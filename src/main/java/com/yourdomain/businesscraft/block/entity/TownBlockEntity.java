@@ -1,5 +1,6 @@
 package com.yourdomain.businesscraft.block.entity;
 
+import com.yourdomain.businesscraft.config.ConfigLoader;
 import com.yourdomain.businesscraft.menu.TownBlockMenu;
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.BlockPos;
@@ -163,7 +164,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             if (!stack.isEmpty() && stack.getItem() == Items.BREAD) {
                 stack.shrink(1); // Consume one bread
                 breadCount++;
-                if (breadCount >= 10) { // Example: 10 bread = 1 population
+                if (breadCount >= ConfigLoader.breadPerPop) {
                     breadCount = 0;
                     population++;
                     setChanged();
@@ -171,7 +172,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             }
 
             // Villager spawning logic
-            if (population > 10 && level.getGameTime() % 200 == 0) { // Every 10 seconds
+            if (population > ConfigLoader.minPopForTourists && level.getGameTime() % 200 == 0) {
                 spawnVillager(level, pos);
             }
         }
@@ -205,8 +206,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     private String getRandomTownName() {
-        int index = new Random().nextInt(TOWN_NAMES.length);
-        return TOWN_NAMES[index];
+        if (ConfigLoader.townNames == null || ConfigLoader.townNames.isEmpty()) {
+            return "DefaultTown"; // Fallback name
+        }
+        int index = new Random().nextInt(ConfigLoader.townNames.size());
+        return ConfigLoader.townNames.get(index);
     }
 
     public void setGuiTownName(String guiTownName) {
