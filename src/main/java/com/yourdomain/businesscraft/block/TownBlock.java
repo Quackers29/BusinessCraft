@@ -30,14 +30,13 @@ public class TownBlock extends BaseEntityBlock {
     @Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
             InteractionHand hand, BlockHitResult hit) {
-        if (!level.isClientSide()) {
-            BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof TownBlockEntity) {
-                NetworkHooks.openScreen((ServerPlayer) player, (TownBlockEntity) be, pos);
-                return InteractionResult.CONSUME;
+        if (!level.isClientSide) {
+            BlockEntity entity = level.getBlockEntity(pos);
+            if (entity instanceof TownBlockEntity) {
+                NetworkHooks.openScreen((ServerPlayer) player, (TownBlockEntity) entity, pos);
             }
         }
-        return InteractionResult.SUCCESS;
+        return InteractionResult.sidedSuccess(level.isClientSide);
     }
 
     @Override
@@ -55,10 +54,6 @@ public class TownBlock extends BaseEntityBlock {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
             BlockEntityType<T> type) {
-        return level.isClientSide ? null : (lvl, pos, blockState, t) -> {
-            if (t instanceof TownBlockEntity townBlockEntity) {
-                townBlockEntity.tick(lvl, pos, blockState, townBlockEntity);
-            }
-        };
+        return createTickerHelper(type, ModBlockEntities.TOWN_BLOCK_ENTITY.get(), TownBlockEntity::tick);
     }
 }
