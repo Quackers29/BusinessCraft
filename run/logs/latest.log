@@ -1,205 +1,119 @@
-[27Nov2024 10:50:07.388] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forgeclientuserdev, --version, MOD_DEV, --assetIndex, 5, --assetsDir, C:\Users\Corsair\.gradle\caches\forge_gradle\assets, --gameDir, ., --fml.forgeVersion, 47.1.0, --fml.mcVersion, 1.20.1, --fml.forgeGroup, net.minecraftforge, --fml.mcpVersion, 20230612.114412]
-[27Nov2024 10:50:07.393] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.0.9+10.0.9+main.dcd20f30 starting: java version 17.0.12 by Oracle Corporation; OS Windows 10 arch amd64 version 10.0
-[27Nov2024 10:50:07.671] [main/INFO] [net.minecraftforge.fml.loading.ImmediateWindowHandler/]: Loading ImmediateWindowProvider fmlearlywindow
-[27Nov2024 10:50:07.816] [main/INFO] [EARLYDISPLAY/]: Trying GL version 4.6
-[27Nov2024 10:50:08.066] [main/INFO] [EARLYDISPLAY/]: Requested GL version 4.6 got version 4.6
-[27Nov2024 10:50:08.181] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.5 Source=union:/C:/Users/Corsair/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.5/9d1c0c3a304ae6697ecd477218fa61b850bf57fc/mixin-0.8.5.jar%23128!/ Service=ModLauncher Env=CLIENT
-[27Nov2024 10:50:08.334] [pool-2-thread-1/INFO] [EARLYDISPLAY/]: GL info: NVIDIA GeForce GTX 1080/PCIe/SSE2 GL version 4.6.0 NVIDIA 565.90, NVIDIA Corporation
-[27Nov2024 10:50:09.307] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\Corsair\.gradle\caches\modules-2\files-2.1\net.minecraftforge\javafmllanguage\1.20.1-47.1.0\a2cd58d15791eaac9983e30be0995e66bd48633e\javafmllanguage-1.20.1-47.1.0.jar is missing mods.toml file
-[27Nov2024 10:50:09.313] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\Corsair\.gradle\caches\modules-2\files-2.1\net.minecraftforge\lowcodelanguage\1.20.1-47.1.0\f1f11b7217b8320f1b3eb81c746b7b8a70a9ba06\lowcodelanguage-1.20.1-47.1.0.jar is missing mods.toml file
-[27Nov2024 10:50:09.323] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\Corsair\.gradle\caches\modules-2\files-2.1\net.minecraftforge\mclanguage\1.20.1-47.1.0\ff1b8eeb1bd00dfb130263b8952b931f5369252e\mclanguage-1.20.1-47.1.0.jar is missing mods.toml file
-[27Nov2024 10:50:09.329] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\Corsair\.gradle\caches\modules-2\files-2.1\net.minecraftforge\fmlcore\1.20.1-47.1.0\69ca36ae5b8d45c377a5485dc38a7343e5ebf33c\fmlcore-1.20.1-47.1.0.jar is missing mods.toml file
-[27Nov2024 10:50:09.506] [main/INFO] [net.minecraftforge.fml.loading.moddiscovery.JarInJarDependencyLocator/]: No dependencies to load found. Skipping!
-[27Nov2024 10:50:12.495] [main/INFO] [cpw.mods.modlauncher.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forgeclientuserdev' with arguments [--version, MOD_DEV, --gameDir, ., --assetsDir, C:\Users\Corsair\.gradle\caches\forge_gradle\assets, --assetIndex, 5]
-[27Nov2024 10:50:21.317] [Datafixer Bootstrap/INFO] [com.mojang.datafixers.DataFixerBuilder/]: 188 Datafixer optimizations took 1274 milliseconds
-[27Nov2024 10:50:23.043] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/C:/Users/Corsair/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1/forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1-recomp.jar%23191!/assets/.mcassetsroot' uses unexpected schema
-[27Nov2024 10:50:23.044] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/C:/Users/Corsair/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1/forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1-recomp.jar%23191!/data/.mcassetsroot' uses unexpected schema
-[27Nov2024 10:50:23.073] [Render thread/INFO] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]: Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
-[27Nov2024 10:50:23.083] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Setting user: Dev
-[27Nov2024 10:50:23.311] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Backend library: LWJGL version 3.3.1 build 7
-[27Nov2024 10:50:23.780] [modloading-worker-0/INFO] [net.minecraftforge.common.ForgeMod/FORGEMOD]: Forge mod loading, version 47.1.0, for MC 1.20.1 with MCP 20230612.114412
-[27Nov2024 10:50:23.783] [modloading-worker-0/INFO] [net.minecraftforge.common.MinecraftForge/FORGE]: MinecraftForge v47.1.0 Initialized
-[27Nov2024 10:50:25.374] [Render thread/INFO] [net.minecraftforge.gametest.ForgeGameTestHooks/]: Enabled Gametest Namespaces: []
-[27Nov2024 10:50:25.539] [Render thread/INFO] [net.minecraft.server.packs.resources.ReloadableResourceManager/]: Reloading ResourceManager: vanilla, mod_resources
-[27Nov2024 10:50:25.807] [Forge Version Check/INFO] [net.minecraftforge.fml.VersionChecker/]: [forge] Starting version check at https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json
-[27Nov2024 10:50:25.874] [Worker-Main-1/INFO] [net.minecraft.client.gui.font.providers.UnihexProvider/]: Found unifont_all_no_pua-15.0.06.hex, loading
-[27Nov2024 10:50:26.707] [Forge Version Check/INFO] [net.minecraftforge.fml.VersionChecker/]: [forge] Found status: OUTDATED Current: 47.1.0 Target: 47.3.0
-[27Nov2024 10:50:30.644] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.goat_horn.play
-[27Nov2024 10:50:30.644] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
-[27Nov2024 10:50:30.789] [Render thread/INFO] [com.mojang.blaze3d.audio.Library/]: OpenAL initialized on device OpenAL Soft on Speakers (Realtek High Definition Audio)
-[27Nov2024 10:50:30.790] [Render thread/INFO] [net.minecraft.client.sounds.SoundEngine/SOUNDS]: Sound engine started
-[27Nov2024 10:50:31.027] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x512x4 minecraft:textures/atlas/blocks.png-atlas
-[27Nov2024 10:50:31.042] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x4 minecraft:textures/atlas/signs.png-atlas
-[27Nov2024 10:50:31.048] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/shield_patterns.png-atlas
-[27Nov2024 10:50:31.048] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/banner_patterns.png-atlas
-[27Nov2024 10:50:31.049] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x1024x4 minecraft:textures/atlas/armor_trims.png-atlas
-[27Nov2024 10:50:31.052] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 128x64x4 minecraft:textures/atlas/decorated_pot.png-atlas
-[27Nov2024 10:50:31.056] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
-[27Nov2024 10:50:31.056] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
-[27Nov2024 10:50:31.057] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
-[27Nov2024 10:50:31.525] [Render thread/WARN] [net.minecraft.client.renderer.ShaderInstance/]: Shader rendertype_entity_translucent_emissive could not find sampler named Sampler2 in the specified shader program.
-[27Nov2024 10:50:31.608] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x0 minecraft:textures/atlas/particles.png-atlas
-[27Nov2024 10:50:31.609] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x0 minecraft:textures/atlas/paintings.png-atlas
-[27Nov2024 10:50:31.610] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 128x128x0 minecraft:textures/atlas/mob_effects.png-atlas
-[27Nov2024 10:50:31.823] [Realms Notification Availability checker #1/INFO] [com.mojang.realmsclient.client.RealmsClient/]: Could not authorize you against Realms server: Invalid session id
-[27Nov2024 10:50:35.234] [Render thread/INFO] [net.minecraftforge.registries.GameData/REGISTRIES]: Injecting existing registry data into this CLIENT instance
-[27Nov2024 10:50:37.581] [Render thread/INFO] [net.minecraft.world.item.crafting.RecipeManager/]: Loaded 7 recipes
-[27Nov2024 10:50:37.719] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 1271 advancements
-[27Nov2024 10:50:38.259] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Starting integrated minecraft server version 1.20.1
-[27Nov2024 10:50:38.260] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Generating keypair
-[27Nov2024 10:50:38.691] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Preparing start region for dimension minecraft:overworld
-[27Nov2024 10:50:42.064] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[27Nov2024 10:50:42.064] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[27Nov2024 10:50:42.065] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[27Nov2024 10:50:42.065] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[27Nov2024 10:50:42.065] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[27Nov2024 10:50:42.065] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[27Nov2024 10:50:42.065] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[27Nov2024 10:50:42.265] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Rivertown
-[27Nov2024 10:50:42.265] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Rivertown
-[27Nov2024 10:50:42.265] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Loaded town name: Maplewood
-[27Nov2024 10:50:42.266] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Greenfield
-[27Nov2024 10:50:42.266] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Greenfield
-[27Nov2024 10:50:42.266] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Loaded town name: Springfield
-[27Nov2024 10:50:42.267] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Lakeside
-[27Nov2024 10:50:42.267] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Lakeside
-[27Nov2024 10:50:42.267] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Loaded town name: Springfield
-[27Nov2024 10:50:42.293] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Maplewood
-[27Nov2024 10:50:42.293] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Maplewood
-[27Nov2024 10:50:42.293] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Loaded town name: Greenfield
-[27Nov2024 10:50:42.293] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Maplewood
-[27Nov2024 10:50:42.294] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Maplewood
-[27Nov2024 10:50:42.303] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Loaded town name: Springfield
-[27Nov2024 10:50:42.355] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[27Nov2024 10:50:42.786] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 30%
-[27Nov2024 10:50:43.236] [Server thread/INFO] [net.minecraftforge.server.permission.PermissionAPI/]: Successfully initialized permission handler forge:default_handler
-[27Nov2024 10:50:43.243] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Time elapsed: 4479 ms
-[27Nov2024 10:50:43.419] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing view distance to 12, from 10
-[27Nov2024 10:50:43.424] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing simulation distance to 12, from 0
-[27Nov2024 10:50:43.582] [Render thread/WARN] [io.netty.util.internal.SystemPropertyUtil/]: Unable to parse the boolean system property 'java.net.preferIPv6Addresses':system - using the default value: false
-[27Nov2024 10:50:44.263] [Netty Local Client IO #0/INFO] [net.minecraftforge.network.NetworkHooks/]: Connected to a modded server.
-[27Nov2024 10:50:44.360] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Dev[local:E:5721af99] logged in with entity id 14 at (13.87175368353209, 2.0, -10.02637605312259)
-[27Nov2024 10:50:44.437] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev joined the game
-[27Nov2024 10:50:48.327] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Greenfield
-[27Nov2024 10:50:48.327] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Greenfield
-[27Nov2024 10:50:48.329] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Springfield
-[27Nov2024 10:50:48.329] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Springfield
-[27Nov2024 10:50:48.329] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Greenfield
-[27Nov2024 10:50:48.329] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Greenfield
-[27Nov2024 10:50:48.334] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Rivertown
-[27Nov2024 10:50:48.335] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Rivertown
-[27Nov2024 10:50:48.335] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Springfield
-[27Nov2024 10:50:48.335] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Springfield
-[27Nov2024 10:50:48.374] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 88 advancements
-[27Nov2024 10:50:52.040] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
-[27Nov2024 10:50:52.063] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
-[27Nov2024 10:50:52.087] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
-[27Nov2024 10:50:52.091] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
-[27Nov2024 10:51:13.093] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Lakeside
-[27Nov2024 10:51:13.093] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Lakeside
-[27Nov2024 10:51:13.095] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Lakeside
-[27Nov2024 10:51:13.095] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Lakeside
-[27Nov2024 10:51:14.141] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
-[27Nov2024 10:51:14.174] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
-[27Nov2024 10:51:14.180] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
-[27Nov2024 10:51:14.182] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
-[27Nov2024 10:51:20.111] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Lakeside
-[27Nov2024 10:51:20.112] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Lakeside
-[27Nov2024 10:51:20.112] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Springfield
-[27Nov2024 10:51:20.112] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Springfield
-[27Nov2024 10:51:21.139] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
-[27Nov2024 10:51:21.155] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
-[27Nov2024 10:51:21.162] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
-[27Nov2024 10:51:21.164] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
-[27Nov2024 10:51:27.899] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:27.903] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:27.912] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:27.922] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:27.930] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:27.936] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:27.945] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:27.954] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:27.963] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:27.971] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:27.981] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:27.988] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:27.997] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.005] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.014] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.027] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.030] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.039] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.047] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.057] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.065] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.081] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.084] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.095] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.103] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.112] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.120] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.130] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.137] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.147] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.154] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.164] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.176] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.180] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.189] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.198] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.206] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.215] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.227] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.232] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.245] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.250] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.262] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.267] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.278] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.284] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.294] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.303] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.311] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.320] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.329] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.336] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.345] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.354] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.362] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.373] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.380] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.388] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.397] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.406] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.415] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.427] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.433] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.444] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.450] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.463] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.470] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.481] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.488] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.497] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.506] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.515] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.527] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:51:28.532] [Render thread/INFO] [com.yourdomain.businesscraft.menu.TownBlockMenu/]: Fetching town name from block entity: Lakeside
-[27Nov2024 10:52:09.240] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
-[27Nov2024 10:52:09.256] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
-[27Nov2024 10:52:09.263] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
-[27Nov2024 10:52:09.265] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
-[27Nov2024 10:52:09.693] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Dev lost connection: Disconnected
-[27Nov2024 10:52:09.693] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev left the game
-[27Nov2024 10:52:09.708] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Stopping singleplayer server as player logged out
-[27Nov2024 10:52:09.759] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Stopping server
-[27Nov2024 10:52:09.760] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving players
-[27Nov2024 10:52:09.760] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving worlds
-[27Nov2024 10:52:10.364] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
-[27Nov2024 10:52:13.936] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
-[27Nov2024 10:52:13.938] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
-[27Nov2024 10:52:13.958] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (New World (1)): All chunks are saved
-[27Nov2024 10:52:13.959] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[27Nov2024 10:52:13.959] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[27Nov2024 10:52:13.959] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage: All dimensions are saved
-[27Nov2024 10:52:15.948] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Stopping!
+[27Nov2024 19:16:30.140] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forgeclientuserdev, --version, MOD_DEV, --assetIndex, 5, --assetsDir, C:\Users\Corsair\.gradle\caches\forge_gradle\assets, --gameDir, ., --fml.forgeVersion, 47.1.0, --fml.mcVersion, 1.20.1, --fml.forgeGroup, net.minecraftforge, --fml.mcpVersion, 20230612.114412]
+[27Nov2024 19:16:30.150] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.0.9+10.0.9+main.dcd20f30 starting: java version 17.0.12 by Oracle Corporation; OS Windows 10 arch amd64 version 10.0
+[27Nov2024 19:16:30.349] [main/INFO] [net.minecraftforge.fml.loading.ImmediateWindowHandler/]: Loading ImmediateWindowProvider fmlearlywindow
+[27Nov2024 19:16:30.541] [main/INFO] [EARLYDISPLAY/]: Trying GL version 4.6
+[27Nov2024 19:16:30.792] [main/INFO] [EARLYDISPLAY/]: Requested GL version 4.6 got version 4.6
+[27Nov2024 19:16:30.969] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.5 Source=union:/C:/Users/Corsair/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.5/9d1c0c3a304ae6697ecd477218fa61b850bf57fc/mixin-0.8.5.jar%23128!/ Service=ModLauncher Env=CLIENT
+[27Nov2024 19:16:31.661] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\Corsair\.gradle\caches\modules-2\files-2.1\net.minecraftforge\javafmllanguage\1.20.1-47.1.0\a2cd58d15791eaac9983e30be0995e66bd48633e\javafmllanguage-1.20.1-47.1.0.jar is missing mods.toml file
+[27Nov2024 19:16:31.668] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\Corsair\.gradle\caches\modules-2\files-2.1\net.minecraftforge\lowcodelanguage\1.20.1-47.1.0\f1f11b7217b8320f1b3eb81c746b7b8a70a9ba06\lowcodelanguage-1.20.1-47.1.0.jar is missing mods.toml file
+[27Nov2024 19:16:31.711] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\Corsair\.gradle\caches\modules-2\files-2.1\net.minecraftforge\mclanguage\1.20.1-47.1.0\ff1b8eeb1bd00dfb130263b8952b931f5369252e\mclanguage-1.20.1-47.1.0.jar is missing mods.toml file
+[27Nov2024 19:16:31.720] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\Corsair\.gradle\caches\modules-2\files-2.1\net.minecraftforge\fmlcore\1.20.1-47.1.0\69ca36ae5b8d45c377a5485dc38a7343e5ebf33c\fmlcore-1.20.1-47.1.0.jar is missing mods.toml file
+[27Nov2024 19:16:31.918] [main/INFO] [net.minecraftforge.fml.loading.moddiscovery.JarInJarDependencyLocator/]: No dependencies to load found. Skipping!
+[27Nov2024 19:16:34.012] [main/INFO] [cpw.mods.modlauncher.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forgeclientuserdev' with arguments [--version, MOD_DEV, --gameDir, ., --assetsDir, C:\Users\Corsair\.gradle\caches\forge_gradle\assets, --assetIndex, 5]
+[27Nov2024 19:16:38.445] [pool-2-thread-1/INFO] [EARLYDISPLAY/]: GL info: NVIDIA GeForce GTX 1080/PCIe/SSE2 GL version 4.6.0 NVIDIA 565.90, NVIDIA Corporation
+[27Nov2024 19:16:43.788] [Datafixer Bootstrap/INFO] [com.mojang.datafixers.DataFixerBuilder/]: 188 Datafixer optimizations took 599 milliseconds
+[27Nov2024 19:16:45.437] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/C:/Users/Corsair/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1/forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1-recomp.jar%23191!/assets/.mcassetsroot' uses unexpected schema
+[27Nov2024 19:16:45.438] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/C:/Users/Corsair/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1/forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1-recomp.jar%23191!/data/.mcassetsroot' uses unexpected schema
+[27Nov2024 19:16:45.456] [Render thread/INFO] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]: Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
+[27Nov2024 19:16:45.462] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Setting user: Dev
+[27Nov2024 19:16:45.634] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Backend library: LWJGL version 3.3.1 build 7
+[27Nov2024 19:16:46.024] [modloading-worker-0/INFO] [net.minecraftforge.common.ForgeMod/FORGEMOD]: Forge mod loading, version 47.1.0, for MC 1.20.1 with MCP 20230612.114412
+[27Nov2024 19:16:46.024] [modloading-worker-0/INFO] [net.minecraftforge.common.MinecraftForge/FORGE]: MinecraftForge v47.1.0 Initialized
+[27Nov2024 19:16:47.421] [Render thread/INFO] [net.minecraftforge.gametest.ForgeGameTestHooks/]: Enabled Gametest Namespaces: []
+[27Nov2024 19:16:47.869] [Render thread/INFO] [net.minecraft.server.packs.resources.ReloadableResourceManager/]: Reloading ResourceManager: vanilla, mod_resources
+[27Nov2024 19:16:48.154] [Worker-Main-3/INFO] [net.minecraft.client.gui.font.providers.UnihexProvider/]: Found unifont_all_no_pua-15.0.06.hex, loading
+[27Nov2024 19:16:49.298] [Forge Version Check/INFO] [net.minecraftforge.fml.VersionChecker/]: [forge] Starting version check at https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json
+[27Nov2024 19:16:49.747] [Forge Version Check/INFO] [net.minecraftforge.fml.VersionChecker/]: [forge] Found status: OUTDATED Current: 47.1.0 Target: 47.3.0
+[27Nov2024 19:16:51.892] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.goat_horn.play
+[27Nov2024 19:16:51.892] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[27Nov2024 19:16:51.938] [Render thread/INFO] [com.mojang.blaze3d.audio.Library/]: OpenAL initialized on device OpenAL Soft on Speakers (Realtek High Definition Audio)
+[27Nov2024 19:16:51.939] [Render thread/INFO] [net.minecraft.client.sounds.SoundEngine/SOUNDS]: Sound engine started
+[27Nov2024 19:16:52.125] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x512x4 minecraft:textures/atlas/blocks.png-atlas
+[27Nov2024 19:16:52.135] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x4 minecraft:textures/atlas/signs.png-atlas
+[27Nov2024 19:16:52.137] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/banner_patterns.png-atlas
+[27Nov2024 19:16:52.137] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/shield_patterns.png-atlas
+[27Nov2024 19:16:52.138] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x1024x4 minecraft:textures/atlas/armor_trims.png-atlas
+[27Nov2024 19:16:52.141] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
+[27Nov2024 19:16:52.144] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 128x64x4 minecraft:textures/atlas/decorated_pot.png-atlas
+[27Nov2024 19:16:52.148] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
+[27Nov2024 19:16:52.148] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
+[27Nov2024 19:16:52.470] [Render thread/WARN] [net.minecraft.client.renderer.ShaderInstance/]: Shader rendertype_entity_translucent_emissive could not find sampler named Sampler2 in the specified shader program.
+[27Nov2024 19:16:52.575] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x0 minecraft:textures/atlas/particles.png-atlas
+[27Nov2024 19:16:52.579] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x0 minecraft:textures/atlas/paintings.png-atlas
+[27Nov2024 19:16:52.579] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 128x128x0 minecraft:textures/atlas/mob_effects.png-atlas
+[27Nov2024 19:16:52.843] [Realms Notification Availability checker #1/INFO] [com.mojang.realmsclient.client.RealmsClient/]: Could not authorize you against Realms server: Invalid session id
+[27Nov2024 19:17:24.796] [Render thread/INFO] [net.minecraftforge.registries.GameData/REGISTRIES]: Injecting existing registry data into this CLIENT instance
+[27Nov2024 19:17:27.168] [Render thread/INFO] [net.minecraft.world.item.crafting.RecipeManager/]: Loaded 7 recipes
+[27Nov2024 19:17:27.327] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 1271 advancements
+[27Nov2024 19:17:27.889] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Starting integrated minecraft server version 1.20.1
+[27Nov2024 19:17:27.890] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Generating keypair
+[27Nov2024 19:17:28.303] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Preparing start region for dimension minecraft:overworld
+[27Nov2024 19:17:32.290] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[27Nov2024 19:17:32.293] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[27Nov2024 19:17:32.293] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[27Nov2024 19:17:32.293] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[27Nov2024 19:17:32.294] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[27Nov2024 19:17:32.301] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[27Nov2024 19:17:32.301] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[27Nov2024 19:17:32.301] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[27Nov2024 19:17:32.457] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[27Nov2024 19:17:32.673] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Springfield
+[27Nov2024 19:17:32.674] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Springfield
+[27Nov2024 19:17:32.677] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Loaded town name: Rivertown
+[27Nov2024 19:17:32.677] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Greenfield
+[27Nov2024 19:17:32.678] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Greenfield
+[27Nov2024 19:17:32.708] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Loaded town name: Greenfield
+[27Nov2024 19:17:32.975] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 15%
+[27Nov2024 19:17:33.442] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 45%
+[27Nov2024 19:17:33.810] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 45%
+[27Nov2024 19:17:34.126] [Server thread/INFO] [net.minecraftforge.server.permission.PermissionAPI/]: Successfully initialized permission handler forge:default_handler
+[27Nov2024 19:17:34.136] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Time elapsed: 5831 ms
+[27Nov2024 19:17:34.326] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing view distance to 12, from 10
+[27Nov2024 19:17:34.329] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing simulation distance to 12, from 0
+[27Nov2024 19:17:34.452] [Render thread/WARN] [io.netty.util.internal.SystemPropertyUtil/]: Unable to parse the boolean system property 'java.net.preferIPv6Addresses':system - using the default value: false
+[27Nov2024 19:17:35.153] [Netty Local Client IO #0/INFO] [net.minecraftforge.network.NetworkHooks/]: Connected to a modded server.
+[27Nov2024 19:17:35.236] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Dev[local:E:8c01a002] logged in with entity id 16 at (15.339704125552645, 2.0, -10.452174245760409)
+[27Nov2024 19:17:35.355] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev joined the game
+[27Nov2024 19:17:35.895] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Springfield
+[27Nov2024 19:17:35.896] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Springfield
+[27Nov2024 19:17:35.900] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Loaded town name: Rivertown
+[27Nov2024 19:17:35.900] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Maplewood
+[27Nov2024 19:17:35.900] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Maplewood
+[27Nov2024 19:17:35.904] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Loaded town name: Greenfield
+[27Nov2024 19:17:36.345] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 88 advancements
+[27Nov2024 19:17:36.888] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
+[27Nov2024 19:17:36.908] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
+[27Nov2024 19:17:38.284] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
+[27Nov2024 19:17:38.286] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
+[27Nov2024 19:17:43.710] [Server thread/INFO] [com.yourdomain.businesscraft.block.TownBlock/]: Interacting with TownBlockEntity at position: MutableBlockPos{x=15, y=0, z=-8}
+[27Nov2024 19:17:47.207] [Server thread/INFO] [com.yourdomain.businesscraft.block.TownBlock/]: Interacting with TownBlockEntity at position: MutableBlockPos{x=15, y=0, z=-8}
+[27Nov2024 19:17:50.457] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Springfield
+[27Nov2024 19:17:50.457] [Render thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Springfield
+[27Nov2024 19:17:50.463] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: Assigned random town name: Greenfield
+[27Nov2024 19:17:50.463] [Server thread/INFO] [com.yourdomain.businesscraft.block.entity.TownBlockEntity/]: TownBlockEntity created with town name: Greenfield
+[27Nov2024 19:17:50.857] [Server thread/INFO] [com.yourdomain.businesscraft.block.TownBlock/]: Interacting with TownBlockEntity at position: MutableBlockPos{x=16, y=0, z=-7}
+[27Nov2024 19:17:59.349] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 16, 0, -7 has the following block data: {townName: "Greenfield", breadCount: 0, x: 16, y: 0, z: -7, id: "businesscraft:town_block", inventory: {Size: 1, Items: []}, population: 0}
+[27Nov2024 19:18:05.894] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] The target block is not a block entity
+[27Nov2024 19:18:10.364] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 15, 0, -8 has the following block data: {townName: "Greenfield", breadCount: 8, x: 15, y: 0, z: -8, id: "businesscraft:town_block", inventory: {Size: 1, Items: []}, population: 10}
+[27Nov2024 19:18:14.276] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
+[27Nov2024 19:18:14.289] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
+[27Nov2024 19:18:14.297] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
+[27Nov2024 19:18:14.299] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
+[27Nov2024 19:18:48.676] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
+[27Nov2024 19:18:48.691] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
+[27Nov2024 19:18:48.698] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
+[27Nov2024 19:18:48.700] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
+[27Nov2024 19:19:36.029] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Dev lost connection: Disconnected
+[27Nov2024 19:19:36.029] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev left the game
+[27Nov2024 19:19:36.043] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Stopping singleplayer server as player logged out
+[27Nov2024 19:19:36.094] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Stopping server
+[27Nov2024 19:19:36.095] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving players
+[27Nov2024 19:19:36.095] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving worlds
+[27Nov2024 19:19:36.880] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
+[27Nov2024 19:19:40.671] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
+[27Nov2024 19:19:40.672] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
+[27Nov2024 19:19:40.691] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (New World (1)): All chunks are saved
+[27Nov2024 19:19:40.691] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[27Nov2024 19:19:40.691] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[27Nov2024 19:19:40.691] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage: All dimensions are saved
+[27Nov2024 19:19:42.311] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Stopping!

@@ -1,10 +1,12 @@
 package com.yourdomain.businesscraft.block.entity;
 
 import com.yourdomain.businesscraft.menu.TownBlockMenu;
+import io.netty.buffer.Unpooled;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Inventory;
@@ -47,12 +49,13 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     };
 
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
-    private final ContainerData data = new SimpleContainerData(2) {
+    private final ContainerData data = new ContainerData() {
         @Override
         public int get(int index) {
             return switch (index) {
                 case 0 -> breadCount;
                 case 1 -> population;
+                case 2 -> getTownNameIndex();
                 default -> 0;
             };
         }
@@ -62,12 +65,13 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             switch (index) {
                 case 0 -> breadCount = value;
                 case 1 -> population = value;
+                case 2 -> setTownNameIndex(value);
             }
         }
 
         @Override
         public int getCount() {
-            return 2;
+            return 3;
         }
     };
     private int breadCount = 0;
@@ -87,6 +91,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         }
         this.guiTownName = this.townName;
         LOGGER.info("TownBlockEntity created with town name: {}", this.townName);
+
+        // Log the stack trace to identify where the constructor is being called from
+        for (StackTraceElement element : Thread.currentThread().getStackTrace()) {
+            LOGGER.debug("at " + element);
+        }
     }
 
     @Override
@@ -97,7 +106,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     @Nullable
     @Override
     public AbstractContainerMenu createMenu(int id, Inventory inventory, Player player) {
-        return new TownBlockMenu(id, inventory, this, this.data);
+        FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
+        buffer.writeBlockPos(this.getBlockPos());
+        return new TownBlockMenu(id, inventory, buffer);
     }
 
     @Override
@@ -196,5 +207,38 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private String getRandomTownName() {
         int index = new Random().nextInt(TOWN_NAMES.length);
         return TOWN_NAMES[index];
+    }
+
+    public void setGuiTownName(String guiTownName) {
+        this.guiTownName = guiTownName;
+    }
+
+    public CompoundTag getUpdateTag() {
+        CompoundTag tag = new CompoundTag();
+        this.saveAdditional(tag);
+        return tag;
+    }
+
+    public ContainerData getContainerData() {
+        return data;
+    }
+
+    private int getTownNameIndex() {
+        for (int i = 0; i < TOWN_NAMES.length; i++) {
+            if (TOWN_NAMES[i].equals(townName)) {
+                return i;
+            }
+        }
+        return 0; // Default to first index if not found
+    }
+
+    private void setTownNameIndex(int index) {
+        if (index >= 0 && index < TOWN_NAMES.length) {
+            townName = TOWN_NAMES[index];
+        }
+    }
+
+    public static String[] getTownNames() {
+        return TOWN_NAMES;
     }
 }

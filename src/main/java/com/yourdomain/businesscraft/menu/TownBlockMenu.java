@@ -1,6 +1,8 @@
 package com.yourdomain.businesscraft.menu;
 
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -18,15 +20,13 @@ public class TownBlockMenu extends AbstractContainerMenu {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public TownBlockMenu(int id, Inventory inv, FriendlyByteBuf extraData) {
-        this(id, inv, inv.player.level().getBlockEntity(extraData.readBlockPos()), new SimpleContainerData(2));
-    }
-
-    public TownBlockMenu(int id, Inventory inv, BlockEntity entity, ContainerData data) {
         super(ModMenuTypes.TOWN_BLOCK_MENU.get(), id);
-        checkContainerSize(inv, 2);
-        blockEntity = (TownBlockEntity) entity;
-        this.data = data;
+        BlockPos pos = extraData.readBlockPos();
+        TownBlockEntity blockEntity = (TownBlockEntity) inv.player.level().getBlockEntity(pos);
+        this.blockEntity = blockEntity;
+        this.data = blockEntity != null ? blockEntity.getContainerData() : new SimpleContainerData(2);
 
+        // Initialize slots and data
         addPlayerInventory(inv);
         addPlayerHotbar(inv);
 
@@ -48,9 +48,9 @@ public class TownBlockMenu extends AbstractContainerMenu {
     }
 
     public String getTownName() {
-        String townName = blockEntity.getTownName();
-        LOGGER.info("Fetching town name from block entity: {}", townName);
-        return townName;
+        int index = data.get(2); // Get town name index
+        String[] townNames = TownBlockEntity.getTownNames();
+        return index >= 0 && index < townNames.length ? townNames[index] : "Unknown";
     }
 
     @Override
