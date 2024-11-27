@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 public class ConfigLoader {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigLoader.class);
     private static final String CONFIG_PATH = "config/businesscraft.properties";
-    
+
     // Default configuration values
     public static int breadPerPop = 10;
     public static int minPopForTourists = 10;
@@ -29,12 +29,11 @@ public class ConfigLoader {
 
             Properties props = new Properties();
 
-                !configFile.exists()) {
+            if (!configFile.exists()) {
                 LOGGER.info("Creating default configuration file");
                 createDefaultConfig(configFile);
             }
 
-                    
             try (FileInputStream fis = new FileInputStream(configFile)) {
                 props.load(fis);
             }
@@ -75,5 +74,4 @@ public class ConfigLoader {
             props.store(fos, "BusinessCraft Configuration File");
         }
     }
-}
 }

@@ -22,6 +22,9 @@ import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import net.minecraftforge.common.Tags.Blocks;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 
 public class TownBlock extends BaseEntityBlock {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownBlock.class);
@@ -30,7 +33,8 @@ public class TownBlock extends BaseEntityBlock {
         super(BlockBehaviour.Properties.of()
                 .mapColor(MapColor.METAL)
                 .strength(2.0f)
-                .requiresCorrectToolForDrops());
+                .requiresCorrectToolForDrops()
+                .instrument(NoteBlockInstrument.BASS));
     }
 
     @Override
