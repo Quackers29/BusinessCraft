@@ -1,0 +1,81 @@
+package com.yourdomain.businesscraft.menu;
+
+import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.*;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.items.SlotItemHandler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+public class TownBlockMenu extends AbstractContainerMenu {
+    private final TownBlockEntity blockEntity;
+    private final ContainerData data;
+    private static final Logger LOGGER = LogManager.getLogger();
+
+    public TownBlockMenu(int id, Inventory inv, FriendlyByteBuf extraData) {
+        this(id, inv, inv.player.level().getBlockEntity(extraData.readBlockPos()), new SimpleContainerData(2));
+    }
+
+    public TownBlockMenu(int id, Inventory inv, BlockEntity entity, ContainerData data) {
+        super(ModMenuTypes.TOWN_BLOCK_MENU.get(), id);
+        checkContainerSize(inv, 2);
+        blockEntity = (TownBlockEntity) entity;
+        this.data = data;
+
+        addPlayerInventory(inv);
+        addPlayerHotbar(inv);
+
+        if (blockEntity != null) {
+            blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(handler -> {
+                addSlot(new SlotItemHandler(handler, 0, 44, 36)); // Input slot for bread
+            });
+        }
+
+        addDataSlots(data);
+    }
+
+    public int getBreadCount() {
+        return data.get(0);
+    }
+
+    public int getPopulation() {
+        return data.get(1);
+    }
+
+    public String getTownName() {
+        String townName = blockEntity.getTownName();
+        LOGGER.info("Fetching town name from block entity: {}", townName);
+        return townName;
+    }
+
+    @Override
+    public ItemStack quickMoveStack(Player player, int index) {
+        // Implementation for shift-clicking items
+        return ItemStack.EMPTY;
+    }
+
+    @Override
+    public boolean stillValid(Player player) {
+        return stillValid(ContainerLevelAccess.create(blockEntity.getLevel(), blockEntity.getBlockPos()),
+                player, blockEntity.getBlockState().getBlock());
+    }
+
+    private void addPlayerInventory(Inventory playerInventory) {
+        for (int i = 0; i < 3; ++i) {
+            for (int l = 0; l < 9; ++l) {
+                this.addSlot(new Slot(playerInventory, l + i * 9 + 9, 8 + l * 18, 84 + i * 18));
+            }
+        }
+    }
+
+    private void addPlayerHotbar(Inventory playerInventory) {
+        for (int i = 0; i < 9; ++i) {
+            this.addSlot(new Slot(playerInventory, i, 8 + i * 18, 142));
+        }
+    }
+}

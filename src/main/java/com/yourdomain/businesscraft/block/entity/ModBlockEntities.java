@@ -8,11 +8,11 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
 public class ModBlockEntities {
-    public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister
-            .create(ForgeRegistries.BLOCK_ENTITY_TYPES, BusinessCraft.MOD_ID);
+        public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister
+                        .create(ForgeRegistries.BLOCK_ENTITY_TYPES, BusinessCraft.MOD_ID);
 
-    public static final RegistryObject<BlockEntityType<CompanyBlockEntity>> COMPANY_BLOCK_ENTITY = BLOCK_ENTITIES
-            .register("company_block",
-                    () -> BlockEntityType.Builder.of(CompanyBlockEntity::new,
-                            ModBlocks.COMPANY_BLOCK.get()).build(null));
+        public static final RegistryObject<BlockEntityType<TownBlockEntity>> TOWN_BLOCK_ENTITY = BLOCK_ENTITIES
+                        .register("town_block",
+                                        () -> BlockEntityType.Builder.of(TownBlockEntity::new,
+                                                        ModBlocks.TOWN_BLOCK.get()).build(null));
 }
