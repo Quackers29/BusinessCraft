@@ -44,24 +44,6 @@ public class TownBlock extends BaseEntityBlock {
         if (!level.isClientSide) {
             BlockEntity entity = level.getBlockEntity(pos);
             if (entity instanceof TownBlockEntity townBlock) {
-                if (townBlock.isInPathCreationMode()) {
-                    BlockPos clickedPos = hit.getBlockPos();
-                    if (!townBlock.isValidPathDistance(clickedPos)) {
-                        player.sendSystemMessage(Component.literal("Too far from town block! Must be within 50 blocks."));
-                        return InteractionResult.FAIL;
-                    }
-                    
-                    if (townBlock.getPathStart() == null) {
-                        townBlock.setPathStart(clickedPos);
-                        player.sendSystemMessage(Component.literal("Start point set. Click another block to set end point."));
-                    } else {
-                        townBlock.setPathEnd(clickedPos);
-                        townBlock.setPathCreationMode(false);
-                        player.sendSystemMessage(Component.literal("Tourist path created!"));
-                    }
-                    return InteractionResult.SUCCESS;
-                }
-                
                 NetworkHooks.openScreen((ServerPlayer) player, townBlock, buf -> {
                     buf.writeBlockPos(pos);
                 });

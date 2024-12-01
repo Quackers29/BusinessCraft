@@ -72,7 +72,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         public void set(int index, int value) {
             switch (index) {
                 case 0 -> breadCount = value;
-                case 1 -> population = value;
+                case 1 -> {
+                    population = value;
+                    setChanged();
+                }
                 case 2 -> setTownNameIndex(value);
             }
         }
@@ -96,6 +99,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private BlockPos pathEnd;
     private boolean isInPathCreationMode = false;
     private static final int MAX_PATH_DISTANCE = 50;
+    private final Random random = new Random();
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -146,15 +150,17 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag) {
+    public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
-        tag.putString("townName", townName);
-        tag.put("inventory", itemHandler.serializeNBT());
         tag.putInt("breadCount", breadCount);
         tag.putInt("population", population);
+        tag.putString("townName", townName);
+        tag.put("inventory", itemHandler.serializeNBT());
+        
         CompoundTag visitorsTag = new CompoundTag();
-        visitingPopulation.forEach((town, count) -> visitorsTag.putInt(town, count));
+        visitingPopulation.forEach(visitorsTag::putInt);
         tag.put("visitingPopulation", visitorsTag);
+        
         if (pathStart != null) {
             tag.putInt("pathStartX", pathStart.getX());
             tag.putInt("pathStartY", pathStart.getY());
@@ -165,25 +171,24 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             tag.putInt("pathEndY", pathEnd.getY());
             tag.putInt("pathEndZ", pathEnd.getZ());
         }
-        super.saveAdditional(tag);
     }
 
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
-        String loadedTownName = tag.getString("townName");
-        if (loadedTownName != null && !loadedTownName.isEmpty()) {
-            this.townName = loadedTownName;
-            LOGGER.info("Loaded town name: {}", this.townName);
-        } else {
-            LOGGER.warn("Loaded town name is null or empty, using default: {}", this.townName);
-        }
-        itemHandler.deserializeNBT(tag.getCompound("inventory"));
         breadCount = tag.getInt("breadCount");
         population = tag.getInt("population");
+        townName = tag.getString("townName");
+        
+        if (tag.contains("inventory")) {
+            itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        }
+        
         CompoundTag visitorsTag = tag.getCompound("visitingPopulation");
         visitingPopulation.clear();
-        visitorsTag.getAllKeys().forEach(town -> visitingPopulation.put(town, visitorsTag.getInt(town)));
+        visitorsTag.getAllKeys().forEach(town -> 
+            visitingPopulation.put(town, visitorsTag.getInt(town)));
+        
         if (tag.contains("pathStartX")) {
             pathStart = new BlockPos(
                 tag.getInt("pathStartX"),
@@ -198,42 +203,93 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 tag.getInt("pathEndZ")
             );
         }
+        
+        // Ensure ContainerData is updated
+        data.set(0, breadCount);
+        data.set(1, population);
+        data.set(2, getTownNameIndex());
     }
 
     @Override
     public void tick(Level level, BlockPos pos, BlockState state, TownBlockEntity blockEntity) {
         if (!level.isClientSide) {
+            // Debug current state
+            if (level.getGameTime() % 200 == 0) {
+                LOGGER.info("=== Town Block Status ===");
+                LOGGER.info("Population: {}", population);
+                LOGGER.info("Min Pop Required: {}", ConfigLoader.minPopForTourists);
+                LOGGER.info("Path Start: {}", pathStart);
+                LOGGER.info("Path End: {}", pathEnd);
+                LOGGER.info("Game Time: {}", level.getGameTime());
+            }
+
+            // Bread handling logic
             ItemStack stack = itemHandler.getStackInSlot(0);
             if (!stack.isEmpty() && stack.getItem() == Items.BREAD) {
-                stack.shrink(1); // Consume one bread
+                stack.shrink(1);
                 breadCount++;
                 if (breadCount >= ConfigLoader.breadPerPop) {
                     breadCount = 0;
                     population++;
+                    LOGGER.info("Population increased to: {}", population);
                     setChanged();
                 }
             }
 
-            // Villager spawning logic
-            if (population > ConfigLoader.minPopForTourists && level.getGameTime() % 200 == 0) {
-                spawnVillager(level, pos);
+            // Path-based villager spawning
+            if (level.getGameTime() % 200 == 0) {  // Check every 10 seconds
+                LOGGER.info("Checking spawn conditions:");
+                LOGGER.info("- Population > MinPop: {} > {} = {}", 
+                    population, ConfigLoader.minPopForTourists, 
+                    population > ConfigLoader.minPopForTourists);
+                LOGGER.info("- Path Start exists: {}", pathStart != null);
+                LOGGER.info("- Path End exists: {}", pathEnd != null);
+
+                if (population > ConfigLoader.minPopForTourists && 
+                    pathStart != null && 
+                    pathEnd != null) {
+                    
+                    // Calculate a random position along the path
+                    double progress = random.nextDouble();
+                    int x = (int) (pathStart.getX() + (pathEnd.getX() - pathStart.getX()) * progress);
+                    int y = (int) (pathStart.getY() + (pathEnd.getY() - pathStart.getY()) * progress);
+                    int z = (int) (pathStart.getZ() + (pathEnd.getZ() - pathStart.getZ()) * progress);
+                    
+                    BlockPos spawnPos = new BlockPos(x, y, z);
+                    
+                    LOGGER.info("Calculated spawn position: {}", spawnPos);
+                    LOGGER.info("- Position is air: {}", level.getBlockState(spawnPos).isAir());
+                    LOGGER.info("- Block below is solid: {}", level.getBlockState(spawnPos.below()).isSolid());
+                    
+                    if (level.getBlockState(spawnPos).isAir() && 
+                        level.getBlockState(spawnPos.below()).isSolid()) {
+                        
+                        Villager villager = EntityType.VILLAGER.create(level);
+                        if (villager != null) {
+                            villager.setPos(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5);
+                            villager.setCustomName(Component.literal(townName));
+                            boolean added = level.addFreshEntity(villager);
+                            LOGGER.info("Villager creation successful: {}", added);
+                            if (added) {
+                                population--;
+                                LOGGER.info("Population decreased to: {}", population);
+                                setChanged();
+                            }
+                        } else {
+                            LOGGER.warn("Failed to create villager entity!");
+                        }
+                    } else {
+                        LOGGER.info("Invalid spawn position - Air: {}, Solid Below: {}", 
+                            level.getBlockState(spawnPos).isAir(),
+                            level.getBlockState(spawnPos.below()).isSolid());
+                    }
+                }
             }
 
-            // Every 2 seconds, check for visitors
+            // Check for visitors
             if (level.getGameTime() % 40 == 0) {
                 checkForVisitors(level, pos);
             }
-        }
-    }
-
-    private void spawnVillager(Level level, BlockPos pos) {
-        if (population > 0) {
-            Villager villager = new Villager(EntityType.VILLAGER, level);
-            villager.setPos(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5);
-            villager.setCustomName(Component.literal(townName));
-            level.addFreshEntity(villager);
-            population--; // Decrease population
-            setChanged();
         }
     }
 
