@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import net.minecraftforge.common.Tags.Blocks;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
+import net.minecraft.network.chat.Component;
 
 public class TownBlock extends BaseEntityBlock {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownBlock.class);
@@ -42,15 +43,28 @@ public class TownBlock extends BaseEntityBlock {
             InteractionHand hand, BlockHitResult hit) {
         if (!level.isClientSide) {
             BlockEntity entity = level.getBlockEntity(pos);
-            if (entity instanceof TownBlockEntity) {
-                LOGGER.info("Interacting with TownBlockEntity at position: {}", pos);
-                CompoundTag tag = ((TownBlockEntity) entity).getUpdateTag();
-                NetworkHooks.openScreen((ServerPlayer) player, (TownBlockEntity) entity, buf -> {
+            if (entity instanceof TownBlockEntity townBlock) {
+                if (townBlock.isInPathCreationMode()) {
+                    BlockPos clickedPos = hit.getBlockPos();
+                    if (!townBlock.isValidPathDistance(clickedPos)) {
+                        player.sendSystemMessage(Component.literal("Too far from town block! Must be within 50 blocks."));
+                        return InteractionResult.FAIL;
+                    }
+                    
+                    if (townBlock.getPathStart() == null) {
+                        townBlock.setPathStart(clickedPos);
+                        player.sendSystemMessage(Component.literal("Start point set. Click another block to set end point."));
+                    } else {
+                        townBlock.setPathEnd(clickedPos);
+                        townBlock.setPathCreationMode(false);
+                        player.sendSystemMessage(Component.literal("Tourist path created!"));
+                    }
+                    return InteractionResult.SUCCESS;
+                }
+                
+                NetworkHooks.openScreen((ServerPlayer) player, townBlock, buf -> {
                     buf.writeBlockPos(pos);
-                    buf.writeNbt(tag);
                 });
-            } else {
-                LOGGER.warn("Block entity is not an instance of TownBlockEntity at position: {}", pos);
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);

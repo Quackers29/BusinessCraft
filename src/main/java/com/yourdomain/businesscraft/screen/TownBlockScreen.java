@@ -9,13 +9,29 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.client.gui.components.Button;
+import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.network.SetPathCreationModePacket;
 
 public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     private static final ResourceLocation TEXTURE = new ResourceLocation(BusinessCraft.MOD_ID,
             "textures/gui/town_block_gui.png");
+    private Button setPathButton;
 
     public TownBlockScreen(TownBlockMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        setPathButton = Button.builder(Component.literal("Set Tourist Path"), button -> {
+            // Send packet to server to enter path creation mode
+            ModMessages.sendToServer(new SetPathCreationModePacket(menu.getBlockEntity().getBlockPos(), true));
+            minecraft.setScreen(null); // Close the screen
+        }).pos(leftPos + 10, topPos + 40).size(100, 20).build();
+        
+        addRenderableWidget(setPathButton);
     }
 
     @Override

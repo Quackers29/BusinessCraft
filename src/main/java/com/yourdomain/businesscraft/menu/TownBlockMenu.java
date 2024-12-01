@@ -78,4 +78,8 @@ public class TownBlockMenu extends AbstractContainerMenu {
             this.addSlot(new Slot(playerInventory, i, 8 + i * 18, 142));
         }
     }
+
+    public TownBlockEntity getBlockEntity() {
+        return this.blockEntity;
+    }
 }

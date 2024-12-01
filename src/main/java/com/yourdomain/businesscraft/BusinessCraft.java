@@ -10,6 +10,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import com.yourdomain.businesscraft.config.ConfigLoader;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import com.yourdomain.businesscraft.network.ModMessages;
 
 @Mod(BusinessCraft.MOD_ID)
 public class BusinessCraft {
@@ -26,6 +27,8 @@ public class BusinessCraft {
 
         MinecraftForge.EVENT_BUS.register(this);
         modEventBus.addListener(this::setup);
+
+        ModMessages.register();
     }
 
     @SubscribeEvent

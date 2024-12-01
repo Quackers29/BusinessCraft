@@ -92,6 +92,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private static final Logger LOGGER = LogManager.getLogger();
     private Map<String, Integer> visitingPopulation = new HashMap<>();
     private static final int VISITOR_RADIUS = 5; // blocks
+    private BlockPos pathStart;
+    private BlockPos pathEnd;
+    private boolean isInPathCreationMode = false;
+    private static final int MAX_PATH_DISTANCE = 50;
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -151,6 +155,16 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         CompoundTag visitorsTag = new CompoundTag();
         visitingPopulation.forEach((town, count) -> visitorsTag.putInt(town, count));
         tag.put("visitingPopulation", visitorsTag);
+        if (pathStart != null) {
+            tag.putInt("pathStartX", pathStart.getX());
+            tag.putInt("pathStartY", pathStart.getY());
+            tag.putInt("pathStartZ", pathStart.getZ());
+        }
+        if (pathEnd != null) {
+            tag.putInt("pathEndX", pathEnd.getX());
+            tag.putInt("pathEndY", pathEnd.getY());
+            tag.putInt("pathEndZ", pathEnd.getZ());
+        }
         super.saveAdditional(tag);
     }
 
@@ -170,6 +184,20 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         CompoundTag visitorsTag = tag.getCompound("visitingPopulation");
         visitingPopulation.clear();
         visitorsTag.getAllKeys().forEach(town -> visitingPopulation.put(town, visitorsTag.getInt(town)));
+        if (tag.contains("pathStartX")) {
+            pathStart = new BlockPos(
+                tag.getInt("pathStartX"),
+                tag.getInt("pathStartY"),
+                tag.getInt("pathStartZ")
+            );
+        }
+        if (tag.contains("pathEndX")) {
+            pathEnd = new BlockPos(
+                tag.getInt("pathEndX"),
+                tag.getInt("pathEndY"),
+                tag.getInt("pathEndZ")
+            );
+        }
     }
 
     @Override
@@ -295,5 +323,35 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     public int getVisitingPopulationFrom(String townName) {
         return visitingPopulation.getOrDefault(townName, 0);
+    }
+
+    public BlockPos getPathStart() {
+        return pathStart;
+    }
+
+    public BlockPos getPathEnd() {
+        return pathEnd;
+    }
+
+    public void setPathStart(BlockPos pos) {
+        this.pathStart = pos;
+        setChanged();
+    }
+
+    public void setPathEnd(BlockPos pos) {
+        this.pathEnd = pos;
+        setChanged();
+    }
+
+    public boolean isInPathCreationMode() {
+        return isInPathCreationMode;
+    }
+
+    public void setPathCreationMode(boolean mode) {
+        this.isInPathCreationMode = mode;
+    }
+
+    public boolean isValidPathDistance(BlockPos pos) {
+        return pos.distManhattan(this.getBlockPos()) <= MAX_PATH_DISTANCE;
     }
 }
