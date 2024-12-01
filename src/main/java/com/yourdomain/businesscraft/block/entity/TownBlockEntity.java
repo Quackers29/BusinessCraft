@@ -100,6 +100,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private boolean isInPathCreationMode = false;
     private static final int MAX_PATH_DISTANCE = 50;
     private final Random random = new Random();
+    private static final int MAX_TOURISTS = 5;
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -213,16 +214,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     @Override
     public void tick(Level level, BlockPos pos, BlockState state, TownBlockEntity blockEntity) {
         if (!level.isClientSide) {
-            // Debug current state
-            if (level.getGameTime() % 200 == 0) {
-                LOGGER.info("=== Town Block Status ===");
-                LOGGER.info("Population: {}", population);
-                LOGGER.info("Min Pop Required: {}", ConfigLoader.minPopForTourists);
-                LOGGER.info("Path Start: {}", pathStart);
-                LOGGER.info("Path End: {}", pathEnd);
-                LOGGER.info("Game Time: {}", level.getGameTime());
-            }
-
             // Bread handling logic
             ItemStack stack = itemHandler.getStackInSlot(0);
             if (!stack.isEmpty() && stack.getItem() == Items.BREAD) {
@@ -231,57 +222,61 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 if (breadCount >= ConfigLoader.breadPerPop) {
                     breadCount = 0;
                     population++;
-                    LOGGER.info("Population increased to: {}", population);
                     setChanged();
                 }
             }
 
             // Path-based villager spawning
-            if (level.getGameTime() % 200 == 0) {  // Check every 10 seconds
-                LOGGER.info("Checking spawn conditions:");
-                LOGGER.info("- Population > MinPop: {} > {} = {}", 
-                    population, ConfigLoader.minPopForTourists, 
-                    population > ConfigLoader.minPopForTourists);
-                LOGGER.info("- Path Start exists: {}", pathStart != null);
-                LOGGER.info("- Path End exists: {}", pathEnd != null);
-
-                if (population > ConfigLoader.minPopForTourists && 
-                    pathStart != null && 
-                    pathEnd != null) {
-                    
+            if (population >= ConfigLoader.minPopForTourists && 
+                pathStart != null && 
+                pathEnd != null && 
+                level.getGameTime() % 200 == 0) {
+                
+                // Count existing tourists in the path area
+                AABB pathBounds = new AABB(
+                    Math.min(pathStart.getX(), pathEnd.getX()) - 1,
+                    pathStart.getY(),
+                    Math.min(pathStart.getZ(), pathEnd.getZ()) - 1,
+                    Math.max(pathStart.getX(), pathEnd.getX()) + 1,
+                    pathStart.getY() + 2,
+                    Math.max(pathStart.getZ(), pathEnd.getZ()) + 1
+                );
+                
+                List<Villager> existingTourists = level.getEntitiesOfClass(Villager.class, pathBounds);
+                
+                if (existingTourists.size() < MAX_TOURISTS) {
                     // Calculate a random position along the path
                     double progress = random.nextDouble();
-                    int x = (int) (pathStart.getX() + (pathEnd.getX() - pathStart.getX()) * progress);
-                    int y = (int) (pathStart.getY() + (pathEnd.getY() - pathStart.getY()) * progress);
-                    int z = (int) (pathStart.getZ() + (pathEnd.getZ() - pathStart.getZ()) * progress);
+                    double exactX = pathStart.getX() + (pathEnd.getX() - pathStart.getX()) * progress;
+                    double exactZ = pathStart.getZ() + (pathEnd.getZ() - pathStart.getZ()) * progress;
+                    int x = (int) Math.round(exactX);
+                    int z = (int) Math.round(exactZ);
+                    int y = pathStart.getY() + 1;
                     
                     BlockPos spawnPos = new BlockPos(x, y, z);
                     
-                    LOGGER.info("Calculated spawn position: {}", spawnPos);
-                    LOGGER.info("- Position is air: {}", level.getBlockState(spawnPos).isAir());
-                    LOGGER.info("- Block below is solid: {}", level.getBlockState(spawnPos.below()).isSolid());
+                    // Check if the position is already occupied
+                    boolean isOccupied = existingTourists.stream()
+                        .anyMatch(v -> {
+                            BlockPos vPos = v.blockPosition();
+                            return vPos.getX() == spawnPos.getX() && 
+                                   vPos.getZ() == spawnPos.getZ();
+                        });
                     
-                    if (level.getBlockState(spawnPos).isAir() && 
-                        level.getBlockState(spawnPos.below()).isSolid()) {
+                    if (!isOccupied && 
+                        level.getBlockState(spawnPos).isAir() && 
+                        level.getBlockState(spawnPos.above()).isAir()) {
                         
                         Villager villager = EntityType.VILLAGER.create(level);
                         if (villager != null) {
-                            villager.setPos(spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5);
+                            // Spawn in center of block and make stationary
+                            villager.setPos(x + 0.5, y, z + 0.5);
                             villager.setCustomName(Component.literal(townName));
-                            boolean added = level.addFreshEntity(villager);
-                            LOGGER.info("Villager creation successful: {}", added);
-                            if (added) {
-                                population--;
-                                LOGGER.info("Population decreased to: {}", population);
-                                setChanged();
-                            }
-                        } else {
-                            LOGGER.warn("Failed to create villager entity!");
+                            villager.setNoAi(true);
+                            level.addFreshEntity(villager);
+                            population--;
+                            setChanged();
                         }
-                    } else {
-                        LOGGER.info("Invalid spawn position - Air: {}, Solid Below: {}", 
-                            level.getBlockState(spawnPos).isAir(),
-                            level.getBlockState(spawnPos.below()).isSolid());
                     }
                 }
             }
