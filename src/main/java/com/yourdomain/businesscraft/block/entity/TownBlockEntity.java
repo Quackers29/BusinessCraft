@@ -26,6 +26,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
@@ -89,8 +90,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private String townName = "Default Town";
     private String guiTownName = "Default Town";
     private static final Logger LOGGER = LogManager.getLogger();
-    private Map<String, Integer> absorbedVillagers = new HashMap<>();
-    private static final int ABSORPTION_RADIUS = 5; // blocks
+    private Map<String, Integer> visitingPopulation = new HashMap<>();
+    private static final int VISITOR_RADIUS = 5; // blocks
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -147,9 +148,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         tag.put("inventory", itemHandler.serializeNBT());
         tag.putInt("breadCount", breadCount);
         tag.putInt("population", population);
-        CompoundTag absorbedTag = new CompoundTag();
-        absorbedVillagers.forEach((town, count) -> absorbedTag.putInt(town, count));
-        tag.put("absorbedVillagers", absorbedTag);
+        CompoundTag visitorsTag = new CompoundTag();
+        visitingPopulation.forEach((town, count) -> visitorsTag.putInt(town, count));
+        tag.put("visitingPopulation", visitorsTag);
         super.saveAdditional(tag);
     }
 
@@ -166,9 +167,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         itemHandler.deserializeNBT(tag.getCompound("inventory"));
         breadCount = tag.getInt("breadCount");
         population = tag.getInt("population");
-        CompoundTag absorbedTag = tag.getCompound("absorbedVillagers");
-        absorbedVillagers.clear();
-        absorbedTag.getAllKeys().forEach(town -> absorbedVillagers.put(town, absorbedTag.getInt(town)));
+        CompoundTag visitorsTag = tag.getCompound("visitingPopulation");
+        visitingPopulation.clear();
+        visitorsTag.getAllKeys().forEach(town -> visitingPopulation.put(town, visitorsTag.getInt(town)));
     }
 
     @Override
@@ -190,9 +191,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 spawnVillager(level, pos);
             }
 
-            // Every second, absorb nearby villagers
-            if (level.getGameTime() % 20 == 0) {
-                absorbNearbyVillagers(level, pos);
+            // Every 2 seconds, check for visitors
+            if (level.getGameTime() % 40 == 0) {
+                checkForVisitors(level, pos);
             }
         }
     }
@@ -208,16 +209,23 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         }
     }
 
-    private void absorbNearbyVillagers(Level level, BlockPos pos) {
+    private void checkForVisitors(Level level, BlockPos pos) {
         List<Villager> nearbyVillagers = level.getEntitiesOfClass(
                 Villager.class,
-                new AABB(pos).inflate(ABSORPTION_RADIUS));
+                new AABB(pos).inflate(VISITOR_RADIUS));
 
         for (Villager villager : nearbyVillagers) {
             Component customName = villager.getCustomName();
             if (customName != null && !customName.getString().equals(this.townName)) {
                 String originTown = customName.getString();
-                absorbedVillagers.merge(originTown, 1, Integer::sum);
+                visitingPopulation.merge(originTown, 1, Integer::sum);
+
+                // Spawn XP bottle where the villager was
+                ExperienceOrb xpOrb = new ExperienceOrb(level,
+                        villager.getX(), villager.getY(), villager.getZ(),
+                        1);
+                level.addFreshEntity(xpOrb);
+
                 villager.remove(Entity.RemovalReason.DISCARDED);
                 setChanged();
             }
@@ -281,11 +289,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         return TOWN_NAMES;
     }
 
-    public Map<String, Integer> getAbsorbedVillagers() {
-        return Collections.unmodifiableMap(absorbedVillagers);
+    public Map<String, Integer> getVisitingPopulation() {
+        return Collections.unmodifiableMap(visitingPopulation);
     }
 
-    public int getAbsorbedVillagerCount(String townName) {
-        return absorbedVillagers.getOrDefault(townName, 0);
+    public int getVisitingPopulationFrom(String townName) {
+        return visitingPopulation.getOrDefault(townName, 0);
     }
 }
