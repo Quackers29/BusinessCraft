@@ -245,37 +245,42 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 List<Villager> existingTourists = level.getEntitiesOfClass(Villager.class, pathBounds);
                 
                 if (existingTourists.size() < MAX_TOURISTS) {
-                    // Calculate a random position along the path
-                    double progress = random.nextDouble();
-                    double exactX = pathStart.getX() + (pathEnd.getX() - pathStart.getX()) * progress;
-                    double exactZ = pathStart.getZ() + (pathEnd.getZ() - pathStart.getZ()) * progress;
-                    int x = (int) Math.round(exactX);
-                    int z = (int) Math.round(exactZ);
-                    int y = pathStart.getY() + 1;
-                    
-                    BlockPos spawnPos = new BlockPos(x, y, z);
-                    
-                    // Check if the position is already occupied
-                    boolean isOccupied = existingTourists.stream()
-                        .anyMatch(v -> {
-                            BlockPos vPos = v.blockPosition();
-                            return vPos.getX() == spawnPos.getX() && 
-                                   vPos.getZ() == spawnPos.getZ();
-                        });
-                    
-                    if (!isOccupied && 
-                        level.getBlockState(spawnPos).isAir() && 
-                        level.getBlockState(spawnPos.above()).isAir()) {
+                    // Try up to 3 times to find a valid spawn location
+                    for (int attempt = 0; attempt < 3; attempt++) {
+                        // Calculate a random position along the path
+                        double progress = random.nextDouble();
+                        double exactX = pathStart.getX() + (pathEnd.getX() - pathStart.getX()) * progress;
+                        double exactZ = pathStart.getZ() + (pathEnd.getZ() - pathStart.getZ()) * progress;
+                        int x = (int) Math.round(exactX);
+                        int z = (int) Math.round(exactZ);
+                        int y = pathStart.getY() + 1;
                         
-                        Villager villager = EntityType.VILLAGER.create(level);
-                        if (villager != null) {
-                            // Spawn in center of block and make stationary
-                            villager.setPos(x + 0.5, y, z + 0.5);
-                            villager.setCustomName(Component.literal(townName));
-                            villager.setNoAi(true);
-                            level.addFreshEntity(villager);
-                            population--;
-                            setChanged();
+                        BlockPos spawnPos = new BlockPos(x, y, z);
+                        
+                        // Check if the position is already occupied
+                        boolean isOccupied = existingTourists.stream()
+                            .anyMatch(v -> {
+                                BlockPos vPos = v.blockPosition();
+                                return vPos.getX() == spawnPos.getX() && 
+                                       vPos.getZ() == spawnPos.getZ();
+                            });
+                        
+                        if (!isOccupied && 
+                            level.getBlockState(spawnPos).isAir() && 
+                            level.getBlockState(spawnPos.above()).isAir()) {
+                            
+                            Villager villager = EntityType.VILLAGER.create(level);
+                            if (villager != null) {
+                                // Spawn in center of block and make extremely slow
+                                villager.setPos(x + 0.5, y, z + 0.5);
+                                villager.setCustomName(Component.literal(townName));
+                                villager.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED)
+                                       .setBaseValue(0.0001);
+                                level.addFreshEntity(villager);
+                                population--;
+                                setChanged();
+                            }
+                            break; // Successfully spawned, exit the loop
                         }
                     }
                 }
