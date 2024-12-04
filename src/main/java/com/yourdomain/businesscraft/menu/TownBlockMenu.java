@@ -53,6 +53,10 @@ public class TownBlockMenu extends AbstractContainerMenu {
         return index >= 0 && index < townNames.length ? townNames[index] : "Unknown";
     }
 
+    public boolean isTouristSpawningEnabled() {
+        return data.get(3) > 0;
+    }
+
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
         // Implementation for shift-clicking items

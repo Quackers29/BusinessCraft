@@ -12,11 +12,13 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.client.gui.components.Button;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.SetPathCreationModePacket;
+import com.yourdomain.businesscraft.network.ToggleTouristSpawningPacket;
 
 public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     private static final ResourceLocation TEXTURE = new ResourceLocation(BusinessCraft.MOD_ID,
             "textures/gui/town_block_gui.png");
     private Button setPathButton;
+    private Button toggleTouristsButton;
 
     public TownBlockScreen(TownBlockMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -31,7 +33,15 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
             minecraft.setScreen(null); // Close the screen
         }).pos(leftPos + 10, topPos + 40).size(100, 20).build();
         
+        toggleTouristsButton = Button.builder(
+            Component.literal(menu.isTouristSpawningEnabled() ? "Tourists: ON" : "Tourists: OFF"), 
+            button -> {
+                ModMessages.sendToServer(new ToggleTouristSpawningPacket(menu.getBlockEntity().getBlockPos()));
+                button.setMessage(Component.literal(menu.isTouristSpawningEnabled() ? "Tourists: OFF" : "Tourists: ON"));
+        }).pos(leftPos + 10, topPos + 65).size(100, 20).build();
+        
         addRenderableWidget(setPathButton);
+        addRenderableWidget(toggleTouristsButton);
     }
 
     @Override

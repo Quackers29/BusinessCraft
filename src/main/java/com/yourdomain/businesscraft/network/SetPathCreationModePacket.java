@@ -46,4 +46,12 @@ public class SetPathCreationModePacket {
         });
         ctx.get().setPacketHandled(true);
     }
+
+    public BlockPos getPos() {
+        return pos;
+    }
+
+    public boolean isEnteringMode() {
+        return mode;
+    }
 } 

@@ -36,6 +36,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import net.minecraft.world.entity.npc.VillagerProfession;
 
 import java.util.Random;
 import java.util.Map;
@@ -64,6 +65,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 case 0 -> breadCount;
                 case 1 -> population;
                 case 2 -> getTownNameIndex();
+                case 3 -> touristSpawningEnabled ? 1 : 0;
                 default -> 0;
             };
         }
@@ -77,12 +79,13 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     setChanged();
                 }
                 case 2 -> setTownNameIndex(value);
+                case 3 -> touristSpawningEnabled = value > 0;
             }
         }
 
         @Override
         public int getCount() {
-            return 3;
+            return 4;
         }
     };
     private int breadCount = 0;
@@ -101,6 +104,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private static final int MAX_PATH_DISTANCE = 50;
     private final Random random = new Random();
     private static final int MAX_TOURISTS = 5;
+    private boolean touristSpawningEnabled = true;
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -151,7 +155,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     @Override
-    public void saveAdditional(CompoundTag tag) {
+    protected void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putInt("breadCount", breadCount);
         tag.putInt("population", population);
@@ -172,6 +176,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             tag.putInt("pathEndY", pathEnd.getY());
             tag.putInt("pathEndZ", pathEnd.getZ());
         }
+        tag.putBoolean("TouristSpawningEnabled", touristSpawningEnabled);
     }
 
     @Override
@@ -209,6 +214,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         data.set(0, breadCount);
         data.set(1, population);
         data.set(2, getTownNameIndex());
+        if (tag.contains("TouristSpawningEnabled")) {
+            touristSpawningEnabled = tag.getBoolean("TouristSpawningEnabled");
+        }
     }
 
     @Override
@@ -227,7 +235,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             }
 
             // Path-based villager spawning
-            if (population >= ConfigLoader.minPopForTourists && 
+            if (touristSpawningEnabled && population >= ConfigLoader.minPopForTourists && 
                 pathStart != null && 
                 pathEnd != null && 
                 level.getGameTime() % 200 == 0) {
@@ -275,7 +283,29 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                                 villager.setPos(x + 0.5, y, z + 0.5);
                                 villager.setCustomName(Component.literal(townName));
                                 villager.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED)
-                                       .setBaseValue(0.0001);
+                                       .setBaseValue(0.000001);
+                                
+                                // Set random profession and level 6
+                                VillagerProfession[] professions = {
+                                    VillagerProfession.ARMORER,
+                                    VillagerProfession.BUTCHER,
+                                    VillagerProfession.CARTOGRAPHER,
+                                    VillagerProfession.CLERIC,
+                                    VillagerProfession.FARMER,
+                                    VillagerProfession.FISHERMAN,
+                                    VillagerProfession.FLETCHER,
+                                    VillagerProfession.LEATHERWORKER,
+                                    VillagerProfession.LIBRARIAN,
+                                    VillagerProfession.MASON,
+                                    VillagerProfession.SHEPHERD,
+                                    VillagerProfession.TOOLSMITH,
+                                    VillagerProfession.WEAPONSMITH
+                                };
+                                VillagerProfession randomProfession = professions[random.nextInt(professions.length)];
+                                villager.setVillagerData(villager.getVillagerData()
+                                    .setProfession(randomProfession)
+                                    .setLevel(6));
+                                
                                 level.addFreshEntity(villager);
                                 population--;
                                 setChanged();
