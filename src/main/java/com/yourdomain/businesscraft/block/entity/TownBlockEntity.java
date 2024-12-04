@@ -155,7 +155,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag) {
+    public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         tag.putInt("breadCount", breadCount);
         tag.putInt("population", population);
@@ -306,6 +306,13 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                                     .setProfession(randomProfession)
                                     .setLevel(6));
                                 
+                                // Add tags when spawning villager
+                                villager.addTag("type_tourist");
+                                villager.addTag("from_" + townName);
+                                villager.addTag("pos_" + getBlockPos().getX() + "_" + 
+                                                getBlockPos().getY() + "_" + 
+                                                getBlockPos().getZ());
+                                
                                 level.addFreshEntity(villager);
                                 population--;
                                 setChanged();
@@ -329,19 +336,39 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 new AABB(pos).inflate(VISITOR_RADIUS));
 
         for (Villager villager : nearbyVillagers) {
-            Component customName = villager.getCustomName();
-            if (customName != null && !customName.getString().equals(this.townName)) {
-                String originTown = customName.getString();
-                visitingPopulation.merge(originTown, 1, Integer::sum);
+            if (villager.getTags().contains("type_tourist")) {
+                String originTown = null;
+                BlockPos originPos = null;
 
-                // Spawn XP bottle where the villager was
-                ExperienceOrb xpOrb = new ExperienceOrb(level,
-                        villager.getX(), villager.getY(), villager.getZ(),
-                        1);
-                level.addFreshEntity(xpOrb);
+                for (String tag : villager.getTags()) {
+                    if (tag.startsWith("from_")) {
+                        originTown = tag.substring(5);
+                    } else if (tag.startsWith("pos_")) {
+                        String[] coords = tag.substring(4).split("_");
+                        originPos = new BlockPos(
+                            Integer.parseInt(coords[0]),
+                            Integer.parseInt(coords[1]),
+                            Integer.parseInt(coords[2])
+                        );
+                    }
+                }
+                
+                if (originTown != null && originPos != null && !originTown.equals(this.townName)) {
+                    visitingPopulation.merge(originTown, 1, Integer::sum);
 
-                villager.remove(Entity.RemovalReason.DISCARDED);
-                setChanged();
+                    // Calculate distance and XP
+                    double distance = Math.sqrt(originPos.distSqr(this.getBlockPos()));
+                    int xpAmount = Math.max(1, (int)(distance / 10)); // 1 XP per 10 blocks, minimum 1
+
+                    // Spawn XP orbs where the villager was
+                    ExperienceOrb xpOrb = new ExperienceOrb(level,
+                            villager.getX(), villager.getY(), villager.getZ(),
+                            xpAmount);
+                    level.addFreshEntity(xpOrb);
+
+                    villager.remove(Entity.RemovalReason.DISCARDED);
+                    setChanged();
+                }
             }
         }
     }
