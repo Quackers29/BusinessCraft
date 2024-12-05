@@ -9,24 +9,35 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.client.gui.components.Button;
+import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.network.SetPathCreationModePacket;
+import com.yourdomain.businesscraft.network.ToggleTouristSpawningPacket;
 
 public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     private static final ResourceLocation TEXTURE = new ResourceLocation(BusinessCraft.MOD_ID,
             "textures/gui/town_block_gui.png");
+    private Button setPathButton;
+    private Button toggleTouristsButton;
 
     public TownBlockScreen(TownBlockMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
     }
 
     @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.setShaderTexture(0, TEXTURE);
-        int x = (width - imageWidth) / 2;
-        int y = (height - imageHeight) / 2;
+    protected void init() {
+        super.init();
+        
+        setPathButton = Button.builder(Component.translatable("gui.businesscraft.set_tourist_path"), (button) -> {
+            ModMessages.sendToServer(new SetPathCreationModePacket(menu.getBlockEntity().getBlockPos(), true));
+        }).pos(leftPos + 10, topPos + 40).size(100, 20).build();
 
-        guiGraphics.blit(TEXTURE, x, y, 0, 0, imageWidth, imageHeight);
+        toggleTouristsButton = Button.builder(Component.translatable("gui.businesscraft.toggle_tourists"), (button) -> {
+            ModMessages.sendToServer(new ToggleTouristSpawningPacket(menu.getBlockEntity().getBlockPos()));
+        }).pos(leftPos + 10, topPos + 65).size(100, 20).build();
+
+        addRenderableWidget(setPathButton);
+        addRenderableWidget(toggleTouristsButton);
     }
 
     @Override
@@ -34,13 +45,21 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         renderBackground(guiGraphics);
         super.render(guiGraphics, mouseX, mouseY, delta);
         renderTooltip(guiGraphics, mouseX, mouseY);
-
-        // Display bread count and population
         int breadCount = menu.getBreadCount();
         int population = menu.getPopulation();
         String townName = menu.getTownName();
-        guiGraphics.drawString(this.font, "Town: " + townName, leftPos + 10, topPos + 0, 0xFFFFFF);
-        guiGraphics.drawString(this.font, "Bread: " + breadCount, leftPos + 10, topPos + 10, 0xFFFFFF);
-        guiGraphics.drawString(this.font, "Population: " + population, leftPos + 10, topPos + 20, 0xFFFFFF);
+        
+        guiGraphics.drawString(this.font, "Town: " + townName, leftPos + 10, topPos + 10, 0xFFFFFF);
+        guiGraphics.drawString(this.font, "Bread: " + breadCount, leftPos + 10, topPos + 20, 0xFFFFFF);
+        guiGraphics.drawString(this.font, "Population: " + population, leftPos + 10, topPos + 30, 0xFFFFFF);
+    }
+
+    @Override
+    protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderTexture(0, TEXTURE);
+        int x = (this.width - this.imageWidth) / 2;
+        int y = (this.height - this.imageHeight) / 2;
+        guiGraphics.blit(TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight);
     }
 }

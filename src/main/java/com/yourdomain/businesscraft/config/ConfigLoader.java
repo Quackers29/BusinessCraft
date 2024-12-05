@@ -16,6 +16,7 @@ public class ConfigLoader {
     public static int minPopForTourists = 10;
     public static List<String> townNames = Arrays.asList(
             "Springfield", "Rivertown", "Maplewood", "Lakeside", "Greenfield");
+    public static int breadForNewVillager = 64;
 
     public static void loadConfig() {
         File configFile = new File(CONFIG_PATH);
@@ -55,6 +56,7 @@ public class ConfigLoader {
         if (townNamesStr != null && !townNamesStr.isEmpty()) {
             townNames = Arrays.asList(townNamesStr.split(","));
         }
+        breadForNewVillager = Integer.parseInt(props.getProperty("breadForNewVillager", String.valueOf(breadForNewVillager)));
     }
 
     private static void logConfiguration() {
@@ -62,6 +64,7 @@ public class ConfigLoader {
         LOGGER.info("Bread per Population: {}", breadPerPop);
         LOGGER.info("Minimum Population for Tourists: {}", minPopForTourists);
         LOGGER.info("Town Names: {}", townNames);
+        LOGGER.info("Bread for New Villager: {}", breadForNewVillager);
     }
 
     private static void createDefaultConfig(File configFile) throws IOException {
@@ -69,6 +72,7 @@ public class ConfigLoader {
         props.setProperty("breadPerPop", String.valueOf(breadPerPop));
         props.setProperty("minPopForTourists", String.valueOf(minPopForTourists));
         props.setProperty("townNames", String.join(",", townNames));
+        props.setProperty("breadForNewVillager", String.valueOf(breadForNewVillager));
 
         try (FileOutputStream fos = new FileOutputStream(configFile)) {
             props.store(fos, "BusinessCraft Configuration File");
