@@ -120,4 +120,13 @@ public class TownManager {
             savedData.setDirty();
         }
     }
+    
+    public void removeTown(UUID townId) {
+        if (towns.remove(townId) != null) {
+            LOGGER.info("Removed town with ID: {}", townId);
+            if (savedData != null) {
+                savedData.setDirty();
+            }
+        }
+    }
 } 
