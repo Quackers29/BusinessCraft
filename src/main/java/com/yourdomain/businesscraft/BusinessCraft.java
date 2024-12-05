@@ -45,10 +45,12 @@ public class BusinessCraft {
         ModMenuTypes.MENUS.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
-        MinecraftForge.EVENT_BUS.register(this);
 
         // Initialize networking
         ModMessages.register();
+
+        // Register ourselves for server and other game events we are interested in
+        MinecraftForge.EVENT_BUS.register(this);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {

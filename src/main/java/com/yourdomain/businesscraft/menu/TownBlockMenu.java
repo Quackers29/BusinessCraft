@@ -137,9 +137,12 @@ public class TownBlockMenu extends AbstractContainerMenu {
     }
 
     public Town getTown() {
-        if (cachedTown == null && townId != null) {
-            cachedTown = TownManager.getInstance().getTown(townId);
+        if (blockEntity != null) {
+            UUID townId = blockEntity.getTownId();
+            if (townId != null) {
+                return TownManager.getInstance().getTown(townId);
+            }
         }
-        return cachedTown;
+        return null;
     }
 }
