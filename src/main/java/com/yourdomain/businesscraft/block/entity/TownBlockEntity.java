@@ -272,7 +272,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                                     
                                     // Add tags when spawning villager
                                     villager.addTag("type_tourist");
-                                    villager.addTag("from_" + town.getName());
+                                    villager.addTag("from_town_" + townId.toString());
+                                    villager.addTag("from_name_" + town.getName());
                                     villager.addTag("pos_" + getBlockPos().getX() + "_" + 
                                                     getBlockPos().getY() + "_" + 
                                                     getBlockPos().getZ());
@@ -312,12 +313,15 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
         for (Villager villager : nearbyVillagers) {
             if (villager.getTags().contains("type_tourist")) {
-                String originTown = null;
+                UUID originTownId = null;
+                String originTownName = null;
                 BlockPos originPos = null;
 
                 for (String tag : villager.getTags()) {
-                    if (tag.startsWith("from_")) {
-                        originTown = tag.substring(5);
+                    if (tag.startsWith("from_town_")) {
+                        originTownId = UUID.fromString(tag.substring(10));
+                    } else if (tag.startsWith("from_name_")) {
+                        originTownName = tag.substring(10);
                     } else if (tag.startsWith("pos_")) {
                         String[] coords = tag.substring(4).split("_");
                         originPos = new BlockPos(
@@ -328,14 +332,14 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     }
                 }
                 
-                if (originTown != null && originPos != null && !originTown.equals(thisTown.getName())) {
-                    visitingPopulation.merge(originTown, 1, Integer::sum);
+                if (originTownId != null && originTownName != null && originPos != null 
+                    && !originTownId.equals(this.townId)) {
+                    visitingPopulation.merge(originTownName, 1, Integer::sum);
 
                     // Calculate distance and XP
                     double distance = Math.sqrt(originPos.distSqr(this.getBlockPos()));
-                    int xpAmount = Math.max(1, (int)(distance / 10)); // 1 XP per 10 blocks, minimum 1
+                    int xpAmount = Math.max(1, (int)(distance / 10));
 
-                    // Spawn XP orbs where the villager was
                     ExperienceOrb xpOrb = new ExperienceOrb(level,
                             villager.getX(), villager.getY(), villager.getZ(),
                             xpAmount);
