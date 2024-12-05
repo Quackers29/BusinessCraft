@@ -457,15 +457,12 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     public void syncTownData() {
         if (level != null && !level.isClientSide()) {
-            LOGGER.info("[TownBlockEntity] Syncing town data. ID: {} at pos: {}", townId, this.getBlockPos());
-            CompoundTag tag = new CompoundTag();
-            if (townId != null) {
-                tag.putUUID("townId", townId);
+            Town town = TownManager.getInstance().getTown(townId);
+            if (town != null) {
+                data.set(0, town.getBreadCount());
+                data.set(1, town.getPopulation());
+                setChanged();
             }
-            level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
-            setChanged();
-        } else {
-            LOGGER.info("[TownBlockEntity] Sync attempted on client side or null level at pos: {}", this.getBlockPos());
         }
     }
 
