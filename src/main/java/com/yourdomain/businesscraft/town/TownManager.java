@@ -79,4 +79,24 @@ public class TownManager {
     public Map<UUID, Town> getAllTowns() {
         return Collections.unmodifiableMap(towns);
     }
+    
+    public void clearGhostTowns() {
+        towns.entrySet().removeIf(entry -> {
+            Town town = entry.getValue();
+            // Define your logic to determine if a town is a "ghost town"
+            return town.getPopulation() == 0; // Example: remove towns with zero population
+        });
+        if (savedData != null) {
+            savedData.setDirty();
+        }
+    }
+    
+    public int clearAllTowns() {
+        int count = towns.size();
+        towns.clear();
+        if (savedData != null) {
+            savedData.setDirty();
+        }
+        return count;
+    }
 } 

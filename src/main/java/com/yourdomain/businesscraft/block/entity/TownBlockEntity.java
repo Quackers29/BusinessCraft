@@ -133,16 +133,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         if (!level.isClientSide()) {
             if (level instanceof ServerLevel serverLevel) {
                 TownManager.init(serverLevel);
-            }
-            
-            if (townId == null || TownManager.getInstance().getTown(townId) == null) {
-                String newTownName = getRandomTownName();
-                townId = TownManager.getInstance().registerTown(getBlockPos(), newTownName);
-                setChanged();
-                syncTownData();
-                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
-            } else {
-                syncTownData();
+                level.scheduleTick(getBlockPos(), getBlockState().getBlock(), 1);
             }
         }
     }
@@ -175,6 +166,20 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     @Override
     public void tick(Level level, BlockPos pos, BlockState state, TownBlockEntity blockEntity) {
+        if (!level.isClientSide()) {
+            if (level instanceof ServerLevel serverLevel) {
+                TownManager.init(serverLevel);
+                
+                // Only sync data if town exists
+                if (townId != null) {
+                    Town town = TownManager.getInstance().getTown(townId);
+                    if (town != null) {
+                        syncTownData();
+                    }
+                }
+            }
+        }
+        
         if (!level.isClientSide && townId != null) {
             Town town = TownManager.getInstance().getTown(townId);
             if (town != null) {
@@ -421,7 +426,19 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     public void syncTownData() {
         if (level != null && !level.isClientSide()) {
-            CompoundTag tag = getUpdateTag();
+            CompoundTag tag = new CompoundTag();
+            if (townId != null) {
+                tag.putUUID("townId", townId);
+            }
+            level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
+            setChanged();
+        }
+    }
+
+    public void setTownId(UUID id) {
+        this.townId = id;
+        syncTownData();
+        if (level != null) {
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
         }
     }
