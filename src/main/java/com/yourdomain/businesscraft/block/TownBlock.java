@@ -104,4 +104,19 @@ public class TownBlock extends BaseEntityBlock {
             }
         }
     }
+
+    @Override
+    public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
+        if (!state.is(newState.getBlock())) {
+            if (level.getBlockEntity(pos) instanceof TownBlockEntity townBlock) {
+                UUID townId = townBlock.getTownId();
+                if (townId != null && !level.isClientSide()) {
+                    // Remove town from manager
+                    TownManager.getInstance().removeTown(townId);
+                }
+            }
+            // Call super after our logic
+            super.onRemove(state, level, pos, newState, isMoving);
+        }
+    }
 }
