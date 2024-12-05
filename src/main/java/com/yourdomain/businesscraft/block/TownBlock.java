@@ -2,8 +2,11 @@ package com.yourdomain.businesscraft.block;
 
 import com.yourdomain.businesscraft.block.entity.ModBlockEntities;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.config.ConfigLoader;
+import com.yourdomain.businesscraft.town.TownManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -16,25 +19,25 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import net.minecraftforge.common.Tags.Blocks;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
+import java.util.Random;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import java.util.UUID;
 
 public class TownBlock extends BaseEntityBlock {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TownBlock.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/TownBlock");
 
     public TownBlock() {
-        super(BlockBehaviour.Properties.of()
-                .mapColor(MapColor.METAL)
-                .strength(2.0f)
-                .requiresCorrectToolForDrops()
-                .instrument(NoteBlockInstrument.BASS));
+        super(BlockBehaviour.Properties.copy(Blocks.STONE)
+                .strength(3.5F)
+                .requiresCorrectToolForDrops());
     }
 
     @Override
@@ -42,15 +45,10 @@ public class TownBlock extends BaseEntityBlock {
             InteractionHand hand, BlockHitResult hit) {
         if (!level.isClientSide) {
             BlockEntity entity = level.getBlockEntity(pos);
-            if (entity instanceof TownBlockEntity) {
-                LOGGER.info("Interacting with TownBlockEntity at position: {}", pos);
-                CompoundTag tag = ((TownBlockEntity) entity).getUpdateTag();
-                NetworkHooks.openScreen((ServerPlayer) player, (TownBlockEntity) entity, buf -> {
+            if (entity instanceof TownBlockEntity townBlock) {
+                NetworkHooks.openScreen((ServerPlayer) player, townBlock, buf -> {
                     buf.writeBlockPos(pos);
-                    buf.writeNbt(tag);
                 });
-            } else {
-                LOGGER.warn("Block entity is not an instance of TownBlockEntity at position: {}", pos);
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
@@ -73,5 +71,37 @@ public class TownBlock extends BaseEntityBlock {
         return createTickerHelper(type, ModBlockEntities.TOWN_BLOCK_ENTITY.get(),
                 (lvl, pos, blockState, blockEntity) -> ((TownBlockEntity) blockEntity).tick(lvl, pos, blockState,
                         (TownBlockEntity) blockEntity));
+    }
+
+    private String getRandomTownName() {
+        if (ConfigLoader.townNames == null || ConfigLoader.townNames.isEmpty()) {
+            return "DefaultTown"; // Fallback name
+        }
+        int index = new Random().nextInt(ConfigLoader.townNames.size());
+        return ConfigLoader.townNames.get(index);
+    }
+
+    @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+        
+        if (!level.isClientSide()) {
+            LOGGER.info("Setting up town block at position: {}", pos);
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof TownBlockEntity townBlock) {
+                if (level instanceof ServerLevel serverLevel) {
+                    TownManager.init(serverLevel);
+                    String newTownName = getRandomTownName();
+                    LOGGER.info("Generated town name: {}", newTownName);
+                    UUID townId = TownManager.getInstance().registerTown(pos, newTownName);
+                    LOGGER.info("Registered new town with ID: {}", townId);
+                    townBlock.setTownId(townId);
+                    townBlock.setChanged();
+                    serverLevel.sendBlockUpdated(pos, state, state, 3);
+                }
+            } else {
+                LOGGER.error("Failed to get TownBlockEntity at position: {}", pos);
+            }
+        }
     }
 }
