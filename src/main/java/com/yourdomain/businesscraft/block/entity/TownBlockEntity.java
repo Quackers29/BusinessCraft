@@ -48,6 +48,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Collections;
 import java.util.UUID;
+import org.slf4j.LoggerFactory;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.Connection;
+import net.minecraft.world.level.block.Block;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -88,7 +94,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             return 3;
         }
     };
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger("BusinessCraft/TownBlockEntity");
     private Map<String, Integer> visitingPopulation = new HashMap<>();
     private static final int VISITOR_RADIUS = 5; // blocks
     private BlockPos pathStart;
@@ -149,8 +155,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         super.saveAdditional(tag);
         if (townId != null) {
             tag.putUUID("townId", townId);
+            LOGGER.info("[TownBlockEntity] Saved town ID to NBT: {} at pos: {}", townId, this.getBlockPos());
+        } else {
+            LOGGER.info("[TownBlockEntity] No town ID to save to NBT at pos: {}", this.getBlockPos());
         }
-        tag.put("inventory", itemHandler.serializeNBT());
     }
 
     @Override
@@ -158,9 +166,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         super.load(tag);
         if (tag.contains("townId")) {
             townId = tag.getUUID("townId");
-        }
-        if (tag.contains("inventory")) {
-            itemHandler.deserializeNBT(tag.getCompound("inventory"));
+            LOGGER.info("[TownBlockEntity] Loaded town ID from NBT: {} at pos: {}", townId, this.getBlockPos());
+        } else {
+            LOGGER.info("[TownBlockEntity] No town ID found in NBT at pos: {}", this.getBlockPos());
         }
     }
 
@@ -359,10 +367,32 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         return ConfigLoader.townNames.get(index);
     }
 
+    @Override
+    public void setChanged() {
+        super.setChanged();
+        if (level != null && !level.isClientSide()) {
+            level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
+        }
+    }
+
+    @Override
     public CompoundTag getUpdateTag() {
         CompoundTag tag = new CompoundTag();
-        this.saveAdditional(tag);
+        saveAdditional(tag);
         return tag;
+    }
+
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    @Override
+    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
+        CompoundTag tag = pkt.getTag();
+        if (tag != null) {
+            load(tag);
+        }
     }
 
     public ContainerData getContainerData() {
@@ -408,6 +438,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     public UUID getTownId() {
+        LOGGER.info("[TownBlockEntity] Getting town ID: {} at pos: {}", townId, this.getBlockPos());
         return townId;
     }
 
@@ -426,20 +457,21 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     public void syncTownData() {
         if (level != null && !level.isClientSide()) {
+            LOGGER.info("[TownBlockEntity] Syncing town data. ID: {} at pos: {}", townId, this.getBlockPos());
             CompoundTag tag = new CompoundTag();
             if (townId != null) {
                 tag.putUUID("townId", townId);
             }
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
             setChanged();
+        } else {
+            LOGGER.info("[TownBlockEntity] Sync attempted on client side or null level at pos: {}", this.getBlockPos());
         }
     }
 
     public void setTownId(UUID id) {
+        LOGGER.info("[TownBlockEntity] Setting town ID to: {} at pos: {}", id, this.getBlockPos());
         this.townId = id;
         syncTownData();
-        if (level != null) {
-            level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 3);
-        }
     }
 }

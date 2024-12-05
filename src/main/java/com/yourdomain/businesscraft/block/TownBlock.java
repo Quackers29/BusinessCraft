@@ -32,7 +32,7 @@ import net.minecraft.world.item.ItemStack;
 import java.util.UUID;
 
 public class TownBlock extends BaseEntityBlock {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TownBlock.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/TownBlock");
 
     public TownBlock() {
         super(BlockBehaviour.Properties.copy(Blocks.STONE)
@@ -86,16 +86,21 @@ public class TownBlock extends BaseEntityBlock {
         super.setPlacedBy(level, pos, state, placer, stack);
         
         if (!level.isClientSide()) {
+            LOGGER.info("Setting up town block at position: {}", pos);
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof TownBlockEntity townBlock) {
                 if (level instanceof ServerLevel serverLevel) {
                     TownManager.init(serverLevel);
                     String newTownName = getRandomTownName();
+                    LOGGER.info("Generated town name: {}", newTownName);
                     UUID townId = TownManager.getInstance().registerTown(pos, newTownName);
+                    LOGGER.info("Registered new town with ID: {}", townId);
                     townBlock.setTownId(townId);
                     townBlock.setChanged();
                     serverLevel.sendBlockUpdated(pos, state, state, 3);
                 }
+            } else {
+                LOGGER.error("Failed to get TownBlockEntity at position: {}", pos);
             }
         }
     }

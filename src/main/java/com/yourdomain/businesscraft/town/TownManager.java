@@ -8,8 +8,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.nbt.CompoundTag;
 import java.util.Collections;
 import com.yourdomain.businesscraft.data.TownSavedData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TownManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/TownManager");
     private static TownManager INSTANCE;
     private final Map<UUID, Town> towns = new ConcurrentHashMap<>();
     private TownSavedData savedData;
@@ -36,15 +39,21 @@ public class TownManager {
     
     public UUID registerTown(BlockPos pos, String name) {
         UUID townId = UUID.randomUUID();
+        LOGGER.info("Registering new town. ID: {}, Name: {}, Position: {}", townId, name, pos);
         towns.put(townId, new Town(townId, pos, name));
         if (savedData != null) {
             savedData.setDirty();
+            LOGGER.info("Marked town data as dirty");
+        } else {
+            LOGGER.warn("SavedData is null when registering town");
         }
         return townId;
     }
     
     public Town getTown(UUID id) {
-        return towns.get(id);
+        Town town = towns.get(id);
+        LOGGER.info("Getting town with ID: {}. Found: {}", id, town != null);
+        return town;
     }
     
     public void updateResources(UUID townId, int breadCount) {

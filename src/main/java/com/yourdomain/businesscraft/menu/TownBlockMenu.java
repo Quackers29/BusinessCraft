@@ -15,13 +15,14 @@ import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.items.SlotItemHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
 public class TownBlockMenu extends AbstractContainerMenu {
     private final TownBlockEntity blockEntity;
     private final ContainerData data;
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger("BusinessCraft/TownBlockMenu");
 
     public TownBlockMenu(int id, Inventory inv, FriendlyByteBuf extraData) {
         super(ModMenuTypes.TOWN_BLOCK_MENU.get(), id);
@@ -52,18 +53,21 @@ public class TownBlockMenu extends AbstractContainerMenu {
     }
 
     public String getTownName() {
+        LOGGER.info("Getting town name. BlockEntity present: {}", blockEntity != null);
         if (blockEntity != null) {
             UUID townId = blockEntity.getTownId();
+            LOGGER.info("Town ID from block entity: {}", townId);
             if (townId != null) {
                 Town town = TownManager.getInstance().getTown(townId);
+                LOGGER.info("Town from manager: {}", town != null ? town.getName() : "null");
                 if (town != null) {
                     return town.getName();
                 }
-                return "Loading...";  // Town ID exists but town not loaded yet
+                return "Loading...";
             }
-            return "Initializing...";  // No town ID yet
+            return "Initializing...";
         }
-        return "Error";  // No block entity
+        return "Error";
     }
 
     public boolean isTouristSpawningEnabled() {
