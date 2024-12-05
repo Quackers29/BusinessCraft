@@ -23,6 +23,8 @@ public class TownBlockMenu extends AbstractContainerMenu {
     private final TownBlockEntity blockEntity;
     private final ContainerData data;
     private static final Logger LOGGER = LogManager.getLogger("BusinessCraft/TownBlockMenu");
+    private Town cachedTown;
+    private UUID townId;
 
     public TownBlockMenu(int id, Inventory inv, FriendlyByteBuf extraData) {
         super(ModMenuTypes.TOWN_BLOCK_MENU.get(), id);
@@ -58,7 +60,7 @@ public class TownBlockMenu extends AbstractContainerMenu {
             UUID townId = blockEntity.getTownId();
             LOGGER.info("Town ID from block entity: {}", townId);
             if (townId != null) {
-                Town town = TownManager.getInstance().getTown(townId);
+                Town town = getTown();
                 LOGGER.info("Town from manager: {}", town != null ? town.getName() : "null");
                 if (town != null) {
                     return town.getName();
@@ -74,7 +76,7 @@ public class TownBlockMenu extends AbstractContainerMenu {
         if (blockEntity != null) {
             UUID townId = blockEntity.getTownId();
             if (townId != null) {
-                Town town = TownManager.getInstance().getTown(townId);
+                Town town = getTown();
                 if (town != null) {
                     return town.canSpawnTourists();
                 }
@@ -132,5 +134,12 @@ public class TownBlockMenu extends AbstractContainerMenu {
 
     public TownBlockEntity getBlockEntity() {
         return blockEntity;
+    }
+
+    public Town getTown() {
+        if (cachedTown == null && townId != null) {
+            cachedTown = TownManager.getInstance().getTown(townId);
+        }
+        return cachedTown;
     }
 }

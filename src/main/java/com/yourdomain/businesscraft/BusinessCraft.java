@@ -5,6 +5,7 @@ import com.yourdomain.businesscraft.block.entity.ModBlockEntities;
 import com.yourdomain.businesscraft.command.ClearTownsCommand;
 import com.yourdomain.businesscraft.config.ConfigLoader;
 import com.yourdomain.businesscraft.menu.ModMenuTypes;
+import com.yourdomain.businesscraft.network.ModMessages;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -45,6 +46,9 @@ public class BusinessCraft {
 
         modEventBus.addListener(this::commonSetup);
         MinecraftForge.EVENT_BUS.register(this);
+
+        // Initialize networking
+        ModMessages.register();
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
