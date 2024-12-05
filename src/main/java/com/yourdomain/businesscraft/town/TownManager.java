@@ -129,4 +129,10 @@ public class TownManager {
             }
         }
     }
+    
+    public void markDirty() {
+        if (savedData != null) {
+            savedData.setDirty();
+        }
+    }
 } 

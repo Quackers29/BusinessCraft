@@ -33,7 +33,7 @@ public class TownScoreboardManager {
         
         // Update scores for each town
         TownManager.getInstance().getAllTowns().forEach((id, town) -> {
-            String displayName = town.getName(); //+ ": " + town.getPopulation()
+            String displayName = town.getName() + " [" + town.getTotalVisitors() + "]";
             scoreboard.getOrCreatePlayerScore(displayName, finalObjective).setScore(town.getPopulation());
         });
     }

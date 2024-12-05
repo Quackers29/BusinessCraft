@@ -314,30 +314,18 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         for (Villager villager : nearbyVillagers) {
             if (villager.getTags().contains("type_tourist")) {
                 UUID originTownId = null;
-                String originTownName = null;
-                BlockPos originPos = null;
 
                 for (String tag : villager.getTags()) {
                     if (tag.startsWith("from_town_")) {
                         originTownId = UUID.fromString(tag.substring(10));
-                    } else if (tag.startsWith("from_name_")) {
-                        originTownName = tag.substring(10);
-                    } else if (tag.startsWith("pos_")) {
-                        String[] coords = tag.substring(4).split("_");
-                        originPos = new BlockPos(
-                            Integer.parseInt(coords[0]),
-                            Integer.parseInt(coords[1]),
-                            Integer.parseInt(coords[2])
-                        );
                     }
                 }
                 
-                if (originTownId != null && originTownName != null && originPos != null 
-                    && !originTownId.equals(this.townId)) {
-                    visitingPopulation.merge(originTownName, 1, Integer::sum);
+                if (originTownId != null && !originTownId.equals(this.townId)) {
+                    thisTown.addVisitor(originTownId);
 
                     // Calculate distance and XP
-                    double distance = Math.sqrt(originPos.distSqr(this.getBlockPos()));
+                    double distance = Math.sqrt(villager.blockPosition().distSqr(this.getBlockPos()));
                     int xpAmount = Math.max(1, (int)(distance / 10));
 
                     ExperienceOrb xpOrb = new ExperienceOrb(level,
@@ -347,6 +335,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
                     villager.remove(Entity.RemovalReason.DISCARDED);
                     setChanged();
+                    TownManager.getInstance().markDirty(); // Ensure this method marks the data as dirty
                 }
             }
         }
