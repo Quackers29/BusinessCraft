@@ -25,20 +25,29 @@ public class Town {
     
     public void addBread(int count) {
         this.breadCount += count;
-        if (this.breadCount >= ConfigLoader.breadForNewVillager) {
-            this.breadCount -= ConfigLoader.breadForNewVillager;
+        if (this.breadCount >= ConfigLoader.breadPerPop) {
+            this.breadCount -= ConfigLoader.breadPerPop;
             this.population++;
+            setChanged();
         }
     }
     
     public boolean canSpawnTourists() {
-        return touristSpawningEnabled && population >= ConfigLoader.minPopForTourists;
+        return touristSpawningEnabled && 
+               population >= ConfigLoader.minPopForTourists;
     }
     
     public void removeTourist() {
         if (population > 0) {
             population--;
+            breadCount -= ConfigLoader.breadPerPop;
+            if (breadCount < 0) breadCount = 0;
+            setChanged();
         }
+    }
+    
+    private void setChanged() {
+        TownManager.getInstance().markDirty();
     }
     
     public void save(CompoundTag tag) {
