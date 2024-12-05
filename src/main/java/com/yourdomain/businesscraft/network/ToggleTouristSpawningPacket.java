@@ -1,6 +1,8 @@
 package com.yourdomain.businesscraft.network;
 
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.town.Town;
+import com.yourdomain.businesscraft.town.TownManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -8,6 +10,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 
+import java.util.UUID;
 import java.util.function.Supplier;
 
 public class ToggleTouristSpawningPacket {
@@ -33,8 +36,14 @@ public class ToggleTouristSpawningPacket {
                 Level level = player.level();
                 BlockEntity be = level.getBlockEntity(pos);
                 if (be instanceof TownBlockEntity townBlock) {
-                    townBlock.getContainerData().set(3, 
-                        townBlock.getContainerData().get(3) == 0 ? 1 : 0);
+                    UUID townId = townBlock.getTownId();
+                    if (townId != null) {
+                        Town town = TownManager.getInstance().getTown(townId);
+                        if (town != null) {
+                            town.setTouristSpawningEnabled(!town.canSpawnTourists());
+                            townBlock.setChanged();
+                        }
+                    }
                 }
             }
         });

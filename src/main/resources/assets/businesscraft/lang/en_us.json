@@ -1,4 +1,6 @@
 {
   "block.businesscraft.town_block": "Town Block",
-  "container.businesscraft.town_block": "Town Interface"
+  "container.businesscraft.town_block": "Town Interface",
+  "gui.businesscraft.set_tourist_path": "Set Tourist Path",
+  "gui.businesscraft.toggle_tourists": "Toggle Tourists"
 }

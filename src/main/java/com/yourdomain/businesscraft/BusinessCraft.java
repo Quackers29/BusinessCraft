@@ -11,8 +11,13 @@ import com.yourdomain.businesscraft.config.ConfigLoader;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import com.yourdomain.businesscraft.network.ModMessages;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.event.level.LevelEvent;
+import com.yourdomain.businesscraft.data.TownSavedData;
 
 @Mod(BusinessCraft.MOD_ID)
+@Mod.EventBusSubscriber(modid = BusinessCraft.MOD_ID)
 public class BusinessCraft {
     public static final String MOD_ID = "businesscraft";
 
@@ -34,5 +39,16 @@ public class BusinessCraft {
     @SubscribeEvent
     public void setup(FMLCommonSetupEvent event) {
         ConfigLoader.loadConfig();
+    }
+
+    @SubscribeEvent
+    public static void onWorldLoad(LevelEvent.Load event) {
+        if (event.getLevel() instanceof ServerLevel serverLevel) {
+            serverLevel.getDataStorage().computeIfAbsent(
+                TownSavedData::load,
+                TownSavedData::create,
+                "businesscraft_towns"
+            );
+        }
     }
 }
