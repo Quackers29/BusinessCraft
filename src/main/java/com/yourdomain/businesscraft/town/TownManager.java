@@ -71,6 +71,10 @@ public class TownManager {
             townsTag.put(id.toString(), townTag);
         });
         worldData.put("towns", townsTag);
+        
+        if (savedData != null) {
+            savedData.setDirty();
+        }
     }
     
     public void loadAllTowns(CompoundTag worldData) {
@@ -107,5 +111,13 @@ public class TownManager {
             savedData.setDirty();
         }
         return count;
+    }
+    
+    public void onServerStopping() {
+        if (savedData != null) {
+            CompoundTag data = new CompoundTag();
+            saveAllTowns(data);
+            savedData.setDirty();
+        }
     }
 } 

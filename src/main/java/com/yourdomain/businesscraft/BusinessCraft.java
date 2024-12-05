@@ -6,6 +6,7 @@ import com.yourdomain.businesscraft.command.ClearTownsCommand;
 import com.yourdomain.businesscraft.config.ConfigLoader;
 import com.yourdomain.businesscraft.menu.ModMenuTypes;
 import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.town.TownManager;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -19,6 +20,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 
 @Mod(BusinessCraft.MOD_ID)
 public class BusinessCraft {
@@ -51,6 +53,9 @@ public class BusinessCraft {
 
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
+        
+        // Register server stopping event
+        MinecraftForge.EVENT_BUS.addListener(this::onServerStopping);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
@@ -60,5 +65,9 @@ public class BusinessCraft {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         ClearTownsCommand.register(event.getDispatcher());
+    }
+
+    private void onServerStopping(ServerStoppingEvent event) {
+        TownManager.getInstance().onServerStopping();
     }
 }
