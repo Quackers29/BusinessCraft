@@ -4,6 +4,8 @@ import net.minecraft.core.BlockPos;
 import java.util.UUID;
 import net.minecraft.nbt.CompoundTag;
 import com.yourdomain.businesscraft.config.ConfigLoader;
+import java.util.Map;
+import java.util.HashMap;
 
 public class Town {
     private final UUID id;
@@ -12,6 +14,7 @@ public class Town {
     private int breadCount;
     private int population;
     private boolean touristSpawningEnabled;
+    private Map<UUID, Integer> visitors = new HashMap<>();
     
     public Town(UUID id, BlockPos pos, String name) {
         this.id = id;
@@ -47,6 +50,11 @@ public class Town {
         tag.putInt("posX", position.getX());
         tag.putInt("posY", position.getY());
         tag.putInt("posZ", position.getZ());
+        CompoundTag visitorsTag = new CompoundTag();
+        visitors.forEach((visitorId, count) -> {
+            visitorsTag.putInt(visitorId.toString(), count);
+        });
+        tag.put("visitors", visitorsTag);
     }
     
     public static Town load(CompoundTag tag) {
@@ -60,6 +68,12 @@ public class Town {
         town.breadCount = tag.getInt("breadCount");
         town.population = tag.getInt("population");
         town.touristSpawningEnabled = tag.getBoolean("touristSpawning");
+        if (tag.contains("visitors")) {
+            CompoundTag visitorsTag = tag.getCompound("visitors");
+            visitorsTag.getAllKeys().forEach(key -> {
+                town.visitors.put(UUID.fromString(key), visitorsTag.getInt(key));
+            });
+        }
         return town;
     }
     
@@ -85,6 +99,14 @@ public class Town {
     
     public void setTouristSpawningEnabled(boolean enabled) {
         this.touristSpawningEnabled = enabled;
+    }
+    
+    public void addVisitor(UUID fromTownId) {
+        visitors.merge(fromTownId, 1, Integer::sum);
+    }
+    
+    public int getTotalVisitors() {
+        return visitors.values().stream().mapToInt(Integer::intValue).sum();
     }
     
     // Getters and setters
