@@ -54,6 +54,10 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.Connection;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.entity.vehicle.AbstractMinecart;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import java.util.stream.Collectors;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -105,6 +109,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private static final int MAX_TOURISTS = 5;
     private boolean touristSpawningEnabled = true;
     private UUID townId;
+    private Town town;
+    private static final ConfigLoader CONFIG = ConfigLoader.INSTANCE;
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -180,6 +186,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         super.load(tag);
         if (tag.contains("TownId")) {
             townId = tag.getUUID("TownId");
+            town = TownManager.getInstance().getTown(townId);
         }
         
         // Load path positions
@@ -328,6 +335,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     TownScoreboardManager.updateScoreboard(serverLevel);
                 }
             }
+        }
+        
+        // Add this - try to mount tourists every 20 ticks (1 second)
+        if (level.getGameTime() % 20 == 0) {
+            mountTouristsToVehicles();
         }
     }
 
@@ -492,6 +504,72 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public void setTownId(UUID id) {
         LOGGER.info("[TownBlockEntity] Setting town ID to: {} at pos: {}", id, this.getBlockPos());
         this.townId = id;
+        this.town = TownManager.getInstance().getTown(id);
         syncTownData();
+    }
+
+    private void mountTouristsToVehicles() {
+        if (level == null || level.isClientSide || town == null) return;
+
+        AABB searchBounds = new AABB(
+            worldPosition.getX() - CONFIG.vehicleSearchRadius,
+            worldPosition.getY() - 2,
+            worldPosition.getZ() - CONFIG.vehicleSearchRadius,
+            worldPosition.getX() + CONFIG.vehicleSearchRadius,
+            worldPosition.getY() + 4,
+            worldPosition.getZ() + CONFIG.vehicleSearchRadius
+        );
+
+        // Get tourists that can be mounted
+        List<Villager> tourists = level.getEntitiesOfClass(Villager.class, searchBounds,
+            villager -> villager.onGround() && 
+                       !villager.isPassenger() &&
+                       villager.getTags().contains("type_tourist") &&
+                       villager.getTags().stream().anyMatch(tag -> 
+                           tag.startsWith("from_town_" + townId.toString())
+                       )
+        );
+
+        if (tourists.isEmpty()) return;
+
+        if (CONFIG.enableCreateTrains) {
+            // Try to mount to Create carriages
+            List<Entity> carriages = level.getEntitiesOfClass(Entity.class, searchBounds,
+                entity -> entity.getType().getDescriptionId().contains("create:carriage"));
+                
+            carriages.forEach(carriage -> {
+                if (!carriage.hasPassenger(passenger -> true)) {
+                    tourists.stream()
+                        .filter(tourist -> !tourist.isPassenger())
+                        .findFirst()
+                        .ifPresent(tourist -> mountTouristsToCarriage(tourists, carriage));
+                }
+            });
+        }
+
+        if (CONFIG.enableMinecarts) {
+            List<AbstractMinecart> minecarts = level.getEntitiesOfClass(AbstractMinecart.class, searchBounds);
+            
+            minecarts.forEach(minecart -> {
+                if (minecart.getDeltaMovement().lengthSqr() < ConfigLoader.minecartStopThreshold && 
+                    !minecart.hasPassenger(passenger -> true)) {
+                    
+                    tourists.stream()
+                        .filter(tourist -> !tourist.isPassenger())
+                        .findFirst()
+                        .ifPresent(tourist -> tourist.startRiding(minecart));
+                }
+            });
+        }
+    }
+
+    private void mountTouristsToCarriage(List<Villager> tourists, Entity carriage) {
+        // Use Create's API to mount passengers
+        if (tourists.isEmpty()) return;
+        
+        tourists.stream()
+            .filter(tourist -> !tourist.isPassenger())
+            .findFirst()
+            .ifPresent(tourist -> tourist.startRiding(carriage));
     }
 }
