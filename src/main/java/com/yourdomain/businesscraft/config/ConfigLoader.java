@@ -1,81 +1,100 @@
 package com.yourdomain.businesscraft.config;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.mojang.logging.LogUtils;
 
 public class ConfigLoader {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigLoader.class);
-    private static final String CONFIG_PATH = "config/businesscraft.properties";
-
-    // Default configuration values
-    public static int breadPerPop = 10;
-    public static int minPopForTourists = 10;
-    public static List<String> townNames = Arrays.asList(
-            "Springfield", "Rivertown", "Maplewood", "Lakeside", "Greenfield");
-    public static int breadForNewVillager = 64;
-
+    private static final Logger LOGGER = LogUtils.getLogger();
+    public static final ConfigLoader INSTANCE = new ConfigLoader();
+    
+    // Vehicle-related config
+    public static boolean enableCreateTrains = true;
+    public static boolean enableMinecarts = true;
+    public static int vehicleSearchRadius = 10;
+    public static double minecartStopThreshold = 0.001;
+    
+    // Town-related config
+    public static List<String> townNames = new ArrayList<>();
+    public static int breadPerPop = 1;
+    public static int minPopForTourists = 5;
+    
+    private ConfigLoader() {
+        loadConfig();
+    }
+    
     public static void loadConfig() {
-        File configFile = new File(CONFIG_PATH);
-        File configDir = configFile.getParentFile();
-
+        Properties props = new Properties();
+        
         try {
-            if (!configDir.exists() && !configDir.mkdirs()) {
-                LOGGER.error("Failed to create config directory");
+            File configFile = new File("config/businesscraft.properties");
+            if (!configFile.exists()) {
+                configFile.getParentFile().mkdirs();
+                saveConfig();
                 return;
             }
-
-            Properties props = new Properties();
-
-            if (!configFile.exists()) {
-                LOGGER.info("Creating default configuration file");
-                createDefaultConfig(configFile);
+            
+            FileReader reader = new FileReader(configFile);
+            props.load(reader);
+            reader.close();
+            
+            // Vehicle settings
+            enableCreateTrains = Boolean.parseBoolean(props.getProperty("enableCreateTrains", "true"));
+            enableMinecarts = Boolean.parseBoolean(props.getProperty("enableMinecarts", "true"));
+            vehicleSearchRadius = Integer.parseInt(props.getProperty("vehicleSearchRadius", "10"));
+            minecartStopThreshold = Double.parseDouble(props.getProperty("minecartStopThreshold", "0.001"));
+            
+            // Town settings
+            breadPerPop = Integer.parseInt(props.getProperty("breadPerPop", "1"));
+            minPopForTourists = Integer.parseInt(props.getProperty("minPopForTourists", "5"));
+            
+            // Load town names
+            String namesStr = props.getProperty("townNames", "");
+            townNames = new ArrayList<>(Arrays.asList(namesStr.split(",")));
+            if (townNames.isEmpty()) {
+                townNames.addAll(Arrays.asList("Riverside", "Hillcrest", "Meadowbrook", "Oakville"));
             }
-
-            try (FileInputStream fis = new FileInputStream(configFile)) {
-                props.load(fis);
-            }
-
-            // Load configuration values
-            loadValues(props);
-            logConfiguration();
-
-        } catch (Exception e) {
-            LOGGER.error("Failed to load configuration: {}", e.getMessage());
-            LOGGER.info("Using default values");
+            
+        } catch (IOException e) {
+            LOGGER.error("Failed to load config: {}", e.getMessage());
         }
-    }
-
-    private static void loadValues(Properties props) {
-        breadPerPop = Integer.parseInt(props.getProperty("breadPerPop", String.valueOf(breadPerPop)));
-        minPopForTourists = Integer.parseInt(props.getProperty("minPopForTourists", String.valueOf(minPopForTourists)));
-        String townNamesStr = props.getProperty("townNames");
-        if (townNamesStr != null && !townNamesStr.isEmpty()) {
-            townNames = Arrays.asList(townNamesStr.split(","));
-        }
-        breadForNewVillager = Integer.parseInt(props.getProperty("breadForNewVillager", String.valueOf(breadForNewVillager)));
-    }
-
-    private static void logConfiguration() {
-        LOGGER.info("Configuration loaded:");
-        LOGGER.info("Bread per Population: {}", breadPerPop);
-        LOGGER.info("Minimum Population for Tourists: {}", minPopForTourists);
+        
+        // Log settings
+        LOGGER.info("Enable Create Trains: {}", enableCreateTrains);
+        LOGGER.info("Enable Minecarts: {}", enableMinecarts);
+        LOGGER.info("Vehicle Search Radius: {}", vehicleSearchRadius);
+        LOGGER.info("Bread Per Pop: {}", breadPerPop);
+        LOGGER.info("Min Pop For Tourists: {}", minPopForTourists);
         LOGGER.info("Town Names: {}", townNames);
-        LOGGER.info("Bread for New Villager: {}", breadForNewVillager);
     }
-
-    private static void createDefaultConfig(File configFile) throws IOException {
+    
+    public static void saveConfig() {
         Properties props = new Properties();
+        
+        // Vehicle settings
+        props.setProperty("enableCreateTrains", String.valueOf(enableCreateTrains));
+        props.setProperty("enableMinecarts", String.valueOf(enableMinecarts));
+        props.setProperty("vehicleSearchRadius", String.valueOf(vehicleSearchRadius));
+        props.setProperty("minecartStopThreshold", String.valueOf(minecartStopThreshold));
+        
+        // Town settings
         props.setProperty("breadPerPop", String.valueOf(breadPerPop));
         props.setProperty("minPopForTourists", String.valueOf(minPopForTourists));
         props.setProperty("townNames", String.join(",", townNames));
-        props.setProperty("breadForNewVillager", String.valueOf(breadForNewVillager));
-
-        try (FileOutputStream fos = new FileOutputStream(configFile)) {
-            props.store(fos, "BusinessCraft Configuration File");
+        
+        try {
+            File configFile = new File("config/businesscraft.properties");
+            configFile.getParentFile().mkdirs();
+            FileWriter writer = new FileWriter(configFile);
+            props.store(writer, "BusinessCraft Configuration");
+            writer.close();
+        } catch (IOException e) {
+            LOGGER.error("Failed to save config: {}", e.getMessage());
         }
     }
 }
