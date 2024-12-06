@@ -122,6 +122,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private static final ConfigLoader CONFIG = ConfigLoader.INSTANCE;
     private Map<UUID, Vec3> lastPositions = new HashMap<>();
     private static final double POSITION_CHANGE_THRESHOLD = 0.001;
+    private Map<UUID, Vec3> lastVisitorPositions = new HashMap<>();
+    private static final double VISITOR_POSITION_CHANGE_THRESHOLD = 0.01;
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -370,6 +372,23 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 new AABB(pos).inflate(VISITOR_RADIUS));
 
         for (Villager villager : nearbyVillagers) {
+            Vec3 currentPos = villager.position();
+            Vec3 lastPos = lastVisitorPositions.get(villager.getUUID());
+            
+            // Store current position for next check
+            lastVisitorPositions.put(villager.getUUID(), currentPos);
+            
+            // Skip if this is the first time we've seen this villager
+            if (lastPos == null) continue;
+            
+            // Calculate position change
+            double positionChange = currentPos.distanceTo(lastPos);
+            
+            // Skip if villager has moved too much (likely on transport)
+            if (positionChange > VISITOR_POSITION_CHANGE_THRESHOLD) {
+                continue;
+            }
+
             if (villager.getTags().contains("type_tourist")) {
                 UUID originTownId = null;
 
@@ -380,6 +399,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 }
                 
                 if (originTownId != null && !originTownId.equals(this.townId)) {
+                    if (level instanceof ServerLevel serverLevel) {
+                        serverLevel.getServer().getPlayerList().broadcastSystemMessage(
+                            Component.literal("[BusinessCraft] Processing visitor from town: " + originTownId), false);
+                    }
+                    
                     thisTown.addVisitor(originTownId);
 
                     // Calculate distance and XP
@@ -536,6 +560,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             worldPosition.getZ() + CONFIG.vehicleSearchRadius
         );
 
+        // Get tourists that can be mounted
         List<Villager> tourists = level.getEntitiesOfClass(Villager.class, searchBounds,
             villager -> villager.onGround() && 
                        !villager.isPassenger() &&
@@ -555,6 +580,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     
                     if (!isCarriage) return false;
                     
+                    // Check if carriage is stopped using position change
                     boolean isStopped = false;
                     if (level instanceof ServerLevel serverLevel) {
                         try {
@@ -568,6 +594,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                             
                             lastPositions.put(entity.getUUID(), currentPos);
                         } catch (Exception e) {
+                            // Silently fail and consider not stopped
                             isStopped = false;
                         }
                     }
@@ -578,10 +605,12 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             if (level instanceof ServerLevel serverLevel) {
                 carriages.forEach(carriage -> {
                     try {
+                        // Get total seats
                         String seatsCommand = String.format("data get entity %s Contraption.Seats", carriage.getStringUUID());
                         int seatCount = serverLevel.getServer().getCommands().getDispatcher()
                             .execute(seatsCommand, serverLevel.getServer().createCommandSourceStack());
                         
+                        // Find free seats
                         List<Integer> freeSeats = new ArrayList<>();
                         for (int i = 0; i < seatCount; i++) {
                             try {
@@ -590,12 +619,15 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                                 serverLevel.getServer().getCommands().getDispatcher()
                                     .execute(checkSeatCommand, serverLevel.getServer().createCommandSourceStack());
                             } catch (Exception e) {
+                                // If command fails, seat is free
                                 freeSeats.add(i);
                             }
                         }
                         
+                        // Shuffle seats for random assignment
                         Collections.shuffle(freeSeats);
                         
+                        // Mount tourists in random free seats
                         for (Integer seatIndex : freeSeats) {
                             tourists.stream()
                                 .filter(tourist -> !tourist.isPassenger())
