@@ -58,6 +58,7 @@ import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import java.util.stream.Collectors;
+import net.minecraft.commands.CommandSourceStack;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -538,15 +539,72 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         if (tourists.isEmpty()) return;
 
         if (CONFIG.enableCreateTrains) {
-            List<Entity> carriages = level.getEntitiesOfClass(Entity.class, searchBounds,
-                entity -> entity.getType().getDescriptionId().contains("create:carriage"));
+            if (level instanceof ServerLevel serverLevel) {
+                serverLevel.getServer().getPlayerList().broadcastSystemMessage(
+                    Component.literal("[BusinessCraft] Searching in area: " + 
+                        "x=" + worldPosition.getX() + 
+                        ", y=" + worldPosition.getY() + 
+                        ", z=" + worldPosition.getZ() + 
+                        ", radius=" + CONFIG.vehicleSearchRadius), false);
                 
+                // Debug all entities in the area
+                List<Entity> allEntities = level.getEntitiesOfClass(Entity.class, searchBounds);
+                serverLevel.getServer().getPlayerList().broadcastSystemMessage(
+                    Component.literal("[BusinessCraft] Total entities in area: " + allEntities.size()), false);
+                allEntities.forEach(entity -> {
+                    serverLevel.getServer().getPlayerList().broadcastSystemMessage(
+                        Component.literal("[BusinessCraft] Found entity: " + entity.getType().builtInRegistryHolder().key()), false);
+                });
+            }
+
+            List<Entity> carriages = level.getEntitiesOfClass(Entity.class, searchBounds,
+                entity -> {
+                    String entityId = entity.getType().builtInRegistryHolder().key().toString();
+                    if (level instanceof ServerLevel serverLevel) {
+                        serverLevel.getServer().getPlayerList().broadcastSystemMessage(
+                            Component.literal("[BusinessCraft] Checking entity: " + entityId), false);
+                    }
+                    return entityId.contains("create:carriage_contraption");
+                });
+            
+            if (level instanceof ServerLevel serverLevel) {
+                serverLevel.getServer().getPlayerList().broadcastSystemMessage(
+                    Component.literal("[BusinessCraft] Found " + carriages.size() + " carriages"), false);
+            }
+
             carriages.forEach(carriage -> {
-                if (!carriage.hasPassenger(passenger -> true)) {
+                if (carriage.getDeltaMovement().lengthSqr() < ConfigLoader.minecartStopThreshold && 
+                    !carriage.hasPassenger(passenger -> true)) {
+                    
                     tourists.stream()
                         .filter(tourist -> !tourist.isPassenger())
                         .findFirst()
-                        .ifPresent(tourist -> mountTouristsToCarriage(tourists, carriage));
+                        .ifPresent(tourist -> {
+                            if (level instanceof ServerLevel serverLevel) {
+                                String command = String.format("create passenger %s %s 0", 
+                                    String.format("@e[type=minecraft:villager,limit=1,nbt={UUID:\"%s\"}]",
+                                        tourist.getUUID().toString()),
+                                    String.format("@e[type=create:carriage_contraption,limit=1,nbt={Motion:[0.0d,0.0d,0.0d]},distance=..%d,x=%d,y=%d,z=%d]",
+                                        CONFIG.vehicleSearchRadius,
+                                        worldPosition.getX(),
+                                        worldPosition.getY(),
+                                        worldPosition.getZ())
+                                );
+                                CommandSourceStack sourceStack = serverLevel.getServer().createCommandSourceStack();
+                                
+                                serverLevel.getServer().getPlayerList().broadcastSystemMessage(
+                                    Component.literal("[BusinessCraft] Attempting to execute: " + command), false);
+                                try {
+                                    serverLevel.getServer().getCommands().getDispatcher()
+                                        .execute(command, sourceStack);
+                                    serverLevel.getServer().getPlayerList().broadcastSystemMessage(
+                                        Component.literal("[BusinessCraft] Successfully executed command"), false);
+                                } catch (Exception e) {
+                                    serverLevel.getServer().getPlayerList().broadcastSystemMessage(
+                                        Component.literal("[BusinessCraft] Failed: " + e.getMessage()), false);
+                                }
+                            }
+                        });
                 }
             });
         }
@@ -565,15 +623,5 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 }
             });
         }
-    }
-
-    private void mountTouristsToCarriage(List<Villager> tourists, Entity carriage) {
-        // Use Create's API to mount passengers
-        if (tourists.isEmpty()) return;
-        
-        tourists.stream()
-            .filter(tourist -> !tourist.isPassenger())
-            .findFirst()
-            .ifPresent(tourist -> tourist.startRiding(carriage));
     }
 }
