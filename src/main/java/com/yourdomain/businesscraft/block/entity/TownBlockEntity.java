@@ -527,25 +527,17 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
         // Get tourists that can be mounted
         List<Villager> tourists = level.getEntitiesOfClass(Villager.class, searchBounds,
-            villager -> {
-                LOGGER.info("[BusinessCraft] Checking villager at {} with tags: {}", 
-                    villager.blockPosition(), villager.getTags());
-                boolean isTourist = villager.getTags().contains("type_tourist");
-                boolean isFromTown = villager.getTags().stream()
-                    .anyMatch(tag -> tag.startsWith("from_town_" + townId.toString()));
-                LOGGER.info("[BusinessCraft] isTourist={}, isFromTown={}", isTourist, isFromTown);
-                
-                return villager.onGround() && 
+            villager -> villager.onGround() && 
                        !villager.isPassenger() &&
-                       isTourist &&
-                       isFromTown;
-            }
+                       villager.getTags().contains("type_tourist") &&
+                       villager.getTags().stream().anyMatch(tag -> 
+                           tag.startsWith("from_town_" + townId.toString())
+                       )
         );
 
         if (tourists.isEmpty()) return;
 
         if (CONFIG.enableCreateTrains) {
-            // Try to mount to Create carriages
             List<Entity> carriages = level.getEntitiesOfClass(Entity.class, searchBounds,
                 entity -> entity.getType().getDescriptionId().contains("create:carriage"));
                 
@@ -573,12 +565,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 }
             });
         }
-
-        List<Villager> allVillagers = level.getEntitiesOfClass(Villager.class, searchBounds);
-        allVillagers.forEach(villager -> {
-            LOGGER.info("[BusinessCraft] Found villager at {}, tags: {}", 
-                villager.blockPosition(), villager.getTags());
-        });
     }
 
     private void mountTouristsToCarriage(List<Villager> tourists, Entity carriage) {
