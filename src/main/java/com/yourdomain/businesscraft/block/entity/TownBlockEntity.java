@@ -161,6 +161,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         super.saveAdditional(tag);
         if (townId != null) {
             tag.putUUID("TownId", townId);
+            town = TownManager.getInstance().getTown(townId);
         }
         
         // Save path positions
@@ -308,12 +309,16 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                                         .setLevel(6));
                                     
                                     // Add tags when spawning villager
+                                    LOGGER.info("[BusinessCraft] Spawning tourist for town {} with ID {}", town.getName(), townId);
                                     villager.addTag("type_tourist");
                                     villager.addTag("from_town_" + townId.toString());
                                     villager.addTag("from_name_" + town.getName());
                                     villager.addTag("pos_" + getBlockPos().getX() + "_" + 
                                                     getBlockPos().getY() + "_" + 
                                                     getBlockPos().getZ());
+                                    
+                                    // Add debug to verify tags were added
+                                    LOGGER.info("[BusinessCraft] Tourist tags after spawning: {}", villager.getTags());
                                     
                                     level.addFreshEntity(villager);
                                     town.removeTourist();
@@ -522,12 +527,19 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
         // Get tourists that can be mounted
         List<Villager> tourists = level.getEntitiesOfClass(Villager.class, searchBounds,
-            villager -> villager.onGround() && 
+            villager -> {
+                LOGGER.info("[BusinessCraft] Checking villager at {} with tags: {}", 
+                    villager.blockPosition(), villager.getTags());
+                boolean isTourist = villager.getTags().contains("type_tourist");
+                boolean isFromTown = villager.getTags().stream()
+                    .anyMatch(tag -> tag.startsWith("from_town_" + townId.toString()));
+                LOGGER.info("[BusinessCraft] isTourist={}, isFromTown={}", isTourist, isFromTown);
+                
+                return villager.onGround() && 
                        !villager.isPassenger() &&
-                       villager.getTags().contains("type_tourist") &&
-                       villager.getTags().stream().anyMatch(tag -> 
-                           tag.startsWith("from_town_" + townId.toString())
-                       )
+                       isTourist &&
+                       isFromTown;
+            }
         );
 
         if (tourists.isEmpty()) return;
@@ -561,6 +573,12 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 }
             });
         }
+
+        List<Villager> allVillagers = level.getEntitiesOfClass(Villager.class, searchBounds);
+        allVillagers.forEach(villager -> {
+            LOGGER.info("[BusinessCraft] Found villager at {}, tags: {}", 
+                villager.blockPosition(), villager.getTags());
+        });
     }
 
     private void mountTouristsToCarriage(List<Villager> tourists, Entity carriage) {
