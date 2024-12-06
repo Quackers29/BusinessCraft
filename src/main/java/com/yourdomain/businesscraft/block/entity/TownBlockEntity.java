@@ -154,21 +154,51 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
         if (townId != null) {
-            tag.putUUID("townId", townId);
-            LOGGER.info("[TownBlockEntity] Saved town ID to NBT: {} at pos: {}", townId, this.getBlockPos());
-        } else {
-            LOGGER.info("[TownBlockEntity] No town ID to save to NBT at pos: {}", this.getBlockPos());
+            tag.putUUID("TownId", townId);
+        }
+        
+        // Save path positions
+        if (pathStart != null) {
+            CompoundTag startPos = new CompoundTag();
+            startPos.putInt("x", pathStart.getX());
+            startPos.putInt("y", pathStart.getY());
+            startPos.putInt("z", pathStart.getZ());
+            tag.put("PathStart", startPos);
+        }
+        
+        if (pathEnd != null) {
+            CompoundTag endPos = new CompoundTag();
+            endPos.putInt("x", pathEnd.getX());
+            endPos.putInt("y", pathEnd.getY());
+            endPos.putInt("z", pathEnd.getZ());
+            tag.put("PathEnd", endPos);
         }
     }
 
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
-        if (tag.contains("townId")) {
-            townId = tag.getUUID("townId");
-            LOGGER.info("[TownBlockEntity] Loaded town ID from NBT: {} at pos: {}", townId, this.getBlockPos());
-        } else {
-            LOGGER.info("[TownBlockEntity] No town ID found in NBT at pos: {}", this.getBlockPos());
+        if (tag.contains("TownId")) {
+            townId = tag.getUUID("TownId");
+        }
+        
+        // Load path positions
+        if (tag.contains("PathStart")) {
+            CompoundTag startPos = tag.getCompound("PathStart");
+            pathStart = new BlockPos(
+                startPos.getInt("x"),
+                startPos.getInt("y"),
+                startPos.getInt("z")
+            );
+        }
+        
+        if (tag.contains("PathEnd")) {
+            CompoundTag endPos = tag.getCompound("PathEnd");
+            pathEnd = new BlockPos(
+                endPos.getInt("x"),
+                endPos.getInt("y"),
+                endPos.getInt("z")
+            );
         }
     }
 
