@@ -11,6 +11,22 @@ archivesBaseName = 'businesscraft'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
+jar {
+    manifest {
+        attributes([
+            "Specification-Title": "businesscraft",
+            "Specification-Vendor": "yourdomain",
+            "Specification-Version": "1",
+            "Implementation-Title": project.name,
+            "Implementation-Version": project.jar.archiveVersion,
+            "Implementation-Vendor" :"yourdomain",
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from sourceSets.main.resources
+}
+
 minecraft {
     mappings channel: 'parchment', version: '2023.06.26-1.20.1'
     
@@ -19,6 +35,7 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+
             mods {
                 businesscraft {
                     source sourceSets.main
@@ -30,6 +47,7 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+            
             mods {
                 businesscraft {
                     source sourceSets.main
@@ -39,22 +57,7 @@ minecraft {
     }
 }
 
-configurations {
-    shade
-    implementation.extendsFrom shade
-}
-
 dependencies {
     minecraft 'net.minecraftforge:forge:1.20.1-47.1.0'
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8'
-}
-
-jar {
-    from {
-        configurations.shade.collect { it.isDirectory() ? it : zipTree(it) }
-    }
 } 
