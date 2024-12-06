@@ -59,6 +59,12 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import java.util.stream.Collectors;
 import net.minecraft.commands.CommandSourceStack;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import java.util.HashSet;
+import java.util.Set;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -546,15 +552,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                         ", y=" + worldPosition.getY() + 
                         ", z=" + worldPosition.getZ() + 
                         ", radius=" + CONFIG.vehicleSearchRadius), false);
-                
-                // Debug all entities in the area
-                List<Entity> allEntities = level.getEntitiesOfClass(Entity.class, searchBounds);
-                serverLevel.getServer().getPlayerList().broadcastSystemMessage(
-                    Component.literal("[BusinessCraft] Total entities in area: " + allEntities.size()), false);
-                allEntities.forEach(entity -> {
-                    serverLevel.getServer().getPlayerList().broadcastSystemMessage(
-                        Component.literal("[BusinessCraft] Found entity: " + entity.getType().builtInRegistryHolder().key()), false);
-                });
             }
 
             List<Entity> carriages = level.getEntitiesOfClass(Entity.class, searchBounds,
@@ -570,43 +567,69 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             if (level instanceof ServerLevel serverLevel) {
                 serverLevel.getServer().getPlayerList().broadcastSystemMessage(
                     Component.literal("[BusinessCraft] Found " + carriages.size() + " carriages"), false);
-            }
-
-            carriages.forEach(carriage -> {
-                if (carriage.getDeltaMovement().lengthSqr() < ConfigLoader.minecartStopThreshold && 
-                    !carriage.hasPassenger(passenger -> true)) {
-                    
-                    tourists.stream()
-                        .filter(tourist -> !tourist.isPassenger())
-                        .findFirst()
-                        .ifPresent(tourist -> {
-                            if (level instanceof ServerLevel serverLevel) {
-                                String command = String.format("create passenger %s %s 0", 
-                                    String.format("@e[type=minecraft:villager,limit=1,nbt={UUID:\"%s\"}]",
-                                        tourist.getUUID().toString()),
-                                    String.format("@e[type=create:carriage_contraption,limit=1,nbt={Motion:[0.0d,0.0d,0.0d]},distance=..%d,x=%d,y=%d,z=%d]",
-                                        CONFIG.vehicleSearchRadius,
-                                        worldPosition.getX(),
-                                        worldPosition.getY(),
-                                        worldPosition.getZ())
-                                );
-                                CommandSourceStack sourceStack = serverLevel.getServer().createCommandSourceStack();
-                                
-                                serverLevel.getServer().getPlayerList().broadcastSystemMessage(
-                                    Component.literal("[BusinessCraft] Attempting to execute: " + command), false);
-                                try {
-                                    serverLevel.getServer().getCommands().getDispatcher()
-                                        .execute(command, sourceStack);
-                                    serverLevel.getServer().getPlayerList().broadcastSystemMessage(
-                                        Component.literal("[BusinessCraft] Successfully executed command"), false);
-                                } catch (Exception e) {
-                                    serverLevel.getServer().getPlayerList().broadcastSystemMessage(
-                                        Component.literal("[BusinessCraft] Failed: " + e.getMessage()), false);
-                                }
+                
+                carriages.forEach(carriage -> {
+                    // First get the total number of seats
+                    String seatsCommand = String.format("data get entity %s Contraption.Seats", carriage.getStringUUID());
+                    try {
+                        serverLevel.getServer().getPlayerList().broadcastSystemMessage(
+                            Component.literal("[BusinessCraft] Checking seats with: " + seatsCommand), false);
+                            
+                        int seatCount = serverLevel.getServer().getCommands().getDispatcher()
+                            .execute(seatsCommand, serverLevel.getServer().createCommandSourceStack());
+                            
+                        serverLevel.getServer().getPlayerList().broadcastSystemMessage(
+                            Component.literal("[BusinessCraft] Found " + seatCount + " seats"), false);
+                            
+                        // Now get current passengers to find free seats
+                        String passengersCommand = String.format("data get entity %s Contraption.Passengers", carriage.getStringUUID());
+                        serverLevel.getServer().getPlayerList().broadcastSystemMessage(
+                            Component.literal("[BusinessCraft] Checking passengers with: " + passengersCommand), false);
+                            
+                        int passengerCount = serverLevel.getServer().getCommands().getDispatcher()
+                            .execute(passengersCommand, serverLevel.getServer().createCommandSourceStack());
+                            
+                        // Create a list of available seats
+                        Set<Integer> freeSeats = new HashSet<>();
+                        for (int i = 0; i < seatCount; i++) {
+                            freeSeats.add(i);
+                        }
+                            
+                        serverLevel.getServer().getPlayerList().broadcastSystemMessage(
+                            Component.literal("[BusinessCraft] Found " + passengerCount + " passengers"), false);
+                            
+                        // Try to mount tourists in free seats
+                        for (Integer seatIndex : freeSeats) {
+                            if (seatIndex >= passengerCount) {  // Only use seats that aren't occupied
+                                tourists.stream()
+                                    .filter(tourist -> !tourist.isPassenger())
+                                    .findFirst()
+                                    .ifPresent(tourist -> {
+                                        String command = String.format("create passenger %s %s %d",
+                                            tourist.getStringUUID(),
+                                            carriage.getStringUUID(),
+                                            seatIndex
+                                        );
+                                        
+                                        serverLevel.getServer().getPlayerList().broadcastSystemMessage(
+                                            Component.literal("[BusinessCraft] Attempting to mount in seat " + seatIndex + ": " + command), false);
+                                        try {
+                                            serverLevel.getServer().getCommands().getDispatcher()
+                                                .execute(command, serverLevel.getServer().createCommandSourceStack());
+                                        } catch (Exception e) {
+                                            serverLevel.getServer().getPlayerList().broadcastSystemMessage(
+                                                Component.literal("[BusinessCraft] Failed to mount: " + e.getMessage()), false);
+                                        }
+                                    });
                             }
-                        });
-                }
-            });
+                        }
+                            
+                    } catch (Exception e) {
+                        serverLevel.getServer().getPlayerList().broadcastSystemMessage(
+                            Component.literal("[BusinessCraft] Failed to process carriage: " + e.getMessage()), false);
+                    }
+                });
+            }
         }
 
         if (CONFIG.enableMinecarts) {
