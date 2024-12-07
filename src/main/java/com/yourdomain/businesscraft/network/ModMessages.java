@@ -42,6 +42,12 @@ public class ModMessages {
                 .encoder(ToggleTouristSpawningPacket::toBytes)
                 .consumerMainThread(ToggleTouristSpawningPacket::handle)
                 .add();
+
+        // Register the new SetSearchRadiusPacket
+        net.registerMessage(id(), SetSearchRadiusPacket.class,
+            SetSearchRadiusPacket::toBytes,
+            SetSearchRadiusPacket::new,
+            SetSearchRadiusPacket::handle);
     }
 
     public static <MSG> void sendToServer(MSG message) {

@@ -109,7 +109,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     };
     private static final Logger LOGGER = LogManager.getLogger("BusinessCraft/TownBlockEntity");
     private Map<String, Integer> visitingPopulation = new HashMap<>();
-    private static final int VISITOR_RADIUS = 5; // blocks
     private BlockPos pathStart;
     private BlockPos pathEnd;
     private boolean isInPathCreationMode = false;
@@ -123,6 +122,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private Map<UUID, Vec3> lastPositions = new HashMap<>();
     private Map<UUID, Vec3> lastVisitorPositions = new HashMap<>();
     private static final double VISITOR_POSITION_CHANGE_THRESHOLD = 0.001;
+    private static final int DEFAULT_SEARCH_RADIUS = CONFIG.vehicleSearchRadius;
+    private int searchRadius = DEFAULT_SEARCH_RADIUS;
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -192,6 +193,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             endPos.putInt("z", pathEnd.getZ());
             tag.put("PathEnd", endPos);
         }
+
+        tag.putInt("searchRadius", searchRadius);
     }
 
     @Override
@@ -220,6 +223,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 endPos.getInt("z")
             );
         }
+
+        searchRadius = tag.contains("searchRadius") ? 
+            tag.getInt("searchRadius") : DEFAULT_SEARCH_RADIUS;
     }
 
     @Override
@@ -361,14 +367,24 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     private void checkForVisitors(Level level, BlockPos pos) {
-        if (townId == null) return;
+        if (townId == null || pathStart == null || pathEnd == null) return;
         
         Town thisTown = TownManager.getInstance().getTown(townId);
         if (thisTown == null) return;
 
+        // Create AABB around the path
+        AABB searchBounds = new AABB(
+            Math.min(pathStart.getX(), pathEnd.getX()) - searchRadius,
+            Math.min(pathStart.getY(), pathEnd.getY()) - 2,
+            Math.min(pathStart.getZ(), pathEnd.getZ()) - searchRadius,
+            Math.max(pathStart.getX(), pathEnd.getX()) + searchRadius,
+            Math.max(pathStart.getY(), pathEnd.getY()) + 4,
+            Math.max(pathStart.getZ(), pathEnd.getZ()) + searchRadius
+        );
+
         List<Villager> nearbyVillagers = level.getEntitiesOfClass(
                 Villager.class,
-                new AABB(pos).inflate(VISITOR_RADIUS));
+                searchBounds);
 
         for (Villager villager : nearbyVillagers) {
             Vec3 currentPos = villager.position();
@@ -550,13 +566,15 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private void mountTouristsToVehicles() {
         if (level == null || level.isClientSide || town == null) return;
 
+        if (pathStart == null || pathEnd == null) return;
+
         AABB searchBounds = new AABB(
-            worldPosition.getX() - CONFIG.vehicleSearchRadius,
-            worldPosition.getY() - 2,
-            worldPosition.getZ() - CONFIG.vehicleSearchRadius,
-            worldPosition.getX() + CONFIG.vehicleSearchRadius,
-            worldPosition.getY() + 4,
-            worldPosition.getZ() + CONFIG.vehicleSearchRadius
+            Math.min(pathStart.getX(), pathEnd.getX()) - searchRadius,
+            Math.min(pathStart.getY(), pathEnd.getY()) - 2,
+            Math.min(pathStart.getZ(), pathEnd.getZ()) - searchRadius,
+            Math.max(pathStart.getX(), pathEnd.getX()) + searchRadius,
+            Math.max(pathStart.getY(), pathEnd.getY()) + 4,
+            Math.max(pathStart.getZ(), pathEnd.getZ()) + searchRadius
         );
 
         // Get tourists that can be mounted
@@ -692,5 +710,14 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     private String formatVec3(Vec3 vec) {
         return String.format("[%.6f, %.6f, %.6f]", vec.x, vec.y, vec.z);
+    }
+
+    public int getSearchRadius() {
+        return searchRadius;
+    }
+
+    public void setSearchRadius(int radius) {
+        this.searchRadius = Math.max(1, Math.min(radius, 20)); // Limit between 1-20 blocks
+        setChanged();
     }
 }

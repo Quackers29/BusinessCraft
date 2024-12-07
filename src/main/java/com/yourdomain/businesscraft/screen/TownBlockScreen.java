@@ -13,6 +13,7 @@ import net.minecraft.client.gui.components.Button;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.SetPathCreationModePacket;
 import com.yourdomain.businesscraft.network.ToggleTouristSpawningPacket;
+import com.yourdomain.businesscraft.network.SetSearchRadiusPacket;
 
 public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     private static final ResourceLocation TEXTURE = new ResourceLocation(BusinessCraft.MOD_ID,
@@ -36,8 +37,21 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
             ModMessages.sendToServer(new ToggleTouristSpawningPacket(menu.getBlockEntity().getBlockPos()));
         }).pos(leftPos + 10, topPos + 65).size(100, 20).build();
 
+        Button radiusButton = Button.builder(
+            Component.literal("Radius: " + menu.getBlockEntity().getSearchRadius()), 
+            (button) -> {
+                int currentRadius = menu.getBlockEntity().getSearchRadius();
+                int newRadius = (currentRadius % 20) + 1; // Cycle 1-20
+                ModMessages.sendToServer(new SetSearchRadiusPacket(menu.getBlockEntity().getBlockPos(), newRadius));
+                button.setMessage(Component.literal("Radius: " + newRadius));
+            })
+            .pos(leftPos + 10, topPos + 90)
+            .size(100, 20)
+            .build();
+
         addRenderableWidget(setPathButton);
         addRenderableWidget(toggleTouristsButton);
+        addRenderableWidget(radiusButton);
     }
 
     @Override
