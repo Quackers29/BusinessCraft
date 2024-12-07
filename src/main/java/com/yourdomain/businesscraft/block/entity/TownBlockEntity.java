@@ -717,7 +717,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     public void setSearchRadius(int radius) {
-        this.searchRadius = Math.max(1, Math.min(radius, 20)); // Limit between 1-20 blocks
+        this.searchRadius = Math.max(1, Math.min(radius, 100)); // Limit between 1-100 blocks
         setChanged();
     }
 }

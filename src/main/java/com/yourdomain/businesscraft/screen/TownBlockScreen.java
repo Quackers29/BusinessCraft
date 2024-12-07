@@ -41,7 +41,25 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
             Component.literal("Radius: " + menu.getBlockEntity().getSearchRadius()), 
             (button) -> {
                 int currentRadius = menu.getBlockEntity().getSearchRadius();
-                int newRadius = (currentRadius % 20) + 1; // Cycle 1-20
+                int newRadius = currentRadius;
+                
+                // Check click modifiers
+                boolean isShift = hasShiftDown();
+                boolean isControl = hasControlDown();
+                
+                if (isShift && isControl) {
+                    newRadius -= 10; // Ctrl + Shift: -10
+                } else if (isControl) {
+                    newRadius -= 1;  // Ctrl: -1
+                } else if (isShift) {
+                    newRadius += 10; // Shift: +10
+                } else {
+                    newRadius += 1;  // Normal: +1
+                }
+                
+                // Ensure within bounds (1-100)
+                newRadius = Math.max(1, Math.min(newRadius, 100));
+                
                 ModMessages.sendToServer(new SetSearchRadiusPacket(menu.getBlockEntity().getBlockPos(), newRadius));
                 button.setMessage(Component.literal("Radius: " + newRadius));
             })
