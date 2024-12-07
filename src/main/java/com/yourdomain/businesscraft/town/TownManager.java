@@ -51,9 +51,8 @@ public class TownManager {
     }
     
     public Town getTown(UUID id) {
-        Town town = towns.get(id);
-        LOGGER.info("Getting town with ID: {}. Found: {}", id, town != null);
-        return town;
+        if (id == null) return null;
+        return towns.get(id);
     }
     
     public void updateResources(UUID townId, int breadCount) {
