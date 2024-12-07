@@ -121,9 +121,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private Town town;
     private static final ConfigLoader CONFIG = ConfigLoader.INSTANCE;
     private Map<UUID, Vec3> lastPositions = new HashMap<>();
-    private static final double POSITION_CHANGE_THRESHOLD = 0.001;
     private Map<UUID, Vec3> lastVisitorPositions = new HashMap<>();
-    private static final double VISITOR_POSITION_CHANGE_THRESHOLD = 0.01;
+    private static final double VISITOR_POSITION_CHANGE_THRESHOLD = 0.001;
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -589,7 +588,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                             
                             if (lastPos != null) {
                                 double positionChange = currentPos.distanceTo(lastPos);
-                                isStopped = positionChange < POSITION_CHANGE_THRESHOLD;
+                                isStopped = positionChange < VISITOR_POSITION_CHANGE_THRESHOLD;
                             }
                             
                             lastPositions.put(entity.getUUID(), currentPos);
@@ -657,14 +656,36 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             List<AbstractMinecart> minecarts = level.getEntitiesOfClass(AbstractMinecart.class, searchBounds);
             
             minecarts.forEach(minecart -> {
-                if (minecart.getDeltaMovement().lengthSqr() < ConfigLoader.minecartStopThreshold && 
-                    !minecart.hasPassenger(passenger -> true)) {
-                    
-                    tourists.stream()
-                        .filter(tourist -> !tourist.isPassenger())
-                        .findFirst()
-                        .ifPresent(tourist -> tourist.startRiding(minecart));
+                Vec3 currentPos = minecart.position();
+                Vec3 lastPos = lastPositions.get(minecart.getUUID());
+                
+                // Store current position for next check
+                lastPositions.put(minecart.getUUID(), currentPos);
+                
+                // Skip if this is the first time we've seen this minecart
+                if (lastPos == null) {
+                    LOGGER.info("[BusinessCraft] First time seeing minecart {}", minecart.getUUID());
+                    return;
                 }
+                
+                // Calculate position change
+                double positionChange = currentPos.distanceTo(lastPos);
+                LOGGER.info("[BusinessCraft] Minecart {} position change: {} (Threshold: {})", 
+                    minecart.getUUID(), 
+                    String.format("%.6f", positionChange), 
+                    String.format("%.6f", VISITOR_POSITION_CHANGE_THRESHOLD));
+                
+                // Only board if position change is LESS than threshold AND no passenger
+                if (positionChange > VISITOR_POSITION_CHANGE_THRESHOLD || 
+                    minecart.hasPassenger(passenger -> true)) {
+                    return; // Skip if moving too fast or has passenger
+                }
+                
+                LOGGER.info("[BusinessCraft] Minecart {} is stopped, allowing boarding", minecart.getUUID());
+                tourists.stream()
+                    .filter(tourist -> !tourist.isPassenger())
+                    .findFirst()
+                    .ifPresent(tourist -> tourist.startRiding(minecart));
             });
         }
     }
