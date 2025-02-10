@@ -84,15 +84,14 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
     private final ContainerData data = new SimpleContainerData(4) {
+        private long lastLogTime = 0;
+        
         @Override
         public int get(int index) {
-            // Client-side should only return stored values
             if (level != null && level.isClientSide()) {
-                //LOGGER.info("Client data request for index: {}", index);
                 return super.get(index);
             }
             
-            // Server-side calculation
             if (townId == null) return 0;
             if (level instanceof ServerLevel sLevel) {
                 Town town = TownManager.get(sLevel).getTown(townId);
@@ -105,7 +104,12 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     case 3 -> town.canSpawnTourists() ? 1 : 0;
                     default -> 0;
                 };
-                super.set(index, value); // Store the calculated value
+                
+                if (System.currentTimeMillis() - lastLogTime > 5000) {
+                    LOGGER.info("[SERVER] Data update - Index: {} = {}", index, value);
+                    lastLogTime = System.currentTimeMillis();
+                }
+                super.set(index, value);
                 return value;
             }
             return 0;
@@ -113,7 +117,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
         @Override
         public void set(int index, int value) {
-            //LOGGER.info("Data set index {} to {}", index, value);
+            //LOGGER.info("Data storage set - Index: {} = {}", index, value);
             super.set(index, value);
         }
     };

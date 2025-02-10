@@ -17,6 +17,7 @@ public class Town {
     private int breadCount;
     private int population;
     private boolean touristSpawningEnabled;
+    private boolean cachedResult;
     private Map<UUID, Integer> visitors = new HashMap<>();
     
     public Town(UUID id, BlockPos pos, String name) {
@@ -35,8 +36,13 @@ public class Town {
     }
     
     public boolean canSpawnTourists() {
-        return touristSpawningEnabled && 
-               population >= ConfigLoader.minPopForTourists;
+        boolean result = touristSpawningEnabled && population >= ConfigLoader.minPopForTourists;
+        if (result != cachedResult) {
+            LOGGER.info("SPAWN STATE CHANGE [{}] - Enabled: {}, Population: {}/{}, Result: {}",
+                id, touristSpawningEnabled, population, ConfigLoader.minPopForTourists, result);
+            cachedResult = result;
+        }
+        return result;
     }
     
     public void removeTourist() {
@@ -104,7 +110,8 @@ public class Town {
     }
     
     public void setTouristSpawningEnabled(boolean enabled) {
-        LOGGER.info("Setting tourist spawning enabled from {} to {}", touristSpawningEnabled, enabled);
+        LOGGER.info("TOGGLE [{}] - Changing from {} to {}", 
+            id, touristSpawningEnabled, enabled);
         this.touristSpawningEnabled = enabled;
     }
     
