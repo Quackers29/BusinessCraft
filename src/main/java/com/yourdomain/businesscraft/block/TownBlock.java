@@ -90,10 +90,10 @@ public class TownBlock extends BaseEntityBlock {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof TownBlockEntity townBlock) {
                 if (level instanceof ServerLevel serverLevel) {
-                    TownManager.init(serverLevel);
+                    TownManager townManager = TownManager.get(serverLevel);
                     String newTownName = getRandomTownName();
                     LOGGER.info("Generated town name: {}", newTownName);
-                    UUID townId = TownManager.getInstance().registerTown(pos, newTownName);
+                    UUID townId = townManager.registerTown(pos, newTownName);
                     LOGGER.info("Registered new town with ID: {}", townId);
                     townBlock.setTownId(townId);
                     townBlock.setChanged();
@@ -112,7 +112,7 @@ public class TownBlock extends BaseEntityBlock {
                 UUID townId = townBlock.getTownId();
                 if (townId != null && !level.isClientSide()) {
                     // Remove town from manager
-                    TownManager.getInstance().removeTown(townId);
+                    TownManager.get((ServerLevel) level).removeTown(townId);
                 }
             }
             // Call super after our logic

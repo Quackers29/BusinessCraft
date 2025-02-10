@@ -21,6 +21,8 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.event.server.ServerStoppingEvent;
+import net.minecraftforge.server.ServerLifecycleHooks;
+import net.minecraft.server.level.ServerLevel;
 
 @Mod(BusinessCraft.MOD_ID)
 public class BusinessCraft {
@@ -68,6 +70,8 @@ public class BusinessCraft {
     }
 
     private void onServerStopping(ServerStoppingEvent event) {
-        TownManager.getInstance().onServerStopping();
+        ServerLifecycleHooks.getCurrentServer().getAllLevels().forEach(level -> {
+            TownManager.get((ServerLevel) level).onServerStopping();
+        });
     }
 }

@@ -32,7 +32,7 @@ public class TownScoreboardManager {
         scoreboard.setDisplayObjective(1, finalObjective);
         
         // Update scores for each town
-        TownManager.getInstance().getAllTowns().forEach((id, town) -> {
+        TownManager.get(level).getAllTowns().forEach((id, town) -> {
             String status = town.canSpawnTourists() ? ":ON" : ":OFF";
             String displayName = town.getName() + status + " [" + town.getTotalVisitors() + "]";
             scoreboard.getOrCreatePlayerScore(displayName, finalObjective).setScore(town.getPopulation());

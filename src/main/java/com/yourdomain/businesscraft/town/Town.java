@@ -47,7 +47,7 @@ public class Town {
     }
     
     private void setChanged() {
-        TownManager.getInstance().markDirty();
+        // Now handled through TownSavedData's automatic dirty marking
     }
     
     public void save(CompoundTag tag) {
