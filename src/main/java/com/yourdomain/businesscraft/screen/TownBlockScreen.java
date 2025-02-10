@@ -14,12 +14,15 @@ import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.SetPathCreationModePacket;
 import com.yourdomain.businesscraft.network.ToggleTouristSpawningPacket;
 import com.yourdomain.businesscraft.network.SetSearchRadiusPacket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     private static final ResourceLocation TEXTURE = new ResourceLocation(BusinessCraft.MOD_ID,
             "textures/gui/town_block_gui.png");
     private Button setPathButton;
     private Button toggleTouristsButton;
+    private static final Logger LOGGER = LoggerFactory.getLogger(TownBlockScreen.class);
 
     public TownBlockScreen(TownBlockMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -80,6 +83,11 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         int breadCount = menu.getBreadCount();
         int population = menu.getPopulation();
         String townName = menu.getTownName();
+        
+        if (menu.getBlockEntity() != null) {
+            LOGGER.info("Client State - Enabled: {}, CanSpawn: {}", 
+                menu.isTouristSpawningEnabled(), menu.getData().get(3));
+        }
         
         guiGraphics.drawString(this.font, "Town: " + townName, leftPos + 10, topPos + 10, 0xFFFFFF);
         guiGraphics.drawString(this.font, "Bread: " + breadCount, leftPos + 10, topPos + 20, 0xFFFFFF);

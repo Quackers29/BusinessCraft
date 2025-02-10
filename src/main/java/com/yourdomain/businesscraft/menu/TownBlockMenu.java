@@ -141,4 +141,8 @@ public class TownBlockMenu extends AbstractContainerMenu {
         }
         return null;
     }
+
+    public ContainerData getData() {
+        return data;
+    }
 }

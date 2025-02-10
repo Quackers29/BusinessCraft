@@ -6,8 +6,11 @@ import net.minecraft.nbt.CompoundTag;
 import com.yourdomain.businesscraft.config.ConfigLoader;
 import java.util.Map;
 import java.util.HashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Town {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Town.class);
     private final UUID id;
     private final BlockPos position;
     private String name;
@@ -101,6 +104,7 @@ public class Town {
     }
     
     public void setTouristSpawningEnabled(boolean enabled) {
+        LOGGER.info("Setting tourist spawning enabled from {} to {}", touristSpawningEnabled, enabled);
         this.touristSpawningEnabled = enabled;
     }
     

@@ -89,7 +89,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             // Client-side should only return stored values
             if (level != null && level.isClientSide()) {
                 //LOGGER.info("Client data request for index: {}", index);
-                //return super.get(index);
+                return super.get(index);
             }
             
             // Server-side calculation
@@ -101,8 +101,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 int value = switch (index) {
                     case 0 -> town.getBreadCount();
                     case 1 -> town.getPopulation();
-                    case 2 -> town.canSpawnTourists() ? 1 : 0;
-                    case 3 -> town.getName().hashCode();
+                    case 2 -> town.isTouristSpawningEnabled() ? 1 : 0;
+                    case 3 -> town.canSpawnTourists() ? 1 : 0;
                     default -> 0;
                 };
                 super.set(index, value); // Store the calculated value
@@ -114,7 +114,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         @Override
         public void set(int index, int value) {
             //LOGGER.info("Data set index {} to {}", index, value);
-            //super.set(index, value);
+            super.set(index, value);
         }
     };
     private static final Logger LOGGER = LogManager.getLogger("BusinessCraft/TownBlockEntity");
@@ -580,8 +580,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             if (town != null) {
                 data.set(0, town.getBreadCount());
                 data.set(1, town.getPopulation());
-                data.set(2, town.canSpawnTourists() ? 1 : 0);
-                data.set(3, town.getName().hashCode());
+                data.set(2, town.isTouristSpawningEnabled() ? 1 : 0);
+                data.set(3, town.canSpawnTourists() ? 1 : 0);
                 setChanged();
             }
         }
