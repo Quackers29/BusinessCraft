@@ -83,18 +83,19 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     };
 
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
-    private final ContainerData data = new ContainerData() {
+    private final ContainerData data = new SimpleContainerData(4) {
         @Override
         public int get(int index) {
             if (townId == null) return 0;
-            if (level instanceof ServerLevel sLevel1) {
-                Town town = TownManager.get(sLevel1).getTown(townId);
+            if (level instanceof ServerLevel sLevel) {
+                Town town = TownManager.get(sLevel).getTown(townId);
                 if (town == null) return 0;
                 
                 return switch (index) {
                     case 0 -> town.getBreadCount();
                     case 1 -> town.getPopulation();
                     case 2 -> town.canSpawnTourists() ? 1 : 0;
+                    case 3 -> town.getName().hashCode();
                     default -> 0;
                 };
             }
@@ -103,12 +104,12 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
         @Override
         public void set(int index, int value) {
-            // Data is read-only as it's managed by Town class
+            // Read-only data
         }
 
         @Override
         public int getCount() {
-            return 3;
+            return 4;
         }
     };
     private static final Logger LOGGER = LogManager.getLogger("BusinessCraft/TownBlockEntity");
@@ -561,14 +562,14 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     public void syncTownData() {
-        if (level != null && !level.isClientSide()) {
-            if (level instanceof ServerLevel sLevel1) {
-                Town town = TownManager.get(sLevel1).getTown(townId);
-                if (town != null) {
-                    data.set(0, town.getBreadCount());
-                    data.set(1, town.getPopulation());
-                    setChanged();
-                }
+        if (level != null && !level.isClientSide() && level instanceof ServerLevel sLevel) {
+            Town town = TownManager.get(sLevel).getTown(townId);
+            if (town != null) {
+                data.set(0, town.getBreadCount());
+                data.set(1, town.getPopulation());
+                data.set(2, town.canSpawnTourists() ? 1 : 0);
+                data.set(3, town.getName().hashCode());
+                setChanged();
             }
         }
     }
@@ -740,5 +741,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public void setSearchRadius(int radius) {
         this.searchRadius = Math.max(1, Math.min(radius, 100)); // Limit between 1-100 blocks
         setChanged();
+    }
+
+    public Town getTown() {
+        return town;
     }
 }
