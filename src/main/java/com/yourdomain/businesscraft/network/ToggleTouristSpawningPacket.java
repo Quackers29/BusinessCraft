@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.server.level.ServerLevel;
 
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -38,7 +39,7 @@ public class ToggleTouristSpawningPacket {
                 if (be instanceof TownBlockEntity townBlock) {
                     UUID townId = townBlock.getTownId();
                     if (townId != null) {
-                        Town town = TownManager.getInstance().getTown(townId);
+                        Town town = TownManager.get((ServerLevel) player.level()).getTown(townId);
                         if (town != null) {
                             town.setTouristSpawningEnabled(!town.canSpawnTourists());
                             townBlock.setChanged();

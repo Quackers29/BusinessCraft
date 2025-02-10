@@ -16,6 +16,8 @@ import net.minecraftforge.items.SlotItemHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.slf4j.LoggerFactory;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 
 import java.util.UUID;
 
@@ -140,7 +142,10 @@ public class TownBlockMenu extends AbstractContainerMenu {
         if (blockEntity != null) {
             UUID townId = blockEntity.getTownId();
             if (townId != null) {
-                return TownManager.getInstance().getTown(townId);
+                Level level = blockEntity.getLevel();
+                if (level instanceof ServerLevel sLevel) {
+                    return TownManager.get(sLevel).getTown(townId);
+                }
             }
         }
         return null;
