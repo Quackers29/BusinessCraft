@@ -37,7 +37,7 @@ public class TownBlockMenu extends AbstractContainerMenu {
         this.blockEntity = entity instanceof TownBlockEntity ? 
             (TownBlockEntity) entity : null;
         this.data = blockEntity != null ? 
-            blockEntity.getContainerData() : new SimpleContainerData(3);
+            blockEntity.getContainerData() : new SimpleContainerData(4);
         
         if (blockEntity != null) {
             blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -52,20 +52,24 @@ public class TownBlockMenu extends AbstractContainerMenu {
     }
 
     public int getBreadCount() {
-        return data.get(0);
+        int count = data.get(0);
+        LOGGER.info("Client Bread Count: {}", count);
+        return count;
     }
 
     public int getPopulation() {
-        return data.get(1);
+        int pop = data.get(1);
+        LOGGER.info("Client Population: {}", pop);
+        return pop;
     }
 
     public String getTownName() {
         if (blockEntity != null) {
-            if (blockEntity.getTown() != null) {
-                return blockEntity.getTown().getName();
+            String name = blockEntity.getTownName();
+            if (!name.isEmpty()) {
+                return name;
             }
-            UUID townId = blockEntity.getTownId();
-            return townId != null ? "Loading..." : "Unregistered";
+            return "Unregistered";
         }
         return "Invalid";
     }
