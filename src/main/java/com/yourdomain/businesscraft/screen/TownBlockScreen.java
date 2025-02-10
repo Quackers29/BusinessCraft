@@ -16,6 +16,7 @@ import com.yourdomain.businesscraft.network.ToggleTouristSpawningPacket;
 import com.yourdomain.businesscraft.network.SetSearchRadiusPacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.config.ConfigLoader;
 
 public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     private static final ResourceLocation TEXTURE = new ResourceLocation(BusinessCraft.MOD_ID,
@@ -80,6 +81,10 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         renderBackground(guiGraphics);
         super.render(guiGraphics, mouseX, mouseY, delta);
         renderTooltip(guiGraphics, mouseX, mouseY);
+        
+        LOGGER.debug("Screen Render - Enabled: {}, CanSpawn: {}",
+            menu.isTouristSpawningEnabled(), menu.getData().get(3));
+        
         int breadCount = menu.getBreadCount();
         int population = menu.getPopulation();
         String townName = menu.getTownName();
@@ -91,7 +96,8 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         
         guiGraphics.drawString(this.font, "Town: " + townName, leftPos + 10, topPos + 10, 0xFFFFFF);
         guiGraphics.drawString(this.font, "Bread: " + breadCount, leftPos + 10, topPos + 20, 0xFFFFFF);
-        guiGraphics.drawString(this.font, "Population: " + population, leftPos + 10, topPos + 30, 0xFFFFFF);
+        guiGraphics.drawString(this.font, "Population: " + population + "/" + ConfigLoader.minPopForTourists, 
+            leftPos + 10, topPos + 30, 0xFFFFFF);
     }
 
     @Override
