@@ -88,8 +88,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         public int get(int index) {
             // Client-side should only return stored values
             if (level != null && level.isClientSide()) {
-                LOGGER.info("Client data request for index: {}", index);
-                return super.get(index);
+                //LOGGER.info("Client data request for index: {}", index);
+                //return super.get(index);
             }
             
             // Server-side calculation
@@ -113,8 +113,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
         @Override
         public void set(int index, int value) {
-            LOGGER.info("Data set index {} to {}", index, value);
-            super.set(index, value);
+            //LOGGER.info("Data set index {} to {}", index, value);
+            //super.set(index, value);
         }
     };
     private static final Logger LOGGER = LogManager.getLogger("BusinessCraft/TownBlockEntity");
@@ -578,8 +578,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         if (level != null && !level.isClientSide() && level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
             if (town != null) {
-                LOGGER.info("Syncing data - Bread: {}, Pop: {}, NameHash: {}",
-                    town.getBreadCount(), town.getPopulation(), town.getName().hashCode());
                 data.set(0, town.getBreadCount());
                 data.set(1, town.getPopulation());
                 data.set(2, town.canSpawnTourists() ? 1 : 0);
