@@ -52,15 +52,11 @@ public class TownBlockMenu extends AbstractContainerMenu {
     }
 
     public int getBreadCount() {
-        int count = data.get(0);
-        LOGGER.info("Client Bread Count: {}", count);
-        return count;
+        return data.get(0);
     }
 
     public int getPopulation() {
-        int pop = data.get(1);
-        LOGGER.info("Client Population: {}", pop);
-        return pop;
+        return data.get(1);
     }
 
     public String getTownName() {
@@ -76,13 +72,8 @@ public class TownBlockMenu extends AbstractContainerMenu {
 
     public boolean isTouristSpawningEnabled() {
         if (blockEntity != null) {
-            UUID townId = blockEntity.getTownId();
-            if (townId != null) {
-                Town town = getTown();
-                if (town != null) {
-                    return town.canSpawnTourists();
-                }
-            }
+            int state = data.get(2);
+            return state == 1;
         }
         return false;
     }

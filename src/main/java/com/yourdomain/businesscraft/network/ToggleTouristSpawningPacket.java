@@ -10,11 +10,14 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraft.server.level.ServerLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 import java.util.function.Supplier;
 
 public class ToggleTouristSpawningPacket {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ToggleTouristSpawningPacket.class);
     private final BlockPos pos;
 
     public ToggleTouristSpawningPacket(BlockPos pos) {
@@ -41,8 +44,11 @@ public class ToggleTouristSpawningPacket {
                     if (townId != null) {
                         Town town = TownManager.get((ServerLevel) player.level()).getTown(townId);
                         if (town != null) {
-                            town.setTouristSpawningEnabled(!town.canSpawnTourists());
-                            townBlock.setChanged();
+                            boolean newState = !town.canSpawnTourists();
+                            LOGGER.info("Toggling tourist spawning to {} for town {}", newState, townId);
+                            town.setTouristSpawningEnabled(newState);
+                            TownManager.get((ServerLevel) player.level()).getSavedData().setDirty();
+                            townBlock.syncTownData();
                         }
                     }
                 }
