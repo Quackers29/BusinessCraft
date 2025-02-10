@@ -112,5 +112,9 @@ public class Town {
         return visitors.values().stream().mapToInt(Integer::intValue).sum();
     }
     
+    public boolean isTouristSpawningEnabled() {
+        return touristSpawningEnabled;
+    }
+    
     // Getters and setters
 } 
