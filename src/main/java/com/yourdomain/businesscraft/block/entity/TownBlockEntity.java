@@ -86,30 +86,35 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private final ContainerData data = new SimpleContainerData(4) {
         @Override
         public int get(int index) {
+            // Client-side should only return stored values
+            if (level != null && level.isClientSide()) {
+                LOGGER.info("Client data request for index: {}", index);
+                return super.get(index);
+            }
+            
+            // Server-side calculation
             if (townId == null) return 0;
             if (level instanceof ServerLevel sLevel) {
                 Town town = TownManager.get(sLevel).getTown(townId);
                 if (town == null) return 0;
                 
-                return switch (index) {
+                int value = switch (index) {
                     case 0 -> town.getBreadCount();
                     case 1 -> town.getPopulation();
                     case 2 -> town.canSpawnTourists() ? 1 : 0;
                     case 3 -> town.getName().hashCode();
                     default -> 0;
                 };
+                super.set(index, value); // Store the calculated value
+                return value;
             }
             return 0;
         }
 
         @Override
         public void set(int index, int value) {
-            // Read-only data
-        }
-
-        @Override
-        public int getCount() {
-            return 4;
+            LOGGER.info("Data set index {} to {}", index, value);
+            super.set(index, value);
         }
     };
     private static final Logger LOGGER = LogManager.getLogger("BusinessCraft/TownBlockEntity");
@@ -122,6 +127,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private static final int MAX_TOURISTS = 5;
     private boolean touristSpawningEnabled = true;
     private UUID townId;
+    private String name;
     private Town town;
     private static final ConfigLoader CONFIG = ConfigLoader.INSTANCE;
     private Map<UUID, Vec3> lastPositions = new HashMap<>();
@@ -203,6 +209,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         }
 
         tag.putInt("searchRadius", searchRadius);
+        if (name != null) {
+            tag.putString("name", name);
+        }
     }
 
     @Override
@@ -236,6 +245,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
         searchRadius = tag.contains("searchRadius") ? 
             tag.getInt("searchRadius") : DEFAULT_SEARCH_RADIUS;
+
+        if (tag.contains("name")) {
+            name = tag.getString("name");
+        }
     }
 
     @Override
@@ -454,15 +467,15 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     public String getTownName() {
         if (townId != null) {
+            if (level.isClientSide && name != null) {
+                return name; // Use client-cached name
+            }
             if (level instanceof ServerLevel sLevel1) {
                 Town town = TownManager.get(sLevel1).getTown(townId);
-                if (town != null) {
-                    return town.getName();
-                }
+                return town != null ? town.getName() : "Loading...2";
             }
-            return "Loading...";  // Town ID exists but town not loaded yet
         }
-        return "Initializing...";  // No town ID yet
+        return "Initializing...";
     }
 
     private String getRandomTownName() {
@@ -565,6 +578,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         if (level != null && !level.isClientSide() && level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
             if (town != null) {
+                LOGGER.info("Syncing data - Bread: {}, Pop: {}, NameHash: {}",
+                    town.getBreadCount(), town.getPopulation(), town.getName().hashCode());
                 data.set(0, town.getBreadCount());
                 data.set(1, town.getPopulation());
                 data.set(2, town.canSpawnTourists() ? 1 : 0);
@@ -578,9 +593,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         LOGGER.info("[TownBlockEntity] Setting town ID to: {} at pos: {}", id, this.getBlockPos());
         this.townId = id;
         if (level instanceof ServerLevel sLevel1) {
-            this.town = TownManager.get(sLevel1).getTown(id);
+            Town town = TownManager.get(sLevel1).getTown(id);
+            this.name = town != null ? town.getName() : "Unnamed";
+            syncTownData();
         }
-        syncTownData();
     }
 
     private void mountTouristsToVehicles() {
