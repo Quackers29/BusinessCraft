@@ -44,7 +44,7 @@ public class ToggleTouristSpawningPacket {
                     if (townId != null) {
                         Town town = TownManager.get((ServerLevel) player.level()).getTown(townId);
                         if (town != null) {
-                            boolean newState = !town.canSpawnTourists();
+                            boolean newState = !town.isTouristSpawningEnabled();
                             LOGGER.info("Toggling tourist spawning to {} for town {}", newState, townId);
                             town.setTouristSpawningEnabled(newState);
                             TownManager.get((ServerLevel) player.level()).getSavedData().setDirty();
