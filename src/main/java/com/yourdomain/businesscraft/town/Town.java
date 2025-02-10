@@ -28,7 +28,6 @@ public class Town {
         if (this.breadCount >= ConfigLoader.breadPerPop) {
             this.breadCount -= ConfigLoader.breadPerPop;
             this.population++;
-            setChanged();
         }
     }
     
@@ -42,12 +41,7 @@ public class Town {
             population--;
             breadCount -= ConfigLoader.breadPerPop;
             if (breadCount < 0) breadCount = 0;
-            setChanged();
         }
-    }
-    
-    private void setChanged() {
-        // Now handled through TownSavedData's automatic dirty marking
     }
     
     public void save(CompoundTag tag) {

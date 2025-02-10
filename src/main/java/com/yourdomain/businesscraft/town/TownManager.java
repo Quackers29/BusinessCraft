@@ -14,6 +14,10 @@ import org.slf4j.LoggerFactory;
 public class TownManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/TownManager");
     private final TownSavedData savedData;
+    
+    public TownSavedData getSavedData() {
+        return this.savedData;
+    }
 
     private TownManager(ServerLevel level) {
         this.savedData = level.getDataStorage().computeIfAbsent(
@@ -43,6 +47,7 @@ public class TownManager {
         Town town = savedData.getTowns().get(townId);
         if (town != null) {
             town.addBread(breadCount);
+            savedData.setDirty();
         }
     }
 
