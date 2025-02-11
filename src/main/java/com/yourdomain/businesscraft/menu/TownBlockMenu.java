@@ -73,7 +73,7 @@ public class TownBlockMenu extends AbstractContainerMenu {
     public boolean isTouristSpawningEnabled() {
         if (blockEntity != null) {
             int state = data.get(2);
-            LOGGER.info("Menu state check - Enabled: {}", state == 1);
+            LOGGER.debug("Menu state check - Enabled: {}", state == 1);
             return state == 1;
         }
         return false;

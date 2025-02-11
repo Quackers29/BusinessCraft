@@ -90,7 +90,7 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         String townName = menu.getTownName();
         
         if (menu.getBlockEntity() != null) {
-            LOGGER.info("Client State - Enabled: {}, CanSpawn: {}", 
+            LOGGER.debug("Client State - Enabled: {}, CanSpawn: {}", 
                 menu.isTouristSpawningEnabled(), menu.getData().get(3));
         }
         
