@@ -16,6 +16,8 @@ import net.minecraftforge.items.SlotItemHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.slf4j.LoggerFactory;
+import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
 
 import java.util.UUID;
 
@@ -27,23 +29,26 @@ public class TownBlockMenu extends AbstractContainerMenu {
     private UUID townId;
 
     public TownBlockMenu(int id, Inventory inv, FriendlyByteBuf extraData) {
-        super(ModMenuTypes.TOWN_BLOCK_MENU.get(), id);
-        BlockPos pos = extraData.readBlockPos();
-        TownBlockEntity blockEntity = (TownBlockEntity) inv.player.level().getBlockEntity(pos);
-        this.blockEntity = blockEntity;
-        this.data = blockEntity != null ? blockEntity.getContainerData() : new SimpleContainerData(3);
+        this(id, inv, inv.player.level().getBlockEntity(extraData.readBlockPos()));
+    }
 
-        // Initialize slots and data
+    public TownBlockMenu(int id, Inventory inv, BlockEntity entity) {
+        super(ModMenuTypes.TOWN_BLOCK_MENU.get(), id);
+        this.blockEntity = entity instanceof TownBlockEntity ? 
+            (TownBlockEntity) entity : null;
+        this.data = blockEntity != null ? 
+            blockEntity.getContainerData() : new SimpleContainerData(4);
+        
+        if (blockEntity != null) {
+            blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER)
+                .ifPresent(handler -> {
+                    addSlot(new SlotItemHandler(handler, 0, 152, 20));
+                });
+            addDataSlots(data);
+        }
+        
         addPlayerInventory(inv);
         addPlayerHotbar(inv);
-
-        if (blockEntity != null) {
-            blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(handler -> {
-                addSlot(new SlotItemHandler(handler, 0, 152, 20)); // Moved to right side, higher up
-            });
-        }
-
-        addDataSlots(data);
     }
 
     public int getBreadCount() {
@@ -55,32 +60,21 @@ public class TownBlockMenu extends AbstractContainerMenu {
     }
 
     public String getTownName() {
-        LOGGER.info("Getting town name. BlockEntity present: {}", blockEntity != null);
         if (blockEntity != null) {
-            UUID townId = blockEntity.getTownId();
-            LOGGER.info("Town ID from block entity: {}", townId);
-            if (townId != null) {
-                Town town = getTown();
-                LOGGER.info("Town from manager: {}", town != null ? town.getName() : "null");
-                if (town != null) {
-                    return town.getName();
-                }
-                return "Loading...";
+            String name = blockEntity.getTownName();
+            if (!name.isEmpty()) {
+                return name;
             }
-            return "Initializing...";
+            return "Unregistered";
         }
-        return "Error";
+        return "Invalid";
     }
 
     public boolean isTouristSpawningEnabled() {
         if (blockEntity != null) {
-            UUID townId = blockEntity.getTownId();
-            if (townId != null) {
-                Town town = getTown();
-                if (town != null) {
-                    return town.canSpawnTourists();
-                }
-            }
+            int state = data.get(2);
+            LOGGER.debug("Menu state check - Enabled: {}", state == 1);
+            return state == 1;
         }
         return false;
     }
@@ -140,9 +134,16 @@ public class TownBlockMenu extends AbstractContainerMenu {
         if (blockEntity != null) {
             UUID townId = blockEntity.getTownId();
             if (townId != null) {
-                return TownManager.getInstance().getTown(townId);
+                Level level = blockEntity.getLevel();
+                if (level instanceof ServerLevel sLevel) {
+                    return TownManager.get(sLevel).getTown(townId);
+                }
             }
         }
         return null;
+    }
+
+    public ContainerData getData() {
+        return data;
     }
 }

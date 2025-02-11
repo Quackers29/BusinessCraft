@@ -13,102 +13,85 @@ import org.slf4j.LoggerFactory;
 
 public class TownManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/TownManager");
-    private static TownManager INSTANCE;
-    private final Map<UUID, Town> towns = new ConcurrentHashMap<>();
-    private TownSavedData savedData;
+    private final TownSavedData savedData;
     
-    private TownManager() {}
-    
-    public static TownManager getInstance() {
-        if (INSTANCE == null) {
-            INSTANCE = new TownManager();
-        }
-        return INSTANCE;
+    public TownSavedData getSavedData() {
+        return this.savedData;
     }
-    
-    public static void init(ServerLevel level) {
-        TownManager manager = getInstance();
-        if (manager.savedData == null) {
-            manager.savedData = level.getDataStorage().computeIfAbsent(
-                TownSavedData::load,
-                TownSavedData::create,
-                TownSavedData.NAME
-            );
-        }
+
+    private TownManager(ServerLevel level) {
+        this.savedData = level.getDataStorage().computeIfAbsent(
+            TownSavedData::load,
+            TownSavedData::create,
+            TownSavedData.NAME
+        );
     }
-    
+
+    public static TownManager get(ServerLevel level) {
+        return new TownManager(level);
+    }
+
     public UUID registerTown(BlockPos pos, String name) {
         UUID townId = UUID.randomUUID();
         LOGGER.info("Registering new town. ID: {}, Name: {}, Position: {}", townId, name, pos);
-        towns.put(townId, new Town(townId, pos, name));
-        if (savedData != null) {
-            savedData.setDirty();
-            LOGGER.info("Marked town data as dirty");
-        } else {
-            LOGGER.warn("SavedData is null when registering town");
-        }
+        savedData.getTowns().put(townId, new Town(townId, pos, name));
+        savedData.setDirty();
         return townId;
     }
-    
+
     public Town getTown(UUID id) {
-        if (id == null) return null;
-        return towns.get(id);
+        return savedData.getTowns().get(id);
     }
-    
+
     public void updateResources(UUID townId, int breadCount) {
-        Town town = towns.get(townId);
+        Town town = savedData.getTowns().get(townId);
         if (town != null) {
             town.addBread(breadCount);
+            savedData.setDirty();
         }
     }
-    
+
     public void saveAllTowns(CompoundTag worldData) {
         CompoundTag townsTag = new CompoundTag();
-        towns.forEach((id, town) -> {
+        savedData.getTowns().forEach((id, town) -> {
             CompoundTag townTag = new CompoundTag();
             town.save(townTag);
             townsTag.put(id.toString(), townTag);
         });
         worldData.put("towns", townsTag);
         
-        if (savedData != null) {
-            savedData.setDirty();
-        }
+        savedData.setDirty();
     }
     
     public void loadAllTowns(CompoundTag worldData) {
-        towns.clear();
+        savedData.getTowns().clear();
         if (worldData.contains("towns")) {
             CompoundTag townsTag = worldData.getCompound("towns");
             townsTag.getAllKeys().forEach(key -> {
                 UUID id = UUID.fromString(key);
                 Town town = Town.load(townsTag.getCompound(key));
-                towns.put(id, town);
+                savedData.getTowns().put(id, town);
             });
         }
     }
     
     public Map<UUID, Town> getAllTowns() {
-        return Collections.unmodifiableMap(towns);
+        return Collections.unmodifiableMap(savedData.getTowns());
     }
     
     public void clearGhostTowns() {
-        towns.entrySet().removeIf(entry -> {
+        savedData.getTowns().entrySet().removeIf(entry -> {
             Town town = entry.getValue();
             // Define your logic to determine if a town is a "ghost town"
             return town.getPopulation() == 0; // Example: remove towns with zero population
         });
-        if (savedData != null) {
-            savedData.setDirty();
-        }
+        savedData.setDirty();
     }
     
     public int clearAllTowns() {
-        int count = towns.size();
-        towns.clear();
-        if (savedData != null) {
-            savedData.setDirty();
-        }
+        int count = savedData.getTowns().size();
+        savedData.getTowns().clear();
+        savedData.setDirty();
         return count;
     }
     
@@ -120,12 +103,9 @@ public class TownManager {
         }
     }
     
-    public void removeTown(UUID townId) {
-        if (towns.remove(townId) != null) {
-            LOGGER.info("Removed town with ID: {}", townId);
-            if (savedData != null) {
-                savedData.setDirty();
-            }
+    public void removeTown(UUID id) {
+        if (savedData.getTowns().remove(id) != null) {
+            savedData.setDirty();
         }
     }
     
