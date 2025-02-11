@@ -8,17 +8,17 @@ import java.util.Map;
 import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.town.components.TownEconomyComponent;
 
 public class Town {
     private static final Logger LOGGER = LoggerFactory.getLogger(Town.class);
     private final UUID id;
     private final BlockPos position;
     private String name;
-    private int breadCount;
-    private int population;
+    private final TownEconomyComponent economy = new TownEconomyComponent();
+    private final Map<UUID, Integer> visitors = new HashMap<>();
     private boolean touristSpawningEnabled;
     private boolean cachedResult;
-    private Map<UUID, Integer> visitors = new HashMap<>();
     
     public Town(UUID id, BlockPos pos, String name) {
         this.id = id;
@@ -28,37 +28,26 @@ public class Town {
     }
     
     public void addBread(int count) {
-        this.breadCount += count;
-        if (this.breadCount >= ConfigLoader.breadPerPop) {
-            this.breadCount -= ConfigLoader.breadPerPop;
-            this.population++;
-        }
+        economy.addBread(count);
     }
     
     public boolean canSpawnTourists() {
-        boolean result = touristSpawningEnabled && population >= ConfigLoader.minPopForTourists;
+        boolean result = touristSpawningEnabled && economy.getPopulation() >= ConfigLoader.minPopForTourists;
         if (result != cachedResult) {
             LOGGER.info("SPAWN STATE CHANGE [{}] - Enabled: {}, Population: {}/{}, Result: {}",
-                id, touristSpawningEnabled, population, ConfigLoader.minPopForTourists, result);
+                id, touristSpawningEnabled, economy.getPopulation(), ConfigLoader.minPopForTourists, result);
             cachedResult = result;
         }
         return result;
     }
     
     public void removeTourist() {
-        if (population > 0) {
-            population--;
-            breadCount -= ConfigLoader.breadPerPop;
-            if (breadCount < 0) breadCount = 0;
-        }
+        economy.removePopulation(1);
     }
     
     public void save(CompoundTag tag) {
         tag.putUUID("id", id);
         tag.putString("name", name);
-        tag.putInt("breadCount", breadCount);
-        tag.putInt("population", population);
-        tag.putBoolean("touristSpawning", touristSpawningEnabled);
         tag.putInt("posX", position.getX());
         tag.putInt("posY", position.getY());
         tag.putInt("posZ", position.getZ());
@@ -67,6 +56,9 @@ public class Town {
             visitorsTag.putInt(visitorId.toString(), count);
         });
         tag.put("visitors", visitorsTag);
+        CompoundTag economyTag = new CompoundTag();
+        economy.save(economyTag);
+        tag.put("economy", economyTag);
     }
     
     public static Town load(CompoundTag tag) {
@@ -77,15 +69,13 @@ public class Town {
         );
         UUID id = tag.getUUID("id");
         Town town = new Town(id, pos, tag.getString("name"));
-        town.breadCount = tag.getInt("breadCount");
-        town.population = tag.getInt("population");
-        town.touristSpawningEnabled = tag.getBoolean("touristSpawning");
         if (tag.contains("visitors")) {
             CompoundTag visitorsTag = tag.getCompound("visitors");
             visitorsTag.getAllKeys().forEach(key -> {
                 town.visitors.put(UUID.fromString(key), visitorsTag.getInt(key));
             });
         }
+        town.economy.load(tag.getCompound("economy"));
         return town;
     }
     
@@ -94,11 +84,11 @@ public class Town {
     }
     
     public int getBreadCount() {
-        return breadCount;
+        return economy.getBreadCount();
     }
     
     public int getPopulation() {
-        return population;
+        return economy.getPopulation();
     }
     
     public UUID getId() {
