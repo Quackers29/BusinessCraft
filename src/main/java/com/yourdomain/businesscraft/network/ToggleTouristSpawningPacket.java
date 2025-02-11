@@ -38,10 +38,21 @@ public class ToggleTouristSpawningPacket {
                 if (be instanceof TownBlockEntity townBlock) {
                     UUID townId = townBlock.getTownId();
                     if (townId != null) {
+<<<<<<< Updated upstream
                         Town town = TownManager.getInstance().getTown(townId);
                         if (town != null) {
                             town.setTouristSpawningEnabled(!town.canSpawnTourists());
                             townBlock.setChanged();
+=======
+                        ServerLevel serverLevel = (ServerLevel) level;
+                        Town town = TownManager.get(serverLevel).getTown(townId);
+                        if (town != null) {
+                            boolean newState = !town.isTouristSpawningEnabled();
+                            LOGGER.info("Toggling tourist spawning to {} for town {}", newState, townId);
+                            town.setTouristSpawningEnabled(newState);
+                            townBlock.syncTownData();
+                            TownManager.get(serverLevel).getSavedData().setDirty();
+>>>>>>> Stashed changes
                         }
                     }
                 }
