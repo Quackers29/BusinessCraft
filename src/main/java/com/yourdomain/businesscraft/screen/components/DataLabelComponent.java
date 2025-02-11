@@ -22,5 +22,5 @@ public class DataLabelComponent implements UIComponent {
 
     @Override public void tick() {}
     @Override public int getWidth() { return maxWidth; }
-    @Override public int getHeight() { return 10; }
+    @Override public int getHeight() { return 12; }
 }

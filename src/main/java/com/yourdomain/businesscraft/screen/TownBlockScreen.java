@@ -32,42 +32,51 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
 
     public TownBlockScreen(TownBlockMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
-        // Initialize components
-        components.add(new DataLabelComponent(
+        this.imageWidth = 256;
+        this.imageHeight = 204;
+        
+        // Left-aligned text components
+        List<UIComponent> leftComponents = new ArrayList<>();
+        leftComponents.add(new DataLabelComponent(
             () -> "Town: " + menu.getTownName(),
-            0xFFFFFF, 100
+            0xFFFFFF, 120
         ));
-        components.add(new DataLabelComponent(
+        leftComponents.add(new DataLabelComponent(
             () -> "Bread: " + menu.getBreadCount(),
-            0xFFFFFF, 100
+            0xFFFFFF, 120
         ));
-        components.add(new DataLabelComponent(
+        leftComponents.add(new DataLabelComponent(
             () -> "Population: " + menu.getPopulation() + "/" + ConfigLoader.minPopForTourists,
-            0xFFFFFF, 150
+            0xFFFFFF, 140
         ));
         
-        // Path button
-        components.add(new ToggleButtonComponent(0, 0, 100, 20, 
+        // Right-aligned buttons
+        List<UIComponent> rightComponents = new ArrayList<>();
+        int buttonWidth = 120;
+        int buttonHeight = 20;
+        
+        rightComponents.add(new ToggleButtonComponent(0, 0, buttonWidth, buttonHeight,
             Component.translatable("gui.businesscraft.set_tourist_path"),
-            button -> {
-                ModMessages.sendToServer(new SetPathCreationModePacket(menu.getBlockEntity().getBlockPos(), true));
-            }
+            button -> ModMessages.sendToServer(new SetPathCreationModePacket(
+                menu.getBlockEntity().getBlockPos(), true
+            ))
         ));
         
-        // Spawn toggle button
-        components.add(new ToggleButtonComponent(0, 0, 100, 20, 
-            Component.translatable("gui.businesscraft.toggle_tourists"), 
-            button -> {
-                ModMessages.sendToServer(new ToggleTouristSpawningPacket(menu.getBlockEntity().getBlockPos()));
-            }
+        rightComponents.add(new ToggleButtonComponent(0, 0, buttonWidth, buttonHeight,
+            Component.translatable("gui.businesscraft.toggle_tourists"),
+            button -> ModMessages.sendToServer(new ToggleTouristSpawningPacket(
+                menu.getBlockEntity().getBlockPos()
+            ))
         ));
         
-        // Radius button
-        components.add(new DataBoundButtonComponent(
+        rightComponents.add(new DataBoundButtonComponent(
             () -> Component.literal("Radius: " + menu.getBlockEntity().getSearchRadius()),
             (button) -> handleRadiusChange(),
-            100, 20
+            buttonWidth, buttonHeight
         ));
+
+        components.addAll(leftComponents);
+        components.addAll(rightComponents);
     }
 
     @Override
@@ -83,10 +92,19 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         renderBackground(guiGraphics);
         super.render(guiGraphics, mouseX, mouseY, delta);
         
-        int yPos = topPos + 10;
-        for (UIComponent component : components) {
-            component.render(guiGraphics, leftPos + 10, yPos, mouseX, mouseY);
-            yPos += component.getHeight() + 5;
+        // Render left-aligned components
+        int yLeft = topPos + 10;
+        for (UIComponent component : components.subList(0, 3)) {
+            component.render(guiGraphics, leftPos + 10, yLeft, mouseX, mouseY);
+            yLeft += component.getHeight() + 8;
+        }
+        
+        // Render right-aligned components
+        int yRight = topPos + 10;
+        int rightX = leftPos + imageWidth - 130; // 120px width + 10px margin
+        for (UIComponent component : components.subList(3, 6)) {
+            component.render(guiGraphics, rightX, yRight, mouseX, mouseY);
+            yRight += component.getHeight() + 8;
         }
     }
 
