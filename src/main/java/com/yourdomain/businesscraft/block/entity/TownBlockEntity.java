@@ -141,6 +141,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private int searchRadius = DEFAULT_SEARCH_RADIUS;
     private final AABB searchBounds = new AABB(worldPosition).inflate(15);
     private List<LivingEntity> tourists = new ArrayList<>();
+    private static final int DATA_BREAD = 0;
+    private static final int DATA_POPULATION = 1;
+    private static final int DATA_SPAWN_ENABLED = 2;
+    private static final int DATA_CAN_SPAWN = 3;
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -566,11 +570,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     public int getBreadCount() {
-        return data.get(0);
+        return data.get(DATA_BREAD);
     }
 
     public int getPopulation() {
-        return data.get(1);
+        return data.get(DATA_POPULATION);
     }
 
     @Override
@@ -579,15 +583,12 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     public void syncTownData() {
-        if (level != null && !level.isClientSide() && level instanceof ServerLevel sLevel) {
-            Town town = TownManager.get(sLevel).getTown(townId);
-            if (town != null) {
-                data.set(0, town.getBreadCount());
-                data.set(1, town.getPopulation());
-                data.set(2, town.isTouristSpawningEnabled() ? 1 : 0);
-                data.set(3, town.canSpawnTourists() ? 1 : 0);
-                setChanged();
-            }
+        if (level != null && !level.isClientSide()) {
+            data.set(DATA_BREAD, data.get(DATA_BREAD));
+            data.set(DATA_POPULATION, data.get(DATA_POPULATION));
+            data.set(DATA_SPAWN_ENABLED, data.get(DATA_SPAWN_ENABLED));
+            data.set(DATA_CAN_SPAWN, data.get(DATA_CAN_SPAWN));
+            setChanged();
         }
     }
 
