@@ -42,14 +42,13 @@ public class ToggleTouristSpawningPacket {
                 if (be instanceof TownBlockEntity townBlock) {
                     UUID townId = townBlock.getTownId();
                     if (townId != null) {
-                        ServerLevel serverLevel = (ServerLevel) player.level();
+                        ServerLevel serverLevel = (ServerLevel) level;
                         Town town = TownManager.get(serverLevel).getTown(townId);
                         if (town != null) {
                             boolean newState = !town.isTouristSpawningEnabled();
-                            LOGGER.info("Toggling tourist spawning to {} for town {}", newState, townId);
                             town.setTouristSpawningEnabled(newState);
-                            TownManager.get(serverLevel).getSavedData().setDirty();
                             townBlock.syncTownData();
+                            TownManager.get(serverLevel).getSavedData().setDirty();
                         }
                     }
                 }

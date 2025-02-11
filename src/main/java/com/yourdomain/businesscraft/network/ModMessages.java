@@ -44,10 +44,11 @@ public class ModMessages {
                 .add();
 
         // Register the new SetSearchRadiusPacket
-        net.registerMessage(id(), SetSearchRadiusPacket.class,
-            SetSearchRadiusPacket::toBytes,
-            SetSearchRadiusPacket::new,
-            SetSearchRadiusPacket::handle);
+        net.messageBuilder(SetSearchRadiusPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(SetSearchRadiusPacket::new)
+                .encoder(SetSearchRadiusPacket::toBytes)
+                .consumerMainThread(SetSearchRadiusPacket::handle)
+                .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {

@@ -106,7 +106,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 };
                 
                 if (System.currentTimeMillis() - lastLogTime > 5000) {
-                    LOGGER.info("[SERVER] Data update - Index: {} = {}", index, value);
+                    //LOGGER.info("[SERVER] Data update - Index: {} = {}", index, value);
                     lastLogTime = System.currentTimeMillis();
                 }
                 super.set(index, value);
