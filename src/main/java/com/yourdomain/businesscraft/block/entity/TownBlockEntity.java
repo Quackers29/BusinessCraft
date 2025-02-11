@@ -592,7 +592,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     public void setTownId(UUID id) {
-        LOGGER.info("[TownBlockEntity] Setting town ID to: {} at pos: {}", id, this.getBlockPos());
         this.townId = id;
         if (level instanceof ServerLevel sLevel1) {
             Town town = TownManager.get(sLevel1).getTown(id);
