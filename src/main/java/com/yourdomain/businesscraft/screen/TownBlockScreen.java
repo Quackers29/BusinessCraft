@@ -92,7 +92,7 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
 
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
-        // Remove redundant OpenGL calls
+        guiGraphics.blit(TEXTURE, leftPos, topPos, 0, 0, imageWidth, imageHeight);
     }
 
     private void handleRadiusChange() {
