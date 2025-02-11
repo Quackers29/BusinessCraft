@@ -98,10 +98,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 if (town == null) return 0;
                 
                 int value = switch (index) {
-                    case 0 -> town.getBreadCount();
-                    case 1 -> town.getPopulation();
-                    case 2 -> town.isTouristSpawningEnabled() ? 1 : 0;
-                    case 3 -> town.canSpawnTourists() ? 1 : 0;
+                    case DATA_BREAD -> town.getBreadCount();
+                    case DATA_POPULATION -> town.getPopulation();
+                    case DATA_SPAWN_ENABLED -> town.isTouristSpawningEnabled() ? 1 : 0;
+                    case DATA_CAN_SPAWN -> town.canSpawnTourists() ? 1 : 0;
                     default -> 0;
                 };
                 
