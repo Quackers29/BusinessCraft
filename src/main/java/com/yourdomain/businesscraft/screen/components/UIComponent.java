@@ -5,9 +5,10 @@ import net.minecraft.client.gui.components.Button;
 import java.util.function.Consumer;
 
 public interface UIComponent {
-    default void init(Consumer<Button> register) {}
+    void init(Consumer<Button> register);
     void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY);
     void tick();
     int getWidth();
     int getHeight();
+    void setVisible(boolean visible);
 }

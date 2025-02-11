@@ -2,5 +2,8 @@
   "block.businesscraft.town_block": "Town Block",
   "container.businesscraft.town_block": " ",
   "gui.businesscraft.set_tourist_path": "Set Tourist Path",
-  "gui.businesscraft.toggle_tourists": "Toggle Tourists"
+  "gui.businesscraft.toggle_tourists": "Toggle Tourists",
+  "gui.businesscraft.tab.town": "Town",
+  "gui.businesscraft.tab.resources": "Resources",
+  "gui.businesscraft.tab.settings": "Settings"
 }
