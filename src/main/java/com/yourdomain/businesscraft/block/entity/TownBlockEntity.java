@@ -41,6 +41,7 @@ import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
 import com.yourdomain.businesscraft.scoreboard.TownScoreboardManager;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.LivingEntity;
 
 import java.util.Random;
 import java.util.Map;
@@ -82,29 +83,42 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     };
 
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
-    private final ContainerData data = new ContainerData() {
+    private final ContainerData data = new SimpleContainerData(4) {
+        private long lastLogTime = 0;
+        
         @Override
         public int get(int index) {
-            if (townId == null) return 0;
-            Town town = TownManager.getInstance().getTown(townId);
-            if (town == null) return 0;
+            if (level != null && level.isClientSide()) {
+                return super.get(index);
+            }
             
-            return switch (index) {
-                case 0 -> town.getBreadCount();
-                case 1 -> town.getPopulation();
-                case 2 -> town.canSpawnTourists() ? 1 : 0;
-                default -> 0;
-            };
+            if (townId == null) return 0;
+            if (level instanceof ServerLevel sLevel) {
+                Town town = TownManager.get(sLevel).getTown(townId);
+                if (town == null) return 0;
+                
+                int value = switch (index) {
+                    case DATA_BREAD -> town.getBreadCount();
+                    case DATA_POPULATION -> town.getPopulation();
+                    case DATA_SPAWN_ENABLED -> town.isTouristSpawningEnabled() ? 1 : 0;
+                    case DATA_CAN_SPAWN -> town.canSpawnTourists() ? 1 : 0;
+                    default -> 0;
+                };
+                
+                if (System.currentTimeMillis() - lastLogTime > 5000) {
+                    LOGGER.info("[SERVER] Data update - Index: {} = {}", index, value);
+                    lastLogTime = System.currentTimeMillis();
+                }
+                super.set(index, value);
+                return value;
+            }
+            return 0;
         }
 
         @Override
         public void set(int index, int value) {
-            // Data is read-only as it's managed by Town class
-        }
-
-        @Override
-        public int getCount() {
-            return 3;
+            //LOGGER.info("Data storage set - Index: {} = {}", index, value);
+            super.set(index, value);
         }
     };
     private static final Logger LOGGER = LogManager.getLogger("BusinessCraft/TownBlockEntity");
@@ -117,6 +131,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private static final int MAX_TOURISTS = 5;
     private boolean touristSpawningEnabled = true;
     private UUID townId;
+    private String name;
     private Town town;
     private static final ConfigLoader CONFIG = ConfigLoader.INSTANCE;
     private Map<UUID, Vec3> lastPositions = new HashMap<>();
@@ -124,6 +139,12 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private static final double VISITOR_POSITION_CHANGE_THRESHOLD = 0.001;
     private static final int DEFAULT_SEARCH_RADIUS = CONFIG.vehicleSearchRadius;
     private int searchRadius = DEFAULT_SEARCH_RADIUS;
+    private final AABB searchBounds = new AABB(worldPosition).inflate(15);
+    private List<LivingEntity> tourists = new ArrayList<>();
+    private static final int DATA_BREAD = 0;
+    private static final int DATA_POPULATION = 1;
+    private static final int DATA_SPAWN_ENABLED = 2;
+    private static final int DATA_CAN_SPAWN = 3;
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -156,9 +177,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         super.onLoad();
         lazyItemHandler = LazyOptional.of(() -> itemHandler);
         if (!level.isClientSide()) {
-            if (level instanceof ServerLevel serverLevel) {
-                TownManager.init(serverLevel);
-                level.scheduleTick(getBlockPos(), getBlockState().getBlock(), 1);
+            if (level instanceof ServerLevel sLevel1) {
+                sLevel1.scheduleTick(getBlockPos(), getBlockState().getBlock(), 1);
             }
         }
     }
@@ -174,7 +194,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         super.saveAdditional(tag);
         if (townId != null) {
             tag.putUUID("TownId", townId);
-            town = TownManager.getInstance().getTown(townId);
+            if (level instanceof ServerLevel sLevel1) {
+                town = TownManager.get(sLevel1).getTown(townId);
+            }
         }
         
         // Save path positions
@@ -195,6 +217,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         }
 
         tag.putInt("searchRadius", searchRadius);
+        if (name != null) {
+            tag.putString("name", name);
+        }
     }
 
     @Override
@@ -202,7 +227,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         super.load(tag);
         if (tag.contains("TownId")) {
             townId = tag.getUUID("TownId");
-            town = TownManager.getInstance().getTown(townId);
+            if (level instanceof ServerLevel sLevel1) {
+                town = TownManager.get(sLevel1).getTown(townId);
+            }
         }
         
         // Load path positions
@@ -226,17 +253,19 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
         searchRadius = tag.contains("searchRadius") ? 
             tag.getInt("searchRadius") : DEFAULT_SEARCH_RADIUS;
+
+        if (tag.contains("name")) {
+            name = tag.getString("name");
+        }
     }
 
     @Override
     public void tick(Level level, BlockPos pos, BlockState state, TownBlockEntity blockEntity) {
         if (!level.isClientSide()) {
-            if (level instanceof ServerLevel serverLevel) {
-                TownManager.init(serverLevel);
-                
+            if (level instanceof ServerLevel sLevel1) {
                 // Only sync data if town exists
                 if (townId != null) {
-                    Town town = TownManager.getInstance().getTown(townId);
+                    Town town = TownManager.get(sLevel1).getTown(townId);
                     if (town != null) {
                         syncTownData();
                     }
@@ -245,117 +274,119 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         }
         
         if (!level.isClientSide && townId != null) {
-            Town town = TownManager.getInstance().getTown(townId);
-            if (town != null) {
-                // Bread handling logic
-                ItemStack stack = itemHandler.getStackInSlot(0);
-                if (!stack.isEmpty() && stack.getItem() == Items.BREAD) {
-                    stack.shrink(1);
-                    town.addBread(1);
-                    setChanged();
-                }
+            if (level instanceof ServerLevel sLevel1) {
+                Town town = TownManager.get(sLevel1).getTown(townId);
+                if (town != null) {
+                    // Bread handling logic
+                    ItemStack stack = itemHandler.getStackInSlot(0);
+                    if (!stack.isEmpty() && stack.getItem() == Items.BREAD) {
+                        stack.shrink(1);
+                        town.addBread(1);
+                        setChanged();
+                    }
 
-                // Path-based villager spawning
-                if (touristSpawningEnabled && town.canSpawnTourists() && pathStart != null && 
-                    pathEnd != null && 
-                    level.getGameTime() % 200 == 0) {
-                    
-                    // Count existing tourists in the path area
-                    AABB pathBounds = new AABB(
-                        Math.min(pathStart.getX(), pathEnd.getX()) - 1,
-                        pathStart.getY(),
-                        Math.min(pathStart.getZ(), pathEnd.getZ()) - 1,
-                        Math.max(pathStart.getX(), pathEnd.getX()) + 1,
-                        pathStart.getY() + 2,
-                        Math.max(pathStart.getZ(), pathEnd.getZ()) + 1
-                    );
-                    
-                    List<Villager> existingTourists = level.getEntitiesOfClass(Villager.class, pathBounds);
-                    
-                    if (existingTourists.size() < MAX_TOURISTS) {
-                        // Try up to 3 times to find a valid spawn location
-                        for (int attempt = 0; attempt < 3; attempt++) {
-                            // Calculate a random position along the path
-                            double progress = random.nextDouble();
-                            double exactX = pathStart.getX() + (pathEnd.getX() - pathStart.getX()) * progress;
-                            double exactZ = pathStart.getZ() + (pathEnd.getZ() - pathStart.getZ()) * progress;
-                            int x = (int) Math.round(exactX);
-                            int z = (int) Math.round(exactZ);
-                            int y = pathStart.getY() + 1;
-                            
-                            BlockPos spawnPos = new BlockPos(x, y, z);
-                            
-                            // Check if the position is already occupied
-                            boolean isOccupied = existingTourists.stream()
-                                .anyMatch(v -> {
-                                    BlockPos vPos = v.blockPosition();
-                                    return vPos.getX() == spawnPos.getX() && 
-                                           vPos.getZ() == spawnPos.getZ();
-                                });
-                            
-                            if (!isOccupied && 
-                                level.getBlockState(spawnPos).isAir() && 
-                                level.getBlockState(spawnPos.above()).isAir()) {
+                    // Path-based villager spawning
+                    if (touristSpawningEnabled && town.canSpawnTourists() && pathStart != null && 
+                        pathEnd != null && 
+                        level.getGameTime() % 200 == 0) {
+                        
+                        // Count existing tourists in the path area
+                        AABB pathBounds = new AABB(
+                            Math.min(pathStart.getX(), pathEnd.getX()) - 1,
+                            pathStart.getY(),
+                            Math.min(pathStart.getZ(), pathEnd.getZ()) - 1,
+                            Math.max(pathStart.getX(), pathEnd.getX()) + 1,
+                            pathStart.getY() + 2,
+                            Math.max(pathStart.getZ(), pathEnd.getZ()) + 1
+                        );
+                        
+                        List<Villager> existingTourists = level.getEntitiesOfClass(Villager.class, pathBounds);
+                        
+                        if (existingTourists.size() < MAX_TOURISTS) {
+                            // Try up to 3 times to find a valid spawn location
+                            for (int attempt = 0; attempt < 3; attempt++) {
+                                // Calculate a random position along the path
+                                double progress = random.nextDouble();
+                                double exactX = pathStart.getX() + (pathEnd.getX() - pathStart.getX()) * progress;
+                                double exactZ = pathStart.getZ() + (pathEnd.getZ() - pathStart.getZ()) * progress;
+                                int x = (int) Math.round(exactX);
+                                int z = (int) Math.round(exactZ);
+                                int y = pathStart.getY() + 1;
                                 
-                                Villager villager = EntityType.VILLAGER.create(level);
-                                if (villager != null) {
-                                    // Spawn in center of block and make extremely slow
-                                    villager.setPos(x + 0.5, y, z + 0.5);
-                                    villager.setCustomName(Component.literal(town.getName()));
-                                    villager.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED)
-                                           .setBaseValue(0.000001);
+                                BlockPos spawnPos = new BlockPos(x, y, z);
+                                
+                                // Check if the position is already occupied
+                                boolean isOccupied = existingTourists.stream()
+                                    .anyMatch(v -> {
+                                        BlockPos vPos = v.blockPosition();
+                                        return vPos.getX() == spawnPos.getX() && 
+                                               vPos.getZ() == spawnPos.getZ();
+                                    });
+                                
+                                if (!isOccupied && 
+                                    level.getBlockState(spawnPos).isAir() && 
+                                    level.getBlockState(spawnPos.above()).isAir()) {
                                     
-                                    // Set random profession and level 6
-                                    VillagerProfession[] professions = {
-                                        VillagerProfession.ARMORER,
-                                        VillagerProfession.BUTCHER,
-                                        VillagerProfession.CARTOGRAPHER,
-                                        VillagerProfession.CLERIC,
-                                        VillagerProfession.FARMER,
-                                        VillagerProfession.FISHERMAN,
-                                        VillagerProfession.FLETCHER,
-                                        VillagerProfession.LEATHERWORKER,
-                                        VillagerProfession.LIBRARIAN,
-                                        VillagerProfession.MASON,
-                                        VillagerProfession.SHEPHERD,
-                                        VillagerProfession.TOOLSMITH,
-                                        VillagerProfession.WEAPONSMITH
-                                    };
-                                    VillagerProfession randomProfession = professions[random.nextInt(professions.length)];
-                                    villager.setVillagerData(villager.getVillagerData()
-                                        .setProfession(randomProfession)
-                                        .setLevel(6));
-                                    
-                                    // Add tags when spawning villager
-                                    LOGGER.info("[BusinessCraft] Spawning tourist for town {} with ID {}", town.getName(), townId);
-                                    villager.addTag("type_tourist");
-                                    villager.addTag("from_town_" + townId.toString());
-                                    villager.addTag("from_name_" + town.getName());
-                                    villager.addTag("pos_" + getBlockPos().getX() + "_" + 
-                                                    getBlockPos().getY() + "_" + 
-                                                    getBlockPos().getZ());
-                                    
-                                    // Add debug to verify tags were added
-                                    LOGGER.info("[BusinessCraft] Tourist tags after spawning: {}", villager.getTags());
-                                    
-                                    level.addFreshEntity(villager);
-                                    town.removeTourist();
-                                    setChanged();
+                                    Villager villager = EntityType.VILLAGER.create(level);
+                                    if (villager != null) {
+                                        // Spawn in center of block and make extremely slow
+                                        villager.setPos(x + 0.5, y, z + 0.5);
+                                        villager.setCustomName(Component.literal(town.getName()));
+                                        villager.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED)
+                                               .setBaseValue(0.000001);
+                                        
+                                        // Set random profession and level 6
+                                        VillagerProfession[] professions = {
+                                            VillagerProfession.ARMORER,
+                                            VillagerProfession.BUTCHER,
+                                            VillagerProfession.CARTOGRAPHER,
+                                            VillagerProfession.CLERIC,
+                                            VillagerProfession.FARMER,
+                                            VillagerProfession.FISHERMAN,
+                                            VillagerProfession.FLETCHER,
+                                            VillagerProfession.LEATHERWORKER,
+                                            VillagerProfession.LIBRARIAN,
+                                            VillagerProfession.MASON,
+                                            VillagerProfession.SHEPHERD,
+                                            VillagerProfession.TOOLSMITH,
+                                            VillagerProfession.WEAPONSMITH
+                                        };
+                                        VillagerProfession randomProfession = professions[random.nextInt(professions.length)];
+                                        villager.setVillagerData(villager.getVillagerData()
+                                            .setProfession(randomProfession)
+                                            .setLevel(6));
+                                        
+                                        // Add tags when spawning villager
+                                        LOGGER.info("[BusinessCraft] Spawning tourist for town {} with ID {}", town.getName(), townId);
+                                        villager.addTag("type_tourist");
+                                        villager.addTag("from_town_" + townId.toString());
+                                        villager.addTag("from_name_" + town.getName());
+                                        villager.addTag("pos_" + getBlockPos().getX() + "_" + 
+                                                        getBlockPos().getY() + "_" + 
+                                                        getBlockPos().getZ());
+                                        
+                                        // Add debug to verify tags were added
+                                        LOGGER.info("[BusinessCraft] Tourist tags after spawning: {}", villager.getTags());
+                                        
+                                        level.addFreshEntity(villager);
+                                        town.removeTourist();
+                                        setChanged();
+                                    }
+                                    break; // Successfully spawned, exit the loop
                                 }
-                                break; // Successfully spawned, exit the loop
                             }
                         }
                     }
-                }
 
-                // Check for visitors
-                if (level.getGameTime() % 40 == 0) {
-                    checkForVisitors(level, pos);
-                }
+                    // Check for visitors
+                    if (level.getGameTime() % 40 == 0) {
+                        checkForVisitors(level, pos);
+                    }
 
-                // Add scoreboard update
-                if (level instanceof ServerLevel serverLevel) {
-                    TownScoreboardManager.updateScoreboard(serverLevel);
+                    // Add scoreboard update
+                    if (level instanceof ServerLevel sLevel2) {
+                        TownScoreboardManager.updateScoreboard(sLevel2);
+                    }
                 }
             }
         }
@@ -369,70 +400,74 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private void checkForVisitors(Level level, BlockPos pos) {
         if (townId == null || pathStart == null || pathEnd == null) return;
         
-        Town thisTown = TownManager.getInstance().getTown(townId);
-        if (thisTown == null) return;
+        if (level instanceof ServerLevel sLevel1) {
+            Town thisTown = TownManager.get(sLevel1).getTown(townId);
+            if (thisTown == null) return;
 
-        // Create AABB around the path
-        AABB searchBounds = new AABB(
-            Math.min(pathStart.getX(), pathEnd.getX()) - searchRadius,
-            Math.min(pathStart.getY(), pathEnd.getY()) - 2,
-            Math.min(pathStart.getZ(), pathEnd.getZ()) - searchRadius,
-            Math.max(pathStart.getX(), pathEnd.getX()) + searchRadius,
-            Math.max(pathStart.getY(), pathEnd.getY()) + 4,
-            Math.max(pathStart.getZ(), pathEnd.getZ()) + searchRadius
-        );
+            // Create AABB around the path
+            AABB searchBounds = new AABB(
+                Math.min(pathStart.getX(), pathEnd.getX()) - searchRadius,
+                Math.min(pathStart.getY(), pathEnd.getY()) - 2,
+                Math.min(pathStart.getZ(), pathEnd.getZ()) - searchRadius,
+                Math.max(pathStart.getX(), pathEnd.getX()) + searchRadius,
+                Math.max(pathStart.getY(), pathEnd.getY()) + 4,
+                Math.max(pathStart.getZ(), pathEnd.getZ()) + searchRadius
+            );
 
-        List<Villager> nearbyVillagers = level.getEntitiesOfClass(
-                Villager.class,
-                searchBounds);
+            List<Villager> nearbyVillagers = level.getEntitiesOfClass(
+                    Villager.class,
+                    searchBounds);
 
-        for (Villager villager : nearbyVillagers) {
-            Vec3 currentPos = villager.position();
-            Vec3 lastPos = lastVisitorPositions.get(villager.getUUID());
-            
-            // Store current position for next check
-            lastVisitorPositions.put(villager.getUUID(), currentPos);
-            
-            // Skip if this is the first time we've seen this villager
-            if (lastPos == null) continue;
-            
-            // Calculate position change
-            double positionChange = currentPos.distanceTo(lastPos);
-            
-            // Skip if villager has moved too much (likely on transport)
-            if (positionChange > VISITOR_POSITION_CHANGE_THRESHOLD) {
-                continue;
-            }
-
-            if (villager.getTags().contains("type_tourist")) {
-                UUID originTownId = null;
-
-                for (String tag : villager.getTags()) {
-                    if (tag.startsWith("from_town_")) {
-                        originTownId = UUID.fromString(tag.substring(10));
-                    }
-                }
+            for (Villager villager : nearbyVillagers) {
+                Vec3 currentPos = villager.position();
+                Vec3 lastPos = lastVisitorPositions.get(villager.getUUID());
                 
-                if (originTownId != null && !originTownId.equals(this.townId)) {
-                    if (level instanceof ServerLevel serverLevel) {
-                        serverLevel.getServer().getPlayerList().broadcastSystemMessage(
-                            Component.literal("[BusinessCraft] Processing visitor from town: " + originTownId), false);
+                // Store current position for next check
+                lastVisitorPositions.put(villager.getUUID(), currentPos);
+                
+                // Skip if this is the first time we've seen this villager
+                if (lastPos == null) continue;
+                
+                // Calculate position change
+                double positionChange = currentPos.distanceTo(lastPos);
+                
+                // Skip if villager has moved too much (likely on transport)
+                if (positionChange > VISITOR_POSITION_CHANGE_THRESHOLD) {
+                    continue;
+                }
+
+                if (villager.getTags().contains("type_tourist")) {
+                    UUID originTownId = null;
+
+                    for (String tag : villager.getTags()) {
+                        if (tag.startsWith("from_town_")) {
+                            originTownId = UUID.fromString(tag.substring(10));
+                        }
                     }
                     
-                    thisTown.addVisitor(originTownId);
+                    if (originTownId != null && !originTownId.equals(this.townId)) {
+                        if (level instanceof ServerLevel sLevel2) {
+                            sLevel2.getServer().getPlayerList().broadcastSystemMessage(
+                                Component.literal("[BusinessCraft] Processing visitor from town: " + originTownId), false);
+                        }
+                        
+                        thisTown.addVisitor(originTownId);
 
-                    // Calculate distance and XP
-                    double distance = Math.sqrt(villager.blockPosition().distSqr(this.getBlockPos()));
-                    int xpAmount = Math.max(1, (int)(distance / 10));
+                        // Calculate distance and XP
+                        double distance = Math.sqrt(villager.blockPosition().distSqr(this.getBlockPos()));
+                        int xpAmount = Math.max(1, (int)(distance / 10));
 
-                    ExperienceOrb xpOrb = new ExperienceOrb(level,
-                            villager.getX(), villager.getY(), villager.getZ(),
-                            xpAmount);
-                    level.addFreshEntity(xpOrb);
+                        ExperienceOrb xpOrb = new ExperienceOrb(level,
+                                villager.getX(), villager.getY(), villager.getZ(),
+                                xpAmount);
+                        level.addFreshEntity(xpOrb);
 
-                    villager.remove(Entity.RemovalReason.DISCARDED);
-                    setChanged();
-                    TownManager.getInstance().markDirty(); // Ensure this method marks the data as dirty
+                        villager.remove(Entity.RemovalReason.DISCARDED);
+                        setChanged();
+                        if (level instanceof ServerLevel sLevel3) {
+                            TownManager.get(sLevel3).markDirty();
+                        }
+                    }
                 }
             }
         }
@@ -440,13 +475,15 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     public String getTownName() {
         if (townId != null) {
-            Town town = TownManager.getInstance().getTown(townId);
-            if (town != null) {
-                return town.getName();
+            if (level.isClientSide && name != null) {
+                return name; // Use client-cached name
             }
-            return "Loading...";  // Town ID exists but town not loaded yet
+            if (level instanceof ServerLevel sLevel1) {
+                Town town = TownManager.get(sLevel1).getTown(townId);
+                return town != null ? town.getName() : "Loading...2";
+            }
         }
-        return "Initializing...";  // No town ID yet
+        return "Initializing...";
     }
 
     private String getRandomTownName() {
@@ -533,11 +570,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     public int getBreadCount() {
-        return data.get(0);
+        return data.get(DATA_BREAD);
     }
 
     public int getPopulation() {
-        return data.get(1);
+        return data.get(DATA_POPULATION);
     }
 
     @Override
@@ -547,20 +584,21 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     public void syncTownData() {
         if (level != null && !level.isClientSide()) {
-            Town town = TownManager.getInstance().getTown(townId);
-            if (town != null) {
-                data.set(0, town.getBreadCount());
-                data.set(1, town.getPopulation());
-                setChanged();
-            }
+            data.set(DATA_BREAD, data.get(DATA_BREAD));
+            data.set(DATA_POPULATION, data.get(DATA_POPULATION));
+            data.set(DATA_SPAWN_ENABLED, data.get(DATA_SPAWN_ENABLED));
+            data.set(DATA_CAN_SPAWN, data.get(DATA_CAN_SPAWN));
+            setChanged();
         }
     }
 
     public void setTownId(UUID id) {
-        LOGGER.info("[TownBlockEntity] Setting town ID to: {} at pos: {}", id, this.getBlockPos());
         this.townId = id;
-        this.town = TownManager.getInstance().getTown(id);
-        syncTownData();
+        if (level instanceof ServerLevel sLevel1) {
+            Town town = TownManager.get(sLevel1).getTown(id);
+            this.name = town != null ? town.getName() : "Unnamed";
+            syncTownData();
+        }
     }
 
     private void mountTouristsToVehicles() {
@@ -568,105 +606,107 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
         if (pathStart == null || pathEnd == null) return;
 
-        AABB searchBounds = new AABB(
-            Math.min(pathStart.getX(), pathEnd.getX()) - searchRadius,
-            Math.min(pathStart.getY(), pathEnd.getY()) - 2,
-            Math.min(pathStart.getZ(), pathEnd.getZ()) - searchRadius,
-            Math.max(pathStart.getX(), pathEnd.getX()) + searchRadius,
-            Math.max(pathStart.getY(), pathEnd.getY()) + 4,
-            Math.max(pathStart.getZ(), pathEnd.getZ()) + searchRadius
-        );
+        if (level instanceof ServerLevel sLevel4) {
+            AABB searchBounds = new AABB(
+                Math.min(pathStart.getX(), pathEnd.getX()) - searchRadius,
+                Math.min(pathStart.getY(), pathEnd.getY()) - 2,
+                Math.min(pathStart.getZ(), pathEnd.getZ()) - searchRadius,
+                Math.max(pathStart.getX(), pathEnd.getX()) + searchRadius,
+                Math.max(pathStart.getY(), pathEnd.getY()) + 4,
+                Math.max(pathStart.getZ(), pathEnd.getZ()) + searchRadius
+            );
 
-        // Get tourists that can be mounted
-        List<Villager> tourists = level.getEntitiesOfClass(Villager.class, searchBounds,
-            villager -> villager.onGround() && 
-                       !villager.isPassenger() &&
-                       villager.getTags().contains("type_tourist") &&
-                       villager.getTags().stream().anyMatch(tag -> 
-                           tag.startsWith("from_town_" + townId.toString())
-                       )
-        );
+            // Get tourists that can be mounted
+            List<Villager> tourists = level.getEntitiesOfClass(Villager.class, searchBounds,
+                villager -> villager.onGround() && 
+                           !villager.isPassenger() &&
+                           villager.getTags().contains("type_tourist") &&
+                           villager.getTags().stream().anyMatch(tag -> 
+                               tag.startsWith("from_town_" + townId.toString())
+                           )
+            );
 
-        if (tourists.isEmpty()) return;
+            if (tourists.isEmpty()) return;
 
-        if (CONFIG.enableCreateTrains) {
-            List<Entity> carriages = level.getEntitiesOfClass(Entity.class, searchBounds,
-                entity -> {
-                    String entityId = entity.getType().builtInRegistryHolder().key().toString();
-                    boolean isCarriage = entityId.contains("create:carriage_contraption");
-                    
-                    if (!isCarriage) return false;
-                    
-                    // Check if carriage is stopped using position change
-                    boolean isStopped = false;
-                    if (level instanceof ServerLevel serverLevel) {
-                        try {
-                            Vec3 currentPos = entity.position();
-                            Vec3 lastPos = lastPositions.get(entity.getUUID());
-                            
-                            if (lastPos != null) {
-                                double positionChange = currentPos.distanceTo(lastPos);
-                                isStopped = positionChange < VISITOR_POSITION_CHANGE_THRESHOLD;
-                            }
-                            
-                            lastPositions.put(entity.getUUID(), currentPos);
-                        } catch (Exception e) {
-                            // Silently fail and consider not stopped
-                            isStopped = false;
-                        }
-                    }
-                    
-                    return isCarriage && isStopped;
-                });
-            
-            if (level instanceof ServerLevel serverLevel) {
-                carriages.forEach(carriage -> {
-                    try {
-                        // Get total seats
-                        String seatsCommand = String.format("data get entity %s Contraption.Seats", carriage.getStringUUID());
-                        int seatCount = serverLevel.getServer().getCommands().getDispatcher()
-                            .execute(seatsCommand, serverLevel.getServer().createCommandSourceStack());
+            if (CONFIG.enableCreateTrains) {
+                List<Entity> carriages = level.getEntitiesOfClass(Entity.class, searchBounds,
+                    entity -> {
+                        String entityId = entity.getType().builtInRegistryHolder().key().toString();
+                        boolean isCarriage = entityId.contains("create:carriage_contraption");
                         
-                        // Find free seats
-                        List<Integer> freeSeats = new ArrayList<>();
-                        for (int i = 0; i < seatCount; i++) {
+                        if (!isCarriage) return false;
+                        
+                        // Check if carriage is stopped using position change
+                        boolean isStopped = false;
+                        if (level instanceof ServerLevel sLevel2) {
                             try {
-                                String checkSeatCommand = String.format("data get entity %s Contraption.Passengers[{Seat:%d}]", 
-                                    carriage.getStringUUID(), i);
-                                serverLevel.getServer().getCommands().getDispatcher()
-                                    .execute(checkSeatCommand, serverLevel.getServer().createCommandSourceStack());
+                                Vec3 currentPos = entity.position();
+                                Vec3 lastPos = lastPositions.get(entity.getUUID());
+                                
+                                if (lastPos != null) {
+                                    double positionChange = currentPos.distanceTo(lastPos);
+                                    isStopped = positionChange < VISITOR_POSITION_CHANGE_THRESHOLD;
+                                }
+                                
+                                lastPositions.put(entity.getUUID(), currentPos);
                             } catch (Exception e) {
-                                // If command fails, seat is free
-                                freeSeats.add(i);
+                                // Silently fail and consider not stopped
+                                isStopped = false;
                             }
                         }
                         
-                        // Shuffle seats for random assignment
-                        Collections.shuffle(freeSeats);
-                        
-                        // Mount tourists in random free seats
-                        for (Integer seatIndex : freeSeats) {
-                            tourists.stream()
-                                .filter(tourist -> !tourist.isPassenger())
-                                .findFirst()
-                                .ifPresent(tourist -> {
-                                    try {
-                                        String command = String.format("create passenger %s %s %d",
-                                            tourist.getStringUUID(),
-                                            carriage.getStringUUID(),
-                                            seatIndex
-                                        );
-                                        serverLevel.getServer().getCommands().getDispatcher()
-                                            .execute(command, serverLevel.getServer().createCommandSourceStack());
-                                    } catch (Exception e) {
-                                        // Silent fail
-                                    }
-                                });
+                        return isCarriage && isStopped;
+                    });
+                
+                if (level instanceof ServerLevel sLevel1) {
+                    carriages.forEach(carriage -> {
+                        try {
+                            // Get total seats
+                            String seatsCommand = String.format("data get entity %s Contraption.Seats", carriage.getStringUUID());
+                            int seatCount = sLevel1.getServer().getCommands().getDispatcher()
+                                .execute(seatsCommand, sLevel1.getServer().createCommandSourceStack());
+                            
+                            // Find free seats
+                            List<Integer> freeSeats = new ArrayList<>();
+                            for (int i = 0; i < seatCount; i++) {
+                                try {
+                                    String checkSeatCommand = String.format("data get entity %s Contraption.Passengers[{Seat:%d}]", 
+                                        carriage.getStringUUID(), i);
+                                    sLevel1.getServer().getCommands().getDispatcher()
+                                        .execute(checkSeatCommand, sLevel1.getServer().createCommandSourceStack());
+                                } catch (Exception e) {
+                                    // If command fails, seat is free
+                                    freeSeats.add(i);
+                                }
+                            }
+                            
+                            // Shuffle seats for random assignment
+                            Collections.shuffle(freeSeats);
+                            
+                            // Mount tourists in random free seats
+                            for (Integer seatIndex : freeSeats) {
+                                tourists.stream()
+                                    .filter(tourist -> !tourist.isPassenger())
+                                    .findFirst()
+                                    .ifPresent(tourist -> {
+                                        try {
+                                            String command = String.format("create passenger %s %s %d",
+                                                tourist.getStringUUID(),
+                                                carriage.getStringUUID(),
+                                                seatIndex
+                                            );
+                                            sLevel1.getServer().getCommands().getDispatcher()
+                                                .execute(command, sLevel1.getServer().createCommandSourceStack());
+                                        } catch (Exception e) {
+                                            // Silent fail
+                                        }
+                                    });
+                            }
+                        } catch (Exception e) {
+                            // Silent fail
                         }
-                    } catch (Exception e) {
-                        // Silent fail
-                    }
-                });
+                    });
+                }
             }
         }
 
@@ -719,5 +759,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public void setSearchRadius(int radius) {
         this.searchRadius = Math.max(1, Math.min(radius, 100)); // Limit between 1-100 blocks
         setChanged();
+    }
+
+    public Town getTown() {
+        return town;
     }
 }
