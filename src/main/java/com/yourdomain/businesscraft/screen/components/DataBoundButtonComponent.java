@@ -12,6 +12,7 @@ public class DataBoundButtonComponent implements UIComponent {
     private final int width;
     private final int height;
     private Button button;
+    private boolean visible = true;
 
     public DataBoundButtonComponent(Supplier<Component> textSupplier, 
                                   Consumer<Button> onPress,
@@ -44,5 +45,11 @@ public class DataBoundButtonComponent implements UIComponent {
     @Override
     public void init(Consumer<Button> register) {
         register.accept(button);
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        this.visible = visible;
+        if (button != null) button.visible = visible;
     }
 }

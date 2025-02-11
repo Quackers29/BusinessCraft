@@ -9,6 +9,7 @@ public class ToggleButtonComponent implements UIComponent {
     private final Button button;
     private final int width;
     private final int height;
+    private boolean visible = true;
 
     public ToggleButtonComponent(int x, int y, int width, int height, 
             Component text, Consumer<Button> onPress) {
@@ -35,6 +36,14 @@ public class ToggleButtonComponent implements UIComponent {
     @Override
     public void tick() {
         // No-op - vanilla buttons don't require ticking
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+        this.visible = visible;
+        if (button != null) {
+            button.visible = visible;
+        }
     }
 
     @Override public int getWidth() { return width; }
