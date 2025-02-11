@@ -25,6 +25,9 @@ import com.yourdomain.businesscraft.screen.components.ToggleButtonComponent;
 import com.yourdomain.businesscraft.screen.components.DataBoundButtonComponent;
 import java.util.ArrayList;
 import java.util.List;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
@@ -36,6 +39,9 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
 =======
     private static final Logger LOGGER = LoggerFactory.getLogger(TownBlockScreen.class);
     private final List<UIComponent> components = new ArrayList<>();
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
     public TownBlockScreen(TownBlockMenu menu, Inventory inventory, Component title) {
@@ -87,8 +93,11 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         renderBackground(guiGraphics);
         super.render(guiGraphics, mouseX, mouseY, delta);
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         renderTooltip(guiGraphics, mouseX, mouseY);
 =======
+=======
+>>>>>>> Stashed changes
         
         int yPos = topPos + 10;
         for (UIComponent component : components) {
@@ -113,6 +122,9 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
             LOGGER.debug("Client State - Enabled: {}, CanSpawn: {}", 
                 menu.isTouristSpawningEnabled(), menu.getData().get(3));
         }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     }
 
