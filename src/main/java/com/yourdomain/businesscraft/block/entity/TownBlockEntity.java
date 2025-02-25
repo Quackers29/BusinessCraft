@@ -83,7 +83,12 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     };
 
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
-    private final ContainerData data = new SimpleContainerData(4) {
+    private static final int DATA_BREAD = 0;
+    private static final int DATA_POPULATION = 1;
+    private static final int DATA_SPAWN_ENABLED = 2;
+    private static final int DATA_CAN_SPAWN = 3;
+    private static final int DATA_SEARCH_RADIUS = 4;
+    private final ContainerData data = new SimpleContainerData(5) {
         private long lastLogTime = 0;
         
         @Override
@@ -102,6 +107,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     case DATA_POPULATION -> town.getPopulation();
                     case DATA_SPAWN_ENABLED -> town.isTouristSpawningEnabled() ? 1 : 0;
                     case DATA_CAN_SPAWN -> town.canSpawnTourists() ? 1 : 0;
+                    case DATA_SEARCH_RADIUS -> town.getSearchRadius();
                     default -> 0;
                 };
                 
@@ -141,10 +147,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private int searchRadius = DEFAULT_SEARCH_RADIUS;
     private final AABB searchBounds = new AABB(worldPosition).inflate(15);
     private List<LivingEntity> tourists = new ArrayList<>();
-    private static final int DATA_BREAD = 0;
-    private static final int DATA_POPULATION = 1;
-    private static final int DATA_SPAWN_ENABLED = 2;
-    private static final int DATA_CAN_SPAWN = 3;
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -225,16 +227,52 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
+        
+        // First load paths from the tag itself as a fallback
+        if (tag.contains("PathStart")) {
+            CompoundTag startPos = tag.getCompound("PathStart");
+            pathStart = new BlockPos(
+                startPos.getInt("x"),
+                startPos.getInt("y"),
+                startPos.getInt("z")
+            );
+        }
+        
+        if (tag.contains("PathEnd")) {
+            CompoundTag endPos = tag.getCompound("PathEnd");
+            pathEnd = new BlockPos(
+                endPos.getInt("x"),
+                endPos.getInt("y"),
+                endPos.getInt("z")
+            );
+        }
+        
+        if (tag.contains("searchRadius")) {
+            searchRadius = tag.getInt("searchRadius");
+        }
+        
+        // Then try to get the town data
         if (tag.contains("TownId")) {
             townId = tag.getUUID("TownId");
             if (level instanceof ServerLevel sLevel1) {
                 town = TownManager.get(sLevel1).getTown(townId);
                 if (town != null) {
-                    // Update local values from the Town object
+                    // Update local values from the Town object, but prefer the ones we already loaded
                     touristSpawningEnabled = town.isTouristSpawningEnabled();
-                    pathStart = town.getPathStart();
-                    pathEnd = town.getPathEnd();
-                    searchRadius = town.getSearchRadius();
+                    
+                    // Only use town paths if we don't have any
+                    if (pathStart == null && town.getPathStart() != null) {
+                        pathStart = town.getPathStart();
+                    }
+                    
+                    if (pathEnd == null && town.getPathEnd() != null) {
+                        pathEnd = town.getPathEnd();
+                    }
+                    
+                    // Use town search radius if already set
+                    if (searchRadius <= 0 && town.getSearchRadius() > 0) {
+                        searchRadius = town.getSearchRadius();
+                    }
                 }
             }
         }
@@ -252,6 +290,20 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 if (townId != null) {
                     Town town = TownManager.get(sLevel1).getTown(townId);
                     if (town != null) {
+                        // Ensure paths are synchronized from Town to BlockEntity
+                        if (town.getPathStart() != null && !town.getPathStart().equals(pathStart)) {
+                            pathStart = town.getPathStart();
+                        }
+                        
+                        if (town.getPathEnd() != null && !town.getPathEnd().equals(pathEnd)) {
+                            pathEnd = town.getPathEnd();
+                        }
+                        
+                        // Ensure search radius is synchronized
+                        if (town.getSearchRadius() != searchRadius) {
+                            searchRadius = town.getSearchRadius();
+                        }
+                        
                         syncTownData();
                     }
                 }
@@ -593,6 +645,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             data.set(DATA_POPULATION, data.get(DATA_POPULATION));
             data.set(DATA_SPAWN_ENABLED, data.get(DATA_SPAWN_ENABLED));
             data.set(DATA_CAN_SPAWN, data.get(DATA_CAN_SPAWN));
+            data.set(DATA_SEARCH_RADIUS, data.get(DATA_SEARCH_RADIUS));
             setChanged();
         }
     }
@@ -773,6 +826,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             }
         }
         
+        // Make sure to update the container data
+        if (level != null && !level.isClientSide()) {
+            data.set(DATA_SEARCH_RADIUS, this.searchRadius);
+        }
+        
         setChanged();
     }
 
@@ -782,6 +840,12 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     public void setTouristSpawningEnabled(boolean enabled) {
         this.touristSpawningEnabled = enabled;
+        
+        // Make sure to update the container data
+        if (level != null && !level.isClientSide()) {
+            data.set(DATA_SPAWN_ENABLED, enabled ? 1 : 0);
+        }
+        
         setChanged();
     }
 }

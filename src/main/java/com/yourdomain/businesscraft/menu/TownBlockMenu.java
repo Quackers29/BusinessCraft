@@ -27,6 +27,13 @@ public class TownBlockMenu extends AbstractContainerMenu {
     private static final Logger LOGGER = LogManager.getLogger("BusinessCraft/TownBlockMenu");
     private Town cachedTown;
     private UUID townId;
+    
+    // Constants for data indices
+    private static final int DATA_BREAD = 0;
+    private static final int DATA_POPULATION = 1;
+    private static final int DATA_SPAWN_ENABLED = 2;
+    private static final int DATA_CAN_SPAWN = 3;
+    private static final int DATA_SEARCH_RADIUS = 4;
 
     public TownBlockMenu(int id, Inventory inv, FriendlyByteBuf extraData) {
         this(id, inv, inv.player.level().getBlockEntity(extraData.readBlockPos()));
@@ -37,7 +44,7 @@ public class TownBlockMenu extends AbstractContainerMenu {
         this.blockEntity = entity instanceof TownBlockEntity ? 
             (TownBlockEntity) entity : null;
         this.data = blockEntity != null ? 
-            blockEntity.getContainerData() : new SimpleContainerData(4);
+            blockEntity.getContainerData() : new SimpleContainerData(5);
         
         if (blockEntity != null) {
             blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -52,11 +59,11 @@ public class TownBlockMenu extends AbstractContainerMenu {
     }
 
     public int getBreadCount() {
-        return data.get(0);
+        return data.get(DATA_BREAD);
     }
 
     public int getPopulation() {
-        return data.get(1);
+        return data.get(DATA_POPULATION);
     }
 
     public String getTownName() {
@@ -72,11 +79,15 @@ public class TownBlockMenu extends AbstractContainerMenu {
 
     public boolean isTouristSpawningEnabled() {
         if (blockEntity != null) {
-            int state = data.get(2);
+            int state = data.get(DATA_SPAWN_ENABLED);
             LOGGER.debug("Menu state check - Enabled: {}", state == 1);
             return state == 1;
         }
         return false;
+    }
+
+    public int getSearchRadius() {
+        return data.get(DATA_SEARCH_RADIUS);
     }
 
     @Override
