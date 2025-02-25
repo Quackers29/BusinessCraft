@@ -87,7 +87,7 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
             ))
         ));
         comps.add(new DataBoundButtonComponent(
-            () -> Component.literal("Radius: " + menu.getBlockEntity().getSearchRadius()),
+            () -> Component.literal("Radius: " + menu.getSearchRadius()),
             (button) -> handleRadiusChange(),
             buttonWidth, buttonHeight
         ));
@@ -130,7 +130,7 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     }
 
     private void handleRadiusChange() {
-        int currentRadius = menu.getBlockEntity().getSearchRadius();
+        int currentRadius = menu.getSearchRadius();
         int newRadius = currentRadius;
         
         boolean isShift = hasShiftDown();

@@ -36,6 +36,7 @@ public class SetSearchRadiusPacket {
                 ServerLevel level = player.serverLevel();
                 if (level.getBlockEntity(pos) instanceof TownBlockEntity townBlock) {
                     townBlock.setSearchRadius(radius);
+                    townBlock.syncTownData();
                 }
             }
         });
