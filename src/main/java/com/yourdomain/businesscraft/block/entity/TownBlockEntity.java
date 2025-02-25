@@ -229,31 +229,16 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             townId = tag.getUUID("TownId");
             if (level instanceof ServerLevel sLevel1) {
                 town = TownManager.get(sLevel1).getTown(townId);
+                if (town != null) {
+                    // Update local values from the Town object
+                    touristSpawningEnabled = town.isTouristSpawningEnabled();
+                    pathStart = town.getPathStart();
+                    pathEnd = town.getPathEnd();
+                    searchRadius = town.getSearchRadius();
+                }
             }
         }
         
-        // Load path positions
-        if (tag.contains("PathStart")) {
-            CompoundTag startPos = tag.getCompound("PathStart");
-            pathStart = new BlockPos(
-                startPos.getInt("x"),
-                startPos.getInt("y"),
-                startPos.getInt("z")
-            );
-        }
-        
-        if (tag.contains("PathEnd")) {
-            CompoundTag endPos = tag.getCompound("PathEnd");
-            pathEnd = new BlockPos(
-                endPos.getInt("x"),
-                endPos.getInt("y"),
-                endPos.getInt("z")
-            );
-        }
-
-        searchRadius = tag.contains("searchRadius") ? 
-            tag.getInt("searchRadius") : DEFAULT_SEARCH_RADIUS;
-
         if (tag.contains("name")) {
             name = tag.getString("name");
         }
@@ -544,11 +529,31 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     public void setPathStart(BlockPos pos) {
         this.pathStart = pos;
+        
+        // Also update in the Town object
+        if (townId != null && level instanceof ServerLevel sLevel) {
+            Town town = TownManager.get(sLevel).getTown(townId);
+            if (town != null) {
+                town.setPathStart(pos);
+                TownManager.get(sLevel).markDirty();
+            }
+        }
+        
         setChanged();
     }
 
     public void setPathEnd(BlockPos pos) {
         this.pathEnd = pos;
+        
+        // Also update in the Town object
+        if (townId != null && level instanceof ServerLevel sLevel) {
+            Town town = TownManager.get(sLevel).getTown(townId);
+            if (town != null) {
+                town.setPathEnd(pos);
+                TownManager.get(sLevel).markDirty();
+            }
+        }
+        
         setChanged();
     }
 
@@ -758,10 +763,25 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     public void setSearchRadius(int radius) {
         this.searchRadius = Math.max(1, Math.min(radius, 100)); // Limit between 1-100 blocks
+        
+        // Also update in the Town object
+        if (townId != null && level instanceof ServerLevel sLevel) {
+            Town town = TownManager.get(sLevel).getTown(townId);
+            if (town != null) {
+                town.setSearchRadius(this.searchRadius);
+                TownManager.get(sLevel).markDirty();
+            }
+        }
+        
         setChanged();
     }
 
     public Town getTown() {
         return town;
+    }
+
+    public void setTouristSpawningEnabled(boolean enabled) {
+        this.touristSpawningEnabled = enabled;
+        setChanged();
     }
 }

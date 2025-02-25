@@ -47,6 +47,7 @@ public class ToggleTouristSpawningPacket {
                         if (town != null) {
                             boolean newState = !town.isTouristSpawningEnabled();
                             town.setTouristSpawningEnabled(newState);
+                            townBlock.setTouristSpawningEnabled(newState);
                             townBlock.syncTownData();
                             TownManager.get(serverLevel).getSavedData().setDirty();
                         }

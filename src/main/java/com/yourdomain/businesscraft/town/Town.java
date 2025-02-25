@@ -19,6 +19,9 @@ public class Town {
     private final Map<UUID, Integer> visitors = new HashMap<>();
     private boolean touristSpawningEnabled;
     private boolean cachedResult;
+    private BlockPos pathStart;
+    private BlockPos pathEnd;
+    private int searchRadius = 10;
     
     public Town(UUID id, BlockPos pos, String name) {
         this.id = id;
@@ -59,6 +62,25 @@ public class Town {
         CompoundTag economyTag = new CompoundTag();
         economy.save(economyTag);
         tag.put("economy", economyTag);
+        
+        if (pathStart != null) {
+            CompoundTag startPos = new CompoundTag();
+            startPos.putInt("x", pathStart.getX());
+            startPos.putInt("y", pathStart.getY());
+            startPos.putInt("z", pathStart.getZ());
+            tag.put("PathStart", startPos);
+        }
+        
+        if (pathEnd != null) {
+            CompoundTag endPos = new CompoundTag();
+            endPos.putInt("x", pathEnd.getX());
+            endPos.putInt("y", pathEnd.getY());
+            endPos.putInt("z", pathEnd.getZ());
+            tag.put("PathEnd", endPos);
+        }
+        
+        tag.putInt("searchRadius", searchRadius);
+        tag.putBoolean("touristSpawningEnabled", touristSpawningEnabled);
     }
     
     public static Town load(CompoundTag tag) {
@@ -76,6 +98,31 @@ public class Town {
             });
         }
         town.economy.load(tag.getCompound("economy"));
+        
+        if (tag.contains("PathStart")) {
+            CompoundTag startPos = tag.getCompound("PathStart");
+            town.pathStart = new BlockPos(
+                startPos.getInt("x"),
+                startPos.getInt("y"),
+                startPos.getInt("z")
+            );
+        }
+        
+        if (tag.contains("PathEnd")) {
+            CompoundTag endPos = tag.getCompound("PathEnd");
+            town.pathEnd = new BlockPos(
+                endPos.getInt("x"),
+                endPos.getInt("y"),
+                endPos.getInt("z")
+            );
+        }
+        
+        town.searchRadius = tag.contains("searchRadius") ? 
+            tag.getInt("searchRadius") : 10;
+        
+        town.touristSpawningEnabled = !tag.contains("touristSpawningEnabled") || 
+            tag.getBoolean("touristSpawningEnabled");
+        
         return town;
     }
     
@@ -115,6 +162,30 @@ public class Town {
     
     public boolean isTouristSpawningEnabled() {
         return touristSpawningEnabled;
+    }
+    
+    public void setPathStart(BlockPos pathStart) {
+        this.pathStart = pathStart;
+    }
+    
+    public void setPathEnd(BlockPos pathEnd) {
+        this.pathEnd = pathEnd;
+    }
+    
+    public BlockPos getPathStart() {
+        return pathStart;
+    }
+    
+    public BlockPos getPathEnd() {
+        return pathEnd;
+    }
+    
+    public int getSearchRadius() {
+        return searchRadius;
+    }
+    
+    public void setSearchRadius(int searchRadius) {
+        this.searchRadius = searchRadius;
     }
     
     // Getters and setters
