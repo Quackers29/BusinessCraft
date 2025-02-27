@@ -21,4 +21,8 @@ public interface ITownDataProvider {
     void setSearchRadius(int radius);
     boolean canSpawnTourists();
     void markDirty();
+    void addBread(int count);
+    BlockPos getPosition();
+    void addVisitor(UUID fromTownId);
+    int getTotalVisitors();
 } 

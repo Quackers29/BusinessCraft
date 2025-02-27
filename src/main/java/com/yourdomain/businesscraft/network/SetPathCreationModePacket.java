@@ -8,6 +8,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.event.ModEvents;
+import com.yourdomain.businesscraft.api.ITownDataProvider;
 
 import java.util.function.Supplier;
 
@@ -29,29 +30,39 @@ public class SetPathCreationModePacket {
         return new SetPathCreationModePacket(buf.readBlockPos(), buf.readBoolean());
     }
 
-    public void handle(Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
-            ServerPlayer player = ctx.get().getSender();
-            if (player != null) {
-                Level level = player.level();
-                BlockEntity be = level.getBlockEntity(pos);
-                
-                if (be instanceof TownBlockEntity townBlock) {
-                    townBlock.setPathCreationMode(mode);
-                    if (mode) {
-                        ModEvents.setActiveTownBlock(pos);
-                    }
-                }
-            }
-        });
-        ctx.get().setPacketHandled(true);
-    }
-
     public BlockPos getPos() {
         return pos;
     }
 
     public boolean isEnteringMode() {
         return mode;
+    }
+
+    public void handle(Supplier<NetworkEvent.Context> supplier) {
+        NetworkEvent.Context context = supplier.get();
+        context.enqueueWork(() -> {
+            ServerPlayer player = context.getSender();
+            if (player != null) {
+                Level level = player.level();
+                BlockEntity be = level.getBlockEntity(pos);
+                if (be instanceof TownBlockEntity townBlock) {
+                    if (mode) {
+                        // Start path creation mode
+                        player.getPersistentData().putUUID("CurrentTownBlock", 
+                                townBlock.getTownId());
+                    } else {
+                        // Path creation complete
+                        ITownDataProvider provider = townBlock.getTownDataProvider();
+                        if (provider != null && townBlock.getPathStart() != null && townBlock.getPathEnd() != null) {
+                            // Update provider with path data
+                            provider.setPathStart(townBlock.getPathStart());
+                            provider.setPathEnd(townBlock.getPathEnd());
+                            provider.markDirty();
+                        }
+                    }
+                }
+            }
+        });
+        context.setPacketHandled(true);
     }
 } 
