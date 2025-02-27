@@ -180,10 +180,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public void onLoad() {
         super.onLoad();
         lazyItemHandler = LazyOptional.of(() -> itemHandler);
+        
+        // Update from provider when loaded
         if (!level.isClientSide()) {
-            if (level instanceof ServerLevel sLevel1) {
-                sLevel1.scheduleTick(getBlockPos(), getBlockState().getBlock(), 1);
-            }
+            updateFromTownProvider();
         }
     }
 
@@ -196,14 +196,16 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     @Override
     public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
+        tag.put("inventory", itemHandler.serializeNBT());
+        
+        // Save local data to tag
         if (townId != null) {
             tag.putUUID("TownId", townId);
-            if (level instanceof ServerLevel sLevel1) {
-                town = TownManager.get(sLevel1).getTown(townId);
-            }
         }
         
-        // Save path positions
+        tag.putString("name", name != null ? name : "");
+        
+        // Always save our local values to tag in case Town gets lost
         if (pathStart != null) {
             CompoundTag startPos = new CompoundTag();
             startPos.putInt("x", pathStart.getX());
@@ -219,11 +221,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             endPos.putInt("z", pathEnd.getZ());
             tag.put("PathEnd", endPos);
         }
-
+        
         tag.putInt("searchRadius", searchRadius);
-        if (name != null) {
-            tag.putString("name", name);
-        }
     }
 
     @Override
@@ -586,13 +585,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public void setPathStart(BlockPos pos) {
         this.pathStart = pos;
         
-        // Also update in the Town object
-        if (townId != null && level instanceof ServerLevel sLevel) {
-            Town town = TownManager.get(sLevel).getTown(townId);
-            if (town != null) {
-                town.setPathStart(pos);
-                TownManager.get(sLevel).markDirty();
-            }
+        // Update the town through the provider
+        ITownDataProvider provider = getTownDataProvider();
+        if (provider != null) {
+            provider.setPathStart(pos);
+            provider.markDirty();
         }
         
         setChanged();
@@ -601,13 +598,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public void setPathEnd(BlockPos pos) {
         this.pathEnd = pos;
         
-        // Also update in the Town object
-        if (townId != null && level instanceof ServerLevel sLevel) {
-            Town town = TownManager.get(sLevel).getTown(townId);
-            if (town != null) {
-                town.setPathEnd(pos);
-                TownManager.get(sLevel).markDirty();
-            }
+        // Update the town through the provider
+        ITownDataProvider provider = getTownDataProvider();
+        if (provider != null) {
+            provider.setPathEnd(pos);
+            provider.markDirty();
         }
         
         setChanged();
@@ -883,6 +878,33 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             this.pathStart = provider.getPathStart();
             this.pathEnd = provider.getPathEnd();
             this.searchRadius = provider.getSearchRadius();
+        }
+    }
+
+    public void processBreadInSlot() {
+        if (!level.isClientSide()) {
+            IItemHandler itemHandler = lazyItemHandler.orElse(this.itemHandler);
+            ItemStack stack = itemHandler.getStackInSlot(0);
+            if (stack.getItem() == Items.BREAD) {
+                int count = stack.getCount();
+                itemHandler.extractItem(0, count, false);
+                
+                // Update the provider
+                ITownDataProvider provider = getTownDataProvider();
+                if (provider != null) {
+                    // This assumes Town has implemented addBread in the provider interface
+                    // If not, we should add this method to ITownDataProvider
+                    if (provider instanceof Town town) {
+                        town.addBread(count);
+                    }
+                    provider.markDirty();
+                }
+                
+                // Update the container data
+                int breadCount = provider != null ? provider.getBreadCount() : 0;
+                data.set(DATA_BREAD, breadCount);
+                setChanged();
+            }
         }
     }
 }
