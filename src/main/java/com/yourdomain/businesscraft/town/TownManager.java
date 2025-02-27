@@ -10,10 +10,14 @@ import java.util.Collections;
 import com.yourdomain.businesscraft.data.TownSavedData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.HashMap;
 
 public class TownManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/TownManager");
     private final TownSavedData savedData;
+    
+    // Static reference to the current level for context
+    private static final Map<ServerLevel, TownManager> INSTANCES = new HashMap<>();
     
     public TownSavedData getSavedData() {
         return this.savedData;
@@ -28,7 +32,7 @@ public class TownManager {
     }
 
     public static TownManager get(ServerLevel level) {
-        return new TownManager(level);
+        return INSTANCES.computeIfAbsent(level, key -> new TownManager(level));
     }
 
     public UUID registerTown(BlockPos pos, String name) {

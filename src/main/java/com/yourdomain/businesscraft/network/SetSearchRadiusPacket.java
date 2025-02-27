@@ -1,6 +1,7 @@
 package com.yourdomain.businesscraft.network;
 
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.api.ITownDataProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
@@ -35,6 +36,13 @@ public class SetSearchRadiusPacket {
             if (player != null) {
                 ServerLevel level = player.serverLevel();
                 if (level.getBlockEntity(pos) instanceof TownBlockEntity townBlock) {
+                    ITownDataProvider provider = townBlock.getTownDataProvider();
+                    if (provider != null) {
+                        provider.setSearchRadius(radius);
+                        provider.markDirty();
+                    }
+                    
+                    // Still update the block entity for UI synchronization
                     townBlock.setSearchRadius(radius);
                     townBlock.syncTownData();
                 }

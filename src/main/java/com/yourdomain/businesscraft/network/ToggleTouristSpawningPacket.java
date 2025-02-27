@@ -12,6 +12,7 @@ import net.minecraftforge.network.NetworkEvent;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.api.ITownDataProvider;
 
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -40,17 +41,15 @@ public class ToggleTouristSpawningPacket {
                 Level level = player.level();
                 BlockEntity be = level.getBlockEntity(pos);
                 if (be instanceof TownBlockEntity townBlock) {
-                    UUID townId = townBlock.getTownId();
-                    if (townId != null) {
-                        ServerLevel serverLevel = (ServerLevel) level;
-                        Town town = TownManager.get(serverLevel).getTown(townId);
-                        if (town != null) {
-                            boolean newState = !town.isTouristSpawningEnabled();
-                            town.setTouristSpawningEnabled(newState);
-                            townBlock.setTouristSpawningEnabled(newState);
-                            townBlock.syncTownData();
-                            TownManager.get(serverLevel).getSavedData().setDirty();
-                        }
+                    ITownDataProvider provider = townBlock.getTownDataProvider();
+                    if (provider != null) {
+                        boolean newState = !provider.isTouristSpawningEnabled();
+                        provider.setTouristSpawningEnabled(newState);
+                        provider.markDirty();
+                        
+                        // Still update the block entity for UI synchronization
+                        townBlock.setTouristSpawningEnabled(newState);
+                        townBlock.syncTownData();
                     }
                 }
             }

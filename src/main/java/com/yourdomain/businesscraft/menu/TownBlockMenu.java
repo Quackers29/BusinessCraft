@@ -18,6 +18,7 @@ import org.apache.logging.log4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
+import com.yourdomain.businesscraft.api.ITownDataProvider;
 
 import java.util.UUID;
 
@@ -59,14 +60,30 @@ public class TownBlockMenu extends AbstractContainerMenu {
     }
 
     public int getBreadCount() {
+        ITownDataProvider provider = getTownDataProvider();
+        if (provider != null) {
+            return provider.getBreadCount();
+        }
         return data.get(DATA_BREAD);
     }
 
     public int getPopulation() {
+        ITownDataProvider provider = getTownDataProvider();
+        if (provider != null) {
+            return provider.getPopulation();
+        }
         return data.get(DATA_POPULATION);
     }
 
     public String getTownName() {
+        ITownDataProvider provider = getTownDataProvider();
+        if (provider != null) {
+            String name = provider.getTownName();
+            if (name != null && !name.isEmpty()) {
+                return name;
+            }
+        }
+        
         if (blockEntity != null) {
             String name = blockEntity.getTownName();
             if (!name.isEmpty()) {
@@ -78,6 +95,11 @@ public class TownBlockMenu extends AbstractContainerMenu {
     }
 
     public boolean isTouristSpawningEnabled() {
+        ITownDataProvider provider = getTownDataProvider();
+        if (provider != null) {
+            return provider.isTouristSpawningEnabled();
+        }
+        
         if (blockEntity != null) {
             int state = data.get(DATA_SPAWN_ENABLED);
             LOGGER.debug("Menu state check - Enabled: {}", state == 1);
@@ -87,6 +109,10 @@ public class TownBlockMenu extends AbstractContainerMenu {
     }
 
     public int getSearchRadius() {
+        ITownDataProvider provider = getTownDataProvider();
+        if (provider != null) {
+            return provider.getSearchRadius();
+        }
         return data.get(DATA_SEARCH_RADIUS);
     }
 
@@ -156,5 +182,12 @@ public class TownBlockMenu extends AbstractContainerMenu {
 
     public ContainerData getData() {
         return data;
+    }
+
+    public ITownDataProvider getTownDataProvider() {
+        if (blockEntity != null) {
+            return blockEntity.getTownDataProvider();
+        }
+        return null;
     }
 }
