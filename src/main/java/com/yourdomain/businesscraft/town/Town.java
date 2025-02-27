@@ -9,8 +9,9 @@ import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.town.components.TownEconomyComponent;
+import com.yourdomain.businesscraft.api.ITownDataProvider;
 
-public class Town {
+public class Town implements ITownDataProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(Town.class);
     private final UUID id;
     private final BlockPos position;
@@ -186,6 +187,21 @@ public class Town {
     
     public void setSearchRadius(int searchRadius) {
         this.searchRadius = searchRadius;
+    }
+    
+    @Override
+    public UUID getTownId() {
+        return id;
+    }
+    
+    @Override
+    public void markDirty() {
+        // This will be handled by the TownManager
+    }
+    
+    @Override
+    public String getTownName() {
+        return getName();
     }
     
     // Getters and setters

@@ -25,6 +25,8 @@ import com.yourdomain.businesscraft.screen.components.ToggleButtonComponent;
 import com.yourdomain.businesscraft.screen.components.DataBoundButtonComponent;
 import com.yourdomain.businesscraft.screen.components.TabComponent;
 import com.yourdomain.businesscraft.screen.components.SlotComponent;
+import com.yourdomain.businesscraft.api.ITownDataProvider;
+
 
 public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     private static final ResourceLocation TEXTURE = new ResourceLocation(BusinessCraft.MOD_ID,
@@ -130,9 +132,11 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     }
 
     private void handleRadiusChange() {
+        // Get the current radius from the menu's data provider if possible
         int currentRadius = menu.getSearchRadius();
         int newRadius = currentRadius;
         
+        // Calculate new radius based on key combinations
         boolean isShift = hasShiftDown();
         boolean isControl = hasControlDown();
         
@@ -146,9 +150,10 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
             newRadius += 1;
         }
         
+        // Clamp to reasonable values
         newRadius = Math.max(1, Math.min(newRadius, 100));
-        ModMessages.sendToServer(new SetSearchRadiusPacket(
-            menu.getBlockEntity().getBlockPos(), newRadius
-        ));
+        
+        // Send packet to update
+        ModMessages.sendToServer(new SetSearchRadiusPacket(menu.getBlockEntity().getBlockPos(), newRadius));
     }
 }

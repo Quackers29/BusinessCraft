@@ -68,6 +68,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.ArrayList;
 import net.minecraft.world.phys.Vec3;
+import com.yourdomain.businesscraft.api.ITownDataProvider;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -147,6 +148,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private int searchRadius = DEFAULT_SEARCH_RADIUS;
     private final AABB searchBounds = new AABB(worldPosition).inflate(15);
     private List<LivingEntity> tourists = new ArrayList<>();
+    private ITownDataProvider townDataProvider;
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -285,6 +287,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     @Override
     public void tick(Level level, BlockPos pos, BlockState state, TownBlockEntity blockEntity) {
         if (!level.isClientSide()) {
+            // Update from provider at regular intervals
+            updateFromTownProvider();
             if (level instanceof ServerLevel sLevel1) {
                 // Only sync data if town exists
                 if (townId != null) {
@@ -841,11 +845,44 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public void setTouristSpawningEnabled(boolean enabled) {
         this.touristSpawningEnabled = enabled;
         
-        // Make sure to update the container data
+        // Update the town through the provider
+        ITownDataProvider provider = getTownDataProvider();
+        if (provider != null) {
+            provider.setTouristSpawningEnabled(enabled);
+            provider.markDirty();
+        }
+        
+        // Update container data
         if (level != null && !level.isClientSide()) {
             data.set(DATA_SPAWN_ENABLED, enabled ? 1 : 0);
         }
         
         setChanged();
+    }
+
+    /**
+     * Gets the town data provider, initializing it if needed
+     */
+    public ITownDataProvider getTownDataProvider() {
+        if (townDataProvider == null && townId != null && level instanceof ServerLevel sLevel) {
+            Town town = TownManager.get(sLevel).getTown(townId);
+            if (town != null) {
+                townDataProvider = town;
+            }
+        }
+        return townDataProvider;
+    }
+    
+    /**
+     * Updates cached values from the town data provider
+     */
+    private void updateFromTownProvider() {
+        ITownDataProvider provider = getTownDataProvider();
+        if (provider != null) {
+            this.touristSpawningEnabled = provider.isTouristSpawningEnabled();
+            this.pathStart = provider.getPathStart();
+            this.pathEnd = provider.getPathEnd();
+            this.searchRadius = provider.getSearchRadius();
+        }
     }
 }
