@@ -9,6 +9,8 @@ import net.minecraftforge.network.NetworkEvent;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.event.ModEvents;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 import java.util.function.Supplier;
 
@@ -50,6 +52,18 @@ public class SetPathCreationModePacket {
                         // Start path creation mode
                         player.getPersistentData().putUUID("CurrentTownBlock", 
                                 townBlock.getTownId());
+                        // Set the active town block in ModEvents
+                        ModEvents.setActiveTownBlock(pos);
+                        // Enable path creation mode on the town block entity
+                        townBlock.setPathCreationMode(true);
+                        
+                        // Reset any existing path to avoid confusion
+                        townBlock.setPathStart(null);
+                        townBlock.setPathEnd(null);
+                        
+                        // Notify player using proper formatting
+                        player.sendSystemMessage(Component.literal("Entering path creation mode. Right-click blocks to set path points.")
+                            .withStyle(ChatFormatting.GREEN));
                     } else {
                         // Path creation complete
                         ITownDataProvider provider = townBlock.getTownDataProvider();
@@ -59,6 +73,10 @@ public class SetPathCreationModePacket {
                             provider.setPathEnd(townBlock.getPathEnd());
                             provider.markDirty();
                         }
+                        
+                        // Disable path creation mode
+                        townBlock.setPathCreationMode(false);
+                        ModEvents.setActiveTownBlock(null);
                     }
                 }
             }
