@@ -11,6 +11,11 @@ import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.town.components.TownEconomyComponent;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
 import net.minecraft.world.item.Item;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Collections;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 
 public class Town implements ITownDataProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(Town.class);
@@ -24,6 +29,10 @@ public class Town implements ITownDataProvider {
     private BlockPos pathStart;
     private BlockPos pathEnd;
     private int searchRadius = 10;
+    
+    // Visit history storage - moved from TownBlockEntity
+    private final List<VisitHistoryRecord> visitHistory = new ArrayList<>();
+    private static final int MAX_HISTORY_SIZE = 50; // Maximum history entries to keep
     
     public Town(UUID id, BlockPos pos, String name) {
         this.id = id;
@@ -98,6 +107,29 @@ public class Town implements ITownDataProvider {
         
         tag.putInt("searchRadius", searchRadius);
         tag.putBoolean("touristSpawningEnabled", touristSpawningEnabled);
+        
+        // Save visit history
+        if (!visitHistory.isEmpty()) {
+            ListTag historyTag = new ListTag();
+            for (VisitHistoryRecord record : visitHistory) {
+                CompoundTag visitTag = new CompoundTag();
+                visitTag.putLong("timestamp", record.getTimestamp());
+                visitTag.putUUID("townId", record.getOriginTownId());
+                visitTag.putInt("count", record.getCount());
+                
+                // Save origin position
+                if (record.getOriginPos() != null && record.getOriginPos() != BlockPos.ZERO) {
+                    CompoundTag posTag = new CompoundTag();
+                    posTag.putInt("x", record.getOriginPos().getX());
+                    posTag.putInt("y", record.getOriginPos().getY());
+                    posTag.putInt("z", record.getOriginPos().getZ());
+                    visitTag.put("pos", posTag);
+                }
+                
+                historyTag.add(visitTag);
+            }
+            tag.put("visitHistory", historyTag);
+        }
     }
     
     public static Town load(CompoundTag tag) {
@@ -139,6 +171,46 @@ public class Town implements ITownDataProvider {
         
         town.touristSpawningEnabled = !tag.contains("touristSpawningEnabled") || 
             tag.getBoolean("touristSpawningEnabled");
+        
+        // Load visit history
+        if (tag.contains("visitHistory")) {
+            ListTag historyTag = tag.getList("visitHistory", Tag.TAG_COMPOUND);
+            
+            for (int i = 0; i < historyTag.size(); i++) {
+                CompoundTag visitTag = historyTag.getCompound(i);
+                
+                long timestamp = visitTag.getLong("timestamp");
+                UUID originTownId;
+                
+                // Support both new UUID format and legacy string format
+                if (visitTag.contains("townId")) {
+                    originTownId = visitTag.getUUID("townId");
+                } else if (visitTag.contains("town")) {
+                    // Legacy format - convert town name to a deterministic UUID
+                    // This ensures backward compatibility
+                    String townName = visitTag.getString("town");
+                    originTownId = UUID.nameUUIDFromBytes(("town:" + townName).getBytes());
+                    LOGGER.info("Converting legacy town name '{}' to UUID: {}", townName, originTownId);
+                } else {
+                    // No valid identifier, use a placeholder UUID
+                    originTownId = new UUID(0, 0);
+                }
+                
+                int count = visitTag.getInt("count");
+                
+                BlockPos originPos = BlockPos.ZERO;
+                if (visitTag.contains("pos")) {
+                    CompoundTag posTag = visitTag.getCompound("pos");
+                    originPos = new BlockPos(
+                        posTag.getInt("x"),
+                        posTag.getInt("y"),
+                        posTag.getInt("z")
+                    );
+                }
+                
+                town.visitHistory.add(new VisitHistoryRecord(timestamp, originTownId, count, originPos));
+            }
+        }
         
         return town;
     }
@@ -233,5 +305,28 @@ public class Town implements ITownDataProvider {
         return getName();
     }
     
-    // Getters and setters
+    // Visit history implementation
+    @Override
+    public void recordVisit(UUID originTownId, int count, BlockPos originPos) {
+        long timestamp = System.currentTimeMillis();
+        
+        // Create the visit record
+        VisitHistoryRecord record = new VisitHistoryRecord(timestamp, originTownId, count, originPos);
+        
+        // Add to the beginning of the list (newest first)
+        visitHistory.add(0, record);
+        
+        // Trim if we exceed the maximum history size
+        while (visitHistory.size() > MAX_HISTORY_SIZE) {
+            visitHistory.remove(visitHistory.size() - 1);
+        }
+        
+        // Mark as dirty to ensure it's saved
+        markDirty();
+    }
+    
+    @Override
+    public List<VisitHistoryRecord> getVisitHistory() {
+        return Collections.unmodifiableList(visitHistory);
+    }
 } 

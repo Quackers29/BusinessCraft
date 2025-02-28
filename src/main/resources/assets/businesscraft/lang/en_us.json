@@ -5,5 +5,6 @@
   "gui.businesscraft.toggle_tourists": "Toggle Tourists",
   "gui.businesscraft.tab.town": "Town",
   "gui.businesscraft.tab.resources": "Resources",
-  "gui.businesscraft.tab.settings": "Settings"
+  "gui.businesscraft.tab.settings": "Settings",
+  "gui.businesscraft.tab.history": "History"
 }
