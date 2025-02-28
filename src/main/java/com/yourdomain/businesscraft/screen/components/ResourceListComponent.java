@@ -161,8 +161,8 @@ public class ResourceListComponent implements UIComponent {
             newList.add(new ResourceEntry(item, count));
         });
         
-        // Sort the list by name
-        newList.sort(Comparator.comparing(ResourceEntry::getItemName));
+        // Sort the list by quantity (highest first)
+        newList.sort(Comparator.comparing(ResourceEntry::getCount).reversed());
         
         // Update our list
         sortedResources = newList;
