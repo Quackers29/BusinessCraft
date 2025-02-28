@@ -345,45 +345,28 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         isEditingTownName = true;
         nameEditor.setVisible(true);
         
-        // Force a fresh town name lookup to ensure we have the latest
-        // Call getTownName() which may trigger a fresh lookup from the provider
+        // Get the current town name
         String currentTownName = menu.getTownName();
-        LOGGER.debug("Showing town name editor with initial name: {}", currentTownName);
         
-        // Get the current town name and set it in the edit box
+        // Set the text in the edit box and focus it
         EditBoxComponent editBox = nameEditor.getEditBox();
         if (editBox != null) {
-            // Set the text in the edit box
             editBox.setText(currentTownName);
-            // Set focus to the edit box (so typing goes there immediately)
             editBox.setFocused(true);
         }
     }
     
     private void handleTownNameConfirmed(String newName) {
-        // Log the name change attempt
-        LOGGER.info("[DEBUG] Confirming name change to: {}", newName);
-        
         // Send packet to update town name
         ModMessages.sendToServer(new SetTownNamePacket(
             menu.getBlockEntity().getBlockPos(), 
             newName
         ));
         
-        // Force immediate UI refresh - simulate a server update by updating the block entity's cached name
-        // This gives immediate feedback to the user before the server confirms the change
+        // Provide immediate client-side feedback
         TownBlockEntity blockEntity = menu.getBlockEntity();
-        if (blockEntity != null) {
-            // Client-side only: Update the cached name directly for immediate feedback
-            // The server will eventually send the real update, but this gives instant response
-            if (minecraft.level.isClientSide) {
-                LOGGER.info("[DEBUG] Setting client-side name to: {}", newName);
-                blockEntity.setClientTownName(newName);
-                
-                // Verify the name was updated
-                String currentName = menu.getTownName();
-                LOGGER.info("[DEBUG] After name change, current name is: {}", currentName);
-            }
+        if (blockEntity != null && minecraft.level.isClientSide) {
+            blockEntity.setClientTownName(newName);
         }
         
         // Hide editor and show tabs again

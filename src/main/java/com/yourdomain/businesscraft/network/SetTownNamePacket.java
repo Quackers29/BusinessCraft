@@ -52,7 +52,7 @@ public class SetTownNamePacket extends BaseBlockEntityPacket {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> {
             handlePacket(context, (player, townBlock) -> {
-                LOGGER.info("[DEBUG] Processing SetTownNamePacket for position {} with new name: '{}'", 
+                LOGGER.debug("Processing SetTownNamePacket for position {} with new name: '{}'", 
                     pos, newName);
                     
                 ITownDataProvider provider = townBlock.getTownDataProvider();
@@ -69,9 +69,6 @@ public class SetTownNamePacket extends BaseBlockEntityPacket {
                         return;
                     }
                     
-                    LOGGER.info("[DEBUG] Changing town name from '{}' to '{}' for town {}", 
-                        town.getName(), trimmedName, town.getTownId());
-                    
                     // Update the name in the Town object
                     town.setName(trimmedName);
                     
@@ -85,11 +82,9 @@ public class SetTownNamePacket extends BaseBlockEntityPacket {
                     BlockState state = player.level().getBlockState(pos);
                     player.level().sendBlockUpdated(pos, state, state, Block.UPDATE_ALL);
                     
-                    // Debug logging to verify the name change
-                    LOGGER.info("[DEBUG] After name change, town name from provider is: {}", 
-                        provider.getTownName());
-                    LOGGER.info("[DEBUG] After name change, town name from block entity is: {}", 
-                        townBlock.getTownName());
+                    // Only keep one debug log for verification
+                    LOGGER.debug("Town renamed successfully from {} to {}", 
+                        town.getName(), trimmedName);
                     
                     // Send confirmation message to player
                     player.sendSystemMessage(Component.literal("Town renamed to: ").withStyle(ChatFormatting.GREEN)
