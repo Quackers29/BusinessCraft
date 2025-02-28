@@ -1,11 +1,11 @@
 package com.yourdomain.businesscraft.client;
 
 import com.yourdomain.businesscraft.BusinessCraft;
+import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -28,12 +28,7 @@ import java.util.function.Supplier;
  */
 public class TownDebugNetwork {
     private static final String PROTOCOL_VERSION = "1";
-    public static final SimpleChannel INSTANCE = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation(BusinessCraft.MOD_ID, "town_debug"),
-            () -> PROTOCOL_VERSION,
-            PROTOCOL_VERSION::equals,
-            PROTOCOL_VERSION::equals
-    );
+    private static SimpleChannel INSTANCE;
     
     private static int packetId = 0;
     private static int nextId() {
@@ -41,6 +36,14 @@ public class TownDebugNetwork {
     }
     
     public static void register() {
+        // Create a separate network channel for debug packets
+        INSTANCE = NetworkRegistry.newSimpleChannel(
+                new ResourceLocation(BusinessCraft.MOD_ID, "town_debug"),
+                () -> PROTOCOL_VERSION,
+                PROTOCOL_VERSION::equals,
+                PROTOCOL_VERSION::equals
+        );
+        
         // Register the request packet (client -> server)
         INSTANCE.messageBuilder(RequestTownDataPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(buf -> new RequestTownDataPacket())

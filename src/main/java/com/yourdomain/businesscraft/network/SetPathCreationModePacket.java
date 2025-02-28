@@ -22,13 +22,9 @@ public class SetPathCreationModePacket extends BaseBlockEntityPacket {
         this.mode = mode;
     }
 
-    public static void encode(SetPathCreationModePacket msg, FriendlyByteBuf buf) {
-        buf.writeBlockPos(msg.getPos());
-        buf.writeBoolean(msg.isEnteringMode());
-    }
-
-    public static SetPathCreationModePacket decode(FriendlyByteBuf buf) {
-        return new SetPathCreationModePacket(buf.readBlockPos(), buf.readBoolean());
+    public SetPathCreationModePacket(FriendlyByteBuf buf) {
+        super(buf);
+        this.mode = buf.readBoolean();
     }
 
     public boolean isEnteringMode() {
@@ -39,6 +35,20 @@ public class SetPathCreationModePacket extends BaseBlockEntityPacket {
     public void toBytes(FriendlyByteBuf buf) {
         super.toBytes(buf);
         buf.writeBoolean(mode);
+    }
+    
+    /**
+     * Static encode method needed by ModMessages registration
+     */
+    public static void encode(SetPathCreationModePacket msg, FriendlyByteBuf buf) {
+        msg.toBytes(buf);
+    }
+    
+    /**
+     * Static decode method needed by ModMessages registration
+     */
+    public static SetPathCreationModePacket decode(FriendlyByteBuf buf) {
+        return new SetPathCreationModePacket(buf);
     }
 
     public void handle(Supplier<NetworkEvent.Context> supplier) {
