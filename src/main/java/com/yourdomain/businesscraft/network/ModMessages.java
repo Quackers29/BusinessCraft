@@ -7,7 +7,13 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.simple.SimpleChannel;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import net.minecraftforge.network.NetworkEvent;
 
+/**
+ * Handles registration and sending of network packets
+ */
 public class ModMessages {
     private static SimpleChannel INSTANCE;
 
@@ -26,28 +32,24 @@ public class ModMessages {
 
         INSTANCE = net;
 
-        // Register existing packets
-        net.messageBuilder(SetPathCreationModePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(buf -> new SetPathCreationModePacket(buf.readBlockPos(), buf.readBoolean()))
-                .encoder((msg, buf) -> {
-                    buf.writeBlockPos(msg.getPos());
-                    buf.writeBoolean(msg.isEnteringMode());
-                })
-                .consumerMainThread(SetPathCreationModePacket::handle)
-                .add();
-
-        // Register the new ToggleTouristSpawningPacket
+        // Register each packet individually since our generic approach has issues
         net.messageBuilder(ToggleTouristSpawningPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(ToggleTouristSpawningPacket::new)
                 .encoder(ToggleTouristSpawningPacket::toBytes)
                 .consumerMainThread(ToggleTouristSpawningPacket::handle)
                 .add();
-
-        // Register the new SetSearchRadiusPacket
+                
         net.messageBuilder(SetSearchRadiusPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SetSearchRadiusPacket::new)
                 .encoder(SetSearchRadiusPacket::toBytes)
                 .consumerMainThread(SetSearchRadiusPacket::handle)
+                .add();
+        
+        // Register the path creation packet
+        net.messageBuilder(SetPathCreationModePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(SetPathCreationModePacket::decode)
+                .encoder(SetPathCreationModePacket::encode)
+                .consumerMainThread(SetPathCreationModePacket::handle)
                 .add();
     }
 
