@@ -32,7 +32,7 @@ public class ModMessages {
 
         INSTANCE = net;
 
-        // Register each packet individually since our generic approach has issues
+        // Register all packets using a consistent pattern
         net.messageBuilder(ToggleTouristSpawningPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(ToggleTouristSpawningPacket::new)
                 .encoder(ToggleTouristSpawningPacket::toBytes)
@@ -46,6 +46,7 @@ public class ModMessages {
                 .add();
         
         // Register the path creation packet
+        // This packet has static encode/decode methods that delegate to instance methods
         net.messageBuilder(SetPathCreationModePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SetPathCreationModePacket::decode)
                 .encoder(SetPathCreationModePacket::encode)

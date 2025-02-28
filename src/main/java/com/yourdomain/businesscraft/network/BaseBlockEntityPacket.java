@@ -41,7 +41,8 @@ public abstract class BaseBlockEntityPacket {
         if (player != null) {
             Level level = player.level();
             BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof TownBlockEntity townBlock) {
+            if (be instanceof TownBlockEntity) {
+                TownBlockEntity townBlock = (TownBlockEntity) be;
                 handler.accept(player, townBlock);
             } else {
                 LOGGER.warn("Received packet for position {} but no TownBlockEntity found", pos);
