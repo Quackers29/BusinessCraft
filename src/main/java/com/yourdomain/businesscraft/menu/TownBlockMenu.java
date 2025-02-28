@@ -19,11 +19,14 @@ import org.slf4j.LoggerFactory;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
+import com.yourdomain.businesscraft.screen.components.VisitHistoryComponent.VisitEntry;
 
 import java.util.UUID;
 import java.util.Collections;
 import java.util.Map;
 import net.minecraft.world.item.Item;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class TownBlockMenu extends AbstractContainerMenu {
     private final TownBlockEntity blockEntity;
@@ -195,23 +198,42 @@ public class TownBlockMenu extends AbstractContainerMenu {
     }
     
     /**
-     * Gets all resources from the town
-     * @return Map of items to quantities, or empty map if no town is available
+     * Gets all resources in the town.
+     * @return A map of items to their quantities.
      */
     public Map<Item, Integer> getAllResources() {
-        // On client side, use the client resources
-        if (blockEntity != null && blockEntity.getLevel().isClientSide()) {
-            Map<Item, Integer> clientResources = blockEntity.getClientResources();
-            if (!clientResources.isEmpty()) {
-                return clientResources;
+        if (blockEntity != null) {
+            // First try client-side cache if available
+            if (blockEntity.getLevel().isClientSide() && !blockEntity.getClientResources().isEmpty()) {
+                return blockEntity.getClientResources();
+            }
+            
+            // Fallback to server-side data if needed
+            ITownDataProvider provider = blockEntity.getTownDataProvider();
+            if (provider != null) {
+                return provider.getAllResources();
             }
         }
-        
-        // On server side, use the provider
-        ITownDataProvider provider = getTownDataProvider();
-        if (provider != null) {
-            return provider.getAllResources();
-        }
         return Collections.emptyMap();
+    }
+    
+    /**
+     * Gets the visit history for this town
+     * @return List of visit entries
+     */
+    public List<VisitEntry> getVisitHistory() {
+        if (blockEntity == null) {
+            return Collections.emptyList();
+        }
+        
+        // Convert TownBlockEntity.VisitRecord to VisitEntry
+        return blockEntity.getVisitHistory().stream()
+            .map(record -> new VisitEntry(
+                record.getTimestamp(),
+                record.getOriginTown(),
+                record.getCount(),
+                record.getOriginPos()
+            ))
+            .collect(Collectors.toList());
     }
 }

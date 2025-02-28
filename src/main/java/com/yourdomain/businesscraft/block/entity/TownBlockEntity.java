@@ -165,6 +165,72 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     // Client-side cache of resources for rendering
     private Map<Item, Integer> clientResources = new HashMap<>();
 
+    // Add structures for visit history
+    public static class VisitRecord {
+        private final long timestamp;
+        private final String originTown;
+        private final int count;
+        private final BlockPos originPos;
+
+        public VisitRecord(long timestamp, String originTown, int count, BlockPos originPos) {
+            this.timestamp = timestamp;
+            this.originTown = originTown;
+            this.count = count;
+            this.originPos = originPos;
+        }
+
+        public long getTimestamp() { return timestamp; }
+        public String getOriginTown() { return originTown; }
+        public int getCount() { return count; }
+        public BlockPos getOriginPos() { return originPos; }
+    }
+
+    // Visit buffer for grouping arrivals
+    private static class VisitBuffer {
+        private final Map<String, Integer> townVisitors = new HashMap<>(); 
+        private final Map<String, BlockPos> townPositions = new HashMap<>();
+        private long lastVisitTime = 0;
+        private static final long BUFFER_TIMEOUT_MS = 1000; // 1 second timeout
+
+        public void addVisitor(String townName, BlockPos originPos) {
+            townVisitors.put(townName, townVisitors.getOrDefault(townName, 0) + 1);
+            townPositions.putIfAbsent(townName, originPos);
+            lastVisitTime = System.currentTimeMillis();
+        }
+
+        public boolean shouldProcess() {
+            return !townVisitors.isEmpty() && 
+                   System.currentTimeMillis() - lastVisitTime > BUFFER_TIMEOUT_MS;
+        }
+
+        public List<VisitRecord> processVisits() {
+            if (townVisitors.isEmpty()) return Collections.emptyList();
+            
+            long now = System.currentTimeMillis();
+            List<VisitRecord> records = townVisitors.entrySet().stream()
+                .map(entry -> new VisitRecord(
+                    now, 
+                    entry.getKey(), 
+                    entry.getValue(),
+                    townPositions.getOrDefault(entry.getKey(), BlockPos.ZERO)
+                ))
+                .collect(Collectors.toList());
+                
+            // Clear the buffer
+            townVisitors.clear();
+            townPositions.clear();
+            return records;
+        }
+    }
+
+    // History storage
+    private final List<VisitRecord> visitHistory = new ArrayList<>();
+    private final VisitBuffer visitBuffer = new VisitBuffer();
+    private static final int MAX_HISTORY_SIZE = 50; // Maximum history entries to keep
+    
+    // Client-side history cache
+    private List<VisitRecord> clientVisitHistory = new ArrayList<>();
+
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
         LOGGER.debug("TownBlockEntity created at position: {}", pos);
@@ -482,6 +548,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             // First, clean up positions of villagers that are no longer present
             cleanupVisitorPositions(nearbyVillagers);
 
+            // Process visitors that are stationary
             for (Villager villager : nearbyVillagers) {
                 Vec3 currentPos = villager.position();
                 Vec3 lastPos = lastVisitorPositions.get(villager.getUUID());
@@ -502,21 +569,33 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
                 if (villager.getTags().contains("type_tourist")) {
                     UUID originTownId = null;
+                    String originTownName = "Unknown";
+                    BlockPos originPos = null;
 
                     for (String tag : villager.getTags()) {
                         if (tag.startsWith("from_town_")) {
                             originTownId = UUID.fromString(tag.substring(10));
+                        } else if (tag.startsWith("from_name_")) {
+                            originTownName = tag.substring(10);
+                        } else if (tag.startsWith("pos_")) {
+                            String[] parts = tag.substring(4).split("_");
+                            if (parts.length == 3) {
+                                try {
+                                    int x = Integer.parseInt(parts[0]);
+                                    int y = Integer.parseInt(parts[1]);
+                                    int z = Integer.parseInt(parts[2]);
+                                    originPos = new BlockPos(x, y, z);
+                                } catch (NumberFormatException e) {
+                                    LOGGER.error("Error parsing position from tag: {}", tag);
+                                }
+                            }
                         }
                     }
                     
                     if (originTownId != null && !originTownId.equals(this.townId)) {
-                        if (level instanceof ServerLevel sLevel2) {
-                            sLevel2.getServer().getPlayerList().broadcastSystemMessage(
-                                Component.literal("[BusinessCraft] Processing visitor from town: " + originTownId), false);
-                        }
+                        // Add to visit buffer instead of processing immediately
+                        visitBuffer.addVisitor(originTownName, originPos != null ? originPos : BlockPos.ZERO);
                         
-                        thisTown.addVisitor(originTownId);
-
                         // Calculate distance and XP
                         double distance = Math.sqrt(villager.blockPosition().distSqr(this.getBlockPos()));
                         int xpAmount = Math.max(1, (int)(distance / 10));
@@ -528,10 +607,53 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
                         villager.remove(Entity.RemovalReason.DISCARDED);
                         setChanged();
-                        if (level instanceof ServerLevel sLevel3) {
-                            TownManager.get(sLevel3).markDirty();
+                    }
+                }
+            }
+            
+            // Process the visit buffer if it's ready
+            if (visitBuffer.shouldProcess()) {
+                List<VisitRecord> newVisits = visitBuffer.processVisits();
+                if (!newVisits.isEmpty()) {
+                    // Add to history and trim if needed
+                    visitHistory.addAll(0, newVisits); // Add to the beginning (newest first)
+                    while (visitHistory.size() > MAX_HISTORY_SIZE) {
+                        visitHistory.remove(visitHistory.size() - 1); // Remove oldest
+                    }
+                    
+                    // Process visits in the town data
+                    for (VisitRecord record : newVisits) {
+                        // Instead of trying to find the town, just use the UUID if possible
+                        UUID originTownId = null;
+                        try {
+                            // Try to find the origin town - if this fails, we'll fall back to basic processing
+                            if (level instanceof ServerLevel serverLevel) {
+                                for (Town town : TownManager.get(serverLevel).getAllTowns().values()) {
+                                    if (town.getName().equals(record.getOriginTown())) {
+                                        originTownId = town.getId();
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            if (originTownId != null) {
+                                // Process each visitor individually to maintain compatibility
+                                for (int i = 0; i < record.getCount(); i++) {
+                                    thisTown.addVisitor(originTownId);
+                                }
+                            }
+                        } catch (Exception e) {
+                            LOGGER.error("Error processing visitor batch from {}: {}", 
+                                record.getOriginTown(), e.getMessage());
                         }
                     }
+                    
+                    if (level instanceof ServerLevel sLevel3) {
+                        TownManager.get(sLevel3).markDirty();
+                    }
+                    
+                    // Update clients
+                    level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
                 }
             }
         }
@@ -639,6 +761,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             // Add resources tag to the update tag
             tag.put("clientResources", resourcesTag);
         }
+        
+        // Add visit history data
+        syncVisitHistoryForClient(tag);
     }
 
     @Override
@@ -652,6 +777,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         
         // Load client resources data
         loadResourcesFromTag(tag);
+        
+        // Load visit history data
+        loadVisitHistoryFromTag(tag);
     }
     
     /**
@@ -939,5 +1067,74 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     @Override
     public Packet<ClientGamePacketListener> getUpdatePacket() {
         return ClientboundBlockEntityDataPacket.create(this);
+    }
+
+    /**
+     * Adds visit history data to the provided tag for client-side rendering
+     */
+    private void syncVisitHistoryForClient(CompoundTag tag) {
+        if (visitHistory.isEmpty()) return;
+        
+        ListTag historyTag = new ListTag();
+        for (VisitRecord record : visitHistory) {
+            CompoundTag visitTag = new CompoundTag();
+            visitTag.putLong("timestamp", record.getTimestamp());
+            visitTag.putString("town", record.getOriginTown());
+            visitTag.putInt("count", record.getCount());
+            
+            // Add origin position
+            if (record.getOriginPos() != null && record.getOriginPos() != BlockPos.ZERO) {
+                CompoundTag posTag = new CompoundTag();
+                posTag.putInt("x", record.getOriginPos().getX());
+                posTag.putInt("y", record.getOriginPos().getY());
+                posTag.putInt("z", record.getOriginPos().getZ());
+                visitTag.put("pos", posTag);
+            }
+            
+            historyTag.add(visitTag);
+        }
+        tag.put("visitHistory", historyTag);
+    }
+    
+    /**
+     * Gets the visit history for client-side display
+     */
+    public List<VisitRecord> getVisitHistory() {
+        return level != null && level.isClientSide() ? 
+            Collections.unmodifiableList(clientVisitHistory) :
+            Collections.unmodifiableList(visitHistory);
+    }
+    
+    /**
+     * Loads visit history from the provided tag into the client-side cache
+     */
+    private void loadVisitHistoryFromTag(CompoundTag tag) {
+        if (tag.contains("visitHistory")) {
+            ListTag historyTag = tag.getList("visitHistory", Tag.TAG_COMPOUND);
+            
+            // Clear previous history
+            clientVisitHistory.clear();
+            
+            // Load all history entries
+            for (int i = 0; i < historyTag.size(); i++) {
+                CompoundTag visitTag = historyTag.getCompound(i);
+                
+                long timestamp = visitTag.getLong("timestamp");
+                String town = visitTag.getString("town");
+                int count = visitTag.getInt("count");
+                
+                BlockPos originPos = BlockPos.ZERO;
+                if (visitTag.contains("pos")) {
+                    CompoundTag posTag = visitTag.getCompound("pos");
+                    originPos = new BlockPos(
+                        posTag.getInt("x"),
+                        posTag.getInt("y"),
+                        posTag.getInt("z")
+                    );
+                }
+                
+                clientVisitHistory.add(new VisitRecord(timestamp, town, count, originPos));
+            }
+        }
     }
 }

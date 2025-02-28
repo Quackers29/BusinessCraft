@@ -28,6 +28,7 @@ import com.yourdomain.businesscraft.screen.components.SlotComponent;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
 import com.yourdomain.businesscraft.screen.components.ResourceListComponent;
 import net.minecraft.client.Minecraft;
+import com.yourdomain.businesscraft.screen.components.VisitHistoryComponent;
 
 
 public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
@@ -49,11 +50,15 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         // Resources Tab - Bread management
         List<UIComponent> resourcesTabComponents = createResourceComponents(menu);
         
+        // History Tab - Tourist visits
+        List<UIComponent> historyTabComponents = createHistoryComponents(menu);
+        
         // Settings Tab - Buttons
         List<UIComponent> settingsTabComponents = createSettingsComponents(menu);
         
         tabComponent.addTab("town", Component.translatable("gui.businesscraft.tab.town"), townTabComponents);
         tabComponent.addTab("resources", Component.translatable("gui.businesscraft.tab.resources"), resourcesTabComponents);
+        tabComponent.addTab("history", Component.translatable("gui.businesscraft.tab.history"), historyTabComponents);
         tabComponent.addTab("settings", Component.translatable("gui.businesscraft.tab.settings"), settingsTabComponents);
         
         components.add(tabComponent);
@@ -70,6 +75,12 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         List<UIComponent> comps = new ArrayList<>();
         comps.add(new ResourceListComponent(() -> menu.getAllResources(), 200));
         comps.add(new SlotComponent());
+        return comps;
+    }
+    
+    private List<UIComponent> createHistoryComponents(TownBlockMenu menu) {
+        List<UIComponent> comps = new ArrayList<>();
+        comps.add(new VisitHistoryComponent(() -> menu.getVisitHistory(), 200));
         return comps;
     }
     
@@ -139,6 +150,12 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
             
             // Show slot tooltip
             renderTooltip(guiGraphics, mouseX, mouseY);
+        } else if (tabComponent.getActiveTabId().equals("history")) {
+            // Special handling for history tab
+            List<UIComponent> historyComponents = tabComponent.getActiveComponents();
+            if (historyComponents.size() >= 1 && historyComponents.get(0) instanceof VisitHistoryComponent historyComponent) {
+                historyComponent.render(guiGraphics, leftPos + 10, yPos, mouseX, mouseY);
+            }
         } else {
             // Standard rendering for other tabs
             for (UIComponent component : tabComponent.getActiveComponents()) {
@@ -170,12 +187,21 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         TabComponent tabComponent = (TabComponent) components.get(0);
         
-        // Only handle scrolling in resources tab
-        if (tabComponent.getActiveTabId().equals("resources")) {
+        // Only handle scrolling in resources or history tab
+        String activeTabId = tabComponent.getActiveTabId();
+        if (activeTabId.equals("resources")) {
             List<UIComponent> resourceComponents = tabComponent.getActiveComponents();
             if (resourceComponents.size() >= 1 && resourceComponents.get(0) instanceof ResourceListComponent resourceList) {
                 // Pass scroll event to resource list component
                 if (resourceList.mouseScrolled(mouseX, mouseY, delta)) {
+                    return true;
+                }
+            }
+        } else if (activeTabId.equals("history")) {
+            List<UIComponent> historyComponents = tabComponent.getActiveComponents();
+            if (historyComponents.size() >= 1 && historyComponents.get(0) instanceof VisitHistoryComponent historyComponent) {
+                // Pass scroll event to history component
+                if (historyComponent.mouseScrolled(mouseX, mouseY, delta)) {
                     return true;
                 }
             }
