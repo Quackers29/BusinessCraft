@@ -28,6 +28,7 @@ import java.util.Map;
 import net.minecraft.world.item.Item;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.function.Function;
 
 public class TownBlockMenu extends AbstractContainerMenu {
     private final TownBlockEntity blockEntity;
@@ -67,22 +68,15 @@ public class TownBlockMenu extends AbstractContainerMenu {
     }
 
     public int getBreadCount() {
-        ITownDataProvider provider = getTownDataProvider();
-        if (provider != null) {
-            return provider.getBreadCount();
-        }
-        return data.get(DATA_BREAD);
+        return getProviderValueOr(ITownDataProvider::getBreadCount, data.get(DATA_BREAD));
     }
 
     public int getPopulation() {
-        ITownDataProvider provider = getTownDataProvider();
-        if (provider != null) {
-            return provider.getPopulation();
-        }
-        return data.get(DATA_POPULATION);
+        return getProviderValueOr(ITownDataProvider::getPopulation, data.get(DATA_POPULATION));
     }
 
     public String getTownName() {
+        // Special handling for town name since it's a String
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
             String name = provider.getTownName();
@@ -102,25 +96,11 @@ public class TownBlockMenu extends AbstractContainerMenu {
     }
 
     public boolean isTouristSpawningEnabled() {
-        ITownDataProvider provider = getTownDataProvider();
-        if (provider != null) {
-            return provider.isTouristSpawningEnabled();
-        }
-        
-        if (blockEntity != null) {
-            int state = data.get(DATA_SPAWN_ENABLED);
-            LOGGER.debug("Menu state check - Enabled: {}", state == 1);
-            return state == 1;
-        }
-        return false;
+        return getProviderValueOr(ITownDataProvider::isTouristSpawningEnabled, data.get(DATA_SPAWN_ENABLED) == 1);
     }
 
     public int getSearchRadius() {
-        ITownDataProvider provider = getTownDataProvider();
-        if (provider != null) {
-            return provider.getSearchRadius();
-        }
-        return data.get(DATA_SEARCH_RADIUS);
+        return getProviderValueOr(ITownDataProvider::getSearchRadius, data.get(DATA_SEARCH_RADIUS));
     }
 
     @Override
@@ -226,42 +206,44 @@ public class TownBlockMenu extends AbstractContainerMenu {
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
             // Use the provider directly to get the visit history (single source of truth)
-            return provider.getVisitHistory().stream()
-                .map(record -> {
-                    // Resolve town name from UUID for display
-                    String townName = resolveTownName(record.getOriginTownId());
-                    // Add extra logging to debug name resolution
-                    LOGGER.debug("Visit history entry: {} from town {} ({})",
-                        record.getTimestamp(),
-                        townName,
-                        record.getOriginTownId());
-                    return new VisitEntry(
-                        record.getTimestamp(),
-                        townName,
-                        record.getCount(),
-                        record.getOriginPos()
-                    );
-                })
-                .collect(Collectors.toList());
+            return mapVisitHistoryToEntries(provider.getVisitHistory());
         }
         
         if (blockEntity != null) {
             // Fallback to using the block entity if provider is null
-            return blockEntity.getVisitHistory().stream()
-                .map(record -> {
-                    // Resolve town name from UUID for display
-                    String townName = resolveTownName(record.getOriginTownId());
-                    return new VisitEntry(
-                        record.getTimestamp(),
-                        townName,
-                        record.getCount(),
-                        record.getOriginPos()
-                    );
-                })
-                .collect(Collectors.toList());
+            return mapVisitHistoryToEntries(blockEntity.getVisitHistory());
         }
         
         return Collections.emptyList();
+    }
+    
+    /**
+     * Maps VisitHistoryRecord objects to VisitEntry objects for display
+     * @param records The history records to map
+     * @return A list of VisitEntry objects ready for UI display
+     */
+    private List<VisitEntry> mapVisitHistoryToEntries(List<VisitHistoryRecord> records) {
+        return records.stream()
+            .map(record -> {
+                // Resolve town name from UUID for display
+                String townName = resolveTownName(record.getOriginTownId());
+                
+                // Add logging for troubleshooting at debug level only
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Visit history entry: {} from town {} ({})",
+                        record.getTimestamp(),
+                        townName,
+                        record.getOriginTownId());
+                }
+                
+                return new VisitEntry(
+                    record.getTimestamp(),
+                    townName,
+                    record.getCount(),
+                    record.getOriginPos()
+                );
+            })
+            .collect(Collectors.toList());
     }
     
     /**
@@ -274,13 +256,29 @@ public class TownBlockMenu extends AbstractContainerMenu {
             // Use the block entity's town name cache for client-side resolution
             String name = blockEntity.getTownNameFromId(townId);
             // If the name returned is the fallback format, log it for debugging
-            if (name.startsWith("Town-")) {
-                LOGGER.warn("Falling back to UUID format for town {}", townId);
+            if (name.startsWith("Town-") && LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Falling back to UUID format for town {}", townId);
             }
             return name;
         }
         
         // Fallback - just show a portion of the UUID
         return "Town-" + townId.toString().substring(0, 8);
+    }
+
+    /**
+     * A utility method to reduce boilerplate when getting values from providers
+     * 
+     * @param <T> The return type of the provider method
+     * @param getter A function that extracts a value from an ITownDataProvider
+     * @param defaultValue The default value to return if no provider exists
+     * @return The value from the provider, or the default if unavailable
+     */
+    private <T> T getProviderValueOr(Function<ITownDataProvider, T> getter, T defaultValue) {
+        ITownDataProvider provider = getTownDataProvider();
+        if (provider != null) {
+            return getter.apply(provider);
+        }
+        return defaultValue;
     }
 }

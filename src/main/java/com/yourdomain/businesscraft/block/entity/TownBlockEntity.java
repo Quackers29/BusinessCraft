@@ -168,38 +168,58 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     // Visit buffer for grouping arrivals
     private static class VisitBuffer {
-        private final Map<UUID, Integer> townVisitors = new HashMap<>(); 
-        private final Map<UUID, BlockPos> townPositions = new HashMap<>();
+        // Single value object to store visitor count and origin position
+        private static class VisitorInfo {
+            final int count;
+            final BlockPos originPos;
+            
+            public VisitorInfo(int count, BlockPos originPos) {
+                this.count = count;
+                this.originPos = originPos;
+            }
+            
+            public VisitorInfo incrementCount() {
+                return new VisitorInfo(count + 1, originPos);
+            }
+        }
+        
+        private final Map<UUID, VisitorInfo> visitors = new HashMap<>();
         private long lastVisitTime = 0;
         private static final long BUFFER_TIMEOUT_MS = 1000; // 1 second timeout
 
         public void addVisitor(UUID townId, BlockPos originPos) {
-            townVisitors.put(townId, townVisitors.getOrDefault(townId, 0) + 1);
-            townPositions.putIfAbsent(townId, originPos);
+            // Update or insert a new VisitorInfo
+            visitors.compute(townId, (id, info) -> {
+                if (info == null) {
+                    return new VisitorInfo(1, originPos);
+                } else {
+                    return info.incrementCount();
+                }
+            });
+            
             lastVisitTime = System.currentTimeMillis();
         }
 
         public boolean shouldProcess() {
-            return !townVisitors.isEmpty() && 
+            return !visitors.isEmpty() && 
                    System.currentTimeMillis() - lastVisitTime > BUFFER_TIMEOUT_MS;
         }
 
         public List<VisitHistoryRecord> processVisits() {
-            if (townVisitors.isEmpty()) return Collections.emptyList();
+            if (visitors.isEmpty()) return Collections.emptyList();
             
             long now = System.currentTimeMillis();
-            List<VisitHistoryRecord> records = townVisitors.entrySet().stream()
+            List<VisitHistoryRecord> records = visitors.entrySet().stream()
                 .map(entry -> new VisitHistoryRecord(
                     now, 
                     entry.getKey(), 
-                    entry.getValue(),
-                    townPositions.getOrDefault(entry.getKey(), BlockPos.ZERO)
+                    entry.getValue().count,
+                    entry.getValue().originPos
                 ))
                 .collect(Collectors.toList());
                 
             // Clear the buffer
-            townVisitors.clear();
-            townPositions.clear();
+            visitors.clear();
             return records;
         }
     }
@@ -622,26 +642,25 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     UUID originTownId = null;
                     BlockPos originPos = null;
 
-                    for (String tag : villager.getTags()) {
-                        if (tag.startsWith("from_town_")) {
-                            try {
+                    // Extract tourist information from tags
+                    try {
+                        for (String tag : villager.getTags()) {
+                            if (tag.startsWith("from_town_")) {
                                 originTownId = UUID.fromString(tag.substring(10));
-                            } catch (IllegalArgumentException e) {
-                                LOGGER.error("Invalid UUID in villager tag: {}", tag);
-                            }
-                        } else if (tag.startsWith("pos_")) {
-                            String[] parts = tag.substring(4).split("_");
-                            if (parts.length == 3) {
-                                try {
+                            } else if (tag.startsWith("pos_")) {
+                                String[] parts = tag.substring(4).split("_");
+                                if (parts.length == 3) {
                                     int x = Integer.parseInt(parts[0]);
                                     int y = Integer.parseInt(parts[1]);
                                     int z = Integer.parseInt(parts[2]);
                                     originPos = new BlockPos(x, y, z);
-                                } catch (NumberFormatException e) {
-                                    LOGGER.error("Error parsing position from tag: {}", tag);
                                 }
                             }
                         }
+                    } catch (IllegalArgumentException e) {
+                        // Log the error and skip this villager
+                        LOGGER.error("Error parsing tourist tags: {}", e.getMessage());
+                        continue;
                     }
                     
                     if (originTownId != null && !originTownId.equals(this.townId)) {
@@ -669,18 +688,16 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 if (!newVisits.isEmpty()) {
                     // Add to the town data provider (single source of truth)
                     for (VisitHistoryRecord record : newVisits) {
-                        // Record the visit in the Town
-                        provider.recordVisit(record.getOriginTownId(), record.getCount(), record.getOriginPos());
-                        
-                        // Process visits in the town data
                         try {
+                            // Record the visit in the Town
+                            provider.recordVisit(record.getOriginTownId(), record.getCount(), record.getOriginPos());
+                            
                             // Each visitor should be processed by adding them to the town's tally
                             for (int i = 0; i < record.getCount(); i++) {
                                 thisTown.addVisitor(record.getOriginTownId());
                             }
                         } catch (Exception e) {
-                            LOGGER.error("Error processing visitor batch from UUID {}: {}", 
-                                record.getOriginTownId(), e.getMessage());
+                            LOGGER.error("Error processing visitor batch: {}", e.getMessage());
                         }
                     }
                     
@@ -723,8 +740,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             }
         }
         
-        // Log only if we actually removed something, to avoid spam
-        if (removedCount > 0 && level != null && !level.isClientSide()) {
+        // Log only if we actually removed something and at debug level only
+        if (removedCount > 0 && level != null && !level.isClientSide() && LOGGER.isDebugEnabled()) {
             LOGGER.debug("Cleaned up {} stale visitor position entries", removedCount);
         }
     }
@@ -736,7 +753,15 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             }
             if (level instanceof ServerLevel sLevel1) {
                 Town town = TownManager.get(sLevel1).getTown(townId);
-                return town != null ? town.getName() : "Loading...2";
+                if (town != null) {
+                    // Always update our local cached name with the latest town name
+                    if (!town.getName().equals(name)) {
+                        LOGGER.debug("[DEBUG] Updating cached name from {} to {}", name, town.getName());
+                        name = town.getName();
+                    }
+                    return town.getName();
+                }
+                return "Loading...2";
             }
         }
         return "Initializing...";
@@ -809,7 +834,12 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         
         // Load town basic data
         if (tag.contains("name")) {
-            name = tag.getString("name");
+            String newName = tag.getString("name");
+            // Only log if the name is changing
+            if (!newName.equals(name)) {
+                LOGGER.debug("Client block entity received updated name: {} (was: {})", newName, name);
+            }
+            name = newName;
         }
         
         // Load client resources data
@@ -926,12 +956,38 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     public void syncTownData() {
         if (level != null && !level.isClientSide()) {
+            // Debug logging
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("[DEBUG] syncTownData called, current name: {}", name);
+            }
+            
+            // Ensure we get the latest name from the town provider
+            if (townId != null) {
+                ITownDataProvider provider = getTownDataProvider();
+                if (provider != null) {
+                    // Update our local name from the provider
+                    String latestName = provider.getTownName();
+                    if (!latestName.equals(name)) {
+                        LOGGER.debug("[DEBUG] Updating local name from {} to {}", name, latestName);
+                        name = latestName;
+                    }
+                }
+            }
+            
             data.set(DATA_BREAD, data.get(DATA_BREAD));
             data.set(DATA_POPULATION, data.get(DATA_POPULATION));
             data.set(DATA_SPAWN_ENABLED, data.get(DATA_SPAWN_ENABLED));
             data.set(DATA_CAN_SPAWN, data.get(DATA_CAN_SPAWN));
             data.set(DATA_SEARCH_RADIUS, data.get(DATA_SEARCH_RADIUS));
+            
+            // Force a block update to sync the latest data including name
+            level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
             setChanged();
+            
+            // Debug logging
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("[DEBUG] After syncTownData, name is: {}", name);
+            }
         }
     }
 
@@ -1047,20 +1103,15 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         if (currentTime - lastMarkDirtyTime > MARK_DIRTY_COOLDOWN_MS) {
             provider.markDirty();
             lastMarkDirtyTime = currentTime;
-            // Only log when we actually mark dirty to reduce spam
-            LOGGER.debug("Marking town data as dirty after cooldown period");
+            
+            // Only log at debug level when actually marking dirty
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Marking town data as dirty after cooldown period");
+            }
         }
     }
 
-    public void processBreadInSlot() {
-        processResourcesInSlot();
-    }
-    
-    /**
-     * Processes resources in the input slot, adding 1 item per tick to the town
-     * This creates a gradual resource processing effect rather than instant input
-     */
-    private void processResourcesInSlot() {
+    public void processResourcesInSlot() {
         if (level == null || level.isClientSide()) return;
         
         ItemStack stack = itemHandler.getStackInSlot(0);
@@ -1141,19 +1192,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 UUID townId = record.getOriginTownId();
                 visitTag.putUUID("townId", townId);
                 
-                // Try to resolve the town name for display - ensure we get a real name
-                String townName = "Unknown";
-                if (level instanceof ServerLevel serverLevel) {
-                    Town town = TownManager.get(serverLevel).getTown(townId);
-                    if (town != null) {
-                        townName = town.getName();
-                        LOGGER.debug("Resolved town name for {}: {}", townId, townName);
-                    } else {
-                        LOGGER.warn("Could not resolve town name for {}", townId);
-                    }
-                }
-                
-                // Always send a name, even if it's a fallback
+                // Resolve town name using the centralized method
+                String townName = resolveTownName(townId, true);
                 visitTag.putString("townName", townName);
             }
             
@@ -1203,9 +1243,16 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 // Store the pre-resolved town name from the server in a client field
                 if (visitTag.contains("townName")) {
                     String townName = visitTag.getString("townName");
+                    // Only log at TRACE level to avoid excessive logging
+                    if (!townNameCache.containsKey(townId)) {
+                        // Only log when first adding a town name
+                        LOGGER.debug("Loaded town name for {}: {}", townId, townName);
+                    } else if (LOGGER.isTraceEnabled()) {
+                        // Only log at TRACE level for subsequent loads
+                        LOGGER.trace("Refreshed town name for {}: {}", townId, townName);
+                    }
                     // Store the name in a map for client-side lookup
                     townNameCache.put(townId, townName);
-                    LOGGER.debug("Loaded town name for {}: {}", townId, townName);
                 } else {
                     LOGGER.warn("Missing town name for visit record with ID {}", townId);
                     // If no name is provided, use a fallback
@@ -1228,36 +1275,60 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         }
     }
 
-    // Helper method to resolve town name from UUID
-    private String resolveTownName(UUID townId) {
+    /**
+     * Resolves a town name from its UUID with flexible behavior for client/server contexts
+     * @param townId The UUID of the town to resolve
+     * @param logResolveFailure Whether to log when resolution fails
+     * @return The resolved name or a fallback
+     */
+    private String resolveTownName(UUID townId, boolean logResolveFailure) {
         if (townId == null) return "Unknown";
         
-        if (level instanceof ServerLevel serverLevel) {
-            Town town = TownManager.get(serverLevel).getTown(townId);
-            if (town != null) {
-                return town.getName();
+        // For server-side or forced server-side lookup
+        if (!level.isClientSide()) {
+            if (level instanceof ServerLevel serverLevel) {
+                Town town = TownManager.get(serverLevel).getTown(townId);
+                if (town != null) {
+                    return town.getName();
+                } else if (logResolveFailure) {
+                    LOGGER.warn("Could not resolve town name for {}", townId);
+                }
+            }
+            return "Unknown Town";
+        }
+        
+        // For client-side lookup
+        if (townNameCache.containsKey(townId)) {
+            String cachedName = townNameCache.get(townId);
+            if (cachedName != null && !cachedName.isEmpty()) {
+                return cachedName;
             }
         }
-        return "Unknown Town";
+        
+        // Fallback for client-side with no cache
+        return "Town-" + townId.toString().substring(0, 8);
+    }
+
+    // Helper method to resolve town name from UUID - simplified version for backward compatibility
+    private String resolveTownName(UUID townId) {
+        return resolveTownName(townId, false);
     }
 
     // Helper method to get town name from client cache or resolve from server
     public String getTownNameFromId(UUID townId) {
         if (townId == null) return "Unknown";
         
-        if (level != null && level.isClientSide()) {
-            // On client, use our cached name if available
-            if (townNameCache.containsKey(townId)) {
-                String cachedName = townNameCache.get(townId);
-                if (cachedName != null && !cachedName.isEmpty()) {
-                    return cachedName;
-                }
-            }
-            // Fall back to the truncated UUID format when no cached name exists
-            return "Town-" + townId.toString().substring(0, 8);
-        } else {
-            // On server, do the actual resolution
-            return resolveTownName(townId);
+        return resolveTownName(townId, level != null && !level.isClientSide());
+    }
+
+    /**
+     * Client-side only: Updates the cached town name for immediate UI feedback
+     * This is only meant to be used on the client side for visual updates
+     * @param newName The new town name to display
+     */
+    public void setClientTownName(String newName) {
+        if (level != null && level.isClientSide) {
+            this.name = newName;
         }
     }
 }

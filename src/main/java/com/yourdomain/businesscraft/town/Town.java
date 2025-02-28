@@ -223,6 +223,14 @@ public class Town implements ITownDataProvider {
         return name;
     }
     
+    /**
+     * Sets a new name for this town
+     * @param newName The new name for the town
+     */
+    public void setName(String newName) {
+        this.name = newName;
+    }
+    
     public int getBreadCount() {
         return economy.getBreadCount();
     }
