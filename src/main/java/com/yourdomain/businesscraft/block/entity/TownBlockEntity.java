@@ -96,6 +96,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private static final int DATA_CAN_SPAWN = 3;
     private static final int DATA_SEARCH_RADIUS = 4;
     private final ContainerData data = new SimpleContainerData(5) {
+        // Tracking time between logs to prevent spamming
         private long lastLogTime = 0;
         
         @Override
@@ -118,10 +119,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     default -> 0;
                 };
                 
-                if (System.currentTimeMillis() - lastLogTime > 5000) {
-                    //LOGGER.info("[SERVER] Data update - Index: {} = {}", index, value);
-                    lastLogTime = System.currentTimeMillis();
-                }
                 super.set(index, value);
                 return value;
             }
@@ -130,7 +127,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
         @Override
         public void set(int index, int value) {
-            //LOGGER.info("Data storage set - Index: {} = {}", index, value);
             super.set(index, value);
         }
     };
@@ -156,7 +152,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private List<LivingEntity> tourists = new ArrayList<>();
     private ITownDataProvider townDataProvider;
     
-    // Add rate limiting for markDirty calls
+    /**
+     * Rate limiting parameters for markDirty calls
+     * Prevents excessive updates which can flood logs and impact performance
+     */
     private long lastMarkDirtyTime = 0;
     private static final long MARK_DIRTY_COOLDOWN_MS = 2000; // 2 seconds between calls
     
@@ -304,6 +303,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         if (!level.isClientSide()) {
             // Update from provider at regular intervals
             updateFromTownProvider();
+            
             if (level instanceof ServerLevel sLevel1) {
                 // Only sync data if town exists
                 if (townId != null) {
@@ -324,6 +324,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                         }
                         
                         syncTownData();
+                        
+                        // Resource handling - process any item in the slot
+                        processResourcesInSlot();
                     }
                 }
             }
@@ -333,19 +336,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             if (level instanceof ServerLevel sLevel1) {
                 Town town = TownManager.get(sLevel1).getTown(townId);
                 if (town != null) {
-                    // Resource handling logic - process any item in the slot
-                    ItemStack stack = itemHandler.getStackInSlot(0);
-                    if (!stack.isEmpty()) {
-                        int count = stack.getCount();
-                        Item item = stack.getItem();
-                        stack.shrink(count);
-                        town.addResource(item, count);
-                        setChanged();
-                        
-                        // Send update to clients when resources change
-                        level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
-                    }
-
                     // Path-based villager spawning
                     if (touristSpawningEnabled && town.canSpawnTourists() && pathStart != null && 
                         pathEnd != null && 
@@ -452,7 +442,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             }
         }
         
-        // Replace the direct call to mountTouristsToVehicles with:
+        // Handle tourist vehicles
         if (level.getGameTime() % 20 == 0) { // Every 1 second
             if (touristSpawningEnabled && pathStart != null && pathEnd != null && townId != null) {
                 // Get town object safely
@@ -609,12 +599,32 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         }
     }
 
+    /**
+     * Creates a standardized update tag with all necessary data for client rendering
+     */
     @Override
     public CompoundTag getUpdateTag() {
-        CompoundTag tag = new CompoundTag();
-        saveAdditional(tag);
+        CompoundTag tag = super.getUpdateTag();
+        
+        // Add town info
+        if (townId != null) {
+            tag.putUUID("TownId", townId);
+        }
+        
+        // Add name for client display
+        tag.putString("name", name != null ? name : "");
         
         // Add resource data for client rendering
+        syncResourcesForClient(tag);
+        
+        return tag;
+    }
+    
+    /**
+     * Adds resource data to the provided tag for client-side rendering
+     * This centralizes our resource serialization logic in one place
+     */
+    private void syncResourcesForClient(CompoundTag tag) {
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
             // Create a resources tag
@@ -629,13 +639,46 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             // Add resources tag to the update tag
             tag.put("clientResources", resourcesTag);
         }
-        
-        return tag;
     }
 
     @Override
-    public Packet<ClientGamePacketListener> getUpdatePacket() {
-        return ClientboundBlockEntityDataPacket.create(this);
+    public void handleUpdateTag(CompoundTag tag) {
+        super.handleUpdateTag(tag);
+        
+        // Load town basic data
+        if (tag.contains("name")) {
+            name = tag.getString("name");
+        }
+        
+        // Load client resources data
+        loadResourcesFromTag(tag);
+    }
+    
+    /**
+     * Loads resources from the provided tag into the client-side cache
+     * This centralizes our resource deserialization logic in one place
+     */
+    private void loadResourcesFromTag(CompoundTag tag) {
+        if (tag.contains("clientResources")) {
+            CompoundTag resourcesTag = tag.getCompound("clientResources");
+            
+            // Clear previous resources
+            clientResources.clear();
+            
+            // Load all resources from the tag
+            for (String key : resourcesTag.getAllKeys()) {
+                try {
+                    ResourceLocation resourceLocation = new ResourceLocation(key);
+                    Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
+                    if (item != null && item != Items.AIR) {
+                        int count = resourcesTag.getInt(key);
+                        clientResources.put(item, count);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error loading client resource: {}", key, e);
+                }
+            }
+        }
     }
 
     @Override
@@ -705,7 +748,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     public UUID getTownId() {
-        LOGGER.info("[TownBlockEntity] Getting town ID: {} at pos: {}", townId, this.getBlockPos());
         return townId;
     }
 
@@ -715,33 +757,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     public int getPopulation() {
         return data.get(DATA_POPULATION);
-    }
-
-    @Override
-    public void handleUpdateTag(CompoundTag tag) {
-        load(tag);
-        
-        // Load client resources data
-        if (tag.contains("clientResources")) {
-            CompoundTag resourcesTag = tag.getCompound("clientResources");
-            
-            // Clear previous resources
-            clientResources.clear();
-            
-            // Load all resources from the tag
-            for (String key : resourcesTag.getAllKeys()) {
-                try {
-                    ResourceLocation resourceLocation = new ResourceLocation(key);
-                    Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
-                    if (item != null && item != Items.AIR) {
-                        int count = resourcesTag.getInt(key);
-                        clientResources.put(item, count);
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("Error loading client resource: {}", key, e);
-                }
-            }
-        }
     }
 
     public void syncTownData() {
@@ -859,7 +874,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
     
     /**
-     * Marks the provider as dirty with rate limiting to reduce excessive log spam
+     * Marks the provider as dirty with rate limiting to reduce excessive updates
      * @param provider The provider to mark as dirty
      */
     private void markDirtyWithRateLimit(ITownDataProvider provider) {
@@ -867,6 +882,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         if (currentTime - lastMarkDirtyTime > MARK_DIRTY_COOLDOWN_MS) {
             provider.markDirty();
             lastMarkDirtyTime = currentTime;
+            // Only log when we actually mark dirty to reduce spam
+            LOGGER.debug("Marking town data as dirty after cooldown period");
         }
     }
 
@@ -875,32 +892,26 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
     
     /**
-     * Process any resources in the input slot
+     * Processes any resources in the input slot and adds them to the town
+     * Also triggers client update when resources change
      */
-    public void processResourcesInSlot() {
-        if (!level.isClientSide()) {
-            IItemHandler itemHandler = lazyItemHandler.orElse(this.itemHandler);
-            ItemStack stack = itemHandler.getStackInSlot(0);
-            
-            if (!stack.isEmpty()) {
-                Item item = stack.getItem();
-                int count = stack.getCount();
-                itemHandler.extractItem(0, count, false);
-                
-                // Update the provider
-                ITownDataProvider provider = getTownDataProvider();
-                if (provider != null) {
-                    provider.addResource(item, count);
-                    provider.markDirty();
+    private void processResourcesInSlot() {
+        if (level == null || level.isClientSide()) return;
+        
+        ItemStack stack = itemHandler.getStackInSlot(0);
+        if (!stack.isEmpty() && townId != null) {
+            if (level instanceof ServerLevel sLevel) {
+                Town town = TownManager.get(sLevel).getTown(townId);
+                if (town != null) {
+                    int count = stack.getCount();
+                    Item item = stack.getItem();
+                    stack.shrink(count);
+                    town.addResource(item, count);
+                    setChanged();
                     
-                    // Update UI if it's bread (for legacy support)
-                    if (item == Items.BREAD) {
-                        int breadCount = provider.getBreadCount();
-                        data.set(DATA_BREAD, breadCount);
-                    }
+                    // Send update to clients when resources change
+                    level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
                 }
-                
-                setChanged();
             }
         }
     }
@@ -920,5 +931,13 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
      */
     public Map<Item, Integer> getClientResources() {
         return Collections.unmodifiableMap(clientResources);
+    }
+
+    /**
+     * Creates the update packet for sending to clients
+     */
+    @Override
+    public Packet<ClientGamePacketListener> getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 }

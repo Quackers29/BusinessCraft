@@ -173,12 +173,7 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         // Only handle scrolling in resources tab
         if (tabComponent.getActiveTabId().equals("resources")) {
             List<UIComponent> resourceComponents = tabComponent.getActiveComponents();
-            if (resourceComponents.size() >= 1) {
-                ResourceListComponent resourceList = (ResourceListComponent) resourceComponents.get(0);
-                
-                // Calculate position for hit testing
-                int yPos = topPos + 30;
-                
+            if (resourceComponents.size() >= 1 && resourceComponents.get(0) instanceof ResourceListComponent resourceList) {
                 // Pass scroll event to resource list component
                 if (resourceList.mouseScrolled(mouseX, mouseY, delta)) {
                     return true;
