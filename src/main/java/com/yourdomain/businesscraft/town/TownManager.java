@@ -11,6 +11,7 @@ import com.yourdomain.businesscraft.data.TownSavedData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
+import net.minecraft.world.item.Item;
 
 public class TownManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/TownManager");
@@ -61,6 +62,21 @@ public class TownManager {
         Town town = savedData.getTowns().get(townId);
         if (town != null) {
             town.addBread(breadCount);
+            savedData.setDirty();
+        }
+    }
+
+    /**
+     * Add a resource to a town
+     * 
+     * @param townId The town ID
+     * @param item The resource item
+     * @param count The amount to add
+     */
+    public void addResource(UUID townId, Item item, int count) {
+        Town town = savedData.getTowns().get(townId);
+        if (town != null) {
+            town.addResource(item, count);
             savedData.setDirty();
         }
     }

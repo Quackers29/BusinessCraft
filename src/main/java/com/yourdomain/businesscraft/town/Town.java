@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.town.components.TownEconomyComponent;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
+import net.minecraft.world.item.Item;
 
 public class Town implements ITownDataProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(Town.class);
@@ -33,6 +34,21 @@ public class Town implements ITownDataProvider {
     
     public void addBread(int count) {
         economy.addBread(count);
+    }
+    
+    @Override
+    public void addResource(Item item, int count) {
+        economy.addResource(item, count);
+    }
+    
+    @Override
+    public int getResourceCount(Item item) {
+        return economy.getResourceCount(item);
+    }
+    
+    @Override
+    public Map<Item, Integer> getAllResources() {
+        return economy.getResources().getAllResources();
     }
     
     public boolean canSpawnTourists() {
