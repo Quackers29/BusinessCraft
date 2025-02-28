@@ -281,4 +281,14 @@ public class TownBlockMenu extends AbstractContainerMenu {
         }
         return defaultValue;
     }
+    
+    /**
+     * Gets the position of the town block
+     */
+    public BlockPos getPos() {
+        if (blockEntity != null) {
+            return blockEntity.getBlockPos();
+        }
+        return BlockPos.ZERO;
+    }
 }

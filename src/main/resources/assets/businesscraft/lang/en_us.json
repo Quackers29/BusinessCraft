@@ -9,5 +9,20 @@
   "gui.businesscraft.tab.history": "History",
   "gui.businesscraft.change_town_name": "Change Town Name",
   "gui.businesscraft.edit_town_name": "Edit Town Name",
-  "gui.businesscraft.town_name": "Town Name:"
+  "gui.businesscraft.town_name": "Town Name:",
+  "businesscraft.set_tourist_path": "Set Tourist Path",
+  "businesscraft.path_instructions": "Click on a block to set the path start point",
+  "businesscraft.path_end_instructions": "Click on a block to set the path end point",
+  "businesscraft.platforms_tab": "Platforms",
+  "businesscraft.manage_platforms": "Manage Platforms",
+  "businesscraft.no_platforms": "No platforms defined",
+  "businesscraft.add_platform": "Add Platform",
+  "businesscraft.enabled": "Enabled",
+  "businesscraft.disabled": "Disabled",
+  "businesscraft.set": "Set",
+  "businesscraft.del": "Del",
+  "businesscraft.set_platform_path": "Set Platform Path",
+  "businesscraft.delete_platform": "Delete Platform",
+  "businesscraft.platform_path_instructions": "Click on a block to set the platform start point",
+  "businesscraft.platform_path_end_instructions": "Click on a block to set the platform end point"
 }
