@@ -26,6 +26,9 @@ import net.minecraftforge.server.ServerLifecycleHooks;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.service.TouristVehicleManager;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraftforge.event.level.LevelEvent;
 
 @Mod(BusinessCraft.MOD_ID)
 public class BusinessCraft {
@@ -40,6 +43,9 @@ public class BusinessCraft {
     
     public static final RegistryObject<Item> TOWN_BLOCK_ITEM = ITEMS.register("town_block",
         () -> new BlockItem(TOWN_BLOCK.get(), new Item.Properties()));
+
+    // Add a static reference to the manager to use in event handlers
+    public static final TouristVehicleManager TOURIST_VEHICLE_MANAGER = new TouristVehicleManager();
 
     public BusinessCraft() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -63,6 +69,9 @@ public class BusinessCraft {
         // Register server lifecycle events
         MinecraftForge.EVENT_BUS.addListener(this::onServerStopping);
         MinecraftForge.EVENT_BUS.addListener(this::onServerStarted);
+        
+        // Register the world unload event listener if not already present
+        MinecraftForge.EVENT_BUS.addListener(this::onLevelUnload);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
@@ -83,6 +92,10 @@ public class BusinessCraft {
         
         // Clear all instances after saving to ensure a clean slate on next load
         TownManager.clearInstances();
+        
+        // Don't forget to clean up the tourist vehicle manager
+        LOGGER.info("Clearing tracked vehicles on server stopping");
+        TOURIST_VEHICLE_MANAGER.clearTrackedVehicles();
     }
     
     private void onServerStarted(ServerStartedEvent event) {
@@ -98,5 +111,13 @@ public class BusinessCraft {
                 LOGGER.info("Loaded {} towns for level: {}", townCount, level.dimension().location());
             }
         });
+    }
+
+    // Add a level unload event handler (replacing WorldEvent with LevelEvent)
+    private void onLevelUnload(LevelEvent.Unload event) {
+        if (event.getLevel() instanceof ServerLevel) {
+            LOGGER.debug("Clearing tracked vehicles on level unload");
+            TOURIST_VEHICLE_MANAGER.clearTrackedVehicles();
+        }
     }
 }
