@@ -892,8 +892,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
     
     /**
-     * Processes any resources in the input slot and adds them to the town
-     * Also triggers client update when resources change
+     * Processes resources in the input slot, adding 1 item per tick to the town
+     * This creates a gradual resource processing effect rather than instant input
      */
     private void processResourcesInSlot() {
         if (level == null || level.isClientSide()) return;
@@ -903,10 +903,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             if (level instanceof ServerLevel sLevel) {
                 Town town = TownManager.get(sLevel).getTown(townId);
                 if (town != null) {
-                    int count = stack.getCount();
                     Item item = stack.getItem();
-                    stack.shrink(count);
-                    town.addResource(item, count);
+                    // Process just 1 item per tick
+                    stack.shrink(1);
+                    town.addResource(item, 1);
                     setChanged();
                     
                     // Send update to clients when resources change
