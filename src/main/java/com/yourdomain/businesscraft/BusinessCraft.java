@@ -67,6 +67,7 @@ public class BusinessCraft {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         ConfigLoader.loadConfig();
+        LOGGER.info("BusinessCraft initialized. Press F3+K in-game to toggle town debug overlay.");
     }
 
     @SubscribeEvent
