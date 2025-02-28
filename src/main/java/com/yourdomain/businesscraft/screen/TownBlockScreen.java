@@ -26,6 +26,8 @@ import com.yourdomain.businesscraft.screen.components.DataBoundButtonComponent;
 import com.yourdomain.businesscraft.screen.components.TabComponent;
 import com.yourdomain.businesscraft.screen.components.SlotComponent;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
+import com.yourdomain.businesscraft.screen.components.ResourceListComponent;
+import net.minecraft.client.Minecraft;
 
 
 public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
@@ -66,7 +68,7 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     
     private List<UIComponent> createResourceComponents(TownBlockMenu menu) {
         List<UIComponent> comps = new ArrayList<>();
-        comps.add(new DataLabelComponent(() -> "Bread: " + menu.getBreadCount(), 0xFFFFFF, 200));
+        comps.add(new ResourceListComponent(() -> menu.getAllResources(), 200));
         comps.add(new SlotComponent());
         return comps;
     }
@@ -115,20 +117,76 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         // Clear previous components and render active tab
         TabComponent tabComponent = (TabComponent) components.get(0);
         int yPos = topPos + 30;
-        for (UIComponent component : tabComponent.getActiveComponents()) {
-            component.render(guiGraphics, leftPos + 10, yPos, mouseX, mouseY);
-            yPos += component.getHeight() + 8;
-        }
         
-        // Only render bread slot in resources tab
-        if (((TabComponent) components.get(0)).getActiveTabId().equals("resources")) {
-            renderTooltip(guiGraphics, mouseX, mouseY); // Shows slot tooltip
+        if (tabComponent.getActiveTabId().equals("resources")) {
+            // Special handling for resources tab
+            List<UIComponent> resourceComponents = tabComponent.getActiveComponents();
+            if (resourceComponents.size() >= 2) {
+                // ResourceListComponent should be the first component
+                ResourceListComponent resourceList = (ResourceListComponent) resourceComponents.get(0);
+                // SlotComponent should be the second component
+                SlotComponent slot = (SlotComponent) resourceComponents.get(1);
+                
+                // Position the resource list on the left
+                resourceList.render(guiGraphics, leftPos + 10, yPos, mouseX, mouseY);
+                
+                // Position the slot on the right
+                slot.render(guiGraphics, leftPos + 180, yPos, mouseX, mouseY);
+                
+                // Add a label for the slot
+                guiGraphics.drawString(Minecraft.getInstance().font, "Add:", leftPos + 180, yPos - 10, 0xFFFFFF);
+            }
+            
+            // Show slot tooltip
+            renderTooltip(guiGraphics, mouseX, mouseY);
+        } else {
+            // Standard rendering for other tabs
+            for (UIComponent component : tabComponent.getActiveComponents()) {
+                component.render(guiGraphics, leftPos + 10, yPos, mouseX, mouseY);
+                yPos += component.getHeight() + 8;
+            }
         }
     }
 
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTicks, int mouseX, int mouseY) {
         guiGraphics.blit(TEXTURE, leftPos, topPos, 0, 0, imageWidth, imageHeight);
+    }
+
+    /**
+     * Override the renderLabels method to prevent the inventory label from being displayed
+     */
+    @Override
+    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        // Only draw the title, not the inventory label
+        guiGraphics.drawString(this.font, this.title, this.titleLabelX, this.titleLabelY, 4210752);
+        // We intentionally do not call super.renderLabels to avoid drawing the inventory label
+    }
+
+    /**
+     * Handle mouse scrolling for resource list
+     */
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        TabComponent tabComponent = (TabComponent) components.get(0);
+        
+        // Only handle scrolling in resources tab
+        if (tabComponent.getActiveTabId().equals("resources")) {
+            List<UIComponent> resourceComponents = tabComponent.getActiveComponents();
+            if (resourceComponents.size() >= 1) {
+                ResourceListComponent resourceList = (ResourceListComponent) resourceComponents.get(0);
+                
+                // Calculate position for hit testing
+                int yPos = topPos + 30;
+                
+                // Pass scroll event to resource list component
+                if (resourceList.mouseScrolled(mouseX, mouseY, delta)) {
+                    return true;
+                }
+            }
+        }
+        
+        return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
     private void handleRadiusChange() {

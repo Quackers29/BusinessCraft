@@ -72,6 +72,8 @@ import java.util.ArrayList;
 import net.minecraft.world.phys.Vec3;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
 import com.yourdomain.businesscraft.service.TouristVehicleManager;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraft.resources.ResourceLocation;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -160,6 +162,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     
     // Add a new TouristVehicleManager instance
     private final TouristVehicleManager touristVehicleManager = new TouristVehicleManager();
+
+    // Client-side cache of resources for rendering
+    private Map<Item, Integer> clientResources = new HashMap<>();
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -336,6 +341,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                         stack.shrink(count);
                         town.addResource(item, count);
                         setChanged();
+                        
+                        // Send update to clients when resources change
+                        level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
                     }
 
                     // Path-based villager spawning
@@ -605,6 +613,23 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public CompoundTag getUpdateTag() {
         CompoundTag tag = new CompoundTag();
         saveAdditional(tag);
+        
+        // Add resource data for client rendering
+        ITownDataProvider provider = getTownDataProvider();
+        if (provider != null) {
+            // Create a resources tag
+            CompoundTag resourcesTag = new CompoundTag();
+            
+            // Add all resources to the tag
+            provider.getAllResources().forEach((item, count) -> {
+                String itemKey = ForgeRegistries.ITEMS.getKey(item).toString();
+                resourcesTag.putInt(itemKey, count);
+            });
+            
+            // Add resources tag to the update tag
+            tag.put("clientResources", resourcesTag);
+        }
+        
         return tag;
     }
 
@@ -617,7 +642,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
         CompoundTag tag = pkt.getTag();
         if (tag != null) {
-            load(tag);
+            handleUpdateTag(tag);
         }
     }
 
@@ -695,6 +720,28 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     @Override
     public void handleUpdateTag(CompoundTag tag) {
         load(tag);
+        
+        // Load client resources data
+        if (tag.contains("clientResources")) {
+            CompoundTag resourcesTag = tag.getCompound("clientResources");
+            
+            // Clear previous resources
+            clientResources.clear();
+            
+            // Load all resources from the tag
+            for (String key : resourcesTag.getAllKeys()) {
+                try {
+                    ResourceLocation resourceLocation = new ResourceLocation(key);
+                    Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
+                    if (item != null && item != Items.AIR) {
+                        int count = resourcesTag.getInt(key);
+                        clientResources.put(item, count);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error loading client resource: {}", key, e);
+                }
+            }
+        }
     }
 
     public void syncTownData() {
@@ -865,5 +912,13 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         touristVehicleManager.clearTrackedVehicles();
         lastVisitorPositions.clear();
         LOGGER.debug("Cleared visitor position tracking on block removal");
+    }
+
+    /**
+     * Gets the client-side resources map for rendering
+     * @return Map of resources with quantities
+     */
+    public Map<Item, Integer> getClientResources() {
+        return Collections.unmodifiableMap(clientResources);
     }
 }
