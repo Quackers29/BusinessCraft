@@ -49,6 +49,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.Iterator;
 import org.slf4j.LoggerFactory;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
@@ -471,6 +472,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             List<Villager> nearbyVillagers = level.getEntitiesOfClass(
                     Villager.class,
                     searchBounds);
+            
+            // First, clean up positions of villagers that are no longer present
+            cleanupVisitorPositions(nearbyVillagers);
 
             for (Villager villager : nearbyVillagers) {
                 Vec3 currentPos = villager.position();
@@ -524,6 +528,39 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Cleans up the lastVisitorPositions map by removing entries for villagers 
+     * that no longer exist in the current list of nearby villagers.
+     * This prevents memory leaks from accumulating over time.
+     */
+    private void cleanupVisitorPositions(List<Villager> currentVillagers) {
+        // Skip if empty to avoid unnecessary work
+        if (lastVisitorPositions.isEmpty()) return;
+        
+        // Create a set of current villager UUIDs for efficient lookups
+        Set<UUID> currentVillagerIds = currentVillagers.stream()
+            .map(Entity::getUUID)
+            .collect(Collectors.toSet());
+            
+        // Keep track of how many entries we're removing for logging
+        int removedCount = 0;
+        
+        // Remove entries that don't correspond to current villagers
+        Iterator<UUID> iterator = lastVisitorPositions.keySet().iterator();
+        while (iterator.hasNext()) {
+            UUID id = iterator.next();
+            if (!currentVillagerIds.contains(id)) {
+                iterator.remove();
+                removedCount++;
+            }
+        }
+        
+        // Log only if we actually removed something, to avoid spam
+        if (removedCount > 0 && level != null && !level.isClientSide()) {
+            LOGGER.debug("Cleaned up {} stale visitor position entries", removedCount);
         }
     }
 
@@ -798,5 +835,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public void setRemoved() {
         super.setRemoved();
         touristVehicleManager.clearTrackedVehicles();
+        lastVisitorPositions.clear();
+        LOGGER.debug("Cleared visitor position tracking on block removal");
     }
 }
