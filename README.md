@@ -1,9 +1,6 @@
 # BusinessCraft Tourism Features Checklist
 
-This checklist tracks the implementation of tourism features in BusinessCraft, based on the CC-Towns project's "Tourists Release" phase.
-
-This is based on the original idea attempted at: https://github.com/Quackers29/CC-Towns/wiki/Tourists-Release 
-Do not implement the same exact methods as the previous project, just use as a guideline
+This checklist tracks the implementation of tourism features in BusinessCraft.
 
 ## Core Tourism Functionality
 
@@ -77,4 +74,4 @@ Do not implement the same exact methods as the previous project, just use as a g
 
 ---
 
-*This checklist will be updated as features are implemented. The BusinessCraft mod expands on the original CC-Towns concept with more sophisticated Minecraft mod capabilities.* 
+*This checklist will be updated as features are implemented.* 
