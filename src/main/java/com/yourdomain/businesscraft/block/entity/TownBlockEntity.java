@@ -75,6 +75,7 @@ import com.yourdomain.businesscraft.service.TouristVehicleManager;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraft.resources.ResourceLocation;
 import com.yourdomain.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
+import com.yourdomain.businesscraft.platform.Platform;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -233,6 +234,13 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     // Add a client-side town name cache
     private final Map<UUID, String> townNameCache = new HashMap<>();
 
+    // Add platform support
+    private static final int MAX_PLATFORMS = 5;
+    private List<Platform> platforms = new ArrayList<>();
+    private List<Platform> clientPlatforms = new ArrayList<>();
+    private boolean isInPlatformCreationMode = false;
+    private UUID platformBeingEdited = null;
+
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
         LOGGER.debug("TownBlockEntity created at position: {}", pos);
@@ -288,7 +296,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         
         tag.putString("name", name != null ? name : "");
         
-        // Always save our local values to tag in case Town gets lost
+        // Save legacy path data for backward compatibility
         if (pathStart != null) {
             CompoundTag startPos = new CompoundTag();
             startPos.putInt("x", pathStart.getX());
@@ -303,6 +311,15 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             endPos.putInt("y", pathEnd.getY());
             endPos.putInt("z", pathEnd.getZ());
             tag.put("PathEnd", endPos);
+        }
+        
+        // Save platforms
+        if (!platforms.isEmpty()) {
+            ListTag platformsTag = new ListTag();
+            for (Platform platform : platforms) {
+                platformsTag.add(platform.toNBT());
+            }
+            tag.put("platforms", platformsTag);
         }
         
         tag.putInt("searchRadius", searchRadius);
@@ -429,6 +446,22 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         if (tag.contains("name")) {
             name = tag.getString("name");
         }
+
+        // Load platforms
+        if (tag.contains("platforms")) {
+            platforms.clear();
+            ListTag platformsTag = tag.getList("platforms", Tag.TAG_COMPOUND);
+            for (int i = 0; i < platformsTag.size(); i++) {
+                CompoundTag platformTag = platformsTag.getCompound(i);
+                platforms.add(Platform.fromNBT(platformTag));
+            }
+        } else if (pathStart != null && pathEnd != null) {
+            // If no platforms but legacy paths exist, create a platform from them
+            if (platforms.isEmpty()) {
+                Platform legacyPlatform = new Platform("Main Platform", true, pathStart, pathEnd);
+                platforms.add(legacyPlatform);
+            }
+        }
     }
 
     @Override
@@ -469,95 +502,15 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             if (level instanceof ServerLevel sLevel1) {
                 Town town = TownManager.get(sLevel1).getTown(townId);
                 if (town != null) {
-                    // Path-based villager spawning
-                    if (touristSpawningEnabled && town.canSpawnTourists() && pathStart != null && 
-                        pathEnd != null && 
+                    // Platform-based villager spawning
+                    if (touristSpawningEnabled && town.canSpawnTourists() && 
+                        !platforms.isEmpty() && 
                         level.getGameTime() % 200 == 0) {
                         
-                        // Count existing tourists in the path area
-                        AABB pathBounds = new AABB(
-                            Math.min(pathStart.getX(), pathEnd.getX()) - 1,
-                            pathStart.getY(),
-                            Math.min(pathStart.getZ(), pathEnd.getZ()) - 1,
-                            Math.max(pathStart.getX(), pathEnd.getX()) + 1,
-                            pathStart.getY() + 2,
-                            Math.max(pathStart.getZ(), pathEnd.getZ()) + 1
-                        );
-                        
-                        List<Villager> existingTourists = level.getEntitiesOfClass(Villager.class, pathBounds);
-                        
-                        if (existingTourists.size() < MAX_TOURISTS) {
-                            // Try up to 3 times to find a valid spawn location
-                            for (int attempt = 0; attempt < 3; attempt++) {
-                                // Calculate a random position along the path
-                                double progress = random.nextDouble();
-                                double exactX = pathStart.getX() + (pathEnd.getX() - pathStart.getX()) * progress;
-                                double exactZ = pathStart.getZ() + (pathEnd.getZ() - pathStart.getZ()) * progress;
-                                int x = (int) Math.round(exactX);
-                                int z = (int) Math.round(exactZ);
-                                int y = pathStart.getY() + 1;
-                                
-                                BlockPos spawnPos = new BlockPos(x, y, z);
-                                
-                                // Check if the position is already occupied
-                                boolean isOccupied = existingTourists.stream()
-                                    .anyMatch(v -> {
-                                        BlockPos vPos = v.blockPosition();
-                                        return vPos.getX() == spawnPos.getX() && 
-                                               vPos.getZ() == spawnPos.getZ();
-                                    });
-                                
-                                if (!isOccupied && 
-                                    level.getBlockState(spawnPos).isAir() && 
-                                    level.getBlockState(spawnPos.above()).isAir()) {
-                                    
-                                    Villager villager = EntityType.VILLAGER.create(level);
-                                    if (villager != null) {
-                                        // Spawn in center of block and make extremely slow
-                                        villager.setPos(x + 0.5, y, z + 0.5);
-                                        villager.setCustomName(Component.literal(town.getName()));
-                                        villager.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED)
-                                               .setBaseValue(0.000001);
-                                        
-                                        // Set random profession and level 6
-                                        VillagerProfession[] professions = {
-                                            VillagerProfession.ARMORER,
-                                            VillagerProfession.BUTCHER,
-                                            VillagerProfession.CARTOGRAPHER,
-                                            VillagerProfession.CLERIC,
-                                            VillagerProfession.FARMER,
-                                            VillagerProfession.FISHERMAN,
-                                            VillagerProfession.FLETCHER,
-                                            VillagerProfession.LEATHERWORKER,
-                                            VillagerProfession.LIBRARIAN,
-                                            VillagerProfession.MASON,
-                                            VillagerProfession.SHEPHERD,
-                                            VillagerProfession.TOOLSMITH,
-                                            VillagerProfession.WEAPONSMITH
-                                        };
-                                        VillagerProfession randomProfession = professions[random.nextInt(professions.length)];
-                                        villager.setVillagerData(villager.getVillagerData()
-                                            .setProfession(randomProfession)
-                                            .setLevel(6));
-                                        
-                                        // Add tags when spawning villager
-                                        LOGGER.info("[BusinessCraft] Spawning tourist for town {} with ID {}", town.getName(), townId);
-                                        villager.addTag("type_tourist");
-                                        villager.addTag("from_town_" + townId.toString());
-                                        villager.addTag("from_name_" + town.getName());
-                                        villager.addTag("pos_" + getBlockPos().getX() + "_" + 
-                                                        getBlockPos().getY() + "_" + 
-                                                        getBlockPos().getZ());
-                                        
-                                        // Add debug to verify tags were added
-                                        LOGGER.info("[BusinessCraft] Tourist tags after spawning: {}", villager.getTags());
-                                        
-                                        level.addFreshEntity(villager);
-                                        town.removeTourist();
-                                        setChanged();
-                                    }
-                                    break; // Successfully spawned, exit the loop
-                                }
+                        // Try to spawn from each enabled platform
+                        for (Platform platform : platforms) {
+                            if (platform.isEnabled() && platform.isComplete()) {
+                                spawnTouristOnPlatform(level, town, platform);
                             }
                         }
                     }
@@ -575,9 +528,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             }
         }
         
-        // Handle tourist vehicles
+        // Handle tourist vehicles for all platforms
         if (level.getGameTime() % 20 == 0) { // Every 1 second
-            if (touristSpawningEnabled && pathStart != null && pathEnd != null && townId != null) {
+            if (touristSpawningEnabled && townId != null) {
                 // Get town object safely
                 Town currentTown = null;
                 if (level instanceof ServerLevel sLevel) {
@@ -585,7 +538,18 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 }
                 
                 if (currentTown != null && currentTown.canSpawnTourists()) {
-                    touristVehicleManager.mountTouristsToVehicles(level, pathStart, pathEnd, searchRadius, townId);
+                    // Process each enabled platform
+                    for (Platform platform : platforms) {
+                        if (platform.isEnabled() && platform.isComplete()) {
+                            touristVehicleManager.mountTouristsToVehicles(
+                                level, 
+                                platform.getStartPos(), 
+                                platform.getEndPos(), 
+                                searchRadius, 
+                                townId
+                            );
+                        }
+                    }
                 }
             }
         }
@@ -615,7 +579,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             List<Villager> nearbyVillagers = level.getEntitiesOfClass(
                     Villager.class,
                     searchBounds);
-            
+
             // First, clean up positions of villagers that are no longer present
             cleanupVisitorPositions(nearbyVillagers);
 
@@ -644,9 +608,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
                     // Extract tourist information from tags
                     try {
-                        for (String tag : villager.getTags()) {
-                            if (tag.startsWith("from_town_")) {
-                                originTownId = UUID.fromString(tag.substring(10));
+                    for (String tag : villager.getTags()) {
+                        if (tag.startsWith("from_town_")) {
+                            originTownId = UUID.fromString(tag.substring(10));
                             } else if (tag.startsWith("pos_")) {
                                 String[] parts = tag.substring(4).split("_");
                                 if (parts.length == 3) {
@@ -666,7 +630,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     if (originTownId != null && !originTownId.equals(this.townId)) {
                         // Add to visit buffer using UUID instead of name
                         visitBuffer.addVisitor(originTownId, originPos != null ? originPos : BlockPos.ZERO);
-                        
+
                         // Calculate distance and XP
                         double distance = Math.sqrt(villager.blockPosition().distSqr(this.getBlockPos()));
                         int xpAmount = Math.max(1, (int)(distance / 10));
@@ -702,9 +666,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     }
                     
                     // Ensure data is saved
-                    if (level instanceof ServerLevel sLevel3) {
-                        TownManager.get(sLevel3).markDirty();
-                    }
+                        if (level instanceof ServerLevel sLevel3) {
+                            TownManager.get(sLevel3).markDirty();
+                        }
                     
                     // Update clients
                     level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
@@ -801,6 +765,15 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         // Add resource data for client rendering
         syncResourcesForClient(tag);
         
+        // Add platforms
+        if (!platforms.isEmpty()) {
+            ListTag platformsTag = new ListTag();
+            for (Platform platform : platforms) {
+                platformsTag.add(platform.toNBT());
+            }
+            tag.put("platforms", platformsTag);
+        }
+        
         return tag;
     }
     
@@ -832,14 +805,26 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public void handleUpdateTag(CompoundTag tag) {
         super.handleUpdateTag(tag);
         
-        // Load town basic data
+        // Handle name updates
         if (tag.contains("name")) {
             String newName = tag.getString("name");
-            // Only log if the name is changing
             if (!newName.equals(name)) {
-                LOGGER.debug("Client block entity received updated name: {} (was: {})", newName, name);
+                LOGGER.debug("Updating town name from {} to {}", name, newName);
+                name = newName;
             }
-            name = newName;
+        }
+        
+        // Handle platform data updates
+        if (tag.contains("platforms")) {
+            LOGGER.debug("Received platform data update from server");
+            clientPlatforms.clear();
+            ListTag platformsTag = tag.getList("platforms", Tag.TAG_COMPOUND);
+            for (int i = 0; i < platformsTag.size(); i++) {
+                CompoundTag platformTag = platformsTag.getCompound(i);
+                Platform platform = Platform.fromNBT(platformTag);
+                clientPlatforms.add(platform);
+            }
+            LOGGER.debug("Updated client platforms list, now contains {} platforms", clientPlatforms.size());
         }
         
         // Load client resources data
@@ -994,7 +979,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private void mountTouristsToVehicles() {
         if (level == null || level.isClientSide || town == null) return;
         if (pathStart == null || pathEnd == null) return;
-        
+
         int mounted = touristVehicleManager.mountTouristsToVehicles(level, pathStart, pathEnd, searchRadius, townId);
         if (mounted > 0) {
             LOGGER.debug("Mounted {} tourists to vehicles for town {}", mounted, name);
@@ -1104,7 +1089,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public void processResourcesInSlot() {
         if (level == null || level.isClientSide()) return;
         
-        ItemStack stack = itemHandler.getStackInSlot(0);
+            ItemStack stack = itemHandler.getStackInSlot(0);
         if (!stack.isEmpty() && townId != null) {
             if (level instanceof ServerLevel sLevel) {
                 Town town = TownManager.get(sLevel).getTown(townId);
@@ -1154,8 +1139,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         if (level != null && level.isClientSide()) {
             return Collections.unmodifiableList(clientVisitHistory);
         } else {
-            ITownDataProvider provider = getTownDataProvider();
-            if (provider != null) {
+                ITownDataProvider provider = getTownDataProvider();
+                if (provider != null) {
                 return provider.getVisitHistory();
             }
             return Collections.emptyList();
@@ -1316,5 +1301,218 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         if (level != null && level.isClientSide) {
             this.name = newName;
         }
+    }
+
+    /**
+     * Try to spawn a tourist on the specified platform
+     */
+    private void spawnTouristOnPlatform(Level level, Town town, Platform platform) {
+        BlockPos startPos = platform.getStartPos();
+        BlockPos endPos = platform.getEndPos();
+        
+        if (startPos == null || endPos == null) return;
+        
+        // Count existing tourists in the platform area
+        AABB pathBounds = new AABB(
+            Math.min(startPos.getX(), endPos.getX()) - 1,
+            startPos.getY(),
+            Math.min(startPos.getZ(), endPos.getZ()) - 1,
+            Math.max(startPos.getX(), endPos.getX()) + 1,
+            startPos.getY() + 2,
+            Math.max(startPos.getZ(), endPos.getZ()) + 1
+        );
+        
+        List<Villager> existingTourists = level.getEntitiesOfClass(Villager.class, pathBounds);
+        
+        if (existingTourists.size() < MAX_TOURISTS) {
+            // Try up to 3 times to find a valid spawn location
+            for (int attempt = 0; attempt < 3; attempt++) {
+                // Calculate a random position along the path
+                double progress = random.nextDouble();
+                double exactX = startPos.getX() + (endPos.getX() - startPos.getX()) * progress;
+                double exactZ = startPos.getZ() + (endPos.getZ() - startPos.getZ()) * progress;
+                int x = (int) Math.round(exactX);
+                int z = (int) Math.round(exactZ);
+                int y = startPos.getY() + 1;
+                
+                BlockPos spawnPos = new BlockPos(x, y, z);
+                
+                // Check if the position is already occupied
+                boolean isOccupied = existingTourists.stream()
+                    .anyMatch(v -> {
+                        BlockPos vPos = v.blockPosition();
+                        return vPos.getX() == spawnPos.getX() && 
+                               vPos.getZ() == spawnPos.getZ();
+                    });
+                
+                if (!isOccupied && 
+                    level.getBlockState(spawnPos).isAir() && 
+                    level.getBlockState(spawnPos.above()).isAir()) {
+                    
+                    Villager villager = EntityType.VILLAGER.create(level);
+                    if (villager != null) {
+                        // Spawn in center of block and make extremely slow
+                        villager.setPos(x + 0.5, y, z + 0.5);
+                        villager.setCustomName(Component.literal(town.getName()));
+                        villager.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED)
+                               .setBaseValue(0.000001);
+                        
+                        // Set random profession and level 6
+                        VillagerProfession[] professions = {
+                            VillagerProfession.ARMORER,
+                            VillagerProfession.BUTCHER,
+                            VillagerProfession.CARTOGRAPHER,
+                            VillagerProfession.CLERIC,
+                            VillagerProfession.FARMER,
+                            VillagerProfession.FISHERMAN,
+                            VillagerProfession.FLETCHER,
+                            VillagerProfession.LEATHERWORKER,
+                            VillagerProfession.LIBRARIAN,
+                            VillagerProfession.MASON,
+                            VillagerProfession.SHEPHERD,
+                            VillagerProfession.TOOLSMITH,
+                            VillagerProfession.WEAPONSMITH
+                        };
+                        VillagerProfession randomProfession = professions[random.nextInt(professions.length)];
+                        villager.setVillagerData(villager.getVillagerData()
+                            .setProfession(randomProfession)
+                            .setLevel(6));
+                        
+                        // Add tags when spawning villager
+                        LOGGER.info("[BusinessCraft] Spawning tourist for town {} with ID {}", town.getName(), townId);
+                        villager.addTag("type_tourist");
+                        villager.addTag("from_town_" + townId.toString());
+                        villager.addTag("from_name_" + town.getName());
+                        villager.addTag("pos_" + getBlockPos().getX() + "_" + 
+                                        getBlockPos().getY() + "_" + 
+                                        getBlockPos().getZ());
+                        
+                        // Add platform ID tag
+                        villager.addTag("platform_" + platform.getId().toString());
+                        
+                        // Add debug to verify tags were added
+                        LOGGER.info("[BusinessCraft] Tourist tags after spawning: {}", villager.getTags());
+                        
+                        level.addFreshEntity(villager);
+                        town.removeTourist();
+                setChanged();
+            }
+                    break; // Successfully spawned, exit the loop
+                }
+            }
+        }
+    }
+    
+    // Platform management methods
+    
+    /**
+     * Gets the list of all platforms
+     */
+    public List<Platform> getPlatforms() {
+        // If on client side, return the client cache
+        if (level != null && level.isClientSide()) {
+            return new ArrayList<>(clientPlatforms);
+        }
+        // Otherwise return the actual platforms
+        return new ArrayList<>(platforms);
+    }
+    
+    /**
+     * Adds a new platform
+     * @return true if added successfully, false if at max capacity
+     */
+    public boolean addPlatform() {
+        if (platforms.size() >= MAX_PLATFORMS) {
+            return false;
+        }
+        
+        Platform platform = new Platform();
+        platform.setName("Platform " + (platforms.size() + 1));
+        platforms.add(platform);
+        setChanged();
+        return true;
+    }
+    
+    /**
+     * Removes a platform by ID
+     */
+    public boolean removePlatform(UUID platformId) {
+        boolean removed = platforms.removeIf(p -> p.getId().equals(platformId));
+        if (removed) {
+            setChanged();
+        }
+        return removed;
+    }
+    
+    /**
+     * Gets a platform by ID
+     */
+    public Platform getPlatform(UUID platformId) {
+        return platforms.stream()
+            .filter(p -> p.getId().equals(platformId))
+            .findFirst()
+            .orElse(null);
+    }
+    
+    /**
+     * Sets the path start for a specific platform
+     */
+    public void setPlatformPathStart(UUID platformId, BlockPos pos) {
+        Platform platform = getPlatform(platformId);
+        if (platform != null) {
+            platform.setStartPos(pos);
+            setChanged();
+        }
+    }
+    
+    /**
+     * Sets the path end for a specific platform
+     */
+    public void setPlatformPathEnd(UUID platformId, BlockPos pos) {
+        Platform platform = getPlatform(platformId);
+        if (platform != null) {
+            platform.setEndPos(pos);
+            setChanged();
+        }
+    }
+    
+    /**
+     * Toggles a platform's enabled state
+     */
+    public void togglePlatformEnabled(UUID platformId) {
+        Platform platform = getPlatform(platformId);
+        if (platform != null) {
+            platform.setEnabled(!platform.isEnabled());
+            setChanged();
+        }
+    }
+    
+    /**
+     * Sets whether we're in platform path creation mode
+     */
+    public void setPlatformCreationMode(boolean mode, UUID platformId) {
+        this.isInPlatformCreationMode = mode;
+        this.platformBeingEdited = mode ? platformId : null;
+    }
+    
+    /**
+     * Gets whether we're in platform path creation mode
+     */
+    public boolean isInPlatformCreationMode() {
+        return isInPlatformCreationMode;
+    }
+    
+    /**
+     * Gets the ID of the platform currently being edited
+     */
+    public UUID getPlatformBeingEdited() {
+        return platformBeingEdited;
+    }
+    
+    /**
+     * Checks if we can add more platforms
+     */
+    public boolean canAddMorePlatforms() {
+        return platforms.size() < MAX_PLATFORMS;
     }
 }

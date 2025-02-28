@@ -10,6 +10,9 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import net.minecraftforge.network.NetworkEvent;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 
 /**
  * Handles registration and sending of network packets
@@ -59,6 +62,43 @@ public class ModMessages {
                 .encoder(SetTownNamePacket::encode)
                 .consumerMainThread(SetTownNamePacket::handle)
                 .add();
+                
+        // Register platform-related packets
+        net.messageBuilder(AddPlatformPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(AddPlatformPacket::new)
+                .encoder(AddPlatformPacket::encode)
+                .consumerMainThread(AddPlatformPacket::handle)
+                .add();
+                
+        net.messageBuilder(DeletePlatformPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(DeletePlatformPacket::new)
+                .encoder(DeletePlatformPacket::encode)
+                .consumerMainThread(DeletePlatformPacket::handle)
+                .add();
+                
+        net.messageBuilder(SetPlatformEnabledPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(SetPlatformEnabledPacket::new)
+                .encoder(SetPlatformEnabledPacket::encode)
+                .consumerMainThread(SetPlatformEnabledPacket::handle)
+                .add();
+                
+        net.messageBuilder(SetPlatformPathPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(SetPlatformPathPacket::new)
+                .encoder(SetPlatformPathPacket::encode)
+                .consumerMainThread(SetPlatformPathPacket::handle)
+                .add();
+                
+        net.messageBuilder(SetPlatformPathCreationModePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(SetPlatformPathCreationModePacket::new)
+                .encoder(SetPlatformPathCreationModePacket::encode)
+                .consumerMainThread(SetPlatformPathCreationModePacket::handle)
+                .add();
+                
+        net.messageBuilder(RefreshPlatformsPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(RefreshPlatformsPacket::new)
+                .encoder(RefreshPlatformsPacket::encode)
+                .consumerMainThread(RefreshPlatformsPacket::handle)
+                .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {
@@ -67,5 +107,13 @@ public class ModMessages {
 
     public static <MSG> void sendToPlayer(MSG message, ServerPlayer player) {
         INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), message);
+    }
+    
+    /**
+     * Sends a packet to all clients tracking a specific chunk
+     */
+    public static <MSG> void sendToAllTrackingChunk(MSG message, Level level, BlockPos pos) {
+        INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> 
+            level.getChunkAt(pos)), message);
     }
 } 

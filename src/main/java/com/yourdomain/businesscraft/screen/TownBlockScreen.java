@@ -10,6 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.SetPathCreationModePacket;
 import com.yourdomain.businesscraft.network.ToggleTouristSpawningPacket;
@@ -22,6 +23,7 @@ import com.yourdomain.businesscraft.screen.components.DataLabelComponent;
 import com.yourdomain.businesscraft.screen.components.UIComponent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import com.yourdomain.businesscraft.screen.components.ToggleButtonComponent;
 import com.yourdomain.businesscraft.screen.components.DataBoundButtonComponent;
 import com.yourdomain.businesscraft.screen.components.TabComponent;
@@ -33,6 +35,10 @@ import net.minecraft.client.Minecraft;
 import com.yourdomain.businesscraft.screen.components.VisitHistoryComponent;
 import com.yourdomain.businesscraft.screen.components.EditBoxComponent;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.platform.Platform;
+import net.minecraft.core.BlockPos;
+import com.yourdomain.businesscraft.network.SetPlatformPathCreationModePacket;
+import com.yourdomain.businesscraft.client.PlatformPathKeyHandler;
 
 
 public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
@@ -44,6 +50,17 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     // Add state for town name editing
     private boolean isEditingTownName = false;
     private TownNameEditorComponent nameEditor;
+    
+    // Add a platforms tab
+    private PlatformsTab platformsTab;
+    private boolean isSettingPlatformPath = false;
+    private UUID platformBeingEdited = null;
+    
+    // Path creation mode
+    private boolean isInPathCreationMode = false;
+    
+    // For displaying instructions
+    private Component instructionsText = null;
 
     public TownBlockScreen(TownBlockMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -103,21 +120,37 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     
     private List<UIComponent> createSettingsComponents(TownBlockMenu menu) {
         List<UIComponent> comps = new ArrayList<>();
-        int buttonWidth = 120;
+        
+        int buttonWidth = 150;
         int buttonHeight = 20;
         
+        // Set tourist path button
         comps.add(new ToggleButtonComponent(0, 0, buttonWidth, buttonHeight,
             Component.translatable("gui.businesscraft.set_tourist_path"),
-            button -> ModMessages.sendToServer(new SetPathCreationModePacket(
-                menu.getBlockEntity().getBlockPos(), true
-            ))
+            button -> {
+                ModMessages.sendToServer(new SetPathCreationModePacket(
+                    menu.getBlockEntity().getBlockPos(), true
+                ));
+                isInPathCreationMode = true;
+                setInstructionsText(Component.translatable("businesscraft.path_instructions"));
+                hideAllMainButtons();
+            }
         ));
+        
+        // Platforms button
+        comps.add(new ToggleButtonComponent(0, 0, buttonWidth, buttonHeight,
+            Component.translatable("businesscraft.platforms_tab"),
+            button -> showPlatformsTab()
+        ));
+        
+        // Toggle tourists button
         comps.add(new ToggleButtonComponent(0, 0, buttonWidth, buttonHeight,
             Component.translatable("gui.businesscraft.toggle_tourists"),
             button -> ModMessages.sendToServer(new ToggleTouristSpawningPacket(
                 menu.getBlockEntity().getBlockPos()
             ))
         ));
+        
         comps.add(new DataBoundButtonComponent(
             () -> Component.literal("Radius: " + menu.getSearchRadius()),
             (button) -> handleRadiusChange(),
@@ -142,6 +175,13 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         
         // Initialize the name editor
         nameEditor.init(this::addRenderableWidget);
+        
+        // Initialize platforms tab if it exists
+        if (platformsTab == null) {
+            platformsTab = new PlatformsTab(this);
+        }
+        platformsTab.init(leftPos, topPos, imageWidth, imageHeight);
+        platformsTab.setVisible(false);  // Hidden by default
     }
 
     @Override
@@ -161,7 +201,26 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
             return;
         }
         
-        // Normal rendering for when not editing
+        // If showing platforms tab, render it
+        if (platformsTab != null && platformsTab.isVisible()) {
+            super.render(guiGraphics, mouseX, mouseY, delta);
+            platformsTab.render(guiGraphics, mouseX, mouseY, delta);
+            
+            // Render instruction text if present (for platform path setting)
+            if (instructionsText != null) {
+                guiGraphics.drawCenteredString(
+                    Minecraft.getInstance().font,
+                    instructionsText,
+                    this.width / 2,
+                    20,
+                    0xFFFFFF
+                );
+            }
+            
+            return;
+        }
+        
+        // Normal rendering for main UI
         super.render(guiGraphics, mouseX, mouseY, delta);
         
         // Render tabs and tab content
@@ -204,6 +263,17 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
                 component.render(guiGraphics, leftPos + 10, yPos, mouseX, mouseY);
                 yPos += component.getHeight() + 8;
             }
+        }
+        
+        // Render instruction text if present (for tourist path setting)
+        if (instructionsText != null) {
+            guiGraphics.drawCenteredString(
+                Minecraft.getInstance().font,
+                instructionsText,
+                this.width / 2,
+                20,
+                0xFFFFFF
+            );
         }
     }
 
@@ -257,20 +327,34 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        // If editing town name, pass mouse clicks to the editor
-        if (isEditingTownName) {
-            boolean handled = nameEditor.mouseClicked(mouseX, mouseY, button);
-            
-            // If the click wasn't on the editor and it's a left-click, handle unfocusing
-            if (!handled && button == 0) {
-                EditBoxComponent editBox = nameEditor.getEditBox();
-                if (editBox != null && editBox.isFocused()) {
-                    editBox.setFocused(false);
-                    return true;
-                }
+        // Handle platform tab clicks if it's visible
+        if (platformsTab != null && platformsTab.isVisible()) {
+            if (platformsTab.mouseClicked(mouseX, mouseY, button)) {
+                return true;
             }
-            
-            return handled || isClickInsideEditor(mouseX, mouseY);
+        }
+        
+        // Handle town name editor clicks if it's visible
+        if (isEditingTownName) {
+            if (isClickInsideEditor(mouseX, mouseY)) {
+                return super.mouseClicked(mouseX, mouseY, button);
+            } else {
+                // Click outside editor cancels
+                handleEditCancelled();
+                return true;
+            }
+        }
+        
+        // Platform path creation mode
+        if (isSettingPlatformPath && platformBeingEdited != null) {
+            // Forward the click to the game for block selection
+            return false;
+        }
+        
+        // Regular path creation mode
+        if (isInPathCreationMode) {
+            // Forward the click to the game for block selection
+            return false;
         }
         
         return super.mouseClicked(mouseX, mouseY, button);
@@ -381,5 +465,153 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     private void hideEditor() {
         isEditingTownName = false;
         nameEditor.setVisible(false);
+    }
+
+    /**
+     * Shows the platforms tab
+     */
+    public void showPlatformsTab() {
+        LOGGER.debug("Showing platforms tab");
+        
+        // Create platforms tab if it doesn't exist
+        if (platformsTab == null) {
+            LOGGER.debug("Creating new platforms tab");
+            platformsTab = new PlatformsTab(this);
+        }
+        
+        // Force a refresh of the block entity's platforms from server data
+        TownBlockEntity blockEntity = menu.getBlockEntity();
+        if (blockEntity != null) {
+            LOGGER.debug("Block entity at {}, has {} platforms", 
+                        blockEntity.getBlockPos(), 
+                        blockEntity.getPlatforms().size());
+        }
+        
+        // Initialize with current screen dimensions
+        platformsTab.init(leftPos, topPos, imageWidth, imageHeight);
+        platformsTab.setVisible(true);
+        
+        // Hide regular buttons while in platforms view
+        hideAllMainButtons();
+        
+        // Refresh the platforms data
+        refreshPlatforms();
+    }
+    
+    /**
+     * Shows the main tab, hiding any specialized tabs
+     */
+    public void showMainTab() {
+        // Hide platforms tab if it exists
+        if (platformsTab != null) {
+            platformsTab.setVisible(false);
+        }
+        
+        // Clear any path setting mode
+        isInPathCreationMode = false;
+        isSettingPlatformPath = false;
+        platformBeingEdited = null;
+        
+        // Hide any instructions
+        instructionsText = null;
+        
+        // Show all the main buttons again
+        showAllMainButtons();
+    }
+    
+    /**
+     * Shows the path editor for a specific platform
+     */
+    public void showPathEditor(UUID platformId) {
+        // Set the path creation mode
+        isSettingPlatformPath = true;
+        platformBeingEdited = platformId;
+        
+        // Set instructions
+        setInstructionsText(Component.translatable("businesscraft.platform_path_instructions"));
+        
+        // Hide the platforms tab
+        if (platformsTab != null) {
+            platformsTab.setVisible(false);
+        }
+        
+        // Register the platform with the key handler so it can detect ESC key
+        PlatformPathKeyHandler.setActivePlatform(
+            menu.getBlockEntity().getBlockPos(),
+            platformId
+        );
+        
+        // Close the screen so the player can interact with the world
+        // We'll send a packet to the server to enter platform path creation mode
+        ModMessages.sendToServer(new SetPlatformPathCreationModePacket(
+            menu.getBlockEntity().getBlockPos(),
+            platformId,
+            true
+        ));
+        
+        // Close the UI to allow world interaction
+        this.onClose();
+    }
+    
+    /**
+     * Refreshes the platforms display
+     */
+    public void refreshPlatforms() {
+        if (platformsTab != null) {
+            platformsTab.refreshPlatforms();
+        }
+    }
+    
+    /**
+     * Gets the block position of the town block
+     */
+    public BlockPos getBlockPos() {
+        return menu.getBlockEntity().getBlockPos();
+    }
+    
+    /**
+     * Gets the list of platforms from the town block
+     */
+    public List<Platform> getPlatforms() {
+        TownBlockEntity blockEntity = menu.getBlockEntity();
+        if (blockEntity != null) {
+            return blockEntity.getPlatforms();
+        }
+        return new ArrayList<>();
+    }
+
+    /**
+     * Hides all main UI buttons when in special modes
+     */
+    private void hideAllMainButtons() {
+        // Hide all components except the first (TabComponent)
+        for (int i = 1; i < components.size(); i++) {
+            components.get(i).setVisible(false);
+        }
+        
+        // Hide the tab component as well
+        if (!components.isEmpty()) {
+            components.get(0).setVisible(false);
+        }
+    }
+    
+    /**
+     * Shows all main UI buttons when returning to normal mode
+     */
+    private void showAllMainButtons() {
+        // Show all components
+        for (UIComponent component : components) {
+            component.setVisible(true);
+        }
+        
+        // Clear instructions
+        instructionsText = null;
+    }
+    
+    /**
+     * Sets instruction text to display at the top of the screen
+     */
+    private void setInstructionsText(Component text) {
+        this.instructionsText = text;
     }
 }
