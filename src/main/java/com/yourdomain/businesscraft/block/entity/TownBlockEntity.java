@@ -18,6 +18,7 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
@@ -81,7 +82,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-            return stack.getItem() == Items.BREAD;
+            // Accept any item as a resource
+            return !stack.isEmpty();
         }
     };
 
@@ -106,7 +108,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 if (town == null) return 0;
                 
                 int value = switch (index) {
-                    case DATA_BREAD -> town.getBreadCount();
+                    case DATA_BREAD -> town.getBreadCount(); // Legacy support for bread count
                     case DATA_POPULATION -> town.getPopulation();
                     case DATA_SPAWN_ENABLED -> town.isTouristSpawningEnabled() ? 1 : 0;
                     case DATA_CAN_SPAWN -> town.canSpawnTourists() ? 1 : 0;
@@ -326,11 +328,13 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             if (level instanceof ServerLevel sLevel1) {
                 Town town = TownManager.get(sLevel1).getTown(townId);
                 if (town != null) {
-                    // Bread handling logic
+                    // Resource handling logic - process any item in the slot
                     ItemStack stack = itemHandler.getStackInSlot(0);
-                    if (!stack.isEmpty() && stack.getItem() == Items.BREAD) {
-                        stack.shrink(1);
-                        town.addBread(1);
+                    if (!stack.isEmpty()) {
+                        int count = stack.getCount();
+                        Item item = stack.getItem();
+                        stack.shrink(count);
+                        town.addResource(item, count);
                         setChanged();
                     }
 
@@ -820,27 +824,35 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     public void processBreadInSlot() {
+        processResourcesInSlot();
+    }
+    
+    /**
+     * Process any resources in the input slot
+     */
+    public void processResourcesInSlot() {
         if (!level.isClientSide()) {
             IItemHandler itemHandler = lazyItemHandler.orElse(this.itemHandler);
             ItemStack stack = itemHandler.getStackInSlot(0);
-            if (stack.getItem() == Items.BREAD) {
+            
+            if (!stack.isEmpty()) {
+                Item item = stack.getItem();
                 int count = stack.getCount();
                 itemHandler.extractItem(0, count, false);
                 
                 // Update the provider
                 ITownDataProvider provider = getTownDataProvider();
                 if (provider != null) {
-                    // This assumes Town has implemented addBread in the provider interface
-                    // If not, we should add this method to ITownDataProvider
-                    if (provider instanceof Town town) {
-                        town.addBread(count);
-                    }
+                    provider.addResource(item, count);
                     provider.markDirty();
+                    
+                    // Update UI if it's bread (for legacy support)
+                    if (item == Items.BREAD) {
+                        int breadCount = provider.getBreadCount();
+                        data.set(DATA_BREAD, breadCount);
+                    }
                 }
                 
-                // Update the container data
-                int breadCount = provider != null ? provider.getBreadCount() : 0;
-                data.set(DATA_BREAD, breadCount);
                 setChanged();
             }
         }
