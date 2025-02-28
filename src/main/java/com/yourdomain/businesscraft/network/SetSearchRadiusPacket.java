@@ -10,43 +10,39 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class SetSearchRadiusPacket {
-    private final BlockPos pos;
+public class SetSearchRadiusPacket extends BaseBlockEntityPacket {
     private final int radius;
 
     public SetSearchRadiusPacket(BlockPos pos, int radius) {
-        this.pos = pos;
+        super(pos);
         this.radius = radius;
     }
 
     public SetSearchRadiusPacket(FriendlyByteBuf buf) {
-        this.pos = buf.readBlockPos();
+        super(buf);
         this.radius = buf.readInt();
     }
 
+    @Override
     public void toBytes(FriendlyByteBuf buf) {
-        buf.writeBlockPos(pos);
+        super.toBytes(buf);
         buf.writeInt(radius);
     }
 
     public void handle(Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> {
-            ServerPlayer player = context.getSender();
-            if (player != null) {
-                ServerLevel level = player.serverLevel();
-                if (level.getBlockEntity(pos) instanceof TownBlockEntity townBlock) {
-                    ITownDataProvider provider = townBlock.getTownDataProvider();
-                    if (provider != null) {
-                        provider.setSearchRadius(radius);
-                        provider.markDirty();
-                    }
+            handlePacket(context, (player, townBlock) -> {
+                ITownDataProvider provider = townBlock.getTownDataProvider();
+                if (provider != null) {
+                    // Update the provider (single source of truth)
+                    provider.setSearchRadius(radius);
+                    provider.markDirty();
                     
-                    // Still update the block entity for UI synchronization
-                    townBlock.setSearchRadius(radius);
+                    // Sync with block entity
                     townBlock.syncTownData();
                 }
-            }
+            });
         });
         context.setPacketHandled(true);
     }

@@ -20,6 +20,7 @@ public class DataLabelComponent implements UIComponent {
 
     @Override
     public void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
+        if (!visible) return;
         guiGraphics.drawString(Minecraft.getInstance().font, textSupplier.get(), x, y, color);
     }
 
