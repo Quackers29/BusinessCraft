@@ -12,6 +12,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -23,10 +24,13 @@ import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import net.minecraft.server.level.ServerLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Mod(BusinessCraft.MOD_ID)
 public class BusinessCraft {
     public static final String MOD_ID = "businesscraft";
+    private static final Logger LOGGER = LoggerFactory.getLogger(BusinessCraft.class);
     
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);
@@ -56,8 +60,9 @@ public class BusinessCraft {
         // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
         
-        // Register server stopping event
+        // Register server lifecycle events
         MinecraftForge.EVENT_BUS.addListener(this::onServerStopping);
+        MinecraftForge.EVENT_BUS.addListener(this::onServerStarted);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
@@ -70,8 +75,27 @@ public class BusinessCraft {
     }
 
     private void onServerStopping(ServerStoppingEvent event) {
+        LOGGER.info("Server stopping, saving town data...");
         ServerLifecycleHooks.getCurrentServer().getAllLevels().forEach(level -> {
             TownManager.get((ServerLevel) level).onServerStopping();
+        });
+        
+        // Clear all instances after saving to ensure a clean slate on next load
+        TownManager.clearInstances();
+    }
+    
+    private void onServerStarted(ServerStartedEvent event) {
+        LOGGER.info("Server started, initializing town data...");
+        ServerLifecycleHooks.getCurrentServer().getAllLevels().forEach(level -> {
+            if (level instanceof ServerLevel) {
+                ServerLevel serverLevel = (ServerLevel) level;
+                // This ensures TownManager is initialized for each level
+                TownManager townManager = TownManager.get(serverLevel);
+                
+                // Log number of towns loaded
+                int townCount = townManager.getAllTowns().size();
+                LOGGER.info("Loaded {} towns for level: {}", townCount, level.dimension().location());
+            }
         });
     }
 }

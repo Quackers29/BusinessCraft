@@ -29,10 +29,20 @@ public class TownManager {
             TownSavedData::create,
             TownSavedData.NAME
         );
+        LOGGER.info("TownManager initialized for level: {}", level.dimension().location());
     }
 
     public static TownManager get(ServerLevel level) {
         return INSTANCES.computeIfAbsent(level, key -> new TownManager(level));
+    }
+    
+    /**
+     * Cleans up instances that might be stale
+     * Call this when server is stopping or restarting
+     */
+    public static void clearInstances() {
+        LOGGER.info("Clearing {} TownManager instances", INSTANCES.size());
+        INSTANCES.clear();
     }
 
     public UUID registerTown(BlockPos pos, String name) {
@@ -101,8 +111,7 @@ public class TownManager {
     
     public void onServerStopping() {
         if (savedData != null) {
-            CompoundTag data = new CompoundTag();
-            saveAllTowns(data);
+            LOGGER.info("Server stopping, marking {} towns as dirty", savedData.getTowns().size());
             savedData.setDirty();
         }
     }

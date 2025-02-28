@@ -874,10 +874,17 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private void updateFromTownProvider() {
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
+            // Sync data from the provider (the single source of truth)
             this.touristSpawningEnabled = provider.isTouristSpawningEnabled();
             this.pathStart = provider.getPathStart();
             this.pathEnd = provider.getPathEnd();
             this.searchRadius = provider.getSearchRadius();
+            
+            // If we made any local changes, we need to sync them back
+            if (level != null && !level.isClientSide() && this.townId != null) {
+                // Mark the provider as dirty to ensure changes are saved
+                provider.markDirty();
+            }
         }
     }
 

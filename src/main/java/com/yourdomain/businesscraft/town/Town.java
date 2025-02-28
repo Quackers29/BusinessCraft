@@ -196,7 +196,20 @@ public class Town implements ITownDataProvider {
     
     @Override
     public void markDirty() {
-        // This will be handled by the TownManager
+        // Find the TownManager for all loaded levels and mark the town data as dirty
+        net.minecraft.server.MinecraftServer server = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
+        if (server != null) {
+            server.getAllLevels().forEach(level -> {
+                if (level instanceof net.minecraft.server.level.ServerLevel) {
+                    net.minecraft.server.level.ServerLevel serverLevel = (net.minecraft.server.level.ServerLevel) level;
+                    TownManager manager = TownManager.get(serverLevel);
+                    if (manager.getTown(id) == this) {
+                        LOGGER.debug("Marking town {} as dirty", id);
+                        manager.markDirty();
+                    }
+                }
+            });
+        }
     }
     
     @Override
