@@ -48,11 +48,11 @@ public interface ITownDataProvider {
     // Visit history methods
     /**
      * Record a visit from another town with additional information
-     * @param originTownId UUID of the town visitors are from
+     * @param townName Name of the town visitors are from
      * @param count Number of visitors
      * @param originPos Position the visitors originated from
      */
-    void recordVisit(UUID originTownId, int count, BlockPos originPos);
+    void recordVisit(String townName, int count, BlockPos originPos);
     
     /**
      * Get all the visit history records
@@ -66,19 +66,19 @@ public interface ITownDataProvider {
      */
     class VisitHistoryRecord {
         private final long timestamp;
-        private final UUID originTownId;
+        private final String originTown;
         private final int count;
         private final BlockPos originPos;
 
-        public VisitHistoryRecord(long timestamp, UUID originTownId, int count, BlockPos originPos) {
+        public VisitHistoryRecord(long timestamp, String originTown, int count, BlockPos originPos) {
             this.timestamp = timestamp;
-            this.originTownId = originTownId;
+            this.originTown = originTown;
             this.count = count;
             this.originPos = originPos;
         }
 
         public long getTimestamp() { return timestamp; }
-        public UUID getOriginTownId() { return originTownId; }
+        public String getOriginTown() { return originTown; }
         public int getCount() { return count; }
         public BlockPos getOriginPos() { return originPos; }
     }
