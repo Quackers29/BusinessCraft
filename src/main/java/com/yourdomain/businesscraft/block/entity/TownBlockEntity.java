@@ -69,6 +69,7 @@ import java.util.Set;
 import java.util.ArrayList;
 import net.minecraft.world.phys.Vec3;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
+import com.yourdomain.businesscraft.service.TouristVehicleManager;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -149,6 +150,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private final AABB searchBounds = new AABB(worldPosition).inflate(15);
     private List<LivingEntity> tourists = new ArrayList<>();
     private ITownDataProvider townDataProvider;
+    
+    // Add a new TouristVehicleManager instance
+    private final TouristVehicleManager touristVehicleManager = new TouristVehicleManager();
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -431,9 +435,19 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             }
         }
         
-        // Add this - try to mount tourists every 20 ticks (1 second)
-        if (level.getGameTime() % 20 == 0) {
-            mountTouristsToVehicles();
+        // Replace the direct call to mountTouristsToVehicles with:
+        if (level.getGameTime() % 20 == 0) { // Every 1 second
+            if (touristSpawningEnabled && pathStart != null && pathEnd != null && townId != null) {
+                // Get town object safely
+                Town currentTown = null;
+                if (level instanceof ServerLevel sLevel) {
+                    currentTown = TownManager.get(sLevel).getTown(townId);
+                }
+                
+                if (currentTown != null && currentTown.canSpawnTourists()) {
+                    touristVehicleManager.mountTouristsToVehicles(level, pathStart, pathEnd, searchRadius, townId);
+                }
+            }
         }
     }
 
@@ -658,150 +672,14 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         }
     }
 
+    // Replace the old mountTouristsToVehicles method with a simplified version that delegates to the manager
     private void mountTouristsToVehicles() {
         if (level == null || level.isClientSide || town == null) return;
-
         if (pathStart == null || pathEnd == null) return;
-
-        if (level instanceof ServerLevel sLevel4) {
-            AABB searchBounds = new AABB(
-                Math.min(pathStart.getX(), pathEnd.getX()) - searchRadius,
-                Math.min(pathStart.getY(), pathEnd.getY()) - 2,
-                Math.min(pathStart.getZ(), pathEnd.getZ()) - searchRadius,
-                Math.max(pathStart.getX(), pathEnd.getX()) + searchRadius,
-                Math.max(pathStart.getY(), pathEnd.getY()) + 4,
-                Math.max(pathStart.getZ(), pathEnd.getZ()) + searchRadius
-            );
-
-            // Get tourists that can be mounted
-            List<Villager> tourists = level.getEntitiesOfClass(Villager.class, searchBounds,
-                villager -> villager.onGround() && 
-                           !villager.isPassenger() &&
-                           villager.getTags().contains("type_tourist") &&
-                           villager.getTags().stream().anyMatch(tag -> 
-                               tag.startsWith("from_town_" + townId.toString())
-                           )
-            );
-
-            if (tourists.isEmpty()) return;
-
-            if (CONFIG.enableCreateTrains) {
-                List<Entity> carriages = level.getEntitiesOfClass(Entity.class, searchBounds,
-                    entity -> {
-                        String entityId = entity.getType().builtInRegistryHolder().key().toString();
-                        boolean isCarriage = entityId.contains("create:carriage_contraption");
-                        
-                        if (!isCarriage) return false;
-                        
-                        // Check if carriage is stopped using position change
-                        boolean isStopped = false;
-                        if (level instanceof ServerLevel sLevel2) {
-                            try {
-                                Vec3 currentPos = entity.position();
-                                Vec3 lastPos = lastPositions.get(entity.getUUID());
-                                
-                                if (lastPos != null) {
-                                    double positionChange = currentPos.distanceTo(lastPos);
-                                    isStopped = positionChange < VISITOR_POSITION_CHANGE_THRESHOLD;
-                                }
-                                
-                                lastPositions.put(entity.getUUID(), currentPos);
-                            } catch (Exception e) {
-                                // Silently fail and consider not stopped
-                                isStopped = false;
-                            }
-                        }
-                        
-                        return isCarriage && isStopped;
-                    });
-                
-                if (level instanceof ServerLevel sLevel1) {
-                    carriages.forEach(carriage -> {
-                        try {
-                            // Get total seats
-                            String seatsCommand = String.format("data get entity %s Contraption.Seats", carriage.getStringUUID());
-                            int seatCount = sLevel1.getServer().getCommands().getDispatcher()
-                                .execute(seatsCommand, sLevel1.getServer().createCommandSourceStack());
-                            
-                            // Find free seats
-                            List<Integer> freeSeats = new ArrayList<>();
-                            for (int i = 0; i < seatCount; i++) {
-                                try {
-                                    String checkSeatCommand = String.format("data get entity %s Contraption.Passengers[{Seat:%d}]", 
-                                        carriage.getStringUUID(), i);
-                                    sLevel1.getServer().getCommands().getDispatcher()
-                                        .execute(checkSeatCommand, sLevel1.getServer().createCommandSourceStack());
-                                } catch (Exception e) {
-                                    // If command fails, seat is free
-                                    freeSeats.add(i);
-                                }
-                            }
-                            
-                            // Shuffle seats for random assignment
-                            Collections.shuffle(freeSeats);
-                            
-                            // Mount tourists in random free seats
-                            for (Integer seatIndex : freeSeats) {
-                                tourists.stream()
-                                    .filter(tourist -> !tourist.isPassenger())
-                                    .findFirst()
-                                    .ifPresent(tourist -> {
-                                        try {
-                                            String command = String.format("create passenger %s %s %d",
-                                                tourist.getStringUUID(),
-                                                carriage.getStringUUID(),
-                                                seatIndex
-                                            );
-                                            sLevel1.getServer().getCommands().getDispatcher()
-                                                .execute(command, sLevel1.getServer().createCommandSourceStack());
-                                        } catch (Exception e) {
-                                            // Silent fail
-                                        }
-                                    });
-                            }
-                        } catch (Exception e) {
-                            // Silent fail
-                        }
-                    });
-                }
-            }
-        }
-
-        if (CONFIG.enableMinecarts) {
-            List<AbstractMinecart> minecarts = level.getEntitiesOfClass(AbstractMinecart.class, searchBounds);
-            
-            minecarts.forEach(minecart -> {
-                Vec3 currentPos = minecart.position();
-                Vec3 lastPos = lastPositions.get(minecart.getUUID());
-                
-                // Store current position for next check
-                lastPositions.put(minecart.getUUID(), currentPos);
-                
-                // Skip if this is the first time we've seen this minecart
-                if (lastPos == null) {
-                    LOGGER.info("[BusinessCraft] First time seeing minecart {}", minecart.getUUID());
-                    return;
-                }
-                
-                // Calculate position change
-                double positionChange = currentPos.distanceTo(lastPos);
-                LOGGER.info("[BusinessCraft] Minecart {} position change: {} (Threshold: {})", 
-                    minecart.getUUID(), 
-                    String.format("%.6f", positionChange), 
-                    String.format("%.6f", VISITOR_POSITION_CHANGE_THRESHOLD));
-                
-                // Only board if position change is LESS than threshold AND no passenger
-                if (positionChange > VISITOR_POSITION_CHANGE_THRESHOLD || 
-                    minecart.hasPassenger(passenger -> true)) {
-                    return; // Skip if moving too fast or has passenger
-                }
-                
-                LOGGER.info("[BusinessCraft] Minecart {} is stopped, allowing boarding", minecart.getUUID());
-                tourists.stream()
-                    .filter(tourist -> !tourist.isPassenger())
-                    .findFirst()
-                    .ifPresent(tourist -> tourist.startRiding(minecart));
-            });
+        
+        int mounted = touristVehicleManager.mountTouristsToVehicles(level, pathStart, pathEnd, searchRadius, townId);
+        if (mounted > 0) {
+            LOGGER.debug("Mounted {} tourists to vehicles for town {}", mounted, name);
         }
     }
 
@@ -913,5 +791,12 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 setChanged();
             }
         }
+    }
+
+    // Ensure we clean up resources when the block entity is removed
+    @Override
+    public void setRemoved() {
+        super.setRemoved();
+        touristVehicleManager.clearTrackedVehicles();
     }
 }
