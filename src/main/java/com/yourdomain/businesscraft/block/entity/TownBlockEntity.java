@@ -152,6 +152,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private List<LivingEntity> tourists = new ArrayList<>();
     private ITownDataProvider townDataProvider;
     
+    // Add rate limiting for markDirty calls
+    private long lastMarkDirtyTime = 0;
+    private static final long MARK_DIRTY_COOLDOWN_MS = 2000; // 2 seconds between calls
+    
     // Add a new TouristVehicleManager instance
     private final TouristVehicleManager touristVehicleManager = new TouristVehicleManager();
 
@@ -640,7 +644,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
             provider.setPathStart(pos);
-            provider.markDirty();
+            markDirtyWithRateLimit(provider);
         }
         
         setChanged();
@@ -653,7 +657,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
             provider.setPathEnd(pos);
-            provider.markDirty();
+            markDirtyWithRateLimit(provider);
         }
         
         setChanged();
@@ -759,7 +763,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
             provider.setTouristSpawningEnabled(enabled);
-            provider.markDirty();
+            markDirtyWithRateLimit(provider);
         }
         
         // Update container data
@@ -797,9 +801,21 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             
             // If we made any local changes, we need to sync them back
             if (level != null && !level.isClientSide() && this.townId != null) {
-                // Mark the provider as dirty to ensure changes are saved
-                provider.markDirty();
+                // Mark the provider as dirty to ensure changes are saved, but with rate limiting
+                markDirtyWithRateLimit(provider);
             }
+        }
+    }
+    
+    /**
+     * Marks the provider as dirty with rate limiting to reduce excessive log spam
+     * @param provider The provider to mark as dirty
+     */
+    private void markDirtyWithRateLimit(ITownDataProvider provider) {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastMarkDirtyTime > MARK_DIRTY_COOLDOWN_MS) {
+            provider.markDirty();
+            lastMarkDirtyTime = currentTime;
         }
     }
 
