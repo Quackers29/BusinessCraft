@@ -956,38 +956,28 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     public void syncTownData() {
         if (level != null && !level.isClientSide()) {
-            // Debug logging
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("[DEBUG] syncTownData called, current name: {}", name);
-            }
-            
-            // Ensure we get the latest name from the town provider
+            // Get latest name from provider if needed
             if (townId != null) {
                 ITownDataProvider provider = getTownDataProvider();
                 if (provider != null) {
-                    // Update our local name from the provider
                     String latestName = provider.getTownName();
                     if (!latestName.equals(name)) {
-                        LOGGER.debug("[DEBUG] Updating local name from {} to {}", name, latestName);
+                        LOGGER.debug("Updating town name from '{}' to '{}'", name, latestName);
                         name = latestName;
                     }
                 }
             }
             
+            // Update container data
             data.set(DATA_BREAD, data.get(DATA_BREAD));
             data.set(DATA_POPULATION, data.get(DATA_POPULATION));
             data.set(DATA_SPAWN_ENABLED, data.get(DATA_SPAWN_ENABLED));
             data.set(DATA_CAN_SPAWN, data.get(DATA_CAN_SPAWN));
             data.set(DATA_SEARCH_RADIUS, data.get(DATA_SEARCH_RADIUS));
             
-            // Force a block update to sync the latest data including name
+            // Force a block update to sync the latest data
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
             setChanged();
-            
-            // Debug logging
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("[DEBUG] After syncTownData, name is: {}", name);
-            }
         }
     }
 
@@ -1243,13 +1233,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 // Store the pre-resolved town name from the server in a client field
                 if (visitTag.contains("townName")) {
                     String townName = visitTag.getString("townName");
-                    // Only log at TRACE level to avoid excessive logging
+                    // Only log when a town name is added for the first time
                     if (!townNameCache.containsKey(townId)) {
-                        // Only log when first adding a town name
                         LOGGER.debug("Loaded town name for {}: {}", townId, townName);
-                    } else if (LOGGER.isTraceEnabled()) {
-                        // Only log at TRACE level for subsequent loads
-                        LOGGER.trace("Refreshed town name for {}: {}", townId, townName);
                     }
                     // Store the name in a map for client-side lookup
                     townNameCache.put(townId, townName);
