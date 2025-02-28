@@ -227,27 +227,60 @@ public class TownBlockMenu extends AbstractContainerMenu {
         if (provider != null) {
             // Use the provider directly to get the visit history (single source of truth)
             return provider.getVisitHistory().stream()
-                .map(record -> new VisitEntry(
-                    record.getTimestamp(),
-                    record.getOriginTown(),
-                    record.getCount(),
-                    record.getOriginPos()
-                ))
+                .map(record -> {
+                    // Resolve town name from UUID for display
+                    String townName = resolveTownName(record.getOriginTownId());
+                    // Add extra logging to debug name resolution
+                    LOGGER.debug("Visit history entry: {} from town {} ({})",
+                        record.getTimestamp(),
+                        townName,
+                        record.getOriginTownId());
+                    return new VisitEntry(
+                        record.getTimestamp(),
+                        townName,
+                        record.getCount(),
+                        record.getOriginPos()
+                    );
+                })
                 .collect(Collectors.toList());
         }
         
         if (blockEntity != null) {
             // Fallback to using the block entity if provider is null
             return blockEntity.getVisitHistory().stream()
-                .map(record -> new VisitEntry(
-                    record.getTimestamp(),
-                    record.getOriginTown(),
-                    record.getCount(),
-                    record.getOriginPos()
-                ))
+                .map(record -> {
+                    // Resolve town name from UUID for display
+                    String townName = resolveTownName(record.getOriginTownId());
+                    return new VisitEntry(
+                        record.getTimestamp(),
+                        townName,
+                        record.getCount(),
+                        record.getOriginPos()
+                    );
+                })
                 .collect(Collectors.toList());
         }
         
         return Collections.emptyList();
+    }
+    
+    /**
+     * Resolves a town name from its UUID for display purposes
+     */
+    private String resolveTownName(UUID townId) {
+        if (townId == null) return "Unknown";
+        
+        if (blockEntity != null) {
+            // Use the block entity's town name cache for client-side resolution
+            String name = blockEntity.getTownNameFromId(townId);
+            // If the name returned is the fallback format, log it for debugging
+            if (name.startsWith("Town-")) {
+                LOGGER.warn("Falling back to UUID format for town {}", townId);
+            }
+            return name;
+        }
+        
+        // Fallback - just show a portion of the UUID
+        return "Town-" + townId.toString().substring(0, 8);
     }
 }
