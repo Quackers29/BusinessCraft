@@ -114,7 +114,12 @@ public class Town implements ITownDataProvider {
             for (VisitHistoryRecord record : visitHistory) {
                 CompoundTag visitTag = new CompoundTag();
                 visitTag.putLong("timestamp", record.getTimestamp());
-                visitTag.putString("town", record.getOriginTown());
+                
+                // Store UUID instead of name
+                if (record.getOriginTownId() != null) {
+                    visitTag.putUUID("townId", record.getOriginTownId());
+                }
+                
                 visitTag.putInt("count", record.getCount());
                 
                 // Save origin position
@@ -180,7 +185,19 @@ public class Town implements ITownDataProvider {
                 CompoundTag visitTag = historyTag.getCompound(i);
                 
                 long timestamp = visitTag.getLong("timestamp");
-                String townName = visitTag.getString("town");
+                
+                // Handle both legacy (name-based) and new (UUID-based) records
+                UUID townId = null;
+                if (visitTag.contains("townId")) {
+                    townId = visitTag.getUUID("townId");
+                } else if (visitTag.contains("town")) {
+                    // Legacy record with only a town name - create a random UUID
+                    // This is just a fallback for migration
+                    townId = UUID.nameUUIDFromBytes(visitTag.getString("town").getBytes());
+                    LOGGER.info("Converted legacy town name '{}' to UUID: {}", 
+                        visitTag.getString("town"), townId);
+                }
+                
                 int count = visitTag.getInt("count");
                 
                 BlockPos originPos = BlockPos.ZERO;
@@ -193,7 +210,9 @@ public class Town implements ITownDataProvider {
                     );
                 }
                 
-                town.visitHistory.add(new VisitHistoryRecord(timestamp, townName, count, originPos));
+                if (townId != null) {
+                    town.visitHistory.add(new VisitHistoryRecord(timestamp, townId, count, originPos));
+                }
             }
         }
         
@@ -292,11 +311,11 @@ public class Town implements ITownDataProvider {
     
     // Visit history implementation
     @Override
-    public void recordVisit(String townName, int count, BlockPos originPos) {
+    public void recordVisit(UUID originTownId, int count, BlockPos originPos) {
         long timestamp = System.currentTimeMillis();
         
         // Create the visit record
-        VisitHistoryRecord record = new VisitHistoryRecord(timestamp, townName, count, originPos);
+        VisitHistoryRecord record = new VisitHistoryRecord(timestamp, originTownId, count, originPos);
         
         // Add to the beginning of the list (newest first)
         visitHistory.add(0, record);
