@@ -21,6 +21,9 @@ import net.minecraft.server.level.ServerLevel;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
 
 import java.util.UUID;
+import java.util.Collections;
+import java.util.Map;
+import net.minecraft.world.item.Item;
 
 public class TownBlockMenu extends AbstractContainerMenu {
     private final TownBlockEntity blockEntity;
@@ -50,7 +53,7 @@ public class TownBlockMenu extends AbstractContainerMenu {
         if (blockEntity != null) {
             blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER)
                 .ifPresent(handler -> {
-                    addSlot(new SlotItemHandler(handler, 0, 152, 20));
+                    addSlot(new SlotItemHandler(handler, 0, 180, 20));
                 });
             addDataSlots(data);
         }
@@ -189,5 +192,26 @@ public class TownBlockMenu extends AbstractContainerMenu {
             return blockEntity.getTownDataProvider();
         }
         return null;
+    }
+    
+    /**
+     * Gets all resources from the town
+     * @return Map of items to quantities, or empty map if no town is available
+     */
+    public Map<Item, Integer> getAllResources() {
+        // On client side, use the client resources
+        if (blockEntity != null && blockEntity.getLevel().isClientSide()) {
+            Map<Item, Integer> clientResources = blockEntity.getClientResources();
+            if (!clientResources.isEmpty()) {
+                return clientResources;
+            }
+        }
+        
+        // On server side, use the provider
+        ITownDataProvider provider = getTownDataProvider();
+        if (provider != null) {
+            return provider.getAllResources();
+        }
+        return Collections.emptyMap();
     }
 }
