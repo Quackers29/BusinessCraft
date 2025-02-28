@@ -6,5 +6,8 @@
   "gui.businesscraft.tab.town": "Town",
   "gui.businesscraft.tab.resources": "Resources",
   "gui.businesscraft.tab.settings": "Settings",
-  "gui.businesscraft.tab.history": "History"
+  "gui.businesscraft.tab.history": "History",
+  "gui.businesscraft.change_town_name": "Change Town Name",
+  "gui.businesscraft.edit_town_name": "Edit Town Name",
+  "gui.businesscraft.town_name": "Town Name:"
 }

@@ -52,6 +52,13 @@ public class ModMessages {
                 .encoder(SetPathCreationModePacket::encode)
                 .consumerMainThread(SetPathCreationModePacket::handle)
                 .add();
+                
+        // Register the town name change packet
+        net.messageBuilder(SetTownNamePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(SetTownNamePacket::decode)
+                .encoder(SetTownNamePacket::encode)
+                .consumerMainThread(SetTownNamePacket::handle)
+                .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {

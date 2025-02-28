@@ -14,6 +14,7 @@ import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.SetPathCreationModePacket;
 import com.yourdomain.businesscraft.network.ToggleTouristSpawningPacket;
 import com.yourdomain.businesscraft.network.SetSearchRadiusPacket;
+import com.yourdomain.businesscraft.network.SetTownNamePacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.config.ConfigLoader;
@@ -25,10 +26,13 @@ import com.yourdomain.businesscraft.screen.components.ToggleButtonComponent;
 import com.yourdomain.businesscraft.screen.components.DataBoundButtonComponent;
 import com.yourdomain.businesscraft.screen.components.TabComponent;
 import com.yourdomain.businesscraft.screen.components.SlotComponent;
+import com.yourdomain.businesscraft.screen.components.TownNameEditorComponent;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
 import com.yourdomain.businesscraft.screen.components.ResourceListComponent;
 import net.minecraft.client.Minecraft;
 import com.yourdomain.businesscraft.screen.components.VisitHistoryComponent;
+import com.yourdomain.businesscraft.screen.components.EditBoxComponent;
+import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 
 
 public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
@@ -36,6 +40,10 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
             "textures/gui/town_block_gui.png");
     private static final Logger LOGGER = LoggerFactory.getLogger(TownBlockScreen.class);
     private final List<UIComponent> components = new ArrayList<>();
+    
+    // Add state for town name editing
+    private boolean isEditingTownName = false;
+    private TownNameEditorComponent nameEditor;
 
     public TownBlockScreen(TownBlockMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -62,6 +70,15 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         tabComponent.addTab("settings", Component.translatable("gui.businesscraft.tab.settings"), settingsTabComponents);
         
         components.add(tabComponent);
+        
+        // Create name editor but keep it hidden initially
+        nameEditor = new TownNameEditorComponent(
+            200,
+            () -> menu.getTownName(),
+            this::handleTownNameConfirmed,
+            this::handleEditCancelled
+        );
+        nameEditor.setVisible(false);
     }
     
     private List<UIComponent> createTownInfoComponents(TownBlockMenu menu) {
@@ -106,6 +123,13 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
             (button) -> handleRadiusChange(),
             buttonWidth, buttonHeight
         ));
+        
+        // Add Change Town Name button
+        comps.add(new ToggleButtonComponent(0, 0, buttonWidth, buttonHeight,
+            Component.translatable("gui.businesscraft.change_town_name"),
+            button -> showTownNameEditor()
+        ));
+        
         return comps;
     }
 
@@ -115,14 +139,32 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         components.forEach(component -> 
             component.init(this::addRenderableWidget)
         );
+        
+        // Initialize the name editor
+        nameEditor.init(this::addRenderableWidget);
     }
 
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
         renderBackground(guiGraphics);
+        
+        // If editing town name, we render a different background and only the editor
+        if (isEditingTownName) {
+            // Draw the background texture
+            guiGraphics.blit(TEXTURE, leftPos, topPos, 0, 0, imageWidth, imageHeight);
+            // Only draw the title
+            guiGraphics.drawString(this.font, this.title, leftPos + this.titleLabelX, topPos + this.titleLabelY, 4210752);
+            // Draw a semi-transparent backdrop 
+            guiGraphics.fill(leftPos, topPos, leftPos + imageWidth, topPos + imageHeight, 0xA0000000);
+            // Draw the editor
+            nameEditor.render(guiGraphics, leftPos + 28, topPos + 50, mouseX, mouseY);
+            return;
+        }
+        
+        // Normal rendering for when not editing
         super.render(guiGraphics, mouseX, mouseY, delta);
         
-        // Render tabs
+        // Render tabs and tab content
         components.get(0).render(guiGraphics, leftPos + 8, topPos + 5, mouseX, mouseY);
         
         // Clear previous components and render active tab
@@ -185,6 +227,9 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
      */
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        // Skip if we're editing a town name
+        if (isEditingTownName) return false;
+        
         TabComponent tabComponent = (TabComponent) components.get(0);
         
         // Only handle scrolling in resources or history tab
@@ -208,6 +253,66 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         }
         
         return super.mouseScrolled(mouseX, mouseY, delta);
+    }
+    
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // If editing town name, pass mouse clicks to the editor
+        if (isEditingTownName) {
+            boolean handled = nameEditor.mouseClicked(mouseX, mouseY, button);
+            
+            // If the click wasn't on the editor and it's a left-click, handle unfocusing
+            if (!handled && button == 0) {
+                EditBoxComponent editBox = nameEditor.getEditBox();
+                if (editBox != null && editBox.isFocused()) {
+                    editBox.setFocused(false);
+                    return true;
+                }
+            }
+            
+            return handled || isClickInsideEditor(mouseX, mouseY);
+        }
+        
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+    
+    /**
+     * Checks if a click is inside the editor area
+     */
+    private boolean isClickInsideEditor(double mouseX, double mouseY) {
+        // Calculate the editor bounds
+        int editorX = leftPos + 28;
+        int editorY = topPos + 50;
+        int editorWidth = nameEditor.getWidth();
+        int editorHeight = nameEditor.getHeight();
+        
+        // Check if the click is inside the editor bounds
+        return mouseX >= editorX && mouseX <= editorX + editorWidth &&
+               mouseY >= editorY && mouseY <= editorY + editorHeight;
+    }
+    
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // If editing town name, pass key presses to the editor
+        if (isEditingTownName) {
+            if (nameEditor.keyPressed(keyCode, scanCode, modifiers)) {
+                return true;
+            }
+        }
+        
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+    
+    @Override
+    public boolean charTyped(char c, int modifiers) {
+        // If editing town name, pass character input to the editor
+        if (isEditingTownName) {
+            if (nameEditor.charTyped(c, modifiers)) {
+                return true;
+            }
+        }
+        
+        return super.charTyped(c, modifiers);
     }
 
     private void handleRadiusChange() {
@@ -234,5 +339,64 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         
         // Send packet to update
         ModMessages.sendToServer(new SetSearchRadiusPacket(menu.getBlockEntity().getBlockPos(), newRadius));
+    }
+    
+    private void showTownNameEditor() {
+        isEditingTownName = true;
+        nameEditor.setVisible(true);
+        
+        // Force a fresh town name lookup to ensure we have the latest
+        // Call getTownName() which may trigger a fresh lookup from the provider
+        String currentTownName = menu.getTownName();
+        LOGGER.debug("Showing town name editor with initial name: {}", currentTownName);
+        
+        // Get the current town name and set it in the edit box
+        EditBoxComponent editBox = nameEditor.getEditBox();
+        if (editBox != null) {
+            // Set the text in the edit box
+            editBox.setText(currentTownName);
+            // Set focus to the edit box (so typing goes there immediately)
+            editBox.setFocused(true);
+        }
+    }
+    
+    private void handleTownNameConfirmed(String newName) {
+        // Log the name change attempt
+        LOGGER.info("[DEBUG] Confirming name change to: {}", newName);
+        
+        // Send packet to update town name
+        ModMessages.sendToServer(new SetTownNamePacket(
+            menu.getBlockEntity().getBlockPos(), 
+            newName
+        ));
+        
+        // Force immediate UI refresh - simulate a server update by updating the block entity's cached name
+        // This gives immediate feedback to the user before the server confirms the change
+        TownBlockEntity blockEntity = menu.getBlockEntity();
+        if (blockEntity != null) {
+            // Client-side only: Update the cached name directly for immediate feedback
+            // The server will eventually send the real update, but this gives instant response
+            if (minecraft.level.isClientSide) {
+                LOGGER.info("[DEBUG] Setting client-side name to: {}", newName);
+                blockEntity.setClientTownName(newName);
+                
+                // Verify the name was updated
+                String currentName = menu.getTownName();
+                LOGGER.info("[DEBUG] After name change, current name is: {}", currentName);
+            }
+        }
+        
+        // Hide editor and show tabs again
+        hideEditor();
+    }
+    
+    private void handleEditCancelled() {
+        // Just hide the editor without saving
+        hideEditor();
+    }
+    
+    private void hideEditor() {
+        isEditingTownName = false;
+        nameEditor.setVisible(false);
     }
 }
