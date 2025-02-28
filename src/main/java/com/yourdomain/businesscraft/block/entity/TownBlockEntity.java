@@ -168,16 +168,14 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     // Visit buffer for grouping arrivals
     private static class VisitBuffer {
-        private final Map<UUID, Integer> townVisitors = new HashMap<>(); 
-        private final Map<UUID, BlockPos> townPositions = new HashMap<>();
-        private final Map<UUID, String> townNames = new HashMap<>();
+        private final Map<String, Integer> townVisitors = new HashMap<>(); 
+        private final Map<String, BlockPos> townPositions = new HashMap<>();
         private long lastVisitTime = 0;
         private static final long BUFFER_TIMEOUT_MS = 1000; // 1 second timeout
 
-        public void addVisitor(UUID townId, String townName, BlockPos originPos) {
-            townVisitors.put(townId, townVisitors.getOrDefault(townId, 0) + 1);
-            townPositions.putIfAbsent(townId, originPos);
-            townNames.putIfAbsent(townId, townName);
+        public void addVisitor(String townName, BlockPos originPos) {
+            townVisitors.put(townName, townVisitors.getOrDefault(townName, 0) + 1);
+            townPositions.putIfAbsent(townName, originPos);
             lastVisitTime = System.currentTimeMillis();
         }
 
@@ -193,7 +191,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             List<VisitHistoryRecord> records = townVisitors.entrySet().stream()
                 .map(entry -> new VisitHistoryRecord(
                     now, 
-                    entry.getKey(),
+                    entry.getKey(), 
                     entry.getValue(),
                     townPositions.getOrDefault(entry.getKey(), BlockPos.ZERO)
                 ))
@@ -202,13 +200,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             // Clear the buffer
             townVisitors.clear();
             townPositions.clear();
-            townNames.clear();
             return records;
-        }
-        
-        // For client-side use, get the town name
-        public String getTownName(UUID townId) {
-            return townNames.getOrDefault(townId, "Unknown");
         }
     }
 
@@ -338,28 +330,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                         CompoundTag visitTag = historyTag.getCompound(i);
                         
                         long timestamp = visitTag.getLong("timestamp");
-                        UUID originTownId;
-                        
-                        // Handle different formats of town identification
-                        if (visitTag.contains("townId")) {
-                            // New format with UUID
-                            originTownId = visitTag.getUUID("townId");
-                        } else if (visitTag.contains("town")) {
-                            // Legacy format with town name - create a UUID from the name
-                            String townName = visitTag.getString("town");
-                            // Try to find the actual UUID if possible
-                            originTownId = findTownIdByName(sLevel1, townName);
-                            if (originTownId == null) {
-                                // If not found, create a deterministic UUID from the name
-                                originTownId = UUID.nameUUIDFromBytes(("town:" + townName).getBytes());
-                                LOGGER.info("Converting legacy town name '{}' to UUID: {}", townName, originTownId);
-                            }
-                        } else {
-                            // No valid identifier, use a placeholder UUID
-                            originTownId = new UUID(0, 0);
-                            LOGGER.warn("Missing town identifier in visit record, using placeholder UUID");
-                        }
-                        
+                        String townName = visitTag.getString("town");
                         int count = visitTag.getInt("count");
                         
                         BlockPos originPos = BlockPos.ZERO;
@@ -373,7 +344,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                         }
                         
                         // Add the record to the Town
-                        VisitHistoryRecord record = new VisitHistoryRecord(timestamp, originTownId, count, originPos);
+                        VisitHistoryRecord record = new VisitHistoryRecord(timestamp, townName, count, originPos);
                         
                         // Use a custom implementation to preserve the original timestamp
                         try {
@@ -397,7 +368,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                         } catch (Exception e) {
                             // Fallback to the standard method if reflection fails
                             LOGGER.error("Error migrating visit history: {}", e.getMessage());
-                            provider.recordVisit(originTownId, count, originPos);
+                            provider.recordVisit(townName, count, originPos);
                         }
                     }
                 }
@@ -662,7 +633,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     
                     if (originTownId != null && !originTownId.equals(this.townId)) {
                         // Add to visit buffer instead of processing immediately
-                        visitBuffer.addVisitor(originTownId, originTownName, originPos != null ? originPos : BlockPos.ZERO);
+                        visitBuffer.addVisitor(originTownName, originPos != null ? originPos : BlockPos.ZERO);
                         
                         // Calculate distance and XP
                         double distance = Math.sqrt(villager.blockPosition().distSqr(this.getBlockPos()));
@@ -686,18 +657,26 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     // Add to the town data provider (single source of truth)
                     for (VisitHistoryRecord record : newVisits) {
                         // Record the visit in the Town
-                        provider.recordVisit(record.getOriginTownId(), record.getCount(), record.getOriginPos());
+                        provider.recordVisit(record.getOriginTown(), record.getCount(), record.getOriginPos());
                         
                         // Process visits in the town data
                         try {
-                            // The originTownId is already stored in the record, 
-                            // so we can directly use it to update visitor counts
-                            for (int i = 0; i < record.getCount(); i++) {
-                                thisTown.addVisitor(record.getOriginTownId());
+                            // Try to find the origin town - if this fails, we'll fall back to basic processing
+                            if (level instanceof ServerLevel serverLevel) {
+                                for (Town town : TownManager.get(serverLevel).getAllTowns().values()) {
+                                    if (town.getName().equals(record.getOriginTown())) {
+                                        UUID originTownId = town.getId();
+                                        // Process each visitor individually to maintain compatibility
+                                        for (int i = 0; i < record.getCount(); i++) {
+                                            thisTown.addVisitor(originTownId);
+                                        }
+                                        break;
+                                    }
+                                }
                             }
                         } catch (Exception e) {
-                            LOGGER.error("Error processing visitor batch from UUID {}: {}", 
-                                record.getOriginTownId(), e.getMessage());
+                            LOGGER.error("Error processing visitor batch from {}: {}", 
+                                record.getOriginTown(), e.getMessage());
                         }
                     }
                     
@@ -1152,16 +1131,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         for (VisitHistoryRecord record : history) {
             CompoundTag visitTag = new CompoundTag();
             visitTag.putLong("timestamp", record.getTimestamp());
-            visitTag.putUUID("townId", record.getOriginTownId());
-            // For backwards compatibility, also store the town name if we can find it
-            if (level instanceof ServerLevel serverLevel) {
-                Town originTown = TownManager.get(serverLevel).getTown(record.getOriginTownId());
-                if (originTown != null) {
-                    visitTag.putString("townName", originTown.getName());
-                } else {
-                    visitTag.putString("townName", "Unknown Town");
-                }
-            }
+            visitTag.putString("town", record.getOriginTown());
             visitTag.putInt("count", record.getCount());
             
             // Add origin position
@@ -1193,23 +1163,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 CompoundTag visitTag = historyTag.getCompound(i);
                 
                 long timestamp = visitTag.getLong("timestamp");
-                UUID townId;
-                
-                // Support both new UUID format and legacy town format
-                if (visitTag.contains("townId")) {
-                    townId = visitTag.getUUID("townId");
-                } else {
-                    // Legacy format - create a deterministic UUID from the name
-                    String townName = visitTag.getString("townName");
-                    if (townName.isEmpty()) {
-                        townName = visitTag.getString("town"); // Even older format
-                    }
-                    if (townName.isEmpty()) {
-                        townName = "Unknown";
-                    }
-                    townId = UUID.nameUUIDFromBytes(("town:" + townName).getBytes());
-                }
-                
+                String town = visitTag.getString("town");
                 int count = visitTag.getInt("count");
                 
                 BlockPos originPos = BlockPos.ZERO;
@@ -1222,23 +1176,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     );
                 }
                 
-                clientVisitHistory.add(new VisitHistoryRecord(timestamp, townId, count, originPos));
+                clientVisitHistory.add(new VisitHistoryRecord(timestamp, town, count, originPos));
             }
         }
-    }
-
-    // Add helper method to find a town ID by name
-    private UUID findTownIdByName(ServerLevel level, String townName) {
-        if (level == null || townName == null || townName.isEmpty()) {
-            return null;
-        }
-        
-        TownManager manager = TownManager.get(level);
-        for (Town town : manager.getAllTowns().values()) {
-            if (townName.equals(town.getName())) {
-                return town.getId();
-            }
-        }
-        return null;
     }
 }
