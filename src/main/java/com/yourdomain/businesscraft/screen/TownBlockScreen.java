@@ -73,14 +73,14 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     
     private List<UIComponent> createResourceComponents(TownBlockMenu menu) {
         List<UIComponent> comps = new ArrayList<>();
-        comps.add(new ResourceListComponent(() -> menu.getAllResources(), 200));
+        comps.add(new ResourceListComponent(() -> menu.getAllResources(), 230));
         comps.add(new SlotComponent());
         return comps;
     }
     
     private List<UIComponent> createHistoryComponents(TownBlockMenu menu) {
         List<UIComponent> comps = new ArrayList<>();
-        comps.add(new VisitHistoryComponent(() -> menu.getVisitHistory(), 200));
+        comps.add(new VisitHistoryComponent(() -> menu.getVisitHistory(), 230));
         return comps;
     }
     
@@ -142,10 +142,10 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
                 resourceList.render(guiGraphics, leftPos + 10, yPos, mouseX, mouseY);
                 
                 // Position the slot on the right
-                slot.render(guiGraphics, leftPos + 180, yPos, mouseX, mouseY);
+                slot.render(guiGraphics, leftPos + 210, yPos, mouseX, mouseY);
                 
                 // Add a label for the slot
-                guiGraphics.drawString(Minecraft.getInstance().font, "Add:", leftPos + 180, yPos - 10, 0xFFFFFF);
+                guiGraphics.drawString(Minecraft.getInstance().font, "Add:", leftPos + 210, yPos - 10, 0xFFFFFF);
             }
             
             // Show slot tooltip

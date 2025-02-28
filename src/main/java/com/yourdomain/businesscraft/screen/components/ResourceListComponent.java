@@ -43,12 +43,12 @@ public class ResourceListComponent implements UIComponent {
     public void init(Consumer<Button> register) {
         scrollUpButton = new Button.Builder(Component.literal("Up"), button -> scrollUp())
             .pos(0, 0) // Position will be set in render
-            .size(20, 20)
+            .size(28, 20)
             .build();
         
         scrollDownButton = new Button.Builder(Component.literal("Down"), button -> scrollDown())
             .pos(0, 0) // Position will be set in render
-            .size(20, 20)
+            .size(28, 20)
             .build();
         
         register.accept(scrollUpButton);
@@ -67,9 +67,9 @@ public class ResourceListComponent implements UIComponent {
         updateResourceList();
         
         // Update button positions
-        scrollUpButton.setX(x + width - 24);
+        scrollUpButton.setX(x + width - 32);
         scrollUpButton.setY(y);
-        scrollDownButton.setX(x + width - 24);
+        scrollDownButton.setX(x + width - 32);
         scrollDownButton.setY(y + getHeight() - 20);
         
         // Enable/disable scroll buttons based on scroll position

@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerLevel;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
+import com.yourdomain.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
 import com.yourdomain.businesscraft.screen.components.VisitHistoryComponent.VisitEntry;
 
 import java.util.UUID;
@@ -222,18 +223,31 @@ public class TownBlockMenu extends AbstractContainerMenu {
      * @return List of visit entries
      */
     public List<VisitEntry> getVisitHistory() {
-        if (blockEntity == null) {
-            return Collections.emptyList();
+        ITownDataProvider provider = getTownDataProvider();
+        if (provider != null) {
+            // Use the provider directly to get the visit history (single source of truth)
+            return provider.getVisitHistory().stream()
+                .map(record -> new VisitEntry(
+                    record.getTimestamp(),
+                    record.getOriginTown(),
+                    record.getCount(),
+                    record.getOriginPos()
+                ))
+                .collect(Collectors.toList());
         }
         
-        // Convert TownBlockEntity.VisitRecord to VisitEntry
-        return blockEntity.getVisitHistory().stream()
-            .map(record -> new VisitEntry(
-                record.getTimestamp(),
-                record.getOriginTown(),
-                record.getCount(),
-                record.getOriginPos()
-            ))
-            .collect(Collectors.toList());
+        if (blockEntity != null) {
+            // Fallback to using the block entity if provider is null
+            return blockEntity.getVisitHistory().stream()
+                .map(record -> new VisitEntry(
+                    record.getTimestamp(),
+                    record.getOriginTown(),
+                    record.getCount(),
+                    record.getOriginPos()
+                ))
+                .collect(Collectors.toList());
+        }
+        
+        return Collections.emptyList();
     }
 }

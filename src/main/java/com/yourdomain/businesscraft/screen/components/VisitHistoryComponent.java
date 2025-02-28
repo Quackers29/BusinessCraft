@@ -20,8 +20,8 @@ import net.minecraft.core.BlockPos;
  */
 public class VisitHistoryComponent implements UIComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(VisitHistoryComponent.class);
-    private static final int ITEM_HEIGHT = 32; // Taller than resource entries to fit more info
-    private static final int MAX_VISIBLE_ITEMS = 5;
+    private static final int ITEM_HEIGHT = 20; // Reduced height for single line
+    private static final int MAX_VISIBLE_ITEMS = 6; // Increased to 6
     private static final int SCROLL_AMOUNT = 1;
     private static final SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("MM/dd HH:mm");
     
@@ -44,12 +44,12 @@ public class VisitHistoryComponent implements UIComponent {
     public void init(Consumer<Button> register) {
         scrollUpButton = new Button.Builder(Component.literal("Up"), button -> scrollUp())
             .pos(0, 0) // Position will be set in render
-            .size(20, 20)
+            .size(28, 20)
             .build();
         
         scrollDownButton = new Button.Builder(Component.literal("Down"), button -> scrollDown())
             .pos(0, 0) // Position will be set in render
-            .size(20, 20)
+            .size(28, 20)
             .build();
         
         register.accept(scrollUpButton);
@@ -68,9 +68,9 @@ public class VisitHistoryComponent implements UIComponent {
         updateHistoryList();
         
         // Update button positions
-        scrollUpButton.setX(x + width - 24);
+        scrollUpButton.setX(x + width - 32);
         scrollUpButton.setY(y);
-        scrollDownButton.setX(x + width - 24);
+        scrollDownButton.setX(x + width - 32);
         scrollDownButton.setY(y + getHeight() - 20);
         
         // Enable/disable scroll buttons based on scroll position
@@ -82,7 +82,7 @@ public class VisitHistoryComponent implements UIComponent {
         guiGraphics.fill(x, y, x + width, y + listHeight, 0x80000000); // Semi-transparent background
         
         // Draw the title with a divider
-        guiGraphics.drawString(Minecraft.getInstance().font, "Tourist Visit History", x + 5, y + 5, 0xFFFFFF);
+        guiGraphics.drawString(Minecraft.getInstance().font, "Tourist Visits", x + 5, y + 5, 0xFFFFFF);
         guiGraphics.fill(x + 5, y + 18, x + width - 5, y + 19, 0x80FFFFFF); // Divider line
         
         // Check if we have any history
@@ -101,21 +101,20 @@ public class VisitHistoryComponent implements UIComponent {
             
             // Draw row background with alternating colors
             int rowColor = count % 2 == 0 ? 0x30FFFFFF : 0x20FFFFFF;
-            guiGraphics.fill(x + 5, yOffset, x + width - 28, yOffset + ITEM_HEIGHT, rowColor);
+            guiGraphics.fill(x + 5, yOffset, x + width - 37, yOffset + ITEM_HEIGHT, rowColor);
             
-            // Draw date/time
-            String timeText = formatTime(entry.getTimestamp());
-            guiGraphics.drawString(Minecraft.getInstance().font, timeText, x + 8, yOffset + 2, 0xFFFFFF);
-            
-            // Draw town name and count
+            // Format all information in a single line
+            String timeText = formatTime(entry.getTimestamp()) + ": ";
             String townText = entry.getTownName() + " x" + entry.getCount();
-            guiGraphics.drawString(Minecraft.getInstance().font, townText, x + 10, yOffset + 14, 0xFFFFFF);
-            
-            // Draw direction if available
             String directionText = getDirectionText(entry);
             if (!directionText.isEmpty()) {
-                guiGraphics.drawString(Minecraft.getInstance().font, directionText, x + width - 95, yOffset + 14, 0xAAAAAA);
+                directionText = " (" + directionText + ")";
             }
+            
+            // Draw the combined information on a single line
+            guiGraphics.drawString(Minecraft.getInstance().font, 
+                timeText + townText + directionText, 
+                x + 8, yOffset + 6, 0xFFFFFF);
             
             yOffset += ITEM_HEIGHT;
             count++;
