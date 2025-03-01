@@ -256,6 +256,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private Map<UUID, Long> platformIndicatorSpawnTimes = new HashMap<>();
     private static final long INDICATOR_SPAWN_INTERVAL = 20; // 1 second in ticks
 
+    // Track when players exit town UI for extended indicators
+    private Map<UUID, Long> extendedIndicatorPlayers = new HashMap<>();
+    private static final long EXTENDED_INDICATOR_DURATION = 600; // 30 seconds in ticks
+
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
         LOGGER.debug("TownBlockEntity created at position: {}", pos);
@@ -481,10 +485,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     @Override
     public void tick(Level level, BlockPos pos, BlockState state, TownBlockEntity blockEntity) {
-        // Process any resource in slot
-        if (level.getGameTime() % 20 == 0) { // Once per second
-            processResourcesInSlot();
-        }
+        // Process resources every tick (not just once per second)
+        processResourcesInSlot();
         
         // Sync town data from the provider
         if (level.getGameTime() % 60 == 0) { // Every 3 seconds
@@ -1535,51 +1537,92 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     /**
-     * Spawns visual indicators at platform start and end points
+     * Spawns visual indicators at platform start and end points and along the line
      */
     private void spawnPlatformIndicators(Level level) {
         if (level.isClientSide || platforms.isEmpty()) return;
         
         long gameTime = level.getGameTime();
         
-        // For each platform, spawn particles at start and end points
+        // Check if any players have recently exited the UI
+        boolean showIndicators = false;
+        Iterator<Map.Entry<UUID, Long>> iterator = extendedIndicatorPlayers.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<UUID, Long> entry = iterator.next();
+            if (gameTime - entry.getValue() > EXTENDED_INDICATOR_DURATION) {
+                // Remove expired entries
+                iterator.remove();
+                LOGGER.debug("Removed expired indicator for player {}", entry.getKey());
+            } else {
+                showIndicators = true;
+            }
+        }
+        
+        // Only show particles if players have recently exited the UI
+        if (!showIndicators) {
+            return; // Exit early if no recent UI exits
+        }
+        
+        // For each platform, spawn particles
         for (Platform platform : platforms) {
             if (!platform.isEnabled() || !platform.isComplete()) continue;
             
             UUID platformId = platform.getId();
             
             // Check if it's time to spawn indicators for this platform
-            if (!platformIndicatorSpawnTimes.containsKey(platformId) || 
-                gameTime - platformIndicatorSpawnTimes.get(platformId) >= INDICATOR_SPAWN_INTERVAL) {
+            boolean shouldSpawnIndicators = 
+                !platformIndicatorSpawnTimes.containsKey(platformId) || 
+                gameTime - platformIndicatorSpawnTimes.get(platformId) >= INDICATOR_SPAWN_INTERVAL;
                 
+            if (shouldSpawnIndicators) {
                 // Update spawn time
                 platformIndicatorSpawnTimes.put(platformId, gameTime);
                 
-                // Spawn indicators at start point
                 BlockPos startPos = platform.getStartPos();
-                ((ServerLevel)level).sendParticles(
-                    ParticleTypes.HAPPY_VILLAGER,
-                    startPos.getX() + 0.5,
-                    startPos.getY() + 1.0,
-                    startPos.getZ() + 0.5,
-                    1, // particle count
-                    0.2, 0.2, 0.2, // spread
-                    0.0 // speed
-                );
-                
-                // Spawn indicators at end point
                 BlockPos endPos = platform.getEndPos();
-                ((ServerLevel)level).sendParticles(
-                    ParticleTypes.HAPPY_VILLAGER,
-                    endPos.getX() + 0.5,
-                    endPos.getY() + 1.0,
-                    endPos.getZ() + 0.5,
-                    1, // particle count
-                    0.2, 0.2, 0.2, // spread
-                    0.0 // speed
-                );
+                
+                // Calculate the path between start and end
+                int startX = startPos.getX();
+                int startY = startPos.getY();
+                int startZ = startPos.getZ();
+                int endX = endPos.getX();
+                int endY = endPos.getY();
+                int endZ = endPos.getZ();
+                
+                // Calculate line length for parameter
+                int dx = endX - startX;
+                int dy = endY - startY;
+                int dz = endZ - startZ;
+                double length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                int steps = (int) Math.max(1, Math.ceil(length));
+                
+                // Spawn particles along the line, one per block
+                for (int i = 0; i <= steps; i++) {
+                    double t = (steps == 0) ? 0 : (double) i / steps;
+                    double x = startX + dx * t;
+                    double y = startY + dy * t + 1.0; // +1.0 to place above the ground
+                    double z = startZ + dz * t;
+                    
+                    ((ServerLevel)level).sendParticles(
+                        ParticleTypes.HAPPY_VILLAGER,
+                        x + 0.5,
+                        y,
+                        z + 0.5,
+                        1, // particle count
+                        0.2, 0.2, 0.2, // spread
+                        0.0 // speed
+                    );
+                }
             }
         }
+    }
+    
+    /**
+     * Registers a player as having exited the town UI, enabling extended indicators
+     * @param playerId The UUID of the player who exited the UI
+     */
+    public void registerPlayerExitUI(UUID playerId) {
+        extendedIndicatorPlayers.put(playerId, level.getGameTime());
     }
     
     // Clean up indicator data for removed platforms

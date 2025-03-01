@@ -39,6 +39,7 @@ import com.yourdomain.businesscraft.platform.Platform;
 import net.minecraft.core.BlockPos;
 import com.yourdomain.businesscraft.network.SetPlatformPathCreationModePacket;
 import com.yourdomain.businesscraft.client.PlatformPathKeyHandler;
+import com.yourdomain.businesscraft.network.PlayerExitUIPacket;
 
 
 public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
@@ -845,5 +846,18 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
                 }
             }
         }
+    }
+
+    /**
+     * Called when the screen is closed
+     */
+    @Override
+    public void onClose() {
+        // If not in path creation mode, send packet to show extended platform indicators
+        if (!isInPathCreationMode && !isSettingPlatformPath) {
+            ModMessages.sendToServer(new PlayerExitUIPacket(menu.getBlockEntity().getBlockPos()));
+        }
+        
+        super.onClose();
     }
 }
