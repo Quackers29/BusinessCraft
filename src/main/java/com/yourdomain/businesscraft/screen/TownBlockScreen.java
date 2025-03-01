@@ -124,31 +124,10 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         int buttonWidth = 150;
         int buttonHeight = 20;
         
-        // Set tourist path button
-        comps.add(new ToggleButtonComponent(0, 0, buttonWidth, buttonHeight,
-            Component.translatable("gui.businesscraft.set_tourist_path"),
-            button -> {
-                ModMessages.sendToServer(new SetPathCreationModePacket(
-                    menu.getBlockEntity().getBlockPos(), true
-                ));
-                isInPathCreationMode = true;
-                setInstructionsText(Component.translatable("businesscraft.path_instructions"));
-                hideAllMainButtons();
-            }
-        ));
-        
         // Platforms button
         comps.add(new ToggleButtonComponent(0, 0, buttonWidth, buttonHeight,
             Component.translatable("businesscraft.platforms_tab"),
             button -> showPlatformsTab()
-        ));
-        
-        // Toggle tourists button
-        comps.add(new ToggleButtonComponent(0, 0, buttonWidth, buttonHeight,
-            Component.translatable("gui.businesscraft.toggle_tourists"),
-            button -> ModMessages.sendToServer(new ToggleTouristSpawningPacket(
-                menu.getBlockEntity().getBlockPos()
-            ))
         ));
         
         comps.add(new DataBoundButtonComponent(
@@ -169,6 +148,11 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     @Override
     protected void init() {
         super.init();
+        
+        // Clear previous widgets to prevent lingering buttons
+        this.clearWidgets();
+        
+        // Initialize the main UI components
         components.forEach(component -> 
             component.init(this::addRenderableWidget)
         );
@@ -176,10 +160,10 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         // Initialize the name editor
         nameEditor.init(this::addRenderableWidget);
         
-        // Initialize platforms tab if it exists
-        if (platformsTab == null) {
-            platformsTab = new PlatformsTab(this);
-        }
+        // Always create a fresh platforms tab instance
+        platformsTab = new PlatformsTab(this);
+        
+        // Initialize it but keep it hidden
         platformsTab.init(leftPos, topPos, imageWidth, imageHeight);
         platformsTab.setVisible(false);  // Hidden by default
     }
@@ -201,22 +185,41 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
             return;
         }
         
-        // If showing platforms tab, render it
+        // If showing platforms tab, render it with a clean background
         if (platformsTab != null && platformsTab.isVisible()) {
-            super.render(guiGraphics, mouseX, mouseY, delta);
+            // Draw a dark gradient background for the entire screen
+            renderDarkBackground(guiGraphics);
+            
+            // Draw just the title at the top
+            guiGraphics.drawCenteredString(
+                this.font, 
+                this.title, 
+                this.width / 2, 
+                topPos - 15, 
+                0xFFFFFF
+            );
+            
+            // Render just the tab component with tabs - with enhanced styling
+            TabComponent tabComponent = (TabComponent) components.get(0);
+            
+            // Draw tab background
+            int tabY = topPos + 5;
+            int tabHeight = 20;
+            int tabWidth = tabComponent.getWidth();
+            guiGraphics.fill(leftPos + 8, tabY, leftPos + 8 + tabWidth, tabY + tabHeight, 0x60000000);
+            
+            // Render the tabs
+            tabComponent.renderTabsOnly(guiGraphics, leftPos + 8, topPos + 5, mouseX, mouseY);
+            
+            // Render the platforms tab content
             platformsTab.render(guiGraphics, mouseX, mouseY, delta);
             
             // Render instruction text if present (for platform path setting)
             if (instructionsText != null) {
-                guiGraphics.drawCenteredString(
-                    Minecraft.getInstance().font,
-                    instructionsText,
-                    this.width / 2,
-                    20,
-                    0xFFFFFF
-                );
+                drawInstructionText(guiGraphics, instructionsText);
             }
             
+            renderTooltip(guiGraphics, mouseX, mouseY);
             return;
         }
         
@@ -329,6 +332,35 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         // Handle platform tab clicks if it's visible
         if (platformsTab != null && platformsTab.isVisible()) {
+            // Check if a tab was clicked first
+            TabComponent tabComponent = (TabComponent) components.get(0);
+            int tabWidth = tabComponent.getWidth() / 4; // Assuming 4 tabs
+            int tabHeight = 20;
+            int tabY = topPos + 5;
+            
+            // Check if click was in the tab area
+            if (mouseY >= tabY && mouseY <= tabY + tabHeight) {
+                for (int i = 0; i < 4; i++) { // For each tab
+                    int tabX = leftPos + 8 + (i * tabWidth);
+                    if (mouseX >= tabX && mouseX <= tabX + tabWidth) {
+                        // A tab was clicked, exit platforms view and switch to that tab
+                        showMainTab();
+                        
+                        // Find and click the actual tab button to trigger its event
+                        for (GuiEventListener listener : children()) {
+                            if (listener instanceof Button tabButton) {
+                                if (tabButton.isMouseOver(mouseX, mouseY)) {
+                                    tabButton.onPress();
+                                    return true;
+                                }
+                            }
+                        }
+                        return true;
+                    }
+                }
+            }
+            
+            // If not a tab click, handle platform tab UI
             if (platformsTab.mouseClicked(mouseX, mouseY, button)) {
                 return true;
             }
@@ -468,43 +500,81 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     }
 
     /**
-     * Shows the platforms tab
+     * Shows the platforms tab for platform management
      */
     public void showPlatformsTab() {
-        LOGGER.debug("Showing platforms tab");
-        
-        // Create platforms tab if it doesn't exist
-        if (platformsTab == null) {
-            LOGGER.debug("Creating new platforms tab");
-            platformsTab = new PlatformsTab(this);
-        }
+        // Always create a fresh platforms tab instance to avoid state issues
+        platformsTab = new PlatformsTab(this);
         
         // Force a refresh of the block entity's platforms from server data
         TownBlockEntity blockEntity = menu.getBlockEntity();
-        if (blockEntity != null) {
-            LOGGER.debug("Block entity at {}, has {} platforms", 
-                        blockEntity.getBlockPos(), 
-                        blockEntity.getPlatforms().size());
-        }
         
-        // Initialize with current screen dimensions
-        platformsTab.init(leftPos, topPos, imageWidth, imageHeight);
-        platformsTab.setVisible(true);
-        
-        // Hide regular buttons while in platforms view
+        // Hide all main UI buttons
         hideAllMainButtons();
+        
+        // Add platform tab components to the screen
+        addPlatformComponentsToScreen();
         
         // Refresh the platforms data
         refreshPlatforms();
+        
+        // Set a title for the platforms view
+        setInstructionsText(Component.translatable("businesscraft.manage_platforms"));
+    }
+    
+    /**
+     * Adds platform tab components to the screen
+     */
+    private void addPlatformComponentsToScreen() {
+        if (platformsTab != null) {
+            // Make sure to clear any existing platform components first
+            clearPlatformButtons();
+            
+            // Initialize and make visible
+            platformsTab.init(leftPos, topPos, imageWidth, imageHeight);
+            platformsTab.setVisible(true);
+        }
+    }
+    
+    /**
+     * Clears all platform-specific buttons from the screen
+     */
+    private void clearPlatformButtons() {
+        // Create a copy of children to avoid concurrent modification
+        List<GuiEventListener> children = new ArrayList<>(this.children());
+        
+        // Remove platform-specific buttons (keeping only the core UI elements)
+        for (GuiEventListener listener : children) {
+            if (listener instanceof Button) {
+                // Preserve tab buttons by checking their position
+                boolean isTabButton = false;
+                if (listener instanceof Button button) {
+                    int tabY = topPos + 5;
+                    int tabHeight = 20;
+                    if (button.getY() >= tabY && button.getY() <= tabY + tabHeight) {
+                        isTabButton = true;
+                    }
+                }
+                
+                if (!isTabButton) {
+                    this.removeWidget(listener);
+                }
+            }
+        }
     }
     
     /**
      * Shows the main tab, hiding any specialized tabs
      */
     public void showMainTab() {
-        // Hide platforms tab if it exists
+        // Always clear ALL widgets first for a clean slate
+        this.clearWidgets();
+        
+        // Make sure platforms tab cleans up its buttons
         if (platformsTab != null) {
+            platformsTab.cleanupButtons();
             platformsTab.setVisible(false);
+            platformsTab = null; // Completely remove the platforms tab reference
         }
         
         // Clear any path setting mode
@@ -515,8 +585,69 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         // Hide any instructions
         instructionsText = null;
         
-        // Show all the main buttons again
-        showAllMainButtons();
+        // Get the active tab ID
+        String activeTabId = "town";
+        if (!components.isEmpty() && components.get(0) instanceof TabComponent) {
+            TabComponent tabComponent = (TabComponent) components.get(0);
+            activeTabId = tabComponent.getActiveTabId();
+        }
+        
+        // Completely reset UI
+        // First clear references to all components
+        components.clear();
+        
+        // Set up the UI from scratch as if it's the first initialization
+        TabComponent tabComponent = new TabComponent(240, 20);
+        
+        // Town Tab - Only indicators
+        List<UIComponent> townTabComponents = createTownInfoComponents(menu);
+        
+        // Resources Tab - Bread management
+        List<UIComponent> resourcesTabComponents = createResourceComponents(menu);
+        
+        // History Tab - Tourist visits
+        List<UIComponent> historyTabComponents = createHistoryComponents(menu);
+        
+        // Settings Tab - Buttons
+        List<UIComponent> settingsTabComponents = createSettingsComponents(menu);
+        
+        tabComponent.addTab("town", Component.translatable("gui.businesscraft.tab.town"), townTabComponents);
+        tabComponent.addTab("resources", Component.translatable("gui.businesscraft.tab.resources"), resourcesTabComponents);
+        tabComponent.addTab("history", Component.translatable("gui.businesscraft.tab.history"), historyTabComponents);
+        tabComponent.addTab("settings", Component.translatable("gui.businesscraft.tab.settings"), settingsTabComponents);
+        
+        components.add(tabComponent);
+        
+        // Initialize everything
+        components.forEach(component -> {
+            component.setVisible(true);
+            component.init(this::addRenderableWidget);
+        });
+        
+        // Now we need to find and click the correct tab button to activate it
+        if (!activeTabId.equals("town")) {
+            // Find the tab button based on the stored ID
+            int tabIndex = 0; // Default to first tab
+            if (activeTabId.equals("resources")) tabIndex = 1;
+            else if (activeTabId.equals("history")) tabIndex = 2;
+            else if (activeTabId.equals("settings")) tabIndex = 3;
+            
+            // Find the tab button in the children list and click it
+            int finalTabIndex = tabIndex;
+            List<GuiEventListener> allChildren = new ArrayList<>(this.children());
+            allChildren.stream()
+                .filter(child -> child instanceof Button)
+                .map(child -> (Button)child)
+                .filter(button -> {
+                    // Identify buttons in the tab row (this is an approximation)
+                    int tabY = topPos + 5;
+                    int tabHeight = 20;
+                    return button.getY() >= tabY && button.getY() <= tabY + tabHeight;
+                })
+                .skip(finalTabIndex) // Skip to the tab we want
+                .findFirst()
+                .ifPresent(Button::onPress); // Simulate click
+        }
     }
     
     /**
@@ -584,14 +715,22 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
      * Hides all main UI buttons when in special modes
      */
     private void hideAllMainButtons() {
-        // Hide all components except the first (TabComponent)
-        for (int i = 1; i < components.size(); i++) {
-            components.get(i).setVisible(false);
-        }
+        // Store current children for later restoration
+        List<GuiEventListener> currentChildren = new ArrayList<>(this.children());
         
-        // Hide the tab component as well
-        if (!components.isEmpty()) {
-            components.get(0).setVisible(false);
+        // Clear all children
+        this.clearWidgets();
+        
+        // Re-add only the tab component buttons to allow navigation
+        TabComponent tabComponent = (TabComponent) components.get(0);
+        tabComponent.readdTabButtons(this::addRenderableWidget);
+        
+        // Keep the tab component in our UI list but hide its content
+        components.get(0).setVisible(false);
+        
+        // This will trigger a re-init of platform tab buttons
+        if (platformsTab != null) {
+            platformsTab.init(leftPos, topPos, imageWidth, imageHeight);
         }
     }
     
@@ -599,9 +738,18 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
      * Shows all main UI buttons when returning to normal mode
      */
     private void showAllMainButtons() {
-        // Show all components
-        for (UIComponent component : components) {
+        // Re-initialize all components from scratch
+        this.clearWidgets();
+        
+        // Re-initialize everything
+        components.forEach(component -> {
             component.setVisible(true);
+            component.init(this::addRenderableWidget);
+        });
+        
+        // Ensure platforms tab is not visible
+        if (platformsTab != null) {
+            platformsTab.setVisible(false);
         }
         
         // Clear instructions
@@ -613,5 +761,89 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
      */
     private void setInstructionsText(Component text) {
         this.instructionsText = text;
+    }
+
+    /**
+     * Allow platform tab to register its buttons
+     */
+    public <T extends Button> T addPlatformButton(T button) {
+        return this.addRenderableWidget(button);
+    }
+
+    /**
+     * Allow removing a button from the screen
+     */
+    public void removePlatformButton(GuiEventListener button) {
+        this.removeWidget(button);
+    }
+
+    /**
+     * Renders a dark background for special screens
+     */
+    private void renderDarkBackground(GuiGraphics guiGraphics) {
+        // Fill the entire screen with a dark gradient
+        guiGraphics.fill(0, 0, this.width, this.height, 0x80000000);
+        
+        // Draw a subtle border around the main content area
+        int borderColor = 0x40AAAAAA;
+        int contentX = leftPos - 5;
+        int contentY = topPos - 20;
+        int contentWidth = imageWidth + 10;
+        int contentHeight = imageHeight + 30;
+        
+        // Border lines
+        guiGraphics.fill(contentX, contentY, contentX + contentWidth, contentY + 1, borderColor);
+        guiGraphics.fill(contentX, contentY, contentX + 1, contentY + contentHeight, borderColor);
+        guiGraphics.fill(contentX, contentY + contentHeight - 1, contentX + contentWidth, contentY + contentHeight, borderColor);
+        guiGraphics.fill(contentX + contentWidth - 1, contentY, contentX + contentWidth, contentY + contentHeight, borderColor);
+    }
+    
+    /**
+     * Draws instruction text with enhanced styling
+     */
+    private void drawInstructionText(GuiGraphics guiGraphics, Component text) {
+        int textWidth = this.font.width(text);
+        int textX = this.width / 2 - textWidth / 2;
+        int textY = 20;
+        
+        // Draw background
+        guiGraphics.fill(textX - 5, textY - 2, textX + textWidth + 5, textY + 12, 0xA0000000);
+        
+        // Draw text with shadow
+        guiGraphics.drawString(
+            this.font,
+            text,
+            textX,
+            textY,
+            0xFFFFDD,
+            true // with shadow
+        );
+    }
+
+    @Override
+    protected void containerTick() {
+        super.containerTick();
+        
+        // Ensure platform buttons aren't visible when they shouldn't be
+        if (platformsTab != null && !platformsTab.isVisible()) {
+            // Check for and remove any buttons from platform entry positions
+            for (GuiEventListener child : new ArrayList<>(this.children())) {
+                if (child instanceof Button button) {
+                    // Check button position - if it's in the platform content area and not a tab button
+                    int tabY = topPos + 5;
+                    int tabHeight = 20;
+                    boolean isTabButton = button.getY() >= tabY && button.getY() <= tabY + tabHeight;
+                    
+                    // Check if button is in platforms position range
+                    boolean isInPlatformArea = button.getY() > topPos + 30 && 
+                                            button.getX() > leftPos + 120;
+                    
+                    if (!isTabButton && isInPlatformArea && platformsTab != null && !platformsTab.isVisible()) {
+                        // Stray platform button detected, remove it
+                        this.removeWidget(button);
+                    }
+                }
+            }
+        }
     }
 }

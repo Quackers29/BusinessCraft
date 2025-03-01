@@ -64,6 +64,22 @@ public class TabComponent implements UIComponent {
         }
     }
 
+    /**
+     * Renders only the tab buttons without their content
+     * This is used for rendering tabs in special screens like the platforms tab
+     */
+    public void renderTabsOnly(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
+        if (!visible) return;
+        
+        int tabWidth = width / tabs.size();
+        for (int i = 0; i < tabs.size(); i++) {
+            Tab tab = tabs.get(i);
+            tab.button.setX(x + i * tabWidth);
+            tab.button.setY(y);
+            tab.button.render(guiGraphics, mouseX, mouseY, 0);
+        }
+    }
+
     public List<UIComponent> getActiveComponents() {
         return tabs.get(activeTab).components;
     }
@@ -79,6 +95,18 @@ public class TabComponent implements UIComponent {
     @Override
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    /**
+     * Re-adds just the tab buttons to the screen
+     * Used when switching to special screens like platforms tab
+     */
+    public void readdTabButtons(Consumer<Button> register) {
+        int tabWidth = width / tabs.size();
+        for (int i = 0; i < tabs.size(); i++) {
+            Tab tab = tabs.get(i);
+            register.accept(tab.button);
+        }
     }
 
     private static class Tab {
