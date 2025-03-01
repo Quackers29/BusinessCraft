@@ -1,7 +1,18 @@
 package com.yourdomain.businesscraft.block.entity;
 
+// import com.yourdomain.businesscraft.blocks.ModBlocks;
+// import com.yourdomain.businesscraft.capability.ItemHandlerCapability;
 import com.yourdomain.businesscraft.config.ConfigLoader;
 import com.yourdomain.businesscraft.menu.TownBlockMenu;
+import com.yourdomain.businesscraft.platform.Platform;
+import com.yourdomain.businesscraft.service.TouristVehicleManager;
+import com.yourdomain.businesscraft.town.Town;
+import com.yourdomain.businesscraft.town.TownManager;
+// import com.yourdomain.businesscraft.api.IEconomyDataProvider;
+import com.yourdomain.businesscraft.api.ITownDataProvider;
+// import com.yourdomain.businesscraft.data.VisitHistoryRecord;
+import com.yourdomain.businesscraft.scoreboard.TownScoreboardManager;
+import net.minecraft.core.particles.ParticleTypes;
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -70,12 +81,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.ArrayList;
 import net.minecraft.world.phys.Vec3;
-import com.yourdomain.businesscraft.api.ITownDataProvider;
-import com.yourdomain.businesscraft.service.TouristVehicleManager;
-import net.minecraftforge.registries.ForgeRegistries;
+import com.yourdomain.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
+import com.yourdomain.businesscraft.platform.Platform;
 import net.minecraft.resources.ResourceLocation;
 import com.yourdomain.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
 import com.yourdomain.businesscraft.platform.Platform;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -240,6 +251,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private List<Platform> clientPlatforms = new ArrayList<>();
     private boolean isInPlatformCreationMode = false;
     private UUID platformBeingEdited = null;
+
+    // Added for platform visualization
+    private Map<UUID, Long> platformIndicatorSpawnTimes = new HashMap<>();
+    private static final long INDICATOR_SPAWN_INTERVAL = 20; // 1 second in ticks
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -466,36 +481,14 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     @Override
     public void tick(Level level, BlockPos pos, BlockState state, TownBlockEntity blockEntity) {
-        if (!level.isClientSide()) {
-            // Update from provider at regular intervals
+        // Process any resource in slot
+        if (level.getGameTime() % 20 == 0) { // Once per second
+            processResourcesInSlot();
+        }
+        
+        // Sync town data from the provider
+        if (level.getGameTime() % 60 == 0) { // Every 3 seconds
             updateFromTownProvider();
-            
-            if (level instanceof ServerLevel sLevel1) {
-                // Only sync data if town exists
-                if (townId != null) {
-                    Town town = TownManager.get(sLevel1).getTown(townId);
-                    if (town != null) {
-                        // Ensure paths are synchronized from Town to BlockEntity
-                        if (town.getPathStart() != null && !town.getPathStart().equals(pathStart)) {
-                            pathStart = town.getPathStart();
-                        }
-                        
-                        if (town.getPathEnd() != null && !town.getPathEnd().equals(pathEnd)) {
-                            pathEnd = town.getPathEnd();
-                        }
-                        
-                        // Ensure search radius is synchronized
-                        if (town.getSearchRadius() != searchRadius) {
-                            searchRadius = town.getSearchRadius();
-                        }
-                        
-                        syncTownData();
-                        
-                        // Resource handling - process any item in the slot
-                        processResourcesInSlot();
-                    }
-                }
-            }
         }
         
         if (!level.isClientSide && townId != null) {
@@ -552,11 +545,17 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     }
                 }
             }
+            
+            // Clean up platform indicators if needed
+            cleanupPlatformIndicators();
         }
+        
+        // Spawn platform indicators
+        spawnPlatformIndicators(level);
     }
 
     private void checkForVisitors(Level level, BlockPos pos) {
-        if (townId == null || pathStart == null || pathEnd == null) return;
+        if (townId == null) return;
         
         if (level instanceof ServerLevel sLevel1) {
             Town thisTown = TownManager.get(sLevel1).getTown(townId);
@@ -566,25 +565,41 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             ITownDataProvider provider = getTownDataProvider();
             if (provider == null) return;
 
-            // Create AABB around the path
-            AABB searchBounds = new AABB(
-                Math.min(pathStart.getX(), pathEnd.getX()) - searchRadius,
-                Math.min(pathStart.getY(), pathEnd.getY()) - 2,
-                Math.min(pathStart.getZ(), pathEnd.getZ()) - searchRadius,
-                Math.max(pathStart.getX(), pathEnd.getX()) + searchRadius,
-                Math.max(pathStart.getY(), pathEnd.getY()) + 4,
-                Math.max(pathStart.getZ(), pathEnd.getZ()) + searchRadius
-            );
+            // If no platforms, can't check for visitors
+            if (platforms.isEmpty()) return;
+            
+            // Create a list to collect all nearby villagers across all platforms
+            List<Villager> allNearbyVillagers = new ArrayList<>();
+            
+            // Check each platform for visitors
+            for (Platform platform : platforms) {
+                if (!platform.isEnabled() || !platform.isComplete()) continue;
+                
+                BlockPos startPos = platform.getStartPos();
+                BlockPos endPos = platform.getEndPos();
+                
+                // Create capsule-shaped AABB around the platform path
+                AABB platformBounds = new AABB(
+                    Math.min(startPos.getX(), endPos.getX()) - searchRadius,
+                    Math.min(startPos.getY(), endPos.getY()) - 2,
+                    Math.min(startPos.getZ(), endPos.getZ()) - searchRadius,
+                    Math.max(startPos.getX(), endPos.getX()) + searchRadius,
+                    Math.max(startPos.getY(), endPos.getY()) + 4,
+                    Math.max(startPos.getZ(), endPos.getZ()) + searchRadius
+                );
 
-            List<Villager> nearbyVillagers = level.getEntitiesOfClass(
-                    Villager.class,
-                    searchBounds);
+                List<Villager> platformVillagers = level.getEntitiesOfClass(
+                        Villager.class,
+                        platformBounds);
+                
+                allNearbyVillagers.addAll(platformVillagers);
+            }
 
-            // First, clean up positions of villagers that are no longer present
-            cleanupVisitorPositions(nearbyVillagers);
+            // Clean up positions of villagers that are no longer present
+            cleanupVisitorPositions(allNearbyVillagers);
 
             // Process visitors that are stationary
-            for (Villager villager : nearbyVillagers) {
+            for (Villager villager : allNearbyVillagers) {
                 Vec3 currentPos = villager.position();
                 Vec3 lastPos = lastVisitorPositions.get(villager.getUUID());
                 
@@ -1112,7 +1127,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         super.setRemoved();
         touristVehicleManager.clearTrackedVehicles();
         lastVisitorPositions.clear();
-        LOGGER.debug("Cleared visitor position tracking on block removal");
+        // Clear platform indicators
+        platformIndicatorSpawnTimes.clear();
+        LOGGER.debug("Cleared visitor position tracking and platform indicators on block removal");
     }
 
     /**
@@ -1438,6 +1455,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public boolean removePlatform(UUID platformId) {
         boolean removed = platforms.removeIf(p -> p.getId().equals(platformId));
         if (removed) {
+            // Remove the platform indicator spawning data when a platform is removed
+            platformIndicatorSpawnTimes.remove(platformId);
             setChanged();
         }
         return removed;
@@ -1513,5 +1532,61 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
      */
     public boolean canAddMorePlatforms() {
         return platforms.size() < MAX_PLATFORMS;
+    }
+
+    /**
+     * Spawns visual indicators at platform start and end points
+     */
+    private void spawnPlatformIndicators(Level level) {
+        if (level.isClientSide || platforms.isEmpty()) return;
+        
+        long gameTime = level.getGameTime();
+        
+        // For each platform, spawn particles at start and end points
+        for (Platform platform : platforms) {
+            if (!platform.isEnabled() || !platform.isComplete()) continue;
+            
+            UUID platformId = platform.getId();
+            
+            // Check if it's time to spawn indicators for this platform
+            if (!platformIndicatorSpawnTimes.containsKey(platformId) || 
+                gameTime - platformIndicatorSpawnTimes.get(platformId) >= INDICATOR_SPAWN_INTERVAL) {
+                
+                // Update spawn time
+                platformIndicatorSpawnTimes.put(platformId, gameTime);
+                
+                // Spawn indicators at start point
+                BlockPos startPos = platform.getStartPos();
+                ((ServerLevel)level).sendParticles(
+                    ParticleTypes.HAPPY_VILLAGER,
+                    startPos.getX() + 0.5,
+                    startPos.getY() + 1.0,
+                    startPos.getZ() + 0.5,
+                    1, // particle count
+                    0.2, 0.2, 0.2, // spread
+                    0.0 // speed
+                );
+                
+                // Spawn indicators at end point
+                BlockPos endPos = platform.getEndPos();
+                ((ServerLevel)level).sendParticles(
+                    ParticleTypes.HAPPY_VILLAGER,
+                    endPos.getX() + 0.5,
+                    endPos.getY() + 1.0,
+                    endPos.getZ() + 0.5,
+                    1, // particle count
+                    0.2, 0.2, 0.2, // spread
+                    0.0 // speed
+                );
+            }
+        }
+    }
+    
+    // Clean up indicator data for removed platforms
+    private void cleanupPlatformIndicators() {
+        // Remove spawn times for platforms that no longer exist
+        platformIndicatorSpawnTimes.keySet().removeIf(platformId -> 
+            platforms.stream().noneMatch(p -> p.getId().equals(platformId))
+        );
     }
 }
