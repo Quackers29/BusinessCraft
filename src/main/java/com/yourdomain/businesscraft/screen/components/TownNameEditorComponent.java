@@ -166,12 +166,6 @@ public class TownNameEditorComponent implements UIComponent {
         confirmButton.setX(x + buttonWidth + SPACING);
         confirmButton.setY(buttonY);
         
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Rendering buttons - cancel at {},{} confirm at {},{}", 
-                cancelButton.getX(), cancelButton.getY(), 
-                confirmButton.getX(), confirmButton.getY());
-        }
-        
         // Render buttons
         cancelButton.render(guiGraphics, mouseX, mouseY, 0);
         confirmButton.render(guiGraphics, mouseX, mouseY, 0);
@@ -212,82 +206,27 @@ public class TownNameEditorComponent implements UIComponent {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (!visible) return false;
         
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("TownNameEditorComponent.mouseClicked at {}, {}", mouseX, mouseY);
-            LOGGER.debug("Button positions during click - cancel at {},{} confirm at {},{}", 
-                cancelButton.getX(), cancelButton.getY(), 
-                confirmButton.getX(), confirmButton.getY());
-        }
-        
         // Let the edit box handle clicks first
         if (editBox.mouseClicked(mouseX, mouseY, button)) {
             return true;
         }
         
-        // Convert component-relative coordinates to screen coordinates for button checks
-        // This is needed because in the component's mouseClicked method, coordinates are relative to component
-        double adjustedMouseX = mouseX + cancelButton.getX() - cancelButton.getWidth(); // Rough estimate
-        double adjustedMouseY = mouseY + cancelButton.getY() - 20; // Rough estimate
-        
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Adjusted click coordinates: {}, {}", adjustedMouseX, adjustedMouseY);
-        }
-        
-        // First check the confirm button directly using adjusted coordinates
-        if (isPointInButton(confirmButton, adjustedMouseX, adjustedMouseY)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Confirm button hit in component with adjusted coordinates");
-            }
-            onNameConfirmed.accept(currentValue);
-            return true;
-        }
-        
-        // Then check the cancel button directly using adjusted coordinates
-        if (isPointInButton(cancelButton, adjustedMouseX, adjustedMouseY)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Cancel button hit in component with adjusted coordinates");
-            }
-            onCancel.run();
-            return true;
-        }
-        
-        // Fall back to original logic as a last resort
+        // Simple logical button area checks as fallback for direct clicks
         if (mouseY >= 0 && mouseY < BUTTON_HEIGHT) {
-            // Check OK button area
+            // Check OK button area (right half)
             if (mouseX >= (width / 2) && mouseX < width) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("OK button click detected with standard logic");
-                }
                 onNameConfirmed.accept(currentValue);
                 return true;
             }
             
-            // Check Cancel button area
+            // Check Cancel button area (left half)
             if (mouseX >= 0 && mouseX < (width / 2)) {
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Cancel button click detected with standard logic");
-                }
                 onCancel.run();
                 return true;
             }
         }
         
         return false;
-    }
-    
-    /**
-     * Helper method to check if a point is inside a button
-     */
-    private boolean isPointInButton(Button button, double x, double y) {
-        boolean result = x >= button.getX() && x < button.getX() + button.getWidth() &&
-                         y >= button.getY() && y < button.getY() + button.getHeight();
-        
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Point ({},{}) in button ({},{},{},{}): {}", 
-                x, y, button.getX(), button.getY(), button.getWidth(), button.getHeight(), result);
-        }
-        
-        return result;
     }
     
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
@@ -325,38 +264,14 @@ public class TownNameEditorComponent implements UIComponent {
      * External method to handle confirm button click
      */
     public void handleConfirmButtonClick() {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Confirm button clicked externally with value: {}", currentValue);
-            LOGGER.debug("Button positions - confirm at {},{} dimensions {}x{}", 
-                confirmButton.getX(), confirmButton.getY(), 
-                confirmButton.getWidth(), confirmButton.getHeight());
-        }
-        
-        // Make sure the confirm button's action is executed directly
-        try {
-            onNameConfirmed.accept(currentValue);
-        } catch (Exception e) {
-            LOGGER.error("Error in confirm button handler", e);
-        }
+        onNameConfirmed.accept(currentValue);
     }
     
     /**
      * External method to handle cancel button click
      */
     public void handleCancelButtonClick() {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Cancel button clicked externally");
-            LOGGER.debug("Button positions - cancel at {},{} dimensions {}x{}", 
-                cancelButton.getX(), cancelButton.getY(), 
-                cancelButton.getWidth(), cancelButton.getHeight());
-        }
-        
-        // Make sure the cancel button's action is executed directly
-        try {
-            onCancel.run();
-        } catch (Exception e) {
-            LOGGER.error("Error in cancel button handler", e);
-        }
+        onCancel.run();
     }
     
     /**
