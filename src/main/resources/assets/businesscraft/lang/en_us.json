@@ -24,5 +24,11 @@
   "businesscraft.set_platform_path": "Set Platform Path",
   "businesscraft.delete_platform": "Delete Platform",
   "businesscraft.platform_path_instructions": "Click on a block to set the platform start point",
-  "businesscraft.platform_path_end_instructions": "Click on a block to set the platform end point"
+  "businesscraft.platform_path_end_instructions": "Click on a block to set the platform end point",
+  "businesscraft.back_button": "Back",
+  "businesscraft.add_button": "Add",
+  "businesscraft.platform_complete": "Complete",
+  "businesscraft.platform_incomplete": "Incomplete",
+  "businesscraft.return_to_settings": "Return to Settings",
+  "businesscraft.platform_number": "Platform %s"
 }
