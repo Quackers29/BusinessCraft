@@ -1608,7 +1608,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                         x + 0.5,
                         y,
                         z + 0.5,
-                        1, // particle count
+                        5, // particle count (increased from 1 to 5)
                         0.2, 0.2, 0.2, // spread
                         0.0 // speed
                     );
