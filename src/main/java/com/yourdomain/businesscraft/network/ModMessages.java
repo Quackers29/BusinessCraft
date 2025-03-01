@@ -99,6 +99,13 @@ public class ModMessages {
                 .encoder(RefreshPlatformsPacket::encode)
                 .consumerMainThread(RefreshPlatformsPacket::handle)
                 .add();
+                
+        // Register player exit UI packet
+        net.messageBuilder(PlayerExitUIPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PlayerExitUIPacket::decode)
+                .encoder(PlayerExitUIPacket::encode)
+                .consumerMainThread(PlayerExitUIPacket::handle)
+                .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {
