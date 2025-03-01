@@ -816,7 +816,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         
         // Handle platform data updates
         if (tag.contains("platforms")) {
-            LOGGER.debug("Received platform data update from server");
+            // Platform update received from server
             clientPlatforms.clear();
             ListTag platformsTag = tag.getList("platforms", Tag.TAG_COMPOUND);
             for (int i = 0; i < platformsTag.size(); i++) {
@@ -824,7 +824,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 Platform platform = Platform.fromNBT(platformTag);
                 clientPlatforms.add(platform);
             }
-            LOGGER.debug("Updated client platforms list, now contains {} platforms", clientPlatforms.size());
         }
         
         // Load client resources data

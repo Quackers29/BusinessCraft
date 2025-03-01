@@ -45,6 +45,10 @@ public class PlatformsTab extends Tab {
     private static final int COLOR_TEXT = 0xFFFFFFFF;
     private static final int COLOR_PLATFORM_NAME = 0xFFDDDDFF;
     
+    // Status colors (changed from pink/purple)
+    private static final int COLOR_ENABLED = 0xFF4CAF50; // Green
+    private static final int COLOR_DISABLED = 0xFFE57373; // Light red
+    
     private final TownBlockScreen screen;
     private final List<PlatformEntry> platformEntries = new ArrayList<>();
     
@@ -66,15 +70,15 @@ public class PlatformsTab extends Tab {
         
         platformEntries.clear();
         
-        // Return button - styled better
-        returnButton = Button.builder(Component.literal("←"), (button) -> screen.showMainTab())
-            .bounds(leftPos + CONTENT_PADDING, topPos + CONTENT_PADDING, 20, 20)
+        // Return button - with proper text
+        returnButton = Button.builder(Component.translatable("businesscraft.back_button"), (button) -> screen.showMainTab())
+            .bounds(leftPos + CONTENT_PADDING, topPos + CONTENT_PADDING, 60, 20)
             .tooltip(Tooltip.create(Component.translatable("businesscraft.return_to_settings")))
             .build();
         
         // Add platform button - moved to bottom of screen
-        addPlatformButton = Button.builder(Component.literal("+"), this::onAddPlatform)
-            .bounds(leftPos + width - 40, topPos + height - 30, 30, 20)
+        addPlatformButton = Button.builder(Component.translatable("businesscraft.add_button"), this::onAddPlatform)
+            .bounds(leftPos + width - 80, topPos + height - 30, 70, 20)
             .tooltip(Tooltip.create(Component.translatable("businesscraft.add_platform")))
             .build();
         
@@ -129,12 +133,10 @@ public class PlatformsTab extends Tab {
         platformEntries.clear();
         List<Platform> platforms = screen.getPlatforms();
         
-        LOGGER.debug("Refreshing platforms tab with {} platforms", platforms.size());
-        
-        for (Platform platform : platforms) {
-            LOGGER.debug("Adding platform '{}' (enabled: {}, id: {})", 
-                platform.getName(), platform.isEnabled(), platform.getId());
-            platformEntries.add(new PlatformEntry(platform));
+        // Create entries with position information
+        for (int i = 0; i < platforms.size(); i++) {
+            boolean isLastPlatform = (i == platforms.size() - 1);
+            platformEntries.add(new PlatformEntry(platforms.get(i), i + 1, isLastPlatform));
         }
         
         scrollOffset = 0;
@@ -142,8 +144,11 @@ public class PlatformsTab extends Tab {
     }
     
     private void onAddPlatform(Button button) {
-        LOGGER.debug("Adding new platform");
+        // Send the add platform packet to the server
         ModMessages.sendToServer(new AddPlatformPacket(screen.getBlockPos()));
+        
+        // Simply return to settings page - more reliable than the async approach
+        screen.showMainTab();
     }
     
     @Override
@@ -240,14 +245,14 @@ public class PlatformsTab extends Tab {
         );
         
         // Title text with shadow
-        Component title = Component.translatable("businesscraft.platforms_management");
+        Component title = Component.translatable("businesscraft.manage_platforms");
         gui.drawString(
             Minecraft.getInstance().font,
             title,
-            contentLeft + 35,
-            contentTop + 16,
+            contentLeft + (contentWidth / 2) - (Minecraft.getInstance().font.width(title) / 2),
+            contentTop + 10,
             COLOR_TITLE,
-            true  // with shadow
+            true // with shadow
         );
     }
     
@@ -309,13 +314,17 @@ public class PlatformsTab extends Tab {
      */
     private class PlatformEntry {
         private final Platform platform;
+        private final int positionNumber;
+        private final boolean isLastPlatform;
         private Button toggleButton;
         private Button setPathButton;
         private Button deleteButton;
         private boolean visible = true;
         
-        public PlatformEntry(Platform platform) {
+        public PlatformEntry(Platform platform, int positionNumber, boolean isLastPlatform) {
             this.platform = platform;
+            this.positionNumber = positionNumber;
+            this.isLastPlatform = isLastPlatform;
             
             int baseX = contentLeft + 5;
             int baseY = contentTop + 40;
@@ -338,16 +347,20 @@ public class PlatformsTab extends Tab {
                 .tooltip(Tooltip.create(Component.translatable("businesscraft.set_platform_path")))
                 .build();
             
-            // Delete button - improved styling
-            deleteButton = Button.builder(Component.translatable("businesscraft.del"), this::onDelete)
-                .bounds(baseX + 210, baseY, 30, 20)
-                .tooltip(Tooltip.create(Component.translatable("businesscraft.delete_platform")))
-                .build();
+            // Delete button - improved styling - only for last platform
+            if (isLastPlatform) {
+                deleteButton = Button.builder(Component.translatable("businesscraft.del"), this::onDelete)
+                    .bounds(baseX + 210, baseY, 30, 20)
+                    .tooltip(Tooltip.create(Component.translatable("businesscraft.delete_platform")))
+                    .build();
+                
+                // Register delete button
+                screen.addPlatformButton(deleteButton);
+            }
             
             // Register buttons with the screen
             screen.addPlatformButton(toggleButton);
             screen.addPlatformButton(setPathButton);
-            screen.addPlatformButton(deleteButton);
         }
         
         public void updatePosition(int x, int y) {
@@ -357,8 +370,10 @@ public class PlatformsTab extends Tab {
             setPathButton.setX(x + 170);
             setPathButton.setY(y);
             
-            deleteButton.setX(x + 210);
-            deleteButton.setY(y);
+            if (isLastPlatform && deleteButton != null) {
+                deleteButton.setX(x + 210);
+                deleteButton.setY(y);
+            }
         }
         
         public void render(GuiGraphics gui, int mouseX, int mouseY, boolean isHovered) {
@@ -378,9 +393,9 @@ public class PlatformsTab extends Tab {
                 bgColor
             );
             
-            // Platform name with enabled/disabled state indication
+            // Use position number instead of platform name
+            Component nameComponent = Component.translatable("businesscraft.platform_number", positionNumber);
             int textColor = platform.isEnabled() ? COLOR_PLATFORM_NAME : 0xBBAAAACC;
-            Component nameComponent = Component.literal(platform.getName());
             
             // Draw name with position offset from toggle button
             gui.drawString(
@@ -392,43 +407,59 @@ public class PlatformsTab extends Tab {
             );
             
             // Show platform status (complete or not)
-            String statusText = platform.isComplete() ? "Complete" : "Incomplete";
-            int statusTextColor = platform.isComplete() ? 0xBB99FF99 : 0xBBFF9999;
+            Component statusText = platform.isComplete() 
+                ? Component.translatable("businesscraft.platform_complete") 
+                : Component.translatable("businesscraft.platform_incomplete");
+            
+            int statusTextColor = platform.isComplete() ? 0xFF66BB6A : 0xFFFF7043;
             
             gui.drawString(
                 Minecraft.getInstance().font,
                 statusText,
                 entryX + 30,
-                entryY + 17,
+                entryY + 18,
                 statusTextColor
             );
             
-            // Status indicator (enabled/disabled)
-            int statusSize = 8;
+            // Draw status indicator (dot)
             int statusX = entryX + 12;
             int statusY = entryY + 10;
-            int statusColor = platform.isEnabled() ? 0xFF44FF44 : 0xFFFF4444;
+            int statusColor = platform.isEnabled() ? COLOR_ENABLED : COLOR_DISABLED;
             
             // Draw colored status dot
-            gui.fill(statusX, statusY, statusX + statusSize, statusY + statusSize, statusColor);
+            gui.fill(statusX, statusY, statusX + 8, statusY + 8, statusColor);
+            
+            // Draw outline around the status indicator
+            gui.fill(statusX, statusY, statusX + 8, statusY + 1, 0xFFFFFFFF); // Top
+            gui.fill(statusX, statusY, statusX + 1, statusY + 8, 0xFFFFFFFF); // Left
+            gui.fill(statusX + 7, statusY, statusX + 8, statusY + 8, 0xFFFFFFFF); // Right
+            gui.fill(statusX, statusY + 7, statusX + 8, statusY + 8, 0xFFFFFFFF); // Bottom
             
             // Render buttons
             toggleButton.render(gui, mouseX, mouseY, 0);
-            deleteButton.render(gui, mouseX, mouseY, 0);
             setPathButton.render(gui, mouseX, mouseY, 0);
+            
+            // Only render delete button for last platform
+            if (isLastPlatform && deleteButton != null) {
+                deleteButton.render(gui, mouseX, mouseY, 0);
+            }
         }
         
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if (!visible) return false;
             
-            return toggleButton.mouseClicked(mouseX, mouseY, button) ||
-                   setPathButton.mouseClicked(mouseX, mouseY, button) ||
-                   deleteButton.mouseClicked(mouseX, mouseY, button);
+            // Only include delete button in check if it's the last platform
+            if (isLastPlatform && deleteButton != null) {
+                return toggleButton.mouseClicked(mouseX, mouseY, button) ||
+                       setPathButton.mouseClicked(mouseX, mouseY, button) ||
+                       deleteButton.mouseClicked(mouseX, mouseY, button);
+            } else {
+                return toggleButton.mouseClicked(mouseX, mouseY, button) ||
+                       setPathButton.mouseClicked(mouseX, mouseY, button);
+            }
         }
         
         private void onToggle() {
-            LOGGER.debug("Toggling platform {} ({})", platform.getName(), platform.getId());
-            
             // Update UI immediately for responsiveness
             platform.setEnabled(!platform.isEnabled());
             toggleButton.setTooltip(Tooltip.create(
@@ -463,16 +494,18 @@ public class PlatformsTab extends Tab {
         }
         
         private void onSetPath(Button button) {
-            LOGGER.debug("Setting path for platform {} ({})", platform.getName(), platform.getId());
             screen.showPathEditor(platform.getId());
         }
         
         private void onDelete(Button button) {
-            LOGGER.debug("Deleting platform {} ({})", platform.getName(), platform.getId());
+            // Send delete packet to server
             ModMessages.sendToServer(new DeletePlatformPacket(
                 screen.getBlockPos(), 
                 platform.getId()
             ));
+            
+            // Simply return to settings page - more reliable than the async approach
+            screen.showMainTab();
         }
         
         public boolean isVisible() {
@@ -487,7 +520,7 @@ public class PlatformsTab extends Tab {
             // Only update visibility without removing from widget list
             if (toggleButton != null) toggleButton.visible = visible;
             if (setPathButton != null) setPathButton.visible = visible;
-            if (deleteButton != null) deleteButton.visible = visible;
+            if (isLastPlatform && deleteButton != null) deleteButton.visible = visible;
         }
         
         /**
@@ -502,7 +535,7 @@ public class PlatformsTab extends Tab {
                 screen.removePlatformButton(setPathButton);
             }
             
-            if (deleteButton != null) {
+            if (isLastPlatform && deleteButton != null) {
                 screen.removePlatformButton(deleteButton);
             }
         }
