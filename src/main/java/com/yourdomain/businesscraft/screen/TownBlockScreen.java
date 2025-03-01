@@ -369,7 +369,58 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         
         // Handle town name editor clicks if it's visible
         if (isEditingTownName) {
+            // Get button positions and dimensions
+            Button confirmButton = nameEditor.getConfirmButton();
+            Button cancelButton = nameEditor.getCancelButton();
+            
+            // Check for direct clicks on buttons using their screen coordinates
+            if (confirmButton.visible && mouseX >= confirmButton.getX() && mouseX <= confirmButton.getX() + confirmButton.getWidth() &&
+                mouseY >= confirmButton.getY() && mouseY <= confirmButton.getY() + confirmButton.getHeight()) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Direct OK button click detected at {},{}", mouseX, mouseY);
+                }
+                nameEditor.handleConfirmButtonClick();
+                return true;
+            }
+            
+            if (cancelButton.visible && mouseX >= cancelButton.getX() && mouseX <= cancelButton.getX() + cancelButton.getWidth() &&
+                mouseY >= cancelButton.getY() && mouseY <= cancelButton.getY() + cancelButton.getHeight()) {
+                if (LOGGER.isDebugEnabled()) {
+                    LOGGER.debug("Direct Cancel button click detected at {},{}", mouseX, mouseY);
+                }
+                nameEditor.handleCancelButtonClick();
+                return true;
+            }
+            
             if (isClickInsideEditor(mouseX, mouseY)) {
+                // The existing button detection seems to fail, but we'll keep it as a fallback
+                for (GuiEventListener listener : children()) {
+                    if (listener instanceof Button b) {
+                        if (b.visible && b.isMouseOver(mouseX, mouseY)) {
+                            if (LOGGER.isDebugEnabled()) {
+                                LOGGER.debug("Button press detected via isMouseOver on button at x={}, y={}, width={}, height={}", 
+                                    b.getX(), b.getY(), b.getWidth(), b.getHeight());
+                            }
+                            
+                            // Check if this is one of our editor buttons
+                            if (b == nameEditor.getConfirmButton()) {
+                                nameEditor.handleConfirmButtonClick();
+                                return true;
+                            } else if (b == nameEditor.getCancelButton()) {
+                                nameEditor.handleCancelButtonClick();
+                                return true;
+                            }
+                            
+                            b.onPress();
+                            return true;
+                        }
+                    }
+                }
+                
+                // If not a direct button press, try forwarding to component with correct coordinates
+                if (nameEditor.mouseClicked(mouseX - (leftPos + 28), mouseY - (topPos + 50), button)) {
+                    return true;
+                }
                 return super.mouseClicked(mouseX, mouseY, button);
             } else {
                 // Click outside editor cancels
