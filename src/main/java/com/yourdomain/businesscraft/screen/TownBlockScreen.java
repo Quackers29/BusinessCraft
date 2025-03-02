@@ -131,9 +131,10 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
             button -> showPlatformsTab()
         ));
         
+        // Radius button - we need to capture the button parameter in mouseClicked
         comps.add(new DataBoundButtonComponent(
             () -> Component.literal("Radius: " + menu.getSearchRadius()),
-            (button) -> handleRadiusChange(),
+            (button) -> handleRadiusChange(0), // 0 = left click by default
             buttonWidth, buttonHeight
         ));
         
@@ -331,6 +332,18 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // Handle radius button right-click
+        for (GuiEventListener listener : children()) {
+            if (listener instanceof Button uiButton && uiButton.isMouseOver(mouseX, mouseY)) {
+                // Check if it's the radius button by checking its message
+                Component message = ((Button)listener).getMessage();
+                if (message != null && message.getString().startsWith("Radius:")) {
+                    handleRadiusChange(button);
+                    return true;
+                }
+            }
+        }
+        
         // Handle platform tab clicks if it's visible
         if (platformsTab != null && platformsTab.isVisible()) {
             // Check if a tab was clicked first
@@ -453,18 +466,21 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         return super.charTyped(c, modifiers);
     }
 
-    private void handleRadiusChange() {
+    private void handleRadiusChange(int mouseButton) {
         // Get the current radius from the menu's data provider if possible
         int currentRadius = menu.getSearchRadius();
         int newRadius = currentRadius;
         
         // Calculate new radius based on key combinations
         boolean isShift = hasShiftDown();
-        boolean isControl = hasControlDown();
         
-        if (isShift && isControl) {
+        // Use mouseButton to determine increase/decrease
+        // mouseButton 0 = left click (increase), 1 = right click (decrease)
+        boolean isDecrease = (mouseButton == 1);
+        
+        if (isShift && isDecrease) {
             newRadius -= 10;
-        } else if (isControl) {
+        } else if (isDecrease) {
             newRadius -= 1;
         } else if (isShift) {
             newRadius += 10;
