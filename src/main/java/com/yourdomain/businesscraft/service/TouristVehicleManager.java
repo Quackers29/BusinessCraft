@@ -1,6 +1,7 @@
 package com.yourdomain.businesscraft.service;
 
 import com.yourdomain.businesscraft.config.ConfigLoader;
+import com.yourdomain.businesscraft.town.utils.TouristUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -88,10 +89,8 @@ public class TouristVehicleManager {
         return level.getEntitiesOfClass(Villager.class, bounds,
             villager -> villager.onGround() && 
                        !villager.isPassenger() &&
-                       villager.getTags().contains("type_tourist") &&
-                       villager.getTags().stream().anyMatch(tag -> 
-                           tag.equals("from_town_" + townId.toString())
-                       )
+                       TouristUtils.isTourist(villager) &&
+                       townId.toString().equals(TouristUtils.getOriginTownId(villager))
         );
     }
     
