@@ -102,7 +102,11 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     private List<UIComponent> createTownInfoComponents(TownBlockMenu menu) {
         List<UIComponent> comps = new ArrayList<>();
         comps.add(new DataLabelComponent(() -> "Town: " + menu.getTownName(), 0xFFFFFF, 200));
-        comps.add(new DataLabelComponent(() -> "Population: " + menu.getPopulation() + "/" + ConfigLoader.minPopForTourists, 0xFFFFFF, 200));
+        
+        // Display population and tourist count separately
+        comps.add(new DataLabelComponent(() -> "Population: " + menu.getPopulation(), 0xFFFFFF, 200));
+        comps.add(new DataLabelComponent(() -> "Tourists: " + menu.getTouristCount() + "/" + menu.getMaxTourists(), 0xFFFFFF, 200));
+        
         return comps;
     }
     

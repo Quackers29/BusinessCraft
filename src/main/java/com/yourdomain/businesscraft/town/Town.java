@@ -74,13 +74,61 @@ public class Town implements ITownDataProvider {
         return result;
     }
     
+    /**
+     * Checks if the town can support additional tourists based on current count and max limits
+     * 
+     * @return true if more tourists can be spawned, false otherwise
+     */
+    public boolean canAddMoreTourists() {
+        // Check if we're already at the fixed maximum
+        if (touristCount >= ConfigLoader.maxTouristsPerTown) {
+            return false;
+        }
+        
+        // Check population-based limit
+        int populationBasedLimit = calculateMaxTouristsFromPopulation();
+        return touristCount < populationBasedLimit;
+    }
+    
+    /**
+     * Calculate the maximum number of tourists this town can support based on population
+     * 
+     * @return the maximum number of tourists allowed
+     */
+    public int calculateMaxTouristsFromPopulation() {
+        // Calculate based on population / populationPerTourist ratio
+        int popBasedLimit = economy.getPopulation() / ConfigLoader.populationPerTourist;
+        
+        // Cap at the configured maximum
+        return Math.min(popBasedLimit, ConfigLoader.maxPopBasedTourists);
+    }
+    
+    /**
+     * Get the maximum number of tourists this town can currently support
+     * 
+     * @return the maximum tourist capacity
+     */
+    public int getMaxTourists() {
+        return Math.min(calculateMaxTouristsFromPopulation(), ConfigLoader.maxTouristsPerTown);
+    }
+    
     public void addTourist() {
-        touristCount++;
+        // Only add tourist if we haven't reached the limit
+        if (canAddMoreTourists()) {
+            touristCount++;
+            LOGGER.debug("Tourist added to town {}, count now {}/{}", 
+                name, touristCount, getMaxTourists());
+        } else {
+            LOGGER.debug("Cannot add tourist to town {}, at capacity {}/{}", 
+                name, touristCount, getMaxTourists());
+        }
     }
     
     public void removeTourist() {
         if (touristCount > 0) {
             touristCount--;
+            LOGGER.debug("Tourist removed from town {}, count now {}/{}", 
+                name, touristCount, getMaxTourists());
         }
     }
     

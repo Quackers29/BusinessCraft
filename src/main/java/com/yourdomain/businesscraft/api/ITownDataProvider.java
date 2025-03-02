@@ -24,6 +24,11 @@ public interface ITownDataProvider {
     // Population methods
     int getPopulation();
     
+    // Tourist methods
+    int getTouristCount();
+    int getMaxTourists();
+    boolean canAddMoreTourists();
+    
     // Other town data
     boolean isTouristSpawningEnabled();
     void setTouristSpawningEnabled(boolean enabled);

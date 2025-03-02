@@ -43,6 +43,8 @@ public class TownBlockMenu extends AbstractContainerMenu {
     private static final int DATA_SPAWN_ENABLED = 2;
     private static final int DATA_CAN_SPAWN = 3;
     private static final int DATA_SEARCH_RADIUS = 4;
+    private static final int DATA_TOURIST_COUNT = 5;
+    private static final int DATA_MAX_TOURISTS = 6;
 
     public TownBlockMenu(int id, Inventory inv, FriendlyByteBuf extraData) {
         this(id, inv, inv.player.level().getBlockEntity(extraData.readBlockPos()));
@@ -53,7 +55,7 @@ public class TownBlockMenu extends AbstractContainerMenu {
         this.blockEntity = entity instanceof TownBlockEntity ? 
             (TownBlockEntity) entity : null;
         this.data = blockEntity != null ? 
-            blockEntity.getContainerData() : new SimpleContainerData(5);
+            blockEntity.getContainerData() : new SimpleContainerData(7);
         
         if (blockEntity != null) {
             blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER)
@@ -73,6 +75,24 @@ public class TownBlockMenu extends AbstractContainerMenu {
 
     public int getPopulation() {
         return getProviderValueOr(ITownDataProvider::getPopulation, data.get(DATA_POPULATION));
+    }
+
+    /**
+     * Get the current number of tourists from this town
+     * 
+     * @return the number of active tourists
+     */
+    public int getTouristCount() {
+        return getProviderValueOr(ITownDataProvider::getTouristCount, data.get(DATA_TOURIST_COUNT));
+    }
+    
+    /**
+     * Get the maximum number of tourists this town can currently support
+     * 
+     * @return the maximum tourist capacity
+     */
+    public int getMaxTourists() {
+        return getProviderValueOr(ITownDataProvider::getMaxTourists, data.get(DATA_MAX_TOURISTS));
     }
 
     public String getTownName() {

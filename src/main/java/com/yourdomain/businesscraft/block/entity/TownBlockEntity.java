@@ -108,7 +108,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private static final int DATA_SPAWN_ENABLED = 2;
     private static final int DATA_CAN_SPAWN = 3;
     private static final int DATA_SEARCH_RADIUS = 4;
-    private final ContainerData data = new SimpleContainerData(5) {
+    private static final int DATA_TOURIST_COUNT = 5;
+    private static final int DATA_MAX_TOURISTS = 6;
+    private final ContainerData data = new SimpleContainerData(7) {
         // Tracking time between logs to prevent spamming
         private long lastLogTime = 0;
         
@@ -129,6 +131,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     case DATA_SPAWN_ENABLED -> town.isTouristSpawningEnabled() ? 1 : 0;
                     case DATA_CAN_SPAWN -> town.canSpawnTourists() ? 1 : 0;
                     case DATA_SEARCH_RADIUS -> town.getSearchRadius();
+                    case DATA_TOURIST_COUNT -> town.getTouristCount();
+                    case DATA_MAX_TOURISTS -> town.getMaxTourists();
                     default -> 0;
                 };
                 
@@ -656,6 +660,16 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                                 villager.getX(), villager.getY(), villager.getZ(),
                                 xpAmount);
                         level.addFreshEntity(xpOrb);
+
+                        // Find the origin town and decrement its tourist count
+                        if (level instanceof ServerLevel serverLevel) {
+                            Town originTown = TownManager.get(serverLevel).getTown(originTownId);
+                            if (originTown != null) {
+                                originTown.removeTourist();
+                                LOGGER.debug("Removed tourist from town {}, count now {}/{}",
+                                    originTown.getName(), originTown.getTouristCount(), originTown.getMaxTourists());
+                            }
+                        }
 
                         villager.remove(Entity.RemovalReason.DISCARDED);
                         setChanged();
@@ -1325,6 +1339,13 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
      * Try to spawn a tourist on the specified platform
      */
     private void spawnTouristOnPlatform(Level level, Town town, Platform platform) {
+        // Skip if town can't support more tourists
+        if (!town.canAddMoreTourists()) {
+            LOGGER.debug("Cannot spawn tourist - town {} at maximum capacity ({}/{})",
+                town.getName(), town.getTouristCount(), town.getMaxTourists());
+            return;
+        }
+        
         BlockPos startPos = platform.getStartPos();
         BlockPos endPos = platform.getEndPos();
         
@@ -1342,7 +1363,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         
         List<Villager> existingTourists = level.getEntitiesOfClass(Villager.class, pathBounds);
         
-        if (existingTourists.size() < MAX_TOURISTS) {
+        // Use configurable max tourists per platform
+        if (existingTourists.size() < ConfigLoader.maxTouristsPerTown) {
             // Try up to 3 times to find a valid spawn location
             for (int attempt = 0; attempt < 3; attempt++) {
                 // Calculate a random position along the path
@@ -1396,10 +1418,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                             .setProfession(randomProfession)
                             .setLevel(6));
                         
-                        // Add tags when spawning villager
-                        LOGGER.info("[BusinessCraft] Spawning tourist for town {} with ID {}", town.getName(), townId);
+                        // Add tags for identification
                         villager.addTag("type_tourist");
-                        villager.addTag("from_town_" + townId.toString());
+                        villager.addTag("from_town_" + town.getId().toString());
                         villager.addTag("from_name_" + town.getName());
                         villager.addTag("pos_" + getBlockPos().getX() + "_" + 
                                         getBlockPos().getY() + "_" + 
@@ -1408,14 +1429,18 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                         // Add platform ID tag
                         villager.addTag("platform_" + platform.getId().toString());
                         
-                        // Add debug to verify tags were added
-                        LOGGER.info("[BusinessCraft] Tourist tags after spawning: {}", villager.getTags());
-                        
+                        // Spawn the entity into the world
                         level.addFreshEntity(villager);
-                        town.removeTourist();
-                setChanged();
-            }
-                    break; // Successfully spawned, exit the loop
+                        
+                        // Update the town's tourist count
+                        town.addTourist();
+                        
+                        // Notify success with logging
+                        LOGGER.debug("Spawned tourist at {} for town {} ({}/{})",
+                            villager.blockPosition(), town.getName(), town.getTouristCount(), town.getMaxTourists());
+                        
+                        break; // Success, stop trying
+                    }
                 }
             }
         }

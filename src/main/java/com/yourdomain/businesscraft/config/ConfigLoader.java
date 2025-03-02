@@ -25,6 +25,9 @@ public class ConfigLoader {
     public static int minPopForTourists = 5;
     public static int minDistanceBetweenTowns = 100; // Minimum distance between towns in blocks
     public static int defaultStartingPopulation = 5; // Default starting population for new towns
+    public static int maxTouristsPerTown = 10; // Maximum number of tourists per town
+    public static int populationPerTourist = 10; // Population required for each tourist (1 tourist per 10 population)
+    public static int maxPopBasedTourists = 20; // Maximum population-based tourists (200 pop = 20 tourists)
     
     private ConfigLoader() {
         loadConfig();
@@ -56,6 +59,9 @@ public class ConfigLoader {
             minPopForTourists = Integer.parseInt(props.getProperty("minPopForTourists", "5"));
             minDistanceBetweenTowns = Integer.parseInt(props.getProperty("minDistanceBetweenTowns", "100"));
             defaultStartingPopulation = Integer.parseInt(props.getProperty("defaultStartingPopulation", "5"));
+            maxTouristsPerTown = Integer.parseInt(props.getProperty("maxTouristsPerTown", "10"));
+            populationPerTourist = Integer.parseInt(props.getProperty("populationPerTourist", "10"));
+            maxPopBasedTourists = Integer.parseInt(props.getProperty("maxPopBasedTourists", "20"));
             
             // Load town names
             String namesStr = props.getProperty("townNames", "");
@@ -76,6 +82,9 @@ public class ConfigLoader {
         LOGGER.info("Min Pop For Tourists: {}", minPopForTourists);
         LOGGER.info("Min Distance Between Towns: {}", minDistanceBetweenTowns);
         LOGGER.info("Default Starting Population: {}", defaultStartingPopulation);
+        LOGGER.info("Max Tourists Per Town: {}", maxTouristsPerTown);
+        LOGGER.info("Population Per Tourist: {}", populationPerTourist);
+        LOGGER.info("Max Population-based Tourists: {}", maxPopBasedTourists);
         LOGGER.info("Town Names: {}", townNames);
     }
     
@@ -93,6 +102,9 @@ public class ConfigLoader {
         props.setProperty("minPopForTourists", String.valueOf(minPopForTourists));
         props.setProperty("minDistanceBetweenTowns", String.valueOf(minDistanceBetweenTowns));
         props.setProperty("defaultStartingPopulation", String.valueOf(defaultStartingPopulation));
+        props.setProperty("maxTouristsPerTown", String.valueOf(maxTouristsPerTown));
+        props.setProperty("populationPerTourist", String.valueOf(populationPerTourist));
+        props.setProperty("maxPopBasedTourists", String.valueOf(maxPopBasedTourists));
         props.setProperty("townNames", String.join(",", townNames));
         
         try {
