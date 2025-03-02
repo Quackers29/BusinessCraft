@@ -90,7 +90,7 @@ public class TouristVehicleManager {
                        !villager.isPassenger() &&
                        villager.getTags().contains("type_tourist") &&
                        villager.getTags().stream().anyMatch(tag -> 
-                           tag.startsWith("from_town_" + townId.toString())
+                           tag.equals("from_town_" + townId.toString())
                        )
         );
     }
