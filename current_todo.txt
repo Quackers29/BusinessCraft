@@ -3,13 +3,13 @@
 ## 1. Core Town System Enhancements
 
 ### 1.1. Town Placement and Initial Setup
-- [ ] 1.1.1. Min distance between towns for placement - Prevent towns from being placed too close together, configurable
-- [ ] 1.1.2. Starting population - Configure default starting population for new towns
-- [ ] 1.1.3. Separation of tourists and population - Population becomes a town attribute that grows over time with tourist arrivals
+- [x] 1.1.1. Min distance between towns for placement - Prevent towns from being placed too close together, configurable
+- [x] 1.1.2. Starting population - Configure default starting population for new towns
+- [x] 1.1.3. Separation of tourists and population - Population becomes a town attribute that grows over time with tourist arrivals
 
 ### 1.2. Tourist Capacity Management
-- [ ] 1.2.1. Limited tourists in world per town - town limit of 10 spawned tourists, must visit other towns until more can spawn
-- [ ] 1.2.2. Population-based tourist limits - Higher town population increases the number of tourists that can be out at any time, to a confiurable max of 20 tourists per town (200 pop = 20 tourists, 1 per 10)
+- [x] 1.2.1. Limited tourists in world per town - town limit of 10 spawned tourists, must visit other towns until more can spawn
+- [x] 1.2.2. Population-based tourist limits - Higher town population increases the number of tourists that can be out at any time, to a confiurable max of 20 tourists per town (200 pop = 20 tourists, 1 per 10)
 
 ## 2. Platform System Improvements
 
@@ -38,8 +38,8 @@ X O O T
 ### 3.1. Tourist Entity Improvements
 - [ ] 3.1.1. Custom tourist model - Create new villager model for tourists to distinguish from regular villagers
 - [ ] 3.1.2. Disable tourist breeding - Prevent tourists from breeding with villagers or other tourists
-- [ ] 3.1.3. Tourist expiry system - Add 2-hour real-time expiry timer that poofs tourists out of existence
-- [ ] 3.1.4. Origin town notification - Notify origin town when tourists expire or die
+- [ ] 3.1.3. Tourist expiry system - Add 2-hour real-time expiry timer that poofs tourists out of existence called quitting, configurable
+- [ ] 3.1.4. Origin town notification - Notify origin town when tourists quit or die
 - [ ] 3.1.5. Tourist naming - Replace town name with destination town in tourist name/tag
 
 ### 3.2. Notifications and Feedback

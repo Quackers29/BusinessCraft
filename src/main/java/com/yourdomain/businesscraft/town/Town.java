@@ -80,6 +80,11 @@ public class Town implements ITownDataProvider {
      * @return true if more tourists can be spawned, false otherwise
      */
     public boolean canAddMoreTourists() {
+        // First check if tourist spawning is enabled at all
+        if (!canSpawnTourists()) {
+            return false;
+        }
+        
         // Check if we're already at the fixed maximum
         if (touristCount >= ConfigLoader.maxTouristsPerTown) {
             return false;

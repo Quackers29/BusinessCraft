@@ -87,6 +87,8 @@ import net.minecraft.resources.ResourceLocation;
 import com.yourdomain.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
 import com.yourdomain.businesscraft.platform.Platform;
 import net.minecraftforge.registries.ForgeRegistries;
+import com.yourdomain.businesscraft.town.utils.TouristUtils;
+import com.yourdomain.businesscraft.town.utils.TouristUtils.TouristInfo;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -154,7 +156,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private boolean isInPathCreationMode = false;
     private static final int MAX_PATH_DISTANCE = 50;
     private final Random random = new Random();
-    private static final int MAX_TOURISTS = 5;
     private boolean touristSpawningEnabled = true;
     private UUID townId;
     private String name;
@@ -623,34 +624,13 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     continue;
                 }
 
-                if (villager.getTags().contains("type_tourist")) {
-                    UUID originTownId = null;
-                    BlockPos originPos = null;
-
-                    // Extract tourist information from tags
-                    try {
-                    for (String tag : villager.getTags()) {
-                        if (tag.startsWith("from_town_")) {
-                            originTownId = UUID.fromString(tag.substring(10));
-                            } else if (tag.startsWith("pos_")) {
-                                String[] parts = tag.substring(4).split("_");
-                                if (parts.length == 3) {
-                                    int x = Integer.parseInt(parts[0]);
-                                    int y = Integer.parseInt(parts[1]);
-                                    int z = Integer.parseInt(parts[2]);
-                                    originPos = new BlockPos(x, y, z);
-                                }
-                            }
-                        }
-                    } catch (IllegalArgumentException e) {
-                        // Log the error and skip this villager
-                        LOGGER.error("Error parsing tourist tags: {}", e.getMessage());
-                        continue;
-                    }
+                if (TouristUtils.isTourist(villager)) {
+                    TouristUtils.TouristInfo touristInfo = TouristUtils.extractTouristInfo(villager);
                     
-                    if (originTownId != null && !originTownId.equals(this.townId)) {
+                    if (touristInfo != null && !touristInfo.originTownId.equals(this.townId.toString())) {
                         // Add to visit buffer using UUID instead of name
-                        visitBuffer.addVisitor(originTownId, originPos != null ? originPos : BlockPos.ZERO);
+                        BlockPos originPos = new BlockPos(touristInfo.originX, touristInfo.originY, touristInfo.originZ);
+                        visitBuffer.addVisitor(UUID.fromString(touristInfo.originTownId), originPos);
 
                         // Calculate distance and XP
                         double distance = Math.sqrt(villager.blockPosition().distSqr(this.getBlockPos()));
@@ -663,7 +643,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
                         // Find the origin town and decrement its tourist count
                         if (level instanceof ServerLevel serverLevel) {
-                            Town originTown = TownManager.get(serverLevel).getTown(originTownId);
+                            Town originTown = TownManager.get(serverLevel).getTown(UUID.fromString(touristInfo.originTownId));
                             if (originTown != null) {
                                 originTown.removeTourist();
                                 LOGGER.debug("Removed tourist from town {}, count now {}/{}",
@@ -1418,16 +1398,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                             .setProfession(randomProfession)
                             .setLevel(6));
                         
-                        // Add tags for identification
-                        villager.addTag("type_tourist");
-                        villager.addTag("from_town_" + town.getId().toString());
-                        villager.addTag("from_name_" + town.getName());
-                        villager.addTag("pos_" + getBlockPos().getX() + "_" + 
-                                        getBlockPos().getY() + "_" + 
-                                        getBlockPos().getZ());
-                        
-                        // Add platform ID tag
-                        villager.addTag("platform_" + platform.getId().toString());
+                        // Add standard tourist tags using the utility class
+                        TouristUtils.addStandardTouristTags(villager, town, platform);
                         
                         // Spawn the entity into the world
                         level.addFreshEntity(villager);
