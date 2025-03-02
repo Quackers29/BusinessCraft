@@ -14,7 +14,7 @@
 ## 2. Platform System Improvements
 
 ### 2.1. Default Platform Configuration
-- [ ] 2.1.1. Default platform layout - Implement first platform as default to a new new town with designated X for spawn location and O for nothing and T for the town block, in the orientation the block was placed in (i.e start 3 blocks to the left of the town block): 
+- [x] 2.1.1. Default platform layout - Implement first platform as default to a new new town with designated X for spawn location and O for nothing and T for the town block, in the orientation the block was placed in (i.e start 3 blocks to the left of the town block): 
 "
 X
 X
