@@ -1,0 +1,77 @@
+# BusinessCraft Current Todo
+
+## 1. Core Town System Enhancements
+
+### 1.1. Town Placement and Initial Setup
+- [ ] 1.1.1. Min distance between towns for placement - Prevent towns from being placed too close together, configurable
+- [ ] 1.1.2. Starting population - Configure default starting population for new towns
+- [ ] 1.1.3. Separation of tourists and population - Population becomes a town attribute that grows over time with tourist arrivals
+
+### 1.2. Tourist Capacity Management
+- [ ] 1.2.1. Limited tourists in world - Global limit of 10 spawned tourists, must visit other towns until more can spawn
+- [ ] 1.2.2. Population-based tourist limits - Higher town population increases the number of tourists that can be out at any time
+
+## 2. Platform System Improvements
+
+### 2.1. Default Platform Configuration
+- [ ] 2.1.1. Default platform layout - Implement first platform as default to a new new town with designated X for spawn location and O for nothing and T for the town block, in the orientation the block was placed in (i.e start 3 blocks to the left of the town block): 
+"
+X
+X
+X
+X
+X O O T
+"
+
+### 2.2. Platform Assignment
+- [ ] 2.2.1. Platforms can be assigned towns - Add UI to link platforms to destination towns
+- [ ] 2.2.2. Destination town selection UI - Create list of closest towns with checkboxes to enable/disable tourist spawning
+- [ ] 2.2.3. Population-based tourist allocation - Higher percentage of tourists allocated to towns with higher population
+- [ ] 2.2.4. Destination selection system - Tourists choose available destinations from allocated slots at spawn time
+
+### 2.3. Visual Improvements
+- [ ] 2.3.1. Search radius indicators - Add red particles to show search area around platform lines (capsule)
+- [ ] 2.3.2. Optimized particle display - Show particles every 10 blocks around perimeter with same expiration as green particles
+
+## 3. Tourist System Enhancements
+
+### 3.1. Tourist Entity Improvements
+- [ ] 3.1.1. Custom tourist model - Create new villager model for tourists to distinguish from regular villagers
+- [ ] 3.1.2. Disable tourist breeding - Prevent tourists from breeding with villagers or other tourists
+- [ ] 3.1.3. Tourist expiry system - Add 2-hour real-time expiry timer that poofs tourists out of existence
+- [ ] 3.1.4. Origin town notification - Notify origin town when tourists expire or die
+- [ ] 3.1.5. Tourist naming - Replace town name with destination town in tourist name/tag
+
+### 3.2. Notifications and Feedback
+- [ ] 3.2.1. Arrival announcement - Notify players in vicinity of platform when tourists arrive
+- [ ] 3.2.2. Include milestone and payment info - Display milestone achievements, payments, and travel distance in notifications
+
+## 4. Economy and Payment Systems
+
+### 4.1. Payment System
+- [ ] 4.1.1. Basic payment configuration - Similar to CC system with configurable payment settings
+- [ ] 4.1.2. Distance-based payment calculation - Payments based on distance traveled per tourist
+- [ ] 4.1.3. Payment destination options - Configure whether payments go to platform center, town communal inventory, or (future) contracted player/company
+
+### 4.2. Communal Inventory
+- [ ] 4.2.1. Resource tab toggle - Add toggle in town resource tab to cycle between town/communal/personal inventories
+- [ ] 4.2.2. Inventory access restrictions - Town resources not accessible for output, communal/personal limited to 27 slots
+- [ ] 4.2.3. Export functionality - Add button to each resource to export to output slot in communal or personal inventories
+
+### 4.3. Milestone System
+- [ ] 4.3.1. Server-wide milestones - Configure distance-based milestones (e.g., +1000m traveled)
+- [ ] 4.3.2. Milestone rewards - Set reward items for each milestone (e.g., 10 emeralds)
+- [ ] 4.3.3. Milestone tracking - Track and display milestone achievements server-wide
+
+## 5. Transport and Vehicle Integration
+
+### 5.1. Train Ownership System
+- [ ] 5.1.1. Train locking mechanism - Allow players to lock in their train at a platform
+- [ ] 5.1.2. Train assignment UI - Create "assign trains" button and UI showing available Create trains at platforms
+- [ ] 5.1.3. Player-train association - Store train UUID linked to player as owner
+- [ ] 5.1.4. Assignment permissions - Only train owner can unassign themselves
+- [ ] 5.1.5. Payment routing - Direct payments and milestone rewards to player/company accounts for tourists transported on owned trains
+
+## 6. Future Enhancements (Reference Only)
+- [ ] 6.1.1. Contract system - Link contracts to platforms for advanced payment routing (future)
+- [ ] 6.1.2. Company-based train ownership - Extend train ownership to companies (future) 
