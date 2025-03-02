@@ -23,6 +23,8 @@ public class ConfigLoader {
     public static List<String> townNames = new ArrayList<>();
     public static int breadPerPop = 1;
     public static int minPopForTourists = 5;
+    public static int minDistanceBetweenTowns = 100; // Minimum distance between towns in blocks
+    public static int defaultStartingPopulation = 5; // Default starting population for new towns
     
     private ConfigLoader() {
         loadConfig();
@@ -52,6 +54,8 @@ public class ConfigLoader {
             // Town settings
             breadPerPop = Integer.parseInt(props.getProperty("breadPerPop", "1"));
             minPopForTourists = Integer.parseInt(props.getProperty("minPopForTourists", "5"));
+            minDistanceBetweenTowns = Integer.parseInt(props.getProperty("minDistanceBetweenTowns", "100"));
+            defaultStartingPopulation = Integer.parseInt(props.getProperty("defaultStartingPopulation", "5"));
             
             // Load town names
             String namesStr = props.getProperty("townNames", "");
@@ -70,6 +74,8 @@ public class ConfigLoader {
         LOGGER.info("Vehicle Search Radius: {}", vehicleSearchRadius);
         LOGGER.info("Bread Per Pop: {}", breadPerPop);
         LOGGER.info("Min Pop For Tourists: {}", minPopForTourists);
+        LOGGER.info("Min Distance Between Towns: {}", minDistanceBetweenTowns);
+        LOGGER.info("Default Starting Population: {}", defaultStartingPopulation);
         LOGGER.info("Town Names: {}", townNames);
     }
     
@@ -85,6 +91,8 @@ public class ConfigLoader {
         // Town settings
         props.setProperty("breadPerPop", String.valueOf(breadPerPop));
         props.setProperty("minPopForTourists", String.valueOf(minPopForTourists));
+        props.setProperty("minDistanceBetweenTowns", String.valueOf(minDistanceBetweenTowns));
+        props.setProperty("defaultStartingPopulation", String.valueOf(defaultStartingPopulation));
         props.setProperty("townNames", String.join(",", townNames));
         
         try {

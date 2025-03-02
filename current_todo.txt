@@ -8,8 +8,8 @@
 - [ ] 1.1.3. Separation of tourists and population - Population becomes a town attribute that grows over time with tourist arrivals
 
 ### 1.2. Tourist Capacity Management
-- [ ] 1.2.1. Limited tourists in world - Global limit of 10 spawned tourists, must visit other towns until more can spawn
-- [ ] 1.2.2. Population-based tourist limits - Higher town population increases the number of tourists that can be out at any time
+- [ ] 1.2.1. Limited tourists in world per town - town limit of 10 spawned tourists, must visit other towns until more can spawn
+- [ ] 1.2.2. Population-based tourist limits - Higher town population increases the number of tourists that can be out at any time, to a confiurable max of 20 tourists per town (200 pop = 20 tourists, 1 per 10)
 
 ## 2. Platform System Improvements
 

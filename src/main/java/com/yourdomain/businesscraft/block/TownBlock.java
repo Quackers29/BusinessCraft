@@ -91,6 +91,23 @@ public class TownBlock extends BaseEntityBlock {
             if (be instanceof TownBlockEntity townBlock) {
                 if (level instanceof ServerLevel serverLevel) {
                     TownManager townManager = TownManager.get(serverLevel);
+                    
+                    // Check if town can be placed here (minimum distance check)
+                    if (!townManager.canPlaceTownAt(pos)) {
+                        // Town can't be placed here, delete the block and notify player
+                        level.removeBlock(pos, false);
+                        if (placer instanceof ServerPlayer player) {
+                            player.displayClientMessage(net.minecraft.network.chat.Component.literal(
+                                "Town cannot be placed here - too close to another town (min distance: " + 
+                                ConfigLoader.minDistanceBetweenTowns + " blocks)"), false);
+                            // Return the block to the player's inventory
+                            if (!player.isCreative()) {
+                                player.getInventory().add(stack.copy());
+                            }
+                        }
+                        return;
+                    }
+                    
                     String newTownName = getRandomTownName();
                     LOGGER.info("Generated town name: {}", newTownName);
                     UUID townId = townManager.registerTown(pos, newTownName);
