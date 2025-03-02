@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import net.minecraft.world.item.Item;
+import com.yourdomain.businesscraft.config.ConfigLoader;
 
 public class TownManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/TownManager");
@@ -47,11 +48,40 @@ public class TownManager {
     }
 
     public UUID registerTown(BlockPos pos, String name) {
+        // Check minimum distance between towns
+        if (!canPlaceTownAt(pos)) {
+            LOGGER.warn("Attempted to place town too close to an existing town at position: {}", pos);
+            return null; // Return null to indicate failure
+        }
+        
         UUID townId = UUID.randomUUID();
         LOGGER.info("Registering new town. ID: {}, Name: {}, Position: {}", townId, name, pos);
         savedData.getTowns().put(townId, new Town(townId, pos, name));
         savedData.setDirty();
         return townId;
+    }
+    
+    /**
+     * Checks if a town can be placed at the specified position based on minimum distance
+     * 
+     * @param pos The position to check
+     * @return true if the town can be placed, false otherwise
+     */
+    public boolean canPlaceTownAt(BlockPos pos) {
+        int minDistanceSquared = ConfigLoader.minDistanceBetweenTowns * ConfigLoader.minDistanceBetweenTowns;
+        
+        for (Town town : savedData.getTowns().values()) {
+            BlockPos townPos = town.getPosition();
+            double distanceSquared = pos.distSqr(townPos);
+            
+            if (distanceSquared < minDistanceSquared) {
+                LOGGER.info("Town placement check failed: distance {} < min required {}", 
+                    Math.sqrt(distanceSquared), ConfigLoader.minDistanceBetweenTowns);
+                return false;
+            }
+        }
+        
+        return true;
     }
 
     public Town getTown(UUID id) {

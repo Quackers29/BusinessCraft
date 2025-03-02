@@ -71,6 +71,18 @@ public class TownEconomyComponent implements TownComponent {
             population -= amount;
         }
     }
+    
+    /**
+     * Set the population of the town directly
+     * 
+     * @param amount The new population value
+     */
+    public void setPopulation(int amount) {
+        if (amount >= 0) {
+            population = amount;
+            LOGGER.debug("Population set to {}", population);
+        }
+    }
 
     @Override
     public void tick() {

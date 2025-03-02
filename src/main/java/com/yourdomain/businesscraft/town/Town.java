@@ -24,6 +24,7 @@ public class Town implements ITownDataProvider {
     private String name;
     private final TownEconomyComponent economy = new TownEconomyComponent();
     private final Map<UUID, Integer> visitors = new HashMap<>();
+    private int touristCount = 0; // Track tourists separately from population
     private boolean touristSpawningEnabled;
     private boolean cachedResult;
     private BlockPos pathStart;
@@ -39,6 +40,9 @@ public class Town implements ITownDataProvider {
         this.position = pos;
         this.name = name;
         this.touristSpawningEnabled = true;
+        
+        // Initialize with default starting population
+        economy.setPopulation(ConfigLoader.defaultStartingPopulation);
     }
     
     public void addBread(int count) {
@@ -63,15 +67,25 @@ public class Town implements ITownDataProvider {
     public boolean canSpawnTourists() {
         boolean result = touristSpawningEnabled && economy.getPopulation() >= ConfigLoader.minPopForTourists;
         if (result != cachedResult) {
-            LOGGER.info("SPAWN STATE CHANGE [{}] - Enabled: {}, Population: {}/{}, Result: {}",
-                id, touristSpawningEnabled, economy.getPopulation(), ConfigLoader.minPopForTourists, result);
+            LOGGER.info("SPAWN STATE CHANGE [{}] - Enabled: {}, Population: {}/{}, Tourists: {}, Result: {}",
+                id, touristSpawningEnabled, economy.getPopulation(), ConfigLoader.minPopForTourists, touristCount, result);
             cachedResult = result;
         }
         return result;
     }
     
+    public void addTourist() {
+        touristCount++;
+    }
+    
     public void removeTourist() {
-        economy.removePopulation(1);
+        if (touristCount > 0) {
+            touristCount--;
+        }
+    }
+    
+    public int getTouristCount() {
+        return touristCount;
     }
     
     public void save(CompoundTag tag) {
@@ -80,6 +94,7 @@ public class Town implements ITownDataProvider {
         tag.putInt("posX", position.getX());
         tag.putInt("posY", position.getY());
         tag.putInt("posZ", position.getZ());
+        tag.putInt("touristCount", touristCount);
         CompoundTag visitorsTag = new CompoundTag();
         visitors.forEach((visitorId, count) -> {
             visitorsTag.putInt(visitorId.toString(), count);
@@ -138,13 +153,21 @@ public class Town implements ITownDataProvider {
     }
     
     public static Town load(CompoundTag tag) {
+        UUID id = tag.getUUID("id");
+        String name = tag.getString("name");
         BlockPos pos = new BlockPos(
             tag.getInt("posX"),
             tag.getInt("posY"),
             tag.getInt("posZ")
         );
-        UUID id = tag.getUUID("id");
-        Town town = new Town(id, pos, tag.getString("name"));
+        
+        Town town = new Town(id, pos, name);
+        
+        // Load tourist count
+        if (tag.contains("touristCount")) {
+            town.touristCount = tag.getInt("touristCount");
+        }
+        
         if (tag.contains("visitors")) {
             CompoundTag visitorsTag = tag.getCompound("visitors");
             visitorsTag.getAllKeys().forEach(key -> {
