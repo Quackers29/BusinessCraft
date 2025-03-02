@@ -28,7 +28,6 @@ import org.apache.logging.log4j.Logger;
 public class PlatformsTab extends Tab {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ResourceLocation BUTTON_TEXTURES = new ResourceLocation(BusinessCraft.MOD_ID, "textures/gui/town_block_buttons.png");
-    private static final ResourceLocation TOGGLE_TEXTURES = new ResourceLocation(BusinessCraft.MOD_ID, "textures/gui/toggle_buttons.png");
     
     // UI constants
     private static final int PLATFORM_ENTRY_HEIGHT = 30;
@@ -329,28 +328,25 @@ public class PlatformsTab extends Tab {
             int baseX = contentLeft + 5;
             int baseY = contentTop + 40;
             
-            // Toggle button (on/off) - restyled
-            toggleButton = new ImageButton(
-                baseX + 140, baseY, 20, 20, 
-                0, platform.isEnabled() ? 0 : 20, 20, 
-                TOGGLE_TEXTURES, 64, 64, 
-                button -> onToggle()
-            );
-            toggleButton.setTooltip(Tooltip.create(
-                Component.translatable(platform.isEnabled() ? 
-                    "businesscraft.enabled" : "businesscraft.disabled")
-            ));
+            // Toggle button (on/off) - changed to standard button
+            toggleButton = Button.builder(Component.translatable(platform.isEnabled() ? 
+                    "businesscraft.enabled" : "businesscraft.disabled"), 
+                    button -> onToggle())
+                .bounds(baseX + 120, baseY, 60, 20)
+                .tooltip(Tooltip.create(Component.translatable(platform.isEnabled() ? 
+                    "businesscraft.enabled" : "businesscraft.disabled")))
+                .build();
             
             // Set path button - improved styling
             setPathButton = Button.builder(Component.translatable("businesscraft.set"), this::onSetPath)
-                .bounds(baseX + 170, baseY, 30, 20)
+                .bounds(baseX + 185, baseY, 30, 20)
                 .tooltip(Tooltip.create(Component.translatable("businesscraft.set_platform_path")))
                 .build();
             
             // Delete button - improved styling - only for last platform
             if (isLastPlatform) {
                 deleteButton = Button.builder(Component.translatable("businesscraft.del"), this::onDelete)
-                    .bounds(baseX + 210, baseY, 30, 20)
+                    .bounds(baseX + 220, baseY, 30, 20)
                     .tooltip(Tooltip.create(Component.translatable("businesscraft.delete_platform")))
                     .build();
                 
@@ -364,14 +360,14 @@ public class PlatformsTab extends Tab {
         }
         
         public void updatePosition(int x, int y) {
-            toggleButton.setX(x + 140);
+            toggleButton.setX(x + 120);
             toggleButton.setY(y);
             
-            setPathButton.setX(x + 170);
+            setPathButton.setX(x + 185);
             setPathButton.setY(y);
             
             if (isLastPlatform && deleteButton != null) {
-                deleteButton.setX(x + 210);
+                deleteButton.setX(x + 220);
                 deleteButton.setY(y);
             }
         }
@@ -383,7 +379,7 @@ public class PlatformsTab extends Tab {
             int bgColor = isHovered ? COLOR_ENTRY_BG_HOVER : COLOR_ENTRY_BG;
             
             // Draw rounded entry background
-            int entryX = toggleButton.getX() - 140; // Calculate x based on button position
+            int entryX = toggleButton.getX() - 120; // Match the toggle button offset
             int entryY = toggleButton.getY();      // Get y from button position
             int entryWidth = contentWidth - CONTENT_PADDING * 2;
             
@@ -435,7 +431,7 @@ public class PlatformsTab extends Tab {
             gui.fill(statusX + 7, statusY, statusX + 8, statusY + 8, 0xFFFFFFFF); // Right
             gui.fill(statusX, statusY + 7, statusX + 8, statusY + 8, 0xFFFFFFFF); // Bottom
             
-            // Render buttons
+            // Render buttons - the toggleButton will now show "Enabled" or "Disabled" text
             toggleButton.render(gui, mouseX, mouseY, 0);
             setPathButton.render(gui, mouseX, mouseY, 0);
             
@@ -462,25 +458,18 @@ public class PlatformsTab extends Tab {
         private void onToggle() {
             // Update UI immediately for responsiveness
             platform.setEnabled(!platform.isEnabled());
-            toggleButton.setTooltip(Tooltip.create(
-                Component.translatable(platform.isEnabled() ? 
-                    "businesscraft.enabled" : "businesscraft.disabled")
-            ));
             
             // Remove old button from screen
             screen.removePlatformButton(toggleButton);
             
-            // Update button texture (using a different approach since setTexture isn't available)
-            toggleButton = new ImageButton(
-                toggleButton.getX(), toggleButton.getY(), 20, 20,
-                0, platform.isEnabled() ? 0 : 20, 20,
-                TOGGLE_TEXTURES, 64, 64,
-                button -> onToggle()
-            );
-            toggleButton.setTooltip(Tooltip.create(
-                Component.translatable(platform.isEnabled() ? 
-                    "businesscraft.enabled" : "businesscraft.disabled")
-            ));
+            // Create new button with updated status
+            toggleButton = Button.builder(Component.translatable(platform.isEnabled() ? 
+                    "businesscraft.enabled" : "businesscraft.disabled"), 
+                    button -> onToggle())
+                .bounds(toggleButton.getX(), toggleButton.getY(), 60, 20)
+                .tooltip(Tooltip.create(Component.translatable(platform.isEnabled() ? 
+                    "businesscraft.enabled" : "businesscraft.disabled")))
+                .build();
             
             // Add new button to screen
             screen.addPlatformButton(toggleButton);
