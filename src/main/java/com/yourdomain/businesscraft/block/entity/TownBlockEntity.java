@@ -266,6 +266,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private Map<UUID, Long> extendedIndicatorPlayers = new HashMap<>();
     private static final long EXTENDED_INDICATOR_DURATION = 600; // 30 seconds in ticks
 
+    // Special UUID for "any town" destination
+    private static final UUID ANY_TOWN_DESTINATION = new UUID(0, 0);
+    private static final String ANY_TOWN_NAME = "Any Town";
+
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
         LOGGER.debug("TownBlockEntity created at position: {}", pos);
@@ -628,11 +632,20 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 if (TouristUtils.isTourist(villager)) {
                     TouristUtils.TouristInfo touristInfo = TouristUtils.extractTouristInfo(villager);
                     
-                    // Only process tourists if this is their destination town
+                    // Process tourists if:
+                    // 1. This is their specific destination town, OR
+                    // 2. They have the ANY_TOWN_DESTINATION and this isn't their origin town
                     if (touristInfo != null && 
-                        touristInfo.destinationTownId != null && 
-                        touristInfo.destinationTownId.equals(this.townId.toString()) &&
-                        !touristInfo.originTownId.equals(this.townId.toString())) {
+                        !touristInfo.originTownId.equals(this.townId.toString()) && 
+                        (
+                            // Specific destination that matches this town
+                            (touristInfo.destinationTownId != null && 
+                             touristInfo.destinationTownId.equals(this.townId.toString()))
+                            ||
+                            // "Any town" destination (UUID 0-0)
+                            (touristInfo.destinationTownId != null && 
+                             touristInfo.destinationTownId.equals(ANY_TOWN_DESTINATION.toString()))
+                        )) {
                         
                         // Add to visit buffer using UUID instead of name
                         BlockPos originPos = new BlockPos(touristInfo.originX, touristInfo.originY, touristInfo.originZ);
@@ -654,14 +667,16 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                                 originTown.removeTourist();
                                 
                                 // Record tourist removal in the allocation tracker
-                                if (touristInfo.destinationTownId != null) {
-                                    TouristAllocationTracker.recordTouristRemoval(
-                                        UUID.fromString(touristInfo.originTownId),
-                                        UUID.fromString(touristInfo.destinationTownId)
-                                    );
-                                }
+                                UUID destId = touristInfo.destinationTownId.equals(ANY_TOWN_DESTINATION.toString()) 
+                                    ? this.townId  // Use actual town ID for stats when ANY_TOWN
+                                    : UUID.fromString(touristInfo.destinationTownId);
                                 
-                                LOGGER.debug("Removed tourist from town {}, count now {}/{}",
+                                TouristAllocationTracker.recordTouristRemoval(
+                                    UUID.fromString(touristInfo.originTownId),
+                                    destId
+                                );
+                                
+                                LOGGER.debug("Removed tourist from town {}, count now {}/{}", 
                                     originTown.getName(), originTown.getTouristCount(), originTown.getMaxTourists());
                             }
                         }
@@ -1443,9 +1458,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         // Get all possible destination towns
         Map<UUID, Boolean> platformDestinations = platform.getDestinations();
         
-        // If no specific destinations are set, select from all towns except current
+        // If no specific destinations are set or all destinations are disabled,
+        // return the special ANY_TOWN_DESTINATION instead of selecting a random town
         if (platformDestinations.isEmpty() || platform.hasNoEnabledDestinations()) {
-            return selectFairTownByPopulation(serverLevel, null);
+            return ANY_TOWN_DESTINATION;
         }
         
         // Filter to only enabled destinations
@@ -1457,7 +1473,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         }
         
         if (enabledDestinations.isEmpty()) {
-            return selectFairTownByPopulation(serverLevel, null);
+            return ANY_TOWN_DESTINATION;
         }
         
         // Select a destination based on population weights and fairness
@@ -1506,9 +1522,18 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         if (level.getBlockState(pos).isAir() && level.getBlockState(pos.above()).isAir()) {
             Villager villager = EntityType.VILLAGER.create(level);
             if (villager != null) {
+                // Handle the special ANY_TOWN_DESTINATION case
+                String displayName;
+                if (destinationTownId.equals(ANY_TOWN_DESTINATION)) {
+                    displayName = "Tourist to Any Town";
+                    destinationName = ANY_TOWN_NAME;
+                } else {
+                    displayName = "Tourist to " + destinationName;
+                }
+                
                 // Spawn in center of block and make extremely slow
                 villager.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-                villager.setCustomName(Component.literal("Tourist to " + destinationName));
+                villager.setCustomName(Component.literal(displayName));
                 villager.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED)
                        .setBaseValue(0.000001);
                 
