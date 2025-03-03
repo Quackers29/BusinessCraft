@@ -27,13 +27,13 @@ X O O T
 - [x] 2.2.1. Platforms can be assigned to destination town(s) - Add UI to link each platforms to destination towns, place a (D) button to the left of the enable / disable button to open this UI
 - [x] 2.2.2. Destination town selection UI - Create list of closest towns with Toggle button (ON/OFF) to enable/disable tourist spawning, use similar scroll list UI methods we already have
 - [x] 2.2.3. Population-based tourist allocation - Higher percentage of tourists allocated to towns with higher population
-      - Implemented TouristAllocationTracker class to manage fair distribution
-      - Added proportional allocation based on town populations
-      - Fixed distribution algorithm to ensure all towns receive tourists
+      - [x] Create TouristAllocationTracker class for managing fair distribution between towns with complete tracking of allocations, fairness metrics, and target weights
+      - [x] Implement proportional allocation formula based on town populations that automatically adjusts allocation targets as town populations grow or shrink
+      - [x] Add randomization mechanism (10%) to allocation algorithm to prevent starvation and ensure all towns receive tourists even when not the absolute most under-allocated
 - [x] 2.2.4. Destination selection system - Tourists choose available destinations from allocated slots at spawn time
-      - Added special "Any Town" destination for platforms with no specific destinations
-      - Improved tourist processing to only accept tourists at their intended destination
-      - Enhanced tourist tracking for fair allocation between destinations
+      - [x] Implement special UUID-based "Any Town" destination option (UUID 0-0) for platforms with no specific destinations configured
+      - [x] Update tourist processing to only accept tourists at their intended destination town or if they have the "Any Town" flag and aren't at their origin
+      - [x] Enhance allocation tracking to maintain accurate statistics as tourists travel between towns and update allocation records during arrival/departure events
 
 ### 2.3. Visual Improvements
 - [ ] 2.3.1. Search radius indicators - Add red particles to show search area around platform lines (capsule)
