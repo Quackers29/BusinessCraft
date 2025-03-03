@@ -36,8 +36,8 @@ X O O T
       - [x] Enhance allocation tracking to maintain accurate statistics as tourists travel between towns and update allocation records during arrival/departure events
 
 ### 2.3. Visual Improvements
-- [ ] 2.3.1. Search radius indicators - Add red particles to show search area around platform lines (capsule)
-- [ ] 2.3.2. Optimized particle display - Show particles every 10 blocks around perimeter with same expiration as green particles
+- [x] 2.3.1. Search radius indicators - Add red particles (same methods as the green particles) to show search area around platform lines (capsule)
+
 
 ## 3. Tourist System Enhancements
 

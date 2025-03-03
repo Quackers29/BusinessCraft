@@ -1784,6 +1784,14 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                         0.0 // speed
                     );
                 }
+                
+                // Add red particles to show search radius
+                spawnSearchRadiusParticles(
+                    (ServerLevel)level,
+                    startPos,
+                    endPos,
+                    searchRadius
+                );
             }
         }
     }
@@ -1802,5 +1810,101 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         platformIndicatorSpawnTimes.keySet().removeIf(platformId -> 
             platforms.stream().noneMatch(p -> p.getId().equals(platformId))
         );
+    }
+
+    /**
+     * Spawns red particles to show search radius around platform line
+     * 
+     * @param level The server level
+     * @param startPos Platform start position
+     * @param endPos Platform end position
+     * @param radius Search radius
+     */
+    private void spawnSearchRadiusParticles(ServerLevel level, BlockPos startPos, BlockPos endPos, int radius) {
+        // Calculate the path between start and end
+        int startX = startPos.getX();
+        int startY = startPos.getY();
+        int startZ = startPos.getZ();
+        int endX = endPos.getX();
+        int endY = endPos.getY();
+        int endZ = endPos.getZ();
+        
+        // Calculate the bounding box the same way it's used for entity search
+        int minX = Math.min(startX, endX) - radius;
+        int minZ = Math.min(startZ, endZ) - radius;
+        int maxX = Math.max(startX, endX) + radius;
+        int maxZ = Math.max(startZ, endZ) + radius;
+        
+        // Use a fixed Y for visualization
+        double particleY = Math.min(startY, endY) + 1.0;
+        
+        // Calculate perimeter length to determine number of particles
+        int perimeterLength = 2 * (maxX - minX + maxZ - minZ);
+        int totalPoints = Math.min(200, Math.max(32, perimeterLength / 2));
+        
+        // Distribute points evenly across the 4 sides of the perimeter
+        int pointsPerSide = totalPoints / 4;
+        
+        // Generate particles along the perimeter
+        
+        // Bottom edge (minX to maxX at minZ)
+        for (int i = 0; i < pointsPerSide; i++) {
+            double t = (double) i / (pointsPerSide - 1);
+            double x = minX + t * (maxX - minX);
+            level.sendParticles(
+                ParticleTypes.FLAME,
+                x,
+                particleY,
+                minZ,
+                1,
+                0.0, 0.0, 0.0,
+                0.0
+            );
+        }
+        
+        // Right edge (maxX, minZ to maxZ)
+        for (int i = 0; i < pointsPerSide; i++) {
+            double t = (double) i / (pointsPerSide - 1);
+            double z = minZ + t * (maxZ - minZ);
+            level.sendParticles(
+                ParticleTypes.FLAME,
+                maxX,
+                particleY,
+                z,
+                1,
+                0.0, 0.0, 0.0,
+                0.0
+            );
+        }
+        
+        // Top edge (maxX to minX at maxZ)
+        for (int i = 0; i < pointsPerSide; i++) {
+            double t = (double) i / (pointsPerSide - 1);
+            double x = maxX - t * (maxX - minX);
+            level.sendParticles(
+                ParticleTypes.FLAME,
+                x,
+                particleY,
+                maxZ,
+                1,
+                0.0, 0.0, 0.0,
+                0.0
+            );
+        }
+        
+        // Left edge (minX, maxZ to minZ)
+        for (int i = 0; i < pointsPerSide; i++) {
+            double t = (double) i / (pointsPerSide - 1);
+            double z = maxZ - t * (maxZ - minZ);
+            level.sendParticles(
+                ParticleTypes.FLAME,
+                minX,
+                particleY,
+                z,
+                1,
+                0.0, 0.0, 0.0,
+                0.0
+            );
+        }
     }
 }
