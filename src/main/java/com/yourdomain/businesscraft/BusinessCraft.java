@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.service.TouristVehicleManager;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.event.level.LevelEvent;
+import com.yourdomain.businesscraft.entity.ModEntityTypes;
 
 @Mod(BusinessCraft.MOD_ID)
 public class BusinessCraft {
@@ -57,6 +58,7 @@ public class BusinessCraft {
         // Register other mod components
         ModBlockEntities.BLOCK_ENTITIES.register(modEventBus);
         ModMenuTypes.MENUS.register(modEventBus);
+        ModEntityTypes.ENTITY_TYPES.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
 

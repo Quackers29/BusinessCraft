@@ -90,6 +90,9 @@ import net.minecraftforge.registries.ForgeRegistries;
 import com.yourdomain.businesscraft.town.utils.TouristUtils;
 import com.yourdomain.businesscraft.town.utils.TouristUtils.TouristInfo;
 import com.yourdomain.businesscraft.town.utils.TouristAllocationTracker;
+import com.yourdomain.businesscraft.entity.TouristEntity;
+import com.yourdomain.businesscraft.entity.ModEntityTypes;
+import com.yourdomain.businesscraft.town.utils.TownNotificationUtils;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -683,6 +686,16 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
                         villager.remove(Entity.RemovalReason.DISCARDED);
                         setChanged();
+
+                        // If notification config is enabled, notify nearby players of the arrival
+                        if (level instanceof ServerLevel serverLevel && ConfigLoader.notifyOnTouristDeparture) {
+                            TownNotificationUtils.notifyTouristArrival(
+                                serverLevel,
+                                worldPosition,
+                                touristInfo.originTownName,
+                                name
+                            );
+                        }
                     }
                 }
             }
@@ -1520,74 +1533,36 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
      */
     private void spawnTourist(Level level, BlockPos pos, Town originTown, Platform platform, UUID destinationTownId, String destinationName) {
         if (level.getBlockState(pos).isAir() && level.getBlockState(pos.above()).isAir()) {
-            Villager villager = EntityType.VILLAGER.create(level);
-            if (villager != null) {
-                // Handle the special ANY_TOWN_DESTINATION case
-                String displayName;
-                if (destinationTownId.equals(ANY_TOWN_DESTINATION)) {
-                    displayName = "Tourist to Any Town";
-                    destinationName = ANY_TOWN_NAME;
-                } else {
-                    displayName = "Tourist to " + destinationName;
-                }
-                
-                // Spawn in center of block and make extremely slow
-                villager.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-                villager.setCustomName(Component.literal(displayName));
-                villager.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED)
-                       .setBaseValue(0.000001);
-                
-                // Set random profession and level 6
-                VillagerProfession[] professions = {
-                    VillagerProfession.ARMORER,
-                    VillagerProfession.BUTCHER,
-                    VillagerProfession.CARTOGRAPHER,
-                    VillagerProfession.CLERIC,
-                    VillagerProfession.FARMER,
-                    VillagerProfession.FISHERMAN,
-                    VillagerProfession.FLETCHER,
-                    VillagerProfession.LEATHERWORKER,
-                    VillagerProfession.LIBRARIAN,
-                    VillagerProfession.MASON,
-                    VillagerProfession.SHEPHERD,
-                    VillagerProfession.TOOLSMITH,
-                    VillagerProfession.WEAPONSMITH
-                };
-                VillagerProfession randomProfession = professions[random.nextInt(professions.length)];
-                villager.setVillagerData(villager.getVillagerData()
-                    .setProfession(randomProfession)
-                    .setLevel(6));
-                
-                // Add standard tourist tags using the utility class
-                TouristUtils.addStandardTouristTags(
-                    villager, 
-                    originTown, 
-                    platform, 
-                    destinationTownId.toString(), 
-                    destinationName
-                );
-                
-                // Add additional data to persistent NBT
-                CompoundTag persistentData = villager.getPersistentData();
-                persistentData.putBoolean("IsTourist", true);
-                persistentData.putString("OriginTown", originTown.getName());
-                persistentData.putUUID("OriginTownId", originTown.getId());
-                persistentData.putString("DestinationTown", destinationName);
-                persistentData.putUUID("DestinationTownId", destinationTownId);
-                
-                // Spawn the entity into the world
-                level.addFreshEntity(villager);
-                
-                // Update the town's tourist count
-                originTown.addTourist();
-                
-                // Record this spawn in the allocation tracker
-                com.yourdomain.businesscraft.town.utils.TouristAllocationTracker.recordTouristSpawn(
-                    originTown.getId(), destinationTownId);
-                
-                // Notify success with logging
-                LOGGER.debug("Spawned tourist at {} for town {} heading to {} ({}/{})",
-                    pos, originTown.getName(), destinationName, originTown.getTouristCount(), originTown.getMaxTourists());
+            // Create our custom TouristEntity instead of a regular Villager
+            TouristEntity tourist = new TouristEntity(
+                ModEntityTypes.TOURIST.get(),
+                level,
+                originTown,
+                platform,
+                destinationTownId,
+                destinationName
+            );
+            
+            // Position the tourist
+            tourist.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+            
+            // Set expiry time based on config (convert minutes to ticks)
+            int expiryTicks = ConfigLoader.touristExpiryMinutes * 60 * 20;
+            tourist.setExpiryTicks(expiryTicks);
+            
+            // Spawn the entity into the world
+            level.addFreshEntity(tourist);
+            
+            // Log the tourist spawn
+            LOGGER.debug("Spawned tourist at {} from {} to {}", pos, originTown.getName(), destinationName);
+            
+            // Update town stats
+            originTown.addTourist();
+            
+            // Decrement bread for population (same as before)
+            int breadNeeded = CONFIG.breadPerPop;
+            if (breadNeeded > 0) {
+                originTown.addResource(Items.BREAD, -breadNeeded);
             }
         }
     }
