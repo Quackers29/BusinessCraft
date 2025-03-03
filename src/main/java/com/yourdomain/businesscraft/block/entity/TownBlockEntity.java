@@ -628,7 +628,12 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 if (TouristUtils.isTourist(villager)) {
                     TouristUtils.TouristInfo touristInfo = TouristUtils.extractTouristInfo(villager);
                     
-                    if (touristInfo != null && !touristInfo.originTownId.equals(this.townId.toString())) {
+                    // Only process tourists if this is their destination town
+                    if (touristInfo != null && 
+                        touristInfo.destinationTownId != null && 
+                        touristInfo.destinationTownId.equals(this.townId.toString()) &&
+                        !touristInfo.originTownId.equals(this.townId.toString())) {
+                        
                         // Add to visit buffer using UUID instead of name
                         BlockPos originPos = new BlockPos(touristInfo.originX, touristInfo.originY, touristInfo.originZ);
                         visitBuffer.addVisitor(UUID.fromString(touristInfo.originTownId), originPos);
