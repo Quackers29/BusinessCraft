@@ -21,6 +21,7 @@
   "businesscraft.disabled": "Disabled",
   "businesscraft.set": "Set",
   "businesscraft.del": "Del",
+  "businesscraft.dest": "Dest",
   "businesscraft.set_platform_path": "Set Platform Path",
   "businesscraft.delete_platform": "Delete Platform",
   "businesscraft.platform_path_instructions": "Click on a block to set the platform start point",
@@ -30,5 +31,16 @@
   "businesscraft.platform_complete": "Complete",
   "businesscraft.platform_incomplete": "Incomplete",
   "businesscraft.return_to_settings": "Return to Settings",
-  "businesscraft.platform_number": "Platform %s"
+  "businesscraft.platform_number": "Platform %s",
+  "businesscraft.platform_destinations": "Platform Destinations",
+  "businesscraft.dest_any": "Destination: Any Town",
+  "businesscraft.dest_selected": "Destination: Selected Towns",
+  "businesscraft.status_active": "Active",
+  "businesscraft.status_inactive": "Inactive",
+  "screen.businesscraft.destinations": "Select Destinations",
+  "businesscraft.platform_subtitle": "Platform: %s",
+  "businesscraft.no_destinations": "No other towns available as destinations",
+  "businesscraft.default_destination_info": "If no destinations are enabled, tourists will go to any town",
+  "businesscraft.scroll_up": "Up",
+  "businesscraft.scroll_down": "Down"
 }

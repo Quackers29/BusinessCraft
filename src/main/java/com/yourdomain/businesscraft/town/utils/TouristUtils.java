@@ -19,6 +19,8 @@ public class TouristUtils {
     public static final String TAG_FROM_NAME_PREFIX = "from_name_";
     public static final String TAG_POS_PREFIX = "pos_";
     public static final String TAG_PLATFORM_PREFIX = "platform_";
+    public static final String TAG_DEST_TOWN_PREFIX = "dest_town_";
+    public static final String TAG_DEST_NAME_PREFIX = "dest_name_";
 
     /**
      * Adds standard tourist tags to a villager entity
@@ -28,6 +30,20 @@ public class TouristUtils {
      * @param platform The platform the tourist is spawned from
      */
     public static void addStandardTouristTags(Villager villager, Town town, Platform platform) {
+        addStandardTouristTags(villager, town, platform, null, null);
+    }
+    
+    /**
+     * Adds standard tourist tags to a villager entity with destination information
+     * 
+     * @param villager The villager entity to tag
+     * @param town The origin town
+     * @param platform The platform the tourist is spawned from
+     * @param destinationTownId The destination town ID
+     * @param destinationName The destination town name
+     */
+    public static void addStandardTouristTags(Villager villager, Town town, Platform platform, 
+                                             String destinationTownId, String destinationName) {
         if (villager == null || town == null) {
             LOGGER.error("Cannot add tourist tags: villager or town is null");
             return;
@@ -48,6 +64,15 @@ public class TouristUtils {
         // Add platform tag if available
         if (platform != null) {
             villager.addTag(TAG_PLATFORM_PREFIX + platform.getId());
+        }
+        
+        // Add destination tags if available
+        if (destinationTownId != null) {
+            villager.addTag(TAG_DEST_TOWN_PREFIX + destinationTownId);
+        }
+        
+        if (destinationName != null) {
+            villager.addTag(TAG_DEST_NAME_PREFIX + destinationName);
         }
         
         LOGGER.debug("Added tourist tags to villager: {}", villager.getTags());
@@ -103,6 +128,10 @@ public class TouristUtils {
                 info.originTownName = tag.substring(TAG_FROM_NAME_PREFIX.length());
             } else if (tag.startsWith(TAG_PLATFORM_PREFIX)) {
                 info.platformId = tag.substring(TAG_PLATFORM_PREFIX.length());
+            } else if (tag.startsWith(TAG_DEST_TOWN_PREFIX)) {
+                info.destinationTownId = tag.substring(TAG_DEST_TOWN_PREFIX.length());
+            } else if (tag.startsWith(TAG_DEST_NAME_PREFIX)) {
+                info.destinationTownName = tag.substring(TAG_DEST_NAME_PREFIX.length());
             } else if (tag.startsWith(TAG_POS_PREFIX)) {
                 try {
                     String[] parts = tag.substring(TAG_POS_PREFIX.length()).split("_");
@@ -127,6 +156,8 @@ public class TouristUtils {
         public String originTownId;
         public String originTownName;
         public String platformId;
+        public String destinationTownId;
+        public String destinationTownName;
         public int originX;
         public int originY;
         public int originZ;

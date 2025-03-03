@@ -100,6 +100,25 @@ public class ModMessages {
                 .consumerMainThread(RefreshPlatformsPacket::handle)
                 .add();
                 
+        // Register platform destination packets
+        net.messageBuilder(OpenDestinationsUIPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(OpenDestinationsUIPacket::new)
+                .encoder(OpenDestinationsUIPacket::encode)
+                .consumerMainThread(OpenDestinationsUIPacket::handle)
+                .add();
+                
+        net.messageBuilder(SetPlatformDestinationPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(SetPlatformDestinationPacket::new)
+                .encoder(SetPlatformDestinationPacket::encode)
+                .consumerMainThread(SetPlatformDestinationPacket::handle)
+                .add();
+                
+        net.messageBuilder(RefreshDestinationsPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(RefreshDestinationsPacket::new)
+                .encoder(RefreshDestinationsPacket::encode)
+                .consumerMainThread(RefreshDestinationsPacket::handle)
+                .add();
+
         // Register player exit UI packet
         net.messageBuilder(PlayerExitUIPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PlayerExitUIPacket::decode)
