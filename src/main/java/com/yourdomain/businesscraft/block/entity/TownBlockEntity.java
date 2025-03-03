@@ -89,6 +89,7 @@ import com.yourdomain.businesscraft.platform.Platform;
 import net.minecraftforge.registries.ForgeRegistries;
 import com.yourdomain.businesscraft.town.utils.TouristUtils;
 import com.yourdomain.businesscraft.town.utils.TouristUtils.TouristInfo;
+import com.yourdomain.businesscraft.town.utils.TouristAllocationTracker;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -646,6 +647,15 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                             Town originTown = TownManager.get(serverLevel).getTown(UUID.fromString(touristInfo.originTownId));
                             if (originTown != null) {
                                 originTown.removeTourist();
+                                
+                                // Record tourist removal in the allocation tracker
+                                if (touristInfo.destinationTownId != null) {
+                                    TouristAllocationTracker.recordTouristRemoval(
+                                        UUID.fromString(touristInfo.originTownId),
+                                        UUID.fromString(touristInfo.destinationTownId)
+                                    );
+                                }
+                                
                                 LOGGER.debug("Removed tourist from town {}, count now {}/{}",
                                     originTown.getName(), originTown.getTouristCount(), originTown.getMaxTourists());
                             }
@@ -1045,6 +1055,29 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         
         setChanged();
     }
+    
+    /**
+     * Gets all towns available as destinations
+     * 
+     * @param serverLevel The server level
+     * @return Map of town IDs to town names
+     */
+    public Map<UUID, String> getAllTownsForDestination(ServerLevel serverLevel) {
+        Map<UUID, String> result = new HashMap<>();
+        
+        // Get all towns from the town manager
+        TownManager townManager = TownManager.get(serverLevel);
+        Map<UUID, Town> allTowns = townManager.getAllTowns();
+        
+        // Filter out the current town
+        allTowns.forEach((id, town) -> {
+            if (!id.equals(townId)) {
+                result.put(id, town.getName());
+            }
+        });
+        
+        return result;
+    }
 
     /**
      * Gets the town data provider, initializing it if needed
@@ -1316,7 +1349,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     /**
-     * Try to spawn a tourist on the specified platform
+     * Spawns a tourist villager on a platform
      */
     private void spawnTouristOnPlatform(Level level, Town town, Platform platform) {
         // Skip if town can't support more tourists
@@ -1345,6 +1378,13 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         
         // Use configurable max tourists per platform
         if (existingTourists.size() < ConfigLoader.maxTouristsPerTown) {
+            // Select a destination for the tourist
+            UUID destinationTownId = selectTouristDestination(level, platform);
+            if (destinationTownId == null) {
+                LOGGER.debug("No valid destination found for tourist from platform at {}", platform.getStartPos());
+                return;
+            }
+            
             // Try up to 3 times to find a valid spawn location
             for (int attempt = 0; attempt < 3; attempt++) {
                 // Calculate a random position along the path
@@ -1360,60 +1400,164 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 // Check if the position is already occupied
                 boolean isOccupied = existingTourists.stream()
                     .anyMatch(v -> {
-                        BlockPos vPos = v.blockPosition();
-                        return vPos.getX() == spawnPos.getX() && 
-                               vPos.getZ() == spawnPos.getZ();
+                        BlockPos villagerPos = v.blockPosition();
+                        return Math.abs(villagerPos.getX() - spawnPos.getX()) < 1 && 
+                               Math.abs(villagerPos.getZ() - spawnPos.getZ()) < 1;
                     });
                 
-                if (!isOccupied && 
-                    level.getBlockState(spawnPos).isAir() && 
-                    level.getBlockState(spawnPos.above()).isAir()) {
-                    
-                    Villager villager = EntityType.VILLAGER.create(level);
-                    if (villager != null) {
-                        // Spawn in center of block and make extremely slow
-                        villager.setPos(x + 0.5, y, z + 0.5);
-                        villager.setCustomName(Component.literal(town.getName()));
-                        villager.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED)
-                               .setBaseValue(0.000001);
-                        
-                        // Set random profession and level 6
-                        VillagerProfession[] professions = {
-                            VillagerProfession.ARMORER,
-                            VillagerProfession.BUTCHER,
-                            VillagerProfession.CARTOGRAPHER,
-                            VillagerProfession.CLERIC,
-                            VillagerProfession.FARMER,
-                            VillagerProfession.FISHERMAN,
-                            VillagerProfession.FLETCHER,
-                            VillagerProfession.LEATHERWORKER,
-                            VillagerProfession.LIBRARIAN,
-                            VillagerProfession.MASON,
-                            VillagerProfession.SHEPHERD,
-                            VillagerProfession.TOOLSMITH,
-                            VillagerProfession.WEAPONSMITH
-                        };
-                        VillagerProfession randomProfession = professions[random.nextInt(professions.length)];
-                        villager.setVillagerData(villager.getVillagerData()
-                            .setProfession(randomProfession)
-                            .setLevel(6));
-                        
-                        // Add standard tourist tags using the utility class
-                        TouristUtils.addStandardTouristTags(villager, town, platform);
-                        
-                        // Spawn the entity into the world
-                        level.addFreshEntity(villager);
-                        
-                        // Update the town's tourist count
-                        town.addTourist();
-                        
-                        // Notify success with logging
-                        LOGGER.debug("Spawned tourist at {} for town {} ({}/{})",
-                            villager.blockPosition(), town.getName(), town.getTouristCount(), town.getMaxTourists());
-                        
-                        break; // Success, stop trying
+                if (!isOccupied) {
+                    // Get destination town name for the tourist tag
+                    String destinationName = "Destination N/A";
+                    if (level instanceof ServerLevel serverLevel) {
+                        Town destTown = TownManager.get(serverLevel).getTown(destinationTownId);
+                        if (destTown != null) {
+                            destinationName = destTown.getName();
+                        }
                     }
+                    
+                    // Spawn the tourist
+                    spawnTourist(level, spawnPos, town, platform, destinationTownId, destinationName);
+                    break;
                 }
+            }
+        }
+    }
+    
+    /**
+     * Selects a destination town for a tourist based on platform configuration and town population
+     * 
+     * @param level The level
+     * @param platform The platform the tourist is spawning from
+     * @return The selected destination town ID, or null if no valid destination found
+     */
+    private UUID selectTouristDestination(Level level, Platform platform) {
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return null;
+        }
+        
+        // Get all possible destination towns
+        Map<UUID, Boolean> platformDestinations = platform.getDestinations();
+        
+        // If no specific destinations are set, select from all towns except current
+        if (platformDestinations.isEmpty() || platform.hasNoEnabledDestinations()) {
+            return selectFairTownByPopulation(serverLevel, null);
+        }
+        
+        // Filter to only enabled destinations
+        List<UUID> enabledDestinations = new ArrayList<>();
+        for (Map.Entry<UUID, Boolean> entry : platformDestinations.entrySet()) {
+            if (entry.getValue()) {
+                enabledDestinations.add(entry.getKey());
+            }
+        }
+        
+        if (enabledDestinations.isEmpty()) {
+            return selectFairTownByPopulation(serverLevel, null);
+        }
+        
+        // Select a destination based on population weights and fairness
+        return selectFairTownByPopulation(serverLevel, enabledDestinations);
+    }
+    
+    /**
+     * Selects a town based on population and fair allocation
+     * 
+     * @param serverLevel The server level
+     * @param allowedTowns List of allowed town IDs, or null for all towns except current
+     * @return The selected town ID, or null if no valid towns found
+     */
+    private UUID selectFairTownByPopulation(ServerLevel serverLevel, List<UUID> allowedTowns) {
+        TownManager townManager = TownManager.get(serverLevel);
+        Map<UUID, Town> allTowns = townManager.getAllTowns();
+        
+        // Remove current town from options
+        Map<UUID, Town> possibleTowns = new HashMap<>(allTowns);
+        possibleTowns.remove(this.townId);
+        
+        // Filter to only allowed towns if specified
+        if (allowedTowns != null) {
+            possibleTowns.keySet().retainAll(allowedTowns);
+        }
+        
+        if (possibleTowns.isEmpty()) {
+            return null;
+        }
+        
+        // Create a map of town ID to population for the tracker
+        Map<UUID, Integer> populationMap = new HashMap<>();
+        for (Map.Entry<UUID, Town> entry : possibleTowns.entrySet()) {
+            populationMap.put(entry.getKey(), entry.getValue().getPopulation());
+        }
+        
+        // Use our new allocation tracker to select a fair destination
+        return com.yourdomain.businesscraft.town.utils.TouristAllocationTracker.selectFairDestination(
+            this.townId, populationMap);
+    }
+    
+    /**
+     * Spawns a tourist villager at the specified location
+     */
+    private void spawnTourist(Level level, BlockPos pos, Town originTown, Platform platform, UUID destinationTownId, String destinationName) {
+        if (level.getBlockState(pos).isAir() && level.getBlockState(pos.above()).isAir()) {
+            Villager villager = EntityType.VILLAGER.create(level);
+            if (villager != null) {
+                // Spawn in center of block and make extremely slow
+                villager.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+                villager.setCustomName(Component.literal("Tourist to " + destinationName));
+                villager.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED)
+                       .setBaseValue(0.000001);
+                
+                // Set random profession and level 6
+                VillagerProfession[] professions = {
+                    VillagerProfession.ARMORER,
+                    VillagerProfession.BUTCHER,
+                    VillagerProfession.CARTOGRAPHER,
+                    VillagerProfession.CLERIC,
+                    VillagerProfession.FARMER,
+                    VillagerProfession.FISHERMAN,
+                    VillagerProfession.FLETCHER,
+                    VillagerProfession.LEATHERWORKER,
+                    VillagerProfession.LIBRARIAN,
+                    VillagerProfession.MASON,
+                    VillagerProfession.SHEPHERD,
+                    VillagerProfession.TOOLSMITH,
+                    VillagerProfession.WEAPONSMITH
+                };
+                VillagerProfession randomProfession = professions[random.nextInt(professions.length)];
+                villager.setVillagerData(villager.getVillagerData()
+                    .setProfession(randomProfession)
+                    .setLevel(6));
+                
+                // Add standard tourist tags using the utility class
+                TouristUtils.addStandardTouristTags(
+                    villager, 
+                    originTown, 
+                    platform, 
+                    destinationTownId.toString(), 
+                    destinationName
+                );
+                
+                // Add additional data to persistent NBT
+                CompoundTag persistentData = villager.getPersistentData();
+                persistentData.putBoolean("IsTourist", true);
+                persistentData.putString("OriginTown", originTown.getName());
+                persistentData.putUUID("OriginTownId", originTown.getId());
+                persistentData.putString("DestinationTown", destinationName);
+                persistentData.putUUID("DestinationTownId", destinationTownId);
+                
+                // Spawn the entity into the world
+                level.addFreshEntity(villager);
+                
+                // Update the town's tourist count
+                originTown.addTourist();
+                
+                // Record this spawn in the allocation tracker
+                com.yourdomain.businesscraft.town.utils.TouristAllocationTracker.recordTouristSpawn(
+                    originTown.getId(), destinationTownId);
+                
+                // Notify success with logging
+                LOGGER.debug("Spawned tourist at {} for town {} heading to {} ({}/{})",
+                    pos, originTown.getName(), destinationName, originTown.getTouristCount(), originTown.getMaxTourists());
             }
         }
     }

@@ -1,8 +1,11 @@
 package com.yourdomain.businesscraft.platform;
 
 import java.util.UUID;
+import java.util.Map;
+import java.util.HashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 
 /**
  * Represents a tourist platform in a town
@@ -13,6 +16,9 @@ public class Platform {
     private BlockPos startPos;
     private BlockPos endPos;
     private UUID id;
+    
+    // Store destination towns and their enabled state
+    private Map<UUID, Boolean> destinations = new HashMap<>();
     
     /**
      * Creates a new platform with default values
@@ -66,6 +72,17 @@ public class Platform {
             platform.endPos = new BlockPos(x, y, z);
         }
         
+        // Load destinations
+        if (tag.contains("destinations")) {
+            ListTag destinationsTag = tag.getList("destinations", 10); // 10 is the type ID for CompoundTag
+            for (int i = 0; i < destinationsTag.size(); i++) {
+                CompoundTag destTag = destinationsTag.getCompound(i);
+                UUID townId = destTag.getUUID("townId");
+                boolean enabled = destTag.getBoolean("enabled");
+                platform.destinations.put(townId, enabled);
+            }
+        }
+        
         return platform;
     }
     
@@ -95,6 +112,18 @@ public class Platform {
             tag.put("endPos", endPosTag);
         }
         
+        // Save destinations
+        ListTag destinationsTag = new ListTag();
+        for (Map.Entry<UUID, Boolean> entry : destinations.entrySet()) {
+            CompoundTag destTag = new CompoundTag();
+            destTag.putUUID("townId", entry.getKey());
+            destTag.putBoolean("enabled", entry.getValue());
+            destinationsTag.add(destTag);
+        }
+        if (!destinations.isEmpty()) {
+            tag.put("destinations", destinationsTag);
+        }
+        
         return tag;
     }
     
@@ -103,6 +132,57 @@ public class Platform {
      */
     public boolean isComplete() {
         return startPos != null && endPos != null;
+    }
+    
+    /**
+     * Gets all destination towns for this platform
+     * @return Map of town IDs to their enabled state
+     */
+    public Map<UUID, Boolean> getDestinations() {
+        return destinations;
+    }
+    
+    /**
+     * Sets the enabled state for a destination town
+     * @param townId The town ID
+     * @param enabled Whether tourists can go to this town
+     */
+    public void setDestinationEnabled(UUID townId, boolean enabled) {
+        destinations.put(townId, enabled);
+    }
+    
+    /**
+     * Removes a destination town
+     * @param townId The town ID to remove
+     */
+    public void removeDestination(UUID townId) {
+        destinations.remove(townId);
+    }
+    
+    /**
+     * Checks if a specific town is an enabled destination
+     * @param townId The town ID to check
+     * @return true if the town is an enabled destination, false otherwise
+     */
+    public boolean isDestinationEnabled(UUID townId) {
+        return destinations.getOrDefault(townId, false);
+    }
+    
+    /**
+     * Checks if any destinations are set for this platform
+     * @return true if there are no destinations or all are disabled, false otherwise
+     */
+    public boolean hasNoEnabledDestinations() {
+        if (destinations.isEmpty()) {
+            return true;
+        }
+        
+        for (boolean enabled : destinations.values()) {
+            if (enabled) {
+                return false;
+            }
+        }
+        return true;
     }
     
     // Getters and Setters
