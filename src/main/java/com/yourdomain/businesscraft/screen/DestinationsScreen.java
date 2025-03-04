@@ -259,6 +259,11 @@ public class DestinationsScreen extends Screen {
         return super.mouseClicked(mouseX, mouseY, button);
     }
     
+    @Override
+    public boolean isPauseScreen() {
+        return false; // Return false to prevent the game from pausing
+    }
+    
     private class DestinationEntry {
         private final UUID townId;
         private final String townName;
