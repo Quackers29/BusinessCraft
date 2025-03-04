@@ -405,7 +405,6 @@ public class Town implements ITownDataProvider {
                     net.minecraft.server.level.ServerLevel serverLevel = (net.minecraft.server.level.ServerLevel) level;
                     TownManager manager = TownManager.get(serverLevel);
                     if (manager.getTown(id) == this) {
-                        LOGGER.debug("Marking town {} as dirty", id);
                         manager.markDirty();
                     }
                 }

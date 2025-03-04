@@ -1154,11 +1154,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         if (currentTime - lastMarkDirtyTime > MARK_DIRTY_COOLDOWN_MS) {
             provider.markDirty();
             lastMarkDirtyTime = currentTime;
-            
-            // Only log at debug level when actually marking dirty
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Marking town data as dirty after cooldown period");
-            }
         }
     }
 
