@@ -22,7 +22,7 @@ public class TownNotificationUtils {
     private static final int NOTIFICATION_RANGE = 64; // Range in blocks for player notifications
     
     /**
-     * Sends a notification to the origin town when a tourist departs (quits or dies)
+     * Handles both the town management and notification for a tourist departure
      */
     public static void notifyTouristDeparture(ServerLevel level, UUID originTownId, String originTownName, 
                                              String destinationName, boolean died, BlockPos lastPosition) {
@@ -31,25 +31,52 @@ public class TownNotificationUtils {
             return;
         }
         
-        // Format message based on whether the tourist died or timed out
-        String actionText = died ? "died" : "quit";
-        Component message = Component.literal("A tourist heading to " + destinationName + " has " + actionText + "!")
-            .withStyle(ChatFormatting.GOLD);
+        // Update the town's tourist count
+        Town town = removeTouristFromOrigin(level, originTownId);
+        if (town == null) return;
+        
+        // Display notification to nearby players
+        displayTouristDepartureNotification(level, town, originTownName, destinationName, died, lastPosition);
+    }
+    
+    /**
+     * Updates the origin town's tourist count without displaying notifications
+     * Returns the town object if successful, null otherwise
+     */
+    public static Town removeTouristFromOrigin(ServerLevel level, UUID originTownId) {
+        if (originTownId == null) {
+            LOGGER.warn("Cannot update tourist count: origin town ID is null");
+            return null;
+        }
         
         // Get town from manager
         Town town = TownManager.get(level).getTown(originTownId);
         if (town == null) {
-            LOGGER.warn("Cannot notify tourist departure: town not found for ID {}", originTownId);
-            return;
+            LOGGER.warn("Cannot update tourist count: town not found for ID {}", originTownId);
+            return null;
         }
         
         // Decrement the tourist count in the origin town
         town.removeTourist();
         
+        return town;
+    }
+    
+    /**
+     * Displays notification to nearby players about a tourist departure
+     * Does not update the town's tourist count
+     */
+    public static void displayTouristDepartureNotification(ServerLevel level, Town town, String originTownName, 
+                                                          String destinationName, boolean died, BlockPos lastPosition) {
+        // Format message based on whether the tourist died or timed out
+        String actionText = died ? "died" : "quit";
+        Component message = Component.literal("A tourist heading to " + destinationName + " has " + actionText + "!")
+            .withStyle(ChatFormatting.GOLD);
+        
         // Get town block position
         BlockPos townPos = town.getPosition();
         if (townPos == null) {
-            LOGGER.warn("Cannot notify tourist departure: town position is null for {}", originTownName);
+            LOGGER.warn("Cannot display tourist departure notification: town position is null for {}", originTownName);
             return;
         }
         

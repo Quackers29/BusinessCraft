@@ -53,9 +53,19 @@ public class TouristEntity extends Villager {
     private String destinationTownName;
     private long spawnTime;
     
+    // Track initial spawn position to determine if tourist has moved
+    private double spawnPosX;
+    private double spawnPosY;
+    private double spawnPosZ;
+    private boolean hasMoved = false;
+    private static final double MOVEMENT_THRESHOLD = 2.0; // Consider moved if more than 2 blocks away from spawn
+
     public TouristEntity(EntityType<? extends Villager> entityType, Level level) {
         super(entityType, level);
         this.spawnTime = level.getGameTime();
+        
+        // Default constructor - position will be set properly by setPos later
+        // We'll update spawnPosX, spawnPosY, spawnPosZ when setPos is called the first time
         
         // Reduce speed significantly to make tourists very slow
         this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.000001);
@@ -115,6 +125,19 @@ public class TouristEntity extends Villager {
     public void tick() {
         super.tick();
         
+        // Check if the tourist has moved from spawn position
+        if (!hasMoved && !this.level().isClientSide) {
+            double dx = this.getX() - this.spawnPosX;
+            double dy = this.getY() - this.spawnPosY;
+            double dz = this.getZ() - this.spawnPosZ;
+            double distanceSquared = dx * dx + dy * dy + dz * dz;
+            
+            if (distanceSquared > MOVEMENT_THRESHOLD * MOVEMENT_THRESHOLD) {
+                hasMoved = true;
+                LOGGER.debug("Tourist has moved from spawn position, distance: {}", Math.sqrt(distanceSquared));
+            }
+        }
+        
         // Handle expiry
         if (!this.level().isClientSide && ConfigLoader.enableTouristExpiry) {
             expiryTicks--;
@@ -134,32 +157,47 @@ public class TouristEntity extends Villager {
     }
     
     private void notifyOriginTownOfQuitting() {
-        if (this.level() instanceof ServerLevel serverLevel && originTownId != null && ConfigLoader.notifyOnTouristDeparture) {
-            // Use the notification utility to send a message to the origin town
-            TownNotificationUtils.notifyTouristDeparture(
-                serverLevel,
-                originTownId,
-                originTownName,
-                destinationTownName != null ? destinationTownName : "unknown destination",
-                false, // Not died, just quitting due to expiry
-                this.blockPosition()
-            );
+        if (this.level() instanceof ServerLevel serverLevel && originTownId != null) {
+            // Always update the origin town's tourist count to ensure proper replenishment
+            Town originTown = TownNotificationUtils.removeTouristFromOrigin(serverLevel, originTownId);
+            
+            // Only send visual notifications if tourist has moved from spawn or notification is disabled
+            if (hasMoved && ConfigLoader.notifyOnTouristDeparture && originTown != null) {
+                // Display notification only if the tourist has moved from spawn position
+                TownNotificationUtils.displayTouristDepartureNotification(
+                    serverLevel,
+                    originTown,
+                    originTownName,
+                    destinationTownName != null ? destinationTownName : "unknown destination",
+                    false, // Not died, just quitting due to expiry
+                    this.blockPosition()
+                );
+            } else {
+                LOGGER.debug("Tourist quit without moving from spawn position, skipping visual notification");
+            }
         }
     }
     
     @Override
     public void die(net.minecraft.world.damagesource.DamageSource cause) {
-        // Notify the origin town before dying if configured
-        if (!this.level().isClientSide && originTownId != null && ConfigLoader.notifyOnTouristDeparture) {
+        // Notify the origin town before dying
+        if (!this.level().isClientSide && originTownId != null) {
             if (this.level() instanceof ServerLevel serverLevel) {
-                TownNotificationUtils.notifyTouristDeparture(
-                    serverLevel,
-                    originTownId,
-                    originTownName,
-                    destinationTownName != null ? destinationTownName : "unknown destination",
-                    true, // Died
-                    this.blockPosition()
-                );
+                // Always update the origin town's tourist count
+                Town originTown = TownNotificationUtils.removeTouristFromOrigin(serverLevel, originTownId);
+                
+                // Always show visual notification for deaths regardless of movement
+                if (ConfigLoader.notifyOnTouristDeparture && originTown != null) {
+                    TownNotificationUtils.displayTouristDepartureNotification(
+                        serverLevel,
+                        originTown,
+                        originTownName,
+                        destinationTownName != null ? destinationTownName : "unknown destination",
+                        true, // Died
+                        this.blockPosition()
+                    );
+                }
+                
                 // Mark as notified to prevent double-counting
                 hasNotifiedOriginTown = true;
             }
@@ -225,6 +263,10 @@ public class TouristEntity extends Villager {
         tag.putBoolean("HasNotifiedOrigin", hasNotifiedOriginTown);
         tag.putLong("SpawnTime", spawnTime);
         tag.putBoolean("HasReceivedRideExtension", hasReceivedRideExtension);
+        tag.putDouble("SpawnPosX", spawnPosX);
+        tag.putDouble("SpawnPosY", spawnPosY);
+        tag.putDouble("SpawnPosZ", spawnPosZ);
+        tag.putBoolean("HasMoved", hasMoved);
         
         if (originTownId != null) {
             tag.putUUID("OriginTownId", originTownId);
@@ -255,6 +297,18 @@ public class TouristEntity extends Villager {
         }
         if (tag.contains("HasReceivedRideExtension")) {
             hasReceivedRideExtension = tag.getBoolean("HasReceivedRideExtension");
+        }
+        if (tag.contains("SpawnPosX")) {
+            spawnPosX = tag.getDouble("SpawnPosX");
+        }
+        if (tag.contains("SpawnPosY")) {
+            spawnPosY = tag.getDouble("SpawnPosY");
+        }
+        if (tag.contains("SpawnPosZ")) {
+            spawnPosZ = tag.getDouble("SpawnPosZ");
+        }
+        if (tag.contains("HasMoved")) {
+            hasMoved = tag.getBoolean("HasMoved");
         }
         
         if (tag.contains("OriginTownId")) {
@@ -317,5 +371,24 @@ public class TouristEntity extends Villager {
     @Override
     public boolean startRiding(Entity entity) {
         return this.startRiding(entity, false);
+    }
+    
+    /**
+     * Override setPos to initialize the spawn position on first call
+     * This ensures we capture the actual spawn position
+     */
+    @Override
+    public void setPos(double x, double y, double z) {
+        // If spawn position hasn't been set yet (all values are 0), this is our first positioning
+        // So we store it as the spawn position
+        if (spawnPosX == 0 && spawnPosY == 0 && spawnPosZ == 0) {
+            this.spawnPosX = x;
+            this.spawnPosY = y;
+            this.spawnPosZ = z;
+            LOGGER.debug("Set tourist spawn position to {},{},{}", x, y, z);
+        }
+        
+        // Call the parent implementation to actually set the position
+        super.setPos(x, y, z);
     }
 } 
