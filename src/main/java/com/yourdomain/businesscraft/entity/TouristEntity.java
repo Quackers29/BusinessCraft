@@ -9,6 +9,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.AgeableMob;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -21,13 +22,18 @@ import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
 public class TouristEntity extends Villager {
+    private static final Logger LOGGER = LogManager.getLogger();
+    
     // Special constant for "Any Town" destination
     public static final UUID ANY_TOWN_DESTINATION = new UUID(0, 0);
     public static final String ANY_TOWN_NAME = "Any Town";
@@ -36,6 +42,9 @@ public class TouristEntity extends Villager {
     private static final int DEFAULT_EXPIRY_TICKS = ConfigLoader.touristExpiryMinutes * 60 * 20; // Convert minutes to ticks
     private int expiryTicks = DEFAULT_EXPIRY_TICKS;
     private boolean hasNotifiedOriginTown = false;
+    
+    // Flag to track if tourist has already received a ride extension
+    private boolean hasReceivedRideExtension = false;
     
     // Tourist origin and destination information
     private UUID originTownId;
@@ -215,6 +224,7 @@ public class TouristEntity extends Villager {
         tag.putInt("ExpiryTicks", expiryTicks);
         tag.putBoolean("HasNotifiedOrigin", hasNotifiedOriginTown);
         tag.putLong("SpawnTime", spawnTime);
+        tag.putBoolean("HasReceivedRideExtension", hasReceivedRideExtension);
         
         if (originTownId != null) {
             tag.putUUID("OriginTownId", originTownId);
@@ -242,6 +252,9 @@ public class TouristEntity extends Villager {
         }
         if (tag.contains("SpawnTime")) {
             spawnTime = tag.getLong("SpawnTime");
+        }
+        if (tag.contains("HasReceivedRideExtension")) {
+            hasReceivedRideExtension = tag.getBoolean("HasReceivedRideExtension");
         }
         
         if (tag.contains("OriginTownId")) {
@@ -280,5 +293,29 @@ public class TouristEntity extends Villager {
     // Factory method for attribute builder
     public static AttributeSupplier.Builder createAttributes() {
         return Villager.createAttributes();
+    }
+    
+    @Override
+    public boolean startRiding(Entity entity, boolean force) {
+        boolean result = super.startRiding(entity, force);
+        
+        if (result && !hasReceivedRideExtension) {
+            // Check if the vehicle is a minecart or Create train carriage
+            if (entity instanceof AbstractMinecart || entity.getClass().getName().contains("create.content.trains")) {
+                // Recalculate expiry ticks from current config value instead of using static constant
+                this.expiryTicks = ConfigLoader.touristExpiryMinutes * 60 * 20;
+                hasReceivedRideExtension = true;
+                LOGGER.debug("Resetting expiry timer for tourist to {} minutes ({})", 
+                    ConfigLoader.touristExpiryMinutes, this.expiryTicks);
+            }
+        }
+        
+        return result;
+    }
+    
+    // For simpler mounting calls
+    @Override
+    public boolean startRiding(Entity entity) {
+        return this.startRiding(entity, false);
     }
 } 

@@ -31,6 +31,9 @@ public class Town implements ITownDataProvider {
     private BlockPos pathEnd;
     private int searchRadius = 10;
     
+    // Counter for tourists received since last population increase
+    private int touristsReceivedCounter = 0;
+    
     // Visit history storage - moved from TownBlockEntity
     private final List<VisitHistoryRecord> visitHistory = new ArrayList<>();
     private static final int MAX_HISTORY_SIZE = 50; // Maximum history entries to keep
@@ -148,6 +151,7 @@ public class Town implements ITownDataProvider {
         tag.putInt("posY", position.getY());
         tag.putInt("posZ", position.getZ());
         tag.putInt("touristCount", touristCount);
+        tag.putInt("touristsReceivedCounter", touristsReceivedCounter);
         CompoundTag visitorsTag = new CompoundTag();
         visitors.forEach((visitorId, count) -> {
             visitorsTag.putInt(visitorId.toString(), count);
@@ -219,6 +223,11 @@ public class Town implements ITownDataProvider {
         // Load tourist count
         if (tag.contains("touristCount")) {
             town.touristCount = tag.getInt("touristCount");
+        }
+        
+        // Load tourists received counter
+        if (tag.contains("touristsReceivedCounter")) {
+            town.touristsReceivedCounter = tag.getInt("touristsReceivedCounter");
         }
         
         if (tag.contains("visitors")) {
@@ -331,6 +340,22 @@ public class Town implements ITownDataProvider {
     
     public void addVisitor(UUID fromTownId) {
         visitors.merge(fromTownId, 1, Integer::sum);
+        
+        // Increment counter for tourists received
+        touristsReceivedCounter++;
+        
+        // Check if population growth from tourism is enabled and if we should increase population
+        if (ConfigLoader.touristsPerPopulationIncrease > 0 && 
+            touristsReceivedCounter >= ConfigLoader.touristsPerPopulationIncrease) {
+            // Increase population by 1
+            economy.setPopulation(economy.getPopulation() + 1);
+            
+            // Reset counter, subtracting any excess tourists
+            touristsReceivedCounter -= ConfigLoader.touristsPerPopulationIncrease;
+            
+            LOGGER.info("Town [{}] population increased to {} after receiving {} tourists", 
+                name, economy.getPopulation(), ConfigLoader.touristsPerPopulationIncrease);
+        }
     }
     
     public int getTotalVisitors() {
