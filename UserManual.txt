@@ -1,0 +1,726 @@
+# BusinessCraft Mod - User Manual
+Last Updated: March 4, 2023
+
+## Introduction
+Welcome to BusinessCraft! This manual will guide you through using the mod's features.
+
+This mod is designed for Minecraft 1.20.1 with Forge and uses TOML configuration files.
+
+## Features
+### Town System
+- Place town blocks in the world to create and manage towns
+- Towns persist between server restarts
+
+### Town Management System
+- Towns are automatically registered when town blocks are placed
+- Each town has a unique identifier (UUID) for reliable tracking
+- Towns must be placed at least a minimum distance apart (configurable)
+- The system prevents placing towns too close to existing ones
+- Town data is automatically saved when the server stops
+- Resources can be added to towns through the town block interface
+- The system can automatically clean up "ghost towns" with zero population
+- All town data persists between server restarts
+- Towns can be removed using the town block or admin commands
+
+### Resource System
+- Towns can now store multiple types of resources, not just bread
+- Place any Minecraft item in the town block's input slot to add it as a resource
+- Bread still contributes to population growth
+- Other resources are stored for future features like crafting and trading
+- View your town's resources in the resource list in the town interface
+- Resources persist when the server stops and starts
+- Resources are displayed in a scrollable list with the highest quantities at the top
+- Use the scroll buttons or mouse wheel to navigate through your resources
+- Each resource shows its icon and current quantity
+
+### Tourist System
+- Tourists will visit your town once it reaches a certain population
+- Tourists are custom entities with special behaviors
+- They will interact with your town and its resources
+- Tourists have a distinctive appearance with special hats
+- Tourists will start shaking when they're about to leave (last 30 seconds)
+- Tourists can wear custom heads and hold items
+- Only adult tourists wear the special tourist hat
+- Baby tourists (if any) will not have the special hat
+- Tourists have random villager professions
+- Tourists will leave after a configurable amount of time
+- Tourists will notify your town when they die
+- Tourists will notify your town when they leave (if they've moved from their spawn point)
+- Putting tourists in minecarts or trains extends their stay
+- Tourists can travel between towns or to any town
+- Tourists cannot breed or pick up items
+
+### Platform and Path System
+- Create platforms in your town for tourists to visit
+- Use the path creation mode to connect platforms
+- Press ESC to exit path creation mode
+- Paths determine how tourists navigate between platforms
+
+### Debug Features
+- Press F4 to toggle the town debug overlay
+- The debug overlay visualizes town boundaries, tourist paths, and other technical details
+- Information displayed includes:
+  - Town position and ID
+  - Population and bread count
+  - Tourist spawning status
+  - Path information
+  - Search radius and visitor statistics
+- Use the mouse wheel to scroll through information when multiple towns exist
+- The overlay automatically refreshes data from the server every second
+- The debug system works across all loaded dimensions
+- This feature is primarily for development and troubleshooting
+
+## Tourist Vehicle System
+The BusinessCraft mod includes a sophisticated system for tourists to use vehicles:
+
+### Minecart Integration
+- Tourists can automatically board vanilla Minecraft minecarts
+- Minecarts must be stopped (not moving) for tourists to board
+- Only empty minecarts will be boarded by tourists
+- Tourists from your town will only board minecarts near your town's paths
+- Once a tourist boards a minecart, they will remain there until the ride is over
+- Tourists riding in minecarts have their expiry time extended
+- Minecarts are recognized and tracked by the system automatically
+- No special setup required - just place minecarts along your tourist paths
+
+### Create Mod Integration
+If you have the Create mod installed, BusinessCraft offers enhanced features:
+
+- Tourists can board Create mod trains and carriages
+- The system detects stopped trains automatically
+- Multiple tourists can board different seats in the same train
+- The system handles finding and assigning free seats
+- Create carriages must be completely stopped for boarding
+- Tourists will only board trains near your town's paths
+- Tourists riding in Create trains have their expiry time extended
+- Create integration can be disabled in the configuration
+
+### Configuration Options
+- `enableMinecarts` - Turn vanilla minecart integration on/off
+- `enableCreateTrains` - Turn Create mod integration on/off (requires Create mod)
+- `minecartStopThreshold` - How still a vehicle must be to be considered "stopped"
+- Configure these options in the mod's configuration file
+
+### How It Works
+1. The system searches around your town's paths for tourists and vehicles
+2. It identifies which vehicles are currently stopped
+3. It finds tourists from your town who aren't already passengers
+4. It matches available tourists with stopped vehicles
+5. Once boarded, tourists will stay in the vehicle until it stops again or they expire
+6. The vehicle system runs automatically without player intervention
+
+## Configuration
+BusinessCraft uses TOML configuration files. These files can be edited with any text editor.
+
+### Resource System Configuration
+- The `breadPerPop` setting in the configuration determines how much bread is required for one population unit
+
+### Tourist Configuration
+- The `touristExpiryMinutes` setting determines how long tourists will stay before leaving
+- The `notifyOnTouristDeparture` setting controls whether notifications appear when tourists leave
+- The `enableTouristExpiry` setting can be used to disable tourist expiration entirely
+
+## Configuration System
+BusinessCraft uses a properties-based configuration system that allows you to customize many aspects of the mod:
+
+### Configuration File
+- The configuration file is located at `config/businesscraft.properties`
+- If the file doesn't exist, it will be automatically created with default values
+- You can edit this file with any text editor
+- Changes take effect after restarting the game
+
+### Town Configuration Options
+- `breadPerPop`: How much bread is required for one population unit (default: 1)
+- `minPopForTourists`: Minimum population required before tourists will visit (default: 5)
+- `minDistanceBetweenTowns`: Minimum distance between towns in blocks (default: 100)
+- `defaultStartingPopulation`: Starting population for new towns (default: 5)
+- `maxTouristsPerTown`: Maximum number of tourists allowed per town (default: 10)
+- `populationPerTourist`: Population required for each tourist (default: 10)
+- `maxPopBasedTourists`: Maximum tourists based on population (default: 20)
+- `townNames`: Comma-separated list of random town names to use when creating towns
+
+### Tourist Configuration Options
+- `touristExpiryMinutes`: How long tourists stay before leaving in minutes (default: 120)
+- `enableTouristExpiry`: Whether tourists should expire at all (default: true)
+- `notifyOnTouristDeparture`: Whether to notify when tourists leave (default: true)
+- `touristsPerPopulationIncrease`: Tourists required to increase population by 1 (default: 2)
+
+### Vehicle Configuration Options
+- `enableCreateTrains`: Whether Create mod train integration is enabled (default: true)
+- `enableMinecarts`: Whether vanilla minecart integration is enabled (default: true)
+- `vehicleSearchRadius`: How far to search for vehicles around paths (default: 10)
+- `minecartStopThreshold`: How still a vehicle must be to be considered stopped (default: 0.001)
+
+### Example Configuration
+```
+enableCreateTrains=true
+enableMinecarts=true
+vehicleSearchRadius=10
+minecartStopThreshold=0.001
+breadPerPop=1
+minPopForTourists=5
+minDistanceBetweenTowns=100
+defaultStartingPopulation=5
+maxTouristsPerTown=10
+populationPerTourist=10
+maxPopBasedTourists=20
+townNames=Riverside,Hillcrest,Meadowbrook,Oakville
+touristExpiryMinutes=120
+enableTouristExpiry=true
+notifyOnTouristDeparture=true
+touristsPerPopulationIncrease=2
+```
+
+## Commands
+- `/cleartowns` - Clears all towns in the current world (admin command)
+
+## Items and Blocks
+- Town Block - A special block used to establish and manage towns
+
+## Troubleshooting
+- If you encounter issues with towns not loading properly, try restarting the server
+- The mod automatically saves town data when the server stops
+
+## Town Block Interface
+Town blocks provide a detailed management interface with several tabs:
+
+### Main Town Tab
+- Displays your town's name and basic statistics
+- Shows current population and tourist count
+- Provides at-a-glance information about your town's status
+
+### Resources Tab
+- View all resources stored in your town
+- Resources are displayed in a scrollable list sorted by quantity
+- Resources show their icon and current amount
+- Use mouse wheel to scroll through resources
+- Add resources by placing items in the input slot
+
+### History Tab 
+- Track tourism activity in your town
+- View records of tourist visits
+- Monitor the effectiveness of your tourist attractions
+
+### Visit History Tracking
+- The History tab shows a record of tourist visits to your town
+- Each entry includes:
+  - Date and time of the visit
+  - Name of the town tourists came from
+  - Number of tourists in the group
+  - Direction and distance to the origin town
+- The history list uses alternating row colors for better readability
+- Scroll through your visit history using the Up/Down buttons or mouse wheel
+- If no tourists have visited yet, you'll see a message indicating this
+- This feature helps you track tourism patterns and popularity over time
+
+### Settings Tab
+- Change your town's name
+- Access the platforms management screen
+- Adjust search radius for tourist mechanics
+- Configure other town settings
+
+### Platform Management
+The platform management system is a key feature for controlling tourist movement and creating attractions:
+
+### Accessing Platform Management
+1. Open your town block interface
+2. Click on the Settings tab
+3. Click on the "Platforms" button
+
+### Managing Platforms
+- **Adding Platforms**: Click the "Add" button at the bottom of the platform screen
+- **Enabling/Disabling**: Each platform has a toggle button (green when enabled, red when disabled)
+- **Setting Paths**: Click the path button (chain icon) to create paths between platforms
+- **Configuring Destinations**: Click the destinations button to set up inter-town connections
+- **Deleting Platforms**: Use the delete button to remove unwanted platforms
+
+### Platform Features
+- Each platform is numbered for easy identification
+- Platforms can be enabled or disabled to control tourist flow
+- Scroll buttons allow you to navigate through your platform list if you have more than 5 platforms
+- The platform screen shows clear status indicators:
+  - Green = Platform is enabled and active
+  - Red = Platform is disabled
+- Hover over platforms to highlight them for easier management
+- Tooltips provide additional information about each button's function
+
+### Creating Tourist Paths
+1. Click the "Set Path" button on a platform
+2. The game will enter path creation mode
+3. Click on another platform to connect them with a path
+4. Press ESC to exit path creation mode when finished
+5. Tourists will follow these paths when visiting your town
+
+### Inter-Town Tourism
+By using the destinations feature, you can connect your town with other towns to:
+- Create tourism networks between multiple towns
+- Allow tourists to travel along established routes
+- Develop a more dynamic and interconnected world
+
+### Other Interface Features
+- Edit your town name at any time from the settings tab
+- Adjust tourist search radius to control how far tourists will look for attractions
+- User-friendly tabs let you navigate between different management screens
+- Mouse wheel scrolling supported in most list components
+- Hover over elements for additional tooltip information
+
+### Item Slots
+- The town interface includes item slots for adding resources to your town
+- These slots are highlighted to make them easy to find
+- To add a resource to your town, simply place the item in the input slot
+- The item will be consumed and added to your town's resource inventory
+- This is the primary way to increase your town's resources
+
+## Destination System
+The destination system allows you to connect towns together for inter-town tourism:
+
+### Accessing Destinations
+1. Open your town block interface
+2. Navigate to the Platforms tab 
+3. Click the destinations button (globe icon) on a platform entry
+
+### Managing Destinations
+- Each destination entry shows:
+  - Town name
+  - Approximate distance (in blocks)
+  - Direction indicator (N, NE, E, SE, S, SW, W, NW)
+  - Enabled/disabled status
+- Click on a destination to toggle it on (green) or off (red)
+- Destinations are automatically sorted by distance (closest first)
+- Use the scroll buttons to navigate if you have more than 4 possible destinations
+
+### How Destinations Work
+- When a tourist visits an enabled destination platform, they may travel to one of the enabled destination towns
+- This creates a network of tourist travel between your towns
+- Tourists are more likely to visit closer destinations than faraway ones
+- You can create specialized tourism routes by carefully managing which destinations are enabled
+- Distance and direction information helps you understand the spatial relationship between towns
+
+### Tips for Using Destinations
+- Enable destinations between complementary towns (e.g., connect a farming town to a mining town)
+- Create tourism circuits by connecting towns in a loop
+- For a more challenging experience, only enable destinations between nearby towns
+- For easier tourism management, enable connections between all your towns 
+
+## Tab Navigation System
+The BusinessCraft mod uses a consistent tab navigation system throughout its interfaces:
+
+### Using Tabs
+- Click on any tab to switch between different sections of the interface
+- Each tab contains related functionality, keeping the interface organized and easy to use
+- The active tab is visually highlighted to show which section you're currently viewing
+- You can freely switch between tabs without losing your changes
+
+### Key Tab Sections
+- **Town Tab**: Basic town information and statistics
+- **Resources Tab**: Resource management and input slots
+- **History Tab**: Tourist visit records
+- **Settings Tab**: Town configuration options
+- **Platforms Tab**: Platform and path management
+
+### Navigation Tips
+- Look for tabs at the top of interfaces to find additional functionality
+- Special interfaces like the Platform Manager maintain the same tab navigation system
+- You can always return to the main town interface by using the "Back" button
+- The mod maintains a consistent tab layout across different screens for easier navigation 
+
+### Dynamic UI Elements
+- The mod features buttons that update their text automatically based on current values
+- For example, the search radius button shows the current radius setting
+- These dynamic elements help you see current settings at a glance
+- Clicking on these elements typically allows you to change their values
+- The interface updates in real-time to reflect your changes 
+
+### Toggle Controls
+- Many settings in the mod can be toggled on or off with a single click
+- Toggle buttons provide a simple way to enable or disable features
+- For example, platforms can be enabled or disabled using toggle buttons
+- These controls maintain a consistent appearance throughout the interface
+- Green typically indicates enabled features, while red indicates disabled ones 
+
+### Town Name Editing
+- You can change your town's name at any time through the Settings tab
+- Click the "Change Town Name" button to open the name editor
+- Type your new town name in the text field
+- Press Enter or click "OK" to confirm your new name
+- Press Escape or click "Cancel" to keep the original name
+- Town names are saved automatically and will persist between game sessions
+- The name editor will automatically focus on the text field when opened 
+
+### Text Input Fields
+- The mod includes text input fields for entering information like town names
+- These fields automatically limit the number of characters you can enter
+- Changes to text fields are processed in real-time
+- You can navigate between fields using the Tab key
+- Click on a field to focus it and start typing
+- Text fields support standard keyboard shortcuts (Ctrl+A to select all, etc.) 
+
+### Dynamic Information Display
+- The mod displays real-time information about your town and its resources
+- Information like population, tourist count, and resource amounts updates automatically
+- Different types of information are color-coded for easier reading
+- The interface adjusts text to fit available space
+- All displayed information is kept in sync with the actual town data 
+
+## Multiplayer Support
+The BusinessCraft mod is fully compatible with multiplayer servers:
+
+- All town data is synchronized between the server and clients
+- Changes made by one player are visible to all other players
+- Town blocks can be interacted with by multiple players
+- Tourist entities are visible to all players in the area
+- Platform and path creation works seamlessly in multiplayer
+- The mod handles network communication automatically
+- No special configuration is needed for multiplayer use
+
+## Data Persistence
+The BusinessCraft mod ensures that all your town data is saved and loaded properly:
+
+- All town data is automatically saved when the world is saved
+- Town data is loaded when the world is loaded
+- Your towns will persist between game sessions
+- Town resources, platforms, and settings are all saved
+- Tourist visit history is preserved
+- No manual saving is required - everything happens automatically
+- If you're running a server, town data is saved with the world data
+
+## Town System
+The town system is the core of the BusinessCraft mod:
+
+- Each town has a unique identifier and name
+- Towns grow in population based on the bread resources they have
+- The number of tourists a town can support is based on its population
+- You can enable or disable tourist spawning for each town
+- Towns track visitor statistics and maintain a history of tourist visits
+- Towns can be connected via paths for tourist navigation
+- Each town has a configurable search radius that affects various features
+- All town data is saved automatically when the world is saved
+
+## Platform Path Creation System
+BusinessCraft's platform path creation system allows you to define how tourists move between points of interest:
+
+- Path creation begins by activating path mode from a platform's management screen
+- Paths are created by defining two points: a start and end point
+- Right-click where you want the path to start, then right-click again where you want it to end
+- You'll receive feedback messages in the chat to guide you through the process
+- Paths cannot extend more than 50 blocks away from your town center
+- If you try to create a path point too far away, you'll receive an error message
+- Once a path is created, tourists will use it to navigate between platforms
+- Right-click events are limited to prevent accidental multiple clicks while creating paths
+- You can cancel path creation at any time by pressing ESC
+
+## Town Path Creation System
+In addition to platform paths, BusinessCraft also allows you to create town-level paths:
+
+- Town paths define routes for tourists to follow within your town
+- Similar to platform paths, town paths are created with a start and end point
+- Right-click where you want the path to start, then right-click again where you want it to end
+- You'll receive feedback messages in the chat during the creation process
+- Paths must be within a valid distance from your town center
+- If you try to create a path point too far away, you'll receive an error message
+- Town paths are saved automatically with your town data
+- You can use town paths to create routes between key areas of your town
+- Right-click events are limited to prevent accidental multiple clicks
+- Town paths provide structure to your town and improve tourist navigation
+
+## Client-Side Features
+BusinessCraft includes several client-side features to enhance your gameplay experience:
+
+- Custom interface screens for town blocks and other mod components
+- Debug overlay that can be toggled to view technical information
+- Specialized UI elements optimized for desktop rendering
+- Client-side network handlers that efficiently process server data
+- Compatibility with various screen resolutions and GUI scales
+- All interface elements registered properly with Minecraft's menu system
+- Debug overlay appears above all other game elements when enabled
+
+## Platform System Detailed
+The platform system is a core component of BusinessCraft's tourist management:
+
+### What Are Platforms?
+- Platforms are specific points in your town where tourists arrive and depart
+- Each platform is a unique entity with its own ID and settings
+- Platforms can be named to help you organize your town
+- Platforms can be enabled or disabled individually to control tourist flow
+
+### Platform Configuration
+- Each platform needs a path with start and end points to be complete
+- Start and end points define how tourists move along the platform
+- You can create multiple platforms in a single town
+- Each platform can be configured independently
+
+### Inter-Town Travel
+- Platforms can have destinations to other towns
+- Each destination can be enabled or disabled individually
+- When a destination is enabled, tourists may travel from your platform to that town
+- If all destinations for a platform are disabled, tourists will only visit locally
+- You can remove destinations you no longer want to use
+- The platform system automatically keeps track of all configured destinations
+
+### Platform Data
+- All platform data is saved automatically with your town
+- Your platform configurations will persist between game sessions
+- If you relocate a town, all its platforms move with it
+- Platform paths and destinations are saved as part of your world data
+
+## Menu System
+The BusinessCraft mod uses Minecraft's container menu system to provide a seamless interface experience:
+
+### Town Block Menu
+- The town block menu is the main interface for interacting with your towns
+- It provides access to all town management features through a tabbed interface
+- The menu automatically synchronizes data between the server and client
+- You can access town statistics, resources, and settings all in one place
+- The menu integrates with your player inventory for easy resource management
+- Quick-move functionality allows you to quickly transfer items to and from the town
+- The menu displays real-time information about your town's status
+- All changes made through the menu are immediately saved to the server
+
+### Resource Management
+- The town block menu includes a dedicated slot for adding resources to your town
+- Simply place items in this slot to add them to your town's resource inventory
+- The menu displays all your town's current resources in a scrollable list
+- Resources are automatically sorted by quantity for easy viewing
+- The menu shows real-time updates as resources are added or consumed
+
+### Town Statistics
+- The menu displays important town statistics like population and tourist count
+- You can see at a glance whether your town can spawn tourists
+- The menu shows your town's current search radius setting
+- You can view the maximum number of tourists your town can support
+- All statistics are updated in real-time as your town changes
+
+## API System
+
+The BusinessCraft mod provides a robust API system for developers and mod integrations through the ITownDataProvider interface.
+
+### Town Data Provider
+
+The ITownDataProvider interface serves as the central access point for all town-related data:
+
+- **Consistent Data Access**: Access town information such as ID, name, population, and tourist counts through standardized methods.
+- **Resource Management**: Add, remove, and query resources using both legacy methods (getBreadCount) and the new generic resource system.
+- **Tourist Management**: Control tourist spawning behavior, set search radius, and manage maximum tourist limits.
+- **Visit History**: Track and query the history of tourists visiting your town, including origin information and timestamps.
+- **Path Configuration**: Configure and query path-related settings for tourist navigation.
+
+### Integration Points
+
+Developers can access the town data provider to:
+- Build custom UIs that display town statistics
+- Create add-ons that enhance town functionality
+- Develop cross-mod compatibility with other economy or town management mods
+- Implement custom resource management systems
+
+### Visit History System
+
+The visit history system tracks tourist movement between towns:
+- Records timestamp of each visit
+- Stores origin town information
+- Tracks number of visitors in each group
+- Maintains origin position data for analytics
+
+This API provides a stable interface that will be maintained across mod updates, ensuring compatibility with extensions and integrations.
+
+## Town Block System
+
+The Town Block is the central component of the BusinessCraft mod, serving as the foundation for creating and managing towns.
+
+### Placing a Town Block
+
+- **Placement Requirements**: Town blocks must be placed at least ${minDistanceBetweenTowns} blocks away from other town blocks.
+- **Initial Setup**: When placed, a town block will:
+  - Generate a random town name from the configuration
+  - Register the town with the Town Manager
+  - Create a default platform extending from the block
+  - The platform will be oriented based on the direction you're facing when placing the block
+
+### Town Block Interface
+
+Right-clicking on a Town Block opens the Town Block Menu, which provides access to:
+- Resource management
+- Town statistics
+- Platform configuration
+- Tourist spawning settings
+
+### Platforms
+
+Each town can have up to 5 platforms that serve as tourist spawn and destination points:
+- **Creating Platforms**: Use the Town Block interface to add new platforms
+- **Configuring Platforms**: Set the start and end positions of each platform
+- **Enabling/Disabling**: Toggle platforms on or off to control tourist spawning
+- **Destinations**: Configure which towns tourists from this platform can travel to
+
+### Tourist Management
+
+The Town Block controls tourist spawning and management:
+- **Spawning Control**: Enable or disable tourist spawning
+- **Search Radius**: Configure how far the town searches for vehicles (default: ${vehicleSearchRadius} blocks)
+- **Maximum Tourists**: The town has a limit on how many tourists can be present at once
+- **Visit History**: The town records all tourist visits, including origin, count, and timestamp
+
+### Resources
+
+Town Blocks can accept resources through their inventory slot:
+- Add items to increase your town's resource stockpile
+- Resources affect your town's attractiveness to tourists
+- The more diverse and plentiful your resources, the more tourists will visit
+
+### Removing a Town Block
+
+Breaking a Town Block will:
+- Remove the town from the Town Manager
+- Delete all associated data including platforms and visit history
+- Release all tourists currently visiting the town
+
+## Scoreboard System
+
+BusinessCraft integrates with Minecraft's scoreboard system to provide at-a-glance information about all towns in your world.
+
+### Town Statistics Scoreboard
+
+The mod automatically creates and updates a scoreboard that displays:
+- **Town Population**: The number of villagers in each town
+- **Tourist Status**: Whether tourist spawning is enabled (ON) or disabled (OFF)
+- **Total Visitors**: The cumulative number of tourists who have visited the town
+
+### Viewing the Scoreboard
+
+The town statistics scoreboard is displayed in the sidebar of your Minecraft interface. You can see it by:
+1. Looking at the right side of your screen
+2. If it's not visible, you may need to use the `/scoreboard objectives setdisplay sidebar townstats` command
+
+### Reading the Scoreboard
+
+Each town appears as an entry in the format:
+```
+TownName:ON [42] - 15
+```
+
+Where:
+- `TownName` is the name of the town
+- `:ON` indicates tourist spawning is enabled (or `:OFF` if disabled)
+- `[42]` shows the total number of visitors the town has received
+- `15` (the score value) shows the current population of the town
+
+### Automatic Updates
+
+The scoreboard updates automatically whenever:
+- A new town is created
+- A town's population changes
+- Tourist spawning is enabled or disabled
+- Tourists visit a town
+
+## Admin Commands
+
+BusinessCraft includes administrative commands to help server operators manage the mod's functionality.
+
+### Clear Towns Command
+
+The `/cleartowns` command allows server operators to remove all towns from the world:
+
+- **Usage**: `/cleartowns`
+- **Permission Level**: Requires operator permission level 2
+- **Effect**: Removes all towns from the world, including their data, blocks, and associated entities
+- **Feedback**: Displays a message indicating how many towns were cleared
+
+This command is particularly useful for:
+- Resetting the mod's state during testing
+- Clearing problematic towns that may be causing issues
+- Starting fresh after configuration changes
+
+**Warning**: This command cannot be undone. All town data will be permanently deleted.
+
+## Mod Items and Blocks
+
+BusinessCraft adds several custom items and blocks to Minecraft that form the foundation of the mod's functionality.
+
+### Town Block
+
+The Town Block is the primary block added by BusinessCraft:
+
+- **Obtaining**: The Town Block can be crafted (recipe details in JEI/REI) or obtained through the creative inventory
+- **Appearance**: The Town Block has a distinctive appearance that makes it easy to identify in the world
+- **Functionality**: When placed, it creates a new town and serves as the central management point
+- **Durability**: The Town Block has a strength similar to stone (3.5) and requires the correct tool to harvest
+
+### Registry System
+
+All items and blocks in BusinessCraft are registered using Forge's registry system:
+- Items and blocks are automatically registered during mod initialization
+- All mod content is organized under the "businesscraft" namespace
+- Items appear in the appropriate creative tabs
+
+## Crafting and Resources
+The BusinessCraft mod adds several new items and blocks to the game:
+
+### Town Block
+- **Crafting Recipe**: Craft a Town Block using 8 iron ingots in a ring pattern (like a chest but with iron)
+- **Mining**: Town Blocks can be mined with a pickaxe
+- **Drops**: Town Blocks always drop themselves when mined, even without Silk Touch
+- **Usage**: Place the Town Block to establish a new town center
+
+### Textures and Appearance
+- The Town Block has a distinctive appearance to make it easy to identify
+- The Tourist entities wear special hats to distinguish them from regular villagers
+- The mod's UI elements use custom textures for a cohesive look and feel
+
+### Language Support
+- The mod currently supports English (en_US)
+- All UI elements, tooltips, and instructions are fully localized
+- Block and item names are properly translated
+
+## Path Creation System
+The BusinessCraft mod includes a sophisticated path creation system for tourist navigation:
+
+### Creating Paths
+1. Open your town block interface
+2. Navigate to the Settings tab
+3. Click on the "Platforms" button
+4. Select a platform and click the "Set Path" button
+5. The game will enter path creation mode
+6. Click on a block to set the start point of the path
+7. Click on another block to set the end point of the path
+8. The path will be created automatically
+
+### Path Creation Rules
+- Paths must be within 50 blocks of the town block (Manhattan distance)
+- You'll receive feedback messages during path creation
+- Green messages indicate successful path creation
+- Yellow messages provide instructions during the process
+- Red messages indicate errors or invalid selections
+- You can cancel path creation by pressing ESC
+
+### Path Usage
+- Tourists will follow created paths when moving between platforms
+- Paths help guide tourists to important locations in your town
+- Well-designed path networks can improve tourist satisfaction
+- Paths are saved with your town data and persist between game sessions
+
+## Configuration Options
+
+BusinessCraft provides extensive configuration options through the `config/businesscraft.properties` file. This file is automatically generated with default values when the mod is first run.
+
+### Vehicle Configuration
+- `enableCreateTrains`: Enable/disable Create mod train support (default: true)
+- `enableMinecarts`: Enable/disable vanilla minecart support (default: true)
+- `vehicleSearchRadius`: Radius in blocks to search for vehicles around tourists (default: 10)
+- `minecartStopThreshold`: Speed threshold to consider a minecart stopped (default: 0.001)
+
+### Town Configuration
+- `breadPerPop`: Amount of bread required per population unit (default: 1)
+- `minPopForTourists`: Minimum population required before tourists can visit (default: 5)
+- `minDistanceBetweenTowns`: Minimum distance between towns in blocks (default: 100)
+- `defaultStartingPopulation`: Default population for new towns (default: 5)
+- `maxTouristsPerTown`: Maximum tourists allowed per town (default: 10)
+- `populationPerTourist`: Population required for each tourist (default: 10)
+- `maxPopBasedTourists`: Maximum population-based tourists (default: 20)
+- `townNames`: Comma-separated list of default town names
+
+### Tourist Configuration
+- `touristExpiryMinutes`: Time in minutes before tourists expire (default: 120)
+- `enableTouristExpiry`: Enable/disable tourist expiry system (default: true)
+- `notifyOnTouristDeparture`: Enable/disable notifications when tourists leave (default: true)
+- `touristsPerPopulationIncrease`: Tourists required to increase population by 1 (default: 2)
+
+To modify these settings, edit the properties file and restart the game, or use the in-game configuration menu.
