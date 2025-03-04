@@ -1,6 +1,7 @@
 package com.yourdomain.businesscraft.client.renderer;
 
 import com.yourdomain.businesscraft.BusinessCraft;
+import com.yourdomain.businesscraft.client.renderer.layer.TouristHatLayer;
 import com.yourdomain.businesscraft.entity.TouristEntity;
 import net.minecraft.client.model.VillagerModel;
 import net.minecraft.client.model.geom.ModelLayers;
@@ -30,6 +31,9 @@ public class TouristRenderer extends MobRenderer<TouristEntity, VillagerModel<To
         
         // Add the profession layer with type "villager" - this is what gives them their profession hats
         this.addLayer(new VillagerProfessionLayer<>(this, context.getResourceManager(), "villager"));
+        
+        // Add our custom tourist hat layer
+        this.addLayer(new TouristHatLayer(this, new VillagerModel<>(context.bakeLayer(ModelLayers.VILLAGER))));
         
         // Add the crossed arms layer
         this.addLayer(new CrossedArmsItemLayer<>(this, context.getItemInHandRenderer()));

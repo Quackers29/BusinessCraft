@@ -23,6 +23,7 @@ import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.UUID;
 
@@ -257,11 +258,23 @@ public class TouristEntity extends Villager {
         }
     }
     
-    // Disable breeding by preventing the production of baby entities
+    // Disable breeding more thoroughly by preventing the production of baby entities
     @Nullable
     @Override
     public Villager getBreedOffspring(ServerLevel level, AgeableMob otherParent) {
         return null; // Return null to prevent breeding
+    }
+    
+    // Override the canBreed method to ensure these entities never breed
+    @Override
+    public boolean canBreed() {
+        return false;
+    }
+    
+    // Prevent tourists from picking up items
+    @Override
+    public boolean wantsToPickUp(ItemStack itemStack) {
+        return false;
     }
     
     // Factory method for attribute builder
