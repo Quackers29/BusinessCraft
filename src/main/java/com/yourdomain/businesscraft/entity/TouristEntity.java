@@ -385,7 +385,6 @@ public class TouristEntity extends Villager {
             this.spawnPosX = x;
             this.spawnPosY = y;
             this.spawnPosZ = z;
-            LOGGER.debug("Set tourist spawn position to {},{},{}", x, y, z);
         }
         
         // Call the parent implementation to actually set the position

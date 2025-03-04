@@ -1409,7 +1409,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             // Select a destination for the tourist
             UUID destinationTownId = selectTouristDestination(level, platform);
             if (destinationTownId == null) {
-                LOGGER.debug("No valid destination found for tourist from platform at {}", platform.getStartPos());
                 return;
             }
             
