@@ -6,6 +6,8 @@
 - [x] 1.1.1. Min distance between towns for placement - Prevent towns from being placed too close together, configurable
 - [x] 1.1.2. Starting population - Configure default starting population for new towns
 - [x] 1.1.3. Separation of tourists and population - Population becomes a town attribute that grows over time with tourist arrivals
+      - [x] Added configurable tourist-to-population conversion - Each X tourists received increases town population by 1
+      - [x] Default setting of 2 tourists required per 1 population increase
 
 ### 1.2. Tourist Capacity Management
 - [x] 1.2.1. Limited tourists in world per town - town limit of 10 spawned tourists, must visit other towns until more can spawn
@@ -45,10 +47,13 @@ X O O T
 - [x] 3.1.1. Custom tourist model - Create new villager model for tourists to distinguish from regular villagers
 - [x] 3.1.2. Disable tourist breeding - Prevent tourists from breeding with villagers or other tourists
 - [x] 3.1.3. Tourist expiry system - Add 2-hour real-time expiry timer that poofs tourists out of existence called quitting, configurable
+      - [x] Changed expiry configuration from hours to minutes for more precise control
+      - [x] Fixed NumberFormatException by ensuring the configuration uses whole numbers
+      - [x] Added feature to reset expiry timer when tourist mounts a minecart or Create train
+      - [x] Ensured timer reset uses current configuration values rather than static values
 - [x] 3.1.4. Origin town notification - Notify origin town when tourists quit or die
-- [ ] 3.1.5. Tourist naming - Replace town name with destination town in tourist name/tag
 
-### 3.2. Notifications and Feedback
+### 3.2. User Interface Improvements
 - [ ] 3.2.1. Arrival announcement - Notify players in vicinity of platform when tourists arrive
 - [ ] 3.2.2. Include milestone and payment info - Display milestone achievements, payments, and travel distance in notifications
 

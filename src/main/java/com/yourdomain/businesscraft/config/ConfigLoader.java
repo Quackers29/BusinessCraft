@@ -33,6 +33,7 @@ public class ConfigLoader {
     public static int touristExpiryMinutes = 120; // Tourist expiry time in minutes (default: 120 = 2 hours)
     public static boolean enableTouristExpiry = true; // Whether tourist expiry is enabled
     public static boolean notifyOnTouristDeparture = true; // Whether to notify origin town when tourist quits or dies
+    public static int touristsPerPopulationIncrease = 2; // Number of tourists required to increase population by 1
     
     private ConfigLoader() {
         loadConfig();
@@ -72,6 +73,7 @@ public class ConfigLoader {
             touristExpiryMinutes = Integer.parseInt(props.getProperty("touristExpiryMinutes", "120"));
             enableTouristExpiry = Boolean.parseBoolean(props.getProperty("enableTouristExpiry", "true"));
             notifyOnTouristDeparture = Boolean.parseBoolean(props.getProperty("notifyOnTouristDeparture", "true"));
+            touristsPerPopulationIncrease = Integer.parseInt(props.getProperty("touristsPerPopulationIncrease", "2"));
             
             // Load town names
             String namesStr = props.getProperty("townNames", "");
@@ -101,6 +103,7 @@ public class ConfigLoader {
         LOGGER.info("Tourist Expiry Minutes: {}", touristExpiryMinutes);
         LOGGER.info("Enable Tourist Expiry: {}", enableTouristExpiry);
         LOGGER.info("Notify On Tourist Departure: {}", notifyOnTouristDeparture);
+        LOGGER.info("Tourists Per Population Increase: {}", touristsPerPopulationIncrease);
     }
     
     public static void saveConfig() {
@@ -126,6 +129,7 @@ public class ConfigLoader {
         props.setProperty("touristExpiryMinutes", String.valueOf(touristExpiryMinutes));
         props.setProperty("enableTouristExpiry", String.valueOf(enableTouristExpiry));
         props.setProperty("notifyOnTouristDeparture", String.valueOf(notifyOnTouristDeparture));
+        props.setProperty("touristsPerPopulationIncrease", String.valueOf(touristsPerPopulationIncrease));
         
         try {
             File configFile = new File("config/businesscraft.properties");
