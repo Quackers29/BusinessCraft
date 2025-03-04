@@ -74,8 +74,6 @@ public class TouristUtils {
         if (destinationName != null) {
             villager.addTag(TAG_DEST_NAME_PREFIX + destinationName);
         }
-        
-        LOGGER.debug("Added tourist tags to villager: {}", villager.getTags());
     }
 
     /**
