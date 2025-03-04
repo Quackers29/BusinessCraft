@@ -671,7 +671,7 @@ The BusinessCraft mod adds several new items and blocks to the game:
 - Block and item names are properly translated
 
 ## Path Creation System
-The BusinessCraft mod includes a sophisticated path creation system for tourist navigation:
+The BusinessCraft mod includes a path creation system for tourist spawning:
 
 ### Creating Paths
 1. Open your town block interface
@@ -690,12 +690,6 @@ The BusinessCraft mod includes a sophisticated path creation system for tourist 
 - Yellow messages provide instructions during the process
 - Red messages indicate errors or invalid selections
 - You can cancel path creation by pressing ESC
-
-### Path Usage
-- Tourists will follow created paths when moving between platforms
-- Paths help guide tourists to important locations in your town
-- Well-designed path networks can improve tourist satisfaction
-- Paths are saved with your town data and persist between game sessions
 
 ## Configuration Options
 
