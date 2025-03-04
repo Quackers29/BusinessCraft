@@ -1,0 +1,172 @@
+# BusinessCraft Project Files Checked
+Last Updated: March 4, 2023
+
+## Files Checked:
+- [x] build.gradle
+- [x] .gitignore
+- [x] settings.gradle
+- [x] .gitattributes
+- [x] LICENSE
+- [x] gradlew
+- [x] gradlew.bat
+- [ ] src/ (directory)
+  - [ ] main/ (directory)
+    - [x] resources/ (directory)
+      - [x] pack.mcmeta
+      - [ ] META-INF/ (directory)
+        - [x] mods.toml
+      - [ ] data/ (directory)
+        - [x] businesscraft/ (directory)
+          - [x] recipes/ (directory)
+            - [x] town_block.json
+          - [x] loot_tables/ (directory)
+            - [x] blocks/ (directory)
+              - [x] town_block.json
+        - [x] minecraft/ (directory)
+          - [x] tags/ (directory)
+            - [x] blocks/ (directory)
+              - [x] mineable/ (directory)
+                - [x] pickaxe.json
+      - [x] assets/ (directory)
+        - [x] businesscraft/ (directory)
+          - [x] textures/ (directory)
+            - [x] entity/ (directory)
+              - [x] tourist_hat.png
+            - [x] gui/ (directory)
+              - [x] town_block_gui.png
+            - [x] block/ (directory)
+              - [x] town_block.png
+          - [x] models/ (directory)
+            - [x] item/ (directory)
+              - [x] town_block.json
+            - [x] block/ (directory)
+              - [x] town_block.json
+          - [x] lang/ (directory)
+            - [x] en_us.json
+          - [x] blockstates/ (directory)
+            - [x] town_block.json
+    - [ ] java/ (directory)
+      - [ ] com/ (directory)
+        - [ ] yourdomain/ (directory)
+          - [ ] businesscraft/ (directory)
+            - [x] BusinessCraft.java
+            - [x] RESOURCE_SYSTEM.md
+            - [ ] client/ (directory)
+              - [x] ClientSetup.java
+              - [x] PlatformPathKeyHandler.java
+              - [x] TownDebugNetwork.java
+              - [x] TownDebugOverlay.java
+              - [x] TownDebugKeyHandler.java
+              - [ ] renderer/ (directory)
+                - [x] TouristRenderer.java
+                - [ ] layer/ (directory)
+                  - [x] TouristHatLayer.java
+              - [ ] rendering/ (directory)
+            - [ ] entity/ (directory)
+              - [x] ModEntityTypes.java
+              - [x] TouristEntity.java
+            - [ ] util/ (directory)
+            - [ ] screen/ (directory)
+              - [x] Tab.java
+              - [x] TownBlockScreen.java
+              - [x] PlatformsTab.java
+              - [x] DestinationsScreen.java
+              - [ ] components/ (directory)
+                - [x] UIComponent.java
+                - [x] TabComponent.java
+                - [x] DataBoundButtonComponent.java
+                - [x] ToggleButtonComponent.java
+                - [x] ResourceListComponent.java
+                - [x] SlotComponent.java
+                - [x] TownNameEditorComponent.java
+                - [x] EditBoxComponent.java
+                - [x] DataLabelComponent.java
+                - [x] VisitHistoryComponent.java
+            - [ ] network/ (directory)
+              - [x] ModMessages.java
+              - [x] PacketHandler.java
+              - [x] SetPlatformDestinationPacket.java
+            - [x] town/ (directory)
+              - [x] Town.java
+              - [x] TownManager.java
+              - [x] utils/ (directory)
+                - [x] TownNotificationUtils.java
+                - [x] TouristAllocationTracker.java
+                - [x] TouristUtils.java
+              - [x] components/ (directory)
+                - [x] TownEconomyComponent.java
+                - [x] TownResources.java
+                - [x] TownComponent.java
+              - [x] data/ (directory)
+              - [x] event/ (directory)
+                - [x] ModEvents.java
+                - [x] ClientModEvents.java
+                - [x] PlatformPathHandler.java
+            - [x] platform/ (directory)
+              - [x] Platform.java
+            - [x] service/ (directory)
+              - [x] TouristVehicleManager.java
+            - [x] config/ (directory)
+              - [x] ConfigLoader.java
+            - [x] menu/ (directory)
+              - [x] TownBlockMenu.java
+              - [x] ModMenuTypes.java
+            - [x] api/ (directory)
+              - [x] ITownDataProvider.java
+            - [x] block/ (directory)
+              - [x] TownBlock.java
+              - [x] entity/ (directory)
+                - [x] TownBlockEntity.java
+                - [x] ModBlockEntities.java
+            - [x] capability/ (directory)
+            - [x] scoreboard/ (directory)
+              - [x] TownScoreboardManager.java
+            - [x] command/ (directory)
+              - [x] ClearTownsCommand.java
+            - [x] systems/ (directory)
+            - [x] registry/ (directory)
+              - [x] ModBlocks.java
+            - [x] init/ (directory)
+  - [ ] resources/ (directory)
+    - [x] pack.mcmeta
+    - [x] META-INF/ (directory)
+      - [x] mods.toml
+    - [x] data/ (directory)
+      - [x] businesscraft/ (directory)
+        - [x] recipes/ (directory)
+          - [x] town_block.json
+        - [x] loot_tables/ (directory)
+          - [x] blocks/ (directory)
+            - [x] town_block.json
+      - [x] minecraft/ (directory)
+        - [x] tags/ (directory)
+          - [x] blocks/ (directory)
+            - [x] mineable/ (directory)
+              - [x] pickaxe.json
+    - [x] assets/ (directory)
+      - [x] businesscraft/ (directory)
+        - [x] textures/ (directory)
+          - [x] entity/ (directory)
+            - [x] tourist_hat.png
+          - [x] gui/ (directory)
+            - [x] town_block_gui.png
+          - [x] block/ (directory)
+            - [x] town_block.png
+        - [x] models/ (directory)
+          - [x] item/ (directory)
+            - [x] town_block.json
+          - [x] block/ (directory)
+            - [x] town_block.json
+        - [x] lang/ (directory)
+          - [x] en_us.json
+        - [x] blockstates/ (directory)
+          - [x] town_block.json
+- [ ] test/ (directory)
+- [ ] gradle/ (directory)
+- [ ] app/ (directory)
+- [ ] bin/ (directory)
+- [ ] build/ (directory)
+- [ ] .gradle/ (directory)
+- [ ] run/ (directory)
+- [ ] .vscode/ (directory)
+- [ ] .git/ (directory)
