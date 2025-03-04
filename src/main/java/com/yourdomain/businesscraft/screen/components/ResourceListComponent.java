@@ -31,8 +31,7 @@ public class ResourceListComponent implements UIComponent {
     private List<ResourceEntry> sortedResources = new ArrayList<>();
     private Button scrollUpButton;
     private Button scrollDownButton;
-    private int renderX;
-    private int renderY;
+    private int x, y;
 
     public ResourceListComponent(Supplier<Map<Item, Integer>> resourcesSupplier, int width) {
         this.resourcesSupplier = resourcesSupplier;
@@ -59,9 +58,8 @@ public class ResourceListComponent implements UIComponent {
     public void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
         if (!visible) return;
         
-        // Store render position for hit testing
-        this.renderX = x;
-        this.renderY = y;
+        this.x = x;
+        this.y = y;
         
         // Update the list of resources
         updateResourceList();
@@ -138,6 +136,21 @@ public class ResourceListComponent implements UIComponent {
         if (scrollDownButton != null) scrollDownButton.visible = visible;
     }
     
+    @Override
+    public boolean isVisible() {
+        return visible;
+    }
+    
+    @Override
+    public int getX() {
+        return x;
+    }
+    
+    @Override
+    public int getY() {
+        return y;
+    }
+    
     private void scrollUp() {
         scrollOffset = Math.max(0, scrollOffset - SCROLL_AMOUNT);
     }
@@ -185,8 +198,8 @@ public class ResourceListComponent implements UIComponent {
     // Check if mouse is over the component
     private boolean isMouseOver(double mouseX, double mouseY) {
         // Use stored render position for more accurate hit testing
-        return mouseX >= renderX && mouseX <= renderX + width && 
-               mouseY >= renderY && mouseY <= renderY + getHeight();
+        return mouseX >= x && mouseX <= x + width && 
+               mouseY >= y && mouseY <= y + getHeight();
     }
     
     /**

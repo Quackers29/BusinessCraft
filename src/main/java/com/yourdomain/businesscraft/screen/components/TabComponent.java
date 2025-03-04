@@ -14,6 +14,7 @@ public class TabComponent implements UIComponent {
     private final int height;
     private String activeTabId = "town";
     private boolean visible = true;
+    private int x, y;
 
     public TabComponent(int width, int height) {
         this.width = width;
@@ -55,6 +56,10 @@ public class TabComponent implements UIComponent {
 
     @Override
     public void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
+        if (!visible) return;
+        
+        this.x = x;
+        this.y = y;
         int tabWidth = width / tabs.size();
         for (int i = 0; i < tabs.size(); i++) {
             Tab tab = tabs.get(i);
@@ -71,6 +76,8 @@ public class TabComponent implements UIComponent {
     public void renderTabsOnly(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
         if (!visible) return;
         
+        this.x = x;
+        this.y = y;
         int tabWidth = width / tabs.size();
         for (int i = 0; i < tabs.size(); i++) {
             Tab tab = tabs.get(i);
@@ -95,6 +102,21 @@ public class TabComponent implements UIComponent {
     @Override
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    @Override
+    public boolean isVisible() {
+        return visible;
+    }
+
+    @Override
+    public int getX() {
+        return x;
+    }
+
+    @Override
+    public int getY() {
+        return y;
     }
 
     /**

@@ -6,10 +6,11 @@ import net.minecraft.network.chat.Component;
 import java.util.function.Consumer;
 
 public class ToggleButtonComponent implements UIComponent {
-    private final Button button;
     private final int width;
     private final int height;
+    private Button button;
     private boolean visible = true;
+    private int x, y;
 
     public ToggleButtonComponent(int x, int y, int width, int height, 
             Component text, Consumer<Button> onPress) {
@@ -28,6 +29,10 @@ public class ToggleButtonComponent implements UIComponent {
 
     @Override
     public void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
+        if (!visible) return;
+        
+        this.x = x;
+        this.y = y;
         button.setX(x);
         button.setY(y);
         button.render(guiGraphics, mouseX, mouseY, 0);
@@ -41,9 +46,22 @@ public class ToggleButtonComponent implements UIComponent {
     @Override
     public void setVisible(boolean visible) {
         this.visible = visible;
-        if (button != null) {
-            button.visible = visible;
-        }
+        if (button != null) button.visible = visible;
+    }
+    
+    @Override
+    public boolean isVisible() {
+        return visible;
+    }
+    
+    @Override
+    public int getX() {
+        return x;
+    }
+    
+    @Override
+    public int getY() {
+        return y;
     }
 
     @Override public int getWidth() { return width; }

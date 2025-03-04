@@ -30,6 +30,7 @@ public class TownNameEditorComponent implements UIComponent {
     private final List<UIComponent> subComponents = new ArrayList<>();
     private boolean visible = true;
     private String currentValue = "";
+    private int x, y;
     private static final Logger LOGGER = LoggerFactory.getLogger(TownNameEditorComponent.class);
 
     public TownNameEditorComponent(int width, Supplier<String> getCurrentName, 
@@ -92,6 +93,9 @@ public class TownNameEditorComponent implements UIComponent {
         
         // Add buttons to components list for proper management
         subComponents.add(new UIComponent() {
+            private boolean visible = true;
+            private int x, y;
+            
             @Override
             public void init(Consumer<Button> register) {
                 // Will be handled in parent's init
@@ -100,6 +104,8 @@ public class TownNameEditorComponent implements UIComponent {
             @Override
             public void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
                 // Rendering is handled by parent
+                this.x = x;
+                this.y = y;
             }
             
             @Override
@@ -114,12 +120,27 @@ public class TownNameEditorComponent implements UIComponent {
             
             @Override
             public void setVisible(boolean visible) {
-                // Will be handled by parent
+                this.visible = visible;
             }
             
             @Override
             public void tick() {
                 // Nothing to tick
+            }
+            
+            @Override
+            public boolean isVisible() {
+                return visible;
+            }
+            
+            @Override
+            public int getX() {
+                return x;
+            }
+            
+            @Override
+            public int getY() {
+                return y;
             }
         });
     }
@@ -138,6 +159,8 @@ public class TownNameEditorComponent implements UIComponent {
     public void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
         if (!visible) return;
         
+        this.x = x;
+        this.y = y;
         // Draw title
         guiGraphics.drawString(
             Minecraft.getInstance().font, 
@@ -201,6 +224,26 @@ public class TownNameEditorComponent implements UIComponent {
         if (visible) {
             editBox.setFocused(true);
         }
+        
+        // Update any child components visibility
+        for (UIComponent component : subComponents) {
+            component.setVisible(visible);
+        }
+    }
+    
+    @Override
+    public boolean isVisible() {
+        return visible;
+    }
+    
+    @Override
+    public int getX() {
+        return x;
+    }
+    
+    @Override
+    public int getY() {
+        return y;
     }
     
     public boolean mouseClicked(double mouseX, double mouseY, int button) {

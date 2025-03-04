@@ -11,4 +11,19 @@ public interface UIComponent {
     int getWidth();
     int getHeight();
     void setVisible(boolean visible);
+    
+    /**
+     * Get the X coordinate of the component
+     */
+    int getX();
+    
+    /**
+     * Get the Y coordinate of the component
+     */
+    int getY();
+    
+    /**
+     * Check if the component is visible
+     */
+    boolean isVisible();
 }

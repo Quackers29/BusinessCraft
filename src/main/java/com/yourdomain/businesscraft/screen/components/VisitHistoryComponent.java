@@ -34,6 +34,7 @@ public class VisitHistoryComponent implements UIComponent {
     private Button scrollDownButton;
     private int renderX;
     private int renderY;
+    private int x, y;
 
     public VisitHistoryComponent(Supplier<List<VisitEntry>> historySupplier, int width) {
         this.historySupplier = historySupplier;
@@ -59,6 +60,9 @@ public class VisitHistoryComponent implements UIComponent {
     @Override
     public void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
         if (!visible) return;
+        
+        this.x = x;
+        this.y = y;
         
         // Store render position for hit testing
         this.renderX = x;
@@ -169,6 +173,21 @@ public class VisitHistoryComponent implements UIComponent {
         this.visible = visible;
         if (scrollUpButton != null) scrollUpButton.visible = visible;
         if (scrollDownButton != null) scrollDownButton.visible = visible;
+    }
+    
+    @Override
+    public boolean isVisible() {
+        return visible;
+    }
+    
+    @Override
+    public int getX() {
+        return x;
+    }
+    
+    @Override
+    public int getY() {
+        return y;
     }
     
     private void scrollUp() {

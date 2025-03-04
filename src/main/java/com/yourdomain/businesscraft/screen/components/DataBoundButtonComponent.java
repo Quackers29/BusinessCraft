@@ -13,6 +13,7 @@ public class DataBoundButtonComponent implements UIComponent {
     private final int height;
     private Button button;
     private boolean visible = true;
+    private int x, y;
 
     public DataBoundButtonComponent(Supplier<Component> textSupplier, 
                                   Consumer<Button> onPress,
@@ -32,6 +33,10 @@ public class DataBoundButtonComponent implements UIComponent {
 
     @Override
     public void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
+        if (!visible) return;
+        
+        this.x = x;
+        this.y = y;
         button.setMessage(textSupplier.get());
         button.setX(x);
         button.setY(y);
@@ -51,5 +56,20 @@ public class DataBoundButtonComponent implements UIComponent {
     public void setVisible(boolean visible) {
         this.visible = visible;
         if (button != null) button.visible = visible;
+    }
+    
+    @Override
+    public boolean isVisible() {
+        return visible;
+    }
+    
+    @Override
+    public int getX() {
+        return x;
+    }
+    
+    @Override
+    public int getY() {
+        return y;
     }
 }

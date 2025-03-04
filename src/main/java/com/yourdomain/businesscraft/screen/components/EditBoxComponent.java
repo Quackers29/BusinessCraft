@@ -19,6 +19,7 @@ public class EditBoxComponent implements UIComponent {
     private final int maxLength;
     private EditBox editBox;
     private boolean visible = true;
+    private int x, y;
 
     public EditBoxComponent(int width, int height, Supplier<String> initialTextSupplier, 
                            Consumer<String> onTextChanged, int maxLength) {
@@ -43,6 +44,8 @@ public class EditBoxComponent implements UIComponent {
     public void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
         if (!visible) return;
         
+        this.x = x;
+        this.y = y;
         editBox.setX(x);
         editBox.setY(y);
         editBox.render(guiGraphics, mouseX, mouseY, 0);
@@ -71,6 +74,21 @@ public class EditBoxComponent implements UIComponent {
         if (editBox != null) {
             editBox.setVisible(visible);
         }
+    }
+    
+    @Override
+    public boolean isVisible() {
+        return visible;
+    }
+    
+    @Override
+    public int getX() {
+        return x;
+    }
+    
+    @Override
+    public int getY() {
+        return y;
     }
     
     public String getText() {
