@@ -18,11 +18,151 @@ When implementing tabbed interfaces using BCTabPanel, keep these crucial points 
 3. **Mouse Event Handling:** 
    - Mouse events are properly translated to panel-local coordinates
    - Clicks outside of tab content don't affect the inactive tabs
+   - For mouse wheel scrolling, use direct event forwarding without position checks in complex hierarchies
 
 4. **Common Issues and Solutions:**
    - Blank tabs often result from incorrect positioning - ensure tab content is positioned properly
    - Missing content can be caused by incorrect panel visibility states
    - Always check both position and visibility when debugging tab issues
+   - For rendering hierarchies, use matrix transformations (pushPose/popPose) for proper coordinate spaces
+
+5. **New Tab Panel Implementation:**
+   - The redesigned BCTabPanel extends BCComponent directly for better control
+   - Tab rendering is done directly rather than through child components
+   - Matrix transformations are used for proper coordinate handling
+   - Only the active tab content is rendered to avoid visibility conflicts
+   - Mouse events are properly translated before forwarding to child components
+
+## Advanced UI Features
+
+### UIGridBuilder
+
+UIGridBuilder is a flexible utility for creating grid-based layouts:
+
+```java
+// Create a grid with specific columns and sizing
+UIGridBuilder grid = new UIGridBuilder(width, height)
+    .withColumns(3, 1, 1)  // 3 columns with relative widths 3:1:1
+    .withPadding(5)        // 5px padding around cells
+    .withSpacing(8);       // 8px spacing between cells
+
+// Add content to the grid
+grid.add("Label:", 0, 0);  // Add at column 0, row 0
+grid.add(valueLabel, 1, 0, 2);  // Span across 2 columns
+
+// Render the grid
+grid.render(guiGraphics, mouseX, mouseY);
+```
+
+Key features:
+- Flexible column configuration with relative widths
+- Row and column spanning for complex layouts
+- Automatic row creation as content is added
+- Support for mixed component types (strings, Components, UI components)
+- Automatic text styling with highlight options
+- Border and background rendering
+
+### Scrollable Content
+
+Implement scrollable content areas with these best practices:
+
+```java
+// In your component class
+private int scrollOffset = 0;
+private int maxVisible;  // Calculate based on available height
+private final int itemHeight = 16;
+
+@Override
+public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    // Calculate max scroll offset
+    int maxScrollOffset = Math.max(0, totalItems - maxVisible);
+    
+    // Apply scrolling directly based on delta sign
+    scrollOffset -= (int)Math.signum(delta);
+    
+    // Clamp scroll position
+    scrollOffset = Math.max(0, Math.min(scrollOffset, maxScrollOffset));
+    
+    return true;
+}
+
+// When rendering content
+private void renderItems(GuiGraphics graphics, int mouseX, int mouseY) {
+    for (int i = scrollOffset; i < Math.min(totalItems, scrollOffset + maxVisible); i++) {
+        int y = verticalPadding + (i - scrollOffset) * itemHeight;
+        // Render item at position y
+    }
+    
+    // Optionally render scrollbar
+    renderScrollbar(graphics, mouseX, mouseY);
+}
+```
+
+Tips for effective scrolling:
+- Skip isMouseOver checks when forwarding wheel events in complex hierarchies
+- Calculate maxVisible dynamically based on container dimensions
+- Implement multiple scroll methods (wheel, middle-mouse drag, scrollbar)
+- Use Math.signum(delta) for consistent scrolling speed across platforms
+
+### Animation Framework
+
+Create smooth UI transitions with the animation system:
+
+```java
+// Fade in animation
+private float alpha = 0.0f;
+private long startTime;
+private boolean animationStarted = false;
+
+// In your render method
+if (!animationStarted) {
+    startTime = Minecraft.getInstance().level.getGameTime();
+    animationStarted = true;
+}
+
+// Calculate animation progress
+long currentTime = Minecraft.getInstance().level.getGameTime();
+long elapsed = currentTime - startTime;
+if (elapsed > 10) {  // Delay start by 10 ticks
+    alpha = Math.min(1.0f, (elapsed - 10) / 20.0f);  // Fade in over 20 ticks
+}
+
+// Apply animation
+graphics.pose().pushPose();
+graphics.pose().mulPose(Vector3f.ZP.rotationDegrees(0));
+RenderSystem.enableBlend();
+RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);
+// Render content
+RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+RenderSystem.disableBlend();
+graphics.pose().popPose();
+```
+
+Animation best practices:
+- Use game time rather than system time for consistent animation speed
+- Apply sequenced animations with staggered delays for a cascading effect
+- Always restore render state after animations (alpha, blend mode, etc.)
+- Use matrix transformations for complex animations
+
+### Pattern Consistency
+
+For a professional UI experience, apply these consistent patterns:
+
+1. **Tab Layout Patterns:**
+   - Overview tabs: Use 2-column grid with labels in column 1 and values in column 2
+   - List tabs: Use consistent item height and padding with scrollable content
+   - Settings tabs: Organize controls in logical groups with headers
+
+2. **Color Usage:**
+   - Use TEXT_COLOR for regular text
+   - Use TEXT_HIGHLIGHT for emphasis and important values
+   - Use consistent background and border colors throughout
+   - Apply semi-transparent colors (0xA0RRGGBB) for better UI depth
+
+3. **Interactive Elements:**
+   - Provide clear visual feedback for hover/click states
+   - Use consistent button sizing and grouping
+   - Place navigation controls in predictable locations
 
 ## Quick Reference Guide
 

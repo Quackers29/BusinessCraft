@@ -5,6 +5,8 @@ import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 
 /**
  * Utility class for creating grid-based UI layouts with various component types.
@@ -25,6 +27,17 @@ public class UIGridBuilder {
     private int borderColor = 0xA0AAAAAA; // Light gray
     private boolean drawBackground = true;
     private boolean drawBorder = true;
+    
+    // Scrolling functionality
+    private boolean horizontalScrollEnabled = false;
+    private int horizontalScrollOffset = 0;
+    private int maxHorizontalScrollOffset = 0;
+    private int scrollBarHeight = 10;
+    private boolean horizontalScrolling = false;
+    private int visibleColumns = 0;
+    private int totalColumns = 0;
+    private int scrollButtonSize = 20;
+    private boolean useScrollButtons = false;
     
     /**
      * Creates a new grid builder with the specified dimensions and layout
@@ -97,6 +110,61 @@ public class UIGridBuilder {
     public UIGridBuilder drawBorder(boolean draw) {
         this.drawBorder = draw;
         return this;
+    }
+    
+    /**
+     * Enables horizontal scrolling with a specific number of visible columns
+     * @param visibleColumns Number of columns to show at once
+     * @param totalColumns Total number of columns in the data (can be more than grid columns)
+     * @return This builder for chaining
+     */
+    public UIGridBuilder withHorizontalScroll(int visibleColumns, int totalColumns) {
+        this.horizontalScrollEnabled = true;
+        this.visibleColumns = visibleColumns;
+        this.totalColumns = totalColumns;
+        this.maxHorizontalScrollOffset = Math.max(0, totalColumns - visibleColumns);
+        return this;
+    }
+    
+    /**
+     * Use buttons for scrolling instead of a scrollbar
+     * @param useButtons Whether to use buttons for scrolling
+     * @return This builder for chaining
+     */
+    public UIGridBuilder useScrollButtons(boolean useButtons) {
+        this.useScrollButtons = useButtons;
+        return this;
+    }
+    
+    /**
+     * Sets the current horizontal scroll offset
+     * @param offset The new offset
+     */
+    public void setHorizontalScrollOffset(int offset) {
+        if (!horizontalScrollEnabled) return;
+        
+        // Clamp scroll offset
+        if (offset < 0) {
+            offset = 0;
+        } else if (offset > maxHorizontalScrollOffset) {
+            offset = maxHorizontalScrollOffset;
+        }
+        
+        horizontalScrollOffset = offset;
+    }
+    
+    /**
+     * Scroll left by one column
+     */
+    public void scrollLeft() {
+        setHorizontalScrollOffset(horizontalScrollOffset - 1);
+    }
+    
+    /**
+     * Scroll right by one column
+     */
+    public void scrollRight() {
+        setHorizontalScrollOffset(horizontalScrollOffset + 1);
     }
     
     /**
@@ -175,14 +243,119 @@ public class UIGridBuilder {
         
         // Calculate cell dimensions
         int availableWidth = width - (2 * horizontalMargin) - ((columns - 1) * horizontalSpacing);
+        if (useScrollButtons && horizontalScrollEnabled) {
+            availableWidth -= (2 * scrollButtonSize); // Account for scroll buttons
+        }
+        
         int availableHeight = height - (2 * verticalMargin) - ((rows - 1) * verticalSpacing);
-        int cellWidth = availableWidth / columns;
+        if (horizontalScrollEnabled && !useScrollButtons) {
+            availableHeight -= scrollBarHeight; // Account for scrollbar height
+        }
+        
+        int cellWidth = availableWidth / (horizontalScrollEnabled ? visibleColumns : columns);
         int cellHeight = availableHeight / rows;
+        
+        // Render scroll buttons if enabled
+        if (horizontalScrollEnabled && useScrollButtons) {
+            // Draw left button
+            boolean leftHovered = mouseX >= x + horizontalMargin && mouseX < x + horizontalMargin + scrollButtonSize &&
+                               mouseY >= y + height / 2 - scrollButtonSize / 2 && mouseY < y + height / 2 + scrollButtonSize / 2;
+            int leftButtonColor = leftHovered ? 0xA0777777 : 0xA0555555;
+            if (horizontalScrollOffset <= 0) {
+                leftButtonColor = 0x80444444; // Disabled state
+            }
+            
+            graphics.fill(
+                x + horizontalMargin,
+                y + height / 2 - scrollButtonSize / 2,
+                x + horizontalMargin + scrollButtonSize,
+                y + height / 2 + scrollButtonSize / 2,
+                leftButtonColor
+            );
+            
+            // Draw left arrow
+            graphics.drawString(
+                Minecraft.getInstance().font,
+                "<",
+                x + horizontalMargin + scrollButtonSize / 2 - 3,
+                y + height / 2 - 4,
+                0xFFFFFFFF
+            );
+            
+            // Draw right button
+            boolean rightHovered = mouseX >= x + width - horizontalMargin - scrollButtonSize && mouseX < x + width - horizontalMargin &&
+                               mouseY >= y + height / 2 - scrollButtonSize / 2 && mouseY < y + height / 2 + scrollButtonSize / 2;
+            int rightButtonColor = rightHovered ? 0xA0777777 : 0xA0555555;
+            if (horizontalScrollOffset >= maxHorizontalScrollOffset) {
+                rightButtonColor = 0x80444444; // Disabled state
+            }
+            
+            graphics.fill(
+                x + width - horizontalMargin - scrollButtonSize,
+                y + height / 2 - scrollButtonSize / 2,
+                x + width - horizontalMargin,
+                y + height / 2 + scrollButtonSize / 2,
+                rightButtonColor
+            );
+            
+            // Draw right arrow
+            graphics.drawString(
+                Minecraft.getInstance().font,
+                ">",
+                x + width - horizontalMargin - scrollButtonSize / 2 - 3,
+                y + height / 2 - 4,
+                0xFFFFFFFF
+            );
+        }
+        
+        // Render horizontal scrollbar if needed
+        if (horizontalScrollEnabled && !useScrollButtons && maxHorizontalScrollOffset > 0) {
+            int scrollBarWidth = Math.max(20, (availableWidth * visibleColumns) / totalColumns);
+            int scrollBarX = x + horizontalMargin + (int)((float)horizontalScrollOffset / maxHorizontalScrollOffset * (availableWidth - scrollBarWidth));
+            
+            // Draw scrollbar track
+            graphics.fill(
+                x + horizontalMargin, 
+                y + height - verticalMargin - scrollBarHeight, 
+                x + horizontalMargin + availableWidth, 
+                y + height - verticalMargin, 
+                0x40FFFFFF
+            );
+            
+            // Draw scrollbar thumb
+            graphics.fill(
+                scrollBarX, 
+                y + height - verticalMargin - scrollBarHeight, 
+                scrollBarX + scrollBarWidth, 
+                y + height - verticalMargin, 
+                0xC0FFFFFF
+            );
+        }
         
         // Render each element
         for (UIGridElement element : elements) {
+            // Skip elements outside the visible range when scrolling
+            if (horizontalScrollEnabled) {
+                if (element.column < horizontalScrollOffset || 
+                    element.column >= horizontalScrollOffset + visibleColumns) {
+                    continue;
+                }
+            }
+            
             // Calculate element position and size
-            int elementX = x + horizontalMargin + (element.column * (cellWidth + horizontalSpacing));
+            int elementX;
+            
+            if (horizontalScrollEnabled) {
+                int adjustedColumn = element.column - horizontalScrollOffset;
+                int startX = x + horizontalMargin;
+                if (useScrollButtons) {
+                    startX += scrollButtonSize; // Account for left scroll button
+                }
+                elementX = startX + (adjustedColumn * (cellWidth + horizontalSpacing));
+            } else {
+                elementX = x + horizontalMargin + (element.column * (cellWidth + horizontalSpacing));
+            }
+            
             int elementY = y + verticalMargin + (element.row * (cellHeight + verticalSpacing));
             int elementWidth = (cellWidth * element.colSpan) + ((element.colSpan - 1) * horizontalSpacing);
             int elementHeight = (cellHeight * element.rowSpan) + ((element.rowSpan - 1) * verticalSpacing);
@@ -216,16 +389,81 @@ public class UIGridBuilder {
      * @return true if a click was handled
      */
     public boolean mouseClicked(int mouseX, int mouseY) {
+        // Check for scroll button clicks first
+        if (horizontalScrollEnabled && useScrollButtons) {
+            // Check left button
+            if (mouseX >= x + horizontalMargin && mouseX < x + horizontalMargin + scrollButtonSize &&
+                mouseY >= y + height / 2 - scrollButtonSize / 2 && mouseY < y + height / 2 + scrollButtonSize / 2) {
+                if (horizontalScrollOffset > 0) {
+                    scrollLeft();
+                    return true;
+                }
+            }
+            
+            // Check right button
+            if (mouseX >= x + width - horizontalMargin - scrollButtonSize && mouseX < x + width - horizontalMargin &&
+                mouseY >= y + height / 2 - scrollButtonSize / 2 && mouseY < y + height / 2 + scrollButtonSize / 2) {
+                if (horizontalScrollOffset < maxHorizontalScrollOffset) {
+                    scrollRight();
+                    return true;
+                }
+            }
+        }
+        
+        // Check for horizontal scrollbar drag
+        if (horizontalScrollEnabled && !useScrollButtons) {
+            int availableWidth = width - (2 * horizontalMargin) - ((columns - 1) * horizontalSpacing);
+            
+            if (mouseY >= y + height - verticalMargin - scrollBarHeight && 
+                mouseY < y + height - verticalMargin &&
+                mouseX >= x + horizontalMargin && 
+                mouseX < x + horizontalMargin + availableWidth) {
+                
+                // Calculate new scroll position based on click position
+                float relativeX = (float)(mouseX - (x + horizontalMargin)) / availableWidth;
+                setHorizontalScrollOffset((int)(relativeX * maxHorizontalScrollOffset));
+                return true;
+            }
+        }
+        
         // Calculate cell dimensions
         int availableWidth = width - (2 * horizontalMargin) - ((columns - 1) * horizontalSpacing);
+        if (useScrollButtons && horizontalScrollEnabled) {
+            availableWidth -= (2 * scrollButtonSize); // Account for scroll buttons
+        }
+        
         int availableHeight = height - (2 * verticalMargin) - ((rows - 1) * verticalSpacing);
-        int cellWidth = availableWidth / columns;
+        if (horizontalScrollEnabled && !useScrollButtons) {
+            availableHeight -= scrollBarHeight; // Account for scrollbar height
+        }
+        
+        int cellWidth = availableWidth / (horizontalScrollEnabled ? visibleColumns : columns);
         int cellHeight = availableHeight / rows;
         
         // Check each element
         for (UIGridElement element : elements) {
+            // Skip elements outside the visible range when scrolling
+            if (horizontalScrollEnabled) {
+                if (element.column < horizontalScrollOffset || 
+                    element.column >= horizontalScrollOffset + visibleColumns) {
+                    continue;
+                }
+            }
+            
             // Calculate element position and size
-            int elementX = x + horizontalMargin + (element.column * (cellWidth + horizontalSpacing));
+            int elementX;
+            
+            if (horizontalScrollEnabled) {
+                int adjustedColumn = element.column - horizontalScrollOffset;
+                int startX = x + horizontalMargin;
+                if (useScrollButtons) {
+                    startX += scrollButtonSize; // Account for left scroll button
+                }
+                elementX = startX + (adjustedColumn * (cellWidth + horizontalSpacing));
+            } else {
+                elementX = x + horizontalMargin + (element.column * (cellWidth + horizontalSpacing));
+            }
+            
             int elementY = y + verticalMargin + (element.row * (cellHeight + verticalSpacing));
             int elementWidth = (cellWidth * element.colSpan) + ((element.colSpan - 1) * horizontalSpacing);
             int elementHeight = (cellHeight * element.rowSpan) + ((element.rowSpan - 1) * verticalSpacing);
@@ -245,23 +483,42 @@ public class UIGridBuilder {
                         
                     case TOGGLE:
                         if (element.onToggle != null) {
+                            // Toggle state
                             element.toggled = !element.toggled;
+                            
                             // Swap colors
                             int temp = element.backgroundColor;
                             element.backgroundColor = element.altBackgroundColor;
                             element.altBackgroundColor = temp;
+                            
+                            // Call handler
                             element.onToggle.accept(element.toggled);
                             return true;
                         }
                         break;
-                        
-                    case LABEL:
-                        // Labels don't respond to clicks
-                        break;
                 }
-                
-                break;
             }
+        }
+        
+        // No element was clicked
+        return false;
+    }
+    
+    /**
+     * Handle mouse scrolling
+     * @return true if handled
+     */
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (!horizontalScrollEnabled || maxHorizontalScrollOffset <= 0) {
+            return false;
+        }
+        
+        // Check if mouse is over the grid
+        if (mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height) {
+            // Scroll horizontally (delta is positive when scrolling up/left, negative when scrolling down/right)
+            int scrollAmount = (int)(-delta);
+            setHorizontalScrollOffset(horizontalScrollOffset + scrollAmount);
+            return true;
         }
         
         return false;
@@ -291,9 +548,9 @@ public class UIGridBuilder {
         graphics.vLine(x + width - 1, y, y + height - 1, borderColor);
         
         // Draw centered text
-        int textX = x + width / 2 - net.minecraft.client.Minecraft.getInstance().font.width(element.text) / 2;
+        int textX = x + width / 2 - Minecraft.getInstance().font.width(element.text) / 2;
         int textY = y + (height - 8) / 2;
-        graphics.drawString(net.minecraft.client.Minecraft.getInstance().font, element.text, textX, textY, 0xFFFFFFFF);
+        graphics.drawString(Minecraft.getInstance().font, element.text, textX, textY, 0xFFFFFFFF);
     }
     
     /**
@@ -302,9 +559,9 @@ public class UIGridBuilder {
     private void renderLabel(GuiGraphics graphics, UIGridElement element, 
                             int x, int y, int width, int height) {
         // Draw text (centered)
-        int textX = x + width / 2 - net.minecraft.client.Minecraft.getInstance().font.width(element.text) / 2;
+        int textX = x + width / 2 - Minecraft.getInstance().font.width(element.text) / 2;
         int textY = y + (height - 8) / 2;
-        graphics.drawString(net.minecraft.client.Minecraft.getInstance().font, element.text, textX, textY, element.textColor);
+        graphics.drawString(Minecraft.getInstance().font, element.text, textX, textY, element.textColor);
     }
     
     /**
@@ -341,9 +598,9 @@ public class UIGridBuilder {
         graphics.fill(indicatorX, indicatorY, indicatorX + indicatorSize, indicatorY + indicatorSize, 0xFFFFFFFF);
         
         // Draw centered text
-        int textX = x + width / 2 - net.minecraft.client.Minecraft.getInstance().font.width(element.text) / 2;
+        int textX = x + width / 2 - Minecraft.getInstance().font.width(element.text) / 2;
         int textY = y + (height - 8) / 2;
-        graphics.drawString(net.minecraft.client.Minecraft.getInstance().font, element.text, textX, textY, 0xFFFFFFFF);
+        graphics.drawString(Minecraft.getInstance().font, element.text, textX, textY, 0xFFFFFFFF);
     }
     
     /**
