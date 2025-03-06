@@ -18,14 +18,25 @@ public class BCToggleButton extends BCButton {
     private int untoggledBackgroundColor = 0x80333333; // Semi-transparent gray when untoggled
     private int toggledBorderColor = 0xFFFFFFFF;       // White border when toggled
     private int untoggledBorderColor = 0x80FFFFFF;     // Semi-transparent white border when untoggled
+    private Consumer<BCToggleButton> toggleHandler;
     
     /**
-     * Create a new toggle button
+     * Create a new toggle button with standard Button consumer
      */
     public BCToggleButton(boolean initialState, Consumer<Button> onToggle) {
-        super(Component.empty(), onToggle, 40, 20);
+        super(Component.empty(), onToggle, 120, 20);
         this.toggled = initialState;
         this.withBackground(false); // We'll handle our own background
+    }
+    
+    /**
+     * Create a new toggle button with special toggle handler
+     * (workaround for type erasure)
+     */
+    public static BCToggleButton createWithToggleHandler(boolean initialState, Consumer<BCToggleButton> toggleHandler) {
+        BCToggleButton button = new BCToggleButton(initialState, (Button b) -> {});
+        button.toggleHandler = toggleHandler;
+        return button;
     }
     
     /**
@@ -76,32 +87,26 @@ public class BCToggleButton extends BCButton {
     }
     
     /**
-     * Check if the mouse is over this button.
-     * 
-     * @param mouseX The mouse X coordinate
-     * @param mouseY The mouse Y coordinate
-     * @return True if the mouse is over this button
-     */
-    public boolean isMouseOver(double mouseX, double mouseY) {
-        return mouseX >= getX() && mouseX < getX() + getWidth() && 
-               mouseY >= getY() && mouseY < getY() + getHeight();
-    }
-    
-    /**
      * Handle mouse click to toggle the button state
      */
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (isMouseOver(mouseX, mouseY) && button == 0) {
+        if (mouseX >= getX() && mouseX < getX() + getWidth() && 
+            mouseY >= getY() && mouseY < getY() + getHeight() && button == 0) {
             // Toggle the state
             toggled = !toggled;
             
             // Play button sound
             playButtonSound();
             
-            // Trigger the callback
+            // Call the original handler if set
             if (onPress != null) {
                 onPress.accept(null);
+            }
+            
+            // Call the toggle handler if set
+            if (toggleHandler != null) {
+                toggleHandler.accept(this);
             }
             
             return true;
@@ -123,7 +128,8 @@ public class BCToggleButton extends BCButton {
      */
     @Override
     protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        boolean hovered = isMouseOver(mouseX, mouseY);
+        boolean hovered = mouseX >= getX() && mouseX < getX() + getWidth() && 
+                         mouseY >= getY() && mouseY < getY() + getHeight();
         
         // Choose colors based on toggle state
         int bgColor = toggled ? toggledBackgroundColor : untoggledBackgroundColor;

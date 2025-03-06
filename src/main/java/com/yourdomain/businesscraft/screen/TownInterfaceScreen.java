@@ -4,13 +4,16 @@ import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
 import com.yourdomain.businesscraft.screen.components.*;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * The Town Interface Screen showcases the BusinessCraft UI system capabilities.
@@ -29,6 +32,11 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     private static final int INACTIVE_TAB_COLOR = 0x80555555;  // Medium gray for inactive tabs
     private static final int TEXT_COLOR = 0xFFFFFFFF;          // White text
     private static final int TEXT_HIGHLIGHT = 0xFFDDFFFF;      // Light cyan highlight text
+    private static final int SUCCESS_COLOR = 0xA0339944;       // Green
+    private static final int DANGER_COLOR = 0xA0993333;        // Red
+    
+    // Grid builder for bottom buttons
+    private UIGridBuilder bottomButtonsGrid;
 
     public TownInterfaceScreen(TownInterfaceMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -61,13 +69,14 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         // Apply our custom theme for this screen
         BCTheme.setActiveTheme(customTheme);
         
-        // Create tab panel with proper dimensions
-        int tabPanelWidth = this.imageWidth - 20;
-        int tabPanelHeight = this.imageHeight - 20;
-        this.tabPanel = new BCTabPanel(tabPanelWidth, tabPanelHeight, 20);
+        // Calculate screen dimensions and padding
+        int screenPadding = 10;
+        int screenContentWidth = this.imageWidth - (screenPadding * 2);
+        int screenContentHeight = this.imageHeight - (screenPadding * 2);
         
-        // Position tab panel properly within the screen
-        this.tabPanel.position(this.leftPos + 10, this.topPos + 10);
+        // Create tab panel with proper dimensions, positioned with padding
+        this.tabPanel = new BCTabPanel(screenContentWidth, screenContentHeight, 20);
+        this.tabPanel.position(this.leftPos + screenPadding, this.topPos + screenPadding);
         
         // Set tab styling with our lighter colors
         this.tabPanel.withTabStyle(ACTIVE_TAB_COLOR, INACTIVE_TAB_COLOR, TEXT_COLOR)
@@ -85,8 +94,29 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             this.tabPanel.setActiveTab("overview");
         }
         
+        // Initialize the bottom buttons grid
+        createBottomButtonsGrid();
+        
         // Initialize the tab panel
         this.tabPanel.init(this::addRenderableWidget);
+    }
+    
+    /**
+     * Create the grid builder for bottom buttons
+     */
+    private void createBottomButtonsGrid() {
+        // Calculate button panel dimensions
+        int buttonPanelWidth = this.imageWidth - 40; // Leave 20px margin on each side
+        int buttonPanelHeight = 40;
+        int buttonPanelX = this.leftPos + (this.imageWidth - buttonPanelWidth) / 2;
+        int buttonPanelY = this.topPos + this.imageHeight + 10;
+        
+        // Create a 1x2 grid (1 row, 2 columns)
+        bottomButtonsGrid = new UIGridBuilder(buttonPanelX, buttonPanelY, buttonPanelWidth, buttonPanelHeight, 1, 2)
+            .withBackgroundColor(BACKGROUND_COLOR)
+            .withBorderColor(BORDER_COLOR)
+            .withMargins(15, 10)
+            .withSpacing(20, 0);
     }
     
     private void createOverviewTab() {
@@ -143,24 +173,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         panel.addChild(infoPanel);
         infoPanel.animate("alpha", 1.0f, 800);
         
-        // Add action buttons panel
-        BCPanel buttonPanel = new BCPanel(panel.getInnerWidth(), 30);
-        buttonPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.HORIZONTAL, 10));
-        
-        // Add action buttons
-        BCButton editButton = BCComponentFactory.createPrimaryButton("Edit Details", b -> {
-            // Implement edit functionality
-        }, 100);
-        buttonPanel.addChild(editButton);
-        
-        BCButton visitButton = BCComponentFactory.createSecondaryButton("Visit Center", b -> {
-            // Implement visit functionality
-        }, 100);
-        buttonPanel.addChild(visitButton);
-        
-        buttonPanel.withAlpha(0.0f);
-        panel.addChild(buttonPanel);
-        buttonPanel.animate("alpha", 1.0f, 1000);
+        // Note: We no longer need to add buttons here as they're handled by the bottom navigation panel
         
         // Add the panel to the tab
         this.tabPanel.addTab("overview", Component.literal("Overview"), panel);
@@ -210,21 +223,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         
         panel.addChild(resourcePanel);
         
-        // Add resource controls
-        BCPanel controlPanel = new BCPanel(panel.getInnerWidth(), 30);
-        controlPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.HORIZONTAL, 10));
-        
-        BCButton tradeButton = BCComponentFactory.createPrimaryButton("Trade Resources", b -> {
-            // Implement trade functionality
-        }, 120);
-        controlPanel.addChild(tradeButton);
-        
-        BCButton manageButton = BCComponentFactory.createSecondaryButton("Manage Storage", b -> {
-            // Implement storage management
-        }, 120);
-        controlPanel.addChild(manageButton);
-        
-        panel.addChild(controlPanel);
+        // Note: We no longer need to add buttons here as they're handled by the bottom navigation panel
         
         // Add the panel to the tab
         this.tabPanel.addTab("economy", Component.literal("Economy"), panel);
@@ -281,22 +280,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         
         panel.addChild(citizenPanel);
         
-        // Create population controls
-        BCPanel controlPanel = new BCPanel(panel.getInnerWidth(), 30);
-        controlPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.HORIZONTAL, 10));
-        
-        // Add control buttons
-        BCButton assignButton = BCComponentFactory.createPrimaryButton("Assign Jobs", b -> {
-            // Implement job assignment
-        }, 100);
-        controlPanel.addChild(assignButton);
-        
-        BCButton recruitButton = BCComponentFactory.createSecondaryButton("Recruit Citizens", b -> {
-            // Implement recruitment
-        }, 120);
-        controlPanel.addChild(recruitButton);
-        
-        panel.addChild(controlPanel);
+        // Note: We no longer need to add buttons here as they're handled by the bottom navigation panel
         
         // Add the panel to the tab
         this.tabPanel.addTab("population", Component.literal("Population"), panel);
@@ -309,7 +293,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
              .withBackgroundColor(0x00000000) // Transparent background
              .withCornerRadius(3);
         
-        // Create a flow layout for the panel
+        // Create a flow layout for the panel with increased spacing
         panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 10));
         
         // Add title
@@ -319,7 +303,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         
         // Create settings form with better styling
         BCPanel settingsForm = new BCPanel(panel.getInnerWidth(), 140);
-        settingsForm.withLayout(new BCGridLayout(2, 8, 8))
+        settingsForm.withLayout(new BCGridLayout(2, 15, 10))
                     .withBackgroundColor(BACKGROUND_COLOR)
                     .withBorderColor(BORDER_COLOR)
                     .withCornerRadius(5);
@@ -350,10 +334,16 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         pvpLabel.withTextColor(TEXT_COLOR);
         settingsForm.addChild(pvpLabel);
         
-        // Create a button instead of a toggle
-        BCButton pvpButton = BCComponentFactory.createSecondaryButton("Disabled", b -> {
-            // Toggle PvP setting
-        }, 80);
+        // Create PvP toggle button with chat notification
+        final BCToggleButton pvpButton = BCToggleButton.createWithToggleHandler(false, button -> {
+            boolean isToggled = button.isToggled();
+            sendChatMessage("Button pressed: PvP Toggle " + (isToggled ? "Enabled" : "Disabled"));
+            // Update button text based on toggle state
+            button.withText(Component.literal(isToggled ? "Enabled" : "Disabled"));
+        });
+        pvpButton.withText(Component.literal("Disabled"));
+        pvpButton.withToggledBackgroundColor(0xA0339944);  // Green when enabled
+        pvpButton.withUntoggledBackgroundColor(0xA0993333); // Red when disabled
         settingsForm.addChild(pvpButton);
         
         // Public toggle
@@ -361,29 +351,21 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         publicLabel.withTextColor(TEXT_COLOR);
         settingsForm.addChild(publicLabel);
         
-        // Create a button instead of a toggle
-        BCButton publicButton = BCComponentFactory.createPrimaryButton("Enabled", b -> {
-            // Toggle public setting
-        }, 80);
+        // Create a toggle button with chat notification
+        final BCToggleButton publicButton = BCToggleButton.createWithToggleHandler(true, button -> {
+            boolean isToggled = button.isToggled();
+            sendChatMessage("Button pressed: Public Town Toggle " + (isToggled ? "Enabled" : "Disabled"));
+            // Update button text based on toggle state
+            button.withText(Component.literal(isToggled ? "Enabled" : "Disabled"));
+        });
+        publicButton.withText(Component.literal("Enabled"));
+        publicButton.withToggledBackgroundColor(0xA0339944);  // Green when enabled
+        publicButton.withUntoggledBackgroundColor(0xA0993333); // Red when disabled
         settingsForm.addChild(publicButton);
         
         panel.addChild(settingsForm);
         
-        // Add control buttons
-        BCPanel controlPanel = new BCPanel(panel.getInnerWidth(), 30);
-        controlPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.HORIZONTAL, 10));
-        
-        BCButton saveButton = BCComponentFactory.createSuccessButton("Save Settings", b -> {
-            // Save settings
-        }, 120);
-        controlPanel.addChild(saveButton);
-        
-        BCButton resetButton = BCComponentFactory.createDangerButton("Reset Defaults", b -> {
-            // Reset to defaults
-        }, 120);
-        controlPanel.addChild(resetButton);
-        
-        panel.addChild(controlPanel);
+        // Note: We no longer need to add buttons here as they're handled by the bottom navigation panel
         
         // Add the panel to the tab
         this.tabPanel.addTab("settings", Component.literal("Settings"), panel);
@@ -419,6 +401,10 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         // Render the tab panel
         this.tabPanel.render(graphics, this.tabPanel.getX(), this.tabPanel.getY(), mouseX, mouseY);
         
+        // Update and render the bottom buttons based on active tab
+        updateBottomButtons();
+        bottomButtonsGrid.render(graphics, mouseX, mouseY);
+        
         // Render the screen title
         graphics.drawCenteredString(this.font, this.title, this.leftPos + this.imageWidth / 2, this.topPos - 12, TEXT_COLOR);
         
@@ -429,19 +415,103 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         graphics.pose().popPose();
     }
     
-    @Override
-    protected void renderBg(GuiGraphics graphics, float partialTicks, int mouseX, int mouseY) {
-        // Background rendering is handled in render() method
+    /**
+     * Updates the bottom buttons based on the active tab
+     */
+    private void updateBottomButtons() {
+        // Calculate button panel dimensions (must be recalculated in case window was resized)
+        int buttonPanelWidth = this.imageWidth - 40;
+        int buttonPanelHeight = 40;
+        int buttonPanelX = this.leftPos + (this.imageWidth - buttonPanelWidth) / 2;
+        int buttonPanelY = this.topPos + this.imageHeight + 10;
+        
+        // Create a new grid builder with current dimensions
+        bottomButtonsGrid = new UIGridBuilder(buttonPanelX, buttonPanelY, buttonPanelWidth, buttonPanelHeight, 1, 2)
+            .withBackgroundColor(BACKGROUND_COLOR)
+            .withBorderColor(BORDER_COLOR)
+            .withMargins(15, 10)
+            .withSpacing(20, 0);
+        
+        // Get the active tab ID
+        String activeTab = this.tabPanel.getActiveTabId();
+        if (activeTab == null) {
+            activeTab = "overview"; // Default
+        }
+        
+        // Configure buttons based on active tab
+        switch (activeTab) {
+            case "overview":
+                bottomButtonsGrid
+                    .addButton(0, 0, "Edit Details", v -> {
+                        sendChatMessage("Button pressed: Edit Details");
+                    }, PRIMARY_COLOR)
+                    .addButton(0, 1, "Visit Center", v -> {
+                        sendChatMessage("Button pressed: Visit Center");
+                    }, SECONDARY_COLOR);
+                break;
+                
+            case "economy":
+                bottomButtonsGrid
+                    .addButton(0, 0, "Trade Resources", v -> {
+                        sendChatMessage("Button pressed: Trade Resources");
+                    }, PRIMARY_COLOR)
+                    .addButton(0, 1, "Manage Storage", v -> {
+                        sendChatMessage("Button pressed: Manage Storage");
+                    }, SECONDARY_COLOR);
+                break;
+                
+            case "population":
+                bottomButtonsGrid
+                    .addButton(0, 0, "Assign Jobs", v -> {
+                        sendChatMessage("Button pressed: Assign Jobs");
+                    }, PRIMARY_COLOR)
+                    .addButton(0, 1, "Recruit Citizens", v -> {
+                        sendChatMessage("Button pressed: Recruit Citizens");
+                    }, SECONDARY_COLOR);
+                break;
+                
+            case "settings":
+                bottomButtonsGrid
+                    .addButton(0, 0, "Save Settings", v -> {
+                        sendChatMessage("Button pressed: Save Settings");
+                    }, SUCCESS_COLOR)
+                    .addButton(0, 1, "Reset Defaults", v -> {
+                        sendChatMessage("Button pressed: Reset Defaults");
+                    }, DANGER_COLOR);
+                break;
+        }
     }
     
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         // Let the tab panel handle clicks first
         if (this.tabPanel.mouseClicked(mouseX, mouseY, button)) {
-                    return true;
+            return true;
+        }
+        
+        // Check if bottom buttons grid handled the click
+        if (button == 0 && bottomButtonsGrid.mouseClicked((int)mouseX, (int)mouseY)) {
+            // Play button sound
+            playButtonClickSound();
+            return true;
         }
         
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+    
+    /**
+     * Plays the button click sound effect
+     */
+    private void playButtonClickSound() {
+        Minecraft.getInstance().getSoundManager().play(
+            net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
+                net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F)
+        );
+    }
+    
+    @Override
+    protected void renderBg(GuiGraphics graphics, float partialTicks, int mouseX, int mouseY) {
+        // Background rendering is handled in render() method
     }
     
     @Override
@@ -472,5 +542,49 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         }
         
         return super.mouseScrolled(mouseX, mouseY, delta);
+    }
+
+    /**
+     * Create a modified button with chat message notification
+     * 
+     * @param text The button text
+     * @param onClick The original click handler
+     * @param width The button width
+     * @return A button that shows a chat message when clicked
+     */
+    private BCButton createNotifyButton(String text, Consumer<BCButton> onClick, int width) {
+        // We need to bridge between different consumer types
+        Consumer<Button> buttonHandler = b -> {
+            // Send chat message
+            sendChatMessage("Button pressed: " + text);
+            
+            // Call original handler if provided
+            if (onClick != null) {
+                onClick.accept(null);
+            }
+        };
+        
+        // Create button with the wrapped handler
+        BCButton button;
+        
+        if (text.contains("Save")) {
+            button = BCComponentFactory.createSuccessButton(text, buttonHandler, width);
+        } else if (text.contains("Reset")) {
+            button = BCComponentFactory.createDangerButton(text, buttonHandler, width);
+        } else {
+            button = BCComponentFactory.createPrimaryButton(text, buttonHandler, width);
+        }
+        
+        return button.withText(Component.literal(text));
+    }
+    
+    /**
+     * Helper method to send a chat message to the player
+     */
+    private void sendChatMessage(String message) {
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player != null) {
+            player.displayClientMessage(Component.literal(message), false);
+        }
     }
 } 

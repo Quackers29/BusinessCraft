@@ -23,3 +23,12 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 10. UI, BCTheme.java, when refactoring a utility class, update all references to deprecated methods in dependent classes
 11. UI, BCToggleButton.java, when extending a component and using its protected methods, make sure to override those that are needed
 12. UI, BCButton.java, when overriding with custom render implementations, disable default rendering with appropriate flags
+13. UI, BCToggleButton.java, for components with type erasure issues, use static factory methods instead of constructors
+14. UI, button handlers, when passing event handlers between different component types, create adapter functions to bridge type differences
+15. UI, responsive layout, calculate button widths based on container dimensions rather than using fixed sizes
+16. UI, button spacing, use nested containers with dedicated layouts to provide consistent spacing and boundaries
+17. UI, layout consistency, use grid layouts (rows/columns) for better control over component positioning and sizing
+18. UI, animation sequences, add animations with delays to create a cascading appearance effect for UI elements
+19. UI, TownInterfaceScreen.java, render bottom buttons separately from tab content to provide consistent navigation controls
+20. UI, tab-specific actions, use the active tab identifier to dynamically change button functions based on current context
+21. UI, UIGridBuilder.java, use a data-driven approach with a grid-based system for flexible and reusable UI layouts
