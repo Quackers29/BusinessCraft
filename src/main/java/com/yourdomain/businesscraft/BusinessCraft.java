@@ -1,6 +1,7 @@
 package com.yourdomain.businesscraft;
 
 import com.yourdomain.businesscraft.block.TownBlock;
+import com.yourdomain.businesscraft.block.TownInterfaceBlock;
 import com.yourdomain.businesscraft.block.entity.ModBlockEntities;
 import com.yourdomain.businesscraft.command.ClearTownsCommand;
 import com.yourdomain.businesscraft.config.ConfigLoader;
@@ -10,6 +11,8 @@ import com.yourdomain.businesscraft.town.TownManager;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.MapColor;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
@@ -44,6 +47,15 @@ public class BusinessCraft {
     
     public static final RegistryObject<Item> TOWN_BLOCK_ITEM = ITEMS.register("town_block",
         () -> new BlockItem(TOWN_BLOCK.get(), new Item.Properties()));
+        
+    public static final RegistryObject<Block> TOWN_INTERFACE = BLOCKS.register("town_interface", 
+        () -> new TownInterfaceBlock(BlockBehaviour.Properties.of()
+                .mapColor(MapColor.STONE)
+                .strength(3.0f, 3.0f)
+                .requiresCorrectToolForDrops()));
+    
+    public static final RegistryObject<Item> TOWN_INTERFACE_ITEM = ITEMS.register("town_interface",
+        () -> new BlockItem(TOWN_INTERFACE.get(), new Item.Properties()));
 
     // Add a static reference to the manager to use in event handlers
     public static final TouristVehicleManager TOURIST_VEHICLE_MANAGER = new TouristVehicleManager();

@@ -1,0 +1,116 @@
+# BusinessCraft UI Component System
+## Quick Reference Guide
+
+This manual provides a brief overview of the BusinessCraft UI component system, designed for creating interactive interfaces in Minecraft mods.
+
+### Core Components
+
+**BCComponent.java**
+Base component class that all UI elements inherit from. Provides common functionality like positioning, sizing, visibility, and rendering.
+
+**BCPanel.java**
+Container component that holds and arranges other components. Can use different layout managers to organize child components.
+
+**BCTabPanel.java**
+Specialized panel that implements a tabbed interface. Manages tab buttons and content panels, allowing only one tab to be visible at a time.
+
+**BCLabel.java**
+Text display component with configurable styles, colors, and alignment options. Supports static and dynamic text content.
+
+**BCButton.java**
+Interactive button component that can trigger actions when clicked. Supports different button styles and states.
+
+**BCComponentFactory.java**
+Factory class with helper methods to create standardized UI components with consistent styling.
+
+**BCTheme.java**
+Defines standard colors, sizes, and styles used throughout the UI system for consistent appearance.
+
+### Layout Managers
+
+**BCLayout.java**
+Base interface for all layout managers.
+
+**BCFlowLayout.java**
+Arranges components in a directional flow (horizontal or vertical) with configurable spacing.
+
+**BCGridLayout.java**
+Arranges components in a grid pattern with configurable columns, row height, and spacing.
+
+### Data Components
+
+**DataLabelComponent.java**
+Label with dynamic content that updates based on a supplier function.
+
+**EditBoxComponent.java**
+Text input component for user-editable text fields.
+
+**ToggleButtonComponent.java**
+Button that toggles between two states (on/off).
+
+### Usage Guide
+
+1. **Creating a Basic Screen:**
+   ```java
+   // Create a panel to hold components
+   BCPanel panel = new BCPanel(width, height);
+   
+   // Add components to the panel
+   panel.addChild(BCComponentFactory.createHeaderLabel("Title", width));
+   panel.addChild(BCComponentFactory.createBodyLabel("Content", width));
+   
+   // Set a layout
+   panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 5));
+   ```
+
+2. **Creating a Tabbed Interface:**
+   ```java
+   // Create a tab panel
+   BCTabPanel tabPanel = new BCTabPanel(width, height, 20);
+   
+   // Create content panels for each tab
+   BCPanel tab1Content = new BCPanel(width, height - 20);
+   // Add components to tab1Content...
+   
+   // Add tabs
+   tabPanel.addTab("tab1", Component.literal("Tab 1"), tab1Content);
+   // Add more tabs...
+   
+   // Initialize the tab panel
+   tabPanel.init(this::addRenderableWidget);
+   ```
+
+3. **Component Styling:**
+   ```java
+   // Create a label with custom styling
+   BCLabel label = BCComponentFactory.createBodyLabel("Text", 100);
+   label.withTextColor(0xFFFFFF);
+   label.withShadow(true);
+   ```
+
+4. **Dynamic Content:**
+   ```java
+   // Create a dynamic label that updates when data changes
+   BCLabel dynamicLabel = BCComponentFactory.createDynamicLabel(
+       () -> Component.literal("Value: " + getValue()),
+       200
+   );
+   ```
+
+5. **Handling User Input:**
+   ```java
+   // Create a button with an action
+   BCButton button = BCComponentFactory.createPrimaryButton(
+       "Click Me",
+       button -> performAction(),
+       100
+   );
+   ```
+
+### Implementation Tips
+
+- Use `BCScreenBuilder` for quick creation of standard screens
+- Always initialize components with `init()` method before rendering
+- Use `position()` to place components relative to their parent
+- Remember to call `layoutChildren()` if using layout managers
+- For custom screens, override the `render()` method to draw components 

@@ -13,4 +13,7 @@ public class ModMenuTypes {
 
         public static final RegistryObject<MenuType<TownBlockMenu>> TOWN_BLOCK_MENU = MENUS.register("town_block",
                         () -> IForgeMenuType.create(TownBlockMenu::new));
+                        
+        public static final RegistryObject<MenuType<TownInterfaceMenu>> TOWN_INTERFACE = MENUS.register("town_interface",
+                        () -> IForgeMenuType.create(TownInterfaceMenu::new));
 }

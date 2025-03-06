@@ -5,309 +5,236 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
- * Pre-configured screen templates for common BusinessCraft interfaces.
- * These templates provide ready-to-use screen configurations with
- * appropriate layouts, styling, and animations.
+ * Provides standard screen templates for BusinessCraft interfaces.
+ * These templates can be used as a starting point for creating consistent UIs.
  */
 public class BCScreenTemplates {
+
+    /**
+     * Creates a standard information screen with a header, content area, and action buttons.
+     * Useful for displaying information and simple actions to the player.
+     */
+    public static <T extends AbstractContainerMenu> AbstractContainerScreen<T> createInfoScreen(
+            T menu, Inventory inventory, Component title, 
+            Component headerText, Component contentText,
+            List<ButtonConfig> buttons) {
+        
+        return BCScreenBuilder.create(menu, inventory, title, 256, 204)
+            .withPadding(10)
+            .withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 10))
+            .addComponent(BCComponentFactory.createHeaderLabel(headerText.getString(), 236))
+            .addComponent(createContentPanel(contentText, 236, 110))
+            .addComponent(createButtonsPanel(buttons, 236))
+            .build();
+    }
     
     /**
-     * Creates a town management screen template.
-     * Includes tabs for Info, Resources, History, and Settings.
-     * 
-     * @param menu The container menu
-     * @param inventory The player inventory
-     * @param title The screen title
-     * @param width Screen width
-     * @param height Screen height
-     * @return A configured screen builder
+     * Creates a standard tabbed management screen with tabs for different categories.
+     * Useful for screens that need to display different types of related information.
      */
-    public static <M extends AbstractContainerMenu> AbstractContainerScreen<M> createTownManagementScreen(
-            M menu, Inventory inventory, Component title, int width, int height) {
+    public static <T extends AbstractContainerMenu> AbstractContainerScreen<T> createTabbedScreen(
+            T menu, Inventory inventory, Component title,
+            List<TabConfig> tabs) {
         
-        BCTheme theme = BCTheme.get();
+        BCScreenBuilder<T> builder = BCScreenBuilder.create(menu, inventory, title, 256, 204)
+            .withPadding(10)
+            .withTabs(20);
         
-        // Create the screen builder with appropriate styling
-        BCScreenBuilder<M> builder = BCScreenBuilder.create(menu, inventory, title, width, height)
-            .withPadding(theme.getMediumPadding())
-            .withBackgroundColor(theme.getBackgroundColor())
-            .withBorderColor(theme.getBorderColor())
-            .withTabs(24)
-            .withTabAnimation(BCAnimation.AnimationType.SLIDE_LEFT, BCAnimation.EasingFunction.EASE_OUT, 200)
-            .withEnterAnimation(BCAnimation.AnimationType.FADE, BCAnimation.EasingFunction.EASE_OUT, 300);
-        
-        // Add Info tab
-        builder.addTab("info", Component.translatable("businesscraft.ui.tab.info"), panel -> {
-            panel.withLayout(new BCGridLayout(2, 3, 8));
-            
-            // Town name and basic info
-            BCPanel infoPanel = BCComponentFactory.createPanel(panel.getWidth() / 2 - 4, 120);
-            infoPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 6));
-            infoPanel.withBorderColor(theme.getPrimaryColor());
-            infoPanel.withBackgroundColor(theme.getSurfaceColor());
-            infoPanel.withPadding(theme.getSmallPadding());
-            
-            // Town stats panel
-            BCPanel statsPanel = BCComponentFactory.createPanel(panel.getWidth() / 2 - 4, 120);
-            statsPanel.withLayout(new BCGridLayout(2, 3, 4));
-            statsPanel.withBorderColor(theme.getPrimaryColor());
-            statsPanel.withBackgroundColor(theme.getSurfaceColor());
-            statsPanel.withPadding(theme.getSmallPadding());
-            
-            // Resource summary panel
-            BCPanel resourceSummary = BCComponentFactory.createPanel(panel.getWidth() - 8, 100);
-            resourceSummary.withLayout(new BCFlowLayout(BCFlowLayout.Direction.HORIZONTAL, 8));
-            resourceSummary.withBorderColor(theme.getSecondaryColor());
-            resourceSummary.withBackgroundColor(theme.getSurfaceColor());
-            resourceSummary.withPadding(theme.getSmallPadding());
-            
-            // Map view panel
-            BCPanel mapView = BCComponentFactory.createPanel(panel.getWidth() - 8, panel.getHeight() - 236);
-            mapView.withBorderColor(theme.getPrimaryColor());
-            mapView.withBackgroundColor(theme.getBackgroundSecondaryColor());
-            mapView.withPadding(0);
-            
-            // Add components to the panel in grid layout
-            panel.addChild(infoPanel);      // Cell 0,0
-            panel.addChild(statsPanel);     // Cell 1,0
-            panel.addChild(resourceSummary); // Cell 0,1 and 1,1 (spans columns)
-            panel.addChild(mapView);        // Cell 0,2 and 1,2 (spans columns)
-        });
-        
-        // Add Resources tab
-        builder.addTab("resources", Component.translatable("businesscraft.ui.tab.resources"), panel -> {
-            panel.withLayout(new BCGridLayout(1, 2, 8));
-            
-            // Resource list panel
-            BCPanel resourceListPanel = BCComponentFactory.createPanel(panel.getWidth() - 8, 180);
-            resourceListPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 2));
-            resourceListPanel.withBorderColor(theme.getPrimaryColor());
-            resourceListPanel.withBackgroundColor(theme.getSurfaceColor());
-            resourceListPanel.withPadding(theme.getSmallPadding());
-            
-            // Resource details panel
-            BCPanel resourceDetailsPanel = BCComponentFactory.createPanel(panel.getWidth() - 8, panel.getHeight() - 188);
-            resourceDetailsPanel.withLayout(new BCGridLayout(2, 3, 6));
-            resourceDetailsPanel.withBorderColor(theme.getSecondaryColor());
-            resourceDetailsPanel.withBackgroundColor(theme.getSurfaceColor());
-            resourceDetailsPanel.withPadding(theme.getMediumPadding());
-            
-            // Add panels to the main panel
-            panel.addChild(resourceListPanel);
-            panel.addChild(resourceDetailsPanel);
-        });
-        
-        // Add History tab
-        builder.addTab("history", Component.translatable("businesscraft.ui.tab.history"), panel -> {
-            panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 8));
-            
-            // Timeline panel
-            BCPanel timelinePanel = BCComponentFactory.createPanel(panel.getWidth() - 8, 60);
-            timelinePanel.withBorderColor(theme.getPrimaryColor());
-            timelinePanel.withBackgroundColor(theme.getSurfaceColor());
-            timelinePanel.withPadding(theme.getSmallPadding());
-            
-            // Events panel
-            BCPanel eventsPanel = BCComponentFactory.createPanel(panel.getWidth() - 8, panel.getHeight() - 68);
-            eventsPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 2));
-            eventsPanel.withBorderColor(theme.getSecondaryColor());
-            eventsPanel.withBackgroundColor(theme.getSurfaceColor());
-            eventsPanel.withPadding(theme.getMediumPadding());
-            
-            // Add panels to the main panel
-            panel.addChild(timelinePanel);
-            panel.addChild(eventsPanel);
-        });
-        
-        // Add Settings tab
-        builder.addTab("settings", Component.translatable("businesscraft.ui.tab.settings"), panel -> {
-            panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 10));
-            panel.withPadding(theme.getMediumPadding());
-            
-            // Settings panel
-            BCPanel settingsPanel = BCComponentFactory.createPanel(panel.getWidth() - 16, panel.getHeight() - 20);
-            settingsPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 8));
-            settingsPanel.withBorderColor(theme.getPrimaryColor());
-            settingsPanel.withBackgroundColor(theme.getSurfaceColor());
-            settingsPanel.withPadding(theme.getMediumPadding());
-            
-            // Add panels to the main panel
-            panel.addChild(settingsPanel);
-        });
+        // Add each tab to the screen
+        for (TabConfig tab : tabs) {
+            builder.addTab(tab.id, tab.title, panel -> {
+                panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 5));
+                
+                // Let the tab configurator set up the panel contents
+                if (tab.configurator != null) {
+                    tab.configurator.accept(panel);
+                }
+            });
+        }
         
         return builder.build();
     }
     
     /**
-     * Creates a dialog screen template.
-     * Perfect for confirmations, alerts, or simple data entry.
-     * 
-     * @param menu The container menu
-     * @param inventory The player inventory
-     * @param title The screen title
-     * @param width Screen width
-     * @param height Screen height
-     * @return A configured screen builder
+     * Creates a standard resource management screen with a list of resources and action buttons.
+     * Useful for screens that display and manage collections of resources.
      */
-    public static <M extends AbstractContainerMenu> AbstractContainerScreen<M> createDialogScreen(
-            M menu, Inventory inventory, Component title, int width, int height) {
+    public static <T extends AbstractContainerMenu> AbstractContainerScreen<T> createResourceScreen(
+            T menu, Inventory inventory, Component title,
+            Component headerText, 
+            List<ResourceConfig> resources,
+            List<ButtonConfig> actions) {
         
-        BCTheme theme = BCTheme.get();
+        return BCScreenBuilder.create(menu, inventory, title, 256, 204)
+            .withPadding(10)
+            .withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 10))
+            .addComponent(BCComponentFactory.createHeaderLabel(headerText.getString(), 236))
+            .addComponent(createResourceListPanel(resources, 236))
+            .addComponent(createButtonsPanel(actions, 236))
+            .build();
+    }
+    
+    /**
+     * Creates a standard settings screen with configurable options.
+     * Useful for screens that allow players to change settings or preferences.
+     */
+    public static <T extends AbstractContainerMenu> AbstractContainerScreen<T> createSettingsScreen(
+            T menu, Inventory inventory, Component title,
+            List<SettingConfig> settings) {
         
-        // Create the screen builder with appropriate styling
-        BCScreenBuilder<M> builder = BCScreenBuilder.create(menu, inventory, title, width, height)
-            .withPadding(theme.getLargePadding())
-            .withBackgroundColor(theme.getDialogBackgroundColor())
-            .withBorderColor(theme.getBorderColor())
-            .withEnterAnimation(BCAnimation.AnimationType.SCALE, BCAnimation.EasingFunction.EASE_OUT, 250)
-            .withExitAnimation(BCAnimation.AnimationType.FADE, BCAnimation.EasingFunction.EASE_IN, 150);
+        BCScreenBuilder<T> builder = BCScreenBuilder.create(menu, inventory, title, 256, 204)
+            .withPadding(10)
+            .withLayout(new BCGridLayout(2, 10, 5));
         
-        // Create the content panel
-        BCPanel contentPanel = BCComponentFactory.createPanel(width - (theme.getLargePadding() * 2), height - (theme.getLargePadding() * 2));
-        contentPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 12));
-        contentPanel.withBackgroundColor(theme.getSurfaceColor());
-        contentPanel.withBorderColor(theme.getPrimaryColor());
-        contentPanel.withPadding(theme.getMediumPadding());
-        
-        // Add the content panel to the screen
-        builder.addComponent(contentPanel);
-        
-        // Configure the layout
-        builder.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 0));
+        // Add each setting as a label + control pair
+        for (SettingConfig setting : settings) {
+            builder.addComponent(BCComponentFactory.createBodyLabel(setting.label.getString(), 110));
+            
+            if (setting.control != null) {
+                builder.addComponent(setting.control);
+            }
+        }
         
         return builder.build();
     }
     
-    /**
-     * Creates a resource management screen template.
-     * Designed for inventory, trading, and resource allocation.
-     * 
-     * @param menu The container menu
-     * @param inventory The player inventory
-     * @param title The screen title
-     * @param width Screen width
-     * @param height Screen height
-     * @return A configured screen builder
-     */
-    public static <M extends AbstractContainerMenu> AbstractContainerScreen<M> createResourceScreen(
-            M menu, Inventory inventory, Component title, int width, int height) {
+    // Helper method to create a content panel
+    private static BCPanel createContentPanel(Component text, int width, int height) {
+        BCPanel panel = new BCPanel(width, height);
+        panel.withBackgroundColor(0x40000000);
+        panel.withBorderColor(0x80FFFFFF);
+        panel.withPadding(5);
         
-        BCTheme theme = BCTheme.get();
+        BCLabel contentLabel = BCComponentFactory.createBodyLabel(text.getString(), width - 10);
+        panel.addChild(contentLabel);
         
-        // Create the screen builder with appropriate styling
-        BCScreenBuilder<M> builder = BCScreenBuilder.create(menu, inventory, title, width, height)
-            .withPadding(theme.getMediumPadding())
-            .withBackgroundColor(theme.getBackgroundSecondaryColor())
-            .withBorderColor(theme.getSecondaryVariantColor())
-            .withEnterAnimation(BCAnimation.AnimationType.SLIDE_UP, BCAnimation.EasingFunction.EASE_OUT, 300);
+        return panel;
+    }
+    
+    // Helper method to create a buttons panel
+    private static BCPanel createButtonsPanel(List<ButtonConfig> buttons, int width) {
+        BCPanel panel = new BCPanel(width, 30);
+        panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.HORIZONTAL, 10));
         
-        // Create the main panel layout
-        BCPanel mainPanel = BCComponentFactory.createPanel(width - (theme.getMediumPadding() * 2), height - (theme.getMediumPadding() * 2));
-        mainPanel.withLayout(new BCGridLayout(2, 2, 8));
-        mainPanel.withBackgroundColor(theme.getSurfaceColor());
-        mainPanel.withBorderColor(theme.getSecondaryColor());
-        mainPanel.withPadding(theme.getSmallPadding());
+        for (ButtonConfig button : buttons) {
+            BCButton bcButton = BCComponentFactory.createPrimaryButton(
+                button.label.getString(), 
+                b -> button.action.run(), 
+                (width / buttons.size()) - 10
+            );
+            panel.addChild(bcButton);
+        }
         
-        // Add the main panel to the screen
-        builder.addComponent(mainPanel);
+        return panel;
+    }
+    
+    // Helper method to create a resource list panel
+    private static BCPanel createResourceListPanel(List<ResourceConfig> resources, int width) {
+        BCPanel panel = new BCPanel(width, 100);
+        panel.withBackgroundColor(0x40000000);
+        panel.withBorderColor(0x80FFFFFF);
+        panel.withLayout(new BCGridLayout(3, 5, 5));
+        panel.withPadding(5);
         
-        // Configure the layout
-        builder.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 0));
+        for (ResourceConfig resource : resources) {
+            BCPanel resourcePanel = new BCPanel(70, 30);
+            resourcePanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.HORIZONTAL, 5));
+            
+            // Resource name
+            BCLabel nameLabel = BCComponentFactory.createBodyLabel(
+                resource.name.getString(), 
+                40
+            );
+            resourcePanel.addChild(nameLabel);
+            
+            // Resource amount
+            BCLabel amountLabel = BCComponentFactory.createDynamicLabel(
+                () -> Component.literal(String.valueOf(resource.amountSupplier.get())),
+                25
+            );
+            resourcePanel.addChild(amountLabel);
+            
+            panel.addChild(resourcePanel);
+        }
         
-        return builder.build();
+        return panel;
     }
     
     /**
-     * Creates a quest/mission screen template.
-     * Designed for displaying quests, missions, and objectives.
-     * 
-     * @param menu The container menu
-     * @param inventory The player inventory
-     * @param title The screen title
-     * @param width Screen width
-     * @param height Screen height
-     * @return A configured screen builder
+     * Configuration for a button
      */
-    public static <M extends AbstractContainerMenu> AbstractContainerScreen<M> createQuestScreen(
-            M menu, Inventory inventory, Component title, int width, int height) {
+    public static class ButtonConfig {
+        private final Component label;
+        private final Runnable action;
         
-        BCTheme theme = BCTheme.get();
+        public ButtonConfig(Component label, Runnable action) {
+            this.label = label;
+            this.action = action;
+        }
         
-        // Create the screen builder with appropriate styling
-        BCScreenBuilder<M> builder = BCScreenBuilder.create(menu, inventory, title, width, height)
-            .withPadding(theme.getMediumPadding())
-            .withBackgroundColor(theme.getBackgroundVariantColor())
-            .withBorderColor(theme.getSecondaryVariantColor())
-            .withEnterAnimation(BCAnimation.AnimationType.SLIDE_LEFT, BCAnimation.EasingFunction.EASE_OUT, 300)
-            .withTabs(24)
-            .withTabAnimation(BCAnimation.AnimationType.FADE, BCAnimation.EasingFunction.EASE_IN_OUT, 200);
+        public static ButtonConfig of(Component label, Runnable action) {
+            return new ButtonConfig(label, action);
+        }
+    }
+    
+    /**
+     * Configuration for a tab
+     */
+    public static class TabConfig {
+        private final String id;
+        private final Component title;
+        private final Consumer<BCPanel> configurator;
         
-        // Add Active Quests tab
-        builder.addTab("active", Component.translatable("businesscraft.ui.tab.active_quests"), panel -> {
-            panel.withLayout(new BCGridLayout(2, 2, 10));
-            panel.withPadding(theme.getSmallPadding());
-            
-            // Quest list panel
-            BCPanel questListPanel = BCComponentFactory.createPanel((panel.getWidth() / 3) - 5, panel.getHeight() - 10);
-            questListPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 2));
-            questListPanel.withBorderColor(theme.getPrimaryColor());
-            questListPanel.withBackgroundColor(theme.getSurfaceColor());
-            questListPanel.withPadding(theme.getSmallPadding());
-            
-            // Quest details panel
-            BCPanel questDetailsPanel = BCComponentFactory.createPanel(((panel.getWidth() * 2) / 3) - 5, panel.getHeight() - 10);
-            questDetailsPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 8));
-            questDetailsPanel.withBorderColor(theme.getSecondaryColor());
-            questDetailsPanel.withBackgroundColor(theme.getSurfaceColor());
-            questDetailsPanel.withPadding(theme.getMediumPadding());
-            
-            // Add panels to the main panel
-            panel.addChild(questListPanel);
-            panel.addChild(questDetailsPanel);
-        });
+        public TabConfig(String id, Component title, Consumer<BCPanel> configurator) {
+            this.id = id;
+            this.title = title;
+            this.configurator = configurator;
+        }
         
-        // Add Completed Quests tab
-        builder.addTab("completed", Component.translatable("businesscraft.ui.tab.completed_quests"), panel -> {
-            panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 8));
-            panel.withPadding(theme.getSmallPadding());
-            
-            // Completed quest list panel
-            BCPanel completedListPanel = BCComponentFactory.createPanel(panel.getWidth() - 10, panel.getHeight() - 10);
-            completedListPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 2));
-            completedListPanel.withBorderColor(theme.getPrimaryColor());
-            completedListPanel.withBackgroundColor(theme.getSurfaceColor());
-            completedListPanel.withPadding(theme.getMediumPadding());
-            
-            // Add panels to the main panel
-            panel.addChild(completedListPanel);
-        });
+        public static TabConfig of(String id, Component title, Consumer<BCPanel> configurator) {
+            return new TabConfig(id, title, configurator);
+        }
+    }
+    
+    /**
+     * Configuration for a resource
+     */
+    public static class ResourceConfig {
+        private final Component name;
+        private final Supplier<Integer> amountSupplier;
+        private final ItemStack icon;
         
-        // Add Available Quests tab
-        builder.addTab("available", Component.translatable("businesscraft.ui.tab.available_quests"), panel -> {
-            panel.withLayout(new BCGridLayout(2, 2, 10));
-            panel.withPadding(theme.getSmallPadding());
-            
-            // Available quest list panel
-            BCPanel availableListPanel = BCComponentFactory.createPanel((panel.getWidth() / 3) - 5, panel.getHeight() - 10);
-            availableListPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 2));
-            availableListPanel.withBorderColor(theme.getPrimaryColor());
-            availableListPanel.withBackgroundColor(theme.getSurfaceColor());
-            availableListPanel.withPadding(theme.getSmallPadding());
-            
-            // Quest preview panel
-            BCPanel questPreviewPanel = BCComponentFactory.createPanel(((panel.getWidth() * 2) / 3) - 5, panel.getHeight() - 10);
-            questPreviewPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 8));
-            questPreviewPanel.withBorderColor(theme.getSecondaryColor());
-            questPreviewPanel.withBackgroundColor(theme.getSurfaceColor());
-            questPreviewPanel.withPadding(theme.getMediumPadding());
-            
-            // Add panels to the main panel
-            panel.addChild(availableListPanel);
-            panel.addChild(questPreviewPanel);
-        });
+        public ResourceConfig(Component name, Supplier<Integer> amountSupplier, ItemStack icon) {
+            this.name = name;
+            this.amountSupplier = amountSupplier;
+            this.icon = icon;
+        }
         
-        return builder.build();
+        public static ResourceConfig of(Component name, Supplier<Integer> amountSupplier, ItemStack icon) {
+            return new ResourceConfig(name, amountSupplier, icon);
+        }
+    }
+    
+    /**
+     * Configuration for a setting
+     */
+    public static class SettingConfig {
+        private final Component label;
+        private final UIComponent control;
+        
+        public SettingConfig(Component label, UIComponent control) {
+            this.label = label;
+            this.control = control;
+        }
+        
+        public static SettingConfig of(Component label, UIComponent control) {
+            return new SettingConfig(label, control);
+        }
     }
 } 
