@@ -1,4 +1,29 @@
 # BusinessCraft UI Component System
+
+## IMPORTANT: Tab Panel Implementation Notes
+
+When implementing tabbed interfaces using BCTabPanel, keep these crucial points in mind:
+
+1. **Rendering Order:** The tab panel renders elements in this specific order:
+   - First: The container background
+   - Second: The content of the active tab
+   - Third: The tab buttons on top
+   This ordering ensures proper layering of visual elements.
+
+2. **Proper Tab Content Positioning:** 
+   - Content panels MUST be positioned relative to the content area of the tab panel
+   - Default position is (0,0) within the content area (which is offset from the tab panel's origin)
+   - When switching tabs, proper repositioning of the new tab's content is essential
+
+3. **Mouse Event Handling:** 
+   - Mouse events are properly translated to panel-local coordinates
+   - Clicks outside of tab content don't affect the inactive tabs
+
+4. **Common Issues and Solutions:**
+   - Blank tabs often result from incorrect positioning - ensure tab content is positioned properly
+   - Missing content can be caused by incorrect panel visibility states
+   - Always check both position and visibility when debugging tab issues
+
 ## Quick Reference Guide
 
 This manual provides a brief overview of the BusinessCraft UI component system, designed for creating interactive interfaces in Minecraft mods.
@@ -6,25 +31,25 @@ This manual provides a brief overview of the BusinessCraft UI component system, 
 ### Core Components
 
 **BCComponent.java**
-Base component class that all UI elements inherit from. Provides common functionality like positioning, sizing, visibility, and rendering.
+Base component class that all UI elements inherit from. Provides common functionality like positioning, sizing, visibility, rendering, animations, and event handling.
 
 **BCPanel.java**
-Container component that holds and arranges other components. Can use different layout managers to organize child components.
+Container component that holds and arranges other components. Can use different layout managers to organize child components. Supports features like padding, background colors, borders, and rounded corners.
 
 **BCTabPanel.java**
-Specialized panel that implements a tabbed interface. Manages tab buttons and content panels, allowing only one tab to be visible at a time.
+Specialized panel that implements a tabbed interface. Manages tab buttons and content panels, allowing only one tab to be visible at a time. Proper positioning of tab content is crucial.
 
 **BCLabel.java**
-Text display component with configurable styles, colors, and alignment options. Supports static and dynamic text content.
+Text display component with configurable styles, colors, and alignment options. Supports static and dynamic text content through suppliers.
 
 **BCButton.java**
-Interactive button component that can trigger actions when clicked. Supports different button styles and states.
+Interactive button component that can trigger actions when clicked. Supports different button styles, states, hover effects, and can include icons.
 
 **BCComponentFactory.java**
 Factory class with helper methods to create standardized UI components with consistent styling.
 
 **BCTheme.java**
-Defines standard colors, sizes, and styles used throughout the UI system for consistent appearance.
+Defines standard colors, sizes, and styles used throughout the UI system for a consistent appearance.
 
 ### Layout Managers
 
@@ -39,14 +64,31 @@ Arranges components in a grid pattern with configurable columns, row height, and
 
 ### Data Components
 
-**DataLabelComponent.java**
+**BCEditBoxComponent.java**
+Text input component for user-editable text fields. Supports validation, styling, and focus states.
+
+**BCToggleButton.java**
+Button that toggles between two states (on/off) with visual feedback.
+
+**BCDynamicLabel.java**
 Label with dynamic content that updates based on a supplier function.
 
-**EditBoxComponent.java**
-Text input component for user-editable text fields.
+### Common Pitfalls and Solutions
 
-**ToggleButtonComponent.java**
-Button that toggles between two states (on/off).
+1. **Tab Panel Positioning**
+   When switching tabs, ensure tab content panels are correctly positioned. The BCTabPanel positions content panels relative to itself.
+
+2. **Component Visibility**
+   Always manage component visibility states correctly. Components won't render if their visible property is false.
+
+3. **Mouse Interaction**
+   Properly convert global mouse coordinates to local coordinates when handling mouse events in nested components.
+
+4. **Animation Usage**
+   Use animations sparingly for non-critical UI elements. Keep them simple and brief for best performance.
+
+5. **Event Handling**
+   Set up event handlers properly and avoid circular dependencies in event chains.
 
 ### Usage Guide
 
@@ -107,10 +149,19 @@ Button that toggles between two states (on/off).
    );
    ```
 
+6. **Using Animation:**
+   ```java
+   // Animate a component to fade in
+   component.withAlpha(0.0f);
+   component.animate("alpha", 1.0f, 500); // 500ms fade-in
+   ```
+
 ### Implementation Tips
 
 - Use `BCScreenBuilder` for quick creation of standard screens
 - Always initialize components with `init()` method before rendering
 - Use `position()` to place components relative to their parent
 - Remember to call `layoutChildren()` if using layout managers
-- For custom screens, override the `render()` method to draw components 
+- For custom screens, override the `render()` method to draw components
+- Ensure tab panels correctly position their content panels
+- Check components are being rendered within their parent's bounds 

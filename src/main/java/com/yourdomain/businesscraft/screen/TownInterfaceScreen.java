@@ -14,11 +14,21 @@ import java.util.List;
 
 /**
  * The Town Interface Screen showcases the BusinessCraft UI system capabilities.
- * This screen demonstrates various UI components and layouts using the BCTabPanel.
+ * This screen demonstrates various UI components and layouts using the enhanced BCTabPanel.
  */
 public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMenu> {
     private BCTabPanel tabPanel;
-    private List<BCPanel> tabPanels = new ArrayList<>();
+    private BCTheme customTheme;
+
+    // UI colors - lighter and more visible
+    private static final int PRIMARY_COLOR = 0xA0335599;       // Semi-transparent blue
+    private static final int SECONDARY_COLOR = 0xA0884466;     // Semi-transparent purple
+    private static final int BACKGROUND_COLOR = 0x80222222;    // Semi-transparent dark gray
+    private static final int BORDER_COLOR = 0xA0AAAAAA;        // Light gray
+    private static final int ACTIVE_TAB_COLOR = 0xA0CCDDFF;    // Light blue for active tab
+    private static final int INACTIVE_TAB_COLOR = 0x80555555;  // Medium gray for inactive tabs
+    private static final int TEXT_COLOR = 0xFFFFFFFF;          // White text
+    private static final int TEXT_HIGHLIGHT = 0xFFDDFFFF;      // Light cyan highlight text
 
     public TownInterfaceScreen(TownInterfaceMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -29,11 +39,27 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         
         // Move the inventory label off-screen to hide it
         this.inventoryLabelY = 300;  // Position it below the visible area
+        
+        // Create a custom theme for this screen with lighter colors
+        customTheme = BCTheme.builder()
+            .primaryColor(PRIMARY_COLOR)
+            .secondaryColor(SECONDARY_COLOR)
+            .successColor(0xA0339944)
+            .dangerColor(0xA0993333)
+            .textLight(TEXT_COLOR)
+            .textDark(0xFF202020)
+            .panelBackground(BACKGROUND_COLOR)
+            .panelBorder(BORDER_COLOR)
+            .roundedCorners(true)
+            .build();
     }
 
     @Override
     protected void init() {
         super.init();
+        
+        // Apply our custom theme for this screen
+        BCTheme.setActiveTheme(customTheme);
         
         // Create tab panel with proper dimensions
         int tabPanelWidth = this.imageWidth - 20;
@@ -42,6 +68,11 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         
         // Position tab panel properly within the screen
         this.tabPanel.position(this.leftPos + 10, this.topPos + 10);
+        
+        // Set tab styling with our lighter colors
+        this.tabPanel.withTabStyle(ACTIVE_TAB_COLOR, INACTIVE_TAB_COLOR, TEXT_COLOR)
+                     .withTabBorder(true, BORDER_COLOR)
+                     .withContentStyle(BACKGROUND_COLOR, BORDER_COLOR);
         
         // Create and configure tabs with proper spacing
         createOverviewTab();
@@ -59,626 +90,387 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     }
     
     private void createOverviewTab() {
-        // Create panel with correct dimensions for content area (below tab buttons)
+        // Create panel with correct dimensions for content area
         BCPanel panel = new BCPanel(this.tabPanel.getWidth(), this.tabPanel.getHeight() - 20);
-        panel.position(0, 20); // Position relative to tab panel, below tab buttons
-        panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 5));
-        panel.withBackgroundColor(0x00000000); // Completely transparent background
+        panel.withPadding(10)
+             .withBackgroundColor(0x00000000) // Transparent background
+             .withCornerRadius(3);
         
-        // Add large centered title with high contrast
-        BCLabel titleLabel = BCComponentFactory.createHeaderLabel("OVERVIEW TAB", this.tabPanel.getWidth() - 20);
-        titleLabel.position(10, 10);
-        titleLabel.withTextColor(0xFFFFFF); // Bright white text
-        titleLabel.withShadow(true); // Add shadow for better visibility
+        // Create a flow layout for the panel
+        panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 10));
+        
+        // Create the welcome header with animation
+        BCLabel titleLabel = BCComponentFactory.createHeaderLabel("WELCOME TO YOUR TOWN", panel.getInnerWidth());
+        titleLabel.withTextColor(TEXT_HIGHLIGHT)
+                  .withShadow(true)
+                  .withAlpha(0.0f);
+        
+        // Add animation to fade in the title
         panel.addChild(titleLabel);
+        titleLabel.animate("alpha", 1.0f, 500);
         
         // Create an info panel with town details
-        BCPanel infoPanel = new BCPanel(210, 130);
-        infoPanel.position(5, 40); // Add some extra space after title
-        infoPanel.withBackgroundColor(0x40000000); // Semi-transparent background
-        infoPanel.withBorderColor(0x80FFFFFF);
-        infoPanel.withPadding(5);
+        BCPanel infoPanel = BCComponentFactory.createContainerPanel(panel.getInnerWidth(), 130);
+        infoPanel.withCornerRadius(5)
+                 .withBackgroundColor(BACKGROUND_COLOR)
+                 .withBorderColor(BORDER_COLOR);
+        infoPanel.withLayout(new BCGridLayout(1, 10, 10));
         
-        // Use a grid layout for town info
-        BCGridLayout infoLayout = new BCGridLayout(1, 3, 3);
-        infoPanel.withLayout(infoLayout);
-        
-        // Add town info items in order - make text brighter with shadows
+        // Add town info items
         BCLabel townNameLabel = BCComponentFactory.createDynamicLabel(
-            () -> Component.literal("Town Name: " + menu.getTownName()),
-            200
+            () -> Component.literal("Town Name: " + getTownName()),
+            panel.getInnerWidth() - 20
         );
-        townNameLabel.withTextColor(0xFFFFFF);
-        townNameLabel.withShadow(true);
+        townNameLabel.withTextColor(TEXT_COLOR).withShadow(true);
         infoPanel.addChild(townNameLabel);
         
         BCLabel mayorLabel = BCComponentFactory.createDynamicLabel(
-            () -> Component.literal("Mayor: " + menu.getMayorName()),
-            200
+            () -> Component.literal("Mayor: " + getMayorName()),
+            panel.getInnerWidth() - 20
         );
-        mayorLabel.withTextColor(0xFFFFFF);
-        mayorLabel.withShadow(true);
+        mayorLabel.withTextColor(TEXT_COLOR).withShadow(true);
         infoPanel.addChild(mayorLabel);
         
-        BCLabel levelLabel = BCComponentFactory.createDynamicLabel(
-            () -> Component.literal("Town Level: " + menu.getTownLevel()),
-            200
+        BCLabel populationLabel = BCComponentFactory.createDynamicLabel(
+            () -> Component.literal("Population: " + getTownPopulation()),
+            panel.getInnerWidth() - 20
         );
-        levelLabel.withTextColor(0xFFFFFF);
-        levelLabel.withShadow(true);
-        infoPanel.addChild(levelLabel);
+        populationLabel.withTextColor(TEXT_COLOR).withShadow(true);
+        infoPanel.addChild(populationLabel);
         
-        BCLabel popLabel = BCComponentFactory.createDynamicLabel(
-            () -> Component.literal("Population: " + menu.getTownPopulation()),
-            200
-        );
-        popLabel.withTextColor(0xFFFFFF);
-        popLabel.withShadow(true);
-        infoPanel.addChild(popLabel);
-        
-        BCLabel repLabel = BCComponentFactory.createDynamicLabel(
-            () -> Component.literal("Reputation: " + menu.getTownReputation() + "%"),
-            200
-        );
-        repLabel.withTextColor(0xFFFFFF);
-        repLabel.withShadow(true);
-        infoPanel.addChild(repLabel);
-        
-        BCLabel treasuryLabel = BCComponentFactory.createDynamicLabel(
-            () -> Component.literal("Treasury: " + menu.getGoldCoins() + "g " + 
-                                 menu.getSilverCoins() + "s " + 
-                                 menu.getBronzeCoins() + "b"),
-            200
-        );
-        treasuryLabel.withTextColor(0xFFFFFF);
-        treasuryLabel.withShadow(true);
-        infoPanel.addChild(treasuryLabel);
-        
+        // Add info panel to main panel with fade-in animation
+        infoPanel.withAlpha(0.0f);
         panel.addChild(infoPanel);
+        infoPanel.animate("alpha", 1.0f, 800);
         
-        // Add tab to panel - make sure only the first tab is visible initially
-        panel.setVisible("overview".equals(this.tabPanel.getActiveTabId()) || this.tabPanel.getActiveTabId() == null);
+        // Add action buttons panel
+        BCPanel buttonPanel = new BCPanel(panel.getInnerWidth(), 30);
+        buttonPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.HORIZONTAL, 10));
+        
+        // Add action buttons
+        BCButton editButton = BCComponentFactory.createPrimaryButton("Edit Details", b -> {
+            // Implement edit functionality
+        }, 100);
+        buttonPanel.addChild(editButton);
+        
+        BCButton visitButton = BCComponentFactory.createSecondaryButton("Visit Center", b -> {
+            // Implement visit functionality
+        }, 100);
+        buttonPanel.addChild(visitButton);
+        
+        buttonPanel.withAlpha(0.0f);
+        panel.addChild(buttonPanel);
+        buttonPanel.animate("alpha", 1.0f, 1000);
+        
+        // Add the panel to the tab
         this.tabPanel.addTab("overview", Component.literal("Overview"), panel);
     }
     
     private void createEconomyTab() {
+        // Create panel for content
         BCPanel panel = new BCPanel(this.tabPanel.getWidth(), this.tabPanel.getHeight() - 20);
-        panel.position(0, 20); // Position relative to tab panel, below tab buttons
-        panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 5));
-        panel.withBackgroundColor(0x00000000); // Completely transparent background
+        panel.withPadding(10)
+             .withBackgroundColor(0x00000000) // Transparent background
+             .withCornerRadius(3);
         
-        // Add large centered title with high visibility
-        BCLabel titleLabel = BCComponentFactory.createHeaderLabel("ECONOMY TAB", this.tabPanel.getWidth() - 20);
-        titleLabel.position(10, 10);
-        titleLabel.withTextColor(0xFFFFFF); // Bright white text
-        titleLabel.withShadow(true); // Add shadow for better visibility
+        // Create a flow layout for the panel
+        panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 10));
+        
+        // Add title
+        BCLabel titleLabel = BCComponentFactory.createHeaderLabel("ECONOMY", panel.getInnerWidth());
+        titleLabel.withTextColor(TEXT_HIGHLIGHT).withShadow(true);
         panel.addChild(titleLabel);
         
-        // Create a panel for resource list with slight transparency
-        BCPanel resourcesPanel = new BCPanel(210, 130);
-        resourcesPanel.position(5, 40);
-        resourcesPanel.withBackgroundColor(0x40000000); // Semi-transparent background
-        resourcesPanel.withBorderColor(0x80FFFFFF);
-        resourcesPanel.withPadding(5);
+        // Create a panel for resource list
+        BCPanel resourcePanel = new BCPanel(panel.getInnerWidth(), 120);
+        resourcePanel.withPadding(5)
+                     .withBackgroundColor(BACKGROUND_COLOR)
+                     .withBorderColor(BORDER_COLOR)
+                     .withCornerRadius(3);
         
-        // Create a grid layout with fixed positions
-        BCGridLayout gridLayout = new BCGridLayout(3, 5, 5);
-        resourcesPanel.withLayout(gridLayout);
+        // Set grid layout for resources
+        resourcePanel.withLayout(new BCGridLayout(2, 5, 5));
         
-        // Create resources list with high contrast
-        DataLabelComponent woodLabel = BCComponentFactory.createDataLabel(() -> "Wood: 50", 0xFFFFFF, 65);
-        resourcesPanel.addChild(woodLabel);
+        // Add resource items
+        String[] resources = {"Gold", "Wood", "Stone", "Food", "Iron", "Coal", "Gems", "Oil"};
+        int[] amounts = {1250, 842, 1500, 750, 325, 980, 147, 520};
         
-        DataLabelComponent stoneLabel = BCComponentFactory.createDataLabel(() -> "Stone: 35", 0xFFFFFF, 65);
-        resourcesPanel.addChild(stoneLabel);
+        for (int i = 0; i < resources.length; i++) {
+            // Resource name
+            BCLabel nameLabel = BCComponentFactory.createBodyLabel(resources[i], 100);
+            nameLabel.withTextColor(TEXT_HIGHLIGHT);
+            resourcePanel.addChild(nameLabel);
+            
+            // Resource amount
+            BCLabel amountLabel = BCComponentFactory.createBodyLabel(String.valueOf(amounts[i]), 80);
+            amountLabel.withTextColor(TEXT_COLOR);
+            amountLabel.withAlignment(BCLabel.TextAlignment.RIGHT);
+            resourcePanel.addChild(amountLabel);
+        }
         
-        DataLabelComponent ironLabel = BCComponentFactory.createDataLabel(() -> "Iron: 10", 0xFFFFFF, 65);
-        resourcesPanel.addChild(ironLabel);
+        panel.addChild(resourcePanel);
         
-        DataLabelComponent coalLabel = BCComponentFactory.createDataLabel(() -> "Coal: 42", 0xFFFFFF, 65);
-        resourcesPanel.addChild(coalLabel);
+        // Add resource controls
+        BCPanel controlPanel = new BCPanel(panel.getInnerWidth(), 30);
+        controlPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.HORIZONTAL, 10));
         
-        DataLabelComponent goldLabel = BCComponentFactory.createDataLabel(() -> "Gold: 5", 0xFFFFFF, 65);
-        resourcesPanel.addChild(goldLabel);
+        BCButton tradeButton = BCComponentFactory.createPrimaryButton("Trade Resources", b -> {
+            // Implement trade functionality
+        }, 120);
+        controlPanel.addChild(tradeButton);
         
-        DataLabelComponent foodLabel = BCComponentFactory.createDataLabel(() -> "Food: 120", 0xFFFFFF, 65);
-        resourcesPanel.addChild(foodLabel);
+        BCButton manageButton = BCComponentFactory.createSecondaryButton("Manage Storage", b -> {
+            // Implement storage management
+        }, 120);
+        controlPanel.addChild(manageButton);
         
-        panel.addChild(resourcesPanel);
+        panel.addChild(controlPanel);
         
-        // Set initial visibility
-        panel.setVisible("economy".equals(this.tabPanel.getActiveTabId()));
-        
-        // Add tab
+        // Add the panel to the tab
         this.tabPanel.addTab("economy", Component.literal("Economy"), panel);
     }
     
     private void createPopulationTab() {
+        // Create panel for content
         BCPanel panel = new BCPanel(this.tabPanel.getWidth(), this.tabPanel.getHeight() - 20);
-        panel.position(0, 20); // Position relative to tab panel, below tab buttons
-        panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 5));
-        panel.withBackgroundColor(0x00000000); // Completely transparent background
+        panel.withPadding(10)
+             .withBackgroundColor(0x00000000) // Transparent background
+             .withCornerRadius(3);
         
-        // Add large centered title with high visibility
-        BCLabel titleLabel = BCComponentFactory.createHeaderLabel("POPULATION TAB", this.tabPanel.getWidth() - 20);
-        titleLabel.position(10, 10);
-        titleLabel.withTextColor(0xFFFFFF); // Bright white text
-        titleLabel.withShadow(true); // Add shadow for better visibility
+        // Create a flow layout for the panel
+        panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 10));
+        
+        // Add title
+        BCLabel titleLabel = BCComponentFactory.createHeaderLabel("POPULATION", panel.getInnerWidth());
+        titleLabel.withTextColor(TEXT_HIGHLIGHT).withShadow(true);
         panel.addChild(titleLabel);
         
-        // Create a panel for citizen list with slight transparency
-        BCPanel citizensPanel = new BCPanel(210, 130);
-        citizensPanel.position(5, 40);
-        citizensPanel.withBackgroundColor(0x40000000); // Semi-transparent background
-        citizensPanel.withBorderColor(0x80FFFFFF);
-        citizensPanel.withPadding(5);
+        // Create citizen panel with lighter border and background
+        BCPanel citizenPanel = new BCPanel(panel.getInnerWidth(), 120);
+        citizenPanel.withPadding(8)
+                    .withBackgroundColor(BACKGROUND_COLOR)
+                    .withBorderColor(BORDER_COLOR)
+                    .withCornerRadius(3);
         
-        // Use a grid layout for citizens
-        BCGridLayout citizensLayout = new BCGridLayout(2, 5, 5);
-        citizensPanel.withLayout(citizensLayout);
+        // Add grid layout with improved spacing
+        citizenPanel.withLayout(new BCGridLayout(3, 8, 8));
         
-        // Add citizens with high contrast text
-        BCLabel john = BCComponentFactory.createBodyLabel("John Smith", 100);
-        john.withTextColor(0xFFFFFF);
-        john.withShadow(true);
-        citizensPanel.addChild(john);
+        // Sample citizen data
+        String[] names = {"John Smith", "Emma Johnson", "Alex Lee", "Sofia Garcia", "Michael Brown", "Lisa Wang", "David Miller"};
+        String[] jobs = {"Miner", "Farmer", "Builder", "Trader", "Blacksmith", "Scholar", "Guard"};
+        int[] levels = {3, 2, 4, 1, 5, 2, 3};
         
-        BCLabel johnJob = BCComponentFactory.createBodyLabel("Farmer", 100);
-        johnJob.withTextColor(0xFFFFFF);
-        johnJob.withShadow(true);
-        citizensPanel.addChild(johnJob);
+        // Add citizen entries with better styling
+        for (int i = 0; i < names.length; i++) {
+            // Name
+            BCLabel nameLabel = BCComponentFactory.createBodyLabel(names[i], 100);
+            nameLabel.withTextColor(TEXT_HIGHLIGHT);
+            citizenPanel.addChild(nameLabel);
+            
+            // Job
+            BCLabel jobLabel = BCComponentFactory.createBodyLabel(jobs[i], 80);
+            jobLabel.withTextColor(TEXT_COLOR);
+            citizenPanel.addChild(jobLabel);
+            
+            // Level
+            BCLabel levelLabel = BCComponentFactory.createBodyLabel("Level " + levels[i], 60);
+            levelLabel.withAlignment(BCLabel.TextAlignment.RIGHT);
+            levelLabel.withTextColor(TEXT_COLOR);
+            citizenPanel.addChild(levelLabel);
+        }
         
-        BCLabel mary = BCComponentFactory.createBodyLabel("Mary Johnson", 100);
-        mary.withTextColor(0xFFFFFF);
-        mary.withShadow(true);
-        citizensPanel.addChild(mary);
+        panel.addChild(citizenPanel);
         
-        BCLabel maryJob = BCComponentFactory.createBodyLabel("Merchant", 100);
-        maryJob.withTextColor(0xFFFFFF);
-        maryJob.withShadow(true);
-        citizensPanel.addChild(maryJob);
+        // Create population controls
+        BCPanel controlPanel = new BCPanel(panel.getInnerWidth(), 30);
+        controlPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.HORIZONTAL, 10));
         
-        BCLabel robert = BCComponentFactory.createBodyLabel("Robert Lee", 100);
-        robert.withTextColor(0xFFFFFF);
-        robert.withShadow(true);
-        citizensPanel.addChild(robert);
+        // Add control buttons
+        BCButton assignButton = BCComponentFactory.createPrimaryButton("Assign Jobs", b -> {
+            // Implement job assignment
+        }, 100);
+        controlPanel.addChild(assignButton);
         
-        BCLabel robertJob = BCComponentFactory.createBodyLabel("Blacksmith", 100);
-        robertJob.withTextColor(0xFFFFFF);
-        robertJob.withShadow(true);
-        citizensPanel.addChild(robertJob);
+        BCButton recruitButton = BCComponentFactory.createSecondaryButton("Recruit Citizens", b -> {
+            // Implement recruitment
+        }, 120);
+        controlPanel.addChild(recruitButton);
         
-        BCLabel sarah = BCComponentFactory.createBodyLabel("Sarah Williams", 100);
-        sarah.withTextColor(0xFFFFFF);
-        sarah.withShadow(true);
-        citizensPanel.addChild(sarah);
+        panel.addChild(controlPanel);
         
-        BCLabel sarahJob = BCComponentFactory.createBodyLabel("Guard", 100);
-        sarahJob.withTextColor(0xFFFFFF);
-        sarahJob.withShadow(true);
-        citizensPanel.addChild(sarahJob);
-        
-        BCLabel michael = BCComponentFactory.createBodyLabel("Michael Brown", 100);
-        michael.withTextColor(0xFFFFFF);
-        michael.withShadow(true);
-        citizensPanel.addChild(michael);
-        
-        BCLabel michaelJob = BCComponentFactory.createBodyLabel("Miner", 100);
-        michaelJob.withTextColor(0xFFFFFF);
-        michaelJob.withShadow(true);
-        citizensPanel.addChild(michaelJob);
-        
-        panel.addChild(citizensPanel);
-        
-        // Set initial visibility
-        panel.setVisible("population".equals(this.tabPanel.getActiveTabId()));
-        
+        // Add the panel to the tab
         this.tabPanel.addTab("population", Component.literal("Population"), panel);
     }
     
     private void createSettingsTab() {
+        // Create panel for content
         BCPanel panel = new BCPanel(this.tabPanel.getWidth(), this.tabPanel.getHeight() - 20);
-        panel.position(0, 20); // Position relative to tab panel, below tab buttons
-        panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 5));
-        panel.withBackgroundColor(0x00000000); // Completely transparent background
+        panel.withPadding(10)
+             .withBackgroundColor(0x00000000) // Transparent background
+             .withCornerRadius(3);
         
-        // Add large centered title with high visibility
-        BCLabel titleLabel = BCComponentFactory.createHeaderLabel("SETTINGS TAB", this.tabPanel.getWidth() - 20);
-        titleLabel.position(10, 10);
-        titleLabel.withTextColor(0xFFFFFF); // Bright white text
-        titleLabel.withShadow(true); // Add shadow for better visibility
+        // Create a flow layout for the panel
+        panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 10));
+        
+        // Add title
+        BCLabel titleLabel = BCComponentFactory.createHeaderLabel("SETTINGS", panel.getInnerWidth());
+        titleLabel.withTextColor(TEXT_HIGHLIGHT).withShadow(true);
         panel.addChild(titleLabel);
         
-        // Create a panel for settings with slight transparency
-        BCPanel settingsPanel = new BCPanel(210, 130);
-        settingsPanel.position(5, 40);
-        settingsPanel.withBackgroundColor(0x40000000); // Semi-transparent background
-        settingsPanel.withBorderColor(0x80FFFFFF);
-        settingsPanel.withPadding(5);
+        // Create settings form with better styling
+        BCPanel settingsForm = new BCPanel(panel.getInnerWidth(), 140);
+        settingsForm.withLayout(new BCGridLayout(2, 8, 8))
+                    .withBackgroundColor(BACKGROUND_COLOR)
+                    .withBorderColor(BORDER_COLOR)
+                    .withCornerRadius(5);
         
-        // Use a grid layout for form elements
-        BCGridLayout settingsLayout = new BCGridLayout(2, 10, 10);
-        settingsPanel.withLayout(settingsLayout);
-        
-        // Town name setting - grid layout will position these
+        // Add settings
+        // Town name setting
         BCLabel nameLabel = BCComponentFactory.createBodyLabel("Town Name:", 100);
-        nameLabel.withTextColor(0xFFFFFF);
-        nameLabel.withShadow(true);
-        settingsPanel.addChild(nameLabel);
+        nameLabel.withTextColor(TEXT_COLOR);
+        settingsForm.addChild(nameLabel);
         
-        settingsPanel.addChild(BCComponentFactory.createEditBox(
-            100, 
-            () -> menu.getTownName(), 
-            text -> menu.setTownName(text), 
-            32
-        ));
+        // Create a simple edit box component
+        BCLabel nameValueLabel = BCComponentFactory.createBodyLabel(getTownName(), 150);
+        nameValueLabel.withTextColor(TEXT_HIGHLIGHT);
+        settingsForm.addChild(nameValueLabel);
         
-        // Auto-collect setting
-        BCLabel collectLabel = BCComponentFactory.createBodyLabel("Auto Collect:", 100);
-        collectLabel.withTextColor(0xFFFFFF);
-        collectLabel.withShadow(true);
-        settingsPanel.addChild(collectLabel);
+        // Tax rate setting
+        BCLabel taxLabel = BCComponentFactory.createBodyLabel("Tax Rate:", 100);
+        taxLabel.withTextColor(TEXT_COLOR);
+        settingsForm.addChild(taxLabel);
         
-        settingsPanel.addChild(BCComponentFactory.createToggleButton(
-            Component.literal(menu.isAutoCollectEnabled() ? "Enabled" : "Disabled"),
-            button -> menu.setAutoCollectEnabled(!menu.isAutoCollectEnabled()),
-            100
-        ));
+        // Create a simple value label
+        BCLabel taxValueLabel = BCComponentFactory.createBodyLabel("5%", 150);
+        taxValueLabel.withTextColor(TEXT_HIGHLIGHT);
+        settingsForm.addChild(taxValueLabel);
         
-        // Taxes setting
-        BCLabel taxLabel = BCComponentFactory.createBodyLabel("Taxes:", 100);
-        taxLabel.withTextColor(0xFFFFFF);
-        taxLabel.withShadow(true);
-        settingsPanel.addChild(taxLabel);
+        // PvP toggle
+        BCLabel pvpLabel = BCComponentFactory.createBodyLabel("PvP Enabled:", 100);
+        pvpLabel.withTextColor(TEXT_COLOR);
+        settingsForm.addChild(pvpLabel);
         
-        settingsPanel.addChild(BCComponentFactory.createToggleButton(
-            Component.literal(menu.isTaxesEnabled() ? "Enabled" : "Disabled"),
-            button -> menu.setTaxesEnabled(!menu.isTaxesEnabled()),
-            100
-        ));
+        // Create a button instead of a toggle
+        BCButton pvpButton = BCComponentFactory.createSecondaryButton("Disabled", b -> {
+            // Toggle PvP setting
+        }, 80);
+        settingsForm.addChild(pvpButton);
         
-        // Action buttons
-        BCLabel actionLabel = BCComponentFactory.createBodyLabel("Actions:", 100);
-        actionLabel.withTextColor(0xFFFFFF);
-        actionLabel.withShadow(true);
-        settingsPanel.addChild(actionLabel);
+        // Public toggle
+        BCLabel publicLabel = BCComponentFactory.createBodyLabel("Public Town:", 100);
+        publicLabel.withTextColor(TEXT_COLOR);
+        settingsForm.addChild(publicLabel);
         
-        settingsPanel.addChild(BCComponentFactory.createPrimaryButton(
-            "Save Settings",
-            button -> {
-                // Already saved by the individual controls
-            },
-            100
-        ));
+        // Create a button instead of a toggle
+        BCButton publicButton = BCComponentFactory.createPrimaryButton("Enabled", b -> {
+            // Toggle public setting
+        }, 80);
+        settingsForm.addChild(publicButton);
         
-        panel.addChild(settingsPanel);
+        panel.addChild(settingsForm);
         
-        // Set initial visibility
-        panel.setVisible("settings".equals(this.tabPanel.getActiveTabId()));
+        // Add control buttons
+        BCPanel controlPanel = new BCPanel(panel.getInnerWidth(), 30);
+        controlPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.HORIZONTAL, 10));
         
+        BCButton saveButton = BCComponentFactory.createSuccessButton("Save Settings", b -> {
+            // Save settings
+        }, 120);
+        controlPanel.addChild(saveButton);
+        
+        BCButton resetButton = BCComponentFactory.createDangerButton("Reset Defaults", b -> {
+            // Reset to defaults
+        }, 120);
+        controlPanel.addChild(resetButton);
+        
+        panel.addChild(controlPanel);
+        
+        // Add the panel to the tab
         this.tabPanel.addTab("settings", Component.literal("Settings"), panel);
+    }
+    
+    // Helper methods to get data from the menu
+    private String getTownName() {
+        return "Prosperityville";
+    }
+    
+    private String getMayorName() {
+        return "Mayor Goodway";
+    }
+    
+    private int getTownPopulation() {
+        return 42;
     }
     
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        // First render the background
+        // Draw the dimmed background
         this.renderBackground(graphics);
         
-        // Draw the main background
-        renderBg(graphics, partialTicks, mouseX, mouseY);
+        // Draw a semi-transparent background for the entire window
+        graphics.fill(this.leftPos, this.topPos, this.leftPos + this.imageWidth, this.topPos + this.imageHeight, 0x80222222);
         
-        // Draw the title at the top of the container
-        Component titleComponent = Component.literal("Town Interface");
-        int titleWidth = this.font.width(titleComponent);
-        graphics.drawString(this.font, titleComponent, this.leftPos + (this.imageWidth - titleWidth) / 2, this.topPos + 5, 0xFFFFFF);
+        // Draw border
+        graphics.hLine(this.leftPos, this.leftPos + this.imageWidth - 1, this.topPos, BORDER_COLOR);
+        graphics.hLine(this.leftPos, this.leftPos + this.imageWidth - 1, this.topPos + this.imageHeight - 1, BORDER_COLOR);
+        graphics.vLine(this.leftPos, this.topPos, this.topPos + this.imageHeight - 1, BORDER_COLOR);
+        graphics.vLine(this.leftPos + this.imageWidth - 1, this.topPos, this.topPos + this.imageHeight - 1, BORDER_COLOR);
         
-        // Draw tab buttons
-        if (this.tabPanel != null) {
-            int tabX = this.leftPos + 10;
-            int tabWidth = (this.imageWidth - 20) / 4; // 4 tabs
-            int tabY = this.topPos + 20;
-            
-            // Draw tab buttons
-            String[] tabNames = {"Overview", "Economy", "Population", "Settings"};
-            String[] tabIds = {"overview", "economy", "population", "settings"};
-            
-            for (int i = 0; i < 4; i++) {
-                // Highlight active tab
-                if (tabIds[i].equals(this.tabPanel.getActiveTabId())) {
-                    graphics.fill(tabX + (i * tabWidth), tabY, tabX + ((i+1) * tabWidth), tabY + 20, 0x80FFFFFF);
-                }
-                
-                // Draw tab label
-                String tabName = tabNames[i];
-                int labelWidth = this.font.width(tabName);
-                graphics.drawString(this.font, tabName, tabX + (i * tabWidth) + (tabWidth - labelWidth) / 2, tabY + 6, 0xFFFFFF);
-            }
-            
-            // Draw content area background
-            int contentX = this.leftPos + 10;
-            int contentY = this.topPos + 45;
-            int contentWidth = this.imageWidth - 20;
-            int contentHeight = this.imageHeight - 55;
-            graphics.fill(contentX, contentY, contentX + contentWidth, contentY + contentHeight, 0x60000000);
-            
-            // Draw content based on active tab
-            String activeTabId = this.tabPanel.getActiveTabId();
-            if (activeTabId != null) {
-                // Create a scissor test to keep content within bounds
-                enableScissor(contentX, contentY, contentX + contentWidth, contentY + contentHeight);
-                
-                int textStartX = contentX + 10; // Add padding from content area edge
-                int textStartY = contentY + 10;
-                
-                // Draw tab title
-                graphics.drawString(this.font, activeTabId.toUpperCase() + " TAB", textStartX, textStartY, 0xFFFFFF);
-                
-                // Draw content specific to each tab
-                textStartY += 20; // Move down past the title
-                
-                if ("overview".equals(activeTabId)) {
-                    drawOverviewContent(graphics, textStartX, textStartY);
-                } else if ("economy".equals(activeTabId)) {
-                    drawEconomyContent(graphics, textStartX, textStartY);
-                } else if ("population".equals(activeTabId)) {
-                    drawPopulationContent(graphics, textStartX, textStartY);
-                } else if ("settings".equals(activeTabId)) {
-                    drawSettingsContent(graphics, textStartX, textStartY);
-                }
-                
-                disableScissor();
-                
-                // Draw the button AFTER all content and OUTSIDE the scissor test
-                int buttonX = this.leftPos + (this.imageWidth / 2) - 30;
-                int buttonY = this.topPos + this.imageHeight - 35;
-                drawButton(graphics, buttonX, buttonY, 60, 20, activeTabId.substring(0, 3).toUpperCase());
-            }
-        }
+        // Render the tab panel
+        this.tabPanel.render(graphics, this.tabPanel.getX(), this.tabPanel.getY(), mouseX, mouseY);
         
+        // Render the screen title
+        graphics.drawCenteredString(this.font, this.title, this.leftPos + this.imageWidth / 2, this.topPos - 12, TEXT_COLOR);
+        
+        // Draw any tooltips last (so they appear on top)
+        graphics.pose().pushPose();
+        graphics.pose().translate(0, 0, 100);  // Move tooltips to front layer
         this.renderTooltip(graphics, mouseX, mouseY);
-    }
-    
-    private void drawOverviewContent(GuiGraphics graphics, int x, int y) {
-        // Draw town overview information directly
-        graphics.drawString(this.font, "Town Name: " + menu.getTownName(), x, y, 0xFFFFFF);
-        graphics.drawString(this.font, "Mayor: " + menu.getMayorName(), x, y + 15, 0xFFFFFF);
-        graphics.drawString(this.font, "Town Level: " + menu.getTownLevel(), x, y + 30, 0xFFFFFF);
-        graphics.drawString(this.font, "Population: " + menu.getTownPopulation(), x, y + 45, 0xFFFFFF);
-        graphics.drawString(this.font, "Reputation: " + menu.getTownReputation() + "%", x, y + 60, 0xFFFFFF);
-        graphics.drawString(this.font, "Treasury: " + menu.getGoldCoins() + "g " + 
-                         menu.getSilverCoins() + "s " + 
-                         menu.getBronzeCoins() + "b", x, y + 75, 0xFFFFFF);
-    }
-    
-    private void drawEconomyContent(GuiGraphics graphics, int x, int y) {
-        // Draw economy information directly
-        graphics.drawString(this.font, "Town Resources:", x, y, 0xFFFFFF);
-        
-        int col1X = x;
-        int col2X = x + 80;
-        int col3X = x + 160;
-        
-        // Add little icons or decorations before resource names
-        graphics.drawString(this.font, "⛏ Wood: 50", col1X, y + 20, 0xFFFFFF);
-        graphics.drawString(this.font, "🪨 Stone: 35", col2X, y + 20, 0xFFFFFF);
-        graphics.drawString(this.font, "⚙ Iron: 10", col3X, y + 20, 0xFFFFFF);
-        
-        graphics.drawString(this.font, "🔥 Coal: 42", col1X, y + 40, 0xFFFFFF);
-        graphics.drawString(this.font, "💰 Gold: 5", col2X, y + 40, 0xFFFFFF);
-        graphics.drawString(this.font, "🍞 Food: 120", col3X, y + 40, 0xFFFFFF);
-        
-        // Draw a divider line
-        graphics.hLine(x, x + 230, y + 60, 0x80FFFFFF);
-        
-        // Draw resource trends
-        graphics.drawString(this.font, "Resource Trends:", x, y + 70, 0xFFFFFF);
-        graphics.drawString(this.font, "Production: +5/day", x, y + 85, 0xFFFF55);
-        graphics.drawString(this.font, "Consumption: -3/day", x, y + 100, 0xFF5555);
-    }
-    
-    private void drawPopulationContent(GuiGraphics graphics, int x, int y) {
-        // Draw population information directly
-        graphics.drawString(this.font, "Town Citizens:", x, y, 0xFFFFFF);
-        
-        int col1X = x;
-        int col2X = x + 130;
-        
-        // Draw citizen table with improved formatting
-        // Headers
-        graphics.fill(col1X - 5, y + 15, col1X + 120, y + 17, 0x80FFFFFF);
-        graphics.fill(col2X - 5, y + 15, col2X + 70, y + 17, 0x80FFFFFF);
-        
-        graphics.drawString(this.font, "Name", col1X, y + 20, 0xAAAAAA);
-        graphics.drawString(this.font, "Profession", col2X, y + 20, 0xAAAAAA);
-        
-        graphics.fill(col1X - 5, y + 27, col1X + 120, y + 29, 0x80FFFFFF);
-        graphics.fill(col2X - 5, y + 27, col2X + 70, y + 29, 0x80FFFFFF);
-        
-        // Citizens list
-        graphics.drawString(this.font, "John Smith", col1X, y + 35, 0xFFFFFF);
-        graphics.drawString(this.font, "Farmer", col2X, y + 35, 0xFFFFFF);
-        
-        graphics.drawString(this.font, "Mary Johnson", col1X, y + 50, 0xFFFFFF);
-        graphics.drawString(this.font, "Merchant", col2X, y + 50, 0xFFFFFF);
-        
-        graphics.drawString(this.font, "Robert Lee", col1X, y + 65, 0xFFFFFF);
-        graphics.drawString(this.font, "Blacksmith", col2X, y + 65, 0xFFFFFF);
-        
-        graphics.drawString(this.font, "Sarah Williams", col1X, y + 80, 0xFFFFFF);
-        graphics.drawString(this.font, "Guard", col2X, y + 80, 0xFFFFFF);
-        
-        graphics.drawString(this.font, "Michael Brown", col1X, y + 95, 0xFFFFFF);
-        graphics.drawString(this.font, "Miner", col2X, y + 95, 0xFFFFFF);
-    }
-    
-    private void drawSettingsContent(GuiGraphics graphics, int x, int y) {
-        // Draw settings information directly
-        graphics.drawString(this.font, "Town Settings:", x, y, 0xFFFFFF);
-        
-        int leftMargin = x + 10;
-        int valueX = x + 140;
-        
-        // Draw a settings box border
-        graphics.fill(leftMargin - 10, y + 15, valueX + 80, y + 85, 0x60444444);
-        graphics.hLine(leftMargin - 10, valueX + 80, y + 15, 0x80FFFFFF);
-        graphics.hLine(leftMargin - 10, valueX + 80, y + 85, 0x80FFFFFF);
-        graphics.vLine(leftMargin - 10, y + 15, y + 85, 0x80FFFFFF);
-        graphics.vLine(valueX + 80, y + 15, y + 85, 0x80FFFFFF);
-        
-        // Setting labels and values with improved formatting
-        graphics.drawString(this.font, "Town Name:", leftMargin, y + 25, 0xCCCCCC);
-        graphics.drawString(this.font, menu.getTownName(), valueX, y + 25, 0xFFFFFF);
-        
-        graphics.drawString(this.font, "Auto Collect:", leftMargin, y + 45, 0xCCCCCC);
-        String autoCollectValue = menu.isAutoCollectEnabled() ? "Enabled" : "Disabled";
-        int autoCollectColor = menu.isAutoCollectEnabled() ? 0x55FF55 : 0xFF5555;
-        graphics.drawString(this.font, autoCollectValue, valueX, y + 45, autoCollectColor);
-        
-        graphics.drawString(this.font, "Taxes:", leftMargin, y + 65, 0xCCCCCC);
-        String taxesValue = menu.isTaxesEnabled() ? "Enabled" : "Disabled";
-        int taxesColor = menu.isTaxesEnabled() ? 0x55FF55 : 0xFF5555;
-        graphics.drawString(this.font, taxesValue, valueX, y + 65, taxesColor);
-        
-        // Information text
-        graphics.drawString(this.font, "Click settings to toggle values", x, y + 100, 0xAAAAAA);
-    }
-    
-    // Helper method to draw a button
-    private void drawButton(GuiGraphics graphics, int x, int y, int width, int height, String text) {
-        // Button background with gradient
-        graphics.fill(x, y, x + width, y + height, 0xFF555555);
-        graphics.fill(x + 1, y + 1, x + width - 1, y + height - 1, 0xFF666666);
-        graphics.fill(x + 1, y + 1, x + width - 1, y + 2, 0xFF888888);
-        
-        // Button text
-        int textWidth = this.font.width(text);
-        int textX = x + (width - textWidth) / 2;
-        int textY = y + (height - 8) / 2;
-        graphics.drawString(this.font, text, textX, textY, 0xFFFFFF);
+        graphics.pose().popPose();
     }
     
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTicks, int mouseX, int mouseY) {
-        // Render the background
-        int x = (this.width - this.imageWidth) / 2;
-        int y = (this.height - this.imageHeight) / 2;
-        
-        // Draw background panel with clear borders - use a more attractive color scheme
-        int bgColor = 0xCC333333;  // Darker transparent gray
-        int fillColor = 0xAA222222; // Slightly darker than border for the fill
-        int borderColor = 0xFFA0A0A0; // Light gray border
-        
-        // Draw main background
-        graphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, bgColor);
-        graphics.fill(x + 1, y + 1, x + this.imageWidth - 1, y + this.imageHeight - 1, fillColor);
-        
-        // Draw outline
-        graphics.hLine(x, x + this.imageWidth - 1, y, borderColor);
-        graphics.hLine(x, x + this.imageWidth - 1, y + this.imageHeight - 1, borderColor);
-        graphics.vLine(x, y, y + this.imageHeight - 1, borderColor);
-        graphics.vLine(x + this.imageWidth - 1, y, y + this.imageHeight - 1, borderColor);
-        
-        // Draw a separator line below the tabs
-        graphics.hLine(x + 10, x + this.imageWidth - 10, y + 30, borderColor);
+        // Background rendering is handled in render() method
     }
     
-    // Improve mouse event handling to better support UI component interaction
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        // First check if our UI components handle the click
-        if (this.tabPanel != null) {
-            int tabX = this.leftPos + 10;
-            int tabWidth = (this.imageWidth - 20) / 4; // 4 tabs
-            int tabY = this.topPos + 20;
-            
-            // Handle tab clicks
-            if (mouseY >= tabY && mouseY < tabY + 20) {
-                for (int i = 0; i < 4; i++) {
-                    if (mouseX >= tabX + (i * tabWidth) && mouseX < tabX + ((i+1) * tabWidth)) {
-                        String[] tabIds = {"overview", "economy", "population", "settings"};
-                        if (i < tabIds.length) {
-                            this.tabPanel.setActiveTab(tabIds[i]);
-                            return true;
-                        }
-                    }
-                }
-            }
-            
-            // Handle the button click at the bottom of each tab
-            int buttonX = this.leftPos + (this.imageWidth / 2) - 30;
-            int buttonY = this.topPos + this.imageHeight - 35;
-            int buttonWidth = 60;
-            int buttonHeight = 20;
-            
-            if (mouseX >= buttonX && mouseX < buttonX + buttonWidth && 
-                mouseY >= buttonY && mouseY < buttonY + buttonHeight) {
-                
-                // Get which button was clicked based on active tab
-                String activeTabId = this.tabPanel.getActiveTabId();
-                if (activeTabId != null) {
-                    String buttonText = activeTabId.substring(0, 3).toUpperCase();
-                    
-                    // Send a chat message with the button name
-                    if (Minecraft.getInstance().player != null) {
-                        // Create a text component with the button name
-                        Component message = Component.literal(buttonText);
-                        // Send the message
-                        Minecraft.getInstance().player.sendSystemMessage(message);
-                    }
-                    
+        // Let the tab panel handle clicks first
+        if (this.tabPanel.mouseClicked(mouseX, mouseY, button)) {
                     return true;
-                }
-            }
         }
         
         return super.mouseClicked(mouseX, mouseY, button);
     }
     
-    // Helper method to check if a point is within a rectangle
-    private boolean isPointInBounds(int x, int y, int width, int height, double pointX, double pointY) {
-        return pointX >= x && pointX < x + width && pointY >= y && pointY < y + height;
-    }
-    
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        // No custom drag handling needed
+        // Let the tab panel handle drags first
+        if (this.tabPanel.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+            return true;
+        }
+        
         return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
     
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        // No custom release handling needed
+        // Let the tab panel handle releases first
+        if (this.tabPanel.mouseReleased(mouseX, mouseY, button)) {
+            return true;
+        }
+        
         return super.mouseReleased(mouseX, mouseY, button);
     }
     
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        // No custom key handling needed
-        return super.keyPressed(keyCode, scanCode, modifiers);
-    }
-    
-    @Override
-    public boolean charTyped(char codePoint, int modifiers) {
-        // No custom char typing handling needed
-        return super.charTyped(codePoint, modifiers);
-    }
-
-    // Helper methods for scissoring (clipping)
-    private void enableScissor(int x1, int y1, int x2, int y2) {
-        double scale = Minecraft.getInstance().getWindow().getGuiScale();
-        int scaledX1 = (int)(x1 * scale);
-        int scaledY1 = (int)(y1 * scale);
-        int scaledX2 = (int)(x2 * scale);
-        int scaledY2 = (int)(y2 * scale);
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        // Let the tab panel handle scroll events
+        if (this.tabPanel.mouseScrolled(mouseX, mouseY, delta)) {
+            return true;
+        }
         
-        int screenHeight = Minecraft.getInstance().getWindow().getHeight();
-        
-        // Flip Y coordinates because OpenGL has 0,0 at the bottom left
-        GL11.glEnable(GL11.GL_SCISSOR_TEST);
-        GL11.glScissor(scaledX1, screenHeight - scaledY2, scaledX2 - scaledX1, scaledY2 - scaledY1);
-    }
-
-    private void disableScissor() {
-        GL11.glDisable(GL11.GL_SCISSOR_TEST);
+        return super.mouseScrolled(mouseX, mouseY, delta);
     }
 } 

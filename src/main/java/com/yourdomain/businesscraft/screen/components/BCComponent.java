@@ -4,20 +4,43 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
  * Enhanced base component for BusinessCraft UI system.
  * Provides common functionality for all UI components including
- * positioning, visibility control, and styling.
+ * positioning, visibility control, styling, and event handling.
  */
 public abstract class BCComponent implements UIComponent {
+    // Basic properties
     protected int x, y, width, height;
     protected boolean visible = true;
     protected Component tooltip;
     protected Style style;
     protected int backgroundColor = 0x80000000; // Default semi-transparent black
     protected int borderColor = -1; // -1 means no border
+    protected int cornerRadius = 0; // 0 means no rounded corners
+    
+    // State management
+    protected boolean enabled = true;
+    protected boolean focused = false;
+    protected boolean hovered = false;
+    protected String id = "";
+    
+    // Animation properties
+    protected float alpha = 1.0f;
+    protected long animationStartTime = 0;
+    protected long animationDuration = 0;
+    protected float animationStartValue = 0;
+    protected float animationEndValue = 0;
+    protected String animationProperty = "";
+    
+    // Event handlers
+    protected Map<String, List<Consumer<BCComponent>>> eventHandlers = new HashMap<>();
     
     /**
      * Create a new BCComponent with the specified dimensions
@@ -78,27 +101,213 @@ public abstract class BCComponent implements UIComponent {
     }
     
     /**
-     * Draw the component's background if it has one
+     * Set the component's corner radius for rounded corners
+     */
+    public BCComponent withCornerRadius(int radius) {
+        this.cornerRadius = radius;
+        return this;
+    }
+    
+    /**
+     * Set the component's ID (useful for finding components in a parent container)
+     */
+    public BCComponent withId(String id) {
+        this.id = id;
+        return this;
+    }
+    
+    /**
+     * Enable or disable the component
+     */
+    public BCComponent setEnabled(boolean enabled) {
+        this.enabled = enabled;
+        return this;
+    }
+    
+    /**
+     * Set the component's opacity (0.0 - 1.0)
+     */
+    public BCComponent withAlpha(float alpha) {
+        this.alpha = Math.max(0, Math.min(1, alpha));
+        return this;
+    }
+    
+    /**
+     * Start an animation for a property
+     */
+    public void animate(String property, float endValue, long durationMs) {
+        this.animationStartTime = System.currentTimeMillis();
+        this.animationDuration = durationMs;
+        this.animationProperty = property;
+        
+        // Set start value based on current property
+        switch (property) {
+            case "alpha":
+                this.animationStartValue = this.alpha;
+                break;
+            case "x":
+                this.animationStartValue = this.x;
+                break;
+            case "y":
+                this.animationStartValue = this.y;
+                break;
+            // Add more properties as needed
+        }
+        
+        this.animationEndValue = endValue;
+    }
+    
+    /**
+     * Update animations if active
+     */
+    protected void updateAnimation() {
+        if (animationDuration <= 0 || animationProperty.isEmpty()) {
+            return;
+        }
+        
+        long currentTime = System.currentTimeMillis();
+        long elapsedTime = currentTime - animationStartTime;
+        
+        if (elapsedTime >= animationDuration) {
+            // Animation complete, set final value
+            applyAnimationValue(animationProperty, animationEndValue);
+            // Reset animation state
+            animationDuration = 0;
+            return;
+        }
+        
+        // Calculate current value based on linear interpolation
+        float progress = (float) elapsedTime / animationDuration;
+        float currentValue = animationStartValue + (animationEndValue - animationStartValue) * progress;
+        
+        // Apply the current animation value
+        applyAnimationValue(animationProperty, currentValue);
+    }
+    
+    /**
+     * Apply an animation value to the appropriate property
+     */
+    private void applyAnimationValue(String property, float value) {
+        switch (property) {
+            case "alpha":
+                this.alpha = value;
+                break;
+            case "x":
+                this.x = (int) value;
+                break;
+            case "y":
+                this.y = (int) value;
+                break;
+            // Add more properties as needed
+        }
+    }
+    
+    /**
+     * Draw the component's background with optional rounded corners
      */
     protected void renderBackground(GuiGraphics guiGraphics) {
         if (backgroundColor != -1) {
-            guiGraphics.fill(x, y, x + width, y + height, backgroundColor);
+            // Apply alpha to background color
+            int bgColor = applyAlpha(backgroundColor);
+            
+            if (cornerRadius > 0) {
+                // Draw rounded rectangle (simplified)
+                // Main rectangle
+                guiGraphics.fill(x + cornerRadius, y, x + width - cornerRadius, y + height, bgColor);
+                // Left and right sides
+                guiGraphics.fill(x, y + cornerRadius, x + cornerRadius, y + height - cornerRadius, bgColor);
+                guiGraphics.fill(x + width - cornerRadius, y + cornerRadius, x + width, y + height - cornerRadius, bgColor);
+                
+                // TODO: Add proper corner rounding with circles when Minecraft rendering allows
+            } else {
+                // Draw regular rectangle
+                guiGraphics.fill(x, y, x + width, y + height, bgColor);
+            }
         }
         
         if (borderColor != -1) {
+            // Apply alpha to border color
+            int bdColor = applyAlpha(borderColor);
+            
             // Draw the border (just a rectangle outline)
-            guiGraphics.hLine(x, x + width - 1, y, borderColor);
-            guiGraphics.hLine(x, x + width - 1, y + height - 1, borderColor);
-            guiGraphics.vLine(x, y, y + height - 1, borderColor);
-            guiGraphics.vLine(x + width - 1, y, y + height - 1, borderColor);
+            guiGraphics.hLine(x, x + width - 1, y, bdColor);
+            guiGraphics.hLine(x, x + width - 1, y + height - 1, bdColor);
+            guiGraphics.vLine(x, y, y + height - 1, bdColor);
+            guiGraphics.vLine(x + width - 1, y, y + height - 1, bdColor);
         }
+    }
+    
+    /**
+     * Apply the current alpha value to a color
+     */
+    protected int applyAlpha(int color) {
+        if (alpha >= 1.0f) return color;
+        
+        int a = (color >> 24) & 0xFF;
+        int r = (color >> 16) & 0xFF;
+        int g = (color >> 8) & 0xFF;
+        int b = color & 0xFF;
+        
+        a = (int)(a * alpha);
+        
+        return (a << 24) | (r << 16) | (g << 8) | b;
     }
     
     /**
      * Check if the mouse is over this component
      */
     public boolean isMouseOver(int mouseX, int mouseY) {
-        return visible && mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
+        return visible && enabled && mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
+    }
+    
+    /**
+     * Handle mouse hover state changes
+     */
+    public void checkHovered(int mouseX, int mouseY) {
+        boolean isNowHovered = isMouseOver(mouseX, mouseY);
+        
+        if (isNowHovered && !hovered) {
+            // Mouse just entered
+            hovered = true;
+            triggerEvent("mouseEnter");
+        } else if (!isNowHovered && hovered) {
+            // Mouse just left
+            hovered = false;
+            triggerEvent("mouseLeave");
+        }
+    }
+    
+    /**
+     * Handle mouse click
+     */
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!isMouseOver((int)mouseX, (int)mouseY) || !enabled) {
+            return false;
+        }
+        
+        focused = true;
+        triggerEvent("click");
+        return true;
+    }
+    
+    /**
+     * Add an event handler
+     */
+    public BCComponent addEventListener(String event, Consumer<BCComponent> handler) {
+        eventHandlers.computeIfAbsent(event, k -> new ArrayList<>()).add(handler);
+        return this;
+    }
+    
+    /**
+     * Trigger an event with this component as the parameter
+     */
+    protected void triggerEvent(String event) {
+        List<Consumer<BCComponent>> handlers = eventHandlers.get(event);
+        if (handlers != null) {
+            for (Consumer<BCComponent> handler : handlers) {
+                handler.accept(this);
+            }
+        }
     }
     
     /**
@@ -129,6 +338,12 @@ public abstract class BCComponent implements UIComponent {
         this.x = x;
         this.y = y;
         
+        // Update animations
+        updateAnimation();
+        
+        // Check hover state
+        checkHovered(mouseX, mouseY);
+        
         // Render background
         renderBackground(guiGraphics);
         
@@ -147,7 +362,8 @@ public abstract class BCComponent implements UIComponent {
     
     @Override
     public void tick() {
-        // Default implementation does nothing
+        // Update animations
+        updateAnimation();
     }
     
     @Override
@@ -170,6 +386,41 @@ public abstract class BCComponent implements UIComponent {
      */
     public boolean isVisible() {
         return visible;
+    }
+    
+    /**
+     * Check if the component is enabled
+     */
+    public boolean isEnabled() {
+        return enabled;
+    }
+    
+    /**
+     * Check if the component is focused
+     */
+    public boolean isFocused() {
+        return focused;
+    }
+    
+    /**
+     * Set the focus state of the component
+     */
+    public void setFocused(boolean focused) {
+        boolean wasFocused = this.focused;
+        this.focused = focused;
+        
+        if (focused && !wasFocused) {
+            triggerEvent("focus");
+        } else if (!focused && wasFocused) {
+            triggerEvent("blur");
+        }
+    }
+    
+    /**
+     * Get the component's ID
+     */
+    public String getId() {
+        return id;
     }
     
     /**

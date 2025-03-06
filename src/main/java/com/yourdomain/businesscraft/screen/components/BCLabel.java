@@ -4,51 +4,54 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Standard label component for BusinessCraft UI system.
- * Provides flexible text display with various alignment options.
+ * Enhanced label component for BusinessCraft UI system.
+ * Provides text display with styling and alignment options.
  */
 public class BCLabel extends BCComponent {
-    private final Supplier<Component> textSupplier;
+    public enum TextAlignment {
+        LEFT,
+        CENTER,
+        RIGHT
+    }
+    
+    private Component text;
+    private Supplier<Component> textSupplier;
+    private int textColor = 0xFFFFFF;
+    private boolean shadow = true;
     private TextAlignment alignment = TextAlignment.LEFT;
-    private int textColor = 0xFFFFFF; // Default white
-    private int shadowColor = 0; // Default black/no shadow
-    private boolean drawShadow = false;
+    private int lineHeight = 10;
     
     /**
-     * Create a new label with the specified text and dimensions
+     * Create a new label with static text
      */
-    public BCLabel(Supplier<Component> textSupplier, int width, int height) {
-        super(width, height);
+    public BCLabel(String translationKey, int width, int lineHeight) {
+        this(Component.translatable(translationKey), width, lineHeight);
+    }
+    
+    /**
+     * Create a new label with a component
+     */
+    public BCLabel(Component text, int width, int lineHeight) {
+        super(width, lineHeight);
+        this.text = text;
+        this.textSupplier = null;
+        this.lineHeight = lineHeight;
+        this.height = lineHeight;
+    }
+    
+    /**
+     * Create a new label with dynamic text from a supplier
+     */
+    public BCLabel(Supplier<Component> textSupplier, int width, int lineHeight) {
+        super(width, lineHeight);
+        this.text = null;
         this.textSupplier = textSupplier;
-        // Make labels transparent by default
-        this.backgroundColor = -1;
-    }
-    
-    /**
-     * Create a new label with fixed text
-     */
-    public BCLabel(Component text, int width, int height) {
-        this(() -> text, width, height);
-    }
-    
-    /**
-     * Create a new label with text from a translation key
-     */
-    public BCLabel(String translationKey, int width, int height) {
-        this(Component.translatable(translationKey), width, height);
-    }
-    
-    /**
-     * Set the text alignment
-     */
-    public BCLabel withAlignment(TextAlignment alignment) {
-        this.alignment = alignment;
-        return this;
+        this.lineHeight = lineHeight;
+        this.height = lineHeight;
     }
     
     /**
@@ -60,38 +63,63 @@ public class BCLabel extends BCComponent {
     }
     
     /**
-     * Set whether to draw text shadow
+     * Set whether to draw text with a shadow
      */
-    public BCLabel withShadow(boolean drawShadow) {
-        this.drawShadow = drawShadow;
+    public BCLabel withShadow(boolean shadow) {
+        this.shadow = shadow;
         return this;
     }
     
     /**
-     * Set the shadow color (only used if drawShadow is true)
+     * Set the text alignment
      */
-    public BCLabel withShadowColor(int shadowColor) {
-        this.shadowColor = shadowColor;
+    public BCLabel withAlignment(TextAlignment alignment) {
+        this.alignment = alignment;
         return this;
+    }
+    
+    /**
+     * Set the text
+     */
+    public void setText(Component text) {
+        this.text = text;
+        this.textSupplier = null;
+    }
+    
+    /**
+     * Set the text supplier
+     */
+    public void setTextSupplier(Supplier<Component> textSupplier) {
+        this.text = null;
+        this.textSupplier = textSupplier;
+    }
+    
+    /**
+     * Get the current text
+     */
+    public Component getText() {
+        if (textSupplier != null) {
+            return textSupplier.get();
+        }
+        return text;
     }
     
     @Override
     protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        Component text = textSupplier.get();
+        Component textToRender = getText();
+        if (textToRender == null) return;
         
-        // Use the supplied style if available
-        if (style != null) {
-            text = text.copy().withStyle(style);
-        }
+        // Apply alpha to text color
+        int finalTextColor = applyAlpha(textColor);
         
         // Calculate text position based on alignment
         int textX = x;
         switch (alignment) {
             case CENTER:
-                textX = x + width / 2 - Minecraft.getInstance().font.width(text) / 2;
+                textX = x + (width / 2) - (Minecraft.getInstance().font.width(textToRender) / 2);
                 break;
             case RIGHT:
-                textX = x + width - Minecraft.getInstance().font.width(text);
+                textX = x + width - Minecraft.getInstance().font.width(textToRender);
                 break;
             case LEFT:
             default:
@@ -99,28 +127,16 @@ public class BCLabel extends BCComponent {
                 break;
         }
         
-        // Center vertically
-        int textY = y + (height - 8) / 2;
-        
-        // Draw text with or without shadow
-        if (drawShadow) {
-            guiGraphics.drawString(Minecraft.getInstance().font, text, textX, textY, textColor, true);
+        // Draw text
+        if (shadow) {
+            guiGraphics.drawString(Minecraft.getInstance().font, textToRender, textX, y, finalTextColor, true);
         } else {
-            guiGraphics.drawString(Minecraft.getInstance().font, text, textX, textY, textColor, false);
+            guiGraphics.drawString(Minecraft.getInstance().font, textToRender, textX, y, finalTextColor, false);
         }
     }
     
     @Override
     public void init(Consumer<Button> register) {
-        // Labels don't have buttons to register
-    }
-    
-    /**
-     * Text alignment options
-     */
-    public enum TextAlignment {
-        LEFT,
-        CENTER,
-        RIGHT
+        // No buttons to register
     }
 } 
