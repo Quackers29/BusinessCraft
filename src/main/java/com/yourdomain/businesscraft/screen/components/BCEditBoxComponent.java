@@ -1,203 +1,187 @@
 package com.yourdomain.businesscraft.screen.components;
 
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
- * A text input component that allows the user to enter and edit text.
+ * Enhanced edit box component for BusinessCraft UI system.
+ * Provides text input functionality with styling and validation.
  */
-public class BCEditBoxComponent implements UIComponent {
+public class BCEditBoxComponent extends BCComponent {
     private final EditBox editBox;
+    private final Supplier<String> textSupplier;
     private final Consumer<String> onTextChanged;
-    private int width;
-    private int height;
-    private int x;
-    private int y;
-    private boolean visible = true;
-
+    private final int maxLength;
+    
+    private int textColor = 0xFFFFFF;
+    private int backgroundColor = 0x80000000;
+    private int focusedBorderColor = 0xFFFFFFFF;
+    private int unfocusedBorderColor = 0x80FFFFFF;
+    
     /**
-     * Creates a new edit box component.
-     *
-     * @param width The width of the edit box
-     * @param height The height of the edit box
-     * @param placeholder Placeholder text to display when empty
-     * @param onTextChanged Callback for when the text changes
+     * Create a new edit box component
      */
-    public BCEditBoxComponent(int width, int height, Component placeholder, Consumer<String> onTextChanged) {
-        this.width = width;
-        this.height = height;
+    public BCEditBoxComponent(int width, int height, Supplier<String> textSupplier, Consumer<String> onTextChanged, int maxLength) {
+        super(width, height);
+        this.textSupplier = textSupplier;
         this.onTextChanged = onTextChanged;
+        this.maxLength = maxLength;
         
+        // Create the vanilla edit box
         this.editBox = new EditBox(
             Minecraft.getInstance().font,
-            0, 0, width, height,
-            placeholder
+            0, 0, // Position will be set in render
+            width, height,
+            Component.empty() // No label
         );
         
-        this.editBox.setMaxLength(128);
+        // Configure the edit box
+        this.editBox.setMaxLength(maxLength);
+        this.editBox.setValue(textSupplier.get());
+        this.editBox.setResponder(this::handleTextChange);
+        this.editBox.setTextColor(textColor);
         this.editBox.setBordered(true);
-        this.editBox.setVisible(true);
-        this.editBox.setTextColor(0xFFFFFFFF);
-        this.editBox.setTextColorUneditable(0xFF888888);
-        
-        // Set up the change listener
-        this.editBox.setResponder(text -> {
-            if (this.onTextChanged != null) {
-                this.onTextChanged.accept(text);
-            }
-        });
+        this.editBox.setCanLoseFocus(true);
     }
-
+    
     /**
-     * Renders the edit box with x and y offsets.
+     * Handle text changes
+     */
+    private void handleTextChange(String text) {
+        if (onTextChanged != null) {
+            onTextChanged.accept(text);
+        }
+        triggerEvent("textChanged");
+    }
+    
+    /**
+     * Set the text color
+     */
+    public BCEditBoxComponent withTextColor(int color) {
+        this.textColor = color;
+        this.editBox.setTextColor(color);
+        return this;
+    }
+    
+    /**
+     * Set the background color
      */
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, int offsetX, int offsetY) {
-        if (!visible) {
-            return;
-        }
-        
-        this.x = offsetX;
-        this.y = offsetY;
-        
-        this.editBox.setX(offsetX);
-        this.editBox.setY(offsetY);
-        this.editBox.render(graphics, mouseX, mouseY, 0); // partialTick is not used in EditBox
+    public BCEditBoxComponent withBackgroundColor(int color) {
+        this.backgroundColor = color;
+        return this;
     }
     
     /**
-     * Implementation of mouse click handling for internal use
+     * Set the border color when focused
      */
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (!visible) {
-            return false;
-        }
-        
-        if (mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height) {
-            return this.editBox.mouseClicked(mouseX, mouseY, button);
-        }
-        
-        return false;
+    public BCEditBoxComponent withFocusedBorderColor(int color) {
+        this.focusedBorderColor = color;
+        return this;
     }
     
     /**
-     * Handles key press events.
-     *
-     * @param keyCode The key code
-     * @param scanCode The scan code
-     * @param modifiers The modifier keys
-     * @return True if the key press was handled
+     * Set the border color when not focused
      */
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (!visible) {
-            return false;
-        }
-        
-        return this.editBox.keyPressed(keyCode, scanCode, modifiers);
+    public BCEditBoxComponent withUnfocusedBorderColor(int color) {
+        this.unfocusedBorderColor = color;
+        return this;
     }
     
     /**
-     * Handles character input events.
-     *
-     * @param codePoint The character code point
-     * @param modifiers The modifier keys
-     * @return True if the character input was handled
+     * Get the current text
      */
-    public boolean charTyped(char codePoint, int modifiers) {
-        if (!visible) {
-            return false;
-        }
-        
-        return this.editBox.charTyped(codePoint, modifiers);
-    }
-    
-    /**
-     * Gets the current text value.
-     *
-     * @return The current text value
-     */
-    public String getValue() {
+    public String getText() {
         return this.editBox.getValue();
     }
     
     /**
-     * Sets the text value.
-     *
-     * @param text The new text value
+     * Set the text
      */
-    public void setValue(String text) {
+    public void setText(String text) {
         this.editBox.setValue(text);
     }
     
-    /**
-     * Sets whether this edit box is focused.
-     *
-     * @param focused True to focus this edit box
-     */
+    @Override
     public void setFocused(boolean focused) {
+        super.setFocused(focused);
         this.editBox.setFocused(focused);
     }
     
-    /**
-     * Gets whether this edit box is focused.
-     *
-     * @return True if this edit box is focused
-     */
-    public boolean isFocused() {
-        return this.editBox.isFocused();
-    }
-    
-    /**
-     * Sets whether the text can be edited.
-     *
-     * @param editable True if the text can be edited
-     */
-    public void setEditable(boolean editable) {
-        this.editBox.setEditable(editable);
-    }
-
     @Override
-    public void setVisible(boolean visible) {
-        this.visible = visible;
-        this.editBox.setVisible(visible);
-    }
-
-    @Override
-    public boolean isVisible() {
-        return visible;
-    }
-
-    @Override
-    public int getX() {
-        return x;
-    }
-
-    @Override
-    public int getY() {
-        return y;
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!isMouseOver((int)mouseX, (int)mouseY) || !enabled) {
+            return false;
+        }
+        
+        boolean handled = this.editBox.mouseClicked(mouseX, mouseY, button);
+        if (handled) {
+            setFocused(true);
+            return true;
+        }
+        
+        return super.mouseClicked(mouseX, mouseY, button);
     }
     
     @Override
-    public int getWidth() {
-        return width;
+    protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        // Update position
+        this.editBox.setX(x + 2);
+        this.editBox.setY(y + (height - 8) / 2 - 4);
+        this.editBox.setWidth(width - 4);
+        
+        // Update text from supplier if not focused
+        if (!this.editBox.isFocused()) {
+            String currentText = this.editBox.getValue();
+            String suppliedText = textSupplier.get();
+            if (!currentText.equals(suppliedText)) {
+                this.editBox.setValue(suppliedText);
+            }
+        }
+        
+        // Draw custom background
+        int bgColor = applyAlpha(backgroundColor);
+        guiGraphics.fill(x, y, x + width, y + height, bgColor);
+        
+        // Draw custom border
+        int borderColor = this.editBox.isFocused() ? focusedBorderColor : unfocusedBorderColor;
+        borderColor = applyAlpha(borderColor);
+        
+        guiGraphics.hLine(x, x + width - 1, y, borderColor);
+        guiGraphics.hLine(x, x + width - 1, y + height - 1, borderColor);
+        guiGraphics.vLine(x, y, y + height - 1, borderColor);
+        guiGraphics.vLine(x + width - 1, y, y + height - 1, borderColor);
+        
+        // Render the edit box (without its background)
+        this.editBox.setBordered(false);
+        this.editBox.setEditable(enabled);
+        this.editBox.render(guiGraphics, mouseX, mouseY, 0);
     }
     
     @Override
-    public int getHeight() {
-        return height;
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (this.editBox.isFocused()) {
+            return this.editBox.keyPressed(keyCode, scanCode, modifiers);
+        }
+        return false;
+    }
+    
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (this.editBox.isFocused()) {
+            return this.editBox.charTyped(codePoint, modifiers);
+        }
+        return false;
     }
     
     @Override
     public void tick() {
+        super.tick();
         this.editBox.tick();
-    }
-    
-    @Override
-    public void init(Consumer<Button> buttonConsumer) {
-        // No regular buttons to register
     }
 } 

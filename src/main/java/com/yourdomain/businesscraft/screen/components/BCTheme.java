@@ -4,66 +4,126 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.Minecraft;
 
 /**
- * Theme system for BusinessCraft UI components.
- * Centralizes styling options and provides consistent theming across the mod.
+ * Theme class for BusinessCraft UI components.
+ * Provides consistent styling across all UI elements.
  */
 public class BCTheme {
+    // Default colors with improved visibility
+    private static final int DEFAULT_PRIMARY_COLOR = 0xA0335599;       // Semi-transparent blue
+    private static final int DEFAULT_SECONDARY_COLOR = 0xA0884466;     // Semi-transparent purple
+    private static final int DEFAULT_SUCCESS_COLOR = 0xA0339944;       // Semi-transparent green
+    private static final int DEFAULT_DANGER_COLOR = 0xA0993333;        // Semi-transparent red
+    private static final int DEFAULT_WARNING_COLOR = 0xA0999933;       // Semi-transparent yellow
+    private static final int DEFAULT_INFO_COLOR = 0xA0339999;          // Semi-transparent teal
+    private static final int DEFAULT_TEXT_LIGHT = 0xFFFFFFFF;          // White text
+    private static final int DEFAULT_TEXT_DARK = 0xFF202020;           // Dark gray text
+    private static final int DEFAULT_PANEL_BACKGROUND = 0x80222222;    // Semi-transparent dark gray
+    private static final int DEFAULT_PANEL_BORDER = 0xA0AAAAAA;        // Light gray border
+    
     // Default theme instance
-    private static final BCTheme DEFAULT = new BCTheme();
+    private static final BCTheme DEFAULT = createDefaultTheme();
     
     // Active theme
     private static BCTheme activeTheme = DEFAULT;
     
     // Color palette
-    private int primaryColor = 0x336699;
-    private int secondaryColor = 0x993366;
-    private int successColor = 0x339933;
-    private int dangerColor = 0x993333;
-    private int warningColor = 0x999933;
-    private int infoColor = 0x339999;
+    private int primaryColor;
+    private int secondaryColor;
+    private int successColor;
+    private int dangerColor;
+    private int warningColor;
+    private int infoColor;
     
     // Text colors
-    private int textLight = 0xFFFFFF;
-    private int textDark = 0x333333;
+    private int textLight;
+    private int textDark;
     private int textMuted = 0x999999;
     
     // Panel colors
-    private int panelBackground = 0x80000000;
-    private int panelBorder = 0x80FFFFFF;
+    private int panelBackground;
+    private int panelBorder;
     
     // Component sizing
-    private int standardButtonHeight = 20;
-    private int smallButtonHeight = 16;
-    private int largeButtonHeight = 24;
-    private int standardPadding = 8;
-    private int smallPadding = 4;
-    private int largePadding = 12;
-    
-    // Border styling
+    private int padding = 5;
+    private int margin = 5;
+    private int cornerRadius = 3;
     private int borderWidth = 1;
     private boolean roundedCorners = true;
     
     /**
-     * Get the active theme
+     * Private constructor for the theme.
+     * Use the builder to create a new theme.
+     */
+    private BCTheme() {
+        // Private constructor
+    }
+    
+    /**
+     * Creates the default theme with improved visibility colors.
+     * 
+     * @return The default theme
+     */
+    private static BCTheme createDefaultTheme() {
+        BCTheme theme = new BCTheme();
+        theme.primaryColor = DEFAULT_PRIMARY_COLOR;
+        theme.secondaryColor = DEFAULT_SECONDARY_COLOR;
+        theme.successColor = DEFAULT_SUCCESS_COLOR;
+        theme.dangerColor = DEFAULT_DANGER_COLOR;
+        theme.warningColor = DEFAULT_WARNING_COLOR;
+        theme.infoColor = DEFAULT_INFO_COLOR;
+        theme.textLight = DEFAULT_TEXT_LIGHT;
+        theme.textDark = DEFAULT_TEXT_DARK;
+        theme.panelBackground = DEFAULT_PANEL_BACKGROUND;
+        theme.panelBorder = DEFAULT_PANEL_BORDER;
+        theme.roundedCorners = true;
+        return theme;
+    }
+    
+    /**
+     * Get the active theme.
+     * 
+     * @return The active theme
      */
     public static BCTheme get() {
         return activeTheme;
     }
     
     /**
-     * Set a custom theme as the active theme
+     * Set the active theme.
+     * 
+     * @param theme The theme to set as active
      */
     public static void setActiveTheme(BCTheme theme) {
         if (theme != null) {
             activeTheme = theme;
+        } else {
+            activeTheme = DEFAULT;
         }
     }
     
     /**
-     * Reset to the default theme
+     * Reset to the default theme.
      */
     public static void resetToDefault() {
         activeTheme = DEFAULT;
+    }
+    
+    /**
+     * Get the default theme.
+     * 
+     * @return The default theme
+     */
+    public static BCTheme getDefaultTheme() {
+        return DEFAULT;
+    }
+    
+    /**
+     * Create a new theme builder.
+     * 
+     * @return A new theme builder
+     */
+    public static Builder builder() {
+        return new Builder();
     }
     
     // Color getters
@@ -84,14 +144,9 @@ public class BCTheme {
     public int getPanelBorder() { return panelBorder; }
     
     // Component sizing getters
-    public int getStandardButtonHeight() { return standardButtonHeight; }
-    public int getSmallButtonHeight() { return smallButtonHeight; }
-    public int getLargeButtonHeight() { return largeButtonHeight; }
-    public int getStandardPadding() { return standardPadding; }
-    public int getSmallPadding() { return smallPadding; }
-    public int getLargePadding() { return largePadding; }
-    
-    // Border styling getters
+    public int getPadding() { return padding; }
+    public int getMargin() { return margin; }
+    public int getCornerRadius() { return cornerRadius; }
     public int getBorderWidth() { return borderWidth; }
     public boolean hasRoundedCorners() { return roundedCorners; }
     
@@ -105,17 +160,14 @@ public class BCTheme {
     }
     
     /**
-     * Create a builder for customizing a theme
-     */
-    public static Builder builder() {
-        return new Builder();
-    }
-    
-    /**
-     * Builder for creating custom themes
+     * Builder class for creating themes.
      */
     public static class Builder {
-        private final BCTheme theme = new BCTheme();
+        private BCTheme theme;
+        
+        public Builder() {
+            theme = new BCTheme();
+        }
         
         public Builder primaryColor(int color) {
             theme.primaryColor = color;
@@ -172,33 +224,18 @@ public class BCTheme {
             return this;
         }
         
-        public Builder standardButtonHeight(int height) {
-            theme.standardButtonHeight = height;
+        public Builder padding(int padding) {
+            theme.padding = padding;
             return this;
         }
         
-        public Builder smallButtonHeight(int height) {
-            theme.smallButtonHeight = height;
+        public Builder margin(int margin) {
+            theme.margin = margin;
             return this;
         }
         
-        public Builder largeButtonHeight(int height) {
-            theme.largeButtonHeight = height;
-            return this;
-        }
-        
-        public Builder standardPadding(int padding) {
-            theme.standardPadding = padding;
-            return this;
-        }
-        
-        public Builder smallPadding(int padding) {
-            theme.smallPadding = padding;
-            return this;
-        }
-        
-        public Builder largePadding(int padding) {
-            theme.largePadding = padding;
+        public Builder cornerRadius(int radius) {
+            theme.cornerRadius = radius;
             return this;
         }
         

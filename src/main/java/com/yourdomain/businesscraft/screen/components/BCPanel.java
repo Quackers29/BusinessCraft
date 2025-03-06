@@ -3,8 +3,12 @@ package com.yourdomain.businesscraft.screen.components;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * Panel component for BusinessCraft UI system.
@@ -12,8 +16,19 @@ import java.util.function.Consumer;
  */
 public class BCPanel extends BCComponent {
     protected final List<UIComponent> children = new ArrayList<>();
+    protected Map<String, UIComponent> namedChildren = new HashMap<>();
     protected BCLayout layout = null;
     protected int padding = 5; // Default padding
+    protected boolean clipChildren = false; // Whether to clip children to the panel's bounds
+    protected boolean automaticLayout = true; // Whether to automatically layout children on render
+
+    // Scroll handling
+    protected boolean scrollable = false;
+    protected int scrollOffset = 0;
+    protected int maxScrollOffset = 0;
+    protected int contentHeight = 0;
+    protected int scrollBarWidth = 5;
+    protected boolean scrolling = false;
     
     /**
      * Create a new panel with the specified dimensions
@@ -27,6 +42,16 @@ public class BCPanel extends BCComponent {
      */
     public BCPanel addChild(UIComponent child) {
         children.add(child);
+        
+        // If the child has an ID, add it to the named children map
+        if (child instanceof BCComponent) {
+            BCComponent bcChild = (BCComponent) child;
+            String id = bcChild.getId();
+            if (id != null && !id.isEmpty()) {
+                namedChildren.put(id, child);
+            }
+        }
+        
         return this;
     }
     
@@ -35,6 +60,16 @@ public class BCPanel extends BCComponent {
      */
     public BCPanel removeChild(UIComponent child) {
         children.remove(child);
+        
+        // Remove from named children if present
+        if (child instanceof BCComponent) {
+            BCComponent bcChild = (BCComponent) child;
+            String id = bcChild.getId();
+            if (id != null && !id.isEmpty() && namedChildren.get(id) == child) {
+                namedChildren.remove(id);
+            }
+        }
+        
         return this;
     }
     
@@ -43,7 +78,33 @@ public class BCPanel extends BCComponent {
      */
     public BCPanel clearChildren() {
         children.clear();
+        namedChildren.clear();
         return this;
+    }
+    
+    /**
+     * Find a child component by ID
+     */
+    public Optional<UIComponent> findChildById(String id) {
+        return Optional.ofNullable(namedChildren.get(id));
+    }
+    
+    /**
+     * Find child components matching a predicate
+     */
+    public List<UIComponent> findChildren(Predicate<UIComponent> predicate) {
+        List<UIComponent> result = new ArrayList<>();
+        for (UIComponent child : children) {
+            if (predicate.test(child)) {
+                result.add(child);
+            }
+            
+            // Search recursively in child panels
+            if (child instanceof BCPanel) {
+                result.addAll(((BCPanel) child).findChildren(predicate));
+            }
+        }
+        return result;
     }
     
     /**
@@ -63,25 +124,293 @@ public class BCPanel extends BCComponent {
     }
     
     /**
+     * Set whether to clip children to the panel's bounds
+     */
+    public BCPanel withClipChildren(boolean clip) {
+        this.clipChildren = clip;
+        return this;
+    }
+    
+    /**
+     * Set whether this panel is scrollable
+     */
+    public BCPanel withScrollable(boolean scrollable) {
+        this.scrollable = scrollable;
+        return this;
+    }
+    
+    /**
+     * Set whether to automatically layout children on render
+     */
+    public BCPanel withAutomaticLayout(boolean automatic) {
+        this.automaticLayout = automatic;
+        return this;
+    }
+    
+    /**
+     * Get the current scroll offset
+     */
+    public int getScrollOffset() {
+        return scrollOffset;
+    }
+    
+    /**
+     * Set the scroll offset
+     */
+    public void setScrollOffset(int offset) {
+        if (!scrollable) return;
+        
+        // Calculate content height if needed
+        updateContentHeight();
+        
+        // Clamp scroll offset
+        if (offset < 0) {
+            offset = 0;
+        } else if (offset > maxScrollOffset) {
+            offset = maxScrollOffset;
+        }
+        
+        if (this.scrollOffset != offset) {
+            this.scrollOffset = offset;
+            triggerEvent("scroll");
+        }
+    }
+    
+    /**
+     * Handle mouse scroll
+     */
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
+        if (!scrollable || !isMouseOver((int)mouseX, (int)mouseY)) {
+            return false;
+        }
+        
+        // Delta is positive when scrolling up, negative when scrolling down
+        int scrollAmount = (int)(-scrollDelta * 10); // Adjust sensitivity
+        setScrollOffset(scrollOffset + scrollAmount);
+        return true;
+    }
+    
+    /**
+     * Update the content height based on children
+     */
+    private void updateContentHeight() {
+        contentHeight = 0;
+        
+        for (UIComponent child : children) {
+            if (child.isVisible()) {
+                int childBottom = child.getY() - getInnerTop() + child.getHeight();
+                if (childBottom > contentHeight) {
+                    contentHeight = childBottom;
+                }
+            }
+        }
+        
+        // Calculate max scroll offset
+        int visibleHeight = getInnerHeight();
+        maxScrollOffset = Math.max(0, contentHeight - visibleHeight);
+    }
+    
+    /**
      * Layout the children using the current layout manager
      */
     public void layoutChildren() {
         if (layout != null) {
             layout.layout(this, children);
         }
+        
+        // Update content height for scrolling
+        if (scrollable) {
+            updateContentHeight();
+        }
+    }
+    
+    /**
+     * Enable scissor test to clip children to panel bounds
+     */
+    private void enableScissor(GuiGraphics guiGraphics) {
+        if (clipChildren) {
+            guiGraphics.pose().pushPose();
+            guiGraphics.enableScissor(
+                x + padding, 
+                y + padding, 
+                x + width - padding, 
+                y + height - padding
+            );
+        }
+    }
+    
+    /**
+     * Disable scissor test
+     */
+    private void disableScissor(GuiGraphics guiGraphics) {
+        if (clipChildren) {
+            guiGraphics.disableScissor();
+            guiGraphics.pose().popPose();
+        }
     }
     
     @Override
     protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        // Layout children if a layout manager is set
-        layoutChildren();
+        // Layout children if a layout manager is set and automatic layout is enabled
+        if (automaticLayout) {
+            layoutChildren();
+        }
+        
+        // Enable scissor if clipping is enabled
+        enableScissor(guiGraphics);
+        
+        // Render scrollbar if needed
+        if (scrollable && maxScrollOffset > 0) {
+            int scrollbarHeight = Math.max(20, (getInnerHeight() * getInnerHeight()) / contentHeight);
+            int scrollbarY = y + padding + (int)((float)scrollOffset / maxScrollOffset * (getInnerHeight() - scrollbarHeight));
+            
+            // Draw scrollbar track
+            guiGraphics.fill(
+                x + width - padding - scrollBarWidth, 
+                y + padding, 
+                x + width - padding, 
+                y + height - padding, 
+                0x40FFFFFF
+            );
+            
+            // Draw scrollbar thumb
+            guiGraphics.fill(
+                x + width - padding - scrollBarWidth, 
+                scrollbarY, 
+                x + width - padding, 
+                scrollbarY + scrollbarHeight, 
+                0xC0FFFFFF
+            );
+        }
         
         // Render children
         for (UIComponent child : children) {
             if (child.isVisible()) {
-                child.render(guiGraphics, child.getX(), child.getY(), mouseX, mouseY);
+                // Apply scroll offset if scrollable
+                int childY = child.getY();
+                if (scrollable) {
+                    childY -= scrollOffset;
+                }
+                
+                // Only render if child is at least partially visible
+                if (!scrollable || 
+                    (childY + child.getHeight() > y + padding && 
+                     childY < y + height - padding)) {
+                    child.render(guiGraphics, child.getX(), childY, mouseX, mouseY);
+                }
             }
         }
+        
+        // Disable scissor
+        disableScissor(guiGraphics);
+    }
+    
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!isMouseOver((int)mouseX, (int)mouseY) || !enabled) {
+            return false;
+        }
+        
+        // Check if clicking on scrollbar
+        if (scrollable && maxScrollOffset > 0) {
+            int scrollbarX = x + width - padding - scrollBarWidth;
+            if (mouseX >= scrollbarX && mouseX <= x + width - padding) {
+                scrolling = true;
+                handleScrollbarDrag(mouseY);
+                return true;
+            }
+        }
+        
+        // Pass the click to children
+        boolean handled = false;
+        for (int i = children.size() - 1; i >= 0; i--) {
+            UIComponent child = children.get(i);
+            if (child.isVisible() && child instanceof BCComponent) {
+                // Adjust y position for scrolling
+                double adjustedY = mouseY;
+                if (scrollable) {
+                    adjustedY += scrollOffset;
+                }
+                
+                if (((BCComponent) child).mouseClicked(mouseX, adjustedY, button)) {
+                    handled = true;
+                    break;
+                }
+            }
+        }
+        
+        // Handle panel click if not handled by children
+        if (!handled) {
+            super.mouseClicked(mouseX, mouseY, button);
+        }
+        
+        return true;
+    }
+    
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (!enabled) return false;
+        
+        // Handle scrollbar dragging
+        if (scrolling) {
+            handleScrollbarDrag(mouseY);
+            return true;
+        }
+        
+        // Pass to children
+        for (UIComponent child : children) {
+            if (child.isVisible() && child instanceof BCComponent) {
+                // Adjust y position for scrolling
+                double adjustedY = mouseY;
+                if (scrollable) {
+                    adjustedY += scrollOffset;
+                }
+                
+                if (((BCComponent) child).mouseDragged(mouseX, adjustedY, button, dragX, dragY)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        // Stop scrolling
+        scrolling = false;
+        
+        // Pass to children
+        for (UIComponent child : children) {
+            if (child.isVisible() && child instanceof BCComponent) {
+                // Adjust y position for scrolling
+                double adjustedY = mouseY;
+                if (scrollable) {
+                    adjustedY += scrollOffset;
+                }
+                
+                if (((BCComponent) child).mouseReleased(mouseX, adjustedY, button)) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Handle scrollbar dragging
+     */
+    private void handleScrollbarDrag(double mouseY) {
+        int scrollbarHeight = Math.max(20, (getInnerHeight() * getInnerHeight()) / contentHeight);
+        float scrollableTrackSize = getInnerHeight() - scrollbarHeight;
+        float relativeY = (float)((mouseY - (y + padding)) / scrollableTrackSize);
+        
+        // Clamp to 0-1 range
+        relativeY = Math.max(0, Math.min(1, relativeY));
+        
+        // Set scroll offset based on relative position
+        setScrollOffset((int)(relativeY * maxScrollOffset));
     }
     
     @Override
@@ -94,6 +423,8 @@ public class BCPanel extends BCComponent {
     
     @Override
     public void tick() {
+        super.tick();
+        
         // Tick all children
         for (UIComponent child : children) {
             child.tick();
@@ -130,7 +461,7 @@ public class BCPanel extends BCComponent {
      * Get the inner width (accounts for padding)
      */
     public int getInnerWidth() {
-        return width - (padding * 2);
+        return width - (padding * 2) - (scrollable ? scrollBarWidth : 0);
     }
     
     /**

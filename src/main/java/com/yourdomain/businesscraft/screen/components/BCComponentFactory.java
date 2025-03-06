@@ -7,117 +7,137 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Factory for creating standardized UI components for BusinessCraft.
- * Provides consistent styling and behavior across the mod.
+ * Factory class for creating common BusinessCraft UI components with consistent styling.
+ * This factory ensures all components follow the same design language and color scheme.
  */
 public class BCComponentFactory {
-    // These constants are kept for backward compatibility
-    // New code should use BCTheme.get() methods instead
-    @Deprecated
-    public static final int PRIMARY_COLOR = 0x336699;
-    @Deprecated
-    public static final int SECONDARY_COLOR = 0x993366;
-    @Deprecated
-    public static final int SUCCESS_COLOR = 0x339933;
-    @Deprecated
-    public static final int DANGER_COLOR = 0x993333;
-    @Deprecated
-    public static final int WARNING_COLOR = 0x999933;
-    @Deprecated
-    public static final int INFO_COLOR = 0x339999;
+    // Color constants for consistent styling
+    private static final int PRIMARY_COLOR = 0xA0335599;       // Semi-transparent blue
+    private static final int SECONDARY_COLOR = 0xA0884466;     // Semi-transparent purple
+    private static final int SUCCESS_COLOR = 0xA0339944;       // Semi-transparent green
+    private static final int DANGER_COLOR = 0xA0993333;        // Semi-transparent red
+    private static final int BACKGROUND_COLOR = 0x80222222;    // Semi-transparent dark gray
+    private static final int BORDER_COLOR = 0xA0AAAAAA;        // Light gray
+    private static final int TEXT_COLOR = 0xFFFFFFFF;          // White text
+    private static final int TEXT_HIGHLIGHT = 0xFFDDFFFF;      // Light cyan highlight text
     
+    // Standard dimension constants
+    private static final int STANDARD_BUTTON_HEIGHT = 20;
+    private static final int SMALL_BUTTON_HEIGHT = 16;
+    private static final int LARGE_BUTTON_HEIGHT = 24;
+    private static final int STANDARD_PADDING = 8;
+    private static final int SMALL_PADDING = 4;
+    private static final int LARGE_PADDING = 12;
+    
+    // Deprecated constants kept for backwards compatibility
     @Deprecated
     public static final int TEXT_LIGHT = 0xFFFFFF;
+    
     @Deprecated
     public static final int TEXT_DARK = 0x333333;
+    
     @Deprecated
     public static final int TEXT_MUTED = 0x999999;
     
     @Deprecated
-    public static final int BUTTON_HEIGHT = 20;
-    @Deprecated
-    public static final int SMALL_BUTTON_HEIGHT = 16;
-    @Deprecated
-    public static final int LARGE_BUTTON_HEIGHT = 24;
+    public static final int BUTTON_HEIGHT = STANDARD_BUTTON_HEIGHT;
     
     /**
-     * Create a standard primary button
+     * Creates a primary button with consistent styling.
+     * 
+     * @param translationKey The translation key for the button text
+     * @param onPress The action to perform when pressed
+     * @param width The width of the button
+     * @return A styled primary button
      */
     public static BCButton createPrimaryButton(String translationKey, Consumer<Button> onPress, int width) {
-        BCButton button = new BCButton(translationKey, onPress, width, BCTheme.get().getStandardButtonHeight());
+        BCButton button = new BCButton(translationKey, onPress, width, STANDARD_BUTTON_HEIGHT);
         button.withType(BCButton.ButtonType.PRIMARY);
         return button;
     }
     
     /**
-     * Create a standard secondary button
+     * Creates a secondary button with consistent styling.
+     * 
+     * @param translationKey The translation key for the button text
+     * @param onPress The action to perform when pressed
+     * @param width The width of the button
+     * @return A styled secondary button
      */
     public static BCButton createSecondaryButton(String translationKey, Consumer<Button> onPress, int width) {
-        BCButton button = new BCButton(translationKey, onPress, width, BCTheme.get().getStandardButtonHeight());
+        BCButton button = new BCButton(translationKey, onPress, width, STANDARD_BUTTON_HEIGHT);
         button.withType(BCButton.ButtonType.SECONDARY);
         return button;
     }
     
     /**
-     * Create a danger button (for destructive actions)
+     * Creates a danger button with consistent styling.
+     * 
+     * @param translationKey The translation key for the button text
+     * @param onPress The action to perform when pressed
+     * @param width The width of the button
+     * @return A styled danger button
      */
     public static BCButton createDangerButton(String translationKey, Consumer<Button> onPress, int width) {
-        BCButton button = new BCButton(translationKey, onPress, width, BCTheme.get().getStandardButtonHeight());
+        BCButton button = new BCButton(translationKey, onPress, width, STANDARD_BUTTON_HEIGHT);
         button.withType(BCButton.ButtonType.DANGER);
         return button;
     }
     
     /**
-     * Create a success button (for confirmations)
+     * Creates a success button with consistent styling.
+     * 
+     * @param translationKey The translation key for the button text
+     * @param onPress The action to perform when pressed
+     * @param width The width of the button
+     * @return A styled success button
      */
     public static BCButton createSuccessButton(String translationKey, Consumer<Button> onPress, int width) {
-        BCButton button = new BCButton(translationKey, onPress, width, BCTheme.get().getStandardButtonHeight());
+        BCButton button = new BCButton(translationKey, onPress, width, STANDARD_BUTTON_HEIGHT);
         button.withType(BCButton.ButtonType.SUCCESS);
         return button;
     }
     
     /**
-     * Create a small icon button
+     * Creates an icon button with consistent styling.
+     * 
+     * @param tooltip The tooltip to display when hovered
+     * @param onPress The action to perform when pressed
+     * @return A styled icon button
      */
     public static BCButton createIconButton(Component tooltip, Consumer<Button> onPress) {
-        BCButton button = new BCButton("", onPress, BCTheme.get().getSmallButtonHeight(), BCTheme.get().getSmallButtonHeight());
+        BCButton button = new BCButton("", onPress, SMALL_BUTTON_HEIGHT, SMALL_BUTTON_HEIGHT);
         button.withTooltip(tooltip);
         return button;
     }
     
-    /**
-     * Create a standard header label
-     */
+    @Deprecated
     public static BCLabel createHeaderLabel(String translationKey, int width) {
         BCLabel label = new BCLabel(translationKey, width, 12);
-        label.withTextColor(BCTheme.get().getTextLight())
-             .withAlignment(BCLabel.TextAlignment.CENTER)
-             .withShadow(true);
+        label.withTextColor(TEXT_HIGHLIGHT)
+              .withAlignment(BCLabel.TextAlignment.CENTER)
+              .withShadow(true);
         return label;
     }
     
-    /**
-     * Create a standard body text label
-     */
+    @Deprecated
     public static BCLabel createBodyLabel(String translationKey, int width) {
         BCLabel label = new BCLabel(translationKey, width, 10);
-        label.withTextColor(BCTheme.get().getTextLight())
-             .withAlignment(BCLabel.TextAlignment.LEFT);
+        label.withTextColor(TEXT_COLOR)
+              .withAlignment(BCLabel.TextAlignment.LEFT);
         return label;
     }
     
-    /**
-     * Create a dynamic label that updates with a supplier
-     */
+    @Deprecated
     public static BCLabel createDynamicLabel(Supplier<Component> textSupplier, int width) {
         BCLabel label = new BCLabel(textSupplier, width, 10);
-        label.withTextColor(BCTheme.get().getTextLight())
-             .withAlignment(BCLabel.TextAlignment.LEFT);
+        label.withTextColor(TEXT_COLOR)
+              .withAlignment(BCLabel.TextAlignment.LEFT);
         return label;
     }
     
     /**
-     * Create a standard panel with flow layout
+     * Creates a panel with a flow layout.
      */
     public static BCPanel createFlowPanel(int width, int height, BCFlowLayout.Direction direction, int spacing) {
         BCPanel panel = new BCPanel(width, height);
@@ -126,7 +146,7 @@ public class BCComponentFactory {
     }
     
     /**
-     * Create a standard panel with grid layout
+     * Creates a panel with a grid layout.
      */
     public static BCPanel createGridPanel(int width, int height, int columns, int hSpacing, int vSpacing) {
         BCPanel panel = new BCPanel(width, height);
@@ -135,60 +155,62 @@ public class BCComponentFactory {
     }
     
     /**
-     * Create a standard container panel with a border
+     * Creates a container panel with consistent styling.
      */
     public static BCPanel createContainerPanel(int width, int height) {
         BCPanel panel = new BCPanel(width, height);
-        panel.withBackgroundColor(BCTheme.get().getPanelBackground())
-             .withBorderColor(BCTheme.get().getPanelBorder());
+        panel.withBackgroundColor(BACKGROUND_COLOR)
+             .withBorderColor(BORDER_COLOR)
+             .withCornerRadius(3);
+        
         return panel;
     }
     
     /**
-     * Create a tooltip panel with text
+     * Creates a tooltip panel with consistent styling.
      */
     public static BCPanel createTooltipPanel(String translationKey, int width) {
-        BCPanel panel = new BCPanel(width, 0);
+        BCPanel panel = new BCPanel(width, 24);
         panel.withBackgroundColor(0xF0100010);
         panel.withBorderColor(0xFF5000FF);
-        panel.withPadding(BCTheme.get().getSmallPadding());
+        panel.withPadding(SMALL_PADDING);
         
-        BCLabel label = createBodyLabel(translationKey, width - 2 * BCTheme.get().getSmallPadding());
+        BCLabel label = createBodyLabel(translationKey, width - 2 * SMALL_PADDING);
         panel.addChild(label);
         
         return panel;
     }
     
     /**
-     * Create an edit box for text input
+     * Creates an edit box with consistent styling.
      */
     public static EditBoxComponent createEditBox(int width, Supplier<String> initialText, Consumer<String> onTextChanged, int maxLength) {
-        return new EditBoxComponent(width, BCTheme.get().getStandardButtonHeight(), initialText, onTextChanged, maxLength);
+        return new EditBoxComponent(width, STANDARD_BUTTON_HEIGHT, initialText, onTextChanged, maxLength);
     }
     
     /**
-     * Create a toggle button
+     * Creates a toggle button with consistent styling.
      */
     public static ToggleButtonComponent createToggleButton(Component text, Consumer<Button> onPress, int width) {
-        return new ToggleButtonComponent(0, 0, width, BCTheme.get().getStandardButtonHeight(), text, onPress);
+        return new ToggleButtonComponent(0, 0, width, STANDARD_BUTTON_HEIGHT, text, onPress);
     }
     
     /**
-     * Create a data-bound button that updates its text automatically
+     * Creates a data-bound button with consistent styling.
      */
     public static DataBoundButtonComponent createDataBoundButton(Supplier<Component> textSupplier, Consumer<Button> onPress, int width) {
-        return new DataBoundButtonComponent(textSupplier, onPress, width, BCTheme.get().getStandardButtonHeight());
+        return new DataBoundButtonComponent(textSupplier, onPress, width, STANDARD_BUTTON_HEIGHT);
     }
     
     /**
-     * Create a data-bound label that updates its text automatically
+     * Creates a data label with consistent styling.
      */
     public static DataLabelComponent createDataLabel(Supplier<String> textSupplier, int color, int width) {
         return new DataLabelComponent(textSupplier, color, width);
     }
     
     /**
-     * Create a slot component for item display
+     * Creates a slot component.
      */
     public static SlotComponent createSlot() {
         return new SlotComponent();

@@ -4,150 +4,186 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import java.util.function.Consumer;
 
 /**
- * A toggle button component that can be switched between an on and off state.
+ * Toggle button component for BusinessCraft UI system.
+ * Provides a button that can be toggled on and off.
  */
-public class BCToggleButton implements UIComponent {
-    private int width;
-    private int height;
-    private Component enabledText;
-    private Component disabledText;
+public class BCToggleButton extends BCButton {
     private boolean toggled;
-    private Consumer<BCToggleButton> onClick;
-    private int x;
-    private int y;
-    private boolean visible = true;
-
+    private int toggledBackgroundColor = 0xA0335599;   // Semi-transparent blue when toggled
+    private int untoggledBackgroundColor = 0x80333333; // Semi-transparent gray when untoggled
+    private int toggledBorderColor = 0xFFFFFFFF;       // White border when toggled
+    private int untoggledBorderColor = 0x80FFFFFF;     // Semi-transparent white border when untoggled
+    
     /**
-     * Creates a new toggle button.
-     *
-     * @param width The width of the button
-     * @param height The height of the button
-     * @param enabledText The text to display when toggled on
-     * @param disabledText The text to display when toggled off
-     * @param initialState The initial toggle state
-     * @param onClick Callback for when the button is clicked
+     * Create a new toggle button
      */
-    public BCToggleButton(int width, int height, Component enabledText, 
-                         Component disabledText, boolean initialState, 
-                         Consumer<BCToggleButton> onClick) {
-        this.width = width;
-        this.height = height;
-        this.enabledText = enabledText;
-        this.disabledText = disabledText;
+    public BCToggleButton(boolean initialState, Consumer<Button> onToggle) {
+        super(Component.empty(), onToggle, 40, 20);
         this.toggled = initialState;
-        this.onClick = onClick;
+        this.withBackground(false); // We'll handle our own background
     }
-
+    
     /**
-     * Renders the toggle button with x and y offsets.
+     * Set the toggled state
      */
-    @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, int offsetX, int offsetY) {
-        if (!visible) {
-            return;
-        }
-        
-        this.x = offsetX;
-        this.y = offsetY;
-        
-        // Determine colors based on toggle state
-        int bgColor = toggled ? 0xFF00AA00 : 0xFF555555; // Green when enabled, gray when disabled
-        int textColor = 0xFFFFFFFF; // White text
-        
-        // Draw background
-        graphics.fill(offsetX, offsetY, offsetX + width, offsetY + height, bgColor);
-        
-        // Draw border
-        graphics.fill(offsetX, offsetY, offsetX + width, offsetY + 1, 0xFFFFFFFF); // Top
-        graphics.fill(offsetX, offsetY + height - 1, offsetX + width, offsetY + height, 0xFFFFFFFF); // Bottom
-        graphics.fill(offsetX, offsetY, offsetX + 1, offsetY + height, 0xFFFFFFFF); // Left
-        graphics.fill(offsetX + width - 1, offsetY, offsetX + width, offsetY + height, 0xFFFFFFFF); // Right
-        
-        // Draw text
-        Component textToRender = toggled ? enabledText : disabledText;
-        int textWidth = Minecraft.getInstance().font.width(textToRender.getString());
-        int textX = offsetX + (width - textWidth) / 2;
-        int textY = offsetY + (height - 8) / 2;
-        
-        graphics.drawString(Minecraft.getInstance().font, textToRender, textX, textY, textColor);
+    public BCToggleButton setToggled(boolean toggled) {
+        this.toggled = toggled;
+        return this;
     }
-
+    
     /**
-     * Implementation of mouse click handling for internal use
-     */
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (!visible) {
-            return false;
-        }
-        
-        if (mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height) {
-            toggled = !toggled;
-            if (onClick != null) {
-                onClick.accept(this);
-            }
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Gets the toggle state of the button.
-     *
-     * @return True if toggled on, false if toggled off
+     * Get the toggled state
      */
     public boolean isToggled() {
         return toggled;
     }
-
+    
     /**
-     * Sets the toggle state of the button.
-     *
-     * @param toggled The new toggle state
+     * Set the background color when toggled
      */
-    public void setToggled(boolean toggled) {
-        this.toggled = toggled;
-    }
-
-    @Override
-    public void setVisible(boolean visible) {
-        this.visible = visible;
-    }
-
-    @Override
-    public boolean isVisible() {
-        return visible;
-    }
-
-    @Override
-    public int getX() {
-        return x;
-    }
-
-    @Override
-    public int getY() {
-        return y;
+    public BCToggleButton withToggledBackgroundColor(int color) {
+        this.toggledBackgroundColor = color;
+        return this;
     }
     
-    @Override
-    public int getWidth() {
-        return width;
+    /**
+     * Set the background color when untoggled
+     */
+    public BCToggleButton withUntoggledBackgroundColor(int color) {
+        this.untoggledBackgroundColor = color;
+        return this;
     }
     
-    @Override
-    public int getHeight() {
-        return height;
+    /**
+     * Set the border color when toggled
+     */
+    public BCToggleButton withToggledBorderColor(int color) {
+        this.toggledBorderColor = color;
+        return this;
     }
     
-    @Override
-    public void tick() {
-        // Nothing to do on tick
+    /**
+     * Set the border color when untoggled
+     */
+    public BCToggleButton withUntoggledBorderColor(int color) {
+        this.untoggledBorderColor = color;
+        return this;
     }
     
+    /**
+     * Check if the mouse is over this button.
+     * 
+     * @param mouseX The mouse X coordinate
+     * @param mouseY The mouse Y coordinate
+     * @return True if the mouse is over this button
+     */
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        return mouseX >= getX() && mouseX < getX() + getWidth() && 
+               mouseY >= getY() && mouseY < getY() + getHeight();
+    }
+    
+    /**
+     * Handle mouse click to toggle the button state
+     */
     @Override
-    public void init(Consumer<Button> buttonConsumer) {
-        // No regular buttons to register
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (isMouseOver(mouseX, mouseY) && button == 0) {
+            // Toggle the state
+            toggled = !toggled;
+            
+            // Play button sound
+            playButtonSound();
+            
+            // Trigger the callback
+            if (onPress != null) {
+                onPress.accept(null);
+            }
+            
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Play the button click sound
+     */
+    private void playButtonSound() {
+        Minecraft.getInstance().getSoundManager().play(
+            SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F)
+        );
+    }
+    
+    /**
+     * Render the toggle button
+     */
+    @Override
+    protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        boolean hovered = isMouseOver(mouseX, mouseY);
+        
+        // Choose colors based on toggle state
+        int bgColor = toggled ? toggledBackgroundColor : untoggledBackgroundColor;
+        int borderColor = toggled ? toggledBorderColor : untoggledBorderColor;
+        
+        // Make colors more opaque when hovered
+        if (hovered) {
+            bgColor = makeMoreOpaque(bgColor);
+            borderColor = makeMoreOpaque(borderColor);
+        }
+        
+        // Draw background
+        guiGraphics.fill(x, y, x + width, y + height, bgColor);
+        
+        // Draw border
+        if (borderColor != 0) {
+            guiGraphics.hLine(x, x + width - 1, y, borderColor);
+            guiGraphics.hLine(x, x + width - 1, y + height - 1, borderColor);
+            guiGraphics.vLine(x, y, y + height - 1, borderColor);
+            guiGraphics.vLine(x + width - 1, y, y + height - 1, borderColor);
+        }
+        
+        // Draw the toggle indicator
+        int indicatorSize = height - 6;
+        int indicatorY = y + 3;
+        int indicatorX;
+        
+        if (toggled) {
+            // Right side for on
+            indicatorX = x + width - indicatorSize - 3;
+        } else {
+            // Left side for off
+            indicatorX = x + 3;
+        }
+        
+        // Draw indicator background (lighter than button background)
+        int indicatorColor = toggled ? 0xFFFFFFFF : 0xFFAAAAAA;
+        guiGraphics.fill(indicatorX, indicatorY, indicatorX + indicatorSize, indicatorY + indicatorSize, indicatorColor);
+        
+        // Draw text label if provided
+        if (getText() != null && !getText().getString().isEmpty()) {
+            int textColor = toggled ? 0xFFFFFFFF : 0xFFAAAAAA;
+            int textX = x + width / 2 - Minecraft.getInstance().font.width(getText()) / 2;
+            int textY = y + (height - 8) / 2;
+            guiGraphics.drawString(Minecraft.getInstance().font, getText(), textX, textY, textColor);
+        }
+    }
+    
+    /**
+     * Make a color more opaque for hover state
+     */
+    private int makeMoreOpaque(int color) {
+        int a = (color >> 24) & 0xFF;
+        int r = (color >> 16) & 0xFF;
+        int g = (color >> 8) & 0xFF;
+        int b = color & 0xFF;
+        
+        // Increase alpha by 25% of remaining transparency
+        a = Math.min(255, a + ((255 - a) / 4));
+        
+        return (a << 24) | (r << 16) | (g << 8) | b;
     }
 } 

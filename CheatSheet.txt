@@ -1,0 +1,25 @@
+# BusinessCraft - Cheat Sheet
+
+## USAGE:
+Prior to starting, check if there is the file 'CheatSheet.txt' in the root directory, read this file to remind you of past mistakes so you are less likely to make them again. At the end of every converstion when you are summerising what you have done, add to the root file 'CheatSheet.txt' one line per item (keep it space efficent, use example) of what you past you could have benefitted from knowing, specifically about resolving errors and what you needed to know not to make that error in the first place, dont just state everything youve done, be concise about useful error resolving tips, nothing specific to the task your were trying to accomplish.
+
+## EXAMPLE (Not a real issue): 
+1.  <Target> <path> <Method> <fix>
+2.  UI, BCScreenBuiler.java, when creating a button, look out for missed references
+
+#Remember ONE line per issue, no more.
+
+# List of Lessons learned
+
+1. UI, BCTabPanel.java, render method, use direct rendering at absolute positions instead of positioning children
+2. UI, BCTabPanel.java, mouse events, always convert global mouse coordinates to panel-local coordinates
+3. UI, BCTabPanel.java, tab content, size panels to fit content area rather than repositioning them
+4. UI, BCTabPanel.java, content rendering, use matrix transformations (pushPose/popPose) for nested component rendering
+5. UI, BCTabPanel.java, simplify inheritance, extend BCComponent directly instead of BCPanel for more control
+6. UI, color management, define color constants in one place and reference them throughout the UI for consistency
+7. UI, BCComponentFactory.java, when adding methods to factory classes, ensure they only call methods available on the return type
+8. UI, component styling, use semi-transparent colors (0xA0RRGGBB) for better visibility against Minecraft's dark UI backgrounds
+9. UI, BCTabPanel.java, tab styling, use lighter colors for active tabs to provide clear visual distinction from inactive tabs
+10. UI, BCTheme.java, when refactoring a utility class, update all references to deprecated methods in dependent classes
+11. UI, BCToggleButton.java, when extending a component and using its protected methods, make sure to override those that are needed
+12. UI, BCButton.java, when overriding with custom render implementations, disable default rendering with appropriate flags

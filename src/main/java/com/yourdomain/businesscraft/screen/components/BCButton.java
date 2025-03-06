@@ -10,211 +10,376 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Standard button component for BusinessCraft UI system.
- * Provides a consistent look and feel for all buttons in the mod.
+ * Enhanced button component for BusinessCraft UI system.
+ * Supports multiple button styles, states, and custom rendering.
  */
 public class BCButton extends BCComponent {
-    private static final ResourceLocation BUTTON_TEXTURE = new ResourceLocation(BusinessCraft.MOD_ID,
-            "textures/gui/bc_button.png");
-    
-    private static final int BUTTON_TEXTURE_WIDTH = 200;
-    private static final int BUTTON_TEXTURE_HEIGHT = 20;
-    
-    // Button states
-    private static final int NORMAL = 0;
-    private static final int HOVERED = 1;
-    private static final int DISABLED = 2;
-    
-    private final Supplier<Component> textSupplier;
-    private final Consumer<Button> onPress;
-    private Button vanillaButton;
-    private boolean enabled = true;
-    
-    // Button type/style
-    private ButtonType buttonType = ButtonType.PRIMARY;
-    
-    /**
-     * Create a new button with the specified text, action, and dimensions
-     */
-    public BCButton(Supplier<Component> textSupplier, Consumer<Button> onPress, int width, int height) {
-        super(width, height);
-        this.textSupplier = textSupplier;
-        this.onPress = onPress;
-        createButton();
+    // Button types
+    public enum ButtonType {
+        PRIMARY,
+        SECONDARY,
+        SUCCESS,
+        DANGER,
+        WARNING,
+        INFO,
+        OUTLINE,
+        TRANSPARENT
     }
     
-    /**
-     * Create a new button with fixed text
-     */
-    public BCButton(Component text, Consumer<Button> onPress, int width, int height) {
-        this(() -> text, onPress, width, height);
-    }
+    // Button state
+    private boolean pressed = false;
+    
+    // Button customization
+    private ButtonType type = ButtonType.PRIMARY;
+    private int textColor = 0xFFFFFF;
+    private boolean shadow = true;
+    protected Consumer<Button> onPress;
+    private Component text;
+    private ResourceLocation iconTexture = null;
+    private int iconU = 0;
+    private int iconV = 0;
+    private int iconWidth = 0;
+    private int iconHeight = 0;
+    private int iconPadding = 4;
+    private boolean drawBackground = true;
+    
+    // Color constants for better visibility
+    private static final int PRIMARY_COLOR = 0xA0335599;       // Semi-transparent blue
+    private static final int SECONDARY_COLOR = 0xA0884466;     // Semi-transparent purple
+    private static final int SUCCESS_COLOR = 0xA0339944;       // Semi-transparent green
+    private static final int DANGER_COLOR = 0xA0993333;        // Semi-transparent red
+    private static final int WARNING_COLOR = 0xA0999933;       // Semi-transparent yellow
+    private static final int INFO_COLOR = 0xA0339999;          // Semi-transparent teal
+    private static final int OUTLINE_COLOR = 0x40FFFFFF;       // Transparent white outline
+    private static final int TRANSPARENT_COLOR = 0x00000000;   // Fully transparent
+    
+    // Hover color modifiers
+    private static final int HOVER_ALPHA_INCREASE = 0x20000000; // Increase alpha by 0x20 when hovering
     
     /**
-     * Create a new button with text from a translation key
+     * Create a new button using a translation key
      */
     public BCButton(String translationKey, Consumer<Button> onPress, int width, int height) {
         this(Component.translatable(translationKey), onPress, width, height);
     }
     
     /**
-     * Create the underlying vanilla button
+     * Create a new button with a component
      */
-    private void createButton() {
-        this.vanillaButton = Button.builder(textSupplier.get(), b -> {
-            if (onPress != null) {
-                onPress.accept(b);
-            }
-        })
-        .pos(0, 0)
-        .size(width, height)
-        .build();
+    public BCButton(Component text, Consumer<Button> onPress, int width, int height) {
+        super(width, height);
+        this.text = text;
+        this.onPress = onPress;
     }
     
     /**
-     * Set the button type/style
+     * Create a new button with a component and a click handler that accepts the button
      */
-    public BCButton withType(ButtonType type) {
-        this.buttonType = type;
-        return this;
+    public BCButton(Component text, Consumer<BCButton> onClick, int width) {
+        super(width, 20);
+        this.text = text;
+        this.onPress = button -> onClick.accept(this);
     }
     
     /**
-     * Set whether the button is enabled
+     * Get the button's background color based on its type and state
      */
-    public BCButton setEnabled(boolean enabled) {
-        this.enabled = enabled;
-        if (vanillaButton != null) {
-            vanillaButton.active = enabled;
+    private int getBackgroundColor(boolean hovered) {
+        if (!drawBackground) {
+            return 0x00000000; // Fully transparent
         }
-        return this;
+        
+        int baseColor;
+        switch (type) {
+            case PRIMARY:
+                baseColor = PRIMARY_COLOR;
+                break;
+            case SECONDARY:
+                baseColor = SECONDARY_COLOR;
+                break;
+            case SUCCESS:
+                baseColor = SUCCESS_COLOR;
+                break;
+            case DANGER:
+                baseColor = DANGER_COLOR;
+                break;
+            case WARNING:
+                baseColor = WARNING_COLOR;
+                break;
+            case INFO:
+                baseColor = INFO_COLOR;
+                break;
+            case OUTLINE:
+                baseColor = OUTLINE_COLOR;
+                break;
+            case TRANSPARENT:
+                baseColor = TRANSPARENT_COLOR;
+                break;
+            default:
+                baseColor = PRIMARY_COLOR;
+        }
+        
+        // Make the button more opaque when hovered
+        if (hovered) {
+            // Add alpha without overflowing
+            int alpha = (baseColor >> 24) & 0xFF;
+            int rgb = baseColor & 0xFFFFFF;
+            alpha = Math.min(alpha + 0x20, 0xFF);
+            return (alpha << 24) | rgb;
+        }
+        
+        return baseColor;
     }
     
-    @Override
-    public void init(Consumer<Button> register) {
-        vanillaButton.setX(x);
-        vanillaButton.setY(y);
-        vanillaButton.setWidth(width);
-        vanillaButton.setHeight(height);
-        vanillaButton.active = enabled;
-        register.accept(vanillaButton);
+    /**
+     * Get the button's border color based on its type
+     */
+    private int getBorderColor() {
+        switch (type) {
+            case OUTLINE:
+                return 0xA0FFFFFF; // Semi-transparent white
+            case TRANSPARENT:
+                return 0x40FFFFFF; // Very transparent white
+            default:
+                return 0x80FFFFFF; // Moderately transparent white
+        }
     }
     
+    /**
+     * Implementation of the required renderContent method from BCComponent
+     */
     @Override
     protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        // Update message in case the supplier has changed
-        vanillaButton.setMessage(textSupplier.get());
+        boolean hovered = isMouseOver(mouseX, mouseY);
         
-        // Instead of letting vanilla button render itself, we'll draw our custom style
-        // but still use the vanilla button for input handling
-        
-        // Determine the state
-        int state = NORMAL;
-        if (!enabled) {
-            state = DISABLED;
-        } else if (isMouseOver(mouseX, mouseY)) {
-            state = HOVERED;
+        // Draw button background with rounded corners
+        if (drawBackground) {
+            int backgroundColor = getBackgroundColor(hovered);
+            int borderColor = getBorderColor();
+            
+            // Override the default background rendering
+            this.backgroundColor = -1; // Disable default background
+            
+            // Draw background
+            drawRoundedRect(guiGraphics, x, y, getWidth(), getHeight(), backgroundColor);
+            
+            // Draw border
+            if (type == ButtonType.OUTLINE || type == ButtonType.TRANSPARENT || hovered) {
+                drawRoundedRectOutline(guiGraphics, x, y, getWidth(), getHeight(), borderColor);
+            }
         }
         
-        // Draw the button texture
-        renderButtonTexture(guiGraphics, state);
+        // Calculate text position
+        int textX = x + (getWidth() - Minecraft.getInstance().font.width(text)) / 2;
+        int textY = y + (getHeight() - 8) / 2;
         
-        // Draw the text
-        Component message = textSupplier.get();
-        int textColor = getTextColor(state);
-        guiGraphics.drawCenteredString(
-            Minecraft.getInstance().font,
-            message,
-            x + width / 2,
-            y + (height - 8) / 2,
-            textColor
-        );
+        // Adjust for icon if present
+        if (iconTexture != null && iconWidth > 0 && iconHeight > 0) {
+            int totalWidth = iconWidth + iconPadding + Minecraft.getInstance().font.width(text);
+            textX = x + (getWidth() - totalWidth) / 2 + iconWidth + iconPadding;
+            
+            // Draw icon
+            int iconX = x + (getWidth() - totalWidth) / 2;
+            int iconY = y + (getHeight() - iconHeight) / 2;
+            guiGraphics.blit(iconTexture, iconX, iconY, iconU, iconV, iconWidth, iconHeight);
+        }
+        
+        // Draw text with shadow if enabled
+        if (shadow) {
+            guiGraphics.drawString(Minecraft.getInstance().font, text, textX, textY, textColor);
+        } else {
+            guiGraphics.drawString(Minecraft.getInstance().font, text, textX, textY, textColor, false);
+        }
     }
     
     /**
-     * Draw the button texture based on the button state
+     * Draw a rounded rectangle
      */
-    private void renderButtonTexture(GuiGraphics guiGraphics, int state) {
-        int textureY = state * BUTTON_TEXTURE_HEIGHT;
-        int textureX = buttonType.ordinal() * BUTTON_TEXTURE_WIDTH;
+    private void drawRoundedRect(GuiGraphics graphics, int x, int y, int width, int height, int color) {
+        int cornerRadius = 3;
         
-        // Draw button using 9-slice rendering for flexible sizing
-        // Top left
-        guiGraphics.blit(BUTTON_TEXTURE, x, y, textureX, textureY, 3, 3);
-        // Top right
-        guiGraphics.blit(BUTTON_TEXTURE, x + width - 3, y, textureX + BUTTON_TEXTURE_WIDTH - 3, textureY, 3, 3);
-        // Bottom left
-        guiGraphics.blit(BUTTON_TEXTURE, x, y + height - 3, textureX, textureY + BUTTON_TEXTURE_HEIGHT - 3, 3, 3);
-        // Bottom right
-        guiGraphics.blit(BUTTON_TEXTURE, x + width - 3, y + height - 3, 
-                textureX + BUTTON_TEXTURE_WIDTH - 3, textureY + BUTTON_TEXTURE_HEIGHT - 3, 3, 3);
+        // Draw center
+        graphics.fill(x + cornerRadius, y, x + width - cornerRadius, y + height, color);
         
-        // Top edge
-        guiGraphics.blit(BUTTON_TEXTURE, x + 3, y, textureX + 3, textureY, width - 6, 3);
-        // Bottom edge
-        guiGraphics.blit(BUTTON_TEXTURE, x + 3, y + height - 3, textureX + 3, textureY + BUTTON_TEXTURE_HEIGHT - 3, width - 6, 3);
-        // Left edge
-        guiGraphics.blit(BUTTON_TEXTURE, x, y + 3, textureX, textureY + 3, 3, height - 6);
-        // Right edge
-        guiGraphics.blit(BUTTON_TEXTURE, x + width - 3, y + 3, textureX + BUTTON_TEXTURE_WIDTH - 3, textureY + 3, 3, height - 6);
+        // Draw left and right edges
+        graphics.fill(x, y + cornerRadius, x + cornerRadius, y + height - cornerRadius, color);
+        graphics.fill(x + width - cornerRadius, y + cornerRadius, x + width, y + height - cornerRadius, color);
         
-        // Center
-        guiGraphics.blit(BUTTON_TEXTURE, x + 3, y + 3, textureX + 3, textureY + 3, width - 6, height - 6);
+        // Draw corners
+        drawCircleQuadrant(graphics, x + cornerRadius, y + cornerRadius, cornerRadius, color, 0);
+        drawCircleQuadrant(graphics, x + width - cornerRadius, y + cornerRadius, cornerRadius, color, 1);
+        drawCircleQuadrant(graphics, x + width - cornerRadius, y + height - cornerRadius, cornerRadius, color, 2);
+        drawCircleQuadrant(graphics, x + cornerRadius, y + height - cornerRadius, cornerRadius, color, 3);
     }
     
     /**
-     * Get the text color based on button state
+     * Draw a rounded rectangle outline
      */
-    private int getTextColor(int state) {
-        switch (state) {
-            case NORMAL:
-                return buttonType.getTextColor();
-            case HOVERED:
-                return buttonType.getHoverTextColor();
-            case DISABLED:
-                return buttonType.getDisabledTextColor();
-            default:
-                return 0xFFFFFF;
+    private void drawRoundedRectOutline(GuiGraphics graphics, int x, int y, int width, int height, int color) {
+        int cornerRadius = 3;
+        
+        // Draw horizontal lines
+        graphics.hLine(x + cornerRadius, x + width - cornerRadius - 1, y, color);
+        graphics.hLine(x + cornerRadius, x + width - cornerRadius - 1, y + height - 1, color);
+        
+        // Draw vertical lines
+        graphics.vLine(x, y + cornerRadius, y + height - cornerRadius - 1, color);
+        graphics.vLine(x + width - 1, y + cornerRadius, y + height - cornerRadius - 1, color);
+        
+        // Draw corner outlines
+        drawCircleQuadrantOutline(graphics, x + cornerRadius, y + cornerRadius, cornerRadius, color, 0);
+        drawCircleQuadrantOutline(graphics, x + width - cornerRadius, y + cornerRadius, cornerRadius, color, 1);
+        drawCircleQuadrantOutline(graphics, x + width - cornerRadius, y + height - cornerRadius, cornerRadius, color, 2);
+        drawCircleQuadrantOutline(graphics, x + cornerRadius, y + height - cornerRadius, cornerRadius, color, 3);
+    }
+    
+    /**
+     * Draw a quadrant of a circle
+     * Quadrant: 0 = top-left, 1 = top-right, 2 = bottom-right, 3 = bottom-left
+     */
+    private void drawCircleQuadrant(GuiGraphics graphics, int centerX, int centerY, int radius, int color, int quadrant) {
+        for (int dx = 0; dx <= radius; dx++) {
+            for (int dy = 0; dy <= radius; dy++) {
+                if (dx * dx + dy * dy <= radius * radius) {
+                    int drawX = centerX;
+                    int drawY = centerY;
+                    
+                    switch (quadrant) {
+                        case 0: // top-left
+                            drawX -= dx;
+                            drawY -= dy;
+                            break;
+                        case 1: // top-right
+                            drawX += dx - 1;
+                            drawY -= dy;
+                            break;
+                        case 2: // bottom-right
+                            drawX += dx - 1;
+                            drawY += dy - 1;
+                            break;
+                        case 3: // bottom-left
+                            drawX -= dx;
+                            drawY += dy - 1;
+                            break;
+                    }
+                    
+                    graphics.fill(drawX, drawY, drawX + 1, drawY + 1, color);
+                }
+            }
         }
+    }
+    
+    /**
+     * Draw a quadrant outline of a circle
+     * Quadrant: 0 = top-left, 1 = top-right, 2 = bottom-right, 3 = bottom-left
+     */
+    private void drawCircleQuadrantOutline(GuiGraphics graphics, int centerX, int centerY, int radius, int color, int quadrant) {
+        for (int i = 0; i <= 90; i++) {
+            double angle = Math.toRadians(i + (quadrant * 90));
+            int dx = (int) (Math.cos(angle) * radius);
+            int dy = (int) (Math.sin(angle) * radius);
+            
+            int drawX = centerX;
+            int drawY = centerY;
+            
+            switch (quadrant) {
+                case 0: // top-left
+                    drawX -= dx;
+                    drawY -= dy;
+                    break;
+                case 1: // top-right
+                    drawX += dx - 1;
+                    drawY -= dy;
+                    break;
+                case 2: // bottom-right
+                    drawX += dx - 1;
+                    drawY += dy - 1;
+                    break;
+                case 3: // bottom-left
+                    drawX -= dx;
+                    drawY += dy - 1;
+                    break;
+            }
+            
+            graphics.fill(drawX, drawY, drawX + 1, drawY + 1, color);
+        }
+    }
+    
+    // Mouse event handling
+    
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (isMouseOver(mouseX, mouseY) && button == 0) {
+            this.pressed = true;
+            if (this.onPress != null) {
+                this.onPress.accept(null);
+            }
+            return true;
+        }
+        return false;
     }
     
     @Override
-    public void setVisible(boolean visible) {
-        super.setVisible(visible);
-        if (vanillaButton != null) {
-            vanillaButton.visible = visible;
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (this.pressed && button == 0) {
+            this.pressed = false;
+            return true;
         }
+        return false;
     }
     
-    /**
-     * Predefined button types/styles
-     */
-    public enum ButtonType {
-        PRIMARY(0xFFFFFF, 0xFFFFBF, 0x707070),    // Standard button
-        SECONDARY(0xCCCCCC, 0xFFFFFF, 0x707070),  // Less prominent button
-        DANGER(0xFFFFFF, 0xFFDDDD, 0x707070),     // Delete/warning actions
-        SUCCESS(0xFFFFFF, 0xDDFFDD, 0x707070);    // Confirm/success actions
-        
-        private final int textColor;
-        private final int hoverTextColor;
-        private final int disabledTextColor;
-        
-        ButtonType(int textColor, int hoverTextColor, int disabledTextColor) {
-            this.textColor = textColor;
-            this.hoverTextColor = hoverTextColor;
-            this.disabledTextColor = disabledTextColor;
-        }
-        
-        public int getTextColor() {
-            return textColor;
-        }
-        
-        public int getHoverTextColor() {
-            return hoverTextColor;
-        }
-        
-        public int getDisabledTextColor() {
-            return disabledTextColor;
-        }
+    private boolean isMouseOver(double mouseX, double mouseY) {
+        return mouseX >= getX() && mouseX < getX() + getWidth() && 
+               mouseY >= getY() && mouseY < getY() + getHeight();
+    }
+    
+    // Fluent API for customization
+    
+    public BCButton withType(ButtonType type) {
+        this.type = type;
+        return this;
+    }
+    
+    public BCButton withTextColor(int textColor) {
+        this.textColor = textColor;
+        return this;
+    }
+    
+    public BCButton withShadow(boolean shadow) {
+        this.shadow = shadow;
+        return this;
+    }
+    
+    public BCButton withIcon(ResourceLocation texture, int u, int v, int width, int height) {
+        this.iconTexture = texture;
+        this.iconU = u;
+        this.iconV = v;
+        this.iconWidth = width;
+        this.iconHeight = height;
+        return this;
+    }
+    
+    public BCButton withIconPadding(int padding) {
+        this.iconPadding = padding;
+        return this;
+    }
+    
+    public BCButton withBackground(boolean drawBackground) {
+        this.drawBackground = drawBackground;
+        return this;
+    }
+    
+    public BCButton withText(Component text) {
+        this.text = text;
+        return this;
+    }
+    
+    public BCButton withText(String translationKey) {
+        this.text = Component.translatable(translationKey);
+        return this;
+    }
+    
+    public Component getText() {
+        return this.text;
     }
 } 
