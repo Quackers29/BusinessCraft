@@ -32,3 +32,16 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 19. UI, TownInterfaceScreen.java, render bottom buttons separately from tab content to provide consistent navigation controls
 20. UI, tab-specific actions, use the active tab identifier to dynamically change button functions based on current context
 21. UI, UIGridBuilder.java, use a data-driven approach with a grid-based system for flexible and reusable UI layouts
+22. UI, component hosting, when embedding UI systems like grids, make them component-specific fields to avoid variable capture issues
+23. UI, state management, maintain persistent state variables for toggle components when they are recreated during rendering
+24. UI, pattern consistency, apply the same UI patterns across all similar content to ensure predictable user experience
+25. UI, large content display, use scrollable panels for content that exceeds fixed container sizes rather than trying to resize the container
+26. UI, custom scrollable components, implement direct scrolling with isMouseOver checks and proper local coordinate handling
+27. UI, component sizing, account for title heights and spacing when calculating available space for nested components
+28. UI, scrollable content, dynamically calculate maxVisible based on container size rather than hardcoding the number of visible items
+29. UI, content density, use smaller item heights and reduced padding to maximize the amount of information visible in a confined space
+30. UI, mouse input, implement middle mouse button (button 2) scrolling by tracking drag distance and translating to scroll amount
+31. UI, scroll wheel handling, ensure mouseScrolled events are directly forwarded to the right component and use Math.signum for consistent scrolling speed
+32. UI, minecraft mouse wheel, implement scrolling using simpler delta sign check instead of math calculations to ensure consistent behavior
+33. UI, debugging mouse wheel events, add System.out.println to track exactly what values are coming into mouseScrolled events for troubleshooting
+34. UI, mouse wheel scrolling, skip isMouseOver checks and directly forward scroll events to ensure they're captured in complex UI hierarchies

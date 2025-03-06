@@ -14,6 +14,7 @@ import org.lwjgl.opengl.GL11;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.Optional;
 
 /**
  * The Town Interface Screen showcases the BusinessCraft UI system capabilities.
@@ -37,6 +38,10 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     
     // Grid builder for bottom buttons
     private UIGridBuilder bottomButtonsGrid;
+    
+    // State tracking for toggle buttons
+    private boolean pvpEnabled = false;
+    private boolean publicTownEnabled = true;
 
     public TownInterfaceScreen(TownInterfaceMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -120,7 +125,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     }
     
     private void createOverviewTab() {
-        // Create panel with correct dimensions for content area
+        // Create panel for content
         BCPanel panel = new BCPanel(this.tabPanel.getWidth(), this.tabPanel.getHeight() - 20);
         panel.withPadding(10)
              .withBackgroundColor(0x00000000) // Transparent background
@@ -129,51 +134,110 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         // Create a flow layout for the panel
         panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 10));
         
-        // Create the welcome header with animation
-        BCLabel titleLabel = BCComponentFactory.createHeaderLabel("WELCOME TO YOUR TOWN", panel.getInnerWidth());
-        titleLabel.withTextColor(TEXT_HIGHLIGHT)
-                  .withShadow(true)
-                  .withAlpha(0.0f);
-        
-        // Add animation to fade in the title
+        // Add title
+        BCLabel titleLabel = BCComponentFactory.createHeaderLabel("TOWN OVERVIEW", panel.getInnerWidth());
+        titleLabel.withTextColor(TEXT_HIGHLIGHT).withShadow(true);
         panel.addChild(titleLabel);
-        titleLabel.animate("alpha", 1.0f, 500);
         
-        // Create an info panel with town details
-        BCPanel infoPanel = BCComponentFactory.createContainerPanel(panel.getInnerWidth(), 130);
-        infoPanel.withCornerRadius(5)
-                 .withBackgroundColor(BACKGROUND_COLOR)
-                 .withBorderColor(BORDER_COLOR);
-        infoPanel.withLayout(new BCGridLayout(1, 10, 10));
+        // Calculate dimensions for the town info grid - ensure it fits within panel boundaries
+        // Account for the panel's padding and the title height
+        int titleHeight = 20; // Approximate height of the header
+        int verticalSpacing = 10; // Space between title and grid
         
-        // Add town info items
-        BCLabel townNameLabel = BCComponentFactory.createDynamicLabel(
-            () -> Component.literal("Town Name: " + getTownName()),
-            panel.getInnerWidth() - 20
-        );
-        townNameLabel.withTextColor(TEXT_COLOR).withShadow(true);
-        infoPanel.addChild(townNameLabel);
+        // Calculate available space for the grid
+        int availableWidth = panel.getInnerWidth();
+        int availableHeight = panel.getInnerHeight() - titleHeight - verticalSpacing;
         
-        BCLabel mayorLabel = BCComponentFactory.createDynamicLabel(
-            () -> Component.literal("Mayor: " + getMayorName()),
-            panel.getInnerWidth() - 20
-        );
-        mayorLabel.withTextColor(TEXT_COLOR).withShadow(true);
-        infoPanel.addChild(mayorLabel);
+        // Add animated town info component with appropriate dimensions
+        BCComponent gridHost = new BCComponent(availableWidth, availableHeight) {
+            // Internal grid instance
+            private UIGridBuilder grid;
+            private float alpha = 0.0f;
+            private long startTime;
+            private boolean animationStarted = false;
+            
+            // Initialize the grid when rendering
+            private UIGridBuilder createGrid() {
+                // Create the grid with component-relative positioning (3 rows x 2 columns)
+                UIGridBuilder newGrid = new UIGridBuilder(x, y, getWidth(), getHeight(), 3, 2)
+                    .withBackgroundColor(BACKGROUND_COLOR)
+                    .withBorderColor(BORDER_COLOR)
+                    .withMargins(15, 10)
+                    .withSpacing(15, 10)
+                    .drawBorder(true);
+                
+                // Add town info data
+                // First row: Town Name
+                newGrid.addLabel(0, 0, "Town Name:", TEXT_COLOR);
+                newGrid.addLabel(0, 1, getTownName(), TEXT_HIGHLIGHT);
+                
+                // Second row: Mayor
+                newGrid.addLabel(1, 0, "Mayor:", TEXT_COLOR);
+                newGrid.addLabel(1, 1, getMayorName(), TEXT_HIGHLIGHT);
+                
+                // Third row: Population
+                newGrid.addLabel(2, 0, "Population:", TEXT_COLOR);
+                newGrid.addLabel(2, 1, String.valueOf(getTownPopulation()), TEXT_HIGHLIGHT);
+                
+                return newGrid;
+            }
+            
+            @Override
+            protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+                // Start animation if not started
+                if (!animationStarted) {
+                    startTime = System.currentTimeMillis();
+                    animationStarted = true;
+                }
+                
+                // Calculate alpha based on time (fade in over 500ms, starting after title appears)
+                long elapsed = System.currentTimeMillis() - startTime;
+                if (elapsed > 300) { // Start after title animation
+                    alpha = Math.min(1.0f, (elapsed - 300) / 500.0f);
+                }
+                
+                // Only render if we have some visibility
+                if (alpha > 0.01f) {
+                    // Save current pose
+                    guiGraphics.pose().pushPose();
+                    
+                    // Apply alpha transformation
+                    int alphaInt = (int)(alpha * 255.0f);
+                    guiGraphics.setColor(1.0f, 1.0f, 1.0f, alpha);
+                    
+                    // Create/update the grid
+                    grid = createGrid();
+                    
+                    // Render the grid with alpha applied
+                    grid.render(guiGraphics, mouseX, mouseY);
+                    
+                    // Restore original pose and color
+                    guiGraphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
+                    guiGraphics.pose().popPose();
+                }
+            }
+            
+            @Override
+            public boolean mouseClicked(double mouseX, double mouseY, int button) {
+                // Only handle clicks if animation is complete
+                if (alpha >= 0.99f) {
+                    // Make sure we have a grid to click on
+                    if (grid == null) {
+                        grid = createGrid();
+                    }
+                    
+                    // Let the grid handle clicks
+                    if (grid.mouseClicked((int)mouseX, (int)mouseY)) {
+                        playButtonClickSound();
+                        return true;
+                    }
+                }
+                return false;
+            }
+        };
         
-        BCLabel populationLabel = BCComponentFactory.createDynamicLabel(
-            () -> Component.literal("Population: " + getTownPopulation()),
-            panel.getInnerWidth() - 20
-        );
-        populationLabel.withTextColor(TEXT_COLOR).withShadow(true);
-        infoPanel.addChild(populationLabel);
-        
-        // Add info panel to main panel with fade-in animation
-        infoPanel.withAlpha(0.0f);
-        panel.addChild(infoPanel);
-        infoPanel.animate("alpha", 1.0f, 800);
-        
-        // Note: We no longer need to add buttons here as they're handled by the bottom navigation panel
+        // Add the grid host component to the panel
+        panel.addChild(gridHost);
         
         // Add the panel to the tab
         this.tabPanel.addTab("overview", Component.literal("Overview"), panel);
@@ -194,36 +258,73 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         titleLabel.withTextColor(TEXT_HIGHLIGHT).withShadow(true);
         panel.addChild(titleLabel);
         
-        // Create a panel for resource list
-        BCPanel resourcePanel = new BCPanel(panel.getInnerWidth(), 120);
-        resourcePanel.withPadding(5)
-                     .withBackgroundColor(BACKGROUND_COLOR)
-                     .withBorderColor(BORDER_COLOR)
-                     .withCornerRadius(3);
+        // Sample resource data
+        String[] resources = {"Wood", "Stone", "Iron", "Gold", "Diamond", "Food", "Coal", "Emerald"};
+        int[] amounts = {128, 64, 32, 16, 8, 256, 48, 24};
         
-        // Set grid layout for resources
-        resourcePanel.withLayout(new BCGridLayout(2, 5, 5));
+        // Calculate dimensions for the resource grid - ensure it fits within panel boundaries
+        // Account for the panel's padding and the title height
+        int titleHeight = 20; // Approximate height of the header
+        int verticalSpacing = 10; // Space between title and grid
         
-        // Add resource items
-        String[] resources = {"Gold", "Wood", "Stone", "Food", "Iron", "Coal", "Gems", "Oil"};
-        int[] amounts = {1250, 842, 1500, 750, 325, 980, 147, 520};
+        // Calculate available space for the grid
+        int availableWidth = panel.getInnerWidth();
+        int availableHeight = panel.getInnerHeight() - titleHeight - verticalSpacing;
         
-        for (int i = 0; i < resources.length; i++) {
-            // Resource name
-            BCLabel nameLabel = BCComponentFactory.createBodyLabel(resources[i], 100);
-            nameLabel.withTextColor(TEXT_HIGHLIGHT);
-            resourcePanel.addChild(nameLabel);
+        // Create a custom component to host the resource grid
+        BCComponent gridHost = new BCComponent(availableWidth, availableHeight) {
+            // Internal grid instance
+            private UIGridBuilder grid;
             
-            // Resource amount
-            BCLabel amountLabel = BCComponentFactory.createBodyLabel(String.valueOf(amounts[i]), 80);
-            amountLabel.withTextColor(TEXT_COLOR);
-            amountLabel.withAlignment(BCLabel.TextAlignment.RIGHT);
-            resourcePanel.addChild(amountLabel);
-        }
+            // Initialize the grid when rendering
+            private UIGridBuilder createGrid() {
+                // Create the grid with component-relative positioning (8 rows x 2 columns)
+                UIGridBuilder newGrid = new UIGridBuilder(x, y, getWidth(), getHeight(), 8, 2)
+                    .withBackgroundColor(BACKGROUND_COLOR)
+                    .withBorderColor(BORDER_COLOR)
+                    .withMargins(15, 5)
+                    .withSpacing(15, 5)
+                    .drawBorder(true);
+                
+                // Add resource data to the grid
+                for (int i = 0; i < resources.length; i++) {
+                    // Add resource name (first column)
+                    newGrid.addLabel(i, 0, resources[i], TEXT_HIGHLIGHT);
+                    
+                    // Add resource amount (second column) - right-aligned effect
+                    newGrid.addLabel(i, 1, String.valueOf(amounts[i]), TEXT_COLOR);
+                }
+                
+                return newGrid;
+            }
+            
+            @Override
+            protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+                // Create/update the grid
+                grid = createGrid();
+                
+                // Render the grid
+                grid.render(guiGraphics, mouseX, mouseY);
+            }
+            
+            @Override
+            public boolean mouseClicked(double mouseX, double mouseY, int button) {
+                // Make sure we have a grid to click on
+                if (grid == null) {
+                    grid = createGrid();
+                }
+                
+                // Let the grid handle clicks
+                if (grid.mouseClicked((int)mouseX, (int)mouseY)) {
+                    playButtonClickSound();
+                    return true;
+                }
+                return false;
+            }
+        };
         
-        panel.addChild(resourcePanel);
-        
-        // Note: We no longer need to add buttons here as they're handled by the bottom navigation panel
+        // Add the grid host component to the panel
+        panel.addChild(gridHost);
         
         // Add the panel to the tab
         this.tabPanel.addTab("economy", Component.literal("Economy"), panel);
@@ -244,43 +345,300 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         titleLabel.withTextColor(TEXT_HIGHLIGHT).withShadow(true);
         panel.addChild(titleLabel);
         
-        // Create citizen panel with lighter border and background
-        BCPanel citizenPanel = new BCPanel(panel.getInnerWidth(), 120);
-        citizenPanel.withPadding(8)
-                    .withBackgroundColor(BACKGROUND_COLOR)
-                    .withBorderColor(BORDER_COLOR)
-                    .withCornerRadius(3);
+        // Sample citizen data (expanded)
+        String[] names = {"John Smith", "Emma Johnson", "Alex Lee", "Sofia Garcia", 
+                         "Michael Brown", "Lisa Wang", "David Miller", "James Wilson",
+                         "Olivia Martinez", "William Taylor", "Ava Robinson", "Benjamin Clark",
+                         "Charlotte Lewis", "Henry Walker", "Mia Allen", "Ethan Young"};
+        String[] jobs = {"Miner", "Farmer", "Builder", "Trader", 
+                        "Blacksmith", "Scholar", "Guard", "Carpenter",
+                        "Baker", "Hunter", "Tailor", "Alchemist",
+                        "Scribe", "Tanner", "Jeweler", "Beekeeper"};
+        int[] levels = {3, 2, 4, 1, 5, 2, 3, 4, 2, 5, 3, 1, 4, 2, 3, 5};
         
-        // Add grid layout with improved spacing
-        citizenPanel.withLayout(new BCGridLayout(3, 8, 8));
+        // Calculate dimensions for the citizens grid - ensure it fits within panel boundaries
+        // Account for the panel's padding and the title height
+        int titleHeight = 20; // Approximate height of the header
+        int verticalSpacing = 10; // Space between title and grid
         
-        // Sample citizen data
-        String[] names = {"John Smith", "Emma Johnson", "Alex Lee", "Sofia Garcia", "Michael Brown", "Lisa Wang", "David Miller"};
-        String[] jobs = {"Miner", "Farmer", "Builder", "Trader", "Blacksmith", "Scholar", "Guard"};
-        int[] levels = {3, 2, 4, 1, 5, 2, 3};
+        // Calculate available space for the grid
+        int availableWidth = panel.getInnerWidth();
+        int availableHeight = panel.getInnerHeight() - titleHeight - verticalSpacing;
         
-        // Add citizen entries with better styling
-        for (int i = 0; i < names.length; i++) {
-            // Name
-            BCLabel nameLabel = BCComponentFactory.createBodyLabel(names[i], 100);
-            nameLabel.withTextColor(TEXT_HIGHLIGHT);
-            citizenPanel.addChild(nameLabel);
+        // Create a direct implementation for the citizen list with scrolling
+        BCComponent citizenList = new BCComponent(availableWidth, availableHeight) {
+            // Scrolling state
+            private int scrollOffset = 0;
+            private final int itemHeight = 16; // Reduced item height for more compact display
+            private final int padding = 8; // Reduced padding for more content space
+            private final int verticalPadding = 5; // Even smaller vertical padding
+            private int maxVisible; // Will be calculated based on available height
+            private boolean isDraggingScrollbar = false;
+            private boolean isMiddleMouseScrolling = false; // Track middle mouse scrolling
+            private double lastMouseY = 0; // Last mouse Y position for middle mouse scrolling
+            private final int scrollbarWidth = 8;
             
-            // Job
-            BCLabel jobLabel = BCComponentFactory.createBodyLabel(jobs[i], 80);
-            jobLabel.withTextColor(TEXT_COLOR);
-            citizenPanel.addChild(jobLabel);
+            @Override
+            protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+                // Calculate max visible items based on available height
+                int contentHeight = this.height - (verticalPadding * 2);
+                maxVisible = contentHeight / itemHeight;
+                
+                // Draw the background panel
+                guiGraphics.fill(this.x, this.y, this.x + this.width, this.y + this.height, BACKGROUND_COLOR);
+                
+                // Draw border
+                guiGraphics.hLine(this.x, this.x + this.width - 1, this.y, BORDER_COLOR);
+                guiGraphics.hLine(this.x, this.x + this.width - 1, this.y + this.height - 1, BORDER_COLOR);
+                guiGraphics.vLine(this.x, this.y, this.y + this.height - 1, BORDER_COLOR);
+                guiGraphics.vLine(this.x + this.width - 1, this.y, this.y + this.height - 1, BORDER_COLOR);
+                
+                // Calculate column widths (3 columns: name, job, level)
+                int contentWidth = this.width - scrollbarWidth - (padding * 2);
+                int nameWidth = (int)(contentWidth * 0.4);
+                int jobWidth = (int)(contentWidth * 0.35);
+                int levelWidth = (int)(contentWidth * 0.25);
+                
+                // Calculate max scroll offset
+                int maxScrollOffset = Math.max(0, names.length - maxVisible);
+                if (scrollOffset > maxScrollOffset) {
+                    scrollOffset = maxScrollOffset;
+                }
+                
+                // Draw the scrollbar if needed
+                if (names.length > maxVisible) {
+                    // Draw scrollbar track
+                    int trackHeight = this.height - (verticalPadding * 2);
+                    guiGraphics.fill(
+                        this.x + this.width - scrollbarWidth - padding,
+                        this.y + verticalPadding,
+                        this.x + this.width - padding,
+                        this.y + this.height - verticalPadding,
+                        0x40FFFFFF // Light gray semi-transparent
+                    );
+                    
+                    // Draw scrollbar thumb
+                    float thumbRatio = (float)maxVisible / names.length;
+                    int thumbHeight = Math.max(20, (int)(trackHeight * thumbRatio));
+                    int thumbY = this.y + verticalPadding + (int)((trackHeight - thumbHeight) * ((float)scrollOffset / maxScrollOffset));
+                    
+                    // Highlight if mouse is over
+                    boolean isOverScrollbar = mouseX >= this.x + this.width - scrollbarWidth - padding &&
+                                            mouseX <= this.x + this.width - padding &&
+                                            mouseY >= this.y + verticalPadding &&
+                                            mouseY <= this.y + this.height - verticalPadding;
+                    
+                    guiGraphics.fill(
+                        this.x + this.width - scrollbarWidth - padding,
+                        thumbY,
+                        this.x + this.width - padding,
+                        thumbY + thumbHeight,
+                        isOverScrollbar ? 0xFFCCDDFF : 0xA0CCDDFF // Light blue with variable opacity
+                    );
+                }
+                
+                // Draw only visible citizens
+                int startY = this.y + verticalPadding;
+                for (int i = 0; i < Math.min(maxVisible, names.length - scrollOffset); i++) {
+                    int dataIndex = i + scrollOffset;
+                    if (dataIndex >= names.length) break; // Safety check
+                    
+                    int rowY = startY + (i * itemHeight);
+                    
+                    // Make sure this row is fully visible
+                    if (rowY + itemHeight > this.y + this.height - verticalPadding) {
+                        break;
+                    }
+                    
+                    // Draw name (first column)
+                    guiGraphics.drawString(
+                        Minecraft.getInstance().font,
+                        names[dataIndex],
+                        this.x + padding,
+                        rowY + 3, // Slight vertical centering
+                        TEXT_HIGHLIGHT
+                    );
+                    
+                    // Draw job (second column)
+                    guiGraphics.drawString(
+                        Minecraft.getInstance().font,
+                        jobs[dataIndex],
+                        this.x + padding + nameWidth,
+                        rowY + 3, // Slight vertical centering
+                        TEXT_COLOR
+                    );
+                    
+                    // Draw level (third column)
+                    guiGraphics.drawString(
+                        Minecraft.getInstance().font,
+                        "Level " + levels[dataIndex],
+                        this.x + padding + nameWidth + jobWidth,
+                        rowY + 3, // Slight vertical centering
+                        TEXT_COLOR
+                    );
+                }
+            }
             
-            // Level
-            BCLabel levelLabel = BCComponentFactory.createBodyLabel("Level " + levels[i], 60);
-            levelLabel.withAlignment(BCLabel.TextAlignment.RIGHT);
-            levelLabel.withTextColor(TEXT_COLOR);
-            citizenPanel.addChild(levelLabel);
-        }
+            @Override
+            public boolean mouseClicked(double mouseX, double mouseY, int button) {
+                if (isMouseOver((int)mouseX, (int)mouseY)) {
+                    // Calculate max visible items based on available height
+                    int contentHeight = this.height - (verticalPadding * 2);
+                    maxVisible = contentHeight / itemHeight;
+                    
+                    // Middle mouse button for scrolling
+                    if (button == 2) { // Middle mouse button
+                        isMiddleMouseScrolling = true;
+                        lastMouseY = mouseY;
+                        return true;
+                    }
+                    
+                    // Left mouse button
+                    if (button == 0) {
+                        // Check if clicking on scrollbar
+                        if (names.length > maxVisible && 
+                            mouseX >= this.x + this.width - scrollbarWidth - padding &&
+                            mouseX <= this.x + this.width - padding &&
+                            mouseY >= this.y + verticalPadding &&
+                            mouseY <= this.y + this.height - verticalPadding) {
+                            
+                            isDraggingScrollbar = true;
+                            
+                            // Calculate new scroll position
+                            int trackHeight = this.height - (verticalPadding * 2);
+                            float relativeY = (float)(mouseY - (this.y + verticalPadding)) / trackHeight;
+                            int maxScrollOffset = Math.max(0, names.length - maxVisible);
+                            scrollOffset = (int)(relativeY * maxScrollOffset);
+                            
+                            // Clamp scroll offset
+                            if (scrollOffset < 0) {
+                                scrollOffset = 0;
+                            } else if (scrollOffset > maxScrollOffset) {
+                                scrollOffset = maxScrollOffset;
+                            }
+                            
+                            return true;
+                        }
+                        
+                        // Check if clicking on a citizen
+                        int clickedItem = -1;
+                        int startY = this.y + verticalPadding;
+                        for (int i = 0; i < Math.min(maxVisible, names.length - scrollOffset); i++) {
+                            int dataIndex = i + scrollOffset;
+                            int rowY = startY + (i * itemHeight);
+                            
+                            if (mouseY >= rowY && mouseY < rowY + itemHeight) {
+                                clickedItem = dataIndex;
+                                break;
+                            }
+                        }
+                        
+                        if (clickedItem != -1 && clickedItem < names.length) {
+                            // Handle citizen click
+                            playButtonClickSound();
+                            sendChatMessage("Selected citizen: " + names[clickedItem] + " (" + jobs[clickedItem] + ")");
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+            
+            @Override
+            public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+                // Left mouse button dragging (scrollbar)
+                if (isDraggingScrollbar && button == 0) {
+                    // Calculate max visible items based on available height
+                    int contentHeight = this.height - (verticalPadding * 2);
+                    maxVisible = contentHeight / itemHeight;
+                    
+                    // Calculate new scroll position based on drag
+                    int trackHeight = this.height - (verticalPadding * 2);
+                    float relativeY = (float)(mouseY - (this.y + verticalPadding)) / trackHeight;
+                    int maxScrollOffset = Math.max(0, names.length - maxVisible);
+                    scrollOffset = (int)(relativeY * maxScrollOffset);
+                    
+                    // Clamp scroll offset
+                    if (scrollOffset < 0) {
+                        scrollOffset = 0;
+                    } else if (scrollOffset > maxScrollOffset) {
+                        scrollOffset = maxScrollOffset;
+                    }
+                    
+                    return true;
+                }
+                
+                // Middle mouse button dragging (direct scrolling)
+                if (isMiddleMouseScrolling && button == 2) {
+                    // Calculate max visible items based on available height
+                    int contentHeight = this.height - (verticalPadding * 2);
+                    maxVisible = contentHeight / itemHeight;
+                    
+                    // Calculate scroll amount based on mouse movement
+                    double deltaY = mouseY - lastMouseY;
+                    lastMouseY = mouseY;
+                    
+                    // Convert mouse movement to scroll amount (scale factor)
+                    // Positive deltaY means dragging down, which should move content up (scroll down)
+                    int scrollAmount = (int)(deltaY * 0.5);
+                    
+                    // Apply scrolling
+                    int maxScrollOffset = Math.max(0, names.length - maxVisible);
+                    scrollOffset += scrollAmount;
+                    
+                    // Clamp scroll offset
+                    if (scrollOffset < 0) {
+                        scrollOffset = 0;
+                    } else if (scrollOffset > maxScrollOffset) {
+                        scrollOffset = maxScrollOffset;
+                    }
+                    
+                    // Middle mouse scrolling active
+                    return true;
+                }
+                
+                return false;
+            }
+            
+            @Override
+            public boolean mouseReleased(double mouseX, double mouseY, int button) {
+                if (isDraggingScrollbar && button == 0) {
+                    isDraggingScrollbar = false;
+                    return true;
+                }
+                
+                if (isMiddleMouseScrolling && button == 2) {
+                    isMiddleMouseScrolling = false;
+                    return true;
+                }
+                
+                return false;
+            }
+            
+            @Override
+            public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+                // Calculate max visible items and offset
+                int contentHeight = this.height - (verticalPadding * 2);
+                maxVisible = contentHeight / itemHeight;
+                int maxScrollOffset = Math.max(0, names.length - maxVisible);
+                
+                // Apply scrolling directly based on delta sign (delta > 0 means scroll up)
+                scrollOffset -= (int)Math.signum(delta);
+                
+                // Clamp scroll position
+                if (scrollOffset < 0) {
+                    scrollOffset = 0;
+                }
+                if (scrollOffset > maxScrollOffset) {
+                    scrollOffset = maxScrollOffset;
+                }
+                
+                return true;
+            }
+        };
         
-        panel.addChild(citizenPanel);
-        
-        // Note: We no longer need to add buttons here as they're handled by the bottom navigation panel
+        // Add the citizen list to the panel
+        panel.addChild(citizenList);
         
         // Add the panel to the tab
         this.tabPanel.addTab("population", Component.literal("Population"), panel);
@@ -293,7 +651,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
              .withBackgroundColor(0x00000000) // Transparent background
              .withCornerRadius(3);
         
-        // Create a flow layout for the panel with increased spacing
+        // Create a flow layout for the panel
         panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 10));
         
         // Add title
@@ -301,71 +659,88 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         titleLabel.withTextColor(TEXT_HIGHLIGHT).withShadow(true);
         panel.addChild(titleLabel);
         
-        // Create settings form with better styling
-        BCPanel settingsForm = new BCPanel(panel.getInnerWidth(), 140);
-        settingsForm.withLayout(new BCGridLayout(2, 15, 10))
+        // Calculate dimensions for the settings grid - ensure it fits within panel boundaries
+        // Account for the panel's padding and the title height
+        int titleHeight = 20; // Approximate height of the header
+        int verticalSpacing = 10; // Space between title and grid
+        
+        // Calculate available space for the grid
+        int availableWidth = panel.getInnerWidth();
+        int availableHeight = panel.getInnerHeight() - titleHeight - verticalSpacing;
+        
+        // Create a custom component to host the settings grid
+        BCComponent gridHost = new BCComponent(availableWidth, availableHeight) {
+            // Internal grid instance
+            private UIGridBuilder grid;
+            
+            // Initialize the grid when rendering
+            private UIGridBuilder createGrid() {
+                // Create the grid with component-relative positioning
+                UIGridBuilder newGrid = new UIGridBuilder(x, y, getWidth(), getHeight(), 4, 2)
                     .withBackgroundColor(BACKGROUND_COLOR)
                     .withBorderColor(BORDER_COLOR)
-                    .withCornerRadius(5);
+                    .withMargins(15, 10)
+                    .withSpacing(15, 10)
+                    .drawBorder(true);
+                
+                // Add town settings
+                
+                // Row 1: PVP Toggle
+                newGrid.addLabel(0, 0, "PVP:", TEXT_COLOR);
+                newGrid.addToggle(0, 1, pvpEnabled ? "Enabled" : "Disabled", pvpEnabled, toggled -> {
+                    // Update the persistent state
+                    pvpEnabled = toggled;
+                    String state = toggled ? "Enabled" : "Disabled";
+                    sendChatMessage("Button pressed: PVP Toggle " + state);
+                }, SUCCESS_COLOR, DANGER_COLOR);
+                
+                // Row 2: Public Town Toggle
+                newGrid.addLabel(1, 0, "Public Town:", TEXT_COLOR);
+                newGrid.addToggle(1, 1, publicTownEnabled ? "Enabled" : "Disabled", publicTownEnabled, toggled -> {
+                    // Update the persistent state
+                    publicTownEnabled = toggled;
+                    String state = toggled ? "Enabled" : "Disabled";
+                    sendChatMessage("Button pressed: Public Town Toggle " + state);
+                }, SUCCESS_COLOR, DANGER_COLOR);
+                
+                // Row 3: Town Rank
+                newGrid.addLabel(2, 0, "Town Rank:", TEXT_COLOR);
+                newGrid.addLabel(2, 1, "Level 3", TEXT_HIGHLIGHT);
+                
+                // Row 4: Founded Date
+                newGrid.addLabel(3, 0, "Founded:", TEXT_COLOR);
+                newGrid.addLabel(3, 1, "Day 42", TEXT_HIGHLIGHT);
+                
+                return newGrid;
+            }
+            
+            @Override
+            protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+                // Create/update the grid
+                grid = createGrid();
+                
+                // Render the grid
+                grid.render(guiGraphics, mouseX, mouseY);
+            }
+            
+            @Override
+            public boolean mouseClicked(double mouseX, double mouseY, int button) {
+                // Make sure we have a grid to click on
+                if (grid == null) {
+                    grid = createGrid();
+                }
+                
+                // Let the grid handle clicks
+                if (grid.mouseClicked((int)mouseX, (int)mouseY)) {
+                    playButtonClickSound();
+                    return true;
+                }
+                return false;
+            }
+        };
         
-        // Add settings
-        // Town name setting
-        BCLabel nameLabel = BCComponentFactory.createBodyLabel("Town Name:", 100);
-        nameLabel.withTextColor(TEXT_COLOR);
-        settingsForm.addChild(nameLabel);
-        
-        // Create a simple edit box component
-        BCLabel nameValueLabel = BCComponentFactory.createBodyLabel(getTownName(), 150);
-        nameValueLabel.withTextColor(TEXT_HIGHLIGHT);
-        settingsForm.addChild(nameValueLabel);
-        
-        // Tax rate setting
-        BCLabel taxLabel = BCComponentFactory.createBodyLabel("Tax Rate:", 100);
-        taxLabel.withTextColor(TEXT_COLOR);
-        settingsForm.addChild(taxLabel);
-        
-        // Create a simple value label
-        BCLabel taxValueLabel = BCComponentFactory.createBodyLabel("5%", 150);
-        taxValueLabel.withTextColor(TEXT_HIGHLIGHT);
-        settingsForm.addChild(taxValueLabel);
-        
-        // PvP toggle
-        BCLabel pvpLabel = BCComponentFactory.createBodyLabel("PvP Enabled:", 100);
-        pvpLabel.withTextColor(TEXT_COLOR);
-        settingsForm.addChild(pvpLabel);
-        
-        // Create PvP toggle button with chat notification
-        final BCToggleButton pvpButton = BCToggleButton.createWithToggleHandler(false, button -> {
-            boolean isToggled = button.isToggled();
-            sendChatMessage("Button pressed: PvP Toggle " + (isToggled ? "Enabled" : "Disabled"));
-            // Update button text based on toggle state
-            button.withText(Component.literal(isToggled ? "Enabled" : "Disabled"));
-        });
-        pvpButton.withText(Component.literal("Disabled"));
-        pvpButton.withToggledBackgroundColor(0xA0339944);  // Green when enabled
-        pvpButton.withUntoggledBackgroundColor(0xA0993333); // Red when disabled
-        settingsForm.addChild(pvpButton);
-        
-        // Public toggle
-        BCLabel publicLabel = BCComponentFactory.createBodyLabel("Public Town:", 100);
-        publicLabel.withTextColor(TEXT_COLOR);
-        settingsForm.addChild(publicLabel);
-        
-        // Create a toggle button with chat notification
-        final BCToggleButton publicButton = BCToggleButton.createWithToggleHandler(true, button -> {
-            boolean isToggled = button.isToggled();
-            sendChatMessage("Button pressed: Public Town Toggle " + (isToggled ? "Enabled" : "Disabled"));
-            // Update button text based on toggle state
-            button.withText(Component.literal(isToggled ? "Enabled" : "Disabled"));
-        });
-        publicButton.withText(Component.literal("Enabled"));
-        publicButton.withToggledBackgroundColor(0xA0339944);  // Green when enabled
-        publicButton.withUntoggledBackgroundColor(0xA0993333); // Red when disabled
-        settingsForm.addChild(publicButton);
-        
-        panel.addChild(settingsForm);
-        
-        // Note: We no longer need to add buttons here as they're handled by the bottom navigation panel
+        // Add the grid host component to the panel
+        panel.addChild(gridHost);
         
         // Add the panel to the tab
         this.tabPanel.addTab("settings", Component.literal("Settings"), panel);
@@ -536,8 +911,23 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        // Let the tab panel handle scroll events
-        if (this.tabPanel.mouseScrolled(mouseX, mouseY, delta)) {
+        // Check if population tab is active and forward directly to citizenList
+        String activeTabId = this.tabPanel.getActiveTabId();
+        if ("population".equals(activeTabId)) {
+            BCPanel panel = this.tabPanel.getTabPanel("population");
+            if (panel != null) {
+                for (UIComponent child : panel.getChildren()) {
+                    if (child instanceof BCComponent) {
+                        if (child.mouseScrolled(mouseX, mouseY, delta)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Let tab panel handle scroll
+        if (this.tabPanel != null && this.tabPanel.mouseScrolled(mouseX, mouseY, delta)) {
             return true;
         }
         
