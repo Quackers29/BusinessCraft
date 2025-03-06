@@ -1,7 +1,5 @@
 package com.yourdomain.businesscraft.screen.components;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
@@ -9,102 +7,66 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 /**
- * A tab panel component for organizing content into tabs.
+ * Tab panel component for BusinessCraft UI system.
+ * Provides a tabbed interface with content panels.
  */
-public class BCTabPanel implements UIComponent {
-    private int width;
-    private int height;
+public class BCTabPanel extends BCPanel {
+    private final List<TabInfo> tabs = new ArrayList<>();
+    private final Map<String, BCPanel> tabPanels = new HashMap<>();
     private final int tabHeight;
-    private final List<TabButton> tabButtons = new ArrayList<>();
-    private final Map<String, BCPanel> tabContents = new HashMap<>();
     private String activeTabId = null;
-    private int x;
-    private int y;
-    private boolean visible = true;
-    private BiFunction<String, String, Boolean> tabChangeListener = null;
+    private int tabButtonWidth;
     
     /**
-     * Creates a new tab panel with the specified size
+     * Create a new tab panel with the specified dimensions
      */
     public BCTabPanel(int width, int height, int tabHeight) {
-        this.width = width;
-        this.height = height;
+        super(width, height);
         this.tabHeight = tabHeight;
     }
     
     /**
      * Add a tab to the panel
      */
-    public void addTab(String id, Component title, BCPanel content) {
-        // Create a new tab button
-        TabButton tabButton = new TabButton(
-                0, 0, // Will be positioned later
-                getTabWidth(title.getString()),
-                tabHeight,
-                title,
-                button -> {
-                    if (activeTabId != null && tabChangeListener != null) {
-                        // If we have a listener, let it decide whether to change tabs immediately
-                        if (!tabChangeListener.apply(activeTabId, id)) {
-                            return; // Listener will handle tab change later
-                        }
-                    }
-                    setActiveTab(id);
-                }
-        );
+    public BCTabPanel addTab(String id, Component title, BCPanel contentPanel) {
+        // Create tab button
+        BCButton tabButton = new BCButton(title, b -> setActiveTab(id), tabButtonWidth, tabHeight);
         
-        tabButtons.add(tabButton);
-        tabContents.put(id, content);
+        // Add tab info
+        tabs.add(new TabInfo(id, title, tabButton));
+        tabPanels.put(id, contentPanel);
         
-        // If this is the first tab, make it active
+        // Set first tab as active by default
         if (activeTabId == null) {
             activeTabId = id;
         }
         
-        // Position all tab buttons
-        positionTabs();
+        return this;
     }
     
     /**
-     * Set a listener to be called when tabs change
-     * The listener should return true if the tab change should proceed immediately,
-     * or false if it will handle the tab change itself (e.g., for animations)
+     * Set the active tab
      */
-    public void setTabChangeListener(BiFunction<String, String, Boolean> listener) {
-        this.tabChangeListener = listener;
-    }
-    
-    /**
-     * Set the active tab with animation
-     */
-    public void setActiveTab(String id) {
-        if (activeTabId == null || !activeTabId.equals(id)) {
-            // Change selected state of tab buttons
-            for (TabButton tab : tabButtons) {
-                tab.setSelected(tab.getTabId().equals(id));
-            }
-            
-            // Set the active tab ID
-            activeTabId = id;
-        }
-    }
-    
-    /**
-     * Set the active tab without triggering animation
-     * Used internally for animation completion
-     */
-    public void setActiveTabWithoutAnimation(String id) {
-        // Change selected state of tab buttons
-        for (TabButton tab : tabButtons) {
-            tab.setSelected(tab.getTabId().equals(id));
+    public void setActiveTab(String tabId) {
+        if (!tabPanels.containsKey(tabId)) {
+            return;
         }
         
-        // Set the active tab ID
-        activeTabId = id;
+        // Hide all tab content first
+        for (String key : tabPanels.keySet()) {
+            tabPanels.get(key).setVisible(false);
+        }
+        
+        // Show new tab content
+        activeTabId = tabId;
+        BCPanel contentPanel = tabPanels.get(activeTabId);
+        contentPanel.setVisible(true);
+        
+        // Ensure the content panel is positioned correctly
+        contentPanel.position(0, tabHeight);
     }
     
     /**
@@ -115,216 +77,112 @@ public class BCTabPanel implements UIComponent {
     }
     
     /**
-     * Returns the width of the tab panel
+     * Get the active tab panel
      */
-    public int getWidth() {
-        return width;
+    public BCPanel getActiveTabPanel() {
+        return tabPanels.get(activeTabId);
     }
     
     /**
-     * Returns the height of the tab panel
+     * Render the tab panel and its active content
      */
-    public int getHeight() {
-        return height;
-    }
-    
-    /**
-     * Calculates the width for a tab with the given title
-     */
-    private int getTabWidth(String title) {
-        return Math.max(80, title.length() * 7); // Simple calculation, adjust as needed
-    }
-    
-    /**
-     * Position all tab buttons
-     */
-    private void positionTabs() {
-        int tabX = 0;
+    @Override
+    protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        if (tabs.isEmpty()) return;
         
-        for (TabButton tab : tabButtons) {
-            tab.setRelativePosition(tabX, 0);
-            tabX += tab.getWidth();
+        // Calculate tab width to evenly distribute across the panel width
+        int totalTabWidth = width - 4;
+        int tabWidth = totalTabWidth / tabs.size();
+        this.tabButtonWidth = tabWidth;
+        
+        // Render content area background FIRST (lowest layer)
+        int contentY = y + tabHeight;
+        int contentHeight = height - tabHeight;
+        
+        // Draw a semi-transparent background for the content area
+        guiGraphics.fill(x, contentY, x + width, contentY + contentHeight, 0x60000000);
+        
+        // Render border if needed
+        if (borderColor != -1) {
+            // Top and bottom
+            guiGraphics.hLine(x, x + width - 1, contentY, borderColor);
+            guiGraphics.hLine(x, x + width - 1, contentY + contentHeight - 1, borderColor);
+            // Left and right
+            guiGraphics.vLine(x, contentY, contentY + contentHeight - 1, borderColor);
+            guiGraphics.vLine(x + width - 1, contentY, contentY + contentHeight - 1, borderColor);
+        }
+        
+        // Then render active tab content BEFORE tab buttons
+        if (activeTabId != null) {
+            BCPanel contentPanel = tabPanels.get(activeTabId);
+            if (contentPanel != null && contentPanel.isVisible()) {
+                // Make sure the panel renders at the correct position
+                contentPanel.position(0, tabHeight);
+                // Calculate the actual position based on the tab panel's position
+                int contentX = x;
+                contentY = y + tabHeight;
+                // Render the content panel
+                contentPanel.render(guiGraphics, contentX, contentY, mouseX, mouseY);
+            }
+        }
+        
+        // Render tab buttons LAST (top layer)
+        int tabX = x + 2;
+        for (TabInfo tab : tabs) {
+            // Set button width
+            tab.button.size(tabWidth, tabHeight);
+            
+            // Highlight active tab with a different color
+            if (tab.id.equals(activeTabId)) {
+                guiGraphics.fill(tabX, y, tabX + tabButtonWidth, y + tabHeight, 0x80FFFFFF);
+            }
+            
+            // Render tab button
+            tab.button.render(guiGraphics, tabX, y, mouseX, mouseY);
+            tabX += tabButtonWidth;
         }
     }
     
-    // UIComponent implementation
-    
-    public void position(int x, int y) {
-        this.x = x;
-        this.y = y;
+    @Override
+    public void init(Consumer<Button> register) {
+        // Register tab buttons
+        for (TabInfo tab : tabs) {
+            tab.button.init(register);
+        }
         
-        // Update tab contents position
-        for (BCPanel tabContent : tabContents.values()) {
-            tabContent.position(x, y + tabHeight);
+        // Initialize all tab panels
+        for (BCPanel panel : tabPanels.values()) {
+            panel.init(register);
+            
+            // Hide all panels except the active one
+            panel.setVisible(panel == tabPanels.get(activeTabId));
         }
     }
     
     @Override
     public void setVisible(boolean visible) {
-        this.visible = visible;
-    }
-    
-    @Override
-    public boolean isVisible() {
-        return visible;
-    }
-    
-    @Override
-    public int getX() {
-        return x;
-    }
-    
-    @Override
-    public int getY() {
-        return y;
-    }
-    
-    @Override
-    public void init(Consumer<Button> widgetAdder) {
-        if (!visible) return;
+        super.setVisible(visible);
         
-        // Add all tab buttons to the screen
-        for (TabButton tab : tabButtons) {
-            tab.setPosition(x + tab.getRelativeX(), y + tab.getRelativeY());
-            widgetAdder.accept(tab);
-        }
-        
-        // Initialize the active tab content
-        if (activeTabId != null) {
-            BCPanel activeContent = tabContents.get(activeTabId);
-            if (activeContent != null) {
-                activeContent.init(widgetAdder);
-            }
-        }
-    }
-    
-    @Override
-    public void tick() {
-        // Tick the active tab content
-        if (activeTabId != null) {
-            BCPanel activeContent = tabContents.get(activeTabId);
-            if (activeContent != null) {
-                activeContent.tick();
-            }
-        }
-    }
-    
-    @Override
-    public void render(GuiGraphics guiGraphics, int renderX, int renderY, int mouseX, int mouseY) {
-        if (!visible) return;
-        
-        // Render tab buttons
-        renderTabsOnly(guiGraphics, renderX, renderY, mouseX, mouseY);
-        
-        // Render active tab content
-        if (activeTabId != null) {
-            BCPanel activeContent = tabContents.get(activeTabId);
-            if (activeContent != null) {
-                activeContent.render(guiGraphics, renderX, renderY + tabHeight, mouseX, mouseY);
+        // When showing the panel, only show the active tab content
+        if (visible && activeTabId != null) {
+            for (Map.Entry<String, BCPanel> entry : tabPanels.entrySet()) {
+                entry.getValue().setVisible(entry.getKey().equals(activeTabId));
             }
         }
     }
     
     /**
-     * Render only the tab buttons, not the content
-     * Used for animations
+     * Information about a tab
      */
-    public void renderTabsOnly(GuiGraphics guiGraphics, int renderX, int renderY, int mouseX, int mouseY) {
-        if (!visible) return;
+    private static class TabInfo {
+        final String id;
+        final Component title;
+        final BCButton button;
         
-        // Render tab buttons
-        for (TabButton tab : tabButtons) {
-            // Manually render tab buttons since they're already added to the screen
-            tab.renderWidget(guiGraphics, mouseX, mouseY, 0);
-        }
-        
-        // Render tab background
-        guiGraphics.fill(
-                renderX,
-                renderY + tabHeight,
-                renderX + width,
-                renderY + height,
-                0xFFDDDDDD
-        );
-    }
-    
-    /**
-     * A button representing a tab
-     */
-    private static class TabButton extends Button {
-        private final String tabId;
-        private boolean selected = false;
-        private int relativeX;
-        private int relativeY;
-        private final int width;
-        private final int height;
-        private final Component message;
-        
-        public TabButton(int x, int y, int width, int height, Component message, OnPress onPress) {
-            super(Button.builder(message, onPress)
-                    .pos(x, y)
-                    .size(width, height));
-                    
-            this.tabId = message.getString();
-            this.relativeX = x;
-            this.relativeY = y;
-            this.width = width;
-            this.height = height;
-            this.message = message;
-        }
-        
-        @Override
-        public void renderWidget(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-            // Get the background color based on selection state
-            int bgColor = selected ? 0xFFDDDDDD : 0xFF888888;
-            
-            // Render tab background
-            guiGraphics.fill(getX(), getY(), getX() + width, getY() + height, bgColor);
-            
-            // Render tab border
-            guiGraphics.hLine(getX(), getX() + width - 1, getY(), 0xFF000000);
-            guiGraphics.vLine(getX(), getY(), getY() + height - 1, 0xFF000000);
-            guiGraphics.vLine(getX() + width - 1, getY(), getY() + height - 1, 0xFF000000);
-            
-            // Only draw the bottom border if not selected
-            if (!selected) {
-                guiGraphics.hLine(getX(), getX() + width - 1, getY() + height - 1, 0xFF000000);
-            }
-            
-            // Render tab text
-            int textColor = selected ? 0xFF000000 : 0xFFFFFFFF;
-            Font font = Minecraft.getInstance().font;
-            int textWidth = font.width(message);
-            guiGraphics.drawString(font, message, getX() + (width - textWidth) / 2, getY() + (height - 8) / 2, textColor);
-        }
-        
-        public void setRelativePosition(int x, int y) {
-            this.relativeX = x;
-            this.relativeY = y;
-        }
-        
-        public int getRelativeX() {
-            return relativeX;
-        }
-        
-        public int getRelativeY() {
-            return relativeY;
-        }
-        
-        public int getWidth() {
-            return width;
-        }
-        
-        public int getHeight() {
-            return height;
-        }
-        
-        public String getTabId() {
-            return tabId;
-        }
-        
-        public void setSelected(boolean selected) {
-            this.selected = selected;
+        TabInfo(String id, Component title, BCButton button) {
+            this.id = id;
+            this.title = title;
+            this.button = button;
         }
     }
 } 

@@ -193,16 +193,4 @@ public class BCComponentFactory {
     public static SlotComponent createSlot() {
         return new SlotComponent();
     }
-    
-    /**
-     * Create a new panel with the specified width and height
-     * 
-     * @param width The width of the panel
-     * @param height The height of the panel
-     * @return A new panel with the specified dimensions
-     */
-    public static BCPanel createPanel(int width, int height) {
-        BCPanel panel = new BCPanel(width, height);
-        return panel;
-    }
 } 

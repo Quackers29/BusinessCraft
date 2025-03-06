@@ -1,330 +1,296 @@
 # BusinessCraft Screen Builder System
 
-The Screen Builder System provides a powerful and flexible way to create screens in the BusinessCraft mod. It simplifies screen creation with a fluent API, animation support, layout management, and pre-configured templates.
-
-## Table of Contents
-
-1. [Overview](#overview)
-2. [Basic Usage](#basic-usage)
-3. [Layouts](#layouts)
-4. [Tabs](#tabs)
-5. [Animations](#animations)
-6. [Themes](#themes)
-7. [Templates](#templates)
-8. [Examples](#examples)
+This documentation provides an overview of the Screen Builder System, which simplifies the creation of UI screens for the BusinessCraft mod.
 
 ## Overview
 
-The Screen Builder System is built around the `BCScreenBuilder` class, which provides a fluent API for creating screens. It includes:
+The Screen Builder System provides:
 
-- Builder pattern for easy screen creation
-- Built-in layout managers for automatic component placement
-- Support for tabbed interfaces
-- Animation and transition effects
-- Theme integration
-- Pre-configured templates for common screen types
+1. A builder pattern for creating screens
+2. Layout managers for automatic component placement
+3. Screen templates for common BusinessCraft interfaces
 
-## Basic Usage
+## Using the Screen Builder
 
-### Creating a Simple Screen
+The `BCScreenBuilder` class provides a fluent API for creating screens:
 
 ```java
-AbstractContainerScreen<MyMenu> screen = BCScreenBuilder.create(
-    menu,
-    playerInventory,
-    Component.translatable("screen.mymod.title"),
-    176, 166
-)
-.withPadding(8)
-.withBackgroundColor(0xE0000000)
-.withBorderColor(0xFF666666)
-.addComponent(new BCButton(10, 10, 80, 20, Component.literal("Click Me"), button -> {
-    // Handle click
-}))
-.build();
+// Create a basic screen
+AbstractContainerScreen<MyMenu> screen = BCScreenBuilder.create(menu, inventory, title, 256, 204)
+    .withPadding(10)
+    .withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 10))
+    .addComponent(BCComponentFactory.createHeaderLabel("My Screen", 236))
+    .addComponent(someComponent)
+    .build();
 ```
 
-### Using Themes
+### Creating a Tabbed Screen
 
 ```java
-BCTheme theme = BCTheme.get();
+// Create a tabbed screen
+BCScreenBuilder<MyMenu> builder = BCScreenBuilder.create(menu, inventory, title, 256, 204)
+    .withPadding(10)
+    .withTabs(20); // Set tab height
 
-AbstractContainerScreen<MyMenu> screen = BCScreenBuilder.create(
-    menu,
-    playerInventory,
-    Component.translatable("screen.mymod.title"),
-    176, 166
-)
-.withPadding(theme.getMediumPadding())
-.withBackgroundColor(theme.getBackgroundColor())
-.withBorderColor(theme.getBorderColor())
-.addComponent(new BCButton(10, 10, 80, 20, Component.literal("Click Me"), button -> {
-    // Handle click
-}))
-.build();
+// Add first tab
+builder.addTab("tab1", Component.literal("First Tab"), panel -> {
+    panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 5));
+    panel.addChild(BCComponentFactory.createHeaderLabel("Tab 1 Content", 210));
+    // Add more components to the tab
+});
+
+// Add second tab
+builder.addTab("tab2", Component.literal("Second Tab"), panel -> {
+    panel.withLayout(new BCGridLayout(2, 5, 5));
+    // Add grid-based components
+});
+
+// Build the screen
+AbstractContainerScreen<MyMenu> screen = builder.build();
 ```
 
-## Layouts
+## Layout Managers
 
-The Screen Builder System provides several layout managers for automatic component placement:
+The Screen Builder System includes the following layout managers:
 
 ### Flow Layout
 
-The `BCFlowLayout` arranges components in a horizontal or vertical flow:
+`BCFlowLayout` arranges components sequentially, either horizontally or vertically:
 
 ```java
-BCScreenBuilder<MyMenu> builder = BCScreenBuilder.create(/* ... */)
-    .withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 8));
+// Vertical layout with 10px spacing
+BCFlowLayout verticalLayout = new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 10);
 
-// Components will be arranged vertically with 8 pixels spacing
-builder.addComponent(component1);
-builder.addComponent(component2);
-builder.addComponent(component3);
+// Horizontal layout with 5px spacing
+BCFlowLayout horizontalLayout = new BCFlowLayout(BCFlowLayout.Direction.HORIZONTAL, 5);
 ```
 
 ### Grid Layout
 
-The `BCGridLayout` arranges components in a grid:
+`BCGridLayout` arranges components in a grid pattern:
 
 ```java
-BCScreenBuilder<MyMenu> builder = BCScreenBuilder.create(/* ... */)
-    .withLayout(new BCGridLayout(2, 3, 5)); // 2 columns, 3 rows, 5 pixels spacing
+// 2-column grid with 10px horizontal spacing and 5px vertical spacing
+BCGridLayout gridLayout = new BCGridLayout(2, 10, 5);
 
-// Components will be arranged in a 2x3 grid
-builder.addComponent(component1); // Cell (0,0)
-builder.addComponent(component2); // Cell (1,0)
-builder.addComponent(component3); // Cell (0,1)
-builder.addComponent(component4); // Cell (1,1)
-builder.addComponent(component5); // Cell (0,2)
-builder.addComponent(component6); // Cell (1,2)
+// 3-column grid
+BCGridLayout threeColGrid = new BCGridLayout(3, 5, 5);
 ```
 
-## Tabs
+## Screen Templates
 
-The Screen Builder System supports tabbed interfaces:
+The `BCScreenTemplates` class provides ready-to-use templates for common screen types:
 
-```java
-BCScreenBuilder<MyMenu> builder = BCScreenBuilder.create(/* ... */)
-    .withTabs(20) // Set the tab height
-    .addTab("tab1", Component.literal("First Tab"), panel -> {
-        panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 5));
-        panel.addChild(new BCButton(0, 0, 80, 20, Component.literal("Button 1"), button -> {}));
-    })
-    .addTab("tab2", Component.literal("Second Tab"), panel -> {
-        panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 5));
-        panel.addChild(new BCButton(0, 0, 80, 20, Component.literal("Button 2"), button -> {}));
-    });
-```
-
-## Animations
-
-The Screen Builder System supports various animations for screen transitions:
+### Information Screen
 
 ```java
-BCScreenBuilder<MyMenu> builder = BCScreenBuilder.create(/* ... */)
-    .withEnterAnimation(BCAnimation.AnimationType.FADE, BCAnimation.EasingFunction.EASE_OUT, 300)
-    .withExitAnimation(BCAnimation.AnimationType.SCALE, BCAnimation.EasingFunction.EASE_IN, 200)
-    .withTabAnimation(BCAnimation.AnimationType.SLIDE_LEFT, BCAnimation.EasingFunction.EASE_IN_OUT, 250);
-```
-
-Available animation types:
-- `FADE` - Fade in/out
-- `SLIDE_LEFT` - Slide from/to left
-- `SLIDE_RIGHT` - Slide from/to right
-- `SLIDE_UP` - Slide from/to top
-- `SLIDE_DOWN` - Slide from/to bottom
-- `SCALE` - Scale up/down
-- `NONE` - No animation
-
-Available easing functions:
-- `LINEAR` - Constant speed
-- `EASE_IN` - Start slow, end fast
-- `EASE_OUT` - Start fast, end slow
-- `EASE_IN_OUT` - Start slow, middle fast, end slow
-- `BOUNCE` - Bounce effect at the end
-- `ELASTIC` - Elastic/spring effect
-
-## Themes
-
-The Screen Builder System integrates with the `BCTheme` system to provide consistent styling:
-
-```java
-BCTheme theme = BCTheme.get(); // Get the current theme
-
-// Or select a predefined theme
-BCTheme.set(BCTheme.darkTheme());
-BCTheme.set(BCTheme.lightTheme());
-BCTheme.set(BCTheme.fantasyTheme());
-
-// Or create a custom theme
-BCTheme customTheme = BCTheme.builder()
-    .primaryColor(0xFF1976D2)
-    .secondaryColor(0xFF388E3C)
-    .backgroundColor(0xE0101010)
-    .surfaceColor(0xF0303030)
-    .borderColor(0xFF555555)
-    .textColor(0xFFFFFFFF)
-    .textSecondaryColor(0xFFCCCCCC)
-    .build();
-
-BCTheme.set(customTheme);
-```
-
-## Templates
-
-The Screen Builder System provides pre-configured templates for common screen types:
-
-```java
-// Town Management Screen
-AbstractContainerScreen<MyMenu> townScreen = BCScreenTemplates.createTownManagementScreen(
+// Create an information screen
+AbstractContainerScreen<MyMenu> infoScreen = BCScreenTemplates.createInfoScreen(
     menu,
-    playerInventory,
-    Component.translatable("screen.mymod.town"),
-    256, 240
+    inventory,
+    Component.literal("Information"),
+    Component.literal("Header Text"),
+    Component.literal("Content text goes here with important information for the player."),
+    Arrays.asList(
+        BCScreenTemplates.ButtonConfig.of(
+            Component.literal("Button 1"),
+            () -> System.out.println("Button 1 clicked")
+        ),
+        BCScreenTemplates.ButtonConfig.of(
+            Component.literal("Button 2"),
+            () -> System.out.println("Button 2 clicked")
+        )
+    )
 );
+```
 
-// Dialog Screen
-AbstractContainerScreen<MyMenu> dialogScreen = BCScreenTemplates.createDialogScreen(
+### Tabbed Management Screen
+
+```java
+// Create a tabbed screen
+AbstractContainerScreen<MyMenu> tabbedScreen = BCScreenTemplates.createTabbedScreen(
     menu,
-    playerInventory,
-    Component.translatable("screen.mymod.dialog"),
-    200, 150
+    inventory,
+    Component.literal("Management"),
+    Arrays.asList(
+        BCScreenTemplates.TabConfig.of(
+            "tab1",
+            Component.literal("Overview"),
+            panel -> {
+                // Configure overview tab
+                panel.addChild(BCComponentFactory.createHeaderLabel("Overview", 210));
+                // Add more components
+            }
+        ),
+        BCScreenTemplates.TabConfig.of(
+            "tab2",
+            Component.literal("Details"),
+            panel -> {
+                // Configure details tab
+                panel.addChild(BCComponentFactory.createHeaderLabel("Details", 210));
+                // Add more components
+            }
+        )
+    )
 );
+```
 
-// Resource Management Screen
+### Resource Management Screen
+
+```java
+// Create a resource management screen
 AbstractContainerScreen<MyMenu> resourceScreen = BCScreenTemplates.createResourceScreen(
     menu,
-    playerInventory,
-    Component.translatable("screen.mymod.resources"),
-    256, 240
-);
-
-// Quest/Mission Screen
-AbstractContainerScreen<MyMenu> questScreen = BCScreenTemplates.createQuestScreen(
-    menu,
-    playerInventory,
-    Component.translatable("screen.mymod.quests"),
-    256, 240
-);
-```
-
-## Examples
-
-### Complete Town Management Screen Example
-
-```java
-public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
-    public TownBlockScreen(TownBlockMenu menu, Inventory playerInventory, Component title) {
-        super(menu, playerInventory, title);
-        
-        // Use the template to create the screen
-        AbstractContainerScreen<TownBlockMenu> templatedScreen = BCScreenTemplates.createTownManagementScreen(
-            menu,
-            playerInventory,
-            title,
-            256, 240
-        );
-        
-        // Copy properties from templated screen
-        this.width = templatedScreen.width;
-        this.height = templatedScreen.height;
-    }
-    
-    @Override
-    protected void init() {
-        super.init();
-        // Initialize the screen
-    }
-    
-    @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        this.renderTooltip(guiGraphics, mouseX, mouseY);
-    }
-    
-    @Override
-    protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        // Render background
-    }
-}
-```
-
-### Custom Screen with Complex Layout
-
-```java
-public class CustomScreen extends AbstractContainerScreen<CustomMenu> {
-    public CustomScreen(CustomMenu menu, Inventory playerInventory, Component title) {
-        super(menu, playerInventory, title);
-        
-        BCTheme theme = BCTheme.get();
-        
-        // Create screen with the builder
-        AbstractContainerScreen<CustomMenu> builtScreen = BCScreenBuilder.create(
-            menu,
-            playerInventory,
-            title,
-            256, 240
+    inventory,
+    Component.literal("Resources"),
+    Component.literal("Available Resources"),
+    Arrays.asList(
+        BCScreenTemplates.ResourceConfig.of(
+            Component.literal("Wood"),
+            () -> 50, // Dynamic resource amount
+            new ItemStack(Items.OAK_LOG)
+        ),
+        BCScreenTemplates.ResourceConfig.of(
+            Component.literal("Stone"),
+            () -> 35,
+            new ItemStack(Items.STONE)
         )
-        .withPadding(theme.getMediumPadding())
-        .withBackgroundColor(theme.getBackgroundColor())
-        .withBorderColor(theme.getBorderColor())
-        .withEnterAnimation(BCAnimation.AnimationType.FADE, BCAnimation.EasingFunction.EASE_OUT, 300)
-        .withTabs(24)
-        .withTabAnimation(BCAnimation.AnimationType.SLIDE_LEFT, BCAnimation.EasingFunction.EASE_OUT, 200)
-        .addTab("info", Component.translatable("custom.tab.info"), panel -> {
-            panel.withLayout(new BCGridLayout(2, 2, 8));
-            
-            // Add components to the panel
-            BCPanel leftPanel = BCComponentFactory.createPanel(panel.getWidth() / 2 - 4, 200);
-            leftPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 5));
-            leftPanel.withBorderColor(theme.getPrimaryColor());
-            leftPanel.withBackgroundColor(theme.getSurfaceColor());
-            
-            BCPanel rightPanel = BCComponentFactory.createPanel(panel.getWidth() / 2 - 4, 200);
-            rightPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 5));
-            rightPanel.withBorderColor(theme.getSecondaryColor());
-            rightPanel.withBackgroundColor(theme.getSurfaceColor());
-            
-            // Add components to the panels
-            leftPanel.addChild(new BCButton(0, 0, 100, 20, Component.literal("Button 1"), button -> {}));
-            rightPanel.addChild(new BCButton(0, 0, 100, 20, Component.literal("Button 2"), button -> {}));
-            
-            // Add panels to the tab
-            panel.addChild(leftPanel);
-            panel.addChild(rightPanel);
-        })
-        .addTab("settings", Component.translatable("custom.tab.settings"), panel -> {
-            panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 10));
-            
-            // Add components to the settings tab
-            panel.addChild(new BCButton(0, 0, 120, 20, Component.literal("Setting 1"), button -> {}));
-            panel.addChild(new BCButton(0, 0, 120, 20, Component.literal("Setting 2"), button -> {}));
-            panel.addChild(new BCButton(0, 0, 120, 20, Component.literal("Setting 3"), button -> {}));
-        })
-        .build();
-        
-        // Copy properties from built screen
-        this.width = builtScreen.width;
-        this.height = builtScreen.height;
-    }
-}
+    ),
+    Arrays.asList(
+        BCScreenTemplates.ButtonConfig.of(
+            Component.literal("Buy"),
+            () -> System.out.println("Buy clicked")
+        ),
+        BCScreenTemplates.ButtonConfig.of(
+            Component.literal("Sell"),
+            () -> System.out.println("Sell clicked")
+        )
+    )
+);
+```
+
+### Settings Screen
+
+```java
+// Create a settings screen
+AbstractContainerScreen<MyMenu> settingsScreen = BCScreenTemplates.createSettingsScreen(
+    menu,
+    inventory,
+    Component.literal("Settings"),
+    Arrays.asList(
+        BCScreenTemplates.SettingConfig.of(
+            Component.literal("Setting 1:"),
+            new BCToggleButton(
+                100, 20,
+                Component.literal("Enabled"),
+                Component.literal("Disabled"),
+                true,
+                button -> System.out.println("Setting 1 toggled: " + button.isToggled())
+            )
+        ),
+        BCScreenTemplates.SettingConfig.of(
+            Component.literal("Setting 2:"),
+            new BCEditBoxComponent(
+                100, 20,
+                Component.literal(""),
+                text -> System.out.println("Setting 2 changed: " + text)
+            )
+        )
+    )
+);
 ```
 
 ## Best Practices
 
-1. **Use themes for consistent styling** - Leverage the `BCTheme` system to ensure consistent colors and styling across your screens.
+1. **Consistent Screen Sizes** - Use standard screen sizes (e.g., 256x204) for consistency.
+2. **Proper Padding** - Always use padding to prevent components from touching the screen edges.
+3. **Layout Managers** - Use layout managers rather than manually positioning components.
+4. **Screen Templates** - Use the provided templates for common screen types to maintain UI consistency.
+5. **Tab Organization** - When using tabs, group related functionality and provide clear tab labels.
+6. **Responsive Design** - Consider different screen resolutions by using relative sizing when possible.
+7. **Theming** - Utilize the BCTheme class to maintain consistent colors and styles across screens.
 
-2. **Prefer layout managers over manual positioning** - Use `BCFlowLayout` and `BCGridLayout` to automatically position components instead of hard-coding coordinates.
+## Example: Complete BusinessCraft Screen
 
-3. **Break complex screens into tabs** - Use tabs to organize complex screens and improve user experience.
+```java
+public class MyBusinessScreen extends AbstractContainerScreen<MyBusinessMenu> {
+    private static final int SCREEN_WIDTH = 256;
+    private static final int SCREEN_HEIGHT = 204;
 
-4. **Use animation judiciously** - Animations can enhance the user experience, but don't overuse them. Keep animations short (200-300ms) to avoid frustrating users.
+    public MyBusinessScreen(MyBusinessMenu menu, Inventory inventory, Component title) {
+        // Use the screen builder to create the screen
+        AbstractContainerScreen<MyBusinessMenu> screen = BCScreenTemplates.createTabbedScreen(
+            menu,
+            inventory,
+            title,
+            Arrays.asList(
+                BCScreenTemplates.TabConfig.of(
+                    "overview",
+                    Component.literal("Overview"),
+                    panel -> {
+                        // Overview tab configuration
+                        panel.addChild(BCComponentFactory.createHeaderLabel("Business Overview", 210));
+                        
+                        BCPanel infoPanel = new BCPanel(210, 130);
+                        infoPanel.withBackgroundColor(0x40000000);
+                        infoPanel.withBorderColor(0x80FFFFFF);
+                        infoPanel.withPadding(5);
+                        infoPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 5));
+                        
+                        infoPanel.addChild(BCComponentFactory.createDynamicLabel(
+                            () -> Component.literal("Business Level: " + getBusinessLevel()),
+                            200
+                        ));
+                        infoPanel.addChild(BCComponentFactory.createDynamicLabel(
+                            () -> Component.literal("Weekly Income: " + getWeeklyIncome() + " coins"),
+                            200
+                        ));
+                        
+                        panel.addChild(infoPanel);
+                    }
+                ),
+                BCScreenTemplates.TabConfig.of(
+                    "employees",
+                    Component.literal("Employees"),
+                    panel -> {
+                        // Employees tab configuration
+                        panel.addChild(BCComponentFactory.createHeaderLabel("Employees", 210));
+                        
+                        // Add employee list and management buttons
+                    }
+                ),
+                BCScreenTemplates.TabConfig.of(
+                    "finances",
+                    Component.literal("Finances"),
+                    panel -> {
+                        // Finances tab configuration
+                        panel.addChild(BCComponentFactory.createHeaderLabel("Financial Report", 210));
+                        
+                        // Add financial charts and information
+                    }
+                )
+            )
+        );
+        
+        // Copy properties from the built screen
+        this.leftPos = screen.leftPos;
+        this.topPos = screen.topPos;
+        this.width = screen.width;
+        this.height = screen.height;
+        // Copy other necessary properties
+    }
+    
+    // Methods to get business data
+    private int getBusinessLevel() {
+        return 3; // Replace with actual implementation
+    }
+    
+    private int getWeeklyIncome() {
+        return 1250; // Replace with actual implementation
+    }
+}
+```
 
-5. **Consider screen templates** - For common screen types, use the pre-configured templates to save time and ensure consistency.
+## Conclusion
 
-6. **Structure components hierarchically** - Use panels to group related components for better organization and easier layout management.
-
-7. **Add tooltips for important controls** - Use `BCComponentFactory.createTooltip()` to add tooltips to important controls to improve usability.
-
-8. **Test different screen resolutions** - Make sure your screens look good at different resolutions and scale factors. 
+The Screen Builder System simplifies the creation of UI screens for the BusinessCraft mod, providing a consistent and maintainable approach to UI development. By using the builder pattern, layout managers, and screen templates, developers can quickly create professional-looking interfaces without having to manually position components. 
