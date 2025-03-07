@@ -226,9 +226,217 @@ public class UIGridBuilder {
     }
     
     /**
+     * Adds a button with a tooltip
+     * 
+     * @param row Grid row
+     * @param column Grid column
+     * @param text Button text
+     * @param tooltip Tooltip text to show on hover
+     * @param onClick Button click handler
+     * @param bgColor Background color
+     * @return This builder for chaining
+     */
+    public UIGridBuilder addButtonWithTooltip(int row, int column, String text, String tooltip, Consumer<Void> onClick, int bgColor) {
+        UIGridElement element = new UIGridElement(UIElementType.BUTTON, row, column, 1, 1);
+        element.text = text;
+        element.tooltip = tooltip;
+        element.onClick = onClick;
+        element.backgroundColor = bgColor;
+        elements.add(element);
+        return this;
+    }
+    
+    /**
+     * Adds a button with a tooltip that spans multiple cells
+     * 
+     * @param row Grid row
+     * @param column Grid column
+     * @param rowSpan Number of rows to span
+     * @param colSpan Number of columns to span
+     * @param text Button text
+     * @param tooltip Tooltip text to show on hover
+     * @param onClick Button click handler
+     * @param bgColor Background color
+     * @return This builder for chaining
+     */
+    public UIGridBuilder addButtonWithTooltip(int row, int column, int rowSpan, int colSpan, 
+                                         String text, String tooltip, Consumer<Void> onClick, int bgColor) {
+        UIGridElement element = new UIGridElement(UIElementType.BUTTON, row, column, rowSpan, colSpan);
+        element.text = text;
+        element.tooltip = tooltip;
+        element.onClick = onClick;
+        element.backgroundColor = bgColor;
+        elements.add(element);
+        return this;
+    }
+    
+    /**
+     * Adds a toggle button with a tooltip
+     * 
+     * @param row Grid row
+     * @param column Grid column
+     * @param text Toggle button text
+     * @param tooltip Tooltip text to show on hover
+     * @param initialState Initial toggle state
+     * @param onToggle Toggle state change handler
+     * @param enabledColor Color when enabled
+     * @param disabledColor Color when disabled
+     * @return This builder for chaining
+     */
+    public UIGridBuilder addToggleWithTooltip(int row, int column, String text, String tooltip, boolean initialState,
+                                          Consumer<Boolean> onToggle, int enabledColor, int disabledColor) {
+        UIGridElement element = new UIGridElement(UIElementType.TOGGLE, row, column, 1, 1);
+        element.text = text;
+        element.tooltip = tooltip;
+        element.toggled = initialState;
+        element.onToggle = onToggle;
+        element.backgroundColor = initialState ? enabledColor : disabledColor;
+        element.altBackgroundColor = initialState ? disabledColor : enabledColor;
+        elements.add(element);
+        return this;
+    }
+    
+    /**
+     * Adds an item display element to the grid
+     * 
+     * @param row Row index (0-based)
+     * @param column Column index (0-based)
+     * @param item The Minecraft item to display
+     * @param quantity The quantity to display
+     * @param onClick Callback for when the item is clicked (can be null)
+     * @return This builder for chaining
+     */
+    public UIGridBuilder addItem(int row, int column, net.minecraft.world.item.Item item, int quantity, Consumer<Void> onClick) {
+        UIGridElement element = new UIGridElement(UIElementType.ITEM, row, column, 1, 1);
+        element.item = item;
+        element.quantity = quantity;
+        element.showQuantity = quantity > 1;
+        element.onClick = onClick;
+        elements.add(element);
+        return this;
+    }
+    
+    /**
+     * Adds an item display element to the grid that spans multiple cells
+     * 
+     * @param row Row index (0-based)
+     * @param column Column index (0-based)
+     * @param rowSpan Number of rows to span
+     * @param colSpan Number of columns to span
+     * @param item The Minecraft item to display
+     * @param quantity The quantity to display
+     * @param onClick Callback for when the item is clicked (can be null)
+     * @return This builder for chaining
+     */
+    public UIGridBuilder addItem(int row, int column, int rowSpan, int colSpan,
+                               net.minecraft.world.item.Item item, int quantity, Consumer<Void> onClick) {
+        UIGridElement element = new UIGridElement(UIElementType.ITEM, row, column, rowSpan, colSpan);
+        element.item = item;
+        element.quantity = quantity;
+        element.showQuantity = quantity > 1;
+        element.onClick = onClick;
+        elements.add(element);
+        return this;
+    }
+    
+    /**
+     * Adds an item display element with a tooltip
+     * 
+     * @param row Row index (0-based)
+     * @param column Column index (0-based)
+     * @param item The Minecraft item to display
+     * @param quantity The quantity to display
+     * @param tooltip Tooltip text to show on hover
+     * @param onClick Callback for when the item is clicked (can be null)
+     * @return This builder for chaining
+     */
+    public UIGridBuilder addItemWithTooltip(int row, int column, net.minecraft.world.item.Item item, 
+                                          int quantity, String tooltip, Consumer<Void> onClick) {
+        UIGridElement element = new UIGridElement(UIElementType.ITEM, row, column, 1, 1);
+        element.item = item;
+        element.quantity = quantity;
+        element.showQuantity = quantity > 1;
+        element.tooltip = tooltip;
+        element.onClick = onClick;
+        elements.add(element);
+        return this;
+    }
+    
+    /**
+     * Adds an item display element to the grid using an ItemStack
+     * 
+     * @param row Row index (0-based)
+     * @param column Column index (0-based)
+     * @param itemStack The ItemStack to display
+     * @param onClick Callback for when the item is clicked (can be null)
+     * @return This builder for chaining
+     */
+    public UIGridBuilder addItemStack(int row, int column, net.minecraft.world.item.ItemStack itemStack, Consumer<Void> onClick) {
+        UIGridElement element = new UIGridElement(UIElementType.ITEM, row, column, 1, 1);
+        element.item = itemStack.getItem();
+        element.quantity = itemStack.getCount();
+        element.showQuantity = itemStack.getCount() > 1;
+        element.onClick = onClick;
+        element.itemStack = itemStack; // Store full itemstack for rendering
+        elements.add(element);
+        return this;
+    }
+    
+    /**
+     * Adds an item display element to the grid that spans multiple cells using an ItemStack
+     * 
+     * @param row Row index (0-based)
+     * @param column Column index (0-based)
+     * @param rowSpan Number of rows to span
+     * @param colSpan Number of columns to span
+     * @param itemStack The ItemStack to display
+     * @param onClick Callback for when the item is clicked (can be null)
+     * @return This builder for chaining
+     */
+    public UIGridBuilder addItemStack(int row, int column, int rowSpan, int colSpan,
+                               net.minecraft.world.item.ItemStack itemStack, Consumer<Void> onClick) {
+        UIGridElement element = new UIGridElement(UIElementType.ITEM, row, column, rowSpan, colSpan);
+        element.item = itemStack.getItem();
+        element.quantity = itemStack.getCount();
+        element.showQuantity = itemStack.getCount() > 1;
+        element.onClick = onClick;
+        element.itemStack = itemStack; // Store full itemstack for rendering
+        elements.add(element);
+        return this;
+    }
+    
+    /**
+     * Adds an item display element with a tooltip using an ItemStack
+     * 
+     * @param row Row index (0-based)
+     * @param column Column index (0-based)
+     * @param itemStack The ItemStack to display
+     * @param tooltip Tooltip text to show on hover (optional, null to use item's tooltip)
+     * @param onClick Callback for when the item is clicked (can be null)
+     * @return This builder for chaining
+     */
+    public UIGridBuilder addItemStackWithTooltip(int row, int column, net.minecraft.world.item.ItemStack itemStack, 
+                                          String tooltip, Consumer<Void> onClick) {
+        UIGridElement element = new UIGridElement(UIElementType.ITEM, row, column, 1, 1);
+        element.item = itemStack.getItem();
+        element.quantity = itemStack.getCount();
+        element.showQuantity = itemStack.getCount() > 1;
+        element.tooltip = tooltip;
+        element.onClick = onClick;
+        element.itemStack = itemStack; // Store full itemstack for rendering
+        elements.add(element);
+        return this;
+    }
+    
+    /**
      * Renders the entire grid with all its elements
      */
     public void render(GuiGraphics graphics, int mouseX, int mouseY) {
+        // Reset hover states
+        for (UIGridElement element : elements) {
+            element.isHovered = false;
+        }
+        
         // Draw background and border
         if (drawBackground) {
             graphics.fill(x, y, x + width, y + height, backgroundColor);
@@ -364,22 +572,54 @@ public class UIGridBuilder {
             boolean hovered = mouseX >= elementX && mouseX < elementX + elementWidth &&
                              mouseY >= elementY && mouseY < elementY + elementHeight;
             
+            // Update hover state
+            element.isHovered = hovered;
+            
             // Render based on element type
             switch (element.type) {
                 case BUTTON:
                     renderButton(graphics, element, elementX, elementY, 
                                 elementWidth, elementHeight, hovered);
                     break;
-                    
                 case LABEL:
                     renderLabel(graphics, element, elementX, elementY, 
                                elementWidth, elementHeight);
                     break;
-                    
                 case TOGGLE:
                     renderToggle(graphics, element, elementX, elementY, 
                                 elementWidth, elementHeight, hovered);
                     break;
+                case ITEM:
+                    renderItem(graphics, element, elementX, elementY, 
+                              elementWidth, elementHeight, hovered);
+                    break;
+            }
+        }
+        
+        // Render tooltips after all elements are drawn
+        renderTooltips(graphics, mouseX, mouseY);
+    }
+    
+    /**
+     * Renders tooltips for hovered elements
+     */
+    private void renderTooltips(GuiGraphics graphics, int mouseX, int mouseY) {
+        for (UIGridElement element : elements) {
+            if (element.isHovered && element.tooltip != null) {
+                graphics.renderTooltip(
+                    Minecraft.getInstance().font,
+                    net.minecraft.network.chat.Component.literal(element.tooltip),
+                    mouseX, mouseY
+                );
+                break; // Only show one tooltip at a time
+            } else if (element.isHovered && element.type == UIElementType.ITEM && element.itemStack != null) {
+                // Show the item's tooltip if available and no custom tooltip is specified
+                graphics.renderTooltip(
+                    Minecraft.getInstance().font,
+                    element.itemStack,
+                    mouseX, mouseY
+                );
+                break; // Only show one tooltip at a time
             }
         }
     }
@@ -604,33 +844,121 @@ public class UIGridBuilder {
     }
     
     /**
+     * Formats a number for display, shortening large numbers with suffixes (K, M, B)
+     * 
+     * @param number The number to format
+     * @return Formatted string representation
+     */
+    private String formatNumber(int number) {
+        if (number < 1000) {
+            return String.valueOf(number);
+        } else if (number < 10000) {
+            // 1000-9999 -> #.#K (1.2K, 9.9K)
+            return String.format("%.1fK", number / 1000.0).replace(".0K", "K");
+        } else if (number < 1000000) {
+            // 10000-999999 -> ##K (10K, 999K)
+            return Math.round(number / 1000.0) + "K";
+        } else if (number < 10000000) {
+            // 1000000-9999999 -> #.#M (1.2M, 9.9M)
+            return String.format("%.1fM", number / 1000000.0).replace(".0M", "M");
+        } else if (number < 1000000000) {
+            // 10000000-999999999 -> ##M (10M, 999M)
+            return Math.round(number / 1000000.0) + "M";
+        } else {
+            // 1000000000+ -> #.#B (1.2B, 9.9B)
+            return String.format("%.1fB", number / 1000000000.0).replace(".0B", "B");
+        }
+    }
+
+    /**
+     * Renders an item element
+     */
+    private void renderItem(GuiGraphics graphics, UIGridElement element, 
+                           int x, int y, int width, int height, boolean hovered) {
+        // Draw a background for the item (lighter when hovered)
+        int bgColor = hovered ? 0x80444444 : 0x60222222;
+        graphics.fill(x, y, x + width, y + height, bgColor);
+        
+        if (element.item != null) {
+            Font font = Minecraft.getInstance().font;
+            
+            // Calculate the item position - align to the left with some padding
+            int itemSize = 16; // Standard Minecraft item size
+            int itemY = y + (height - itemSize) / 2; // Center vertically
+            int itemX = x + 5; // Left align with padding
+            
+            // Render the item - use the stored ItemStack if available, otherwise create one
+            net.minecraft.world.item.ItemStack stack = element.itemStack != null ? 
+                element.itemStack : new net.minecraft.world.item.ItemStack(element.item, element.quantity);
+            
+            // Render the item
+            graphics.renderItem(stack, itemX, itemY);
+            
+            // If we have a quantity, show it with an 'x' symbol
+            if (element.showQuantity) {
+                // Format the quantity
+                String quantityText = formatNumber(element.quantity);
+                
+                // Calculate the multiplier (x) position - center in remaining space
+                String multiplier = "x"; // Use simple ASCII "x" instead of Unicode
+                int multiplierWidth = font.width(multiplier);
+                int contentWidth = width - 10 - itemSize; // Total width minus item and padding
+                int multiplierX = itemX + itemSize + 5 + (contentWidth - multiplierWidth - font.width(quantityText)) / 2;
+                int textY = y + (height - font.lineHeight) / 2; // Center text vertically
+                
+                // Draw the multiplier
+                graphics.drawString(
+                    font,
+                    multiplier,
+                    multiplierX,
+                    textY,
+                    0xFFAAAAAA // Light gray color for the multiplier
+                );
+                
+                // Draw the quantity text right-aligned
+                graphics.drawString(
+                    font,
+                    quantityText,
+                    x + width - font.width(quantityText) - 5, // Right-aligned with padding
+                    textY,
+                    0xFFFFFFFF // White color for the quantity
+                );
+            }
+        }
+    }
+    
+    /**
      * Types of UI elements supported in the grid
      */
     private enum UIElementType {
         BUTTON,
         LABEL,
-        TOGGLE
+        TOGGLE,
+        ITEM   // New element type for Minecraft items with quantity indicator
     }
     
     /**
      * Class representing a single element in the grid
      */
     private static class UIGridElement {
-        // Location in grid
         UIElementType type;
         int row, column;
         int rowSpan, colSpan;
-        
-        // Common properties
         String text;
-        int backgroundColor;
-        int altBackgroundColor; // Used for toggle states
         int textColor = 0xFFFFFFFF;
-        boolean toggled;
-        
-        // Event handlers
+        int backgroundColor = 0xA0335599;
+        int altBackgroundColor = 0x80555555; // For toggle buttons
+        boolean toggled = false;
         Consumer<Void> onClick;
         Consumer<Boolean> onToggle;
+        String tooltip; // Tooltip text to display on hover
+        boolean isHovered = false; // Track hover state for tooltip rendering
+        
+        // New fields for item display
+        net.minecraft.world.item.Item item; // The Minecraft item to display
+        int quantity = 1;    // Quantity to display
+        boolean showQuantity = true; // Whether to show quantity indicator
+        net.minecraft.world.item.ItemStack itemStack; // Full itemstack for rendering
         
         public UIGridElement(UIElementType type, int row, int column, int rowSpan, int colSpan) {
             this.type = type;

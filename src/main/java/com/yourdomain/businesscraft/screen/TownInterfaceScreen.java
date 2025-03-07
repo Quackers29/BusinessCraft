@@ -264,9 +264,58 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         titleLabel.withTextColor(TEXT_HIGHLIGHT).withShadow(true);
         panel.addChild(titleLabel);
         
-        // Sample resource data
-        String[] resources = {"Wood", "Stone", "Iron", "Gold", "Diamond", "Food", "Coal", "Emerald"};
-        int[] amounts = {128, 64, 32, 16, 8, 256, 48, 24};
+        // Basic resource data
+        String[] baseResources = {"Wood", "Stone", "Iron", "Gold", "Diamond", "Food", "Coal", "Emerald", 
+                              "Copper", "Lapis", "Redstone", "Quartz", "Obsidian", "Netherite", 
+                              "Wool", "Clay", "Paper", "Wheat", "Leather", "Amethyst"};
+        
+        // Map resources to Minecraft items
+        net.minecraft.world.item.Item[] baseItems = {
+            net.minecraft.world.item.Items.OAK_LOG,         // Wood
+            net.minecraft.world.item.Items.STONE,           // Stone
+            net.minecraft.world.item.Items.IRON_INGOT,      // Iron
+            net.minecraft.world.item.Items.GOLD_INGOT,      // Gold
+            net.minecraft.world.item.Items.DIAMOND,         // Diamond
+            net.minecraft.world.item.Items.BREAD,           // Food
+            net.minecraft.world.item.Items.COAL,            // Coal
+            net.minecraft.world.item.Items.EMERALD,         // Emerald
+            net.minecraft.world.item.Items.COPPER_INGOT,    // Copper
+            net.minecraft.world.item.Items.LAPIS_LAZULI,    // Lapis
+            net.minecraft.world.item.Items.REDSTONE,        // Redstone
+            net.minecraft.world.item.Items.QUARTZ,          // Quartz
+            net.minecraft.world.item.Items.OBSIDIAN,        // Obsidian
+            net.minecraft.world.item.Items.NETHERITE_INGOT, // Netherite
+            net.minecraft.world.item.Items.WHITE_WOOL,      // Wool
+            net.minecraft.world.item.Items.CLAY_BALL,       // Clay
+            net.minecraft.world.item.Items.PAPER,           // Paper
+            net.minecraft.world.item.Items.WHEAT,           // Wheat
+            net.minecraft.world.item.Items.LEATHER,         // Leather
+            net.minecraft.world.item.Items.AMETHYST_SHARD   // Amethyst
+        };
+        
+        // Basic Resource tooltips
+        String[] baseTooltips = {
+            "Used for buildings and tools",
+            "Used for structures and roads",
+            "Used for advanced tools and armor",
+            "Valuable resource for trade",
+            "Most valuable resource for trade and tools",
+            "Keeps your citizens fed and happy",
+            "Fuel for furnaces and machinery",
+            "Special currency for trading",
+            "Used for machinery and decoration",
+            "Used for enchanting and decoration",
+            "Used for redstone mechanisms",
+            "Used for decoration and redstone components",
+            "Strong material for portals and storage",
+            "Strongest material for tools and armor",
+            "Used for beds and decoration",
+            "Used for bricks and pottery",
+            "Used for books and maps",
+            "Basic ingredient for food",
+            "Used for armor and item frames",
+            "Used for decorative blocks and telescopes"
+        };
         
         // Calculate dimensions for the resource grid - ensure it fits within panel boundaries
         // Account for the panel's padding and the title height
@@ -281,24 +330,105 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         BCComponent gridHost = new BCComponent(availableWidth, availableHeight) {
             // Internal grid instance
             private UIGridBuilder grid;
+            // Random instance for generating quantities
+            private final java.util.Random random = new java.util.Random();
+            // Generate a random number of resources (between 1 and 20)
+            private final int resourceCount = random.nextInt(20) + 1;
+            // Arrays to hold the randomly selected resources
+            private final String[] resources = new String[resourceCount];
+            private final net.minecraft.world.item.Item[] items = new net.minecraft.world.item.Item[resourceCount];
+            private final String[] tooltips = new String[resourceCount];
+            // Store the quantities
+            private final int[] currentQuantities = new int[resourceCount];
+            // Track scrolling
+            private int scrollOffset = 0;
+            private final int itemHeight = 24; // Height of each row
+            private int maxVisible; // Will be calculated dynamically
+            private final int scrollbarWidth = 8;
+            // For middle mouse scrolling
+            private boolean isMiddleMouseScrolling = false;
+            private double lastMouseY = 0;
+            
+            // Initialize resource data
+            {
+                // Randomly select resources to display
+                for (int i = 0; i < resourceCount; i++) {
+                    int index = random.nextInt(baseResources.length);
+                    resources[i] = baseResources[index];
+                    items[i] = baseItems[index];
+                    tooltips[i] = baseTooltips[index];
+                    
+                    // Give each resource a quantity in a specific range based on its position
+                    // This ensures we demonstrate different formatting (regular, K, M, etc.)
+                    if (i % 6 == 0) {
+                        // Small quantities (1-99)
+                        currentQuantities[i] = random.nextInt(99) + 1;
+                    } else if (i % 6 == 1) {
+                        // Medium quantities (100-999)
+                        currentQuantities[i] = random.nextInt(900) + 100;
+                    } else if (i % 6 == 2) {
+                        // Thousands (1,000-9,999)
+                        currentQuantities[i] = random.nextInt(9000) + 1000;
+                    } else if (i % 6 == 3) {
+                        // Tens of thousands (10,000-99,999)
+                        currentQuantities[i] = random.nextInt(90000) + 10000;
+                    } else if (i % 6 == 4) {
+                        // Millions (1,000,000-9,999,999)
+                        currentQuantities[i] = random.nextInt(9000000) + 1000000;
+                    } else {
+                        // Billions (just under max int value)
+                        currentQuantities[i] = random.nextInt(1000000000) + 1000000000;
+                    }
+                }
+            }
             
             // Initialize the grid when rendering
             private UIGridBuilder createGrid() {
-                // Create the grid with component-relative positioning (8 rows x 2 columns)
-                UIGridBuilder newGrid = new UIGridBuilder(x, y, getWidth(), getHeight(), 8, 2)
+                // Calculate how many rows can be visible at once
+                maxVisible = (height - 10) / itemHeight;
+                int rowsToDisplay = Math.min(resourceCount, maxVisible);
+                
+                // Create the grid with component-relative positioning
+                UIGridBuilder newGrid = new UIGridBuilder(x, y, width, height, rowsToDisplay, 2)
                     .withBackgroundColor(BACKGROUND_COLOR)
                     .withBorderColor(BORDER_COLOR)
                     .withMargins(15, 5)
                     .withSpacing(15, 5)
                     .drawBorder(true);
                 
-                // Add resource data to the grid
-                for (int i = 0; i < resources.length; i++) {
-                    // Add resource name (first column)
-                    newGrid.addLabel(i, 0, resources[i], TEXT_HIGHLIGHT);
+                // Add visible resource data to the grid
+                int endIndex = Math.min(scrollOffset + rowsToDisplay, resourceCount);
+                for (int i = scrollOffset; i < endIndex; i++) {
+                    int gridRow = i - scrollOffset;
+                    final int resourceIndex = i; // For use in the lambda
                     
-                    // Add resource amount (second column) - right-aligned effect
-                    newGrid.addLabel(i, 1, String.valueOf(amounts[i]), TEXT_COLOR);
+                    // Click handler for the item
+                    java.util.function.Consumer<Void> onClick = unused -> {
+                        // Increase the quantity based on its current magnitude
+                        if (currentQuantities[resourceIndex] < 100) {
+                            currentQuantities[resourceIndex] += random.nextInt(10) + 1;
+                        } else if (currentQuantities[resourceIndex] < 1000) {
+                            currentQuantities[resourceIndex] += random.nextInt(100) + 10;
+                        } else if (currentQuantities[resourceIndex] < 10000) {
+                            currentQuantities[resourceIndex] += random.nextInt(1000) + 100;
+                        } else if (currentQuantities[resourceIndex] < 1000000) {
+                            currentQuantities[resourceIndex] += random.nextInt(10000) + 1000;
+                        } else if (currentQuantities[resourceIndex] < 1000000000) {
+                            currentQuantities[resourceIndex] += random.nextInt(1000000) + 100000;
+                        } else {
+                            currentQuantities[resourceIndex] += random.nextInt(100000000) + 10000000;
+                        }
+                        playButtonClickSound();
+                        // Force redraw
+                        grid = null;
+                        return;
+                    };
+                    
+                    // Add resource name (first column)
+                    newGrid.addLabel(gridRow, 0, resources[i], TEXT_HIGHLIGHT);
+                    
+                    // Add item with quantity and tooltip (second column)
+                    newGrid.addItemWithTooltip(gridRow, 1, items[i], currentQuantities[i], tooltips[i], onClick);
                 }
                 
                 return newGrid;
@@ -311,6 +441,36 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
                 
                 // Render the grid
                 grid.render(guiGraphics, mouseX, mouseY);
+                
+                // Draw scrollbar if needed
+                if (resourceCount > maxVisible) {
+                    // Calculate max scroll offset
+                    int maxScrollOffset = Math.max(0, resourceCount - maxVisible);
+                    
+                    // Draw scrollbar track
+                    int trackHeight = this.height - 10;
+                    guiGraphics.fill(
+                        this.x + this.width - scrollbarWidth - 5,
+                        this.y + 5,
+                        this.x + this.width - 5,
+                        this.y + this.height - 5,
+                        0x40FFFFFF // Light gray semi-transparent
+                    );
+                    
+                    // Calculate thumb size and position
+                    float thumbPercentSize = (float)maxVisible / resourceCount;
+                    int thumbHeight = Math.max(20, (int)(trackHeight * thumbPercentSize));
+                    int thumbY = this.y + 5 + (int)((trackHeight - thumbHeight) * ((float)scrollOffset / maxScrollOffset));
+                    
+                    // Draw scrollbar thumb
+                    guiGraphics.fill(
+                        this.x + this.width - scrollbarWidth - 5,
+                        thumbY,
+                        this.x + this.width - 5,
+                        thumbY + thumbHeight,
+                        0xC0FFFFFF // White semi-transparent
+                    );
+                }
             }
             
             @Override
@@ -320,11 +480,88 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
                     grid = createGrid();
                 }
                 
-                // Let the grid handle clicks
-                if (grid.mouseClicked((int)mouseX, (int)mouseY)) {
-                    playButtonClickSound();
+                // Middle mouse button for scrolling
+                if (button == 2 && isMouseOver((int)mouseX, (int)mouseY)) { // Middle mouse button
+                    isMiddleMouseScrolling = true;
+                    lastMouseY = mouseY;
                     return true;
                 }
+                
+                // Check if we're clicking on the scrollbar
+                if (resourceCount > maxVisible && mouseX >= this.x + this.width - scrollbarWidth - 5 && mouseX <= this.x + this.width - 5 &&
+                    mouseY >= this.y + 5 && mouseY <= this.y + this.height - 5) {
+                    // Clicked on scrollbar track - move to that position
+                    int trackHeight = this.height - 10;
+                    int maxScrollOffset = Math.max(0, resourceCount - maxVisible);
+                    float clickPercentage = (float)(mouseY - (this.y + 5)) / trackHeight;
+                    scrollOffset = Math.min(maxScrollOffset, Math.max(0, (int)(clickPercentage * resourceCount)));
+                    return true;
+                }
+                
+                // Let the grid handle clicks
+                if (grid.mouseClicked((int)mouseX, (int)mouseY)) {
+                    return true;
+                }
+                
+                return false;
+            }
+            
+            @Override
+            public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+                // Middle mouse button dragging (direct scrolling)
+                if (isMiddleMouseScrolling && button == 2) {
+                    // Calculate scroll amount based on mouse movement
+                    double deltaY = mouseY - lastMouseY;
+                    lastMouseY = mouseY;
+                    
+                    // Convert mouse movement to scroll amount (scale factor)
+                    // Positive deltaY means dragging down, which should move content up (scroll down)
+                    int scrollAmount = (int)(deltaY * 0.5);
+                    
+                    // Apply scrolling
+                    int maxScrollOffset = Math.max(0, resourceCount - maxVisible);
+                    scrollOffset += scrollAmount;
+                    
+                    // Clamp scroll offset
+                    if (scrollOffset < 0) {
+                        scrollOffset = 0;
+                    } else if (scrollOffset > maxScrollOffset) {
+                        scrollOffset = maxScrollOffset;
+                    }
+                    
+                    return true;
+                }
+                
+                return false;
+            }
+            
+            @Override
+            public boolean mouseReleased(double mouseX, double mouseY, int button) {
+                if (isMiddleMouseScrolling && button == 2) {
+                    isMiddleMouseScrolling = false;
+                    return true;
+                }
+                return false;
+            }
+            
+            @Override
+            public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+                if (resourceCount <= maxVisible) {
+                    return false;
+                }
+                
+                // Calculate max scroll offset
+                int maxScrollOffset = Math.max(0, resourceCount - maxVisible);
+                
+                // Scroll up or down based on mouse wheel direction
+                if (delta > 0 && scrollOffset > 0) {
+                    scrollOffset--;
+                    return true;
+                } else if (delta < 0 && scrollOffset < maxScrollOffset) {
+                    scrollOffset++;
+                    return true;
+                }
+                
                 return false;
             }
         };
@@ -353,10 +590,12 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         
         // Sample citizen data (expanded)
         String[] names = {"John Smith", "Emma Johnson", "Alex Lee", "Sofia Garcia", 
+                         "Michael Brown", "Lisa Wang", 
+                         "Michael Brown", "Lisa Wang", 
                          "Michael Brown", "Lisa Wang"};
         String[] jobs = {"Miner", "Farmer", "Builder", "Trader", 
-                        "Blacksmith", "Scholar"};
-        int[] levels = {3, 2, 4, 1, 5, 2};
+                        "Blacksmith", "Scholar","Blacksmith", "Scholar","Blacksmith", "Scholar"};
+        int[] levels = {3, 2, 4, 1, 5, 2, 3, 4, 2, 5};
         
         // Calculate dimensions for the citizens grid - ensure it fits within panel boundaries
         // Account for the panel's padding and the title height
@@ -833,40 +1072,40 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         switch (activeTab) {
             case "overview":
                 bottomButtonsGrid
-                    .addButton(0, 0, "Edit Details", v -> {
+                    .addButtonWithTooltip(0, 0, "Edit Details", "Edit town details and properties", v -> {
                         showChangeTownNamePopup();
                     }, PRIMARY_COLOR)
-                    .addButton(0, 1, "View Visitors", v -> {
+                    .addButtonWithTooltip(0, 1, "View Visitors", "View list of visitors to your town", v -> {
                         showVisitorListModal();
                     }, SECONDARY_COLOR);
                 break;
                 
             case "economy":
                 bottomButtonsGrid
-                    .addButton(0, 0, "Trade Resources", v -> {
+                    .addButtonWithTooltip(0, 0, "Trade Resources", "Trade resources with other towns", v -> {
                         sendChatMessage("Button pressed: Trade Resources");
                     }, PRIMARY_COLOR)
-                    .addButton(0, 1, "Manage Storage", v -> {
+                    .addButtonWithTooltip(0, 1, "Manage Storage", "Manage town storage and inventory", v -> {
                         sendChatMessage("Button pressed: Manage Storage");
                     }, SECONDARY_COLOR);
                 break;
                 
             case "population":
                 bottomButtonsGrid
-                    .addButton(0, 0, "Assign Jobs", v -> {
+                    .addButtonWithTooltip(0, 0, "Assign Jobs", "Assign jobs to town citizens", v -> {
                         sendChatMessage("Button pressed: Assign Jobs");
                     }, PRIMARY_COLOR)
-                    .addButton(0, 1, "Recruit Citizens", v -> {
+                    .addButtonWithTooltip(0, 1, "Recruit Citizens", "Recruit new citizens to your town", v -> {
                         sendChatMessage("Button pressed: Recruit Citizens");
                     }, SECONDARY_COLOR);
                 break;
                 
             case "settings":
                 bottomButtonsGrid
-                    .addButton(0, 0, "Save Settings", v -> {
+                    .addButtonWithTooltip(0, 0, "Save Settings", "Save current town settings", v -> {
                         sendChatMessage("Button pressed: Save Settings");
                     }, SUCCESS_COLOR)
-                    .addButton(0, 1, "Reset Defaults", v -> {
+                    .addButtonWithTooltip(0, 1, "Reset Defaults", "Reset town settings to defaults", v -> {
                         sendChatMessage("Button pressed: Reset Defaults");
                     }, DANGER_COLOR);
                 break;
@@ -1069,7 +1308,26 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         // If popup is active, let it handle keyboard input first
         if (activePopup != null && activePopup.isVisible()) {
+            // Handle escape key specially to allow closing the popup
+            if (keyCode == 256) { // ESCAPE key
+                return activePopup.keyPressed(keyCode, scanCode, modifiers);
+            }
+            
+            // For string input popups, completely consume 'e' key (inventory key) to prevent it from closing the popup
+            if (keyCode == 69 && activePopup.isInputPopup()) { // 'e' key and input popup
+                // Forward to popup for text input handling
+                activePopup.keyPressed(keyCode, scanCode, modifiers);
+                // Always consume the event
+                return true;
+            }
+            
+            // Let popup handle other keys normally
             if (activePopup.keyPressed(keyCode, scanCode, modifiers)) {
+                return true;
+            }
+            
+            // If it's an input popup, consume all uncaught key events to prevent them from affecting the main screen
+            if (activePopup.isInputPopup()) {
                 return true;
             }
         }

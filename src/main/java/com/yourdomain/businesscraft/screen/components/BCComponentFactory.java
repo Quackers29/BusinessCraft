@@ -318,4 +318,64 @@ public class BCComponentFactory {
     public static BCPopupScreen createConfirmationPopup(String title, Consumer<BCPopupScreen.PopupResult> resultCallback) {
         return BCPopupScreen.createConfirmationPopup(title, resultCallback);
     }
+    
+    /**
+     * Creates a primary button with a tooltip
+     * 
+     * @param text The button text
+     * @param tooltip The tooltip text to display on hover
+     * @param onPress The action to perform when pressed
+     * @param width The width of the button
+     * @return The created button
+     */
+    public static BCButton createPrimaryButtonWithTooltip(String text, String tooltip, Consumer<Button> onPress, int width) {
+        BCButton button = createPrimaryButton(text, onPress, width);
+        button.withTooltip(Component.literal(tooltip));
+        return button;
+    }
+    
+    /**
+     * Creates a secondary button with a tooltip
+     * 
+     * @param text The button text
+     * @param tooltip The tooltip text to display on hover
+     * @param onPress The action to perform when pressed
+     * @param width The width of the button
+     * @return The created button
+     */
+    public static BCButton createSecondaryButtonWithTooltip(String text, String tooltip, Consumer<Button> onPress, int width) {
+        BCButton button = createSecondaryButton(text, onPress, width);
+        button.withTooltip(Component.literal(tooltip));
+        return button;
+    }
+    
+    /**
+     * Creates a danger button with a tooltip
+     * 
+     * @param text The button text
+     * @param tooltip The tooltip text to display on hover
+     * @param onPress The action to perform when pressed
+     * @param width The width of the button
+     * @return The created button
+     */
+    public static BCButton createDangerButtonWithTooltip(String text, String tooltip, Consumer<Button> onPress, int width) {
+        BCButton button = createDangerButton(text, onPress, width);
+        button.withTooltip(Component.literal(tooltip));
+        return button;
+    }
+    
+    /**
+     * Creates a success button with a tooltip
+     * 
+     * @param text The button text
+     * @param tooltip The tooltip text to display on hover
+     * @param onPress The action to perform when pressed
+     * @param width The width of the button
+     * @return The created button
+     */
+    public static BCButton createSuccessButtonWithTooltip(String text, String tooltip, Consumer<Button> onPress, int width) {
+        BCButton button = createSuccessButton(text, onPress, width);
+        button.withTooltip(Component.literal(tooltip));
+        return button;
+    }
 } 

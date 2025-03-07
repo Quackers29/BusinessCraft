@@ -1,0 +1,171 @@
+[33mcommit 8f7ef4ed3bbed9b1642fbd2494430dbd95d69ca5[m
+Author: Quackers29 <gazer29@hotmail.com>
+Date:   Tue Mar 4 19:18:46 2025 +0000
+
+    added 3.3.2, ui improvements
+
+[1mdiff --git a/current_todo.txt b/current_todo.txt[m
+[1mindex ee24a17..f7aafaf 100644[m
+[1m--- a/current_todo.txt[m
+[1m+++ b/current_todo.txt[m
+[36m@@ -58,22 +58,21 @@[m [mX O O T[m
+ - [ ] 3.2.2. Include milestone and payment info - Display milestone achievements, payments, and travel distance in notifications[m
+ [m
+ ### 3.3. UI System Standardization[m
+[31m-- [ ] 3.3.1. Component Architecture Refactoring[m
+[31m-  - [ ] Create standard base components for all UI elements (buttons, tabs, labels, resource displays)[m
+[31m-  - [ ] Implement consistent positioning and sizing system for all UI elements[m
+[31m-  - [ ] Add responsive UI layout capabilities to handle different screen sizes better[m
+[31m-  - [ ] Standardize component styling and appearance across all screens[m
+[31m-[m
+[31m-- [ ] 3.3.2. UI Component Library[m
+[31m-  - [ ] Create reusable library components specific to BusinessCraft[m
+[31m-  - [ ] Implement standardized factory methods for common component creation[m
+[31m-  - [ ] Add theme support for consistent colors and styling[m
+[31m-  - [ ] Document all components with clear usage examples[m
+[32m+[m[32m- [x] 3.3.1. Component Architecture Refactoring[m
+[32m+[m[32m  - [x] Create standard base components for all UI elements (buttons, tabs, labels, resource displays)[m
+[32m+[m[32m  - [x] Implement consistent positioning and sizing system for all UI elements[m
+[32m+[m[32m  - [x] Add responsive UI layout capabilities to handle different screen sizes better[m
+[32m+[m[32m  - [x] Standardize component styling and appearance across all screens[m
+[32m+[m
+[32m+[m[32m- [x] 3.3.2. UI Component Library[m
+[32m+[m[32m  - [x] Create reusable library components specific to BusinessCraft[m
+[32m+[m[32m  - [x] Implement standardized factory methods for common component creation[m
+[32m+[m[32m  - [x] Add theme support for consistent colors and styling[m
+[32m+[m[32m  - [x] Document all components with clear usage examples[m
+ [m
+ - [ ] 3.3.3. Screen Builder System[m
+   - [ ] Create builder pattern for screens to simplify screen creation[m
+   - [ ] Implement layout managers for automatic placement of components[m
+[31m-  - [ ] Add animation and transition support between screens/tabs[m
+   - [ ] Create screen templates for typical BusinessCraft interfaces[m
+ [m
+ - [ ] 3.3.4. Input and Validation[m
+
+[33mcommit e302852c5c4ea2488067eb55cc8be40d643fa7ee[m
+Author: Quackers29 <gazer29@hotmail.com>
+Date:   Tue Mar 4 19:08:36 2025 +0000
+
+    Ui start
+
+[1mdiff --git a/current_todo.txt b/current_todo.txt[m
+[1mindex 2d122a5..ee24a17 100644[m
+[1m--- a/current_todo.txt[m
+[1m+++ b/current_todo.txt[m
+[36m@@ -57,6 +57,31 @@[m [mX O O T[m
+ - [ ] 3.2.1. Arrival announcement - Notify players in vicinity of platform when tourists arrive[m
+ - [ ] 3.2.2. Include milestone and payment info - Display milestone achievements, payments, and travel distance in notifications[m
+ [m
+[32m+[m[32m### 3.3. UI System Standardization[m
+[32m+[m[32m- [ ] 3.3.1. Component Architecture Refactoring[m
+[32m+[m[32m  - [ ] Create standard base components for all UI elements (buttons, tabs, labels, resource displays)[m
+[32m+[m[32m  - [ ] Implement consistent positioning and sizing system for all UI elements[m
+[32m+[m[32m  - [ ] Add responsive UI layout capabilities to handle different screen sizes better[m
+[32m+[m[32m  - [ ] Standardize component styling and appearance across all screens[m
+[32m+[m
+[32m+[m[32m- [ ] 3.3.2. UI Component Library[m
+[32m+[m[32m  - [ ] Create reusable library components specific to BusinessCraft[m
+[32m+[m[32m  - [ ] Implement standardized factory methods for common component creation[m
+[32m+[m[32m  - [ ] Add theme support for consistent colors and styling[m
+[32m+[m[32m  - [ ] Document all components with clear usage examples[m
+[32m+[m
+[32m+[m[32m- [ ] 3.3.3. Screen Builder System[m
+[32m+[m[32m  - [ ] Create builder pattern for screens to simplify screen creation[m
+[32m+[m[32m  - [ ] Implement layout managers for automatic placement of components[m
+[32m+[m[32m  - [ ] Add animation and transition support between screens/tabs[m
+[32m+[m[32m  - [ ] Create screen templates for typical BusinessCraft interfaces[m
+[32m+[m
+[32m+[m[32m- [ ] 3.3.4. Input and Validation[m
+[32m+[m[32m  - [ ] Standardize input handling across all components[m
+[32m+[m[32m  - [ ] Create validation system for user inputs with error feedback[m
+[32m+[m[32m  - [ ] Improve accessibility with keyboard navigation support[m
+[32m+[m[32m  - [ ] Add tooltips and help text system for all interactive elements[m
+[32m+[m
+ ## 4. Economy and Payment Systems[m
+ [m
+ ### 4.1. Payment System[m
+
+[33mcommit 339fd88f4fc4025771cf87b464ef8f053d7f8331[m
+Author: Quackers29 <gazer29@hotmail.com>
+Date:   Tue Mar 4 03:08:18 2025 +0000
+
+    Added more to 1.1.3, visitors to population increase
+
+[1mdiff --git a/current_todo.txt b/current_todo.txt[m
+[1mindex d8d788f..2d122a5 100644[m
+[1m--- a/current_todo.txt[m
+[1m+++ b/current_todo.txt[m
+[36m@@ -6,6 +6,8 @@[m
+ - [x] 1.1.1. Min distance between towns for placement - Prevent towns from being placed too close together, configurable[m
+ - [x] 1.1.2. Starting population - Configure default starting population for new towns[m
+ - [x] 1.1.3. Separation of tourists and population - Population becomes a town attribute that grows over time with tourist arrivals[m
+[32m+[m[32m      - [x] Added configurable tourist-to-population conversion - Each X tourists received increases town population by 1[m
+[32m+[m[32m      - [x] Default setting of 2 tourists required per 1 population increase[m
+ [m
+ ### 1.2. Tourist Capacity Management[m
+ - [x] 1.2.1. Limited tourists in world per town - town limit of 10 spawned tourists, must visit other towns until more can spawn[m
+[36m@@ -45,10 +47,13 @@[m [mX O O T[m
+ - [x] 3.1.1. Custom tourist model - Create new villager model for tourists to distinguish from regular villagers[m
+ - [x] 3.1.2. Disable tourist breeding - Prevent tourists from breeding with villagers or other tourists[m
+ - [x] 3.1.3. Tourist expiry system - Add 2-hour real-time expiry timer that poofs tourists out of existence called quitting, configurable[m
+[32m+[m[32m      - [x] Changed expiry configuration from hours to minutes for more precise control[m
+[32m+[m[32m      - [x] Fixed NumberFormatException by ensuring the configuration uses whole numbers[m
+[32m+[m[32m      - [x] Added feature to reset expiry timer when tourist mounts a minecart or Create train[m
+[32m+[m[32m      - [x] Ensured timer reset uses current configuration values rather than static values[m
+ - [x] 3.1.4. Origin town notification - Notify origin town when tourists quit or die[m
+[31m-- [ ] 3.1.5. Tourist naming - Replace town name with destination town in tourist name/tag[m
+ [m
+[31m-### 3.2. Notifications and Feedback[m
+[32m+[m[32m### 3.2. User Interface Improvements[m
+ - [ ] 3.2.1. Arrival announcement - Notify players in vicinity of platform when tourists arrive[m
+ - [ ] 3.2.2. Include milestone and payment info - Display milestone achievements, payments, and travel distance in notifications[m
+ [m
+
+[33mcommit aa70992d5fc910e785c6828916f373b3c78737b9[m
+Author: Quackers29 <gazer29@hotmail.com>
+Date:   Tue Mar 4 02:03:54 2025 +0000
+
+    added 3.1.1 + .2 Tourist models with specific hat
+
+[1mdiff --git a/current_todo.txt b/current_todo.txt[m
+[1mindex 0d024bf..d8d788f 100644[m
+[1m--- a/current_todo.txt[m
+[1m+++ b/current_todo.txt[m
+[36m@@ -42,10 +42,11 @@[m [mX O O T[m
+ ## 3. Tourist System Enhancements[m
+ [m
+ ### 3.1. Tourist Entity Improvements[m
+[31m-- [ ] 3.1.1. Custom tourist model - Create new villager model for tourists to distinguish from regular villagers[m
+[31m-- [ ] 3.1.2. Disable tourist breeding - Prevent tourists from breeding with villagers or other tourists[m
+[32m+[m[32m- [x] 3.1.1. Custom tourist model - Create new villager model for tourists to distinguish from regular villagers[m
+[32m+[m[32m- [x] 3.1.2. Disable tourist breeding - Prevent tourists from breeding with villagers or other tourists[m
+ - [x] 3.1.3. Tourist expiry system - Add 2-hour real-time expiry timer that poofs tourists out of existence called quitting, configurable[m
+ - [x] 3.1.4. Origin town notification - Notify origin town when tourists quit or die[m
+[32m+[m[32m- [ ] 3.1.5. Tourist naming - Replace town name with destination town in tourist name/tag[m
+ [m
+ ### 3.2. Notifications and Feedback[m
+ - [ ] 3.2.1. Arrival announcement - Notify players in vicinity of platform when tourists arrive[m
+
+[33mcommit a89a99d62e308a5931e59f45be25afba9092d7bd[m
+Author: Quackers29 <gazer29@hotmail.com>
+Date:   Mon Mar 3 06:44:28 2025 +0000
+
+    Add to 3.1, tourist quit or die, town replenishes
+
+[1mdiff --git a/current_todo.txt b/current_todo.txt[m
+[1mindex 4fe2225..0d024bf 100644[m
+[1m--- a/current_todo.txt[m
+[1m+++ b/current_todo.txt[m
+[36m@@ -44,9 +44,8 @@[m [mX O O T[m
+ ### 3.1. Tourist Entity Improvements[m
+ - [ ] 3.1.1. Custom tourist model - Create new villager model for tourists to distinguish from regular villagers[m
+ - [ ] 3.1.2. Disable tourist breeding - Prevent tourists from breeding with villagers or other tourists[m
+[31m-- [ ] 3.1.3. Tourist expiry system - Add 2-hour real-time expiry timer that poofs tourists out of existence called quitting, configurable[m
+[31m-- [ ] 3.1.4. Origin town notification - Notify origin town when tourists quit or die[m
+[31m-- [ ] 3.1.5. Tourist naming - Replace town name with destination town in tourist name/tag[m
+[32m+[m[32m- [x] 3.1.3. Tourist expiry system - Add 2-hour real-time expiry timer that poofs tourists out of existence called quitting, configurable[m
+[32m+[m[32m- [x] 3.1.4. Origin town notification - Notify origin town when tourists quit or die[m
+ [m
+ ### 3.2. Notifications and Feedback[m
+ - [ ] 3.2.1. Arrival announcement - Notify players in vicinity of platform when tourists arrive[m
