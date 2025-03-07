@@ -54,3 +54,15 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 41. UI, control visibility, add specific System.out.println logging when controls aren't rendering to track their positions and states
 42. UI, complex components, use direct rendering with immediate-mode approach rather than composing from other components when facing render order issues
 43. UI, rendering utilities, create reusable static methods in utility classes for direct rendering to ensure consistent styling across all UI components
+44. UI, grid management, recreate grids instead of clearing them when contents or layout need to change as many grid builders lack explicit reset methods
+45. UI, modal windows, use fully opaque backgrounds (0xFF instead of 0xE0) and set position before creating child components to ensure proper layering
+46. UI, event handlers, when updating common event methods (like mouseScrolled), preserve specialized handling for components that need direct event forwarding
+47. UI, sizing strategy, size UI containers based on content requirements rather than fixed percentages of screen size to avoid excessive empty space
+48. UI, debug logging, use conditional logging with LOGGER.isDebugEnabled() checks instead of direct System.out.println in frequently called methods
+49. UI, adaptive sizing, calculate UI container dimensions based on actual content quantity with min/max constraints and recenter after resizing
+50. UI, child positioning, when parent containers resize or reposition, manually update child component positions as they don't automatically inherit changes
+51. UI, error handling, wrap callback execution in try-catch blocks to prevent errors in event handlers from breaking the entire UI
+52. UI, constants, define layout constants as static final fields rather than hardcoding values throughout methods for better maintainability
+53. UI, event system, use a copy of handler lists when iterating through event handlers to avoid concurrent modification exceptions
+54. UI, defensive coding, add null checks for all data inputs and suppliers to prevent NullPointerExceptions in rendering code
+55. UI, component resizing, trigger resize events after changing dimensions to ensure dependent components can react appropriately

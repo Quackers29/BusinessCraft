@@ -46,6 +46,9 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     // Add a field for the active popup
     private BCPopupScreen activePopup = null;
 
+    // Add field for modal screen
+    private BCModalScreen activeModal = null;
+
     public TownInterfaceScreen(TownInterfaceMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         
@@ -350,14 +353,10 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         
         // Sample citizen data (expanded)
         String[] names = {"John Smith", "Emma Johnson", "Alex Lee", "Sofia Garcia", 
-                         "Michael Brown", "Lisa Wang", "David Miller", "James Wilson",
-                         "Olivia Martinez", "William Taylor", "Ava Robinson", "Benjamin Clark",
-                         "Charlotte Lewis", "Henry Walker", "Mia Allen", "Ethan Young"};
+                         "Michael Brown", "Lisa Wang"};
         String[] jobs = {"Miner", "Farmer", "Builder", "Trader", 
-                        "Blacksmith", "Scholar", "Guard", "Carpenter",
-                        "Baker", "Hunter", "Tailor", "Alchemist",
-                        "Scribe", "Tanner", "Jeweler", "Beekeeper"};
-        int[] levels = {3, 2, 4, 1, 5, 2, 3, 4, 2, 5, 3, 1, 4, 2, 3, 5};
+                        "Blacksmith", "Scholar"};
+        int[] levels = {3, 2, 4, 1, 5, 2};
         
         // Calculate dimensions for the citizens grid - ensure it fits within panel boundaries
         // Account for the panel's padding and the title height
@@ -755,7 +754,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     }
     
     private String getMayorName() {
-        return "Mayor Goodway";
+        return "Mayor Goodway!";
     }
     
     private int getTownPopulation() {
@@ -785,30 +784,25 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         
         // Render the screen title
         graphics.drawCenteredString(this.font, this.title, this.leftPos + this.imageWidth / 2, this.topPos - 12, TEXT_COLOR);
-
+        
         // Draw any tooltips
         graphics.pose().pushPose();
         graphics.pose().translate(0, 0, 100);  // Move tooltips to front layer
         this.renderTooltip(graphics, mouseX, mouseY);
         graphics.pose().popPose();
         
+        // IMPORTANT: Render modals and popups AFTER everything else
+        
         // If we have an active popup, render it on top of everything with matrix transformation for Z-ordering
         if (activePopup != null && activePopup.isVisible()) {
-            // Save the current render state
-            graphics.pose().pushPose();
-            
-            // Move forward in Z-buffer to ensure it renders on top of everything else
-            graphics.pose().translate(0, 0, 1000);
-            
-            // Draw a darker semi-transparent overlay for the entire screen first
-            graphics.fill(0, 0, this.width, this.height, 0xD0000000); // 80% opacity black
-            
-            // Now render the actual popup content
-            // We pass null for font because the popup will use Minecraft.getInstance().font directly
+            // The popup handles its own matrix transformations internally
             activePopup.render(graphics, 0, 0, mouseX, mouseY);
-            
-            // Restore the render state
-            graphics.pose().popPose();
+        }
+        
+        // If we have an active modal, render it last to ensure it's on top of everything
+        if (activeModal != null) {
+            // The modal now handles its own matrix transformations internally
+            activeModal.render(graphics, 0, 0, mouseX, mouseY);
         }
     }
     
@@ -842,8 +836,8 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
                     .addButton(0, 0, "Edit Details", v -> {
                         showChangeTownNamePopup();
                     }, PRIMARY_COLOR)
-                    .addButton(0, 1, "Visit Center", v -> {
-                        sendChatMessage("Button pressed: Visit Center");
+                    .addButton(0, 1, "View Visitors", v -> {
+                        showVisitorListModal();
                     }, SECONDARY_COLOR);
                 break;
                 
@@ -881,6 +875,13 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // If modal is active, let it handle clicks first
+        if (activeModal != null) {
+            if (activeModal.mouseClicked(mouseX, mouseY, button)) {
+                return true;
+            }
+        }
+        
         // If popup is active, let it handle clicks first
         if (activePopup != null && activePopup.isVisible()) {
             if (activePopup.mouseClicked(mouseX, mouseY, button)) {
@@ -940,6 +941,20 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        // If modal is active, let it handle scroll first
+        if (activeModal != null) {
+            if (activeModal.mouseScrolled(mouseX, mouseY, delta)) {
+                return true;
+            }
+        }
+        
+        // If popup is active, let it handle character input first
+        if (activePopup != null && activePopup.isVisible()) {
+            if (activePopup.mouseScrolled(mouseX, mouseY, delta)) {
+                return true;
+            }
+        }
+        
         // Check if population tab is active and forward directly to citizenList
         String activeTabId = this.tabPanel.getActiveTabId();
         if ("population".equals(activeTabId)) {
@@ -955,7 +970,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             }
         }
         
-        // Let tab panel handle scroll
+        // Let the tab panel handle scroll
         if (this.tabPanel != null && this.tabPanel.mouseScrolled(mouseX, mouseY, delta)) {
             return true;
         }
@@ -1072,5 +1087,33 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         }
         
         return super.charTyped(c, modifiers);
+    }
+
+    /**
+     * Show the visitor list modal screen
+     */
+    private void showVisitorListModal() {
+        // Create a modal with a list of visitors
+        // Use the 2-column constructor for an appropriately sized window
+        activeModal = new BCModalScreen(
+            "Town Visitors", 
+            result -> {
+                // Handle the result (OK or Back)
+                if (result) {
+                    sendChatMessage("Selected visitors from the list");
+                }
+                activeModal = null; // Clear the modal when closed
+            },
+            2 // Explicitly specify 2 columns for a narrower width
+        );
+        
+        // Create some example data - just 5 items for a more compact display
+        List<String> visitorNames = new ArrayList<>();
+        for (int i = 1; i <= 12; i++) {
+            visitorNames.add("Visitor " + i + " - Town " + (i * 10));
+        }
+        
+        // Set the data - this will adjust the height automatically
+        activeModal.setData(visitorNames);
     }
 } 

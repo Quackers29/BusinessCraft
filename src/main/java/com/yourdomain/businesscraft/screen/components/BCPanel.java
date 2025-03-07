@@ -472,10 +472,12 @@ public class BCPanel extends BCComponent {
     }
     
     /**
-     * Get the list of child components
+     * Get the list of child components (needed for positional updates)
+     * 
+     * @return List of child components
      */
     public List<UIComponent> getChildren() {
-        return children;
+        return new ArrayList<>(children); // Return a copy to prevent external modification
     }
     
     /**
