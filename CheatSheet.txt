@@ -66,3 +66,26 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 53. UI, event system, use a copy of handler lists when iterating through event handlers to avoid concurrent modification exceptions
 54. UI, defensive coding, add null checks for all data inputs and suppliers to prevent NullPointerExceptions in rendering code
 55. UI, component resizing, trigger resize events after changing dimensions to ensure dependent components can react appropriately
+56. UI, tooltips, render tooltips at the end of the rendering cycle to ensure they appear on top of all other UI elements
+57. UI, key handling, handle vanilla Minecraft key bindings at both component and parent screen levels, always returning true to consume key events
+58. UI, text input, prefer direct delegation to Minecraft's EditBox instead of custom cursor tracking to avoid cursor positioning bugs
+59. UI, component wrappers, when facing issues with component behavior, try creating an ultra-minimal wrapper with almost no custom functionality
+60. UI, text input components, when cursor is not visible, avoid custom drawing over or around Minecraft's EditBox and let it render itself completely
+61. UI, edit input issues, when facing persistent cursor visibility problems, use vanilla EditBox directly without any custom component wrapper
+62. UI, focus debugging, add detailed logging to track focus state changes and display warnings when focus operations fail
+63. UI, input priority, when handling keyboard events, check focused components FIRST before handling any other keys
+64. UI, text input components, for critical text editing functionality, directly use vanilla EditBox without any custom component wrapper
+65. UI, EditBox rendering, always render EditBox directly in the render method immediately before or after child components, not as a child itself
+66. UI, vanilla components, when using vanilla components like EditBox directly, ensure proper layout by adding the same labels and positioning logic
+67. UI, EditBox styling, improve EditBox visibility by drawing a white border frame behind it and using high contrast text colors
+68. UI, component rendering, when nested components don't position correctly, switch to direct rendering code that explicitly draws each element
+69. UI, immediate mode UI, for complex interactive components like popups with EditBoxes, use direct rendering with minimal component hierarchy for reliability
+70. UI, UIGridBuilder.java, when adding new UI element types, implement both direct (Item) and wrapped (ItemStack) versions of methods for flexibility
+71. UI, TownInterfaceScreen.java, for interactive item displays, store quantities in a persistent array and use lambdas with final index variables for click handlers
+72. UI, scrollable grid UI, calculate maxVisible dynamically based on container height and item height for responsive scrolling
+73. UI, scrollbar implementation, use relative percentages to position scrollbar thumb based on content scroll position for accurate representation
+74. UI, number formatting, implement suffix-based formatting (K, M, B) for large numbers to keep UI clean and readable
+75. UI, item display alignment, use standard item size (16px) and vertically center items and text using font metrics for consistent appearance
+76. UI, item quantity display, use Unicode symbols (×) instead of plain 'x' for better aesthetics and align quantities based on visual spacing
+77. UI, text rendering, prefer ASCII characters over Unicode when text rendering issues occur with special characters
+78. UI, mouse input, implement middle mouse button scrolling consistently across all scrollable components for a unified user experience

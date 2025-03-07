@@ -65,7 +65,7 @@ public class BCPopupScreen extends BCPanel {
     private final String title;
     private final Consumer<PopupResult> resultCallback;
     
-    private BCEditBoxComponent inputField;
+    private EditBox vanillaEditBox;
     private BCButton backButton;
     private BCButton okButton;
     private Consumer<Button> closePopupHandler;
@@ -99,6 +99,10 @@ public class BCPopupScreen extends BCPanel {
         
         // Create popup content
         createContent();
+        
+        // Center in screen by default
+        Minecraft minecraft = Minecraft.getInstance();
+        setParentBounds(0, 0, minecraft.getWindow().getGuiScaledWidth(), minecraft.getWindow().getGuiScaledHeight());
     }
     
     /**
@@ -132,60 +136,61 @@ public class BCPopupScreen extends BCPanel {
      * Create the content of the popup based on its type
      */
     private void createContent() {
-        int contentPadding = 15;
-        int titleHeight = 24;
-        int buttonHeight = 25;  // Taller buttons for visibility
+        int contentPadding = 20;
+        int titleHeight = 30;
+        int buttonHeight = 20;
         int buttonWidth = 100;
         int inputFieldHeight = 20;
-        int spacing = 20;
+        int spacing = 10;
+        
+        // Calculate positions and dimensions
+        int contentWidth = this.width - (contentPadding * 2);
+        
+        // Create the input field for input popups
+        if (type == PopupType.STRING_INPUT || type == PopupType.NUMERIC_INPUT) {
+            // Create vanilla EditBox with proper dimensions
+            vanillaEditBox = new EditBox(
+                Minecraft.getInstance().font,
+                contentPadding,  // initial x position 
+                contentPadding + titleHeight + 40, // initial y position
+                contentWidth, // full content width
+                inputFieldHeight, // standard height
+                Component.empty() // no label
+            );
+            
+            // Configure the vanilla EditBox
+            vanillaEditBox.setMaxLength(100);
+            vanillaEditBox.setBordered(true);
+            vanillaEditBox.setTextColor(0xFFFFFFFF); // White text
+            vanillaEditBox.setValue(currentInputValue);
+            vanillaEditBox.setTextColorUneditable(0xFFAAAAAA); // Gray when not editable
+            
+            // Set responder to update cached value
+            vanillaEditBox.setResponder(text -> {
+                if (type == PopupType.NUMERIC_INPUT) {
+                    // For numeric input, validate that it contains only digits
+                    if (text.isEmpty() || text.matches("^\\d+$")) {
+                        currentInputValue = text;
+                    } else {
+                        // Reject invalid input
+                        vanillaEditBox.setValue(currentInputValue);
+                    }
+                } else {
+                    // For text input, accept any string
+                    currentInputValue = text;
+                }
+            });
+        }
         
         // Title label - centered
         BCLabel titleLabel = BCComponentFactory.createHeaderLabel(this.title, this.width - (contentPadding * 2));
         titleLabel.position((this.width - titleLabel.getWidth()) / 2, contentPadding);
         this.addChild(titleLabel);
         
-        // Input field
-        if (type == PopupType.STRING_INPUT || type == PopupType.NUMERIC_INPUT) {
-            // Input field label - explicit instruction
-            BCLabel instructionLabel = BCComponentFactory.createBodyLabel("Enter new name:", this.width - (contentPadding * 2));
-            instructionLabel.position(contentPadding, contentPadding + titleHeight + 10);
-            this.addChild(instructionLabel);
-            
-            // Create a text supplier and change handler
-            Supplier<String> textSupplier = () -> currentInputValue;
-            Consumer<String> textChangeHandler = text -> {
-                // For numeric input, validate the text
-                if (type == PopupType.NUMERIC_INPUT) {
-                    if (text.isEmpty() || text.matches("^\\d+$")) {
-                        currentInputValue = text;
-                    }
-                } else {
-                    currentInputValue = text;
-                }
-            };
-            
-            // Create the edit box with the supplier and handler
-            inputField = new BCEditBoxComponent(
-                this.width - (contentPadding * 2), 
-                inputFieldHeight + 8,
-                textSupplier,
-                textChangeHandler,
-                100 // Max length
-            );
-            // Position below the instruction label
-            inputField.position(contentPadding, contentPadding + titleHeight + 35);
-            
-            // Style the input field for better visibility
-            inputField.withBackgroundColor(0xFF555555);
-            inputField.withTextColor(0xFFFFFFFF);
-            inputField.withFocusedBorderColor(0xFFAAAAAA);
-            
-            this.addChild(inputField);
-        }
-        
         // Buttons - position at bottom with fixed spacing
         int totalButtonWidth = (buttonWidth * 2) + spacing;
         int buttonY = this.height - buttonHeight - contentPadding;
+        int startX = (this.width - totalButtonWidth) / 2; // Center the buttons horizontally
         
         // Back button with brighter colors
         backButton = BCComponentFactory.createSecondaryButton(
@@ -193,7 +198,7 @@ public class BCPopupScreen extends BCPanel {
             button -> handleBackButton(), 
             buttonWidth
         );
-        backButton.position((this.width - totalButtonWidth) / 2, buttonY);
+        backButton.position(startX, buttonY);
         backButton.size(buttonWidth, buttonHeight); // Explicit sizing
         this.addChild(backButton);
         
@@ -203,7 +208,7 @@ public class BCPopupScreen extends BCPanel {
             button -> handleOkButton(), 
             buttonWidth
         );
-        okButton.position(backButton.getX() + buttonWidth + spacing, buttonY);
+        okButton.position(startX + buttonWidth + spacing, buttonY);
         okButton.size(buttonWidth, buttonHeight); // Explicit sizing
         this.addChild(okButton);
     }
@@ -256,9 +261,12 @@ public class BCPopupScreen extends BCPanel {
      * Set the initial value for the input field
      */
     public void setInitialValue(String value) {
-        currentInputValue = value;
-        if (inputField != null) {
-            inputField.setText(value);
+        // Update our cached value
+        currentInputValue = value != null ? value : "";
+        
+        // Update the EditBox directly
+        if (vanillaEditBox != null) {
+            vanillaEditBox.setValue(currentInputValue);
         }
     }
     
@@ -266,8 +274,8 @@ public class BCPopupScreen extends BCPanel {
      * Focus the input field for immediate keyboard input
      */
     public void focusInput() {
-        if (inputField != null) {
-            inputField.setFocused(true);
+        if (vanillaEditBox != null) {
+            vanillaEditBox.setFocused(true);
         }
     }
     
@@ -294,91 +302,115 @@ public class BCPopupScreen extends BCPanel {
     
     @Override
     public void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
-        // Draw semi-transparent overlay for the entire screen
+        // Calculate screen and popup dimensions
         int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
         int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        int popupX = (screenWidth - this.width) / 2;
+        int popupY = (screenHeight - this.height) / 2;
         
-        // First, push the matrix to ensure proper Z-ordering
+        // Push pose matrix for proper Z-ordering
         guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0, 0, 100);
         
-        // Move forward in Z-buffer to ensure it renders on top
-        guiGraphics.pose().translate(0, 0, 1000);
+        // Draw semi-transparent overlay behind popup
+        guiGraphics.fill(0, 0, screenWidth, screenHeight, 0xA0000000);
         
-        // Fill the entire screen with a dark overlay
-        guiGraphics.fill(0, 0, screenWidth, screenHeight, 0xD0000000);
+        // Draw popup background (dark gray)
+        guiGraphics.fill(popupX, popupY, popupX + this.width, popupY + this.height, 0xFF333333);
         
-        // Draw background at our stored position - fully opaque
-        renderBackground(guiGraphics);
+        // Draw border around popup
+        guiGraphics.hLine(popupX, popupX + this.width - 1, popupY, 0xFFFFFFFF);
+        guiGraphics.hLine(popupX, popupX + this.width - 1, popupY + this.height - 1, 0xFFFFFFFF);
+        guiGraphics.vLine(popupX, popupY, popupY + this.height - 1, 0xFFFFFFFF);
+        guiGraphics.vLine(popupX + this.width - 1, popupY, popupY + this.height - 1, 0xFFFFFFFF);
         
-        // Render title - second layer
-        if (title != null) {
-            guiGraphics.drawCenteredString(
+        // Define layout constants
+        final int padding = 20;
+        final int titleHeight = 30;
+        
+        // Draw title - centered at top
+        guiGraphics.drawCenteredString(
+            Minecraft.getInstance().font,
+            Component.literal(this.title),
+            popupX + this.width / 2,
+            popupY + padding,
+            0xFFFFFFFF
+        );
+        
+        // Draw instruction text if this is an input popup
+        if (type == PopupType.STRING_INPUT || type == PopupType.NUMERIC_INPUT) {
+            String instruction = "Enter " + (type == PopupType.NUMERIC_INPUT ? "value:" : "text:");
+            guiGraphics.drawString(
                 Minecraft.getInstance().font,
-                Component.literal(title),
-                this.x + this.width / 2,
-                this.y + 15,
+                instruction,
+                popupX + padding,
+                popupY + padding + titleHeight,
                 0xFFFFFFFF
             );
         }
         
-        // Render instruction text - third layer
-        if (type == PopupType.STRING_INPUT || type == PopupType.NUMERIC_INPUT) {
-            guiGraphics.drawString(
-                Minecraft.getInstance().font,
-                "Enter new name:",
-                this.x + 15,
-                this.y + 45,
-                0xFFE0E0E0
-            );
-        }
-        
-        // Render input field - fourth layer
-        if (type == PopupType.STRING_INPUT || type == PopupType.NUMERIC_INPUT) {
-            int textFieldX = this.x + 15;
-            int textFieldY = this.y + 60;
-            int textFieldWidth = this.width - 30;
-            int textFieldHeight = 20;
+        // Render EditBox with proper positioning
+        if (vanillaEditBox != null) {
+            // Position the EditBox properly
+            int editBoxY = popupY + padding + titleHeight + 20;
+            vanillaEditBox.setX(popupX + padding);
+            vanillaEditBox.setY(editBoxY);
+            vanillaEditBox.setWidth(this.width - (padding * 2));
             
-            // Use our utility to render the input field
-            UIDirectRenderer.renderInputField(
-                guiGraphics,
-                currentInputValue,
-                textFieldX,
-                textFieldY,
-                textFieldWidth,
-                textFieldHeight,
-                true // Always focused in a popup
+            // Draw white border around EditBox for visibility
+            int editBoxHeight = 20;
+            guiGraphics.fill(
+                popupX + padding - 1, 
+                editBoxY - 1, 
+                popupX + padding + this.width - (padding * 2) + 1, 
+                editBoxY + editBoxHeight + 1, 
+                0xFFFFFFFF
             );
+            
+            // Render the EditBox
+            vanillaEditBox.render(guiGraphics, mouseX, mouseY, 0);
         }
         
-        // Render Back button - fifth layer
-        int buttonY = this.y + this.height - 35;
-        UIDirectRenderer.renderButton(
-            guiGraphics,
-            "Back",
-            this.x + (this.width / 2) - 110,
-            buttonY,
-            100,
-            20,
-            false, // Secondary style
-            mouseX,
-            mouseY
+        // Render buttons
+        int buttonY = popupY + this.height - padding - 20;
+        int buttonSpacing = 10;
+        int buttonWidth = 100;
+        int totalButtonWidth = (buttonWidth * 2) + buttonSpacing;
+        int buttonStartX = popupX + (this.width - totalButtonWidth) / 2;
+        
+        // Cancel button (blue)
+        guiGraphics.fill(
+            buttonStartX, 
+            buttonY, 
+            buttonStartX + buttonWidth, 
+            buttonY + 20, 
+            0xFF5555AA // Blue shade matching your UI
+        );
+        guiGraphics.drawCenteredString(
+            Minecraft.getInstance().font,
+            Component.literal("Cancel"),
+            buttonStartX + buttonWidth / 2,
+            buttonY + 6,
+            0xFFFFFFFF
         );
         
-        // Render OK button - sixth layer
-        UIDirectRenderer.renderButton(
-            guiGraphics,
-            "OK",
-            this.x + (this.width / 2) + 10,
-            buttonY,
-            100,
-            20,
-            true, // Primary style
-            mouseX,
-            mouseY
+        // OK button (green)
+        guiGraphics.fill(
+            buttonStartX + buttonWidth + buttonSpacing, 
+            buttonY, 
+            buttonStartX + buttonWidth * 2 + buttonSpacing, 
+            buttonY + 20, 
+            0xFF55AA55 // Green shade matching your UI
+        );
+        guiGraphics.drawCenteredString(
+            Minecraft.getInstance().font,
+            Component.literal("OK"),
+            buttonStartX + buttonWidth + buttonSpacing + buttonWidth / 2,
+            buttonY + 6,
+            0xFFFFFFFF
         );
         
-        // Pop the pose after we're done rendering everything
+        // Restore the pose
         guiGraphics.pose().popPose();
     }
     
@@ -403,101 +435,121 @@ public class BCPopupScreen extends BCPanel {
     
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0) { // Left click
-            // Check if clicked on input field
-            if (type == PopupType.STRING_INPUT || type == PopupType.NUMERIC_INPUT) {
-                if (mouseX >= this.x + 15 && mouseX < this.x + this.width - 15 &&
-                    mouseY >= this.y + 60 && mouseY < this.y + 80) {
-                    // Input field clicked - already focused in a popup
-                    return true;
-                }
-            }
-            
-            // Check if clicked on Back button using utility
-            if (UIDirectRenderer.handleButtonClick(
-                    mouseX, mouseY,
-                    this.x + (this.width / 2) - 110,
-                    this.y + this.height - 35,
-                    100, 20,
-                    btn -> handleBackButton()
-                )) {
-                return true;
-            }
-            
-            // Check if clicked on OK button using utility
-            if (UIDirectRenderer.handleButtonClick(
-                    mouseX, mouseY,
-                    this.x + (this.width / 2) + 10,
-                    this.y + this.height - 35,
-                    100, 20,
-                    btn -> handleOkButton()
-                )) {
-                return true;
-            }
+        // Only handle left clicks
+        if (button != 0) {
+            return false;
         }
         
-        // If click is inside popup but not on a control, consume the event
-        if (mouseX >= this.x && mouseX < this.x + this.width &&
-            mouseY >= this.y && mouseY < this.y + this.height) {
+        // Calculate positions
+        int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+        int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        int popupX = (screenWidth - this.width) / 2;
+        int popupY = (screenHeight - this.height) / 2;
+        
+        // Button dimensions and positions
+        int padding = 20;
+        int buttonY = popupY + this.height - padding - 20;
+        int buttonSpacing = 10;
+        int buttonWidth = 100;
+        int buttonHeight = 20;
+        int totalButtonWidth = (buttonWidth * 2) + buttonSpacing;
+        int buttonStartX = popupX + (this.width - totalButtonWidth) / 2;
+        
+        // Check EditBox click first
+        if (vanillaEditBox != null && vanillaEditBox.mouseClicked(mouseX, mouseY, button)) {
             return true;
         }
         
-        return false;
-    }
-    
-    /**
-     * Handle key presses
-     */
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        // Check for escape key to cancel
-        if (keyCode == 256) { // ESCAPE
+        // Check Cancel button click
+        if (isPointInRegion(
+                buttonStartX, buttonY, 
+                buttonWidth, buttonHeight, 
+                mouseX, mouseY)) {
             handleBackButton();
             return true;
         }
         
-        // Check for enter key to confirm
-        if (keyCode == 257 || keyCode == 335) { // ENTER or NUMPAD ENTER
+        // Check OK button click
+        if (isPointInRegion(
+                buttonStartX + buttonWidth + buttonSpacing, buttonY, 
+                buttonWidth, buttonHeight, 
+                mouseX, mouseY)) {
             handleOkButton();
             return true;
         }
         
-        // Handle text input for the edit box
-        if (type == PopupType.STRING_INPUT || type == PopupType.NUMERIC_INPUT) {
-            // Only handle letter/number keys and backspace
-            if (keyCode == 259) { // BACKSPACE
-                if (!currentInputValue.isEmpty()) {
-                    currentInputValue = currentInputValue.substring(0, currentInputValue.length() - 1);
-                    return true;
-                }
-            }
+        // If the click is inside the popup, consume the event
+        if (isPointInRegion(
+                popupX, popupY, 
+                this.width, this.height, 
+                mouseX, mouseY)) {
+            return true;
         }
         
-        return false;
+        // Click outside the popup - treat as cancel
+        handleBackButton();
+        return true;
     }
     
     /**
-     * Handle character input
+     * Helper method to check if a point is within a rectangular region
+     */
+    private boolean isPointInRegion(int x, int y, int width, int height, double pointX, double pointY) {
+        return pointX >= x && pointX < x + width && 
+               pointY >= y && pointY < y + height;
+    }
+    
+    /**
+     * Handle key press events for this popup
+     */
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // First check if the EditBox wants to handle the key
+        if (vanillaEditBox != null && vanillaEditBox.isFocused() && 
+            vanillaEditBox.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        
+        // Handle special keys
+        switch (keyCode) {
+            case 256: // ESC
+                handleBackButton();
+                return true;
+            case 257: // ENTER
+            case 335: // NUMPAD ENTER
+                handleOkButton();
+                return true;
+            case 69:  // 'E' key - prevent inventory screen from opening
+                if (isInputPopup()) {
+                    return true;
+                }
+                break;
+        }
+        
+        // Consume all keypresses for input popups
+        return isInputPopup();
+    }
+    
+    /**
+     * Handle character type events for this popup
      */
     @Override
     public boolean charTyped(char c, int modifiers) {
-        // Forward to input field
-        if (type == PopupType.STRING_INPUT || type == PopupType.NUMERIC_INPUT) {
-            // For numeric input, only accept digits
-            if (type == PopupType.NUMERIC_INPUT) {
-                if (Character.isDigit(c)) {
-                    currentInputValue += c;
-                    return true;
-                }
-            } else {
-                // For string input, accept any printable character
-                if (c >= 32 && c <= 126) { // ASCII printable characters
-                    currentInputValue += c;
-                    return true;
-                }
-            }
+        // Let the EditBox handle character input if it's focused
+        if (vanillaEditBox != null && vanillaEditBox.charTyped(c, modifiers)) {
+            return true;
         }
         
-        return false;
+        // Consume all character events in input popups
+        return isInputPopup();
+    }
+    
+    /**
+     * Check if this popup is used for text input
+     * 
+     * @return true if this is a STRING_INPUT or NUMERIC_INPUT popup
+     */
+    public boolean isInputPopup() {
+        return type == PopupType.STRING_INPUT || type == PopupType.NUMERIC_INPUT;
     }
 } 
