@@ -477,4 +477,53 @@ public class BCPanel extends BCComponent {
     public List<UIComponent> getChildren() {
         return children;
     }
+    
+    /**
+     * Create a panel between two points with optional styling
+     * 
+     * @param x1 Starting X coordinate
+     * @param y1 Starting Y coordinate
+     * @param x2 Ending X coordinate
+     * @param y2 Ending Y coordinate
+     * @param backgroundColor Background color for the panel
+     * @param borderColor Border color for the panel
+     * @param cornerRadius Corner radius for rounded corners
+     * @return A new BCPanel instance positioned between the two points
+     */
+    public static BCPanel createBetweenPoints(int x1, int y1, int x2, int y2, 
+                                             int backgroundColor, int borderColor, int cornerRadius) {
+        // Ensure correct coordinate order
+        int left = Math.min(x1, x2);
+        int top = Math.min(y1, y2);
+        int width = Math.abs(x2 - x1);
+        int height = Math.abs(y2 - y1);
+        
+        // Create panel with calculated dimensions
+        BCPanel panel = new BCPanel(width, height);
+        panel.position(left, top);
+        
+        // Apply styling
+        panel.withBackgroundColor(backgroundColor);
+        panel.withBorderColor(borderColor);
+        panel.withCornerRadius(cornerRadius);
+        
+        return panel;
+    }
+    
+    /**
+     * Create a panel between two points with default styling from the current theme
+     * 
+     * @param x1 Starting X coordinate
+     * @param y1 Starting Y coordinate
+     * @param x2 Ending X coordinate
+     * @param y2 Ending Y coordinate
+     * @return A new BCPanel instance positioned between the two points with theme styling
+     */
+    public static BCPanel createBetweenPoints(int x1, int y1, int x2, int y2) {
+        BCTheme theme = BCTheme.get();
+        return createBetweenPoints(x1, y1, x2, y2, 
+                                  theme.getPanelBackground(), 
+                                  theme.getPanelBorder(),
+                                  theme.hasRoundedCorners() ? 3 : 0);
+    }
 } 

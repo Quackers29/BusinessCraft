@@ -107,10 +107,15 @@ public class BCEditBoxComponent extends BCComponent {
         this.editBox.setValue(text);
     }
     
-    @Override
+    /**
+     * Set focus state for this component
+     */
     public void setFocused(boolean focused) {
-        super.setFocused(focused);
         this.editBox.setFocused(focused);
+        // When focusing, move cursor to end of text for easier editing
+        if (focused) {
+            this.editBox.moveCursorToEnd();
+        }
     }
     
     @Override
@@ -130,10 +135,10 @@ public class BCEditBoxComponent extends BCComponent {
     
     @Override
     protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        // Update position
-        this.editBox.setX(x + 2);
-        this.editBox.setY(y + (height - 8) / 2 - 4);
-        this.editBox.setWidth(width - 4);
+        // Update the editBox position to match our position - adjust for better visibility
+        this.editBox.setX(x + 4);
+        this.editBox.setY(y + (height - 10) / 2); // Center vertically
+        this.editBox.setWidth(width - 8);
         
         // Update text from supplier if not focused
         if (!this.editBox.isFocused()) {
@@ -144,22 +149,24 @@ public class BCEditBoxComponent extends BCComponent {
             }
         }
         
-        // Draw custom background
-        int bgColor = applyAlpha(backgroundColor);
+        // Draw a more prominent background
+        int bgColor = backgroundColor;
         guiGraphics.fill(x, y, x + width, y + height, bgColor);
         
-        // Draw custom border
-        int borderColor = this.editBox.isFocused() ? focusedBorderColor : unfocusedBorderColor;
-        borderColor = applyAlpha(borderColor);
+        // Draw a more visible border
+        int borderColor = this.editBox.isFocused() ? 0xFFFFFFFF : 0xFFAAAAAA; // White when focused, light gray otherwise
         
         guiGraphics.hLine(x, x + width - 1, y, borderColor);
         guiGraphics.hLine(x, x + width - 1, y + height - 1, borderColor);
         guiGraphics.vLine(x, y, y + height - 1, borderColor);
         guiGraphics.vLine(x + width - 1, y, y + height - 1, borderColor);
         
+        // Ensure the edit box is visible with proper settings
+        this.editBox.setBordered(false); // We're drawing our own border
+        this.editBox.setEditable(true); // Always editable in a popup
+        this.editBox.setTextColor(0xFFFFFFFF); // White text for better contrast
+        
         // Render the edit box (without its background)
-        this.editBox.setBordered(false);
-        this.editBox.setEditable(enabled);
         this.editBox.render(guiGraphics, mouseX, mouseY, 0);
     }
     

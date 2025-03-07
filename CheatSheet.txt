@@ -45,3 +45,12 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 32. UI, minecraft mouse wheel, implement scrolling using simpler delta sign check instead of math calculations to ensure consistent behavior
 33. UI, debugging mouse wheel events, add System.out.println to track exactly what values are coming into mouseScrolled events for troubleshooting
 34. UI, mouse wheel scrolling, skip isMouseOver checks and directly forward scroll events to ensure they're captured in complex UI hierarchies
+35. UI, utility methods, create dedicated rendering utilities for common UI drawing tasks to maintain consistent visuals and reduce code duplication
+36. UI, popup management, handle popups in main screen render and mouse event methods, rendering them on top of all other content
+37. UI, text input, override keyPressed and charTyped methods in screens to forward events to focused input components
+38. UI, popup positioning, use full screen dimensions (not just UI panel dimensions) for correct screen-center popup placement
+39. UI, absolute positioning, completely override the render method for components requiring exact screen positions rather than relying on parent-relative positioning
+40. UI, layering, use matrix transformations (translate in Z direction) to ensure popups render on top of other UI elements
+41. UI, control visibility, add specific System.out.println logging when controls aren't rendering to track their positions and states
+42. UI, complex components, use direct rendering with immediate-mode approach rather than composing from other components when facing render order issues
+43. UI, rendering utilities, create reusable static methods in utility classes for direct rendering to ensure consistent styling across all UI components

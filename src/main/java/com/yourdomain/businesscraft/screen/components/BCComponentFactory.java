@@ -215,4 +215,107 @@ public class BCComponentFactory {
     public static SlotComponent createSlot() {
         return new SlotComponent();
     }
+    
+    /**
+     * Create a container panel between two points with theme styling
+     * 
+     * @param x1 Starting X coordinate
+     * @param y1 Starting Y coordinate 
+     * @param x2 Ending X coordinate
+     * @param y2 Ending Y coordinate
+     * @return A new BCPanel with theme styling
+     */
+    public static BCPanel createContainer(int x1, int y1, int x2, int y2) {
+        return BCPanel.createBetweenPoints(x1, y1, x2, y2);
+    }
+    
+    /**
+     * Create a container panel between two points with custom styling
+     * 
+     * @param x1 Starting X coordinate
+     * @param y1 Starting Y coordinate
+     * @param x2 Ending X coordinate
+     * @param y2 Ending Y coordinate
+     * @param backgroundColor Background color for the container
+     * @param borderColor Border color for the container
+     * @param cornerRadius Corner radius for rounded corners
+     * @return A new BCPanel with custom styling
+     */
+    public static BCPanel createContainer(int x1, int y1, int x2, int y2, 
+                                         int backgroundColor, int borderColor, int cornerRadius) {
+        return BCPanel.createBetweenPoints(x1, y1, x2, y2, backgroundColor, borderColor, cornerRadius);
+    }
+    
+    /**
+     * Create a section panel with a title between two points
+     * 
+     * @param title The title for the section
+     * @param x1 Starting X coordinate
+     * @param y1 Starting Y coordinate
+     * @param x2 Ending X coordinate
+     * @param y2 Ending Y coordinate
+     * @return A BCPanel with a title at the top
+     */
+    public static BCPanel createSection(String title, int x1, int y1, int x2, int y2) {
+        // Create the main panel
+        BCPanel panel = createContainer(x1, y1, x2, y2);
+        
+        // Calculate content dimensions
+        int contentPadding = 5;
+        int titleHeight = 20;
+        
+        // Add the title label
+        BCLabel titleLabel = createHeaderLabel(title, panel.getWidth() - (contentPadding * 2));
+        titleLabel.position(panel.getX() + contentPadding, panel.getY() + contentPadding);
+        panel.addChild(titleLabel);
+        
+        // Add a content panel
+        BCPanel contentPanel = new BCPanel(panel.getWidth() - (contentPadding * 2), 
+                                          panel.getHeight() - titleHeight - (contentPadding * 2));
+        contentPanel.position(panel.getX() + contentPadding, panel.getY() + titleHeight + contentPadding);
+        panel.addChild(contentPanel);
+        
+        return panel;
+    }
+    
+    /**
+     * Create a popup for string input
+     * 
+     * @param title The title of the popup
+     * @param initialValue The initial value for the input field
+     * @param resultCallback Callback that receives the result when the popup is closed
+     * @return A new BCPopupScreen configured for string input
+     */
+    public static BCPopupScreen createStringInputPopup(String title, String initialValue, Consumer<BCPopupScreen.PopupResult> resultCallback) {
+        BCPopupScreen popup = BCPopupScreen.createStringInputPopup(title, resultCallback);
+        if (initialValue != null) {
+            popup.setInitialValue(initialValue);
+        }
+        return popup;
+    }
+    
+    /**
+     * Create a popup for numeric input
+     * 
+     * @param title The title of the popup
+     * @param initialValue The initial numeric value for the input field
+     * @param resultCallback Callback that receives the result when the popup is closed
+     * @return A new BCPopupScreen configured for numeric input
+     */
+    public static BCPopupScreen createNumericInputPopup(String title, int initialValue, Consumer<BCPopupScreen.PopupResult> resultCallback) {
+        BCPopupScreen popup = BCPopupScreen.createNumericInputPopup(title, resultCallback);
+        popup.setInitialValue(String.valueOf(initialValue));
+        return popup;
+    }
+    
+    /**
+     * Create a confirmation popup
+     * 
+     * @param title The title of the popup
+     * @param resultCallback Callback that receives the result when the popup is closed
+     * @return A new BCPopupScreen configured for confirmation
+     */
+    public static BCPopupScreen createConfirmationPopup(String title, Consumer<BCPopupScreen.PopupResult> resultCallback) {
+        return BCPopupScreen.createConfirmationPopup(title, resultCallback);
+    }
 } 
