@@ -297,13 +297,26 @@ public abstract class BCComponent implements UIComponent {
     }
     
     /**
-     * Trigger an event with this component as the parameter
+     * Trigger a custom event for this component
      */
     protected void triggerEvent(String event) {
+        // Only process events if this component is enabled
+        if (!enabled) {
+            return;
+        }
+        
         List<Consumer<BCComponent>> handlers = eventHandlers.get(event);
         if (handlers != null) {
-            for (Consumer<BCComponent> handler : handlers) {
-                handler.accept(this);
+            // Make a copy of the list to avoid concurrent modification issues
+            List<Consumer<BCComponent>> handlersCopy = new ArrayList<>(handlers);
+            
+            for (Consumer<BCComponent> handler : handlersCopy) {
+                try {
+                    handler.accept(this);
+                } catch (Exception e) {
+                    // Log the error but don't break the event chain
+                    System.err.println("Error in event handler for event " + event + ": " + e.getMessage());
+                }
             }
         }
     }
@@ -434,4 +447,117 @@ public abstract class BCComponent implements UIComponent {
     public int getY() {
         return y;
     }
+    
+    /**
+     * Position the component at the specified coordinates and update any children
+     */
+    public BCComponent positionWithChildren(int x, int y) {
+        int deltaX = x - this.x;
+        int deltaY = y - this.y;
+        
+        // Update this component's position
+        this.x = x;
+        this.y = y;
+        
+        // Update all child components if this is a container
+        if (this instanceof BCPanel) {
+            BCPanel panel = (BCPanel) this;
+            for (UIComponent child : panel.getChildren()) {
+                if (child instanceof BCComponent) {
+                    BCComponent component = (BCComponent) child;
+                    component.position(component.getX() + deltaX, component.getY() + deltaY);
+                }
+            }
+        }
+        
+        return this;
+    }
+    
+    /**
+     * Set the component's size and update internal state
+     */
+    public BCComponent sizeWithUpdates(int width, int height) {
+        this.width = width;
+        this.height = height;
+        
+        // Trigger resize event
+        triggerEvent("resize");
+        
+        return this;
+    }
+    
+    /**
+     * Center this component within the specified width and height
+     */
+    public BCComponent centerIn(int containerWidth, int containerHeight) {
+        int x = (containerWidth - this.width) / 2;
+        int y = (containerHeight - this.height) / 2;
+        return this.position(x, y);
+    }
+    
+    /**
+     * Show this component with optional animation
+     */
+    public BCComponent show(boolean animate) {
+        if (animate) {
+            this.alpha = 0.0f;
+            this.animate("alpha", 1.0f, 250);
+        } else {
+            this.alpha = 1.0f;
+        }
+        this.visible = true;
+        
+        // Trigger visibility change event
+        triggerEvent("show");
+        
+        return this;
+    }
+    
+    /**
+     * Hide this component with optional animation
+     */
+    public BCComponent hide(boolean animate) {
+        if (animate) {
+            this.animate("alpha", 0.0f, 250, () -> {
+                this.visible = false;
+                triggerEvent("hide");
+            });
+        } else {
+            this.alpha = 0.0f;
+            this.visible = false;
+            triggerEvent("hide");
+        }
+        
+        return this;
+    }
+    
+    /**
+     * Set up animation with completion callback
+     */
+    public void animate(String property, float endValue, long durationMs, Runnable onComplete) {
+        animationProperty = property;
+        animationStartTime = System.currentTimeMillis();
+        animationDuration = durationMs;
+        
+        // Set the start value based on current property
+        switch (property) {
+            case "alpha":
+                animationStartValue = alpha;
+                break;
+            // Add other animatable properties as needed
+            default:
+                animationStartValue = 0;
+                break;
+        }
+        
+        animationEndValue = endValue;
+        
+        // Store the completion callback
+        if (onComplete != null) {
+            animationCompletionCallback = onComplete;
+        }
+    }
+    
+    // Field to store animation completion callback
+    private Runnable animationCompletionCallback = null;
 } 

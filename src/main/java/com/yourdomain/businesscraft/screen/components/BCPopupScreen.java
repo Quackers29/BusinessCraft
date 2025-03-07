@@ -294,7 +294,20 @@ public class BCPopupScreen extends BCPanel {
     
     @Override
     public void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
-        // Draw background at our stored position - this is the first layer
+        // Draw semi-transparent overlay for the entire screen
+        int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
+        int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        
+        // First, push the matrix to ensure proper Z-ordering
+        guiGraphics.pose().pushPose();
+        
+        // Move forward in Z-buffer to ensure it renders on top
+        guiGraphics.pose().translate(0, 0, 1000);
+        
+        // Fill the entire screen with a dark overlay
+        guiGraphics.fill(0, 0, screenWidth, screenHeight, 0xD0000000);
+        
+        // Draw background at our stored position - fully opaque
         renderBackground(guiGraphics);
         
         // Render title - second layer
@@ -326,7 +339,7 @@ public class BCPopupScreen extends BCPanel {
             int textFieldWidth = this.width - 30;
             int textFieldHeight = 20;
             
-            // Use our new utility to render the input field
+            // Use our utility to render the input field
             UIDirectRenderer.renderInputField(
                 guiGraphics,
                 currentInputValue,
@@ -364,6 +377,9 @@ public class BCPopupScreen extends BCPanel {
             mouseX,
             mouseY
         );
+        
+        // Pop the pose after we're done rendering everything
+        guiGraphics.pose().popPose();
     }
     
     /**
@@ -371,13 +387,18 @@ public class BCPopupScreen extends BCPanel {
      */
     @Override
     protected void renderBackground(GuiGraphics guiGraphics) {
-        // Use our new utility for panel background rendering
-        UIDirectRenderer.renderPanelBackground(
-            guiGraphics,
-            x, y, width, height,
-            true, // With header
-            true  // Is dialog
-        );
+        // Main background fill - fully opaque
+        guiGraphics.fill(x, y, x + width, y + height, 0xFF222222);
+        
+        // Original border style - fully opaque
+        int borderColor = 0xFFAAAAAA;
+        guiGraphics.hLine(x, x + width - 1, y, borderColor);
+        guiGraphics.hLine(x, x + width - 1, y + height - 1, borderColor);
+        guiGraphics.vLine(x, y, y + height - 1, borderColor);
+        guiGraphics.vLine(x + width - 1, y, y + height - 1, borderColor);
+        
+        // Header gradient in original blue colors - fully opaque
+        guiGraphics.fillGradient(x + 1, y + 1, x + width - 1, y + 30, 0xFF335599, 0xFF223366);
     }
     
     @Override

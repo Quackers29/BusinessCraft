@@ -18,7 +18,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     // Town properties for UI display
     private String townName = "New Town";
     private String mayorName = "Mayor";
-    private int townLevel = 1;
+    private int townLevel = 99;
     private int townPopulation = 0;
     private int townReputation = 50;
     
