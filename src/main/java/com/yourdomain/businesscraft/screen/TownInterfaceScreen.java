@@ -43,6 +43,9 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     private boolean pvpEnabled = false;
     private boolean publicTownEnabled = true;
 
+    // Add a field for the active popup
+    private BCPopupScreen activePopup = null;
+
     public TownInterfaceScreen(TownInterfaceMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         
@@ -782,12 +785,31 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         
         // Render the screen title
         graphics.drawCenteredString(this.font, this.title, this.leftPos + this.imageWidth / 2, this.topPos - 12, TEXT_COLOR);
-        
-        // Draw any tooltips last (so they appear on top)
+
+        // Draw any tooltips
         graphics.pose().pushPose();
         graphics.pose().translate(0, 0, 100);  // Move tooltips to front layer
         this.renderTooltip(graphics, mouseX, mouseY);
         graphics.pose().popPose();
+        
+        // If we have an active popup, render it on top of everything with matrix transformation for Z-ordering
+        if (activePopup != null && activePopup.isVisible()) {
+            // Save the current render state
+            graphics.pose().pushPose();
+            
+            // Move forward in Z-buffer to ensure it renders on top of everything else
+            graphics.pose().translate(0, 0, 1000);
+            
+            // Draw a darker semi-transparent overlay for the entire screen first
+            graphics.fill(0, 0, this.width, this.height, 0xD0000000); // 80% opacity black
+            
+            // Now render the actual popup content
+            // We pass null for font because the popup will use Minecraft.getInstance().font directly
+            activePopup.render(graphics, 0, 0, mouseX, mouseY);
+            
+            // Restore the render state
+            graphics.pose().popPose();
+        }
     }
     
     /**
@@ -818,7 +840,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             case "overview":
                 bottomButtonsGrid
                     .addButton(0, 0, "Edit Details", v -> {
-                        sendChatMessage("Button pressed: Edit Details");
+                        showChangeTownNamePopup();
                     }, PRIMARY_COLOR)
                     .addButton(0, 1, "Visit Center", v -> {
                         sendChatMessage("Button pressed: Visit Center");
@@ -859,6 +881,13 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // If popup is active, let it handle clicks first
+        if (activePopup != null && activePopup.isVisible()) {
+            if (activePopup.mouseClicked(mouseX, mouseY, button)) {
+                return true;
+            }
+        }
+        
         // Let the tab panel handle clicks first
         if (this.tabPanel.mouseClicked(mouseX, mouseY, button)) {
             return true;
@@ -866,7 +895,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         
         // Check if bottom buttons grid handled the click
         if (button == 0 && bottomButtonsGrid.mouseClicked((int)mouseX, (int)mouseY)) {
-            // Play button sound
+            // Play button click sound
             playButtonClickSound();
             return true;
         }
@@ -976,5 +1005,72 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         if (player != null) {
             player.displayClientMessage(Component.literal(message), false);
         }
+    }
+
+    /**
+     * Show the change town name popup
+     */
+    private void showChangeTownNamePopup() {
+        // Create a popup for changing the town name
+        activePopup = BCComponentFactory.createStringInputPopup(
+            "Change Town Name", 
+            getTownName(), // Initial value
+            result -> {
+                // Handle the result
+                if (result.isConfirmed() && !result.getStringValue().isEmpty()) {
+                    // Send chat message with the new town name
+                    sendChatMessage("Town name changed to: " + result.getStringValue());
+                }
+            }
+        );
+        
+        // Get screen dimensions
+        Minecraft minecraft = Minecraft.getInstance();
+        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
+        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
+        
+        // Calculate exact center position
+        int popupWidth = 300; // Same as in createStringInputPopup
+        int popupHeight = 150; // Same as in createStringInputPopup
+        int centerX = screenWidth / 2 - popupWidth / 2;
+        int centerY = screenHeight / 2 - popupHeight / 2;
+        
+        // Directly position the popup at the center of the screen
+        activePopup.position(centerX, centerY);
+        
+        // Set close handler
+        activePopup.setClosePopupHandler(button -> {
+            activePopup = null; // Clear the popup when closed
+        });
+        
+        // Initialize the popup
+        activePopup.init(this::addRenderableWidget);
+        
+        // Focus the input field
+        activePopup.focusInput();
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // If popup is active, let it handle keyboard input first
+        if (activePopup != null && activePopup.isVisible()) {
+            if (activePopup.keyPressed(keyCode, scanCode, modifiers)) {
+                return true;
+            }
+        }
+        
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean charTyped(char c, int modifiers) {
+        // If popup is active, let it handle character input first
+        if (activePopup != null && activePopup.isVisible()) {
+            if (activePopup.charTyped(c, modifiers)) {
+                return true;
+            }
+        }
+        
+        return super.charTyped(c, modifiers);
     }
 } 

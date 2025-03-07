@@ -203,37 +203,35 @@ public abstract class BCComponent implements UIComponent {
     }
     
     /**
-     * Draw the component's background with optional rounded corners
+     * Render the component's background (if backgroundColor is set)
+     * and border (if borderColor is set)
      */
     protected void renderBackground(GuiGraphics guiGraphics) {
-        if (backgroundColor != -1) {
-            // Apply alpha to background color
+        if (backgroundColor != 0x00000000) {
             int bgColor = applyAlpha(backgroundColor);
             
             if (cornerRadius > 0) {
-                // Draw rounded rectangle (simplified)
-                // Main rectangle
-                guiGraphics.fill(x + cornerRadius, y, x + width - cornerRadius, y + height, bgColor);
-                // Left and right sides
-                guiGraphics.fill(x, y + cornerRadius, x + cornerRadius, y + height - cornerRadius, bgColor);
-                guiGraphics.fill(x + width - cornerRadius, y + cornerRadius, x + width, y + height - cornerRadius, bgColor);
-                
-                // TODO: Add proper corner rounding with circles when Minecraft rendering allows
+                // Use the utility method to draw a rounded background with border
+                BCRenderUtils.drawRoundedBox(guiGraphics, x, y, x + width, y + height, 
+                                            cornerRadius, bgColor, borderColor);
             } else {
-                // Draw regular rectangle
-                guiGraphics.fill(x, y, x + width, y + height, bgColor);
+                // Use the utility method to draw a regular box with border
+                BCRenderUtils.drawBox(guiGraphics, x, y, x + width, y + height, 
+                                     bgColor, borderColor);
             }
-        }
-        
-        if (borderColor != -1) {
-            // Apply alpha to border color
-            int bdColor = applyAlpha(borderColor);
-            
-            // Draw the border (just a rectangle outline)
-            guiGraphics.hLine(x, x + width - 1, y, bdColor);
-            guiGraphics.hLine(x, x + width - 1, y + height - 1, bdColor);
-            guiGraphics.vLine(x, y, y + height - 1, bdColor);
-            guiGraphics.vLine(x + width - 1, y, y + height - 1, bdColor);
+        } else if (borderColor != -1) {
+            // If there's no background but there is a border, just draw the border
+            if (cornerRadius > 0) {
+                // Draw a rounded outline
+                BCRenderUtils.drawRoundedBox(guiGraphics, x, y, x + width, y + height, 
+                                            cornerRadius, 0x00000000, borderColor);
+            } else {
+                // Just draw a regular border
+                guiGraphics.hLine(x, x + width - 1, y, borderColor);
+                guiGraphics.hLine(x, x + width - 1, y + height - 1, borderColor);
+                guiGraphics.vLine(x, y, y + height - 1, borderColor);
+                guiGraphics.vLine(x + width - 1, y, y + height - 1, borderColor);
+            }
         }
     }
     
