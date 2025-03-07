@@ -89,3 +89,7 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 76. UI, item quantity display, use Unicode symbols (×) instead of plain 'x' for better aesthetics and align quantities based on visual spacing
 77. UI, text rendering, prefer ASCII characters over Unicode when text rendering issues occur with special characters
 78. UI, mouse input, implement middle mouse button scrolling consistently across all scrollable components for a unified user experience
+79. UI, scrollbar implementation, use identical scrollbar code and styling across different tabs/screens to maintain interface consistency
+80. UI, event forwarding, ensure mouse and keyboard events are properly forwarded to all active components in tabbed interfaces, not just specific tabs
+81. UI, debug logging, add detailed debug logs for input events to track event propagation and handling through the UI hierarchy
+82. UI, code cleanup, remove temporary debug logging after confirming fixes to keep the codebase clean and maintainable

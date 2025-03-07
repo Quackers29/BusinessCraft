@@ -348,6 +348,11 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             // For middle mouse scrolling
             private boolean isMiddleMouseScrolling = false;
             private double lastMouseY = 0;
+            // For scrollbar dragging
+            private boolean isDraggingScrollbar = false;
+            // Padding values to match Population tab
+            private final int padding = 8;
+            private final int verticalPadding = 5;
             
             // Initialize resource data
             {
@@ -448,27 +453,32 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
                     int maxScrollOffset = Math.max(0, resourceCount - maxVisible);
                     
                     // Draw scrollbar track
-                    int trackHeight = this.height - 10;
+                    int trackHeight = this.height - (verticalPadding * 2);
                     guiGraphics.fill(
-                        this.x + this.width - scrollbarWidth - 5,
-                        this.y + 5,
-                        this.x + this.width - 5,
-                        this.y + this.height - 5,
+                        this.x + this.width - scrollbarWidth - padding,
+                        this.y + verticalPadding,
+                        this.x + this.width - padding,
+                        this.y + this.height - verticalPadding,
                         0x40FFFFFF // Light gray semi-transparent
                     );
                     
                     // Calculate thumb size and position
-                    float thumbPercentSize = (float)maxVisible / resourceCount;
-                    int thumbHeight = Math.max(20, (int)(trackHeight * thumbPercentSize));
-                    int thumbY = this.y + 5 + (int)((trackHeight - thumbHeight) * ((float)scrollOffset / maxScrollOffset));
+                    float thumbRatio = (float)maxVisible / resourceCount;
+                    int thumbHeight = Math.max(20, (int)(trackHeight * thumbRatio));
+                    int thumbY = this.y + verticalPadding + (int)((trackHeight - thumbHeight) * ((float)scrollOffset / maxScrollOffset));
                     
-                    // Draw scrollbar thumb
+                    // Highlight if mouse is over
+                    boolean isOverScrollbar = mouseX >= this.x + this.width - scrollbarWidth - padding &&
+                                            mouseX <= this.x + this.width - padding &&
+                                            mouseY >= this.y + verticalPadding &&
+                                            mouseY <= this.y + this.height - verticalPadding;
+                    
                     guiGraphics.fill(
-                        this.x + this.width - scrollbarWidth - 5,
+                        this.x + this.width - scrollbarWidth - padding,
                         thumbY,
-                        this.x + this.width - 5,
+                        this.x + this.width - padding,
                         thumbY + thumbHeight,
-                        0xC0FFFFFF // White semi-transparent
+                        isOverScrollbar ? 0xFFCCDDFF : 0xA0CCDDFF // Light blue with variable opacity
                     );
                 }
             }
@@ -480,27 +490,47 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
                     grid = createGrid();
                 }
                 
-                // Middle mouse button for scrolling
-                if (button == 2 && isMouseOver((int)mouseX, (int)mouseY)) { // Middle mouse button
-                    isMiddleMouseScrolling = true;
-                    lastMouseY = mouseY;
-                    return true;
-                }
-                
-                // Check if we're clicking on the scrollbar
-                if (resourceCount > maxVisible && mouseX >= this.x + this.width - scrollbarWidth - 5 && mouseX <= this.x + this.width - 5 &&
-                    mouseY >= this.y + 5 && mouseY <= this.y + this.height - 5) {
-                    // Clicked on scrollbar track - move to that position
-                    int trackHeight = this.height - 10;
-                    int maxScrollOffset = Math.max(0, resourceCount - maxVisible);
-                    float clickPercentage = (float)(mouseY - (this.y + 5)) / trackHeight;
-                    scrollOffset = Math.min(maxScrollOffset, Math.max(0, (int)(clickPercentage * resourceCount)));
-                    return true;
-                }
-                
-                // Let the grid handle clicks
-                if (grid.mouseClicked((int)mouseX, (int)mouseY)) {
-                    return true;
+                // Check if we're clicking within this component
+                if (isMouseOver((int)mouseX, (int)mouseY)) {
+                    // Middle mouse button for scrolling
+                    if (button == 2) { // Middle mouse button
+                        isMiddleMouseScrolling = true;
+                        lastMouseY = mouseY;
+                        return true;
+                    }
+                    
+                    // Left mouse button for scrollbar or clicking items
+                    if (button == 0) {
+                        // Check if clicking on scrollbar
+                        if (resourceCount > maxVisible && 
+                            mouseX >= this.x + this.width - scrollbarWidth - padding &&
+                            mouseX <= this.x + this.width - padding &&
+                            mouseY >= this.y + verticalPadding &&
+                            mouseY <= this.y + this.height - verticalPadding) {
+                            
+                            isDraggingScrollbar = true;
+                            
+                            // Calculate new scroll position
+                            int trackHeight = this.height - (verticalPadding * 2);
+                            float relativeY = (float)(mouseY - (this.y + verticalPadding)) / trackHeight;
+                            int maxScrollOffset = Math.max(0, resourceCount - maxVisible);
+                            scrollOffset = (int)(relativeY * maxScrollOffset);
+                            
+                            // Clamp scroll offset
+                            if (scrollOffset < 0) {
+                                scrollOffset = 0;
+                            } else if (scrollOffset > maxScrollOffset) {
+                                scrollOffset = maxScrollOffset;
+                            }
+                            
+                            return true;
+                        }
+                        
+                        // Let the grid handle clicks for items
+                        if (grid.mouseClicked((int)mouseX, (int)mouseY)) {
+                            return true;
+                        }
+                    }
                 }
                 
                 return false;
@@ -508,6 +538,24 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             
             @Override
             public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+                // Left mouse button dragging (scrollbar)
+                if (isDraggingScrollbar && button == 0) {
+                    // Calculate max visible items based on available height
+                    int trackHeight = this.height - (verticalPadding * 2);
+                    float relativeY = (float)(mouseY - (this.y + verticalPadding)) / trackHeight;
+                    int maxScrollOffset = Math.max(0, resourceCount - maxVisible);
+                    scrollOffset = (int)(relativeY * maxScrollOffset);
+                    
+                    // Clamp scroll offset
+                    if (scrollOffset < 0) {
+                        scrollOffset = 0;
+                    } else if (scrollOffset > maxScrollOffset) {
+                        scrollOffset = maxScrollOffset;
+                    }
+                    
+                    return true;
+                }
+                
                 // Middle mouse button dragging (direct scrolling)
                 if (isMiddleMouseScrolling && button == 2) {
                     // Calculate scroll amount based on mouse movement
@@ -537,10 +585,16 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             
             @Override
             public boolean mouseReleased(double mouseX, double mouseY, int button) {
+                if (isDraggingScrollbar && button == 0) {
+                    isDraggingScrollbar = false;
+                    return true;
+                }
+                
                 if (isMiddleMouseScrolling && button == 2) {
                     isMiddleMouseScrolling = false;
                     return true;
                 }
+                
                 return false;
             }
             
@@ -1194,10 +1248,11 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             }
         }
         
-        // Check if population tab is active and forward directly to citizenList
+        // Get active tab and forward scroll events
         String activeTabId = this.tabPanel.getActiveTabId();
-        if ("population".equals(activeTabId)) {
-            BCPanel panel = this.tabPanel.getTabPanel("population");
+        
+        if ("economy".equals(activeTabId) || "population".equals(activeTabId)) {
+            BCPanel panel = this.tabPanel.getTabPanel(activeTabId);
             if (panel != null) {
                 for (UIComponent child : panel.getChildren()) {
                     if (child instanceof BCComponent) {
