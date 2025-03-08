@@ -2,6 +2,7 @@ package com.yourdomain.businesscraft.screen;
 
 import com.yourdomain.businesscraft.menu.TradeMenu;
 import com.yourdomain.businesscraft.screen.util.InventoryRenderer;
+import com.yourdomain.businesscraft.screen.util.ScreenNavigationHelper;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
@@ -226,27 +227,15 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
         
-        return mouseX >= x + BACK_BUTTON_X && mouseX < x + BACK_BUTTON_X + BACK_BUTTON_WIDTH &&
-               mouseY >= y + BACK_BUTTON_Y && mouseY < y + BACK_BUTTON_Y + BACK_BUTTON_HEIGHT;
+        return InventoryRenderer.isMouseOverElement(mouseX, mouseY, x, y, 
+                BACK_BUTTON_X, BACK_BUTTON_Y, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT);
     }
     
     private void returnToMainUI() {
         // Close the current screen
         this.onClose();
         
-        // Open the town interface screen
-        net.minecraft.world.level.block.entity.BlockEntity blockEntity = this.minecraft.level.getBlockEntity(this.minecraft.player.blockPosition());
-        
-        // Create the menu with just the player's current position
-        net.minecraft.world.inventory.AbstractContainerMenu containerMenu = 
-            new com.yourdomain.businesscraft.menu.TownInterfaceMenu(
-                0, this.minecraft.player.getInventory(), 
-                this.minecraft.player.blockPosition());
-        
-        this.minecraft.setScreen(
-            new TownInterfaceScreen(
-                (com.yourdomain.businesscraft.menu.TownInterfaceMenu) containerMenu,
-                this.minecraft.player.getInventory(),
-                Component.literal("Town Interface")));
+        // Use the utility method to return to the main interface
+        ScreenNavigationHelper.returnToTownInterface(this.minecraft, this.minecraft.player);
     }
 }
