@@ -104,3 +104,6 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 91. UI, rendering fallbacks, use fill() and drawString() methods for temporary UI when texture resources aren't available yet
 92. UI, text visibility, improve text readability with text shadows, contrasting backgrounds, and button borders for better visual hierarchy
 93. UI, inventory rendering, draw borders around slot groups and individual slots for better UI organization and to match vanilla inventory style
+94. UI, component reusability, extract common rendering patterns into utility classes with static methods to reduce code duplication across screens
+95. UI, modal screens, use the same pattern for creating and opening modal screens to ensure consistent user experience and inventory functionality
+96. UI, screen registration, register MenuScreens for each menu type in only one place to avoid "Duplicate registration" errors that crash the game

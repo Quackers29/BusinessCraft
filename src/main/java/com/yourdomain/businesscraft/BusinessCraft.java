@@ -5,10 +5,13 @@ import com.yourdomain.businesscraft.block.TownInterfaceBlock;
 import com.yourdomain.businesscraft.block.entity.ModBlockEntities;
 import com.yourdomain.businesscraft.command.ClearTownsCommand;
 import com.yourdomain.businesscraft.config.ConfigLoader;
-import com.yourdomain.businesscraft.menu.ModMenuTypes;
+import com.yourdomain.businesscraft.init.ModMenuTypes;
 import com.yourdomain.businesscraft.menu.TradeMenu;
+import com.yourdomain.businesscraft.menu.StorageMenu;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.screen.TradeScreen;
+import com.yourdomain.businesscraft.screen.StorageScreen;
+import com.yourdomain.businesscraft.screen.TownInterfaceScreen;
 import com.yourdomain.businesscraft.town.TownManager;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.world.item.BlockItem;
@@ -75,6 +78,7 @@ public class BusinessCraft {
         
         // Register menu types
         TradeMenu.MENUS.register(modEventBus);
+        StorageMenu.MENUS.register(modEventBus);
         
         // Register our mod's event handlers
         modEventBus.addListener(this::commonSetup);
@@ -87,7 +91,7 @@ public class BusinessCraft {
         ModBlockEntities.BLOCK_ENTITIES.register(modEventBus);
         
         // Register our menus
-        ModMenuTypes.MENUS.register(modEventBus);
+        ModMenuTypes.MENU_TYPES.register(modEventBus);
         
         // Register ourselves for server and other game events
         MinecraftForge.EVENT_BUS.register(this);
@@ -110,10 +114,10 @@ public class BusinessCraft {
     private void clientSetup(final FMLClientSetupEvent event) {
         LOGGER.info("BusinessCraft client setup starting");
         
-        // Register our menu screens
-        event.enqueueWork(() -> {
-            MenuScreens.register(TradeMenu.TRADE_MENU.get(), TradeScreen::new);
-        });
+        // Register screen factories
+        MenuScreens.register(ModMenuTypes.TOWN_INTERFACE.get(), TownInterfaceScreen::new);
+        MenuScreens.register(TradeMenu.TRADE_MENU.get(), TradeScreen::new);
+        MenuScreens.register(StorageMenu.STORAGE_MENU.get(), StorageScreen::new);
         
         LOGGER.info("BusinessCraft client setup complete");
     }

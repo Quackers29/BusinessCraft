@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.screen;
 
-import com.yourdomain.businesscraft.menu.TradeMenu;
+import com.yourdomain.businesscraft.menu.StorageMenu;
 import com.yourdomain.businesscraft.screen.util.InventoryRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -10,16 +10,10 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 
-public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
-    // The location of the trade GUI texture
+public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
+    // The location of the storage GUI texture
     private static final ResourceLocation TEXTURE = 
-            new ResourceLocation("businesscraft", "textures/gui/trade_screen.png");
-    
-    // Trade button coordinates
-    private static final int TRADE_BUTTON_X = 80;
-    private static final int TRADE_BUTTON_Y = 35;
-    private static final int TRADE_BUTTON_WIDTH = 20;
-    private static final int TRADE_BUTTON_HEIGHT = 20;
+            new ResourceLocation("businesscraft", "textures/gui/storage_screen.png");
     
     // Back button coordinates
     private static final int BACK_BUTTON_X = 8;
@@ -33,11 +27,17 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
     private static final int HOTBAR_START_Y = 142;
     private static final int INVENTORY_SPACING = 4; // Spacing between inventory sections
     
+    // Storage grid positions
+    private static final int STORAGE_START_X = 8;
+    private static final int STORAGE_START_Y = 28;
+    private static final int STORAGE_ROWS = 2;
+    private static final int STORAGE_COLS = 9;
+    
     // Track if we're currently dragging items
     private boolean isDragging = false;
     private Slot currentDragSlot = null;
     
-    public TradeScreen(TradeMenu menu, Inventory inventory, Component title) {
+    public StorageScreen(StorageMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         
         // Set the size of the screen
@@ -62,11 +62,6 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
         // Render tooltips for slots
         this.renderTooltip(guiGraphics, mouseX, mouseY);
         
-        // Render tooltip for trade button if mouse is over it
-        if (isMouseOverTradeButton(mouseX, mouseY)) {
-            guiGraphics.renderTooltip(this.font, Component.literal("Process the trade"), mouseX, mouseY);
-        }
-        
         // Render tooltip for back button if mouse is over it
         if (isMouseOverBackButton(mouseX, mouseY)) {
             guiGraphics.renderTooltip(this.font, Component.literal("Return to Town Interface"), mouseX, mouseY);
@@ -85,24 +80,44 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
         guiGraphics.fill(x + 2, y + 2, x + this.imageWidth - 2, y + this.imageHeight - 2, InventoryRenderer.BACKGROUND_COLOR);
         
         // Draw screen title with improved visibility
-        InventoryRenderer.drawLabel(guiGraphics, this.font, "Trade Resources", 
+        InventoryRenderer.drawLabel(guiGraphics, this.font, "Town Storage", 
                 x + this.titleLabelX, y + this.titleLabelY);
         
         // Draw inventory label with improved visibility
         InventoryRenderer.drawLabel(guiGraphics, this.font, "Inventory", 
                 x + this.inventoryLabelX, y + this.inventoryLabelY);
+                
+        // Draw storage grid section
+        // Background and border for storage grid
+        guiGraphics.fill(x + STORAGE_START_X - 2, y + STORAGE_START_Y - 2, 
+                x + STORAGE_START_X + (STORAGE_COLS * InventoryRenderer.SLOT_SIZE) + 2, 
+                y + STORAGE_START_Y + (STORAGE_ROWS * InventoryRenderer.SLOT_SIZE) + 2, 
+                0x70000000); // Darker background behind slots
+        
+        InventoryRenderer.drawBorder(guiGraphics, 
+                x + STORAGE_START_X - 2, y + STORAGE_START_Y - 2, 
+                STORAGE_COLS * InventoryRenderer.SLOT_SIZE + 4, 
+                STORAGE_ROWS * InventoryRenderer.SLOT_SIZE + 4, 
+                InventoryRenderer.INVENTORY_BORDER_COLOR, 2);
+        
+        // Draw storage slot grid
+        for (int row = 0; row < STORAGE_ROWS; row++) {
+            for (int col = 0; col < STORAGE_COLS; col++) {
+                int slotX = x + STORAGE_START_X + (col * InventoryRenderer.SLOT_SIZE);
+                int slotY = y + STORAGE_START_Y + (row * InventoryRenderer.SLOT_SIZE);
+                
+                // Draw slot background
+                guiGraphics.fill(slotX, slotY, slotX + 16, slotY + 16, InventoryRenderer.SLOT_BG_COLOR);
+                
+                // Draw slot border
+                InventoryRenderer.drawSlotBorder(guiGraphics, slotX - 1, slotY - 1, 18, 18, InventoryRenderer.SLOT_BORDER_COLOR);
+            }
+        }
         
         // Draw player inventory using the utility class
         InventoryRenderer.drawInventoryWithHotbar(guiGraphics, 
                 x + INV_START_X, y + INV_START_Y, 
                 9, 3, 1, INVENTORY_SPACING);
-        
-        // Draw the trade button
-        boolean isTradeButtonHovered = isMouseOverTradeButton(mouseX, mouseY);
-        InventoryRenderer.drawButton(guiGraphics, 
-                x + TRADE_BUTTON_X, y + TRADE_BUTTON_Y, 
-                TRADE_BUTTON_WIDTH, TRADE_BUTTON_HEIGHT, 
-                "T", this.font, isTradeButtonHovered);
         
         // Draw the back button
         boolean isBackButtonHovered = isMouseOverBackButton(mouseX, mouseY);
@@ -110,49 +125,10 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
                 x + BACK_BUTTON_X, y + BACK_BUTTON_Y, 
                 BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT, 
                 "B", this.font, isBackButtonHovered);
-        
-        // Draw slot highlights and labels with improved visibility
-        // Input slot
-        InventoryRenderer.drawSlot(guiGraphics, 
-                x + TradeMenu.SLOT_INPUT_X, y + TradeMenu.SLOT_INPUT_Y, 
-                InventoryRenderer.PRIMARY_COLOR, InventoryRenderer.SLOT_BORDER_COLOR);
-        
-        // Input label
-        InventoryRenderer.drawLabel(guiGraphics, this.font, "Input", 
-                x + TradeMenu.SLOT_INPUT_X, y + TradeMenu.SLOT_INPUT_Y - 12);
-        
-        // Output slot
-        InventoryRenderer.drawSlot(guiGraphics, 
-                x + TradeMenu.SLOT_OUTPUT_X, y + TradeMenu.SLOT_OUTPUT_Y, 
-                InventoryRenderer.SECONDARY_COLOR, InventoryRenderer.SLOT_BORDER_COLOR);
-        
-        // Output label
-        InventoryRenderer.drawLabel(guiGraphics, this.font, "Output", 
-                x + TradeMenu.SLOT_OUTPUT_X, y + TradeMenu.SLOT_OUTPUT_Y - 12);
-        
-        // Draw arrow between slots
-        InventoryRenderer.drawArrow(guiGraphics, 
-                x + TradeMenu.SLOT_INPUT_X + 20, 
-                y + TradeMenu.SLOT_INPUT_Y + 8,
-                x + TradeMenu.SLOT_OUTPUT_X - 4, 
-                y + TradeMenu.SLOT_OUTPUT_Y + 8,
-                0xFFFFFFFF);
     }
     
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        // Check if the trade button was clicked
-        if (button == 0 && isMouseOverTradeButton((int)mouseX, (int)mouseY)) {
-            // Process the trade
-            this.menu.processTrade();
-            // Play a click sound
-            net.minecraft.client.resources.sounds.SimpleSoundInstance sound = 
-                net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
-                    net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F);
-            this.minecraft.getSoundManager().play(sound);
-            return true;
-        }
-        
         // Check if the back button was clicked
         if (button == 0 && isMouseOverBackButton((int)mouseX, (int)mouseY)) {
             // Play a click sound
@@ -214,14 +190,6 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
         return null;
     }
     
-    private boolean isMouseOverTradeButton(int mouseX, int mouseY) {
-        int x = (this.width - this.imageWidth) / 2;
-        int y = (this.height - this.imageHeight) / 2;
-        
-        return mouseX >= x + TRADE_BUTTON_X && mouseX < x + TRADE_BUTTON_X + TRADE_BUTTON_WIDTH &&
-               mouseY >= y + TRADE_BUTTON_Y && mouseY < y + TRADE_BUTTON_Y + TRADE_BUTTON_HEIGHT;
-    }
-    
     private boolean isMouseOverBackButton(int mouseX, int mouseY) {
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
@@ -249,4 +217,4 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
                 this.minecraft.player.getInventory(),
                 Component.literal("Town Interface")));
     }
-}
+} 

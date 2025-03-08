@@ -20,7 +20,6 @@ public class ClientModEvents {
         // Register menu screens
         event.enqueueWork(() -> {
             MenuScreens.register(ModMenuTypes.TOWN_BLOCK.get(), TownBlockScreen::new);
-            MenuScreens.register(ModMenuTypes.TOWN_INTERFACE.get(), TownInterfaceScreen::new);
             
             // Register network handlers for debug overlay
             TownDebugNetwork.register();
