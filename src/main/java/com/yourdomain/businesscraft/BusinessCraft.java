@@ -6,8 +6,11 @@ import com.yourdomain.businesscraft.block.entity.ModBlockEntities;
 import com.yourdomain.businesscraft.command.ClearTownsCommand;
 import com.yourdomain.businesscraft.config.ConfigLoader;
 import com.yourdomain.businesscraft.menu.ModMenuTypes;
+import com.yourdomain.businesscraft.menu.TradeMenu;
 import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.screen.TradeScreen;
 import com.yourdomain.businesscraft.town.TownManager;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -19,6 +22,7 @@ import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
@@ -30,7 +34,6 @@ import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.service.TouristVehicleManager;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.event.level.LevelEvent;
 import com.yourdomain.businesscraft.entity.ModEntityTypes;
 
@@ -62,22 +65,31 @@ public class BusinessCraft {
 
     public BusinessCraft() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-
-        // Register the DeferredRegisters
+        
+        // Register blocks and items
         BLOCKS.register(modEventBus);
         ITEMS.register(modEventBus);
         
-        // Register other mod components
-        ModBlockEntities.BLOCK_ENTITIES.register(modEventBus);
-        ModMenuTypes.MENUS.register(modEventBus);
+        // Register entity types
         ModEntityTypes.ENTITY_TYPES.register(modEventBus);
-
+        
+        // Register menu types
+        TradeMenu.MENUS.register(modEventBus);
+        
+        // Register our mod's event handlers
         modEventBus.addListener(this::commonSetup);
-
+        modEventBus.addListener(this::clientSetup);
+        
         // Initialize networking
         ModMessages.register();
-
-        // Register ourselves for server and other game events we are interested in
+        
+        // Register block entities
+        ModBlockEntities.BLOCK_ENTITIES.register(modEventBus);
+        
+        // Register our menus
+        ModMenuTypes.MENUS.register(modEventBus);
+        
+        // Register ourselves for server and other game events
         MinecraftForge.EVENT_BUS.register(this);
         
         // Register server lifecycle events
@@ -86,11 +98,24 @@ public class BusinessCraft {
         
         // Register the world unload event listener if not already present
         MinecraftForge.EVENT_BUS.addListener(this::onLevelUnload);
+        
+        LOGGER.info("BusinessCraft initialized. Press F3+K in-game to toggle town debug overlay.");
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         ConfigLoader.loadConfig();
         LOGGER.info("BusinessCraft initialized. Press F3+K in-game to toggle town debug overlay.");
+    }
+
+    private void clientSetup(final FMLClientSetupEvent event) {
+        LOGGER.info("BusinessCraft client setup starting");
+        
+        // Register our menu screens
+        event.enqueueWork(() -> {
+            MenuScreens.register(TradeMenu.TRADE_MENU.get(), TradeScreen::new);
+        });
+        
+        LOGGER.info("BusinessCraft client setup complete");
     }
 
     @SubscribeEvent

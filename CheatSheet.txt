@@ -93,3 +93,11 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 80. UI, event forwarding, ensure mouse and keyboard events are properly forwarded to all active components in tabbed interfaces, not just specific tabs
 81. UI, debug logging, add detailed debug logs for input events to track event propagation and handling through the UI hierarchy
 82. UI, code cleanup, remove temporary debug logging after confirming fixes to keep the codebase clean and maintainable
+83. UI, inventory slots, extend BCModalScreen to create custom inventory interfaces rather than using event handlers for reliable rendering
+84. UI, vanilla inventories, implement proper AbstractContainerMenu and AbstractContainerScreen for inventory UIs with real item handling
+85. UI, MenuType registration, use IForgeMenuType.create with @SuppressWarnings("unchecked") for proper menu factory creation
+86. UI, inventory transitions, implement proper screen closing and opening when transitioning between GUI screens
+87. UI, registry registration, ensure all registry objects are registered to the mod event bus before using them in other code
+88. UI, mod constants, always use the centralized MOD_ID constant in registry creation to ensure consistency
+89. UI, navigation, always include back/return buttons when creating new screens that replace the main UI
+90. UI, inventory interaction, set player.containerMenu to the current menu when opening inventory screens for proper item drag/transfer
