@@ -1136,7 +1136,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
                         showTradeResourcesModal();
                     }, PRIMARY_COLOR)
                     .addButtonWithTooltip(0, 1, "Manage Storage", "Manage town storage and inventory", v -> {
-                        sendChatMessage("Button pressed: Manage Storage");
+                        showStorageModal();
                     }, SECONDARY_COLOR);
                 break;
                 
@@ -1456,6 +1456,41 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         com.yourdomain.businesscraft.screen.TradeScreen screen = 
             new com.yourdomain.businesscraft.screen.TradeScreen(
                 menu, player.getInventory(), net.minecraft.network.chat.Component.literal("Trade Resources"));
+        
+        // Set the screen to be displayed
+        this.minecraft.setScreen(screen);
+    }
+    
+    /**
+     * Shows the storage modal screen with 2x9 chest-like storage
+     */
+    private void showStorageModal() {
+        // Create and send a network packet to open the vanilla inventory storage screen
+        Player player = this.minecraft.player;
+        
+        // Close the current screen
+        this.onClose();
+        
+        // In a real implementation, we would send a packet to the server to open the menu
+        // For now, we'll create a client-side container with a unique ID
+        int containerId = player.containerMenu.containerId + 1;
+        
+        // Create a new inventory handler for the storage (2 rows x 9 columns = 18 slots)
+        net.minecraftforge.items.ItemStackHandler handler = 
+            new net.minecraftforge.items.ItemStackHandler(18);
+        
+        // Create the storage menu with a proper container ID
+        com.yourdomain.businesscraft.menu.StorageMenu menu = 
+            new com.yourdomain.businesscraft.menu.StorageMenu(containerId, player.getInventory(), handler);
+        
+        // Tell the player that this is now their active container
+        // This is important for vanilla's item drag/transfer handling
+        player.containerMenu = menu;
+        
+        // Create and open the storage screen
+        com.yourdomain.businesscraft.screen.StorageScreen screen = 
+            new com.yourdomain.businesscraft.screen.StorageScreen(
+                menu, player.getInventory(), net.minecraft.network.chat.Component.literal("Town Storage"));
         
         // Set the screen to be displayed
         this.minecraft.setScreen(screen);
