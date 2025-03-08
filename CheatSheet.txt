@@ -107,3 +107,4 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 94. UI, component reusability, extract common rendering patterns into utility classes with static methods to reduce code duplication across screens
 95. UI, modal screens, use the same pattern for creating and opening modal screens to ensure consistent user experience and inventory functionality
 96. UI, screen registration, register MenuScreens for each menu type in only one place to avoid "Duplicate registration" errors that crash the game
+97. UI, code duplication, extract common UI functions like navigation and mouse checks into utility classes to improve maintainability

@@ -305,3 +305,85 @@ Label with dynamic content that updates based on a supplier function.
 - For custom screens, override the `render()` method to draw components
 - Ensure tab panels correctly position their content panels
 - Check components are being rendered within their parent's bounds 
+
+## Inventory Screen Design
+
+### Proper UI Element Spacing
+
+When designing inventory screens, proper spacing between UI elements is crucial for usability and aesthetics:
+
+1. **Navigation Controls Placement:**
+   - Place back buttons in the top-left corner (typical constants: `BACK_BUTTON_X = 8`, `BACK_BUTTON_Y = 6`) 
+   - Ensure at least 20-25 pixels between the bottom of controls and the top of inventory slots
+   - For screens with titles next to buttons, use proper offsets (e.g., `titleLabelX = 8 + BACK_BUTTON_WIDTH + 4`)
+
+2. **Inventory Grid Positioning:**
+   - Define all position constants as `static final` fields for easy adjustment
+   - For standard town storage, use vertical spacing of at least 28 pixels from the top (`STORAGE_START_Y = 28`)
+   - Maintain consistent padding around slot groups (typically 2px or more)
+   - Draw borders around slot groups to visually separate different inventories
+
+3. **Synchronized Visual and Functional Elements:**
+   - Always ensure the visual rendering (`StorageScreen`) and functional slot positions (`StorageMenu`) use the same constants
+   - When adjusting UI layout, update both the screen and menu classes to maintain consistency
+   - Remember that slot positions in menu classes affect item interaction, while screen rendering is purely visual
+
+4. **Player Inventory Standards:**
+   - Keep standard player inventory at consistent positions (typically `INV_START_Y = 84` and `HOTBAR_START_Y = 142`)
+   - Use consistent spacing between hotbar and main inventory (typically 4px)
+   - Follow vanilla Minecraft slot sizing (18x18) and spacing conventions
+
+5. **Modular Design:**
+   - Extract common rendering code to utility classes like `InventoryRenderer`
+   - For reusable patterns, create helper methods with consistent parameters
+   - Use proper borders to visually distinguish different sections of the UI
+
+Proper inventory design significantly improves user experience. Maintaining consistent spacing, organized slot groups, and clear navigation controls helps players quickly understand and interact with your UI. 
+
+## UI Utility Methods
+
+### Screen Navigation and Mouse Interaction
+
+The BusinessCraft UI system provides several utility methods to reduce code duplication across screens:
+
+1. **Mouse Interaction Utilities:**
+   ```java
+   // Check if mouse is over a UI element with screen-relative coordinates
+   boolean isOver = InventoryRenderer.isMouseOverElement(
+       mouseX, mouseY,      // Current mouse position
+       screenX, screenY,    // Screen top-left position
+       elementX, elementY,  // Element position relative to screen
+       width, height        // Element dimensions
+   );
+   
+   // For centered screens, use this simplified version
+   boolean isOver = InventoryRenderer.isMouseOverElementCentered(
+       mouseX, mouseY,             // Current mouse position
+       screenWidth, screenHeight,  // Screen dimensions
+       elementX, elementY,         // Element position within centered area
+       width, height               // Element dimensions
+   );
+   ```
+
+2. **Screen Navigation Utilities:**
+   ```java
+   // Return to the main TownInterface screen from any other screen
+   ScreenNavigationHelper.returnToTownInterface(
+       minecraft,      // Minecraft client instance
+       player          // Player whose inventory will be used
+   );
+   ```
+
+These utility methods offer several advantages:
+- Eliminate duplicate code across different screen classes
+- Ensure consistent behavior for common UI interactions
+- Centralize logic for easier maintenance and updates
+- Improve readability by abstracting implementation details
+
+When implementing new screens:
+- Prefer using utility methods over copying and pasting code
+- Use consistent button placement (e.g., back buttons in top-left at position 8,6)
+- Leverage the `ScreenNavigationHelper` for transitions between screens
+- Add new utility methods when you find yourself implementing the same functionality in multiple places
+
+This approach creates a more maintainable codebase by reducing redundancy and establishing clear patterns for UI implementation. 

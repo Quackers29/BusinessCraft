@@ -231,4 +231,44 @@ public class InventoryRenderer {
             guiGraphics.fill(endX - i, startY - i - 1, endX - i + 1, startY + i + 2, color);
         }
     }
+    
+    /**
+     * Utility method to check if the mouse is over a UI element like a button
+     * 
+     * @param mouseX The mouse X position
+     * @param mouseY The mouse Y position
+     * @param screenX The screen X position (top left of screen)
+     * @param screenY The screen Y position (top left of screen)
+     * @param elementX The element X position (relative to screen)
+     * @param elementY The element Y position (relative to screen)
+     * @param elementWidth The element width
+     * @param elementHeight The element height
+     * @return true if the mouse is over the element, false otherwise
+     */
+    public static boolean isMouseOverElement(int mouseX, int mouseY, int screenX, int screenY,
+                                           int elementX, int elementY, int elementWidth, int elementHeight) {
+        return mouseX >= screenX + elementX && mouseX < screenX + elementX + elementWidth &&
+               mouseY >= screenY + elementY && mouseY < screenY + elementY + elementHeight;
+    }
+    
+    /**
+     * Utility method to check if the mouse is over a UI element in a centered screen
+     * 
+     * @param mouseX The mouse X position
+     * @param mouseY The mouse Y position
+     * @param screenWidth The total screen width
+     * @param screenHeight The total screen height
+     * @param elementX The element X position (relative to the centered screen)
+     * @param elementY The element Y position (relative to the centered screen)
+     * @param elementWidth The element width
+     * @param elementHeight The element height
+     * @return true if the mouse is over the element, false otherwise
+     */
+    public static boolean isMouseOverElementCentered(int mouseX, int mouseY, int screenWidth, int screenHeight,
+                                                    int elementX, int elementY, int elementWidth, int elementHeight) {
+        int x = (screenWidth - elementWidth) / 2;
+        int y = (screenHeight - elementHeight) / 2;
+        
+        return isMouseOverElement(mouseX, mouseY, x, y, elementX, elementY, elementWidth, elementHeight);
+    }
 } 
