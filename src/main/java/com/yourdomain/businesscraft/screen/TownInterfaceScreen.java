@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import org.lwjgl.opengl.GL11;
@@ -485,11 +486,6 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             
             @Override
             public boolean mouseClicked(double mouseX, double mouseY, int button) {
-                // Make sure we have a grid to click on
-                if (grid == null) {
-                    grid = createGrid();
-                }
-                
                 // Check if we're clicking within this component
                 if (isMouseOver((int)mouseX, (int)mouseY)) {
                     // Middle mouse button for scrolling
@@ -1137,7 +1133,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             case "economy":
                 bottomButtonsGrid
                     .addButtonWithTooltip(0, 0, "Trade Resources", "Trade resources with other towns", v -> {
-                        sendChatMessage("Button pressed: Trade Resources");
+                        showTradeResourcesModal();
                     }, PRIMARY_COLOR)
                     .addButtonWithTooltip(0, 1, "Manage Storage", "Manage town storage and inventory", v -> {
                         sendChatMessage("Button pressed: Manage Storage");
@@ -1428,5 +1424,189 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         
         // Set the data - this will adjust the height automatically
         activeModal.setData(visitorNames);
+    }
+
+    /**
+     * Shows the trade resources modal screen with input and output slots
+     */
+    private void showTradeResourcesModal() {
+        // Create and send a network packet to open the vanilla inventory trading screen
+        Player player = this.minecraft.player;
+        
+        // Close the current screen
+        this.onClose();
+        
+        // In a real implementation, we would send a packet to the server to open the menu
+        // For now, we'll create a client-side container with a unique ID
+        int containerId = player.containerMenu.containerId + 1;
+        
+        // Create a new inventory handler for the trade
+        net.minecraftforge.items.ItemStackHandler handler = 
+            new net.minecraftforge.items.ItemStackHandler(2);
+        
+        // Create the trade menu with a proper container ID
+        com.yourdomain.businesscraft.menu.TradeMenu menu = 
+            new com.yourdomain.businesscraft.menu.TradeMenu(containerId, player.getInventory(), handler);
+        
+        // Tell the player that this is now their active container
+        // This is important for vanilla's item drag/transfer handling
+        player.containerMenu = menu;
+        
+        // Create and open the trade screen
+        com.yourdomain.businesscraft.screen.TradeScreen screen = 
+            new com.yourdomain.businesscraft.screen.TradeScreen(
+                menu, player.getInventory(), net.minecraft.network.chat.Component.literal("Trade Resources"));
+        
+        // Set the screen to be displayed
+        this.minecraft.setScreen(screen);
+    }
+    
+    /**
+     * Close the active modal if one exists
+     */
+    private void closeActiveModal() {
+        this.activeModal = null;
+    }
+    
+    /**
+     * Custom modal screen for trading resources
+     */
+    private class TradeModal extends BCModalScreen {
+        private net.minecraft.world.item.ItemStack inputStack = net.minecraft.world.item.ItemStack.EMPTY;
+        private net.minecraft.world.item.ItemStack outputStack = net.minecraft.world.item.ItemStack.EMPTY;
+        private BCButton tradeButton;
+        
+        public TradeModal(String title, Consumer<Boolean> resultCallback) {
+            super(title, resultCallback, 2);
+            
+            // Set sample data rows
+            List<String> modalData = new ArrayList<>();
+            modalData.add("Input Slot");  // Row 1
+            modalData.add("Output Slot"); // Row 2
+            setData(modalData);
+            
+            // Replace OK button with Trade button
+            for (UIComponent child : getChildren()) {
+                if (child instanceof BCButton) {
+                    BCButton button = (BCButton) child;
+                    if ("OK".equals(button.getText().getString())) {
+                        button.withText(Component.literal("Trade"));
+                        tradeButton = button;
+                        button.addEventListener("click", component -> executeTrade());
+                    }
+                }
+            }
+        }
+        
+        @Override
+        public void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
+            // First render the normal modal content using parent
+            super.render(guiGraphics, x, y, mouseX, mouseY);
+            
+            // Then render our custom slots
+            renderTradeSlots(guiGraphics, mouseX, mouseY);
+        }
+        
+        private void renderTradeSlots(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+            int slotSize = 18;
+            int centerX = getWidth() / 2;
+            int inputX = getX() + centerX - 40;
+            int outputX = getX() + centerX + 20;
+            int slotsY = getY() + 80;
+            
+            // Input slot
+            guiGraphics.fill(inputX, slotsY, inputX + slotSize, slotsY + slotSize, 0xFF444444);
+            guiGraphics.hLine(inputX - 1, inputX + slotSize, slotsY - 1, BORDER_COLOR);
+            guiGraphics.hLine(inputX - 1, inputX + slotSize, slotsY + slotSize, BORDER_COLOR);
+            guiGraphics.vLine(inputX - 1, slotsY - 1, slotsY + slotSize, BORDER_COLOR);
+            guiGraphics.vLine(inputX + slotSize, slotsY - 1, slotsY + slotSize, BORDER_COLOR);
+            
+            // Draw input label
+            guiGraphics.drawString(font, "Input", inputX, slotsY - 10, TEXT_COLOR);
+            
+            // Draw arrow
+            int arrowX = getX() + centerX - 4;
+            int arrowY = slotsY + slotSize/2 - 4;
+            guiGraphics.drawString(font, "→", arrowX, arrowY, TEXT_HIGHLIGHT);
+            
+            // Output slot
+            guiGraphics.fill(outputX, slotsY, outputX + slotSize, slotsY + slotSize, 0xFF444444);
+            guiGraphics.hLine(outputX - 1, outputX + slotSize, slotsY - 1, BORDER_COLOR);
+            guiGraphics.hLine(outputX - 1, outputX + slotSize, slotsY + slotSize, BORDER_COLOR);
+            guiGraphics.vLine(outputX - 1, slotsY - 1, slotsY + slotSize, BORDER_COLOR);
+            guiGraphics.vLine(outputX + slotSize, slotsY - 1, slotsY + slotSize, BORDER_COLOR);
+            
+            // Draw output label
+            guiGraphics.drawString(font, "Output", outputX, slotsY - 10, TEXT_COLOR);
+            
+            // Draw items if present
+            if (!inputStack.isEmpty()) {
+                guiGraphics.renderItem(inputStack, inputX + 1, slotsY + 1);
+            }
+            
+            if (!outputStack.isEmpty()) {
+                guiGraphics.renderItem(outputStack, outputX + 1, slotsY + 1);
+            }
+        }
+        
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            // Check for clicks on our custom slots first
+            int slotSize = 18;
+            int centerX = getWidth() / 2;
+            int inputX = getX() + centerX - 40;
+            int outputX = getX() + centerX + 20;
+            int slotsY = getY() + 80;
+            
+            // Check input slot
+            if (mouseX >= inputX && mouseX < inputX + slotSize && 
+                mouseY >= slotsY && mouseY < slotsY + slotSize) {
+                
+                // For demo, we'll just put a stone item in the slot when clicked
+                if (inputStack.isEmpty()) {
+                    inputStack = new net.minecraft.world.item.ItemStack(
+                        net.minecraft.world.item.Items.STONE, 1);
+                    sendChatMessage("Added Stone to input slot");
+                } else {
+                    // Clear the slot if clicked again
+                    inputStack = net.minecraft.world.item.ItemStack.EMPTY;
+                    sendChatMessage("Removed item from input slot");
+                }
+                return true;
+            }
+            
+            // Check output slot
+            if (mouseX >= outputX && mouseX < outputX + slotSize && 
+                mouseY >= slotsY && mouseY < slotsY + slotSize) {
+                
+                // Collect item from output slot
+                if (!outputStack.isEmpty()) {
+                    sendChatMessage("Collected: " + outputStack.getCount() + "x " + 
+                                   outputStack.getDisplayName().getString());
+                    outputStack = net.minecraft.world.item.ItemStack.EMPTY;
+                    return true;
+                }
+            }
+            
+            // If not handled by our slots, let the parent handle it
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+        
+        /**
+         * Execute the trade operation
+         */
+        private void executeTrade() {
+            if (!inputStack.isEmpty()) {
+                // Process trade by moving input to output
+                outputStack = inputStack.copy();
+                
+                // Clear input slot
+                inputStack = net.minecraft.world.item.ItemStack.EMPTY;
+                
+                sendChatMessage("Trade executed - item transferred to output slot");
+            } else {
+                sendChatMessage("No input item to trade");
+            }
+        }
     }
 } 
