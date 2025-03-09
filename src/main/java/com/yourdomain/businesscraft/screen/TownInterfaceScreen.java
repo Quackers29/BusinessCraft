@@ -11,6 +11,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import org.lwjgl.opengl.GL11;
+import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.network.SetTownNamePacket;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -178,13 +180,13 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
                 newGrid.addLabel(0, 0, "Town Name:", TEXT_COLOR);
                 newGrid.addLabel(0, 1, getTownName(), TEXT_HIGHLIGHT);
                 
-                // Second row: Mayor
-                newGrid.addLabel(1, 0, "Mayor:", TEXT_COLOR);
-                newGrid.addLabel(1, 1, getMayorName(), TEXT_HIGHLIGHT);
+                // Second row: Population
+                newGrid.addLabel(1, 0, "Population:", TEXT_COLOR);
+                newGrid.addLabel(1, 1, String.valueOf(getTownPopulation()), TEXT_HIGHLIGHT);
                 
-                // Third row: Population
-                newGrid.addLabel(2, 0, "Population:", TEXT_COLOR);
-                newGrid.addLabel(2, 1, String.valueOf(getTownPopulation()), TEXT_HIGHLIGHT);
+                // Third row: Tourists
+                newGrid.addLabel(2, 0, "Tourists:", TEXT_COLOR);
+                newGrid.addLabel(2, 1, getTouristString(), TEXT_HIGHLIGHT);
                 
                 return newGrid;
             }
@@ -226,18 +228,9 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             
             @Override
             public boolean mouseClicked(double mouseX, double mouseY, int button) {
-                // Only handle clicks if animation is complete
-                if (alpha >= 0.99f) {
-                    // Make sure we have a grid to click on
-                    if (grid == null) {
-                        grid = createGrid();
-                    }
-                    
-                    // Let the grid handle clicks
-                    if (grid.mouseClicked((int)mouseX, (int)mouseY)) {
-                        playButtonClickSound();
-                        return true;
-                    }
+                // Pass the event to the grid if it was created
+                if (grid != null) {
+                    return grid.mouseClicked((int)mouseX, (int)mouseY);
                 }
                 return false;
             }
@@ -967,40 +960,30 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             // Initialize the grid when rendering
             private UIGridBuilder createGrid() {
                 // Create the grid with component-relative positioning
-                UIGridBuilder newGrid = new UIGridBuilder(x, y, getWidth(), getHeight(), 4, 2)
+                UIGridBuilder newGrid = new UIGridBuilder(x, y, getWidth(), getHeight(), 2, 2)
                     .withBackgroundColor(BACKGROUND_COLOR)
                     .withBorderColor(BORDER_COLOR)
                     .withMargins(15, 10)
                     .withSpacing(15, 10)
                     .drawBorder(true);
                 
-                // Add town settings
+                // Define button width for consistent sizing
+                int buttonWidth = 150;
                 
-                // Row 1: PVP Toggle
-                newGrid.addLabel(0, 0, "PVP:", TEXT_COLOR);
-                newGrid.addToggle(0, 1, pvpEnabled ? "Enabled" : "Disabled", pvpEnabled, toggled -> {
-                    // Update the persistent state
-                    pvpEnabled = toggled;
-                    String state = toggled ? "Enabled" : "Disabled";
-                    sendChatMessage("Button pressed: PVP Toggle " + state);
-                }, SUCCESS_COLOR, DANGER_COLOR);
+                // Row 1: Platforms button
+                newGrid.addLabel(0, 0, "Platforms:", TEXT_COLOR);
+                newGrid.addButton(0, 1, "Set Platforms", button -> {
+                    playButtonClickSound();
+                    sendChatMessage("Set Platforms button clicked - would open platforms tab");
+                    // Note: In TownBlockScreen this would call showPlatformsTab()
+                }, PRIMARY_COLOR);
                 
-                // Row 2: Public Town Toggle
-                newGrid.addLabel(1, 0, "Public Town:", TEXT_COLOR);
-                newGrid.addToggle(1, 1, publicTownEnabled ? "Enabled" : "Disabled", publicTownEnabled, toggled -> {
-                    // Update the persistent state
-                    publicTownEnabled = toggled;
-                    String state = toggled ? "Enabled" : "Disabled";
-                    sendChatMessage("Button pressed: Public Town Toggle " + state);
-                }, SUCCESS_COLOR, DANGER_COLOR);
-                
-                // Row 3: Town Rank
-                newGrid.addLabel(2, 0, "Town Rank:", TEXT_COLOR);
-                newGrid.addLabel(2, 1, "Level 3", TEXT_HIGHLIGHT);
-                
-                // Row 4: Founded Date
-                newGrid.addLabel(3, 0, "Founded:", TEXT_COLOR);
-                newGrid.addLabel(3, 1, "Day 42", TEXT_HIGHLIGHT);
+                // Row 2: Radius button
+                newGrid.addLabel(1, 0, "Search Radius:", TEXT_COLOR);
+                newGrid.addButton(1, 1, "Radius: " + menu.getSearchRadius(), button -> {
+                    // In TownBlockScreen, this would increase the radius
+                    handleRadiusChange(0); // 0 = left click (increase)
+                }, PRIMARY_COLOR);
                 
                 return newGrid;
             }
@@ -1016,38 +999,67 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             
             @Override
             public boolean mouseClicked(double mouseX, double mouseY, int button) {
-                // Make sure we have a grid to click on
-                if (grid == null) {
-                    grid = createGrid();
-                }
-                
-                // Let the grid handle clicks
-                if (grid.mouseClicked((int)mouseX, (int)mouseY)) {
-                    playButtonClickSound();
-                    return true;
+                // Pass the event to the grid if it was created
+                if (grid != null) {
+                    return grid.mouseClicked((int)mouseX, (int)mouseY);
                 }
                 return false;
             }
         };
         
-        // Add the grid host component to the panel
+        // Add the grid host to the panel
         panel.addChild(gridHost);
         
         // Add the panel to the tab
         this.tabPanel.addTab("settings", Component.literal("Settings"), panel);
     }
     
-    // Helper methods to get data from the menu
-    private String getTownName() {
-        return "Prosperityville";
+    /**
+     * Handles changes to the search radius
+     * Mimics the behavior in TownBlockScreen
+     */
+    private void handleRadiusChange(int mouseButton) {
+        // Get the current radius from the menu
+        int currentRadius = menu.getSearchRadius();
+        int newRadius = currentRadius;
+        
+        // Calculate new radius based on key combinations
+        boolean isShift = hasShiftDown();
+        
+        // Use mouseButton to determine increase/decrease
+        // mouseButton 0 = left click (increase), 1 = right click (decrease)
+        boolean isDecrease = (mouseButton == 1);
+        
+        if (isShift && isDecrease) {
+            newRadius -= 10;
+        } else if (isDecrease) {
+            newRadius -= 1;
+        } else if (isShift) {
+            newRadius += 10;
+        } else {
+            newRadius += 1;
+        }
+        
+        // Clamp to reasonable values
+        newRadius = Math.max(1, Math.min(newRadius, 100));
+        
+        // Update the UI temporarily - in a real implementation this would send a packet to the server
+        sendChatMessage("Search radius " + (isDecrease ? "decreased" : "increased") + " to " + newRadius);
+        // Note: In TownBlockScreen this would send a packet with:
+        // ModMessages.sendToServer(new SetSearchRadiusPacket(menu.getBlockEntity().getBlockPos(), newRadius));
     }
     
-    private String getMayorName() {
-        return "Mayor Goodway!";
+    // Helper methods to get data from the menu
+    private String getTownName() {
+        return this.menu.getTownName();
+    }
+    
+    private String getTouristString() {
+        return this.menu.getCurrentTourists() + "/" + this.menu.getMaxTourists();
     }
     
     private int getTownPopulation() {
-        return 42;
+        return this.menu.getTownPopulation();
     }
     
     @Override
@@ -1323,8 +1335,15 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             result -> {
                 // Handle the result
                 if (result.isConfirmed() && !result.getStringValue().isEmpty()) {
-                    // Send chat message with the new town name
-                    sendChatMessage("Town name changed to: " + result.getStringValue());
+                    String newName = result.getStringValue().trim();
+                    
+                    // Send packet to update town name on the server
+                    ModMessages.sendToServer(
+                        new SetTownNamePacket(menu.getPos(), newName)
+                    );
+                    
+                    // Provide immediate client-side feedback
+                    sendChatMessage("Changing town name to: " + newName);
                 }
             }
         );
@@ -1570,9 +1589,6 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             guiGraphics.hLine(outputX - 1, outputX + slotSize, slotsY + slotSize, BORDER_COLOR);
             guiGraphics.vLine(outputX - 1, slotsY - 1, slotsY + slotSize, BORDER_COLOR);
             guiGraphics.vLine(outputX + slotSize, slotsY - 1, slotsY + slotSize, BORDER_COLOR);
-            
-            // Draw output label
-            guiGraphics.drawString(font, "Output", outputX, slotsY - 10, TEXT_COLOR);
             
             // Draw items if present
             if (!inputStack.isEmpty()) {

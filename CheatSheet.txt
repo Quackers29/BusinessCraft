@@ -108,3 +108,9 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 95. UI, modal screens, use the same pattern for creating and opening modal screens to ensure consistent user experience and inventory functionality
 96. UI, screen registration, register MenuScreens for each menu type in only one place to avoid "Duplicate registration" errors that crash the game
 97. UI, code duplication, extract common UI functions like navigation and mouse checks into utility classes to improve maintainability
+98. Blocks, block entities, when creating blocks with similar functionality, reuse the same block entity type and register both blocks with the same BlockEntityType
+99. Blocks, screen separation, create custom MenuProvider in block's use method to control which UI screen opens while sharing the same block entity
+100. Data integration, when connecting UIs to game data systems, implement fallback strategies (direct object reference, entity lookup, defaults) for better reliability
+101. Data access, when accessing data from entities that don't directly implement an interface, use the entity to get the actual data provider (Town) instead of casting
+102. UI, consistent controls, when adapting UI controls from one screen to another, reuse the same method signatures and parameter handling to ensure consistent behavior
+103. Network, when implementing UI interactions that modify server data, use the same packet types and handler patterns across different UI screens
