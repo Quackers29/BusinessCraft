@@ -5,6 +5,7 @@ import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.SetPlatformPathCreationModePacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.InputEvent;
@@ -21,57 +22,60 @@ import java.util.UUID;
 @Mod.EventBusSubscriber(modid = BusinessCraft.MOD_ID, value = Dist.CLIENT)
 public class PlatformPathKeyHandler {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static BlockPos activeTownBlockPos = null;
-    private static UUID activePlatformId = null;
+    
+    private static boolean isActive = false;
+    private static BlockPos townPos;
+    private static UUID platformId;
     
     /**
-     * Sets the active town block and platform ID for path creation
+     * Set the active platform for path creation
      */
-    public static void setActivePlatform(BlockPos pos, UUID platformId) {
-        LOGGER.debug("Setting active platform {} for town block at {}", platformId, pos);
-        activeTownBlockPos = pos;
-        activePlatformId = platformId;
+    public static void setActivePlatform(BlockPos pos, UUID id) {
+        isActive = true;
+        townPos = pos;
+        platformId = id;
+        
+        LOGGER.debug("Platform path key handler activated for platform {} at {}", id, pos);
     }
     
     /**
-     * Clears the active platform
+     * Clear the active platform
      */
     public static void clearActivePlatform() {
-        activeTownBlockPos = null;
-        activePlatformId = null;
-        LOGGER.debug("Cleared active platform");
+        isActive = false;
+        townPos = null;
+        platformId = null;
+        
+        LOGGER.debug("Platform path key handler deactivated");
     }
     
     /**
-     * Handles key presses to detect ESC key
+     * Handle key press events
      */
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
-    public static void onKeyInput(InputEvent.Key event) {
-        // Only handle if we have an active platform
-        if (activeTownBlockPos == null || activePlatformId == null) {
-            return;
-        }
+    @OnlyIn(Dist.CLIENT)
+    public static void onKeyPress(InputEvent.Key event) {
+        if (!isActive) return;
         
-        // Handle ESC key press
+        // Check for ESC key
         if (event.getKey() == GLFW.GLFW_KEY_ESCAPE && event.getAction() == GLFW.GLFW_PRESS) {
-            LOGGER.debug("ESC pressed while in platform path creation mode");
+            LOGGER.debug("ESC key pressed, exiting platform path creation mode");
             
-            // Exit platform path creation mode
+            // Send packet to exit path creation mode
             ModMessages.sendToServer(new SetPlatformPathCreationModePacket(
-                activeTownBlockPos,
-                activePlatformId,
+                townPos,
+                platformId,
                 false
             ));
             
-            // Clear the active platform
-            clearActivePlatform();
+            // Display message to player
+            Minecraft.getInstance().player.displayClientMessage(
+                Component.translatable("businesscraft.platform_path_cancelled"),
+                false
+            );
             
-            // Show the town block screen again
-            Minecraft.getInstance().execute(() -> {
-                // Open the town block screen again
-                Minecraft.getInstance().setScreen(null);
-            });
+            // Clear active platform
+            clearActivePlatform();
         }
     }
 } 

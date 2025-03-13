@@ -204,6 +204,6 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
         this.onClose();
         
         // Use the utility method to return to the main interface
-        ScreenNavigationHelper.returnToTownInterface(this.minecraft, this.minecraft.player);
+        ScreenNavigationHelper.returnToTownInterface(this.minecraft, this.minecraft.player, this.menu.getTownBlockPos());
     }
 } 

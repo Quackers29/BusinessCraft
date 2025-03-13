@@ -14,6 +14,9 @@ import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraft.network.FriendlyByteBuf;
+import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.network.TradeResourcePacket;
+import net.minecraft.core.BlockPos;
 
 public class TradeMenu extends AbstractContainerMenu {
     // Constants for the number of slots
@@ -23,6 +26,9 @@ public class TradeMenu extends AbstractContainerMenu {
     
     // ItemHandlers for the trading inventory
     private final ItemStackHandler tradeInventory;
+    
+    // Store the position of the town block
+    private BlockPos townBlockPos;
     
     // Slot positions
     public static final int SLOT_INPUT_X = 44;
@@ -50,6 +56,16 @@ public class TradeMenu extends AbstractContainerMenu {
     // Constructor for server-side creation
     public TradeMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
         this(containerId, playerInventory, new ItemStackHandler(INVENTORY_SIZE));
+        // Read the BlockPos from the extra data if available
+        if (extraData != null && extraData.readableBytes() > 0) {
+            this.townBlockPos = extraData.readBlockPos();
+        }
+    }
+    
+    // Constructor with BlockPos
+    public TradeMenu(int containerId, Inventory playerInventory, BlockPos pos) {
+        this(containerId, playerInventory, new ItemStackHandler(INVENTORY_SIZE));
+        this.townBlockPos = pos;
     }
     
     // Main constructor
@@ -84,7 +100,7 @@ public class TradeMenu extends AbstractContainerMenu {
     // Check if the player can interact with the menu
     @Override
     public boolean stillValid(Player player) {
-        return true; // Always valid as this is a UI-only menu
+        return true; // Allow interaction regardless of position
     }
     
     // Handle shift-clicking items between slots
@@ -125,15 +141,38 @@ public class TradeMenu extends AbstractContainerMenu {
     }
     
     // Process the trade when requested
-    public void processTrade() {
-        if (!tradeInventory.getStackInSlot(SLOT_INPUT).isEmpty() && 
-            tradeInventory.getStackInSlot(SLOT_OUTPUT).isEmpty()) {
-            
-            // For now, just move the input to the output
-            ItemStack inputStack = tradeInventory.getStackInSlot(SLOT_INPUT).copy();
-            tradeInventory.extractItem(SLOT_INPUT, inputStack.getCount(), false);
-            tradeInventory.insertItem(SLOT_OUTPUT, inputStack, false);
+    public boolean processTrade() {
+        ItemStack stack = this.tradeInventory.getStackInSlot(SLOT_INPUT);
+        if (stack.isEmpty()) {
+            return false;
         }
+        
+        // Don't move the item directly - instead send it to the server for processing
+        // The server will decide if the town accepts the trade and sends back emeralds
+        ModMessages.sendToServer(new TradeResourcePacket(townBlockPos, stack.copy(), SLOT_INPUT));
+        
+        // Remove the input item now, payment will be handled by server response
+        this.tradeInventory.extractItem(SLOT_INPUT, stack.getCount(), false);
+        
+        return true;
+    }
+    
+    /**
+     * Sets an item in the output slot directly (used for server-side trade responses)
+     */
+    public void setOutputItem(ItemStack itemStack) {
+        if (!itemStack.isEmpty() && tradeInventory.getStackInSlot(SLOT_OUTPUT).isEmpty()) {
+            // Place the item in the output slot
+            tradeInventory.insertItem(SLOT_OUTPUT, itemStack, false);
+        }
+    }
+    
+    /**
+     * Get the position of the town block
+     * @return The BlockPos of the town block
+     */
+    public BlockPos getTownBlockPos() {
+        return this.townBlockPos;
     }
     
     // Custom input slot that only accepts input items

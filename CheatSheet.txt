@@ -114,3 +114,33 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 101. Data access, when accessing data from entities that don't directly implement an interface, use the entity to get the actual data provider (Town) instead of casting
 102. UI, consistent controls, when adapting UI controls from one screen to another, reuse the same method signatures and parameter handling to ensure consistent behavior
 103. Network, when implementing UI interactions that modify server data, use the same packet types and handler patterns across different UI screens
+104. UI, shared data access, reuse the same data retrieval methods across different UI screens to maintain consistent data representation and centralize resource access
+105. Network, when implementing trade systems, create separate packets for client-to-server requests and server-to-client responses to handle asynchronous operations
+106. Network, for trade operations, store the BlockPos in the menu class and pass it to packets to ensure proper targeting of block entities
+107. Network, when handling packets that interact with block entities, add null checks and type validation for all critical components (player, level, position, entity)
+108. BlockEntity, to display resources on the client side, implement a client-side cache system with proper getters and sync it with level.sendBlockUpdated
+109. Trade, when removing items from town resources for payment, use town.addResource with negative values to deduct items consistently
+110. UI, for resource displays, ensure getAllResources method handles both server-side and client-side retrieval with appropriate conditionals
+111. UI, when refactoring resource displays, use UIGridBuilder with appropriate column setup (item name and item with quantity)
+112. Resource, when implementing resource deduction, update addResource to handle negative amounts and log both additions and removals
+113. UI, when using UIGridBuilder, use addTab with proper parameters instead of nonexistent addTabContent method
+114. UI, UIGridBuilder.java, implement mouseClicked and mouseScrolled methods with proper signatures (int, int, int) and (double, double, double) for consistent event handling
+115. UI, UIGridBuilder.java, for vertical scrolling, set both withVerticalScroll(true, visibleRows) and increase row height with withRowHeight(32) for better usability
+116. UI, resource display, use taller row heights (32px) and fewer visible rows (6) with vertical scrolling for better readability of resource items
+117. UI, UIGridBuilder.java, add data-driven methods that accept arrays of data and automatically calculate scrolling needs based on content and available space
+118. UI, UIGridBuilder.java, implement static utility methods (createLabelValueGrid, createLabelButtonGrid) for common grid patterns to reduce screen-specific code
+119. UI, reusable components, design components to accept and automatically layout their data rather than requiring screens to manually manage layout details
+120. UI, UIGridBuilder.java, for mouse wheel scrolling, use Math.signum(delta) with negative sign to make scrolling match vanilla Minecraft conventions
+121. UI, item quantity display, always show quantities (even for single items) with element.showQuantity = true for better user feedback
+122. UI, UIGridBuilder.java, set default row height to 24px (instead of calculating dynamically) for more predictable vertical layouts
+123. UI, mouse wheel scrolling, use a more lenient bounds check (x-5, x+width+5) to catch scroll events that happen slightly outside the grid component
+124. UI, UIGridBuilder.java, force vertical scrolling for resource lists with 3+ items by explicitly setting rows and calculating visible rows
+125. UI, scrollable components, add debug print statements when implementing scrolling to track scroll offsets and deltas for troubleshooting
+126. UI, resource displays, explicitly calculate visible rows based on available height divided by (rowHeight + spacing) instead of using a fixed value
+127. UI, scrollable grids, for mouse wheel events, completely remove bounds checking and always forward events to ensure reliable scrolling
+128. UI, row height, when setting small row heights (e.g., 14px), update spacing values accordingly to avoid wasted space
+129. UI, mouse input handling, add debug prints at multiple levels of the UI hierarchy to identify where scroll events are lost
+130. UI, complex scrollable components, implement mouseScrolled to directly update scroll position without delegating to other methods
+131. Network, packet registration, use static decode methods instead of constructor references in messageBuilder for packet registration
+132. Network, packet classes, when implementing a packet class, ensure static decode method converts FriendlyByteBuf to the necessary constructor parameters
+133. UI, dynamic button text, use component.isComplete() or similar state checks to update button labels and tooltips based on current state

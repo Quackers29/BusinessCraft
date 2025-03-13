@@ -19,18 +19,50 @@ import org.slf4j.LoggerFactory;
 public class TownResources {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownResources.class);
     private final Map<Item, Integer> resources = new HashMap<>();
+    private final String instanceId = java.util.UUID.randomUUID().toString().substring(0, 8);
+    
+    public TownResources() {
+        LOGGER.info("Created new TownResources instance {}", instanceId);
+    }
     
     /**
      * Add a specific resource to the town
      * 
      * @param item The item that represents the resource
-     * @param count The amount to add
+     * @param count The amount to add (can be negative to remove resources)
      */
     public void addResource(Item item, int count) {
-        if (item == null || count <= 0) return;
+        if (item == null) return;
         
-        resources.merge(item, count, Integer::sum);
-        LOGGER.debug("Added {} of resource {}", count, ForgeRegistries.ITEMS.getKey(item));
+        if (count > 0) {
+            // Adding resources
+            resources.merge(item, count, Integer::sum);
+            LOGGER.debug("Added {} of resource {}", count, ForgeRegistries.ITEMS.getKey(item));
+        } else if (count < 0) {
+            // Removing resources (count is negative)
+            int currentAmount = resources.getOrDefault(item, 0);
+            int newAmount = Math.max(0, currentAmount + count); // Ensure we don't go below 0
+            
+            // Special logging for emeralds (more important for debugging)
+            boolean isEmerald = item == net.minecraft.world.item.Items.EMERALD;
+            
+            if (currentAmount > 0) {
+                if (isEmerald && count <= -5) {
+                    LOGGER.info("Emerald change: {} -> {} (removed {})", 
+                        currentAmount, newAmount, -count);
+                } else {
+                    LOGGER.debug("Removed {} of resource {} (new amount: {})", 
+                        -count, ForgeRegistries.ITEMS.getKey(item), newAmount);
+                }
+                
+                // Store the updated amount
+                resources.put(item, newAmount);
+            } else {
+                if (isEmerald) {
+                    LOGGER.warn("Failed emerald reduction: Attempted to remove {} emeralds, but current amount is 0", -count);
+                }
+            }
+        }
     }
     
     /**

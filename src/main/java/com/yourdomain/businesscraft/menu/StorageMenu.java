@@ -14,6 +14,7 @@ import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.core.BlockPos;
 
 public class StorageMenu extends AbstractContainerMenu {
     // Constants for the number of slots
@@ -23,6 +24,9 @@ public class StorageMenu extends AbstractContainerMenu {
     
     // ItemHandlers for the storage inventory
     private final ItemStackHandler storageInventory;
+    
+    // Store the position of the town block
+    private BlockPos townBlockPos;
     
     // Storage grid positions
     private static final int STORAGE_START_X = 8;
@@ -49,6 +53,16 @@ public class StorageMenu extends AbstractContainerMenu {
     // Constructor for server-side creation
     public StorageMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
         this(containerId, playerInventory, new ItemStackHandler(INVENTORY_SIZE));
+        // Read the BlockPos from the extra data if available
+        if (extraData != null && extraData.readableBytes() > 0) {
+            this.townBlockPos = extraData.readBlockPos();
+        }
+    }
+    
+    // Constructor with BlockPos
+    public StorageMenu(int containerId, Inventory playerInventory, BlockPos pos) {
+        this(containerId, playerInventory, new ItemStackHandler(INVENTORY_SIZE));
+        this.townBlockPos = pos;
     }
     
     // Main constructor
@@ -89,7 +103,7 @@ public class StorageMenu extends AbstractContainerMenu {
     // Check if the player can interact with the menu
     @Override
     public boolean stillValid(Player player) {
-        return true; // Always valid as this is a UI-only menu
+        return true; // Allow interaction regardless of position
     }
     
     // Handle shift-clicking items between slots
@@ -140,5 +154,13 @@ public class StorageMenu extends AbstractContainerMenu {
         public boolean mayPlace(ItemStack stack) {
             return true;
         }
+    }
+    
+    /**
+     * Get the position of the town block
+     * @return The BlockPos of the town block
+     */
+    public BlockPos getTownBlockPos() {
+        return this.townBlockPos;
     }
 } 

@@ -34,27 +34,27 @@ public class PacketHandler {
         // Register platform-related packets
         INSTANCE.registerMessage(id(), AddPlatformPacket.class, 
             AddPlatformPacket::encode, 
-            AddPlatformPacket::new, 
+            AddPlatformPacket::decode, 
             AddPlatformPacket::handle);
         
         INSTANCE.registerMessage(id(), DeletePlatformPacket.class,
             DeletePlatformPacket::encode,
-            DeletePlatformPacket::new,
+            DeletePlatformPacket::decode,
             DeletePlatformPacket::handle);
         
         INSTANCE.registerMessage(id(), SetPlatformEnabledPacket.class,
             SetPlatformEnabledPacket::encode,
-            SetPlatformEnabledPacket::new,
+            SetPlatformEnabledPacket::decode,
             SetPlatformEnabledPacket::handle);
         
         INSTANCE.registerMessage(id(), SetPlatformPathPacket.class,
             SetPlatformPathPacket::encode,
-            SetPlatformPathPacket::new,
+            SetPlatformPathPacket::decode,
             SetPlatformPathPacket::handle);
         
         INSTANCE.registerMessage(id(), RefreshPlatformsPacket.class,
             RefreshPlatformsPacket::encode,
-            RefreshPlatformsPacket::new,
+            buf -> new RefreshPlatformsPacket(buf),
             RefreshPlatformsPacket::handle);
     }
     

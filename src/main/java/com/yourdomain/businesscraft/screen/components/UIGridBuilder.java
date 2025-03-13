@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import java.util.Map;
 
 /**
  * Utility class for creating grid-based UI layouts with various component types.
@@ -39,6 +40,18 @@ public class UIGridBuilder {
     private int scrollButtonSize = 20;
     private boolean useScrollButtons = false;
     
+    // Vertical scrolling functionality
+    private boolean verticalScrollEnabled = false;
+    private int verticalScrollOffset = 0;
+    private int maxVerticalScrollOffset = 0;
+    private int scrollBarWidth = 8;
+    private boolean verticalScrolling = false;
+    private int visibleRows = 0;
+    private int totalRows = 0;
+    
+    // Custom row height (default 14px - drastically smaller than before)
+    private Integer customRowHeight = 14;
+    
     /**
      * Creates a new grid builder with the specified dimensions and layout
      * 
@@ -46,7 +59,21 @@ public class UIGridBuilder {
      * @param y Y position of the grid
      * @param width Width of the grid
      * @param height Height of the grid
-     * @param rows Number of rows in the grid
+     * @param columns Number of columns in the grid
+     * @return A new grid builder with default values
+     */
+    public static UIGridBuilder create(int x, int y, int width, int height, int columns) {
+        return new UIGridBuilder(x, y, width, height, 1, columns);
+    }
+    
+    /**
+     * Creates a new grid builder with the specified dimensions and layout
+     * 
+     * @param x X position of the grid
+     * @param y Y position of the grid
+     * @param width Width of the grid
+     * @param height Height of the grid
+     * @param rows Number of rows in the grid (can be updated later by data)
      * @param columns Number of columns in the grid
      */
     public UIGridBuilder(int x, int y, int width, int height, int rows, int columns) {
@@ -57,9 +84,9 @@ public class UIGridBuilder {
         this.rows = rows;
         this.columns = columns;
         this.horizontalSpacing = 10;
-        this.verticalSpacing = 10;
+        this.verticalSpacing = 2;
         this.horizontalMargin = 15;
-        this.verticalMargin = 10;
+        this.verticalMargin = 6;
     }
     
     /**
@@ -165,6 +192,71 @@ public class UIGridBuilder {
      */
     public void scrollRight() {
         setHorizontalScrollOffset(horizontalScrollOffset + 1);
+    }
+    
+    /**
+     * Sets a custom fixed row height
+     * @param height Height in pixels for each row
+     * @return This builder for chaining
+     */
+    public UIGridBuilder withRowHeight(int height) {
+        this.customRowHeight = height;
+        return this;
+    }
+    
+    /**
+     * Enables vertical scrolling with a specific number of visible rows
+     * @param enable Whether to enable vertical scrolling
+     * @param visibleRows Number of rows to show at once
+     * @return This builder for chaining
+     */
+    public UIGridBuilder withVerticalScroll(boolean enable, int visibleRows) {
+        this.verticalScrollEnabled = enable;
+        this.visibleRows = visibleRows;
+        this.totalRows = rows;
+        if (enable) {
+            this.maxVerticalScrollOffset = Math.max(0, totalRows - visibleRows);
+        }
+        return this;
+    }
+    
+    /**
+     * Sets the current vertical scroll offset
+     * @param offset The new offset
+     */
+    public void setVerticalScrollOffset(int offset) {
+        if (!verticalScrollEnabled) return;
+        
+        // Store old offset for comparison
+        int oldOffset = verticalScrollOffset;
+        
+        // Clamp scroll offset
+        if (offset < 0) {
+            offset = 0;
+        } else if (offset > maxVerticalScrollOffset) {
+            offset = maxVerticalScrollOffset;
+        }
+        
+        verticalScrollOffset = offset;
+        
+        // Debug if the offset changed
+        if (oldOffset != verticalScrollOffset) {
+            System.out.println("Grid vertical offset changed: " + oldOffset + " -> " + verticalScrollOffset);
+        }
+    }
+    
+    /**
+     * Scroll up by one row
+     */
+    public void scrollUp() {
+        setVerticalScrollOffset(verticalScrollOffset - 1);
+    }
+    
+    /**
+     * Scroll down by one row
+     */
+    public void scrollDown() {
+        setVerticalScrollOffset(verticalScrollOffset + 1);
     }
     
     /**
@@ -310,8 +402,8 @@ public class UIGridBuilder {
         UIGridElement element = new UIGridElement(UIElementType.ITEM, row, column, 1, 1);
         element.item = item;
         element.quantity = quantity;
-        element.showQuantity = quantity > 1;
         element.onClick = onClick;
+        element.showQuantity = true; // Always show quantity, even for single items
         elements.add(element);
         return this;
     }
@@ -333,8 +425,8 @@ public class UIGridBuilder {
         UIGridElement element = new UIGridElement(UIElementType.ITEM, row, column, rowSpan, colSpan);
         element.item = item;
         element.quantity = quantity;
-        element.showQuantity = quantity > 1;
         element.onClick = onClick;
+        element.showQuantity = true; // Always show quantity, even for single items
         elements.add(element);
         return this;
     }
@@ -355,9 +447,9 @@ public class UIGridBuilder {
         UIGridElement element = new UIGridElement(UIElementType.ITEM, row, column, 1, 1);
         element.item = item;
         element.quantity = quantity;
-        element.showQuantity = quantity > 1;
         element.tooltip = tooltip;
         element.onClick = onClick;
+        element.showQuantity = true; // Always show quantity, even for single items
         elements.add(element);
         return this;
     }
@@ -375,9 +467,9 @@ public class UIGridBuilder {
         UIGridElement element = new UIGridElement(UIElementType.ITEM, row, column, 1, 1);
         element.item = itemStack.getItem();
         element.quantity = itemStack.getCount();
-        element.showQuantity = itemStack.getCount() > 1;
-        element.onClick = onClick;
         element.itemStack = itemStack; // Store full itemstack for rendering
+        element.onClick = onClick;
+        element.showQuantity = true; // Always show quantity, even for single items
         elements.add(element);
         return this;
     }
@@ -398,9 +490,9 @@ public class UIGridBuilder {
         UIGridElement element = new UIGridElement(UIElementType.ITEM, row, column, rowSpan, colSpan);
         element.item = itemStack.getItem();
         element.quantity = itemStack.getCount();
-        element.showQuantity = itemStack.getCount() > 1;
-        element.onClick = onClick;
         element.itemStack = itemStack; // Store full itemstack for rendering
+        element.onClick = onClick;
+        element.showQuantity = true; // Always show quantity, even for single items
         elements.add(element);
         return this;
     }
@@ -420,348 +512,115 @@ public class UIGridBuilder {
         UIGridElement element = new UIGridElement(UIElementType.ITEM, row, column, 1, 1);
         element.item = itemStack.getItem();
         element.quantity = itemStack.getCount();
-        element.showQuantity = itemStack.getCount() > 1;
+        element.itemStack = itemStack; // Store full itemstack for rendering
         element.tooltip = tooltip;
         element.onClick = onClick;
-        element.itemStack = itemStack; // Store full itemstack for rendering
+        element.showQuantity = true; // Always show quantity, even for single items
         elements.add(element);
         return this;
     }
     
     /**
-     * Renders the entire grid with all its elements
+     * Renders the grid and its elements
      */
     public void render(GuiGraphics graphics, int mouseX, int mouseY) {
-        // Reset hover states
-        for (UIGridElement element : elements) {
-            element.isHovered = false;
-        }
-        
-        // Draw background and border
+        // Draw grid background if enabled
         if (drawBackground) {
             graphics.fill(x, y, x + width, y + height, backgroundColor);
         }
         
+        // Draw grid border if enabled
         if (drawBorder) {
+            // Top, Bottom
             graphics.hLine(x, x + width - 1, y, borderColor);
             graphics.hLine(x, x + width - 1, y + height - 1, borderColor);
+            // Left, Right
             graphics.vLine(x, y, y + height - 1, borderColor);
             graphics.vLine(x + width - 1, y, y + height - 1, borderColor);
         }
         
         // Calculate cell dimensions
-        int availableWidth = width - (2 * horizontalMargin) - ((columns - 1) * horizontalSpacing);
-        if (useScrollButtons && horizontalScrollEnabled) {
-            availableWidth -= (2 * scrollButtonSize); // Account for scroll buttons
-        }
+        int cellsWidth = width - (horizontalMargin * 2);
+        int cellsHeight = height - (verticalMargin * 2);
         
-        int availableHeight = height - (2 * verticalMargin) - ((rows - 1) * verticalSpacing);
-        if (horizontalScrollEnabled && !useScrollButtons) {
-            availableHeight -= scrollBarHeight; // Account for scrollbar height
-        }
+        // Calculate individual cell dimensions
+        int effectiveColumns = horizontalScrollEnabled ? Math.min(columns, visibleColumns) : columns;
+        int effectiveRows = verticalScrollEnabled ? Math.min(visibleRows, rows) : rows;
         
-        int cellWidth = availableWidth / (horizontalScrollEnabled ? visibleColumns : columns);
-        int cellHeight = availableHeight / rows;
+        int cellWidth = (cellsWidth - (horizontalSpacing * (effectiveColumns - 1))) / effectiveColumns;
+        int rowHeight = customRowHeight != null ? customRowHeight : 
+                       (cellsHeight - (verticalSpacing * (effectiveRows - 1))) / effectiveRows;
         
-        // Render scroll buttons if enabled
-        if (horizontalScrollEnabled && useScrollButtons) {
-            // Draw left button
-            boolean leftHovered = mouseX >= x + horizontalMargin && mouseX < x + horizontalMargin + scrollButtonSize &&
-                               mouseY >= y + height / 2 - scrollButtonSize / 2 && mouseY < y + height / 2 + scrollButtonSize / 2;
-            int leftButtonColor = leftHovered ? 0xA0777777 : 0xA0555555;
-            if (horizontalScrollOffset <= 0) {
-                leftButtonColor = 0x80444444; // Disabled state
-            }
-            
-            graphics.fill(
-                x + horizontalMargin,
-                y + height / 2 - scrollButtonSize / 2,
-                x + horizontalMargin + scrollButtonSize,
-                y + height / 2 + scrollButtonSize / 2,
-                leftButtonColor
-            );
-            
-            // Draw left arrow
-            graphics.drawString(
-                Minecraft.getInstance().font,
-                "<",
-                x + horizontalMargin + scrollButtonSize / 2 - 3,
-                y + height / 2 - 4,
-                0xFFFFFFFF
-            );
-            
-            // Draw right button
-            boolean rightHovered = mouseX >= x + width - horizontalMargin - scrollButtonSize && mouseX < x + width - horizontalMargin &&
-                               mouseY >= y + height / 2 - scrollButtonSize / 2 && mouseY < y + height / 2 + scrollButtonSize / 2;
-            int rightButtonColor = rightHovered ? 0xA0777777 : 0xA0555555;
-            if (horizontalScrollOffset >= maxHorizontalScrollOffset) {
-                rightButtonColor = 0x80444444; // Disabled state
-            }
-            
-            graphics.fill(
-                x + width - horizontalMargin - scrollButtonSize,
-                y + height / 2 - scrollButtonSize / 2,
-                x + width - horizontalMargin,
-                y + height / 2 + scrollButtonSize / 2,
-                rightButtonColor
-            );
-            
-            // Draw right arrow
-            graphics.drawString(
-                Minecraft.getInstance().font,
-                ">",
-                x + width - horizontalMargin - scrollButtonSize / 2 - 3,
-                y + height / 2 - 4,
-                0xFFFFFFFF
-            );
-        }
-        
-        // Render horizontal scrollbar if needed
-        if (horizontalScrollEnabled && !useScrollButtons && maxHorizontalScrollOffset > 0) {
-            int scrollBarWidth = Math.max(20, (availableWidth * visibleColumns) / totalColumns);
-            int scrollBarX = x + horizontalMargin + (int)((float)horizontalScrollOffset / maxHorizontalScrollOffset * (availableWidth - scrollBarWidth));
-            
-            // Draw scrollbar track
-            graphics.fill(
-                x + horizontalMargin, 
-                y + height - verticalMargin - scrollBarHeight, 
-                x + horizontalMargin + availableWidth, 
-                y + height - verticalMargin, 
-                0x40FFFFFF
-            );
-            
-            // Draw scrollbar thumb
-            graphics.fill(
-                scrollBarX, 
-                y + height - verticalMargin - scrollBarHeight, 
-                scrollBarX + scrollBarWidth, 
-                y + height - verticalMargin, 
-                0xC0FFFFFF
-            );
-        }
-        
-        // Render each element
+        // Track if any element is currently hovered
         for (UIGridElement element : elements) {
-            // Skip elements outside the visible range when scrolling
-            if (horizontalScrollEnabled) {
-                if (element.column < horizontalScrollOffset || 
-                    element.column >= horizontalScrollOffset + visibleColumns) {
-                    continue;
-                }
+            element.isHovered = false;
+        }
+        
+        // Render all visible elements
+        for (UIGridElement element : elements) {
+            // Skip elements outside the visible range for horizontal scrolling
+            if (horizontalScrollEnabled && (element.column < horizontalScrollOffset || 
+                element.column >= horizontalScrollOffset + visibleColumns)) {
+                continue;
             }
             
-            // Calculate element position and size
-            int elementX;
-            
-            if (horizontalScrollEnabled) {
-                int adjustedColumn = element.column - horizontalScrollOffset;
-                int startX = x + horizontalMargin;
-                if (useScrollButtons) {
-                    startX += scrollButtonSize; // Account for left scroll button
-                }
-                elementX = startX + (adjustedColumn * (cellWidth + horizontalSpacing));
-            } else {
-                elementX = x + horizontalMargin + (element.column * (cellWidth + horizontalSpacing));
+            // Skip elements outside the visible range for vertical scrolling
+            if (verticalScrollEnabled && (element.row < verticalScrollOffset || 
+                element.row >= verticalScrollOffset + visibleRows)) {
+                continue;
             }
             
-            int elementY = y + verticalMargin + (element.row * (cellHeight + verticalSpacing));
-            int elementWidth = (cellWidth * element.colSpan) + ((element.colSpan - 1) * horizontalSpacing);
-            int elementHeight = (cellHeight * element.rowSpan) + ((element.rowSpan - 1) * verticalSpacing);
+            // Calculate adjusted column and row positions for scrolling
+            int adjustedColumn = horizontalScrollEnabled ? element.column - horizontalScrollOffset : element.column;
+            int adjustedRow = verticalScrollEnabled ? element.row - verticalScrollOffset : element.row;
             
-            // Check if mouse is over this element
+            // Calculate element position and size, accounting for spans
+            int elementX = x + horizontalMargin + (adjustedColumn * (cellWidth + horizontalSpacing));
+            int elementY = y + verticalMargin + (adjustedRow * (rowHeight + verticalSpacing));
+            int elementWidth = cellWidth * element.colSpan + (element.colSpan - 1) * horizontalSpacing;
+            int elementHeight = rowHeight * element.rowSpan + (element.rowSpan - 1) * verticalSpacing;
+            
+            // Check if element is hovered
             boolean hovered = mouseX >= elementX && mouseX < elementX + elementWidth &&
-                             mouseY >= elementY && mouseY < elementY + elementHeight;
+                              mouseY >= elementY && mouseY < elementY + elementHeight;
             
-            // Update hover state
             element.isHovered = hovered;
             
-            // Render based on element type
+            // Render the element based on its type
             switch (element.type) {
                 case BUTTON:
-                    renderButton(graphics, element, elementX, elementY, 
-                                elementWidth, elementHeight, hovered);
+                    renderButton(graphics, element, elementX, elementY, elementWidth, elementHeight, hovered);
                     break;
                 case LABEL:
-                    renderLabel(graphics, element, elementX, elementY, 
-                               elementWidth, elementHeight);
+                    renderLabel(graphics, element, elementX, elementY, elementWidth, elementHeight);
                     break;
                 case TOGGLE:
-                    renderToggle(graphics, element, elementX, elementY, 
-                                elementWidth, elementHeight, hovered);
+                    renderToggle(graphics, element, elementX, elementY, elementWidth, elementHeight, hovered);
                     break;
                 case ITEM:
-                    renderItem(graphics, element, elementX, elementY, 
-                              elementWidth, elementHeight, hovered);
+                    renderItem(graphics, element, elementX, elementY, elementWidth, elementHeight);
                     break;
             }
         }
         
-        // Render tooltips after all elements are drawn
-        renderTooltips(graphics, mouseX, mouseY);
-    }
-    
-    /**
-     * Renders tooltips for hovered elements
-     */
-    private void renderTooltips(GuiGraphics graphics, int mouseX, int mouseY) {
+        // Render scrollbars
+        if (horizontalScrollEnabled) {
+            renderHorizontalScrollbar(graphics, mouseX, mouseY);
+        }
+        
+        if (verticalScrollEnabled) {
+            renderVerticalScrollbar(graphics, mouseX, mouseY);
+        }
+        
+        // Render tooltips for hovered elements
         for (UIGridElement element : elements) {
-            if (element.isHovered && element.tooltip != null) {
-                graphics.renderTooltip(
-                    Minecraft.getInstance().font,
-                    net.minecraft.network.chat.Component.literal(element.tooltip),
-                    mouseX, mouseY
-                );
-                break; // Only show one tooltip at a time
-            } else if (element.isHovered && element.type == UIElementType.ITEM && element.itemStack != null) {
-                // Show the item's tooltip if available and no custom tooltip is specified
-                graphics.renderTooltip(
-                    Minecraft.getInstance().font,
-                    element.itemStack,
-                    mouseX, mouseY
-                );
+            if (element.isHovered && element.tooltip != null && !element.tooltip.isEmpty()) {
+                // Use Minecraft's tooltip rendering (converted to Component)
+                Minecraft mc = Minecraft.getInstance();
+                graphics.renderTooltip(mc.font, Component.literal(element.tooltip), mouseX, mouseY);
                 break; // Only show one tooltip at a time
             }
         }
-    }
-    
-    /**
-     * Handles mouse clicks on the grid elements
-     * @return true if a click was handled
-     */
-    public boolean mouseClicked(int mouseX, int mouseY) {
-        // Check for scroll button clicks first
-        if (horizontalScrollEnabled && useScrollButtons) {
-            // Check left button
-            if (mouseX >= x + horizontalMargin && mouseX < x + horizontalMargin + scrollButtonSize &&
-                mouseY >= y + height / 2 - scrollButtonSize / 2 && mouseY < y + height / 2 + scrollButtonSize / 2) {
-                if (horizontalScrollOffset > 0) {
-                    scrollLeft();
-                    return true;
-                }
-            }
-            
-            // Check right button
-            if (mouseX >= x + width - horizontalMargin - scrollButtonSize && mouseX < x + width - horizontalMargin &&
-                mouseY >= y + height / 2 - scrollButtonSize / 2 && mouseY < y + height / 2 + scrollButtonSize / 2) {
-                if (horizontalScrollOffset < maxHorizontalScrollOffset) {
-                    scrollRight();
-                    return true;
-                }
-            }
-        }
-        
-        // Check for horizontal scrollbar drag
-        if (horizontalScrollEnabled && !useScrollButtons) {
-            int availableWidth = width - (2 * horizontalMargin) - ((columns - 1) * horizontalSpacing);
-            
-            if (mouseY >= y + height - verticalMargin - scrollBarHeight && 
-                mouseY < y + height - verticalMargin &&
-                mouseX >= x + horizontalMargin && 
-                mouseX < x + horizontalMargin + availableWidth) {
-                
-                // Calculate new scroll position based on click position
-                float relativeX = (float)(mouseX - (x + horizontalMargin)) / availableWidth;
-                setHorizontalScrollOffset((int)(relativeX * maxHorizontalScrollOffset));
-                return true;
-            }
-        }
-        
-        // Calculate cell dimensions
-        int availableWidth = width - (2 * horizontalMargin) - ((columns - 1) * horizontalSpacing);
-        if (useScrollButtons && horizontalScrollEnabled) {
-            availableWidth -= (2 * scrollButtonSize); // Account for scroll buttons
-        }
-        
-        int availableHeight = height - (2 * verticalMargin) - ((rows - 1) * verticalSpacing);
-        if (horizontalScrollEnabled && !useScrollButtons) {
-            availableHeight -= scrollBarHeight; // Account for scrollbar height
-        }
-        
-        int cellWidth = availableWidth / (horizontalScrollEnabled ? visibleColumns : columns);
-        int cellHeight = availableHeight / rows;
-        
-        // Check each element
-        for (UIGridElement element : elements) {
-            // Skip elements outside the visible range when scrolling
-            if (horizontalScrollEnabled) {
-                if (element.column < horizontalScrollOffset || 
-                    element.column >= horizontalScrollOffset + visibleColumns) {
-                    continue;
-                }
-            }
-            
-            // Calculate element position and size
-            int elementX;
-            
-            if (horizontalScrollEnabled) {
-                int adjustedColumn = element.column - horizontalScrollOffset;
-                int startX = x + horizontalMargin;
-                if (useScrollButtons) {
-                    startX += scrollButtonSize; // Account for left scroll button
-                }
-                elementX = startX + (adjustedColumn * (cellWidth + horizontalSpacing));
-            } else {
-                elementX = x + horizontalMargin + (element.column * (cellWidth + horizontalSpacing));
-            }
-            
-            int elementY = y + verticalMargin + (element.row * (cellHeight + verticalSpacing));
-            int elementWidth = (cellWidth * element.colSpan) + ((element.colSpan - 1) * horizontalSpacing);
-            int elementHeight = (cellHeight * element.rowSpan) + ((element.rowSpan - 1) * verticalSpacing);
-            
-            // Check if click is within this element
-            if (mouseX >= elementX && mouseX < elementX + elementWidth &&
-                mouseY >= elementY && mouseY < elementY + elementHeight) {
-                
-                // Handle based on element type
-                switch (element.type) {
-                    case BUTTON:
-                        if (element.onClick != null) {
-                            element.onClick.accept(null);
-                            return true;
-                        }
-                        break;
-                        
-                    case TOGGLE:
-                        if (element.onToggle != null) {
-                            // Toggle state
-                            element.toggled = !element.toggled;
-                            
-                            // Swap colors
-                            int temp = element.backgroundColor;
-                            element.backgroundColor = element.altBackgroundColor;
-                            element.altBackgroundColor = temp;
-                            
-                            // Call handler
-                            element.onToggle.accept(element.toggled);
-                            return true;
-                        }
-                        break;
-                }
-            }
-        }
-        
-        // No element was clicked
-        return false;
-    }
-    
-    /**
-     * Handle mouse scrolling
-     * @return true if handled
-     */
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        if (!horizontalScrollEnabled || maxHorizontalScrollOffset <= 0) {
-            return false;
-        }
-        
-        // Check if mouse is over the grid
-        if (mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height) {
-            // Scroll horizontally (delta is positive when scrolling up/left, negative when scrolling down/right)
-            int scrollAmount = (int)(-delta);
-            setHorizontalScrollOffset(horizontalScrollOffset + scrollAmount);
-            return true;
-        }
-        
-        return false;
     }
     
     /**
@@ -778,7 +637,7 @@ public class UIGridBuilder {
             buttonColor = ((Math.min(255, alpha + 0x20)) << 24) | rgb;
         }
         
-        // Draw button background
+        // Draw button background - use the full height and width provided
         graphics.fill(x, y, x + width, y + height, buttonColor);
         
         // Draw button border
@@ -787,10 +646,11 @@ public class UIGridBuilder {
         graphics.vLine(x, y, y + height - 1, borderColor);
         graphics.vLine(x + width - 1, y, y + height - 1, borderColor);
         
-        // Draw centered text
-        int textX = x + width / 2 - Minecraft.getInstance().font.width(element.text) / 2;
-        int textY = y + (height - 8) / 2;
-        graphics.drawString(Minecraft.getInstance().font, element.text, textX, textY, 0xFFFFFFFF);
+        // Draw centered text - center vertically in the whole button area
+        Font font = Minecraft.getInstance().font;
+        int textX = x + width / 2 - font.width(element.text) / 2;
+        int textY = y + (height - font.lineHeight) / 2; // Centered within the actual height
+        graphics.drawString(font, element.text, textX, textY, 0xFFFFFFFF);
     }
     
     /**
@@ -864,7 +724,7 @@ public class UIGridBuilder {
         } else if (number < 1000000000) {
             // 10000000-999999999 -> ##M (10M, 999M)
             return Math.round(number / 1000000.0) + "M";
-        } else {
+            } else {
             // 1000000000+ -> #.#B (1.2B, 9.9B)
             return String.format("%.1fB", number / 1000000000.0).replace(".0B", "B");
         }
@@ -874,9 +734,9 @@ public class UIGridBuilder {
      * Renders an item element
      */
     private void renderItem(GuiGraphics graphics, UIGridElement element, 
-                           int x, int y, int width, int height, boolean hovered) {
+                           int x, int y, int width, int height) {
         // Draw a background for the item (lighter when hovered)
-        int bgColor = hovered ? 0x80444444 : 0x60222222;
+        int bgColor = element.isHovered ? 0x80444444 : 0x60222222;
         graphics.fill(x, y, x + width, y + height, bgColor);
         
         if (element.item != null) {
@@ -967,5 +827,682 @@ public class UIGridBuilder {
             this.rowSpan = rowSpan;
             this.colSpan = colSpan;
         }
+    }
+    
+    /**
+     * Handles mouse clicks on the grid elements
+     * @return true if a click was handled
+     */
+    public boolean mouseClicked(int mouseX, int mouseY, int button) {
+        // Check for scroll button clicks first
+        if (horizontalScrollEnabled && useScrollButtons) {
+            // Check left button
+            if (mouseX >= x + horizontalMargin && mouseX < x + horizontalMargin + scrollButtonSize &&
+                mouseY >= y + height / 2 - scrollButtonSize / 2 && mouseY < y + height / 2 + scrollButtonSize / 2) {
+                if (horizontalScrollOffset > 0) {
+                    scrollLeft();
+                    return true;
+                }
+            }
+            
+            // Check right button
+            if (mouseX >= x + width - horizontalMargin - scrollButtonSize && mouseX < x + width - horizontalMargin &&
+                mouseY >= y + height / 2 - scrollButtonSize / 2 && mouseY < y + height / 2 + scrollButtonSize / 2) {
+                if (horizontalScrollOffset < maxHorizontalScrollOffset) {
+                    scrollRight();
+                    return true;
+                }
+            }
+        }
+        
+        // Check for horizontal scrollbar drag
+        if (horizontalScrollEnabled && !useScrollButtons) {
+            int availableWidth = width - (2 * horizontalMargin) - ((columns - 1) * horizontalSpacing);
+            
+            if (mouseY >= y + height - verticalMargin - scrollBarHeight && 
+                mouseY < y + height - verticalMargin &&
+                mouseX >= x + horizontalMargin && 
+                mouseX < x + horizontalMargin + availableWidth) {
+                
+                // Calculate new scroll position based on click position
+                float relativeX = (float)(mouseX - (x + horizontalMargin)) / availableWidth;
+                setHorizontalScrollOffset((int)(relativeX * maxHorizontalScrollOffset));
+                return true;
+            }
+        }
+        
+        // Check for vertical scrollbar drag - must use the same position as in rendering
+        if (verticalScrollEnabled) {
+            // Use the same scrollbar position as in renderVerticalScrollbar method
+            int scrollBarX = x + width - scrollBarWidth - 4; // Match rendering position
+            int scrollTrackY = y + verticalMargin;
+            int scrollTrackHeight = height - (verticalMargin * 2);
+            
+            if (mouseX >= scrollBarX && mouseX < scrollBarX + scrollBarWidth &&
+                mouseY >= scrollTrackY && mouseY < scrollTrackY + scrollTrackHeight) {
+                
+                // Calculate new scroll position based on click position
+                float relativeY = (float)(mouseY - scrollTrackY) / scrollTrackHeight;
+                setVerticalScrollOffset((int)(relativeY * maxVerticalScrollOffset));
+                return true;
+            }
+        }
+        
+        // Calculate cell dimensions for element click detection
+        int availableWidth = width - (2 * horizontalMargin);
+        if (visibleColumns > 0 && horizontalScrollEnabled) {
+            availableWidth -= ((visibleColumns - 1) * horizontalSpacing);
+        } else {
+            availableWidth -= ((columns - 1) * horizontalSpacing);
+        }
+        
+        int availableHeight = height - (2 * verticalMargin);
+        
+        // Adjust height for horizontal scrollbar if needed
+        if (horizontalScrollEnabled && !useScrollButtons) {
+            availableHeight -= scrollBarHeight;
+        }
+        
+        // Adjust width for vertical scrollbar if needed
+        if (verticalScrollEnabled) {
+            availableWidth -= scrollBarWidth;
+        }
+        
+        // Calculate column width
+        int columnCount = horizontalScrollEnabled ? visibleColumns : columns;
+        int cellWidth = availableWidth / columnCount;
+        
+        // Calculate row height - use custom height if set, otherwise calculate based on available space
+        int rowCount = verticalScrollEnabled ? visibleRows : rows;
+        int cellHeight = customRowHeight != null ? customRowHeight : 
+                        (availableHeight - ((rowCount - 1) * verticalSpacing)) / rowCount;
+        
+        // Check each element
+        for (UIGridElement element : elements) {
+            // Skip elements outside the visible range when using horizontal scrolling
+            if (horizontalScrollEnabled) {
+                if (element.column < horizontalScrollOffset || 
+                    element.column >= horizontalScrollOffset + visibleColumns) {
+                    continue;
+                }
+            }
+            
+            // Skip elements outside the visible range when using vertical scrolling
+            if (verticalScrollEnabled) {
+                if (element.row < verticalScrollOffset || 
+                    element.row >= verticalScrollOffset + visibleRows) {
+                    continue;
+                }
+            }
+            
+            // Calculate element position and size, adjusting for scroll offsets
+            int elementX;
+            int elementY;
+            
+            if (horizontalScrollEnabled) {
+                int adjustedColumn = element.column - horizontalScrollOffset;
+                int startX = x + horizontalMargin;
+                if (useScrollButtons) {
+                    startX += scrollButtonSize; // Account for left scroll button
+                }
+                elementX = startX + (adjustedColumn * (cellWidth + horizontalSpacing));
+            } else {
+                elementX = x + horizontalMargin + (element.column * (cellWidth + horizontalSpacing));
+            }
+            
+            if (verticalScrollEnabled) {
+                int adjustedRow = element.row - verticalScrollOffset;
+                elementY = y + verticalMargin + (adjustedRow * (cellHeight + verticalSpacing));
+            } else {
+                elementY = y + verticalMargin + (element.row * (cellHeight + verticalSpacing));
+            }
+            
+            int elementWidth = (cellWidth * element.colSpan) + ((element.colSpan - 1) * horizontalSpacing);
+            int elementHeight = (cellHeight * element.rowSpan) + ((element.rowSpan - 1) * verticalSpacing);
+            
+            // Check if click is within this element
+            if (mouseX >= elementX && mouseX < elementX + elementWidth &&
+                mouseY >= elementY && mouseY < elementY + elementHeight) {
+                
+                // Handle based on element type
+                switch (element.type) {
+                    case BUTTON:
+                        if (element.onClick != null) {
+                            element.onClick.accept(null);
+                            return true;
+                        }
+                        break;
+                        
+                    case TOGGLE:
+                        if (element.onToggle != null) {
+                            // Toggle state
+                            element.toggled = !element.toggled;
+                            
+                            // Swap colors
+                            int temp = element.backgroundColor;
+                            element.backgroundColor = element.altBackgroundColor;
+                            element.altBackgroundColor = temp;
+                            
+                            // Call handler
+                            element.onToggle.accept(element.toggled);
+                            return true;
+                        }
+                        break;
+                        
+                    case ITEM:
+                        if (element.onClick != null) {
+                            element.onClick.accept(null);
+                            return true;
+                        }
+                        break;
+                }
+            }
+        }
+        
+        // No element was clicked
+        return false;
+    }
+    
+    /**
+     * Handle mouse scrolling
+     * @return true if handled
+     */
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        // Always handle mouseScrolled regardless of position
+        // This matches the Population tab's approach
+        
+        // For vertical scrolling
+        if (verticalScrollEnabled && maxVerticalScrollOffset > 0) {
+            // Apply scrolling directly based on delta sign (delta > 0 means scroll up)
+            // Use the Population tab approach that works
+            verticalScrollOffset -= (int)Math.signum(delta);
+            
+            // Clamp scroll position
+            if (verticalScrollOffset < 0) {
+                verticalScrollOffset = 0;
+            }
+            if (verticalScrollOffset > maxVerticalScrollOffset) {
+                verticalScrollOffset = maxVerticalScrollOffset;
+            }
+            
+            System.out.println("UIGridBuilder scrolling: delta=" + delta + ", offset=" + verticalScrollOffset);
+            return true;
+        }
+        
+        // For horizontal scrolling if vertical scrolling is not enabled
+        if (horizontalScrollEnabled && maxHorizontalScrollOffset > 0) {
+            // Apply scrolling directly based on delta sign
+            horizontalScrollOffset -= (int)Math.signum(delta);
+            
+            // Clamp scroll position
+            if (horizontalScrollOffset < 0) {
+                horizontalScrollOffset = 0;
+            }
+            if (horizontalScrollOffset > maxHorizontalScrollOffset) {
+                horizontalScrollOffset = maxHorizontalScrollOffset;
+            }
+            
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Enum for different types of grid content
+     */
+    public enum GridContentType {
+        TEXT,
+        ITEM,
+        ITEM_WITH_QUANTITY,
+        TOGGLE,
+        BUTTON
+    }
+    
+    /**
+     * Class representing a single grid content item
+     */
+    public static class GridContent {
+        private GridContentType type;
+        private Object value;
+        private int textColor = 0xFFFFFFFF;  // Default text color
+        private String tooltip;
+        private Consumer<Void> onClick;
+        private Consumer<Boolean> onToggle;
+        private int bgColor = 0xA0335599;    // Default background color
+        
+        // Constructor for text
+        public static GridContent text(String text, int textColor) {
+            GridContent content = new GridContent();
+            content.type = GridContentType.TEXT;
+            content.value = text;
+            content.textColor = textColor;
+            return content;
+        }
+        
+        // Constructor for item
+        public static GridContent item(net.minecraft.world.item.Item item) {
+            GridContent content = new GridContent();
+            content.type = GridContentType.ITEM;
+            content.value = item;
+            return content;
+        }
+        
+        // Constructor for item with quantity
+        public static GridContent itemWithQuantity(net.minecraft.world.item.Item item, int quantity) {
+            GridContent content = new GridContent();
+            content.type = GridContentType.ITEM_WITH_QUANTITY;
+            content.value = new Object[]{item, quantity};
+            return content;
+        }
+        
+        // Constructor for toggle
+        public static GridContent toggle(String text, boolean initialState, Consumer<Boolean> onToggle, 
+                                        int enabledColor, int disabledColor) {
+            GridContent content = new GridContent();
+            content.type = GridContentType.TOGGLE;
+            content.value = new Object[]{text, initialState};
+            content.onToggle = onToggle;
+            content.bgColor = initialState ? enabledColor : disabledColor;
+            return content;
+        }
+        
+        // Constructor for button
+        public static GridContent button(String text, Consumer<Void> onClick, int bgColor) {
+            GridContent content = new GridContent();
+            content.type = GridContentType.BUTTON;
+            content.value = text;
+            content.onClick = onClick;
+            content.bgColor = bgColor;
+            return content;
+        }
+        
+        // Add tooltip to any content type
+        public GridContent withTooltip(String tooltip) {
+            this.tooltip = tooltip;
+            return this;
+        }
+        
+        // Add click handler to any content type
+        public GridContent withClickHandler(Consumer<Void> onClick) {
+            this.onClick = onClick;
+            return this;
+        }
+    }
+    
+    /**
+     * Build a grid from column data arrays
+     * 
+     * @param columnData Arrays of GridContent objects for each column
+     * @return This builder for chaining
+     */
+    public UIGridBuilder withColumnData(List<GridContent>[] columnData) {
+        if (columnData == null || columnData.length == 0) {
+            return this;
+        }
+        
+        // Determine the number of rows needed (use the longest column)
+        int maxRows = 0;
+        for (List<GridContent> column : columnData) {
+            maxRows = Math.max(maxRows, column.size());
+        }
+        
+        // Update total rows for scrolling calculations
+        this.rows = maxRows;
+        this.totalRows = maxRows;
+        
+        // Calculate how many rows are visible based on the available height and row height
+        int availableHeight = height - (2 * verticalMargin);
+        int calculatedRowHeight = customRowHeight != null ? customRowHeight : 
+                             (availableHeight - ((Math.min(rows, 10) - 1) * verticalSpacing)) / Math.min(rows, 10);
+        
+        // Determine if we need to enable vertical scrolling
+        int recommendedVisibleRows = Math.max(1, availableHeight / (calculatedRowHeight + verticalSpacing));
+        if (maxRows > recommendedVisibleRows) {
+            withVerticalScroll(true, recommendedVisibleRows);
+        }
+        
+        // Add all content elements to the grid
+        for (int colIndex = 0; colIndex < columnData.length; colIndex++) {
+            List<GridContent> column = columnData[colIndex];
+            
+            for (int rowIndex = 0; rowIndex < column.size(); rowIndex++) {
+                GridContent content = column.get(rowIndex);
+                
+                switch (content.type) {
+                    case TEXT:
+                        addLabel(rowIndex, colIndex, (String)content.value, content.textColor);
+                        if (content.tooltip != null) {
+                            // Update last added element with tooltip
+                            elements.get(elements.size() - 1).tooltip = content.tooltip;
+                        }
+                        if (content.onClick != null) {
+                            // Update last added element with click handler
+                            elements.get(elements.size() - 1).onClick = content.onClick;
+                        }
+                        break;
+                        
+                    case ITEM:
+                        addItem(rowIndex, colIndex, (net.minecraft.world.item.Item)content.value, 1, content.onClick);
+                        if (content.tooltip != null) {
+                            // Update last added element with tooltip
+                            elements.get(elements.size() - 1).tooltip = content.tooltip;
+                        }
+                        break;
+                        
+                    case ITEM_WITH_QUANTITY:
+                        Object[] itemData = (Object[])content.value;
+                        net.minecraft.world.item.Item item = (net.minecraft.world.item.Item)itemData[0];
+                        int quantity = (Integer)itemData[1];
+                        addItem(rowIndex, colIndex, item, quantity, content.onClick);
+                        if (content.tooltip != null) {
+                            // Update last added element with tooltip
+                            elements.get(elements.size() - 1).tooltip = content.tooltip;
+                        }
+                        break;
+                        
+                    case TOGGLE:
+                        Object[] toggleData = (Object[])content.value;
+                        String toggleText = (String)toggleData[0];
+                        boolean initialState = (Boolean)toggleData[1];
+                        addToggle(rowIndex, colIndex, toggleText, initialState, content.onToggle, 
+                                 content.bgColor, 0x80555555); // Use default disabled color
+                        if (content.tooltip != null) {
+                            // Update last added element with tooltip
+                            elements.get(elements.size() - 1).tooltip = content.tooltip;
+                        }
+                        break;
+                        
+                    case BUTTON:
+                        addButton(rowIndex, colIndex, (String)content.value, content.onClick, content.bgColor);
+                        if (content.tooltip != null) {
+                            // Update last added element with tooltip
+                            elements.get(elements.size() - 1).tooltip = content.tooltip;
+                        }
+                        break;
+                }
+            }
+        }
+        
+        return this;
+    }
+    
+    /**
+     * Utility method to create a grid from item-quantity pairs
+     * 
+     * @param itemQuantityPairs Map of items to their quantities
+     * @param textColor Color for the item name text
+     * @return This builder for chaining
+     */
+    public UIGridBuilder withItemQuantityPairs(Map<net.minecraft.world.item.Item, Integer> itemQuantityPairs, int textColor) {
+        // Clear existing elements
+        this.elements.clear();
+        
+        // Sort items by name
+        List<Map.Entry<net.minecraft.world.item.Item, Integer>> sortedEntries = 
+            new ArrayList<>(itemQuantityPairs.entrySet());
+        
+        sortedEntries.sort((a, b) -> {
+            String nameA = a.getKey().getDescriptionId();
+            String nameB = b.getKey().getDescriptionId();
+            return nameA.compareToIgnoreCase(nameB);
+        });
+        
+        // Calculate total rows needed
+        int totalRows = sortedEntries.size();
+        
+        // Adjust rows and columns based on data
+        this.columns = 2; // Item and quantity
+        this.rows = totalRows;
+        
+        // Calculate visible rows based on available height and row height
+        int effectiveRowHeight = this.customRowHeight != null ? this.customRowHeight : 16;
+        
+        // Calculate available height (accounting for margins)
+        int availableHeight = this.height - (this.verticalMargin * 2);
+        
+        // Calculate how many rows can fit in the available height
+        // Use Math.max to ensure at least 1 row is visible
+        int calculatedVisibleRows = Math.max(4, availableHeight / (effectiveRowHeight + this.verticalSpacing));
+        
+        System.out.println("Row calculation: availableHeight=" + availableHeight + 
+                           ", effectiveRowHeight=" + effectiveRowHeight + 
+                           ", spacing=" + this.verticalSpacing + 
+                           ", calculatedRows=" + calculatedVisibleRows);
+        
+        // Force vertical scrolling if we have more than 4 rows
+        if (totalRows > 4) {
+            this.withVerticalScroll(true, calculatedVisibleRows);
+        }
+        
+        // Add item elements
+        for (int i = 0; i < sortedEntries.size(); i++) {
+            Map.Entry<net.minecraft.world.item.Item, Integer> entry = sortedEntries.get(i);
+            
+            // Create a formatted item name
+            String itemName = formatItemName(entry.getKey().getDescriptionId());
+            
+            // Add label for item name (first column)
+            addLabel(i, 0, itemName, textColor);
+            
+            // Add item with quantity (second column)
+            UIGridElement element = addItem(i, 1, entry.getKey(), entry.getValue(), null).elements.get(elements.size() - 1);
+            element.showQuantity = true; // Always show quantity
+        }
+        
+        return this;
+    }
+    
+    /**
+     * Creates a grid with label-value pairs, which is a very common pattern
+     * 
+     * @param x X position 
+     * @param y Y position
+     * @param width Width
+     * @param height Height
+     * @param labelColor Color for labels
+     * @param valueColor Color for values
+     * @param pairs Map of label-value pairs
+     * @return A new grid builder with the pairs added
+     */
+    public static UIGridBuilder createLabelValueGrid(
+            int x, int y, int width, int height, 
+            int labelColor, int valueColor, 
+            Map<String, String> pairs) {
+        
+        UIGridBuilder grid = create(x, y, width, height, 2)
+            .withRowHeight(26); // Use consistent row height
+        
+        // Create column data arrays
+        @SuppressWarnings("unchecked")
+        List<GridContent>[] columnData = new List[2];
+        columnData[0] = new ArrayList<>(); // Label column
+        columnData[1] = new ArrayList<>(); // Value column
+        
+        // Add pairs
+        for (Map.Entry<String, String> entry : pairs.entrySet()) {
+            columnData[0].add(GridContent.text(entry.getKey(), labelColor));
+            columnData[1].add(GridContent.text(entry.getValue(), valueColor));
+        }
+        
+        // Use the column data
+        grid.withColumnData(columnData);
+        
+        return grid;
+    }
+    
+    /**
+     * Creates a grid with label-button pairs, which is a common pattern
+     * 
+     * @param x X position
+     * @param y Y position
+     * @param width Width
+     * @param height Height
+     * @param labelColor Color for labels
+     * @param buttonColor Color for buttons
+     * @param pairs Map of label to button data (text and click handler)
+     * @return A new grid builder with the pairs added
+     */
+    public static UIGridBuilder createLabelButtonGrid(
+            int x, int y, int width, int height,
+            int labelColor, int buttonColor,
+            Map<String, Object[]> pairs) {
+        
+        UIGridBuilder grid = create(x, y, width, height, 2)
+            .withRowHeight(26); // Use consistent row height
+        
+        // Create column data arrays
+        @SuppressWarnings("unchecked")
+        List<GridContent>[] columnData = new List[2];
+        columnData[0] = new ArrayList<>(); // Label column
+        columnData[1] = new ArrayList<>(); // Button column
+        
+        // Add pairs
+        for (Map.Entry<String, Object[]> entry : pairs.entrySet()) {
+            String label = entry.getKey();
+            Object[] buttonData = entry.getValue();
+            String buttonText = (String)buttonData[0];
+            @SuppressWarnings("unchecked") 
+            Consumer<Void> onClick = (Consumer<Void>)buttonData[1];
+            
+            columnData[0].add(GridContent.text(label, labelColor));
+            columnData[1].add(GridContent.button(buttonText, onClick, buttonColor));
+        }
+        
+        // Use the column data
+        grid.withColumnData(columnData);
+        
+        return grid;
+    }
+
+    /**
+     * Format an item's description ID into a readable name
+     */
+    private String formatItemName(String descriptionId) {
+        // Extract the item name from the description ID (e.g., "block.minecraft.stone" -> "Stone")
+        String[] parts = descriptionId.split("\\.");
+        if (parts.length > 0) {
+            String name = parts[parts.length - 1];
+            // Capitalize first letter and replace underscores with spaces
+            name = name.substring(0, 1).toUpperCase() + name.substring(1).replace('_', ' ');
+            return name;
+        }
+        return descriptionId;
+    }
+
+    /**
+     * Check if the mouse is over the vertical scrollbar thumb
+     */
+    private boolean isMouseOverVerticalScrollThumb(int mouseX, int mouseY) {
+        if (!verticalScrollEnabled) return false;
+        
+        // Calculate scroll thumb dimensions and position - must match the rendering position
+        int scrollTrackX = this.x + this.width - scrollBarWidth - 4; // Match the render position
+        int scrollTrackY = this.y + verticalMargin;
+        int scrollTrackHeight = this.height - (verticalMargin * 2);
+        
+        // Calculate thumb size and position
+        float thumbRatio = (float)visibleRows / totalRows;
+        int thumbHeight = Math.max(20, Math.round(thumbRatio * scrollTrackHeight));
+        
+        // Calculate thumb position
+        float scrollProgress = (totalRows <= visibleRows) ? 0 : 
+                              (float)verticalScrollOffset / (totalRows - visibleRows);
+        int thumbY = scrollTrackY + Math.round((scrollTrackHeight - thumbHeight) * scrollProgress);
+        
+        // Check if mouse is over thumb
+        return mouseX >= scrollTrackX && mouseX <= scrollTrackX + scrollBarWidth &&
+               mouseY >= thumbY && mouseY <= thumbY + thumbHeight;
+    }
+
+    /**
+     * Renders the horizontal scrollbar
+     */
+    private void renderHorizontalScrollbar(GuiGraphics graphics, int mouseX, int mouseY) {
+        if (!horizontalScrollEnabled) return;
+        
+        // Calculate scroll area dimensions
+        int scrollTrackX = this.x + horizontalMargin;
+        int scrollTrackY = this.y + height - verticalMargin - scrollBarHeight;
+        int scrollTrackWidth = this.width - (horizontalMargin * 2);
+        
+        // Draw scrollbar background
+        graphics.fill(scrollTrackX, scrollTrackY, 
+                     scrollTrackX + scrollTrackWidth, scrollTrackY + scrollBarHeight, 
+                     0x40000000);
+        
+        // Calculate thumb width and position
+        float thumbRatio = (float)visibleColumns / (float)totalColumns;
+        int thumbWidth = Math.max(20, (int)(scrollTrackWidth * thumbRatio));
+        
+        // Calculate thumb position based on current scroll offset
+        float scrollProgress = (totalColumns <= visibleColumns) ? 0 : 
+                              (float)horizontalScrollOffset / (totalColumns - visibleColumns);
+        int thumbX = scrollTrackX + Math.round((scrollTrackWidth - thumbWidth) * scrollProgress);
+        
+        // Draw the thumb
+        boolean isThumbHovered = isMouseOverHorizontalScrollThumb(mouseX, mouseY);
+        int thumbColor = isThumbHovered ? 0xCCAAAAAA : 0x80AAAAAA;
+        graphics.fill(thumbX, scrollTrackY, 
+                     thumbX + thumbWidth, scrollTrackY + scrollBarHeight, 
+                     thumbColor);
+    }
+
+    /**
+     * Renders the vertical scrollbar
+     */
+    private void renderVerticalScrollbar(GuiGraphics graphics, int mouseX, int mouseY) {
+        if (!verticalScrollEnabled) return;
+        
+        // Calculate scroll area dimensions - position a bit left from the edge
+        int scrollTrackX = this.x + this.width - scrollBarWidth - 4; // Moved 4px left from the edge
+        int scrollTrackY = this.y + verticalMargin;
+        int scrollTrackHeight = this.height - (verticalMargin * 2);
+        
+        // Draw scrollbar background
+        graphics.fill(scrollTrackX, scrollTrackY, 
+                     scrollTrackX + scrollBarWidth, scrollTrackY + scrollTrackHeight, 
+                     0x40000000);
+        
+        // Calculate thumb size and position
+        float thumbRatio = (float)visibleRows / totalRows;
+        int thumbHeight = Math.max(20, Math.round(thumbRatio * scrollTrackHeight));
+        
+        // Calculate thumb position based on current scroll offset
+        float scrollProgress = (totalRows <= visibleRows) ? 0 : 
+                              (float)verticalScrollOffset / (totalRows - visibleRows);
+        int thumbY = scrollTrackY + Math.round((scrollTrackHeight - thumbHeight) * scrollProgress);
+        
+        // Draw the thumb
+        boolean isThumbHovered = isMouseOverVerticalScrollThumb(mouseX, mouseY);
+        int thumbColor = isThumbHovered ? 0xCCAAAAAA : 0x80AAAAAA;
+        graphics.fill(scrollTrackX, thumbY, 
+                     scrollTrackX + scrollBarWidth, thumbY + thumbHeight, 
+                     thumbColor);
+    }
+
+    /**
+     * Checks if the mouse is over the horizontal scrollbar thumb
+     */
+    private boolean isMouseOverHorizontalScrollThumb(int mouseX, int mouseY) {
+        if (!horizontalScrollEnabled) return false;
+        
+        // Calculate scroll thumb dimensions and position
+        int scrollTrackX = this.x + horizontalMargin;
+        int scrollTrackY = this.y + height - verticalMargin - scrollBarHeight;
+        int scrollTrackWidth = this.width - (horizontalMargin * 2);
+        
+        // Calculate thumb size and position
+        float thumbRatio = (float)visibleColumns / (float)totalColumns;
+        int thumbWidth = Math.max(20, (int)(scrollTrackWidth * thumbRatio));
+        
+        // Calculate thumb position
+        float scrollProgress = (totalColumns <= visibleColumns) ? 0 : 
+                              (float)horizontalScrollOffset / (totalColumns - visibleColumns);
+        int thumbX = scrollTrackX + Math.round((scrollTrackWidth - thumbWidth) * scrollProgress);
+        
+        // Check if mouse is over thumb
+        return mouseX >= thumbX && mouseX < thumbX + thumbWidth &&
+               mouseY >= scrollTrackY && mouseY < scrollTrackY + scrollBarHeight;
     }
 } 

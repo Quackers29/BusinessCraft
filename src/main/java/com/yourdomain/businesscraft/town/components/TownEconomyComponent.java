@@ -26,12 +26,21 @@ public class TownEconomyComponent implements TownComponent {
      * @param count The amount to add
      */
     public void addResource(Item item, int count) {
-        if (item == null || count <= 0) return;
+        if (item == null) return;
         
+        // Special logging for emerald deductions
+        boolean isEmerald = item == net.minecraft.world.item.Items.EMERALD;
+        
+        // Log only significant emerald deductions (> 1)
+        if (count < 0 && isEmerald && count <= -5) {
+            LOGGER.info("Deducting {} emeralds from town economy", -count);
+        }
+        
+        // Actually add/remove the resource
         resources.addResource(item, count);
         
         // Special handling for bread which still drives population
-        if (item == Items.BREAD) {
+        if (item == Items.BREAD && count > 0) {
             int breadCount = resources.getResourceCount(Items.BREAD);
             int popToAdd = breadCount / ConfigLoader.breadPerPop;
             
