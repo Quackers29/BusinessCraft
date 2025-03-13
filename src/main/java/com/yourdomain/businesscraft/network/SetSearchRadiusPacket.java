@@ -39,6 +39,9 @@ public class SetSearchRadiusPacket extends BaseBlockEntityPacket {
                     provider.setSearchRadius(radius);
                     provider.markDirty();
                     
+                    // Also directly update the block entity
+                    townBlock.setSearchRadius(radius);
+                    
                     // Sync with block entity
                     townBlock.syncTownData();
                 }

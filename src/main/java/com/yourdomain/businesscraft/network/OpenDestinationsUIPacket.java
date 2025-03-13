@@ -18,103 +18,107 @@ import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
 
 /**
- * Packet sent from client to server to open the destinations UI for a platform
+ * Packet for opening the destinations UI for a platform
  */
 public class OpenDestinationsUIPacket {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final BlockPos pos;
+    private final BlockPos blockPos;
     private final UUID platformId;
     
-    public OpenDestinationsUIPacket(BlockPos pos, UUID platformId) {
-        this.pos = pos;
+    public OpenDestinationsUIPacket(BlockPos blockPos, UUID platformId) {
+        this.blockPos = blockPos;
         this.platformId = platformId;
     }
     
-    public OpenDestinationsUIPacket(FriendlyByteBuf buf) {
-        this.pos = buf.readBlockPos();
-        this.platformId = buf.readUUID();
-    }
-    
+    /**
+     * Encode the packet data into the buffer
+     */
     public void encode(FriendlyByteBuf buf) {
-        buf.writeBlockPos(pos);
+        buf.writeBlockPos(blockPos);
         buf.writeUUID(platformId);
     }
     
+    /**
+     * Decode the packet data from the buffer
+     */
+    public static OpenDestinationsUIPacket decode(FriendlyByteBuf buf) {
+        return new OpenDestinationsUIPacket(buf.readBlockPos(), buf.readUUID());
+    }
+    
+    /**
+     * Handle the packet on the receiving side
+     */
     public boolean handle(Supplier<NetworkEvent.Context> ctx) {
         NetworkEvent.Context context = ctx.get();
         context.enqueueWork(() -> {
+            // Get player and world from context
             ServerPlayer player = context.getSender();
             if (player == null) return;
             
-            ServerLevel serverLevel = player.serverLevel();
-            BlockEntity be = serverLevel.getBlockEntity(pos);
+            Level level = player.level();
             
+            // Check if the block entity is valid
+            BlockEntity be = level.getBlockEntity(blockPos);
             if (be instanceof TownBlockEntity townBlock) {
-                LOGGER.debug("Player {} is opening destinations UI for platform {} at {}", 
-                    player.getName().getString(), platformId, pos);
-                
-                // Find the platform with this ID
-                Platform platform = null;
-                for (Platform p : townBlock.getPlatforms()) {
-                    if (p.getId().equals(platformId)) {
-                        platform = p;
-                        break;
-                    }
-                }
-                
+                // Find the platform
+                Platform platform = townBlock.getPlatform(platformId);
                 if (platform != null) {
-                    // Create refresh packet with town data
-                    RefreshDestinationsPacket packet = new RefreshDestinationsPacket(pos, platformId);
+                    // Get town manager to find all towns
+                    TownManager townManager = TownManager.get((ServerLevel) level);
                     
-                    // Get destination data for this platform
-                    Map<UUID, Boolean> destinations = platform.getDestinations();
+                    // Create a response packet with town information
+                    RefreshDestinationsPacket responsePacket = new RefreshDestinationsPacket(
+                        blockPos, platformId
+                    );
                     
-                    // Get all towns
-                    Map<UUID, String> allTowns = townBlock.getAllTownsForDestination(serverLevel);
-                    
-                    // Get the origin town
+                    // Get the current town's position for distance calculations
+                    BlockPos originPos = blockPos;
                     Town originTown = townBlock.getTown();
+                    if (originTown != null) {
+                        LOGGER.debug("Found origin town: {}", originTown.getName());
+                    }
                     
-                    // Use the block's position if town or town position is null
-                    BlockPos originPos = (originTown != null && originTown.getPosition() != null) 
-                        ? originTown.getPosition() 
-                        : pos; // Use the block entity's position as fallback
-                    
-                    // Add towns to the packet with distance information
-                    for (Map.Entry<UUID, String> entry : allTowns.entrySet()) {
+                    // Add all towns except the current one to the packet
+                    int addedTowns = 0;
+                    for (Map.Entry<UUID, Town> entry : townManager.getAllTowns().entrySet()) {
                         UUID townId = entry.getKey();
-                        String name = entry.getValue();
-                        boolean enabled = destinations.getOrDefault(townId, false);
+                        Town town = entry.getValue();
                         
-                        // Calculate distance between towns
-                        int distance = 100; // Default fallback distance
-                        String direction = ""; // Direction (N, NE, E, etc.)
-                        
-                        Town destTown = TownManager.get(serverLevel).getTown(townId);
-                        
-                        if (destTown != null) {
-                            BlockPos destPos = destTown.getPosition();
-                            if (destPos != null) {
-                                // Calculate Euclidean distance in blocks
-                                double dx = destPos.getX() - originPos.getX();
-                                double dy = destPos.getY() - originPos.getY();
-                                double dz = destPos.getZ() - originPos.getZ();
-                                distance = (int)Math.sqrt(dx*dx + dy*dy + dz*dz);
-                                
-                                // Calculate direction (ignore Y-axis)
-                                direction = calculateDirection(dx, dz);
-                            }
+                        // Skip this town
+                        if (originTown != null && townId.equals(originTown.getId())) {
+                            continue;
                         }
                         
-                        packet.addTown(townId, name, enabled, distance, direction);
+                        // Calculate distance and direction to the town
+                        BlockPos townPos = town.getPosition();
+                        if (townPos != null) {
+                            int distance = (int) Math.sqrt(townPos.distSqr(originPos));
+                            String direction = calculateDirection(
+                                townPos.getX() - originPos.getX(),
+                                townPos.getZ() - originPos.getZ()
+                            );
+                            
+                            // Add town to packet
+                            boolean enabled = platform.isDestinationEnabled(townId);
+                            responsePacket.addTown(
+                                townId, 
+                                town.getName(), 
+                                enabled,
+                                distance,
+                                direction
+                            );
+                            addedTowns++;
+                        }
                     }
                     
-                    // Send the packet to the client
-                    ModMessages.sendToPlayer(packet, player);
+                    // Send response packet to open UI on client
+                    ModMessages.sendToPlayer(responsePacket, player);
+                    LOGGER.debug("Sent destinations data for {} towns to player {}", 
+                        addedTowns, player.getName().getString());
                 }
             }
         });
-        
+        context.setPacketHandled(true);
         return true;
     }
     

@@ -13,72 +13,79 @@ import org.apache.logging.log4j.Logger;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.network.ModMessages;
 import net.minecraft.world.level.Level;
+import com.yourdomain.businesscraft.platform.Platform;
 
 /**
- * Packet sent from client to server to set a platform's path start or end point
+ * Packet for setting a platform's path
  */
 public class SetPlatformPathPacket {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final BlockPos pos;
+    private final BlockPos blockPos;
     private final UUID platformId;
-    private final BlockPos pathPos;
-    private final boolean isStart;
+    private final BlockPos startPos;
+    private final BlockPos endPos;
     
-    public SetPlatformPathPacket(BlockPos pos, UUID platformId, BlockPos pathPos, boolean isStart) {
-        this.pos = pos;
+    public SetPlatformPathPacket(BlockPos blockPos, UUID platformId, BlockPos startPos, BlockPos endPos) {
+        this.blockPos = blockPos;
         this.platformId = platformId;
-        this.pathPos = pathPos;
-        this.isStart = isStart;
+        this.startPos = startPos;
+        this.endPos = endPos;
     }
     
-    public SetPlatformPathPacket(FriendlyByteBuf buf) {
-        this.pos = buf.readBlockPos();
-        this.platformId = buf.readUUID();
-        this.pathPos = buf.readBlockPos();
-        this.isStart = buf.readBoolean();
-    }
-    
+    /**
+     * Encode the packet data into the buffer
+     */
     public void encode(FriendlyByteBuf buf) {
-        buf.writeBlockPos(pos);
+        buf.writeBlockPos(blockPos);
         buf.writeUUID(platformId);
-        buf.writeBlockPos(pathPos);
-        buf.writeBoolean(isStart);
+        buf.writeBlockPos(startPos);
+        buf.writeBlockPos(endPos);
     }
     
+    /**
+     * Decode the packet data from the buffer
+     */
+    public static SetPlatformPathPacket decode(FriendlyByteBuf buf) {
+        return new SetPlatformPathPacket(
+            buf.readBlockPos(),
+            buf.readUUID(),
+            buf.readBlockPos(),
+            buf.readBlockPos()
+        );
+    }
+    
+    /**
+     * Handle the packet on the receiving side
+     */
     public boolean handle(Supplier<NetworkEvent.Context> ctx) {
         NetworkEvent.Context context = ctx.get();
         context.enqueueWork(() -> {
+            // Get player and world from context
             ServerPlayer player = context.getSender();
             if (player == null) return;
             
             Level level = player.level();
-            BlockEntity be = level.getBlockEntity(pos);
             
+            // Check if the block entity is valid
+            BlockEntity be = level.getBlockEntity(blockPos);
             if (be instanceof TownBlockEntity townBlock) {
-                String pointType = isStart ? "start" : "end";
-                LOGGER.debug("Player {} is setting platform {} {} point to {} at {}", 
-                    player.getName().getString(), platformId, pointType, pathPos, pos);
-                
-                // Set the appropriate path point
-                if (isStart) {
-                    townBlock.setPlatformPathStart(platformId, pathPos);
-                } else {
-                    townBlock.setPlatformPathEnd(platformId, pathPos);
+                // Find the platform
+                Platform platform = townBlock.getPlatform(platformId);
+                if (platform != null) {
+                    // Update start and end positions
+                    platform.setStartPos(startPos);
+                    platform.setEndPos(endPos);
+                    System.out.println("Updated platform " + platformId + " path from " + 
+                        startPos + " to " + endPos);
+                    
+                    // Sync the town block
+                    townBlock.setChanged();
+                    level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), 
+                        level.getBlockState(blockPos), 3);
                 }
-                
-                LOGGER.debug("Successfully set platform {} {} point to {} at {}", 
-                    platformId, pointType, pathPos, pos);
-                
-                townBlock.setChanged();
-                
-                // Force a block update to ensure clients get the updated data
-                level.sendBlockUpdated(pos, level.getBlockState(pos), level.getBlockState(pos), 3);
-                
-                // Notify clients of the update (only affects the specific platform's path points)
-                ModMessages.sendToAllTrackingChunk(new RefreshPlatformsPacket(pos), level, pos);
             }
         });
-        
+        context.setPacketHandled(true);
         return true;
     }
 } 

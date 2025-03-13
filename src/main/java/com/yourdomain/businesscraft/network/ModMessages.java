@@ -65,44 +65,50 @@ public class ModMessages {
                 
         // Register platform-related packets
         net.messageBuilder(AddPlatformPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(AddPlatformPacket::new)
+                .decoder(AddPlatformPacket::decode)
                 .encoder(AddPlatformPacket::encode)
                 .consumerMainThread(AddPlatformPacket::handle)
                 .add();
                 
         net.messageBuilder(DeletePlatformPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(DeletePlatformPacket::new)
+                .decoder(DeletePlatformPacket::decode)
                 .encoder(DeletePlatformPacket::encode)
                 .consumerMainThread(DeletePlatformPacket::handle)
                 .add();
                 
         net.messageBuilder(SetPlatformEnabledPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(SetPlatformEnabledPacket::new)
+                .decoder(SetPlatformEnabledPacket::decode)
                 .encoder(SetPlatformEnabledPacket::encode)
                 .consumerMainThread(SetPlatformEnabledPacket::handle)
                 .add();
                 
         net.messageBuilder(SetPlatformPathPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(SetPlatformPathPacket::new)
+                .decoder(SetPlatformPathPacket::decode)
                 .encoder(SetPlatformPathPacket::encode)
                 .consumerMainThread(SetPlatformPathPacket::handle)
                 .add();
                 
+        net.messageBuilder(ResetPlatformPathPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(ResetPlatformPathPacket::decode)
+                .encoder(ResetPlatformPathPacket::encode)
+                .consumerMainThread(ResetPlatformPathPacket::handle)
+                .add();
+                
         net.messageBuilder(SetPlatformPathCreationModePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(SetPlatformPathCreationModePacket::new)
+                .decoder(buf -> new SetPlatformPathCreationModePacket(buf))
                 .encoder(SetPlatformPathCreationModePacket::encode)
                 .consumerMainThread(SetPlatformPathCreationModePacket::handle)
                 .add();
                 
         net.messageBuilder(RefreshPlatformsPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(RefreshPlatformsPacket::new)
+                .decoder(buf -> new RefreshPlatformsPacket(buf))
                 .encoder(RefreshPlatformsPacket::encode)
                 .consumerMainThread(RefreshPlatformsPacket::handle)
                 .add();
                 
         // Register platform destination packets
         net.messageBuilder(OpenDestinationsUIPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(OpenDestinationsUIPacket::new)
+                .decoder(OpenDestinationsUIPacket::decode)
                 .encoder(OpenDestinationsUIPacket::encode)
                 .consumerMainThread(OpenDestinationsUIPacket::handle)
                 .add();
@@ -124,6 +130,20 @@ public class ModMessages {
                 .decoder(PlayerExitUIPacket::decode)
                 .encoder(PlayerExitUIPacket::encode)
                 .consumerMainThread(PlayerExitUIPacket::handle)
+                .add();
+
+        // Register resource trading packet
+        net.messageBuilder(TradeResourcePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(TradeResourcePacket::decode)
+                .encoder(TradeResourcePacket::encode)
+                .consumerMainThread(TradeResourcePacket::handle)
+                .add();
+                
+        // Register payment result packet (server to client)
+        net.messageBuilder(PaymentResultPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(PaymentResultPacket::decode)
+                .encoder(PaymentResultPacket::encode)
+                .consumerMainThread(PaymentResultPacket::handle)
                 .add();
     }
 

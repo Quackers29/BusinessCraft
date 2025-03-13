@@ -43,6 +43,10 @@ import java.util.UUID;
 import java.util.List;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.particles.ParticleTypes;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * The Town Interface Block provides a modern UI for managing town settings.
@@ -51,6 +55,12 @@ import net.minecraft.world.item.ItemStack;
 public class TownInterfaceBlock extends BaseEntityBlock {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/TownInterfaceBlock");
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
+    
+    // Add fields for platform visualization
+    private static final long INDICATOR_SPAWN_INTERVAL = 20; // 1 second in ticks
+    private static final long EXTENDED_INDICATOR_DURATION = 600; // 30 seconds in ticks
+    private final Map<UUID, Long> platformIndicatorSpawnTimes = new HashMap<>();
+    private final Map<UUID, Long> extendedIndicatorPlayers = new HashMap<>();
     
     // Block shape - a slightly smaller than full block
     private static final VoxelShape SHAPE = Block.box(1, 0, 1, 15, 16, 15);
@@ -119,9 +129,27 @@ public class TownInterfaceBlock extends BaseEntityBlock {
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
             BlockEntityType<T> type) {
-        return createTickerHelper(type, ModBlockEntities.TOWN_BLOCK_ENTITY.get(),
+        // First use the default ticker for the TownBlockEntity
+        BlockEntityTicker<T> baseTicker = createTickerHelper(type, ModBlockEntities.TOWN_BLOCK_ENTITY.get(),
                 (lvl, pos, blockState, blockEntity) -> ((TownBlockEntity) blockEntity).tick(lvl, pos, blockState,
                         (TownBlockEntity) blockEntity));
+        
+        // Then add our own ticker that also handles platform visualization
+        return (lvl, pos, blockState, blockEntity) -> {
+            // First call the base ticker
+            if (baseTicker != null) {
+                baseTicker.tick(lvl, pos, blockState, blockEntity);
+            }
+            
+            // Then handle our own logic for platform visualization
+            if (!lvl.isClientSide() && lvl.getGameTime() % 20 == 0) { // Every 1 second
+                // Clean up platform indicators
+                cleanupPlatformIndicators(pos, lvl);
+                
+                // Spawn platform indicators
+                spawnPlatformIndicators(lvl, pos);
+            }
+        };
     }
 
     private String getRandomTownName() {
@@ -273,6 +301,228 @@ public class TownInterfaceBlock extends BaseEntityBlock {
             }
             // Call super after our logic
             super.onRemove(state, level, pos, newState, isMoving);
+        }
+    }
+
+    /**
+     * Spawns visual indicators at platform start and end points and along the line
+     */
+    private void spawnPlatformIndicators(Level level, BlockPos pos) {
+        if (level.isClientSide) return;
+        
+        // Get the block entity
+        BlockEntity be = level.getBlockEntity(pos);
+        if (!(be instanceof TownBlockEntity townBlock)) return;
+        
+        List<Platform> platforms = townBlock.getPlatforms();
+        if (platforms.isEmpty()) return;
+        
+        long gameTime = level.getGameTime();
+        
+        // Check if any players have recently exited the UI
+        boolean showIndicators = false;
+        Iterator<Map.Entry<UUID, Long>> iterator = extendedIndicatorPlayers.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<UUID, Long> entry = iterator.next();
+            if (gameTime - entry.getValue() > EXTENDED_INDICATOR_DURATION) {
+                // Remove expired entries
+                iterator.remove();
+                LOGGER.debug("Removed expired indicator for player {}", entry.getKey());
+            } else {
+                showIndicators = true;
+            }
+        }
+        
+        // Only show particles if players have recently exited the UI
+        if (!showIndicators) {
+            return; // Exit early if no recent UI exits
+        }
+        
+        // For each platform, spawn particles
+        for (Platform platform : platforms) {
+            if (!platform.isEnabled() || !platform.isComplete()) continue;
+            
+            UUID platformId = platform.getId();
+            
+            // Check if it's time to spawn indicators for this platform
+            boolean shouldSpawnIndicators = 
+                !platformIndicatorSpawnTimes.containsKey(platformId) || 
+                gameTime - platformIndicatorSpawnTimes.get(platformId) >= INDICATOR_SPAWN_INTERVAL;
+                
+            if (shouldSpawnIndicators) {
+                // Update spawn time
+                platformIndicatorSpawnTimes.put(platformId, gameTime);
+                
+                BlockPos startPos = platform.getStartPos();
+                BlockPos endPos = platform.getEndPos();
+                
+                // Calculate the path between start and end
+                int startX = startPos.getX();
+                int startY = startPos.getY();
+                int startZ = startPos.getZ();
+                int endX = endPos.getX();
+                int endY = endPos.getY();
+                int endZ = endPos.getZ();
+                
+                // Calculate line length for parameter
+                int dx = endX - startX;
+                int dy = endY - startY;
+                int dz = endZ - startZ;
+                double length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                int steps = (int) Math.max(1, Math.ceil(length));
+                
+                // Spawn particles along the line, one per block
+                for (int i = 0; i <= steps; i++) {
+                    double t = (steps == 0) ? 0 : (double) i / steps;
+                    double x = startX + dx * t;
+                    double y = startY + dy * t + 1.0; // +1.0 to place above the ground
+                    double z = startZ + dz * t;
+                    
+                    ((ServerLevel)level).sendParticles(
+                        ParticleTypes.HAPPY_VILLAGER,
+                        x + 0.5,
+                        y,
+                        z + 0.5,
+                        5, // particle count (increased from 1 to 5)
+                        0.2, 0.2, 0.2, // spread
+                        0.0 // speed
+                    );
+                }
+                
+                // Add red particles to show search radius
+                spawnSearchRadiusParticles(
+                    (ServerLevel)level,
+                    startPos,
+                    endPos,
+                    townBlock.getSearchRadius()
+                );
+            }
+        }
+    }
+    
+    /**
+     * Registers a player as having exited the town UI, enabling extended indicators
+     * @param playerId The UUID of the player who exited the UI
+     * @param level The level containing the block
+     * @param pos The position of the block
+     */
+    public void registerPlayerExitUI(UUID playerId, Level level, BlockPos pos) {
+        extendedIndicatorPlayers.put(playerId, level.getGameTime());
+        
+        // Spawn immediate indicators
+        spawnPlatformIndicators(level, pos);
+    }
+    
+    /**
+     * Clean up indicator data for removed platforms
+     * @param blockPos The position of the block
+     * @param level The level containing the block
+     */
+    private void cleanupPlatformIndicators(BlockPos blockPos, Level level) {
+        BlockEntity be = level.getBlockEntity(blockPos);
+        if (!(be instanceof TownBlockEntity townBlock)) return;
+        
+        List<Platform> platforms = townBlock.getPlatforms();
+        
+        // Remove spawn times for platforms that no longer exist
+        platformIndicatorSpawnTimes.keySet().removeIf(platformId -> 
+            platforms.stream().noneMatch(p -> p.getId().equals(platformId))
+        );
+    }
+
+    /**
+     * Spawns red particles to show search radius around platform line
+     * 
+     * @param level The server level
+     * @param startPos Platform start position
+     * @param endPos Platform end position
+     * @param radius Search radius
+     */
+    private void spawnSearchRadiusParticles(ServerLevel level, BlockPos startPos, BlockPos endPos, int radius) {
+        // Calculate the path between start and end
+        int startX = startPos.getX();
+        int startY = startPos.getY();
+        int startZ = startPos.getZ();
+        int endX = endPos.getX();
+        int endY = endPos.getY();
+        int endZ = endPos.getZ();
+        
+        // Calculate the bounding box the same way it's used for entity search
+        int minX = Math.min(startX, endX) - radius;
+        int minZ = Math.min(startZ, endZ) - radius;
+        int maxX = Math.max(startX, endX) + radius;
+        int maxZ = Math.max(startZ, endZ) + radius;
+        
+        // Use a fixed Y for visualization
+        double particleY = Math.min(startY, endY) + 1.0;
+        
+        // Calculate perimeter length to determine number of particles
+        int perimeterLength = 2 * (maxX - minX + maxZ - minZ);
+        int totalPoints = Math.min(200, Math.max(32, perimeterLength / 2));
+        
+        // Distribute points evenly across the 4 sides of the perimeter
+        int pointsPerSide = totalPoints / 4;
+        
+        // Generate particles along the perimeter
+        
+        // Bottom edge (minX to maxX at minZ)
+        for (int i = 0; i < pointsPerSide; i++) {
+            double t = (double) i / (pointsPerSide - 1);
+            double x = minX + t * (maxX - minX);
+            level.sendParticles(
+                ParticleTypes.FLAME,
+                x,
+                particleY,
+                minZ,
+                1,
+                0.0, 0.0, 0.0,
+                0.0
+            );
+        }
+        
+        // Right edge (maxX, minZ to maxZ)
+        for (int i = 0; i < pointsPerSide; i++) {
+            double t = (double) i / (pointsPerSide - 1);
+            double z = minZ + t * (maxZ - minZ);
+            level.sendParticles(
+                ParticleTypes.FLAME,
+                maxX,
+                particleY,
+                z,
+                1,
+                0.0, 0.0, 0.0,
+                0.0
+            );
+        }
+        
+        // Top edge (maxX to minX at maxZ)
+        for (int i = 0; i < pointsPerSide; i++) {
+            double t = (double) i / (pointsPerSide - 1);
+            double x = maxX - t * (maxX - minX);
+            level.sendParticles(
+                ParticleTypes.FLAME,
+                x,
+                particleY,
+                maxZ,
+                1,
+                0.0, 0.0, 0.0,
+                0.0
+            );
+        }
+        
+        // Left edge (minX, maxZ to minZ)
+        for (int i = 0; i < pointsPerSide; i++) {
+            double t = (double) i / (pointsPerSide - 1);
+            double z = maxZ - t * (maxZ - minZ);
+            level.sendParticles(
+                ParticleTypes.FLAME,
+                minX,
+                particleY,
+                z,
+                1,
+                0.0, 0.0, 0.0,
+                0.0
+            );
         }
     }
 } 

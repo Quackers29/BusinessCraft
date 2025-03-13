@@ -12,68 +12,76 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import net.minecraft.world.level.Level;
+import com.yourdomain.businesscraft.platform.Platform;
 
 /**
- * Packet sent from client to server to toggle a platform's enabled state
+ * Packet for toggling platform enabled state
  */
 public class SetPlatformEnabledPacket {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final BlockPos pos;
+    private final BlockPos blockPos;
     private final UUID platformId;
     private final boolean enabled;
     
-    public SetPlatformEnabledPacket(BlockPos pos, UUID platformId, boolean enabled) {
-        this.pos = pos;
+    public SetPlatformEnabledPacket(BlockPos blockPos, UUID platformId, boolean enabled) {
+        this.blockPos = blockPos;
         this.platformId = platformId;
         this.enabled = enabled;
     }
     
-    public SetPlatformEnabledPacket(FriendlyByteBuf buf) {
-        this.pos = buf.readBlockPos();
-        this.platformId = buf.readUUID();
-        this.enabled = buf.readBoolean();
-    }
-    
+    /**
+     * Encode the packet data into the buffer
+     */
     public void encode(FriendlyByteBuf buf) {
-        buf.writeBlockPos(pos);
+        buf.writeBlockPos(blockPos);
         buf.writeUUID(platformId);
         buf.writeBoolean(enabled);
     }
     
+    /**
+     * Decode the packet data from the buffer
+     */
+    public static SetPlatformEnabledPacket decode(FriendlyByteBuf buf) {
+        return new SetPlatformEnabledPacket(buf.readBlockPos(), buf.readUUID(), buf.readBoolean());
+    }
+    
+    /**
+     * Handle the packet on the receiving side
+     */
     public boolean handle(Supplier<NetworkEvent.Context> ctx) {
         NetworkEvent.Context context = ctx.get();
         context.enqueueWork(() -> {
+            // Get player and world from context
             ServerPlayer player = context.getSender();
             if (player == null) return;
             
             Level level = player.level();
-            BlockEntity be = level.getBlockEntity(pos);
             
+            // Check if the block entity is valid
+            BlockEntity be = level.getBlockEntity(blockPos);
             if (be instanceof TownBlockEntity townBlock) {
-                LOGGER.debug("Player {} is setting platform {} enabled state to {} at {}", 
-                    player.getName().getString(), platformId, enabled, pos);
-                
-                // Get the platform
-                com.yourdomain.businesscraft.platform.Platform platform = townBlock.getPlatform(platformId);
+                // Find the platform
+                Platform platform = townBlock.getPlatform(platformId);
                 if (platform != null) {
-                    // Update its state
+                    // Update enabled state
                     platform.setEnabled(enabled);
-                    LOGGER.debug("Successfully set platform {} enabled state to {} at {}", 
-                        platformId, enabled, pos);
-                    townBlock.setChanged();
+                    LOGGER.debug("Player {} is setting platform {} enabled state to {} at {}", 
+                        player.getName().getString(), platformId, enabled, blockPos);
                     
-                    // Force a block update to ensure clients get the updated data
-                    level.sendBlockUpdated(pos, level.getBlockState(pos), level.getBlockState(pos), 3);
+                    // Sync the town block
+                    townBlock.setChanged();
+                    level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), 
+                        level.getBlockState(blockPos), 3);
                     
                     // Notify clients of the update
-                    ModMessages.sendToAllTrackingChunk(new RefreshPlatformsPacket(pos), level, pos);
+                    ModMessages.sendToAllTrackingChunk(new RefreshPlatformsPacket(blockPos), level, blockPos);
                 } else {
                     LOGGER.debug("Failed to set platform {} enabled state - platform not found at {}", 
-                        platformId, pos);
+                        platformId, blockPos);
                 }
             }
         });
-        
+        context.setPacketHandled(true);
         return true;
     }
 } 

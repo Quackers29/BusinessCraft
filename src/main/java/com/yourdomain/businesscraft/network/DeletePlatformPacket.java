@@ -14,57 +14,66 @@ import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import net.minecraft.world.level.Level;
 
 /**
- * Packet sent from client to server to delete a platform from a town block
+ * Packet for deleting a platform from a town
  */
 public class DeletePlatformPacket {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final BlockPos pos;
+    private final BlockPos blockPos;
     private final UUID platformId;
     
-    public DeletePlatformPacket(BlockPos pos, UUID platformId) {
-        this.pos = pos;
+    public DeletePlatformPacket(BlockPos blockPos, UUID platformId) {
+        this.blockPos = blockPos;
         this.platformId = platformId;
     }
     
-    public DeletePlatformPacket(FriendlyByteBuf buf) {
-        this.pos = buf.readBlockPos();
-        this.platformId = buf.readUUID();
-    }
-    
+    /**
+     * Encode the packet data into the buffer
+     */
     public void encode(FriendlyByteBuf buf) {
-        buf.writeBlockPos(pos);
+        buf.writeBlockPos(blockPos);
         buf.writeUUID(platformId);
     }
     
+    /**
+     * Decode the packet data from the buffer
+     */
+    public static DeletePlatformPacket decode(FriendlyByteBuf buf) {
+        return new DeletePlatformPacket(buf.readBlockPos(), buf.readUUID());
+    }
+    
+    /**
+     * Handle the packet on the receiving side
+     */
     public boolean handle(Supplier<NetworkEvent.Context> ctx) {
         NetworkEvent.Context context = ctx.get();
         context.enqueueWork(() -> {
+            // Get player and world from context
             ServerPlayer player = context.getSender();
             if (player == null) return;
             
             Level level = player.level();
-            BlockEntity be = level.getBlockEntity(pos);
             
+            // Check if the block entity is valid
+            BlockEntity be = level.getBlockEntity(blockPos);
             if (be instanceof TownBlockEntity townBlock) {
-                LOGGER.debug("Player {} is deleting platform {} from town block at {}", 
-                    player.getName().getString(), platformId, pos);
-                
-                boolean removed = townBlock.removePlatform(platformId);
-                if (removed) {
-                    LOGGER.debug("Successfully deleted platform {} from town block at {}", platformId, pos);
-                    townBlock.setChanged();
+                // Delete the platform
+                boolean deleted = townBlock.removePlatform(platformId);
+                if (deleted) {
+                    LOGGER.debug("Deleted platform {} from town at {}", platformId, blockPos);
                     
-                    // Force a block update to ensure clients get the updated data
-                    level.sendBlockUpdated(pos, level.getBlockState(pos), level.getBlockState(pos), 3);
+                    // Sync the town block
+                    townBlock.setChanged();
+                    level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), 
+                        level.getBlockState(blockPos), 3);
                     
                     // Notify clients of the update
-                    ModMessages.sendToAllTrackingChunk(new RefreshPlatformsPacket(pos), level, pos);
+                    ModMessages.sendToAllTrackingChunk(new RefreshPlatformsPacket(blockPos), level, blockPos);
                 } else {
-                    LOGGER.debug("Failed to delete platform {} from town block at {}", platformId, pos);
+                    LOGGER.debug("Failed to delete platform {} from town at {}", platformId, blockPos);
                 }
             }
         });
-        
+        context.setPacketHandled(true);
         return true;
     }
 } 

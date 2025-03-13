@@ -10,6 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 
 public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
     // The location of the trade GUI texture
@@ -236,6 +237,18 @@ public class TradeScreen extends AbstractContainerScreen<TradeMenu> {
         this.onClose();
         
         // Use the utility method to return to the main interface
-        ScreenNavigationHelper.returnToTownInterface(this.minecraft, this.minecraft.player);
+        // Pass the town block position from the menu to ensure we maintain the town reference
+        ScreenNavigationHelper.returnToTownInterface(this.minecraft, this.minecraft.player, this.menu.getTownBlockPos());
+    }
+    
+    /**
+     * Sets an item in the output slot after a trade has been processed on the server
+     */
+    public void setOutputItem(ItemStack itemStack) {
+        // Update the output slot in the menu directly
+        if (this.menu != null) {
+            // Update the item in the trade inventory
+            this.menu.setOutputItem(itemStack);
+        }
     }
 }

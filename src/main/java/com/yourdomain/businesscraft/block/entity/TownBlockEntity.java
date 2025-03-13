@@ -1003,6 +1003,19 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                         LOGGER.debug("Updating town name from '{}' to '{}'", name, latestName);
                         name = latestName;
                     }
+                    
+                    // Explicitly update client resources when syncing town data
+                    if (level instanceof ServerLevel serverLevel) {
+                        Town town = TownManager.get(serverLevel).getTown(townId);
+                        if (town != null) {
+                            // Update client resources from the town (make sure emeralds are properly reflected)
+                            clientResources.clear();
+                            town.getAllResources().forEach((item, count) -> {
+                                clientResources.put(item, count);
+                            });
+                            LOGGER.debug("Updated client resources from town during sync, resources count: {}", clientResources.size());
+                        }
+                    }
                 }
             }
             
