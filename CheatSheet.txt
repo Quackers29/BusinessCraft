@@ -144,3 +144,37 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 131. Network, packet registration, use static decode methods instead of constructor references in messageBuilder for packet registration
 132. Network, packet classes, when implementing a packet class, ensure static decode method converts FriendlyByteBuf to the necessary constructor parameters
 133. UI, dynamic button text, use component.isComplete() or similar state checks to update button labels and tooltips based on current state
+134. UI, modal overlays, render parent screens with invalid mouse coordinates (-999, -999) to show background UI while preventing interactions
+135. UI, screen transitions, always pass BlockPos between screens when returning to block-related UIs to avoid NullPointerExceptions
+136. UI, modal overlays, avoid rendering parent screen UI and instead use renderBackground() with a dark overlay to prevent UI element overlap
+137. UI, game screens, override isPauseScreen() to return false for information overlays to allow the game to continue running in the background
+138. UI, town name lookups, wrap town name lookups in try-catch blocks to handle cases where town data may change or be unavailable during lookups
+139. UI, scrollable lists, implement visual scrollbars for long lists to indicate position and allow direct manipulation
+140. UI, screen transitions, when closing a modal or overlay screen, explicitly set the active tab in the parent screen to ensure consistent navigation
+141. UI, UIGridBuilder, always specify grid height and width along with column count to enable proper scrolling behavior when content exceeds the visible area
+142. UI, modal sizing, scale modal dimensions based on content volume instead of using fixed sizes that might be too large for the game UI
+143. UI, font scaling, use pose transformations (scale) for title text to make it larger without increasing its spacing requirements
+144. UI, screen real estate, reduce overlay screen size by 30% and center vertically for a less imposing appearance that doesn't dominate gameplay
+145. UI, grid scrolling, use scrollingOnly parameter in refresh methods to avoid reloading data during scrolling operations
+146. UI, scrollbar manipulation, implement consistent scrollbar interaction for both dragging and clicking to match vanilla Minecraft UI patterns
+147. UI, title placement, move screen titles inside the content panel rather than above it for a more integrated and compact appearance
+148. UI, component templates, extract complex UI components into reusable template classes with generic type parameters for different data types
+149. UI, factory patterns, create factory methods for common screen types to simplify creation and reduce duplicate code
+150. UI, theme management, implement color theme arrays or constants to easily apply consistent styling across related components
+151. UI, builder pattern, use builder pattern with method chaining to create clean, readable component configuration code
+152. UI, modal screens, implement proper onClose callbacks to control navigation flow when returning from modal screens
+153. UI, nested UI, handle parent-child screen relationships explicitly by passing parent references to modal screens
+154. UI, inventory modals, retain parent screen when showing inventory UIs to maintain navigation context instead of replacing screens
+155. UI, containerMenu, when integrating inventory screens with gui systems, render slots at coordinates relative to the modal panel, not absolute screen positions
+156. UI, slot rendering, use specific rendering methods for different inventory slot types (input, output, storage) to provide visual cues to users
+157. UI, inventory interaction, implement mouseClicked event handlers that use Minecraft.gameMode.handleInventoryMouseClick for proper slot interaction
+158. UI, inventory tooltips, render tooltips for slots and items at the end of the rendering cycle using the slot's item as the source
+159. UI, typesafe factories, create specific factory methods for each menu type (TradeMenu, StorageMenu) to simplify screen creation and avoid type errors
+160. UI, AbstractContainerScreen, hide default title/inventory labels by setting titleLabelX/Y and inventoryLabelX/Y to -9999 to provide custom rendering
+161. UI, AbstractContainerScreen, move custom title rendering to a dedicated method to simplify the render method and improve code organization
+162. UI, AbstractContainerScreen, override renderLabels method to prevent default label rendering when implementing custom title/inventory labels
+163. UI, modal inventory screen, maintain clear rendering order with background, slots, title, and tooltips separated for proper layering
+164. UI, inventory interaction, do not call super.render twice in the render method to avoid doubled rendering of slots and items
+165. UI, inventory slots, explicitly render borders around all slots in a dedicated method to improve visibility against dark backgrounds
+166. UI, inventory slot borders, precise pixel alignment is critical for slot borders to properly match with game's slot positions
+167. UI, network packets, update packet handlers to check for multiple possible UI implementations when packet can be handled by different screens

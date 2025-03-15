@@ -5,6 +5,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.screen.components.BCModalInventoryScreen;
+import com.yourdomain.businesscraft.menu.TradeMenu;
 
 import java.util.function.Supplier;
 
@@ -55,13 +57,21 @@ public class PaymentResultPacket {
     private void handleClientSide() {
         LOGGER.debug("Payment result received: {}", paymentItem);
         
-        // Get the current screen and if it's TradeScreen, update the output slot
-        // We need to use a safer approach with client.execute() since this is client-side processing
+        // Get the current screen and update the output slot on either TradeScreen or BCModalInventoryScreen
         net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
         
         client.execute(() -> {
+            // Handle traditional TradeScreen first
             if (client.screen instanceof com.yourdomain.businesscraft.screen.TradeScreen tradeScreen) {
                 tradeScreen.setOutputItem(paymentItem);
+            } 
+            // Also check for our new modal inventory screen
+            else if (client.screen instanceof BCModalInventoryScreen<?> modalScreen) {
+                // Check if the container is a TradeMenu
+                if (modalScreen.getMenu() instanceof TradeMenu tradeMenu) {
+                    LOGGER.debug("Setting payment item in BCModalInventoryScreen: {}", paymentItem);
+                    tradeMenu.setOutputItem(paymentItem.copy());
+                }
             }
         });
     }

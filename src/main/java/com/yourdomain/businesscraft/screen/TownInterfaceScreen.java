@@ -23,6 +23,7 @@ import net.minecraft.core.BlockPos;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.Optional;
 import java.util.Map;
 import java.util.UUID;
@@ -30,6 +31,21 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.town.Town;
+import com.yourdomain.businesscraft.town.TownManager;
+import com.yourdomain.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
+import net.minecraft.client.gui.screens.Screen;
+import com.yourdomain.businesscraft.screen.components.BCModalGridScreen;
+import com.yourdomain.businesscraft.screen.components.BCModalGridFactory;
+import com.yourdomain.businesscraft.screen.components.BCModalInventoryScreen;
+import com.yourdomain.businesscraft.screen.components.BCModalInventoryFactory;
+import com.yourdomain.businesscraft.menu.TradeMenu;
+import com.yourdomain.businesscraft.menu.StorageMenu;
 
 /**
  * The Town Interface Screen showcases the BusinessCraft UI system capabilities.
@@ -370,7 +386,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             @Override
             public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
                 // Always try to handle scrolling, even if the mouse is not exactly over the grid
-                // This matches population tab's behavior that works
+                // This matches the resources tab's approach that works reliably
                 if (grid != null) {
                     System.out.println("Resources Tab forwarding scroll: " + delta);
                     return grid.mouseScrolled(mouseX, mouseY, delta);
@@ -779,10 +795,8 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
                 if (button == 1) {
                     // Approximate if the click is in the button area
                     // This is a simplified approach that assumes the radius button is at a specific position
-                    if (mouseX >= x + getWidth()/2 && mouseX <= x + getWidth()) {
-                        handleRadiusChange(1); // Handle right click
-                        return true;
-                    }
+                    handleRadiusChange(1); // Handle right click
+                    return true;
                 }
                 
                 // For all other cases, delegate to the grid
@@ -986,8 +1000,8 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
                     .addButtonWithTooltip(0, 0, "Assign Jobs", "Assign jobs to town citizens", v -> {
                         sendChatMessage("Button pressed: Assign Jobs");
                     }, PRIMARY_COLOR)
-                    .addButtonWithTooltip(0, 1, "Recruit Citizens", "Recruit new citizens to your town", v -> {
-                        sendChatMessage("Button pressed: Recruit Citizens");
+                    .addButtonWithTooltip(0, 1, "View Visitors", "View history of visitors to your town", v -> {
+                        showVisitorHistoryScreen();
                     }, SECONDARY_COLOR);
                 break;
                 
@@ -1105,12 +1119,14 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
                 }
             }
         } 
-        // Other scrollable tabs handle events differently
+        // Other scrollable tabs handle events the same way for consistency
         else if ("population".equals(activeTabId)) {
             BCPanel panel = this.tabPanel.getTabPanel(activeTabId);
             if (panel != null) {
+                // Always forward to all children without checking bounds
                 for (UIComponent child : panel.getChildren()) {
                     if (child instanceof BCComponent) {
+                        // Forward the scroll event directly, no bounds checking
                         if (child.mouseScrolled(mouseX, mouseY, delta)) {
                             return true;
                         }
@@ -1296,74 +1312,38 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
      * Shows the trade resources modal screen with input and output slots
      */
     private void showTradeResourcesModal() {
-        // Create and send a network packet to open the vanilla inventory trading screen
-        Player player = this.minecraft.player;
+        // Create a modal trade screen using the factory
+        BCModalInventoryScreen<TradeMenu> tradeScreen = BCModalInventoryFactory.createTradeScreen(
+            Component.literal("Trade Resources"),
+            this,
+            this.menu.getBlockPos(),
+            screen -> {
+                // Optional callback when screen is closed
+                // We can use this to refresh data if needed
+            }
+        );
         
-        // Close the current screen
-        this.onClose();
-        
-        // In a real implementation, we would send a packet to the server to open the menu
-        // For now, we'll create a client-side container with a unique ID
-        int containerId = player.containerMenu.containerId + 1;
-        
-        // Create a new inventory handler for the trade
-        net.minecraftforge.items.ItemStackHandler handler = 
-            new net.minecraftforge.items.ItemStackHandler(2);
-        
-        // Create the trade menu with a proper container ID and the town block position
-        com.yourdomain.businesscraft.menu.TradeMenu menu = 
-            new com.yourdomain.businesscraft.menu.TradeMenu(
-                containerId, 
-                player.getInventory(), 
-                this.menu.getBlockPos() // Pass the BlockPos from the TownInterfaceMenu
-            );
-        
-        // Tell the player that this is now their active container
-        // This is important for vanilla's item drag/transfer handling
-        player.containerMenu = menu;
-        
-        // Create and open the trade screen
-        com.yourdomain.businesscraft.screen.TradeScreen screen = 
-            new com.yourdomain.businesscraft.screen.TradeScreen(
-                menu, player.getInventory(), net.minecraft.network.chat.Component.literal("Trade Resources"));
-        
-        // Set the screen to be displayed
-        this.minecraft.setScreen(screen);
+        // Show the trade screen as a modal overlay
+        this.minecraft.setScreen(tradeScreen);
     }
     
     /**
      * Shows the storage modal screen with 2x9 chest-like storage
      */
     private void showStorageModal() {
-        // Create and send a network packet to open the vanilla inventory storage screen
-        Player player = this.minecraft.player;
+        // Create a modal storage screen using the factory
+        BCModalInventoryScreen<StorageMenu> storageScreen = BCModalInventoryFactory.createStorageScreen(
+            Component.literal("Town Storage"),
+            this,
+            this.menu.getBlockPos(),
+            screen -> {
+                // Optional callback when screen is closed
+                // We can use this to refresh data if needed
+            }
+        );
         
-        // Close the current screen
-        this.onClose();
-        
-        // In a real implementation, we would send a packet to the server to open the menu
-        // For now, we'll create a client-side container with a unique ID
-        int containerId = player.containerMenu.containerId + 1;
-        
-        // Create a new inventory handler for the storage (2 rows x 9 columns = 18 slots)
-        net.minecraftforge.items.ItemStackHandler handler = 
-            new net.minecraftforge.items.ItemStackHandler(18);
-        
-        // Create the storage menu with a proper container ID
-        com.yourdomain.businesscraft.menu.StorageMenu menu = 
-            new com.yourdomain.businesscraft.menu.StorageMenu(containerId, player.getInventory(), handler);
-        
-        // Tell the player that this is now their active container
-        // This is important for vanilla's item drag/transfer handling
-        player.containerMenu = menu;
-        
-        // Create and open the storage screen
-        com.yourdomain.businesscraft.screen.StorageScreen screen = 
-            new com.yourdomain.businesscraft.screen.StorageScreen(
-                menu, player.getInventory(), net.minecraft.network.chat.Component.literal("Town Storage"));
-        
-        // Set the screen to be displayed
-        this.minecraft.setScreen(screen);
+        // Show the storage screen as a modal overlay
+        this.minecraft.setScreen(storageScreen);
     }
     
     /**
@@ -1374,142 +1354,72 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     }
     
     /**
-     * Custom modal screen for trading resources
+     * Show the visitor history screen
      */
-    private class TradeModal extends BCModalScreen {
-        private net.minecraft.world.item.ItemStack inputStack = net.minecraft.world.item.ItemStack.EMPTY;
-        private net.minecraft.world.item.ItemStack outputStack = net.minecraft.world.item.ItemStack.EMPTY;
-        private BCButton tradeButton;
+    private void showVisitorHistoryScreen() {
+        // Get the block entity and visit history
+        List<VisitHistoryRecord> visitHistory = new ArrayList<>();
+        BlockPos townPos = menu.getBlockPos();
         
-        public TradeModal(String title, Consumer<Boolean> resultCallback) {
-            super(title, resultCallback, 2);
+        if (this.minecraft != null && this.minecraft.level != null) {
+            BlockEntity blockEntity = this.minecraft.level.getBlockEntity(townPos);
+            if (blockEntity instanceof TownBlockEntity townBlock) {
+                // Request the town block entity to sync its town data with the server
+                ModMessages.sendToServer(new PlayerExitUIPacket(townPos));
+                
+                // Get the visit history
+                visitHistory.addAll(townBlock.getVisitHistory());
+            }
+        }
+        
+        // Create a town name lookup function
+        Function<UUID, String> townNameLookup = townId -> {
+            if (townId == null) return "Unknown";
             
-            // Set sample data rows
-            List<String> modalData = new ArrayList<>();
-            modalData.add("Input Slot");  // Row 1
-            modalData.add("Output Slot"); // Row 2
-            setData(modalData);
-            
-            // Replace OK button with Trade button
-            for (UIComponent child : getChildren()) {
-                if (child instanceof BCButton) {
-                    BCButton button = (BCButton) child;
-                    if ("OK".equals(button.getText().getString())) {
-                        button.withText(Component.literal("Trade"));
-                        tradeButton = button;
-                        button.addEventListener("click", component -> executeTrade());
+            try {
+                // On the client side, we need to rely on the TownBlockEntity to get the town name
+                if (this.minecraft != null && this.minecraft.level != null) {
+                    BlockEntity blockEntity = this.minecraft.level.getBlockEntity(townPos);
+                    if (blockEntity instanceof TownBlockEntity townBlock) {
+                        // Use the getTownNameFromId method to look up the town name
+                        String townName = townBlock.getTownNameFromId(townId);
+                        
+                        // If we got a name, return it
+                        if (townName != null) {
+                            return townName;
+                        }
                     }
                 }
-            }
-        }
-        
-        @Override
-        public void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
-            // First render the normal modal content using parent
-            super.render(guiGraphics, x, y, mouseX, mouseY);
-            
-            // Then render our custom slots
-            renderTradeSlots(guiGraphics, mouseX, mouseY);
-        }
-        
-        private void renderTradeSlots(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-            int slotSize = 18;
-            int centerX = getWidth() / 2;
-            int inputX = getX() + centerX - 40;
-            int outputX = getX() + centerX + 20;
-            int slotsY = getY() + 80;
-            
-            // Input slot
-            guiGraphics.fill(inputX, slotsY, inputX + slotSize, slotsY + slotSize, 0xFF444444);
-            guiGraphics.hLine(inputX - 1, inputX + slotSize, slotsY - 1, BORDER_COLOR);
-            guiGraphics.hLine(inputX - 1, inputX + slotSize, slotsY + slotSize, BORDER_COLOR);
-            guiGraphics.vLine(inputX - 1, slotsY - 1, slotsY + slotSize, BORDER_COLOR);
-            guiGraphics.vLine(inputX + slotSize, slotsY - 1, slotsY + slotSize, BORDER_COLOR);
-            
-            // Draw input label
-            guiGraphics.drawString(font, "Input", inputX, slotsY - 10, TEXT_COLOR);
-            
-            // Draw arrow
-            int arrowX = getX() + centerX - 4;
-            int arrowY = slotsY + slotSize/2 - 4;
-            guiGraphics.drawString(font, "→", arrowX, arrowY, TEXT_HIGHLIGHT);
-            
-            // Output slot
-            guiGraphics.fill(outputX, slotsY, outputX + slotSize, slotsY + slotSize, 0xFF444444);
-            guiGraphics.hLine(outputX - 1, outputX + slotSize, slotsY - 1, BORDER_COLOR);
-            guiGraphics.hLine(outputX - 1, outputX + slotSize, slotsY + slotSize, BORDER_COLOR);
-            guiGraphics.vLine(outputX - 1, slotsY - 1, slotsY + slotSize, BORDER_COLOR);
-            guiGraphics.vLine(outputX + slotSize, slotsY - 1, slotsY + slotSize, BORDER_COLOR);
-            
-            // Draw items if present
-            if (!inputStack.isEmpty()) {
-                guiGraphics.renderItem(inputStack, inputX + 1, slotsY + 1);
+            } catch (Exception e) {
+                // Log the error but don't crash
+                System.out.println("Error looking up town name for UUID " + townId + ": " + e.getMessage());
             }
             
-            if (!outputStack.isEmpty()) {
-                guiGraphics.renderItem(outputStack, outputX + 1, slotsY + 1);
-            }
-        }
+            // Fallback if town not found
+            return "Town-" + townId.toString().substring(0, 8);
+        };
         
-        @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            // Check for clicks on our custom slots first
-            int slotSize = 18;
-            int centerX = getWidth() / 2;
-            int inputX = getX() + centerX - 40;
-            int outputX = getX() + centerX + 20;
-            int slotsY = getY() + 80;
-            
-            // Check input slot
-            if (mouseX >= inputX && mouseX < inputX + slotSize && 
-                mouseY >= slotsY && mouseY < slotsY + slotSize) {
-                
-                // For demo, we'll just put a stone item in the slot when clicked
-                if (inputStack.isEmpty()) {
-                    inputStack = new net.minecraft.world.item.ItemStack(
-                        net.minecraft.world.item.Items.STONE, 1);
-                    sendChatMessage("Added Stone to input slot");
-                } else {
-                    // Clear the slot if clicked again
-                    inputStack = net.minecraft.world.item.ItemStack.EMPTY;
-                    sendChatMessage("Removed item from input slot");
+        // Create modal grid screen with the visitor history data
+        BCModalGridScreen<VisitHistoryRecord> visitorScreen = BCModalGridFactory.createVisitorHistoryScreen(
+            Component.literal("Town Visitor History"),
+            this, // Parent screen
+            visitHistory,
+            screen -> {
+                // When closing, ensure we're on the population tab
+                if (this.tabPanel != null) {
+                    this.tabPanel.setActiveTab("population");
                 }
-                return true;
-            }
-            
-            // Check output slot
-            if (mouseX >= outputX && mouseX < outputX + slotSize && 
-                mouseY >= slotsY && mouseY < slotsY + slotSize) {
-                
-                // Collect item from output slot
-                if (!outputStack.isEmpty()) {
-                    sendChatMessage("Collected: " + outputStack.getCount() + "x " + 
-                                   outputStack.getDisplayName().getString());
-                    outputStack = net.minecraft.world.item.ItemStack.EMPTY;
-                    return true;
-                }
-            }
-            
-            // If not handled by our slots, let the parent handle it
-            return super.mouseClicked(mouseX, mouseY, button);
-        }
+            },
+            townNameLookup // Pass our town name lookup function
+        );
         
-        /**
-         * Execute the trade operation
-         */
-        private void executeTrade() {
-            if (!inputStack.isEmpty()) {
-                // Process trade by moving input to output
-                outputStack = inputStack.copy();
-                
-                // Clear input slot
-                inputStack = net.minecraft.world.item.ItemStack.EMPTY;
-                
-                sendChatMessage("Trade executed - item transferred to output slot");
-            } else {
-                sendChatMessage("No input item to trade");
-            }
-        }
+        // Customize appearance if needed
+        visitorScreen.withBackButtonText("Back")
+                     .withTitleScale(1.5f)
+                     .withRowHeight(20);
+        
+        // Show the visitor history screen
+        this.minecraft.setScreen(visitorScreen);
     }
 
     @Override
