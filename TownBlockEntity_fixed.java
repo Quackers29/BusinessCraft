@@ -184,14 +184,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     // Add a new TouristVehicleManager instance
     private final TouristVehicleManager touristVehicleManager = new TouristVehicleManager();
 
-    // Client-side caches for resource data
-    private final Map<Item, Integer> clientResources = new HashMap<>();
+    // Client-side cache of resources for rendering
+    private Map<Item, Integer> clientResources = new HashMap<>();
     
     // Client-side cache for communal storage
     private final Map<Item, Integer> clientCommunalStorage = new HashMap<>();
-    
-    // Client-side cache for personal storage (player UUID -> items)
-    private final Map<UUID, Map<Item, Integer>> clientPersonalStorage = new HashMap<>();
 
     // Visit buffer for grouping arrivals
     private static class VisitBuffer {
@@ -819,19 +816,51 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             tag.putUUID("TownId", townId);
         }
         
-        // Add name for client display
-        tag.putString("name", name != null ? name : "");
+        if (name != null) {
+            tag.putString("name", name);
+        }
         
-        // Add resource data for client rendering
-        syncResourcesForClient(tag);
-        
-        // Add platforms
+        // Add platforms for client
         if (!platforms.isEmpty()) {
             ListTag platformsTag = new ListTag();
             for (Platform platform : platforms) {
                 platformsTag.add(platform.toNBT());
             }
             tag.put("platforms", platformsTag);
+        }
+        
+        // Add resources for client-side rendering
+        if (level != null && !level.isClientSide() && townId != null) {
+            // Get town from manager (server-side only)
+            if (level instanceof ServerLevel sLevel) {
+                Town town = TownManager.get(sLevel).getTown(townId);
+                if (town != null) {
+                    // Add resources
+                    CompoundTag resourcesTag = new CompoundTag();
+                    Map<Item, Integer> resources = town.getAllResources();
+                    for (Map.Entry<Item, Integer> entry : resources.entrySet()) {
+                        ResourceLocation key = ForgeRegistries.ITEMS.getKey(entry.getKey());
+                        if (key != null) {
+                            resourcesTag.putInt(key.toString(), entry.getValue());
+                        }
+                    }
+                    tag.put("clientResources", resourcesTag);
+                    
+                    // Add communal storage
+                    CompoundTag communalTag = new CompoundTag();
+                    Map<Item, Integer> communalItems = town.getAllCommunalItems();
+                    for (Map.Entry<Item, Integer> entry : communalItems.entrySet()) {
+                        ResourceLocation key = ForgeRegistries.ITEMS.getKey(entry.getKey());
+                        if (key != null) {
+                            communalTag.putInt(key.toString(), entry.getValue());
+                        }
+                    }
+                    tag.put("communalStorage", communalTag);
+                    
+                    // Add visit history
+                    syncVisitHistoryForClient(tag);
+                }
+            }
         }
         
         return tag;
@@ -855,14 +884,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             
             // Add resources tag to the update tag
             tag.put("clientResources", resourcesTag);
-            
-            // Add communal storage data
-            CompoundTag communalTag = new CompoundTag();
-            provider.getAllCommunalStorageItems().forEach((item, count) -> {
-                String itemKey = ForgeRegistries.ITEMS.getKey(item).toString();
-                communalTag.putInt(itemKey, count);
-            });
-            tag.put("clientCommunalStorage", communalTag);
         }
         
         // Add visit history data
@@ -873,89 +894,72 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public void handleUpdateTag(CompoundTag tag) {
         super.handleUpdateTag(tag);
         
-        // Handle name updates
-        if (tag.contains("name")) {
-            String newName = tag.getString("name");
-            if (!newName.equals(name)) {
-                LOGGER.debug("Updating town name from {} to {}", name, newName);
-                name = newName;
-            }
+        // Load town ID
+        if (tag.contains("TownId")) {
+            townId = tag.getUUID("TownId");
         }
         
-        // Handle platform data updates
+        // Load name
+        if (tag.contains("name")) {
+            name = tag.getString("name");
+        }
+        
+        // Load platforms
         if (tag.contains("platforms")) {
-            // Platform update received from server
-            clientPlatforms.clear();
+            platforms.clear();
             ListTag platformsTag = tag.getList("platforms", Tag.TAG_COMPOUND);
             for (int i = 0; i < platformsTag.size(); i++) {
                 CompoundTag platformTag = platformsTag.getCompound(i);
                 Platform platform = Platform.fromNBT(platformTag);
-                clientPlatforms.add(platform);
+                platforms.add(platform);
             }
         }
         
-        // Load client resources data
-        loadResourcesFromTag(tag);
+        // Load client-side resources cache
+        if (tag.contains("clientResources")) {
+            clientResources.clear();
+            CompoundTag resourcesTag = tag.getCompound("clientResources");
+            for (String key : resourcesTag.getAllKeys()) {
+                ResourceLocation resourceLocation = new ResourceLocation(key);
+                Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
+                if (item != null && item != Items.AIR) {
+                    clientResources.put(item, resourcesTag.getInt(key));
+                }
+            }
+        }
         
-        // Load visit history data
-        loadVisitHistoryFromTag(tag);
+        // Load client-side communal storage cache
+        if (tag.contains("communalStorage")) {
+            clientCommunalStorage.clear();
+            CompoundTag communalTag = tag.getCompound("communalStorage");
+            for (String key : communalTag.getAllKeys()) {
+                ResourceLocation resourceLocation = new ResourceLocation(key);
+                Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
+                if (item != null && item != Items.AIR) {
+                    clientCommunalStorage.put(item, communalTag.getInt(key));
+                }
+            }
+        }
+    }
+    
+    @Override
+    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
+        super.onDataPacket(net, pkt);
+        handleUpdateTag(pkt.getTag());
     }
     
     /**
-     * Loads resources from the provided tag into the client-side cache
-     * This centralizes our resource deserialization logic in one place
+     * Get the client-side cache of town resources (for rendering)
+     * @return A map of items to their quantities
      */
-    private void loadResourcesFromTag(CompoundTag tag) {
-        if (tag.contains("clientResources")) {
-            CompoundTag resourcesTag = tag.getCompound("clientResources");
-            
-            // Clear previous resources
-            clientResources.clear();
-            
-            // Load all resources from the tag
-            for (String key : resourcesTag.getAllKeys()) {
-                try {
-                    ResourceLocation resourceLocation = new ResourceLocation(key);
-                    Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
-                    if (item != null && item != Items.AIR) {
-                        int count = resourcesTag.getInt(key);
-                        clientResources.put(item, count);
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("Error loading client resource: {}", key, e);
-                }
-            }
-        }
-        
-        // Load communal storage data
-        if (tag.contains("clientCommunalStorage")) {
-            CompoundTag communalTag = tag.getCompound("clientCommunalStorage");
-            
-            // Clear previous communal storage
-            clientCommunalStorage.clear();
-            
-            // Load all communal storage items from the tag
-            for (String key : communalTag.getAllKeys()) {
-                try {
-                    ResourceLocation resourceLocation = new ResourceLocation(key);
-                    Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
-                    if (item != null && item != Items.AIR) {
-                        int count = communalTag.getInt(key);
-                        clientCommunalStorage.put(item, count);
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("Error loading client communal storage item: {}", key, e);
-                }
-            }
-        }
     }
-
-    @Override
-    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
-        CompoundTag tag = pkt.getTag();
-        if (tag != null) {
-            handleUpdateTag(tag);
-        }
+    
+    /**
+     * Get the client-side cache of communal storage items (for rendering)
+     * @return Map of communal storage items with quantities
+     */
+    public Map<Item, Integer> getClientCommunalStorage() {
+        return Collections.unmodifiableMap(clientCommunalStorage);
     }
 
     public ContainerData getContainerData() {
@@ -1050,13 +1054,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                                 clientResources.put(item, count);
                             });
                             LOGGER.debug("Updated client resources from town during sync, resources count: {}", clientResources.size());
-                            
-                            // Update client communal storage from the town
-                            clientCommunalStorage.clear();
-                            town.getAllCommunalStorageItems().forEach((item, count) -> {
-                                clientCommunalStorage.put(item, count);
-                            });
-                            LOGGER.debug("Updated client communal storage from town during sync, storage count: {}", clientCommunalStorage.size());
                         }
                     }
                 }
@@ -1167,7 +1164,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         
         return result;
     }
-
+    
     /**
      * Gets the town data provider, initializing it if needed
      */
@@ -1246,47 +1243,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     /**
-     * Gets the client-side cached resources
-     * @return Map of resources
+     * Gets the client-side resources map for rendering
+     * @return Map of resources with quantities
      */
-    public Map<Item, Integer> getClientResources() {
-        return clientResources;
-    }
-    
-    /**
-     * Gets the client-side cached communal storage items
-     * @return Map of communal storage items
-     */
-    public Map<Item, Integer> getClientCommunalStorage() {
-        return clientCommunalStorage;
-    }
-    
-    /**
-     * Gets the client-side cached personal storage items for a specific player
-     * @param playerId UUID of the player
-     * @return Map of personal storage items for that player
-     */
-    public Map<Item, Integer> getClientPersonalStorage(UUID playerId) {
-        return clientPersonalStorage.getOrDefault(playerId, Collections.emptyMap());
-    }
-    
-    /**
-     * Updates the client-side personal storage cache for a player
-     * @param playerId UUID of the player
-     * @param items Map of items in the player's personal storage
-     */
-    public void updateClientPersonalStorage(UUID playerId, Map<Item, Integer> items) {
-        if (playerId == null) return;
-        
-        // Clear existing items for this player
-        Map<Item, Integer> playerItems = clientPersonalStorage.computeIfAbsent(playerId, k -> new HashMap<>());
-        playerItems.clear();
-        
-        // Add all the new items
-        playerItems.putAll(items);
-        
-        LOGGER.debug("Updated client personal storage cache for player {} with {} items", 
-            playerId, items.size());
     }
 
     /**
@@ -1356,7 +1315,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     /**
      * Loads visit history from the provided tag into the client-side cache
      */
-    private void loadVisitHistoryFromTag(CompoundTag tag) {
+    private void loadClientVisitHistory(CompoundTag tag) {
         if (tag.contains("visitHistory")) {
             ListTag historyTag = tag.getList("visitHistory", Tag.TAG_COMPOUND);
             

@@ -1342,6 +1342,20 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             }
         );
         
+        // Initialize the storage inventory with the town's communal storage items
+        if (storageScreen.getMenu() != null) {
+            StorageMenu storageMenu = storageScreen.getMenu();
+            
+            // Start with communal storage by default
+            boolean isPersonalMode = false;
+            storageMenu.updateStorageItems(this.menu.getAllCommunalStorageItems());
+            
+            // If at some point we want to start with personal mode, we would do:
+            // isPersonalMode = true;
+            // storageMenu.toggleStorageMode();
+            // storageMenu.updatePersonalStorageItems(this.menu.getPersonalStorageItems(this.minecraft.player.getUUID()));
+        }
+        
         // Show the storage screen as a modal overlay
         this.minecraft.setScreen(storageScreen);
     }

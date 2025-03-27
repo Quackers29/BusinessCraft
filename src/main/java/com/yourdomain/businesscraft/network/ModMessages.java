@@ -145,6 +145,38 @@ public class ModMessages {
                 .encoder(PaymentResultPacket::encode)
                 .consumerMainThread(PaymentResultPacket::handle)
                 .add();
+                
+        // Register communal storage packets
+        net.messageBuilder(CommunalStoragePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(CommunalStoragePacket::decode)
+                .encoder(CommunalStoragePacket::encode)
+                .consumerMainThread(CommunalStoragePacket::handle)
+                .add();
+                
+        net.messageBuilder(CommunalStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(CommunalStorageResponsePacket::decode)
+                .encoder(CommunalStorageResponsePacket::encode)
+                .consumerMainThread(CommunalStorageResponsePacket::handle)
+                .add();
+                
+        // Register personal storage packets
+        net.messageBuilder(PersonalStoragePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PersonalStoragePacket::decode)
+                .encoder(PersonalStoragePacket::encode)
+                .consumerMainThread(PersonalStoragePacket::handle)
+                .add();
+                
+        net.messageBuilder(PersonalStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(PersonalStorageResponsePacket::decode)
+                .encoder(PersonalStorageResponsePacket::encode)
+                .consumerMainThread(PersonalStorageResponsePacket::handle)
+                .add();
+
+        net.messageBuilder(PersonalStorageRequestPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PersonalStorageRequestPacket::decode)
+                .encoder(PersonalStorageRequestPacket::encode)
+                .consumerMainThread(PersonalStorageRequestPacket::handle)
+                .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {

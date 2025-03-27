@@ -38,6 +38,12 @@ public class Town implements ITownDataProvider {
     private final List<VisitHistoryRecord> visitHistory = new ArrayList<>();
     private static final int MAX_HISTORY_SIZE = 50; // Maximum history entries to keep
     
+    // Communal storage - accessible to all players
+    private final Map<Item, Integer> communalStorage = new HashMap<>();
+    
+    // Personal storage - individual storage for each player (UUID -> items)
+    private final Map<UUID, Map<Item, Integer>> personalStorage = new HashMap<>();
+    
     public Town(UUID id, BlockPos pos, String name) {
         this.id = id;
         this.position = pos;
@@ -207,6 +213,40 @@ public class Town implements ITownDataProvider {
             }
             tag.put("visitHistory", historyTag);
         }
+        
+        // Save communal storage
+        if (!communalStorage.isEmpty()) {
+            CompoundTag storageTag = new CompoundTag();
+            communalStorage.forEach((item, count) -> {
+                String itemKey = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(item).toString();
+                storageTag.putInt(itemKey, count);
+            });
+            tag.put("communalStorage", storageTag);
+        }
+        
+        // Save personal storage
+        if (!personalStorage.isEmpty()) {
+            CompoundTag personalTag = new CompoundTag();
+            
+            personalStorage.forEach((playerId, itemMap) -> {
+                // Skip empty player inventories
+                if (itemMap.isEmpty()) return;
+                
+                // Create tag for this player's items
+                CompoundTag playerTag = new CompoundTag();
+                
+                // Save each item
+                itemMap.forEach((item, count) -> {
+                    String itemKey = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(item).toString();
+                    playerTag.putInt(itemKey, count);
+                });
+                
+                // Add to main personal storage tag with player UUID as key
+                personalTag.put(playerId.toString(), playerTag);
+            });
+            
+            tag.put("personalStorage", personalTag);
+        }
     }
     
     public static Town load(CompoundTag tag) {
@@ -299,6 +339,65 @@ public class Town implements ITownDataProvider {
                     town.visitHistory.add(new VisitHistoryRecord(timestamp, townId, count, originPos));
                 }
             }
+        }
+        
+        // Load communal storage
+        if (tag.contains("communalStorage")) {
+            CompoundTag storageTag = tag.getCompound("communalStorage");
+            storageTag.getAllKeys().forEach(key -> {
+                try {
+                    net.minecraft.resources.ResourceLocation itemId = new net.minecraft.resources.ResourceLocation(key);
+                    Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(itemId);
+                    if (item != null) {
+                        int count = storageTag.getInt(key);
+                        if (count > 0) {
+                            town.communalStorage.put(item, count);
+                        }
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error loading communal storage item: {}", key, e);
+                }
+            });
+        }
+        
+        // Load personal storage
+        if (tag.contains("personalStorage")) {
+            CompoundTag personalTag = tag.getCompound("personalStorage");
+            
+            // Iterate through each player's data
+            personalTag.getAllKeys().forEach(playerKey -> {
+                try {
+                    // Parse player UUID
+                    UUID playerId = UUID.fromString(playerKey);
+                    
+                    // Get player's items
+                    CompoundTag playerTag = personalTag.getCompound(playerKey);
+                    Map<Item, Integer> playerItems = new HashMap<>();
+                    
+                    // Load each item
+                    playerTag.getAllKeys().forEach(itemKey -> {
+                        try {
+                            net.minecraft.resources.ResourceLocation itemId = new net.minecraft.resources.ResourceLocation(itemKey);
+                            Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(itemId);
+                            if (item != null) {
+                                int count = playerTag.getInt(itemKey);
+                                if (count > 0) {
+                                    playerItems.put(item, count);
+                                }
+                            }
+                        } catch (Exception e) {
+                            LOGGER.error("Error loading personal storage item for player {}: {}", playerKey, itemKey, e);
+                        }
+                    });
+                    
+                    // Add to town's personal storage if not empty
+                    if (!playerItems.isEmpty()) {
+                        town.personalStorage.put(playerId, playerItems);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error parsing player UUID for personal storage: {}", playerKey, e);
+                }
+            });
         }
         
         return town;
@@ -440,5 +539,138 @@ public class Town implements ITownDataProvider {
     @Override
     public List<VisitHistoryRecord> getVisitHistory() {
         return Collections.unmodifiableList(visitHistory);
+    }
+    
+    /**
+     * Add a resource to the town's communal storage
+     * 
+     * @param item The item to add
+     * @param count The amount to add (can be negative to remove)
+     * @return true if successful, false if there aren't enough items to remove
+     */
+    public boolean addToCommunalStorage(Item item, int count) {
+        if (count == 0) return true;
+        
+        // Get current amount
+        int currentAmount = communalStorage.getOrDefault(item, 0);
+        int newAmount = currentAmount + count;
+        
+        // Check if removing more than available
+        if (newAmount < 0) {
+            LOGGER.warn("Attempted to remove {} {} from communal storage but only {} available", 
+                Math.abs(count), item.getDescription().getString(), currentAmount);
+            return false;
+        }
+        
+        // Update storage
+        if (newAmount > 0) {
+            communalStorage.put(item, newAmount);
+            LOGGER.debug("Updated communal storage: {} {} (now {})", 
+                count > 0 ? "Added" : "Removed", 
+                Math.abs(count) + " " + item.getDescription().getString(),
+                newAmount);
+        } else {
+            // Remove the entry if amount is zero
+            communalStorage.remove(item);
+            LOGGER.debug("Removed {} from communal storage (empty)", item.getDescription().getString());
+        }
+        
+        // Mark town as dirty to save changes
+        markDirty();
+        return true;
+    }
+    
+    /**
+     * Get the count of a specific item in the communal storage
+     * 
+     * @param item The item to check
+     * @return The amount stored
+     */
+    public int getCommunalStorageCount(Item item) {
+        return communalStorage.getOrDefault(item, 0);
+    }
+    
+    /**
+     * Get all items in the communal storage
+     * 
+     * @return Map of all items and their counts
+     */
+    public Map<Item, Integer> getAllCommunalStorageItems() {
+        return Collections.unmodifiableMap(communalStorage);
+    }
+    
+    /**
+     * Add a resource to a player's personal storage
+     * 
+     * @param playerId The UUID of the player
+     * @param item The item to add
+     * @param count The amount to add (can be negative to remove)
+     * @return true if successful, false if there aren't enough items to remove
+     */
+    public boolean addToPersonalStorage(UUID playerId, Item item, int count) {
+        if (count == 0 || playerId == null) return true;
+        
+        // Get or create the player's storage map
+        Map<Item, Integer> playerStorage = personalStorage.computeIfAbsent(playerId, k -> new HashMap<>());
+        
+        // Get current amount
+        int currentAmount = playerStorage.getOrDefault(item, 0);
+        int newAmount = currentAmount + count;
+        
+        // Check if removing more than available
+        if (newAmount < 0) {
+            LOGGER.warn("Attempted to remove {} {} from personal storage of player {} but only {} available", 
+                Math.abs(count), item.getDescription().getString(), playerId, currentAmount);
+            return false;
+        }
+        
+        // Update storage
+        if (newAmount > 0) {
+            playerStorage.put(item, newAmount);
+            LOGGER.debug("Updated personal storage for player {}: {} {} (now {})", 
+                playerId,
+                count > 0 ? "Added" : "Removed", 
+                Math.abs(count) + " " + item.getDescription().getString(),
+                newAmount);
+        } else {
+            // Remove the entry if amount is zero
+            playerStorage.remove(item);
+            LOGGER.debug("Removed {} from personal storage of player {} (empty)", item.getDescription().getString(), playerId);
+        }
+        
+        // Mark town as dirty to save changes
+        markDirty();
+        return true;
+    }
+    
+    /**
+     * Get the count of a specific item in a player's personal storage
+     * 
+     * @param playerId The UUID of the player
+     * @param item The item to check
+     * @return The amount stored
+     */
+    public int getPersonalStorageCount(UUID playerId, Item item) {
+        if (playerId == null) return 0;
+        
+        Map<Item, Integer> playerStorage = personalStorage.get(playerId);
+        if (playerStorage == null) return 0;
+        
+        return playerStorage.getOrDefault(item, 0);
+    }
+    
+    /**
+     * Get all items in a player's personal storage
+     * 
+     * @param playerId The UUID of the player
+     * @return Map of all items and their counts
+     */
+    public Map<Item, Integer> getPersonalStorageItems(UUID playerId) {
+        if (playerId == null) return Collections.emptyMap();
+        
+        Map<Item, Integer> playerStorage = personalStorage.get(playerId);
+        if (playerStorage == null) return Collections.emptyMap();
+        
+        return Collections.unmodifiableMap(playerStorage);
     }
 } 
