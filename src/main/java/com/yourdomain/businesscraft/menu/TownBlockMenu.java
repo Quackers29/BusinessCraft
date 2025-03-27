@@ -219,6 +219,51 @@ public class TownBlockMenu extends AbstractContainerMenu {
     }
     
     /**
+     * Gets all items in the town's communal storage.
+     * @return A map of items to their quantities in communal storage.
+     */
+    public Map<Item, Integer> getAllCommunalStorageItems() {
+        if (blockEntity != null) {
+            // First try client-side cache if available
+            if (blockEntity.getLevel().isClientSide() && !blockEntity.getClientCommunalStorage().isEmpty()) {
+                return blockEntity.getClientCommunalStorage();
+            }
+            
+            // Fallback to server-side data if needed
+            ITownDataProvider provider = blockEntity.getTownDataProvider();
+            if (provider != null) {
+                return provider.getAllCommunalStorageItems();
+            }
+        }
+        return Collections.emptyMap();
+    }
+    
+    /**
+     * Gets all items in a player's personal storage for this town.
+     * 
+     * @param playerId The UUID of the player
+     * @return A map of items to their quantities in the player's personal storage
+     */
+    public Map<Item, Integer> getPersonalStorageItems(UUID playerId) {
+        if (blockEntity != null && playerId != null) {
+            // First try client-side cache if available
+            if (blockEntity.getLevel().isClientSide()) {
+                Map<Item, Integer> personalItems = blockEntity.getClientPersonalStorage(playerId);
+                if (!personalItems.isEmpty()) {
+                    return personalItems;
+                }
+            }
+            
+            // Fallback to server-side data if needed
+            ITownDataProvider provider = blockEntity.getTownDataProvider();
+            if (provider != null) {
+                return provider.getPersonalStorageItems(playerId);
+            }
+        }
+        return Collections.emptyMap();
+    }
+    
+    /**
      * Gets the visit history for this town
      * @return List of visit entries
      */

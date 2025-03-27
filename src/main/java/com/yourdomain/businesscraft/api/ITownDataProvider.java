@@ -21,6 +21,16 @@ public interface ITownDataProvider {
     int getResourceCount(Item item);
     Map<Item, Integer> getAllResources();
     
+    // Communal storage methods
+    boolean addToCommunalStorage(Item item, int count);
+    int getCommunalStorageCount(Item item);
+    Map<Item, Integer> getAllCommunalStorageItems();
+    
+    // Personal storage methods
+    boolean addToPersonalStorage(UUID playerId, Item item, int count);
+    int getPersonalStorageCount(UUID playerId, Item item);
+    Map<Item, Integer> getPersonalStorageItems(UUID playerId);
+    
     // Population methods
     int getPopulation();
     

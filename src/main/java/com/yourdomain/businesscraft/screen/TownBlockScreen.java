@@ -34,12 +34,18 @@ import com.yourdomain.businesscraft.screen.components.ResourceListComponent;
 import net.minecraft.client.Minecraft;
 import com.yourdomain.businesscraft.screen.components.VisitHistoryComponent;
 import com.yourdomain.businesscraft.screen.components.EditBoxComponent;
+import com.yourdomain.businesscraft.screen.components.StateResourceListComponent;
+import com.yourdomain.businesscraft.screen.components.StateVisitHistoryComponent;
+import com.yourdomain.businesscraft.screen.state.TownInterfaceState;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
-import com.yourdomain.businesscraft.platform.Platform;
-import net.minecraft.core.BlockPos;
-import com.yourdomain.businesscraft.network.SetPlatformPathCreationModePacket;
 import com.yourdomain.businesscraft.client.PlatformPathKeyHandler;
 import com.yourdomain.businesscraft.network.PlayerExitUIPacket;
+import java.util.Map;
+import java.util.HashMap;
+import java.lang.StringBuilder;
+import net.minecraft.core.BlockPos;
+import com.yourdomain.businesscraft.platform.Platform;
+import com.yourdomain.businesscraft.network.SetPlatformPathCreationModePacket;
 
 
 public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
@@ -63,11 +69,20 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     // For displaying instructions
     private Component instructionsText = null;
 
+    // State management
+    private final TownInterfaceState state;
+
     public TownBlockScreen(TownBlockMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         this.imageWidth = 256;
         this.imageHeight = 204;
 
+        // Initialize state management
+        this.state = new TownInterfaceState();
+        
+        // Initialize state with menu data
+        updateStateFromMenu();
+        
         TabComponent tabComponent = new TabComponent(240, 20);
         
         // Town Tab - Only indicators
@@ -99,6 +114,51 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         nameEditor.setVisible(false);
     }
     
+    private void updateStateFromMenu() {
+        // Update town data
+        state.setTownName(menu.getTownName());
+        state.setPopulation(menu.getPopulation());
+        state.setTouristCount(menu.getTouristCount());
+        state.setMaxTourists(menu.getMaxTourists());
+        
+        // Update resources
+        Map<String, Integer> resourceMap = new HashMap<>();
+        menu.getAllResources().forEach((item, count) -> 
+            resourceMap.put(item.getDescription().getString(), count));
+        state.setResources(resourceMap);
+        
+        // Update visit history
+        List<TownInterfaceState.VisitHistoryEntry> historyEntries = new ArrayList<>();
+        menu.getVisitHistory().forEach(entry -> {
+            String direction = calculateDirection(entry.getOriginPos());
+            historyEntries.add(new TownInterfaceState.VisitHistoryEntry(
+                entry.getTimestamp(),
+                entry.getTownName(),
+                entry.getCount(),
+                direction
+            ));
+        });
+        state.setVisitHistory(historyEntries);
+    }
+    
+    private String calculateDirection(BlockPos originPos) {
+        if (originPos == null || originPos.equals(BlockPos.ZERO)) {
+            return "Unknown";
+        }
+        
+        BlockPos playerPos = Minecraft.getInstance().player.blockPosition();
+        StringBuilder direction = new StringBuilder();
+        
+        if (originPos.getZ() < playerPos.getZ()) direction.append("N");
+        else if (originPos.getZ() > playerPos.getZ()) direction.append("S");
+        
+        if (originPos.getX() > playerPos.getX()) direction.append("E");
+        else if (originPos.getX() < playerPos.getX()) direction.append("W");
+        
+        int distance = (int) Math.sqrt(playerPos.distSqr(originPos));
+        return direction + " " + distance + "m";
+    }
+    
     private List<UIComponent> createTownInfoComponents(TownBlockMenu menu) {
         List<UIComponent> comps = new ArrayList<>();
         comps.add(new DataLabelComponent(() -> "Town: " + menu.getTownName(), 0xFFFFFF, 200));
@@ -112,14 +172,14 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     
     private List<UIComponent> createResourceComponents(TownBlockMenu menu) {
         List<UIComponent> comps = new ArrayList<>();
-        comps.add(new ResourceListComponent(() -> menu.getAllResources(), 230));
+        comps.add(new StateResourceListComponent(state));
         comps.add(new SlotComponent());
         return comps;
     }
     
     private List<UIComponent> createHistoryComponents(TownBlockMenu menu) {
         List<UIComponent> comps = new ArrayList<>();
-        comps.add(new VisitHistoryComponent(() -> menu.getVisitHistory(), 230));
+        comps.add(new StateVisitHistoryComponent(state));
         return comps;
     }
     
@@ -175,7 +235,32 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
     }
 
     @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+        // Update state from menu each render
+        updateStateFromMenu();
+        
+        // Clean up platform buttons if needed
+        if (platformsTab != null && !platformsTab.isVisible()) {
+            // Check for and remove any buttons from platform entry positions
+            for (GuiEventListener child : new ArrayList<>(this.children())) {
+                if (child instanceof Button button) {
+                    // Check button position - if it's in the platform content area and not a tab button
+                    int tabY = topPos + 5;
+                    int tabHeight = 20;
+                    boolean isTabButton = button.getY() >= tabY && button.getY() <= tabY + tabHeight;
+                    
+                    // Check if button is in platforms position range
+                    boolean isInPlatformArea = button.getY() > topPos + 30 && 
+                                            button.getX() > leftPos + 120;
+                    
+                    if (!isTabButton && isInPlatformArea && platformsTab != null && !platformsTab.isVisible()) {
+                        // Stray platform button detected, remove it
+                        this.removeWidget(button);
+                    }
+                }
+            }
+        }
+        
         renderBackground(guiGraphics);
         
         // If editing town name, we render a different background and only the editor
@@ -218,7 +303,7 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
             tabComponent.renderTabsOnly(guiGraphics, leftPos + 8, topPos + 5, mouseX, mouseY);
             
             // Render the platforms tab content
-            platformsTab.render(guiGraphics, mouseX, mouseY, delta);
+            platformsTab.render(guiGraphics, mouseX, mouseY, partialTicks);
             
             // Render instruction text if present (for platform path setting)
             if (instructionsText != null) {
@@ -230,7 +315,7 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
         }
         
         // Normal rendering for main UI
-        super.render(guiGraphics, mouseX, mouseY, delta);
+        super.render(guiGraphics, mouseX, mouseY, partialTicks);
         
         // Render tabs and tab content
         components.get(0).render(guiGraphics, leftPos + 8, topPos + 5, mouseX, mouseY);
@@ -860,33 +945,6 @@ public class TownBlockScreen extends AbstractContainerScreen<TownBlockMenu> {
             0xFFFFDD,
             true // with shadow
         );
-    }
-
-    @Override
-    protected void containerTick() {
-        super.containerTick();
-        
-        // Ensure platform buttons aren't visible when they shouldn't be
-        if (platformsTab != null && !platformsTab.isVisible()) {
-            // Check for and remove any buttons from platform entry positions
-            for (GuiEventListener child : new ArrayList<>(this.children())) {
-                if (child instanceof Button button) {
-                    // Check button position - if it's in the platform content area and not a tab button
-                    int tabY = topPos + 5;
-                    int tabHeight = 20;
-                    boolean isTabButton = button.getY() >= tabY && button.getY() <= tabY + tabHeight;
-                    
-                    // Check if button is in platforms position range
-                    boolean isInPlatformArea = button.getY() > topPos + 30 && 
-                                            button.getX() > leftPos + 120;
-                    
-                    if (!isTabButton && isInPlatformArea && platformsTab != null && !platformsTab.isVisible()) {
-                        // Stray platform button detected, remove it
-                        this.removeWidget(button);
-                    }
-                }
-            }
-        }
     }
 
     /**

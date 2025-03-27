@@ -3,6 +3,11 @@ package com.yourdomain.businesscraft.screen.components;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.yourdomain.businesscraft.menu.StorageMenu;
 import com.yourdomain.businesscraft.menu.TradeMenu;
+import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
+import com.yourdomain.businesscraft.menu.TownBlockMenu;
+import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.network.PersonalStorageRequestPacket;
+import com.yourdomain.businesscraft.network.CommunalStoragePacket;
 import com.yourdomain.businesscraft.screen.util.InventoryRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -15,11 +20,16 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 
 import java.util.function.Consumer;
 import java.util.function.BiFunction;
+import java.util.UUID;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A modal inventory screen that allows for inventory-based interactions
@@ -27,6 +37,8 @@ import java.util.function.BiFunction;
  * This provides a consistent UI experience with other modal components.
  */
 public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BCModalInventoryScreen.class);
+    
     // Screen properties
     private final Screen parentScreen;
     private final Consumer<BCModalInventoryScreen<T>> onCloseCallback;
@@ -43,6 +55,19 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
     // Title scale factor
     private float titleScale = 1.5f;
     
+    // Storage mode labels
+    private static final String COMMUNAL_LABEL = "Communal";
+    private static final String PERSONAL_LABEL = "Personal";
+    
+    // Toggle button coordinates for storage mode
+    private static final int TOGGLE_BUTTON_X = 136;
+    private static final int TOGGLE_BUTTON_Y = 6;
+    private static final int TOGGLE_BUTTON_WIDTH = 32;
+    private static final int TOGGLE_BUTTON_HEIGHT = 20;
+    
+    // Display title that can be updated (unlike the final 'title' field inherited from Screen)
+    private Component displayTitle;
+    
     // InventoryType determines the layout and functionality
     public enum InventoryType {
         TRADE,      // Trade interface with input/output slots
@@ -53,6 +78,9 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
     
     // Functions for special actions
     private BiFunction<BlockPos, ItemStack, Boolean> tradeFunction;
+    
+    // Keep track of all slots affected during a drag operation
+    private final java.util.Set<Integer> affectedDragSlots = new java.util.HashSet<>();
     
     /**
      * Constructor for the modal inventory screen
@@ -75,6 +103,7 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
         this.parentScreen = parentScreen;
         this.inventoryType = inventoryType;
         this.onCloseCallback = onCloseCallback;
+        this.displayTitle = title; // Initialize display title with the original title
         
         // Move the title and inventory label off-screen to hide them (we'll draw our own)
         this.titleLabelX = -9999;
@@ -106,6 +135,15 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
             .size(100, 20)
             .build()
         );
+        
+        // If this is a storage screen, initialize with the correct mode data
+        if (this.inventoryType == InventoryType.STORAGE && 
+            this.menu instanceof StorageMenu storageMenu) {
+            if (storageMenu.isPersonalStorageMode()) {
+                // Load personal storage items if in personal mode
+                loadPersonalStorageItems(storageMenu);
+            }
+        }
     }
     
     /**
@@ -159,28 +197,22 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
      * Render our custom title
      */
     private void renderTitle(GuiGraphics guiGraphics) {
-        // Draw title with scale
+        int titleWidth = this.font.width(this.displayTitle);
+        float scale = this.titleScale;
+        
+        // Adjust title position
+        int titleX = (int)((this.width / 2) - (titleWidth * scale / 2));
+        int titleY = this.topPos - 22;
+        
+        // Push matrix to apply transformations
         guiGraphics.pose().pushPose();
-        
-        // Position title in center of panel
-        float titleX = this.leftPos + this.imageWidth / 2;
-        float titleY = this.topPos + 10;
-        
-        // Apply transformations for scaling centered on text position
         guiGraphics.pose().translate(titleX, titleY, 0);
-        guiGraphics.pose().scale(titleScale, titleScale, 1.0f);
-        guiGraphics.pose().translate(-titleX, -titleY, 0);
+        guiGraphics.pose().scale(scale, scale, 1.0f);
         
         // Draw title with shadow
-        guiGraphics.drawCenteredString(
-            this.font,
-            this.title,
-            (int)titleX,
-            (int)titleY,
-            titleColor
-        );
+        guiGraphics.drawString(this.font, this.displayTitle, 0, 0, titleColor, true);
         
-        // Restore transformation
+        // Pop matrix to restore original state
         guiGraphics.pose().popPose();
     }
     
@@ -254,9 +286,19 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
      * Render custom tooltips for UI elements
      */
     private void renderCustomTooltips(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        // Render tooltip for trade button if mouse is over it and it's a trade screen
+        // For trade screen, add tooltip for the trade button
         if (this.inventoryType == InventoryType.TRADE && isMouseOverTradeButton(mouseX, mouseY)) {
-            guiGraphics.renderTooltip(this.font, Component.literal("Process the trade"), mouseX, mouseY);
+            guiGraphics.renderTooltip(this.font, Component.literal("Click to trade"), mouseX, mouseY);
+        }
+        
+        // For storage screen, add tooltip for the storage mode toggle button
+        if (this.inventoryType == InventoryType.STORAGE && isMouseOverStorageModeToggle(mouseX, mouseY) && 
+            this.menu instanceof StorageMenu storageMenu) {
+            String currentMode = storageMenu.isPersonalStorageMode() ? COMMUNAL_LABEL : PERSONAL_LABEL;
+            String nextMode = storageMenu.isPersonalStorageMode() ? PERSONAL_LABEL : COMMUNAL_LABEL;
+            guiGraphics.renderTooltip(this.font, 
+                Component.literal("Current: " + currentMode + "\nClick to switch to " + nextMode), 
+                mouseX, mouseY);
         }
     }
 
@@ -312,15 +354,7 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
             0x50000000 // Semi-transparent dark background
         );
         
-        // Draw border around main inventory
-        InventoryRenderer.drawBorder(guiGraphics,
-            this.leftPos + 7,
-            INVENTORY_Y + 2,
-            SLOTS_PER_ROW * SLOT_SIZE + 2,
-            3 * SLOT_SIZE,
-            InventoryRenderer.INVENTORY_BORDER_COLOR,
-            1
-        );
+
         
         // Draw background for hotbar (1 row x 9 slots)
         guiGraphics.fill(
@@ -409,6 +443,38 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
         InventoryRenderer.drawSlotGrid(guiGraphics, 
                 this.leftPos + STORAGE_START_X, this.topPos + STORAGE_START_Y, 
                 STORAGE_COLS, STORAGE_ROWS);
+        
+        // Draw the toggle button for storage mode if this is a storage menu
+        if (this.menu instanceof StorageMenu storageMenu) {
+            boolean isToggleButtonHovered = isMouseOverStorageModeToggle(mouseX, mouseY);
+            InventoryRenderer.drawButton(guiGraphics, 
+                    this.leftPos + TOGGLE_BUTTON_X, this.topPos + TOGGLE_BUTTON_Y, 
+                    TOGGLE_BUTTON_WIDTH, TOGGLE_BUTTON_HEIGHT, 
+                    storageMenu.isPersonalStorageMode() ? "P" : "C", this.font, isToggleButtonHovered);
+        }
+    }
+    
+    /**
+     * Check if mouse is over the storage mode toggle button
+     */
+    private boolean isMouseOverStorageModeToggle(int mouseX, int mouseY) {
+        return mouseX >= this.leftPos + TOGGLE_BUTTON_X && 
+               mouseX < this.leftPos + TOGGLE_BUTTON_X + TOGGLE_BUTTON_WIDTH && 
+               mouseY >= this.topPos + TOGGLE_BUTTON_Y && 
+               mouseY < this.topPos + TOGGLE_BUTTON_Y + TOGGLE_BUTTON_HEIGHT;
+    }
+    
+    /**
+     * Helper method to get the StorageMenu from the current menu
+     * 
+     * @return The StorageMenu if available, null otherwise
+     */
+    private StorageMenu getStorageMenu() {
+        if (this.inventoryType == InventoryType.STORAGE && 
+            this.menu instanceof StorageMenu storageMenu) {
+            return storageMenu;
+        }
+        return null;
     }
     
     @Override
@@ -423,8 +489,532 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
             return true;
         }
         
+        // Check if storage mode toggle button was clicked (for storage screen only)
+        if (button == 0 && this.inventoryType == InventoryType.STORAGE && 
+            isMouseOverStorageModeToggle((int)mouseX, (int)mouseY) && 
+            this.menu instanceof StorageMenu storageMenu) {
+            
+            // Toggle storage mode
+            boolean isPersonal = storageMenu.toggleStorageMode();
+            
+            // Play a click sound
+            playClickSound();
+            
+            // Update the display title based on the storage mode
+            this.displayTitle = Component.literal("Town " + (isPersonal ? "Personal" : "Communal") + " Storage");
+            
+            // Refresh the storage data based on the new mode
+            if (isPersonal) {
+                loadPersonalStorageItems(storageMenu);
+            } else {
+                loadCommunalStorageItems(storageMenu);
+            }
+            
+            return true;
+        }
+        
         // Let AbstractContainerScreen handle normal inventory interactions
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+    
+    /**
+     * Helper method to load personal storage items
+     */
+    private void loadPersonalStorageItems(StorageMenu storageMenu) {
+        if (this.minecraft != null && this.minecraft.player != null) {
+            // Get personal storage data for the current player
+            UUID playerId = this.minecraft.player.getUUID();
+            try {
+                BlockPos townPos = storageMenu.getTownBlockPos();
+                if (townPos != null) {
+                    // First, request personal storage data from the server
+                    LOGGER.debug("Requesting personal storage data for player {} at position {}", playerId, townPos);
+                    ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
+                    
+                    // Then try to fetch from local cache as a fallback
+                    TownBlockMenu townMenu = storageMenu.getTownBlockMenu();
+                    if (townMenu != null) {
+                        // Get the personal storage items
+                        Map<Item, Integer> personalItems = townMenu.getPersonalStorageItems(playerId);
+                        
+                        // Update with personal storage items
+                        storageMenu.updatePersonalStorageItems(personalItems);
+                        LOGGER.debug("Updated personal storage display with {} items from local cache", personalItems.size());
+                    } else {
+                        LOGGER.warn("Could not access TownBlockMenu for personal storage");
+                    }
+                } else {
+                    LOGGER.warn("No town position available for personal storage request");
+                }
+            } catch (Exception e) {
+                LOGGER.error("Error loading personal storage items", e);
+            }
+        }
+    }
+    
+    /**
+     * Helper method to load communal storage items
+     */
+    private void loadCommunalStorageItems(StorageMenu storageMenu) {
+        if (this.minecraft != null && this.minecraft.player != null) {
+            try {
+                // Get the town menu to access storage data
+                TownBlockMenu townMenu = storageMenu.getTownBlockMenu();
+                if (townMenu != null) {
+                    // Update with communal storage items
+                    storageMenu.updateStorageItems(
+                        townMenu.getAllCommunalStorageItems()
+                    );
+                } else {
+                    LOGGER.warn("Could not access TownBlockMenu for communal storage");
+                }
+            } catch (Exception e) {
+                LOGGER.error("Error loading communal storage items", e);
+            }
+        }
+    }
+    
+    /**
+     * Override slotClicked to handle custom slot behavior for storage and trade
+     */
+    @Override
+    protected void slotClicked(Slot slot, int slotId, int mouseButton, ClickType type) {
+        StorageMenu storageMenu = getStorageMenu();
+        if (storageMenu == null) {
+            super.slotClicked(slot, slotId, mouseButton, type);
+            return;
+        }
+        
+        boolean isPersonalMode = storageMenu.isPersonalStorageMode();
+        
+        // Handle double-click to collect all items of same type (DOUBLE_CLICK)
+        if (type == ClickType.PICKUP && mouseButton == 0 && 
+            !this.menu.getCarried().isEmpty() && slot == null) {
+            
+            // This is a special case - double-click collecting operation
+            // Track the item before the operation
+            ItemStack carriedBefore = this.menu.getCarried().copy();
+            
+            // Let Minecraft handle the double-click collection
+            super.slotClicked(slot, slotId, mouseButton, type);
+            
+            // Find out what changed by comparing carried item before and after
+            ItemStack carriedAfter = this.menu.getCarried();
+            int itemsCollected = carriedAfter.getCount() - carriedBefore.getCount();
+            
+            if (itemsCollected > 0) {
+                LOGGER.debug("Collected {} items via double-click", itemsCollected);
+                
+                // Request updated storage data to keep the backend in sync
+                BlockPos townPos = storageMenu.getTownBlockPos();
+                if (townPos != null && this.minecraft != null && this.minecraft.player != null) {
+                    UUID playerId = this.minecraft.player.getUUID();
+                    if (isPersonalMode) {
+                        // Request personal storage data refresh
+                        ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
+                    } else {
+                        // Request communal storage data refresh
+                        ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                    }
+                }
+            }
+            
+            return;
+        }
+        
+        // Handle dragging items across slots (QUICK_CRAFT)
+        if (type == ClickType.QUICK_CRAFT) {
+            // Track drag stages for both left-click and right-click dragging:
+            // Left-click dragging (distribute evenly):
+            //   mouseButton == 0: start dragging
+            //   mouseButton == 1: add slot
+            //   mouseButton == 2: end dragging
+            // Right-click dragging (place one per slot):
+            //   mouseButton == 4: start dragging
+            //   mouseButton == 5: add slot
+            //   mouseButton == 6: end dragging
+            
+            // If we're starting a drag operation, clear the affected slots set
+            if (mouseButton == 0 || mouseButton == 4) {
+                this.affectedDragSlots.clear();
+            }
+            
+            // If we're adding a slot to the drag operation, track it
+            if ((mouseButton == 1 || mouseButton == 5) && slot != null) {
+                // Only track storage slots (within the storage grid)
+                // Storage is always first 18 slots (2x9 grid)
+                if (slotId < 18) {
+                    this.affectedDragSlots.add(slotId);
+                }
+            }
+            
+            // Let Minecraft handle the drag operation
+            super.slotClicked(slot, slotId, mouseButton, type);
+            
+            // If this is the end of a drag operation
+            if (mouseButton == 2 || mouseButton == 6) {
+                // Process all affected slots individually
+                BlockPos townPos = storageMenu.getTownBlockPos();
+                if (townPos != null && this.minecraft != null && this.minecraft.player != null) {
+                    boolean anySlotUpdated = false;
+                    
+                    LOGGER.debug("Processing {} affected slots after drag operation", affectedDragSlots.size());
+                    for (int affectedSlotId : affectedDragSlots) {
+                        Slot affectedSlot = this.menu.slots.get(affectedSlotId);
+                        if (affectedSlot != null) {
+                            ItemStack slotStack = affectedSlot.getItem();
+                            if (!slotStack.isEmpty()) {
+                                // Process the storage add operation based on mode
+                                if (isPersonalMode) {
+                                    storageMenu.processPersonalStorageAdd(this.minecraft.player, affectedSlotId, slotStack.copy());
+                                } else {
+                                    storageMenu.processCommunalStorageAdd(this.minecraft.player, affectedSlotId, slotStack.copy());
+                                }
+                                anySlotUpdated = true;
+                            }
+                        }
+                    }
+                    
+                    // Request a full refresh only if we didn't update any slots
+                    if (!anySlotUpdated && !affectedDragSlots.isEmpty()) {
+                        if (isPersonalMode) {
+                            // Request personal storage data refresh
+                            ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
+                        } else {
+                            // Request communal storage data refresh
+                            ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                        }
+                    }
+                    
+                    // Clear the affected slots for the next operation
+                    this.affectedDragSlots.clear();
+                }
+            }
+            
+            return;
+        }
+        
+        // Check if it's a storage slot (in the 2x9 grid)
+        if (slot != null && slotId < 18) {
+            // If player is adding an item to storage (left click with carried item)
+            if (type == ClickType.PICKUP && mouseButton == 0 && !this.menu.getCarried().isEmpty()) {
+                // Store information about the state before clicking
+                ItemStack carriedBefore = this.menu.getCarried().copy();
+                ItemStack slotBefore = slot.getItem().isEmpty() ? ItemStack.EMPTY : slot.getItem().copy();
+                
+                // Let the standard handling happen first
+                super.slotClicked(slot, slotId, mouseButton, type);
+                
+                // Calculate what actually changed
+                ItemStack carriedAfter = this.menu.getCarried();
+                ItemStack slotAfter = slot.getItem();
+                
+                // Only send packet if items were actually added to storage
+                if (slotAfter.getCount() > slotBefore.getCount() || 
+                    (slotBefore.isEmpty() && !slotAfter.isEmpty())) {
+                    
+                    // Calculate how many items were actually added
+                    int itemsAdded;
+                    if (slotBefore.isEmpty()) {
+                        // New stack was created
+                        itemsAdded = slotAfter.getCount();
+                    } else {
+                        // Existing stack was increased
+                        itemsAdded = slotAfter.getCount() - slotBefore.getCount();
+                    }
+                    
+                    // If items were actually added, send the packet with the correct item count
+                    if (itemsAdded > 0) {
+                        ItemStack itemToAdd = slotAfter.copy();
+                        itemToAdd.setCount(itemsAdded);
+                        
+                        LOGGER.debug("Adding {} items to storage at slot {}", itemsAdded, slotId);
+                        
+                        // Process the storage add operation based on mode
+                        if (isPersonalMode) {
+                            storageMenu.processPersonalStorageAdd(this.minecraft.player, slotId, itemToAdd);
+                        } else {
+                            storageMenu.processCommunalStorageAdd(this.minecraft.player, slotId, itemToAdd);
+                        }
+                    }
+                }
+                // Handle the case where we swapped different items (not just adding more of the same type)
+                else if (!ItemStack.isSameItemSameTags(slotBefore, slotAfter) && 
+                        !slotBefore.isEmpty() && !slotAfter.isEmpty()) {
+                    
+                    LOGGER.debug("Swapping different items in slot {}: {} -> {}", 
+                        slotId, slotBefore.getHoverName().getString(), slotAfter.getHoverName().getString());
+                    
+                    // First, remove the original item from storage
+                    if (isPersonalMode) {
+                        storageMenu.processPersonalStorageRemove(this.minecraft.player, slotId, slotBefore);
+                    } else {
+                        storageMenu.processCommunalStorageRemove(this.minecraft.player, slotId, slotBefore);
+                    }
+                    
+                    // Then, add the new item to storage
+                    if (isPersonalMode) {
+                        storageMenu.processPersonalStorageAdd(this.minecraft.player, slotId, slotAfter.copy());
+                    } else {
+                        storageMenu.processCommunalStorageAdd(this.minecraft.player, slotId, slotAfter.copy());
+                    }
+                }
+                return;
+            }
+            // If player is right-clicking to split a stack in storage
+            else if (type == ClickType.PICKUP && mouseButton == 1 && !slot.getItem().isEmpty()) {
+                // Store information about the state before clicking
+                ItemStack slotBefore = slot.getItem().copy();
+                int countBefore = slotBefore.getCount();
+                
+                // Let the standard handling happen first
+                super.slotClicked(slot, slotId, mouseButton, type);
+                
+                // After splitting, get the remaining items in the slot
+                ItemStack slotAfter = slot.getItem();
+                ItemStack carriedAfter = this.menu.getCarried();
+                
+                // Calculate how many items were actually removed
+                int itemsRemoved = carriedAfter.getCount();
+                
+                LOGGER.debug("Right-click split: {} items remaining in slot, {} items in hand", 
+                    slotAfter.getCount(), carriedAfter.getCount());
+                
+                // Create a copy of the item stack with the split amount
+                ItemStack splitStack = slotBefore.copy();
+                splitStack.setCount(itemsRemoved);
+                
+                // Process the storage remove operation based on mode
+                if (isPersonalMode) {
+                    storageMenu.processPersonalStorageRemove(this.minecraft.player, slotId, splitStack);
+                } else {
+                    storageMenu.processCommunalStorageRemove(this.minecraft.player, slotId, splitStack);
+                }
+                
+                return;
+            }
+            // If player is removing an item from storage (left click on item in slot)
+            else if (type == ClickType.PICKUP && mouseButton == 0 && !slot.getItem().isEmpty()) {
+                // Get a copy of the item before it's removed
+                var itemStack = slot.getItem().copy();
+                
+                // Let the standard handling happen first
+                super.slotClicked(slot, slotId, mouseButton, type);
+                
+                // Then process the storage remove operation based on mode
+                if (isPersonalMode) {
+                    storageMenu.processPersonalStorageRemove(this.minecraft.player, slotId, itemStack);
+                } else {
+                    storageMenu.processCommunalStorageRemove(this.minecraft.player, slotId, itemStack);
+                }
+                return;
+            }
+
+            // Add a new case for right-click placing a single item from carried stack
+            // If player is right-clicking with carried item to place just one item
+            else if (type == ClickType.PICKUP && mouseButton == 1 && !this.menu.getCarried().isEmpty()) {
+                // Store information about the state before clicking
+                ItemStack carriedBefore = this.menu.getCarried().copy();
+                ItemStack slotBefore = slot.getItem().isEmpty() ? ItemStack.EMPTY : slot.getItem().copy();
+                
+                // Let the standard handling happen first
+                super.slotClicked(slot, slotId, mouseButton, type);
+                
+                // Calculate what actually changed
+                ItemStack carriedAfter = this.menu.getCarried();
+                ItemStack slotAfter = slot.getItem();
+                
+                // Only send packet if items were actually added to storage
+                if (slotAfter.getCount() > slotBefore.getCount() || 
+                    (slotBefore.isEmpty() && !slotAfter.isEmpty())) {
+                    
+                    // Calculate how many items were actually added (should be 1 for right-click)
+                    int itemsAdded;
+                    if (slotBefore.isEmpty()) {
+                        // New stack was created
+                        itemsAdded = slotAfter.getCount();
+                    } else {
+                        // Existing stack was increased
+                        itemsAdded = slotAfter.getCount() - slotBefore.getCount();
+                    }
+                    
+                    // If items were actually added, send the packet with the correct item count
+                    if (itemsAdded > 0) {
+                        ItemStack itemToAdd = slotAfter.copy();
+                        itemToAdd.setCount(itemsAdded);
+                        
+                        LOGGER.debug("Right-click adding {} items to storage at slot {}", itemsAdded, slotId);
+                        
+                        // Process the storage add operation based on mode
+                        if (isPersonalMode) {
+                            storageMenu.processPersonalStorageAdd(this.minecraft.player, slotId, itemToAdd);
+                        } else {
+                            storageMenu.processCommunalStorageAdd(this.minecraft.player, slotId, itemToAdd);
+                        }
+                    }
+                }
+                return;
+            }
+        }
+        
+        // Handle shift-clicking (QUICK_MOVE) to properly track moved items
+        if (type == ClickType.QUICK_MOVE && slot != null && storageMenu != null) {
+            boolean isStorageSlot = slotId < 18; // First 18 slots are storage slots
+            
+            // Store the state before the quick move
+            ItemStack slotBefore = slot.getItem().copy();
+            
+            // Let the standard handling happen
+            super.slotClicked(slot, slotId, mouseButton, type);
+            
+            // Store the state after the quick move
+            ItemStack slotAfter = slot.getItem().copy();
+            
+            // If moving from storage to player inventory
+            if (isStorageSlot && !slotBefore.isEmpty() && (slotAfter.isEmpty() || slotAfter.getCount() < slotBefore.getCount())) {
+                // Calculate how many items were actually moved
+                int itemsMoved;
+                if (slotAfter.isEmpty()) {
+                    // Full stack was moved
+                    itemsMoved = slotBefore.getCount();
+                } else {
+                    // Partial stack was moved
+                    itemsMoved = slotBefore.getCount() - slotAfter.getCount();
+                }
+                
+                LOGGER.debug("Shift-click removed {} items from storage slot {}", itemsMoved, slotId);
+                
+                // Create a copy of the item stack with the moved count
+                ItemStack itemsToRemove = slotBefore.copy();
+                itemsToRemove.setCount(itemsMoved);
+                
+                // Process the storage remove operation based on mode
+                if (isPersonalMode) {
+                    storageMenu.processPersonalStorageRemove(this.minecraft.player, slotId, itemsToRemove);
+                } else {
+                    storageMenu.processCommunalStorageRemove(this.minecraft.player, slotId, itemsToRemove);
+                }
+            }
+            // If moving from player inventory to storage
+            else if (!isStorageSlot && !slotBefore.isEmpty()) {
+                LOGGER.debug("Shift-click from player inventory slot {} to storage", slotId);
+                
+                // Capture the storage state before the operation
+                ItemStack[] storageSlotsBefore = new ItemStack[18]; // 18 storage slots
+                for (int i = 0; i < 18; i++) {
+                    Slot storageSlot = this.menu.slots.get(i);
+                    storageSlotsBefore[i] = storageSlot.hasItem() ? storageSlot.getItem().copy() : ItemStack.EMPTY;
+                }
+                
+                // Let the standard handling happen
+                super.slotClicked(slot, slotId, mouseButton, type);
+                
+                // Now compare storage slots before and after to see what changed
+                boolean anySlotUpdated = false;
+                for (int i = 0; i < 18; i++) {
+                    Slot storageSlot = this.menu.slots.get(i);
+                    ItemStack storageSlotAfter = storageSlot.hasItem() ? storageSlot.getItem().copy() : ItemStack.EMPTY;
+                    ItemStack storageSlotBefore = storageSlotsBefore[i];
+                    
+                    // Case 1: Existing stack size increased (same item type)
+                    if (!storageSlotBefore.isEmpty() && !storageSlotAfter.isEmpty() && 
+                        ItemStack.isSameItemSameTags(storageSlotBefore, storageSlotAfter)) {
+                        
+                        if (storageSlotAfter.getCount() > storageSlotBefore.getCount()) {
+                            // Normal case - stack was increased
+                            int itemsAdded = storageSlotAfter.getCount() - storageSlotBefore.getCount();
+                            
+                            // Create a copy with just the added items
+                            ItemStack itemsToAdd = storageSlotAfter.copy();
+                            itemsToAdd.setCount(itemsAdded);
+                            
+                            // Process the storage add operation based on mode
+                            if (isPersonalMode) {
+                                storageMenu.processPersonalStorageAdd(this.minecraft.player, i, itemsToAdd);
+                            } else {
+                                storageMenu.processCommunalStorageAdd(this.minecraft.player, i, itemsToAdd);
+                            }
+                            anySlotUpdated = true;
+                        } 
+                        else if (storageSlotAfter.getCount() == storageSlotBefore.getCount() && 
+                                 ItemStack.isSameItemSameTags(storageSlotAfter, slotBefore)) {
+                            // Special case: Same count but potentially a new item instance replacing the old one
+                            // This happens when Minecraft replaces the item instead of stacking it
+                            
+                            // Check if this slot already received items in this operation
+                            boolean slotAlreadyUpdated = false;
+                            for (int j = 0; j < i; j++) {
+                                if (affectedDragSlots.contains(j)) {
+                                    Slot prevSlot = this.menu.slots.get(j);
+                                    if (ItemStack.isSameItemSameTags(prevSlot.getItem(), storageSlotAfter)) {
+                                        slotAlreadyUpdated = true;
+                                        break;
+                                    }
+                                }
+                            }
+                                    
+                            if (!slotAlreadyUpdated) {
+                                // Get the itemstack that was shift-clicked
+                                ItemStack itemToAdd = slotBefore.copy();
+                                
+                                // Process the server update
+                                if (isPersonalMode) {
+                                    storageMenu.processPersonalStorageAdd(this.minecraft.player, i, itemToAdd);
+                                } else {
+                                    storageMenu.processCommunalStorageAdd(this.minecraft.player, i, itemToAdd);
+                                }
+                                anySlotUpdated = true;
+                                affectedDragSlots.add(i);
+                            }
+                        }
+                    }
+                    // Case 2: New stack created in empty slot
+                    else if (storageSlotBefore.isEmpty() && !storageSlotAfter.isEmpty()) {
+                        // Check if this matches what we were shift-clicking
+                        boolean isMatchingItem = ItemStack.isSameItemSameTags(storageSlotAfter, slotBefore);
+                        
+                        if (isMatchingItem) {
+                            // Process the storage add operation based on mode
+                            if (isPersonalMode) {
+                                storageMenu.processPersonalStorageAdd(this.minecraft.player, i, storageSlotAfter.copy());
+                            } else {
+                                storageMenu.processCommunalStorageAdd(this.minecraft.player, i, storageSlotAfter.copy());
+                            }
+                            anySlotUpdated = true;
+                        } else {
+                            // This slot changed but doesn't match our shift-clicked item - this shouldn't happen
+                            LOGGER.warn("Unexpected item type in storage slot {} after shift-click", i);
+                            
+                            // Send an update anyway to be safe
+                            if (isPersonalMode) {
+                                storageMenu.processPersonalStorageAdd(this.minecraft.player, i, storageSlotAfter.copy());
+                            } else {
+                                storageMenu.processCommunalStorageAdd(this.minecraft.player, i, storageSlotAfter.copy());
+                            }
+                            anySlotUpdated = true;
+                        }
+                    }
+                }
+                
+                // If no specific slot updates were found, request a full refresh
+                if (!anySlotUpdated) {
+                    BlockPos townPos = storageMenu.getTownBlockPos();
+                    if (townPos != null && this.minecraft != null && this.minecraft.player != null) {
+                        if (isPersonalMode) {
+                            ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
+                        } else {
+                            ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                        }
+                    }
+                }
+                return;
+            }
+            
+            return;
+        }
+        
+        // For other slots or click types, use default behavior
+        super.slotClicked(slot, slotId, mouseButton, type);
     }
     
     /**
