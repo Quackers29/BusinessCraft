@@ -6,8 +6,13 @@ import com.yourdomain.businesscraft.screen.components.BCFlowLayout;
 import com.yourdomain.businesscraft.screen.components.BCLabel;
 import com.yourdomain.businesscraft.screen.components.BCPanel;
 import com.yourdomain.businesscraft.screen.TownInterfaceScreen;
-import net.minecraft.client.Minecraft;
+import com.yourdomain.businesscraft.screen.components.UIGridBuilder;
+import com.yourdomain.businesscraft.api.ITownDataProvider;
 import net.minecraft.client.gui.GuiGraphics;
+import java.util.ArrayList;
+import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Handles the creation and management of the Population tab in the Town Interface Screen.
@@ -16,15 +21,13 @@ public class PopulationTab {
     private final TownInterfaceScreen screen;
     private final BCPanel panel;
     private final int textHighlight;
-    private final int textColor;
     private final int backgroundColor;
     private final int borderColor;
 
-    public PopulationTab(TownInterfaceScreen screen, BCPanel panel, int textHighlight, int textColor, int backgroundColor, int borderColor) {
+    public PopulationTab(TownInterfaceScreen screen, BCPanel panel, int textHighlight, int backgroundColor, int borderColor) {
         this.screen = screen;
         this.panel = panel;
         this.textHighlight = textHighlight;
-        this.textColor = textColor;
         this.backgroundColor = backgroundColor;
         this.borderColor = borderColor;
     }
@@ -35,16 +38,7 @@ public class PopulationTab {
         titleLabel.withTextColor(textHighlight).withShadow(true);
         panel.addChild(titleLabel);
 
-        // Sample citizen data (expanded)
-        String[] names = {"John Smith", "Emma Johnson", "Alex Lee", "Sofia Garcia", 
-                         "Michael Brown", "Lisa Wang", 
-                         "Michael Brown", "Lisa Wang", 
-                         "Michael Brown", "Lisa Wang"};
-        String[] jobs = {"Miner", "Farmer", "Builder", "Trader", 
-                        "Blacksmith", "Scholar", "Blacksmith", "Scholar", "Blacksmith", "Scholar"};
-        int[] levels = {3, 2, 4, 1, 5, 2, 3, 4, 2, 5};
-
-        // Calculate dimensions for the citizens grid - ensure it fits within panel boundaries
+        // Calculate dimensions for the population list - ensure it fits within panel boundaries
         // Account for the panel's padding and the title height
         int titleHeight = 20; // Approximate height of the header
         int verticalSpacing = 10; // Space between title and grid
@@ -53,9 +47,10 @@ public class PopulationTab {
         int availableWidth = panel.getInnerWidth();
         int availableHeight = panel.getInnerHeight() - titleHeight - verticalSpacing;
 
-        // Create a direct implementation for the citizen list with scrolling
-        BCComponent citizenList = new BCComponent(availableWidth, availableHeight) {
-            // Scrolling state
+        // Create a custom component to host the population list using UIGridBuilder
+        BCComponent populationListHost = new BCComponent(availableWidth, availableHeight) {
+            // Internal grid instance with scrolling
+            private UIGridBuilder grid;
             private int scrollOffset = 0;
             private final int itemHeight = 16; // Reduced item height for more compact display
             private final int padding = 8; // Reduced padding for more content space
@@ -68,282 +63,218 @@ public class PopulationTab {
 
             @Override
             protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-                // Calculate max visible items based on available height
-                int contentHeight = this.height - (verticalPadding * 2);
-                maxVisible = contentHeight / itemHeight;
+                // Get visit history from menu
+                List<ITownDataProvider.VisitHistoryRecord> visitHistory = getVisitHistory();
 
-                // Draw the background panel
-                guiGraphics.fill(this.x, this.y, this.x + this.width, this.y + this.height, backgroundColor);
+                // Calculate the number of visible items based on available height
+                maxVisible = (availableHeight - (padding * 2)) / itemHeight;
 
-                // Draw border
-                guiGraphics.hLine(this.x, this.x + this.width - 1, this.y, borderColor);
-                guiGraphics.hLine(this.x, this.x + this.width - 1, this.y + this.height - 1, borderColor);
-                guiGraphics.vLine(this.x, this.y, this.y + this.height - 1, borderColor);
-                guiGraphics.vLine(this.x + this.width - 1, this.y, this.y + this.height - 1, borderColor);
-
-                // Calculate column widths (3 columns: name, job, level)
-                int contentWidth = this.width - scrollbarWidth - (padding * 2);
-                int nameWidth = (int)(contentWidth * 0.4);
-                int jobWidth = (int)(contentWidth * 0.35);
-                int levelWidth = (int)(contentWidth * 0.25);
-
-                // Calculate max scroll offset
-                int maxScrollOffset = Math.max(0, names.length - maxVisible);
-                if (scrollOffset > maxScrollOffset) {
-                    scrollOffset = maxScrollOffset;
+                // Create or recreate the grid with the proper number of rows
+                if (grid == null) {
+                    createGrid(visitHistory);
                 }
 
-                // Draw the scrollbar if needed
-                if (names.length > maxVisible) {
-                    // Draw scrollbar track
-                    int trackHeight = this.height - (verticalPadding * 2);
-                    guiGraphics.fill(
-                        this.x + this.width - scrollbarWidth - padding,
-                        this.y + verticalPadding,
-                        this.x + this.width - padding,
-                        this.y + this.height - verticalPadding,
-                        0x40FFFFFF // Light gray semi-transparent
-                    );
-
-                    // Draw scrollbar thumb
-                    float thumbRatio = (float)maxVisible / names.length;
-                    int thumbHeight = Math.max(20, (int)(trackHeight * thumbRatio));
-                    int thumbY = this.y + verticalPadding + (int)((trackHeight - thumbHeight) * ((float)scrollOffset / maxScrollOffset));
-
-                    // Highlight if mouse is over
-                    boolean isOverScrollbar = mouseX >= this.x + this.width - scrollbarWidth - padding &&
-                                            mouseX <= this.x + this.width - padding &&
-                                            mouseY >= this.y + verticalPadding &&
-                                            mouseY <= this.y + this.height - verticalPadding;
-
-                    guiGraphics.fill(
-                        this.x + this.width - scrollbarWidth - padding,
-                        thumbY,
-                        this.x + this.width - padding,
-                        thumbY + thumbHeight,
-                        isOverScrollbar ? 0xFFCCDDFF : 0xA0CCDDFF // Light blue with variable opacity
-                    );
-                }
-
-                // Draw only visible citizens
-                int startY = this.y + verticalPadding;
-                for (int i = 0; i < Math.min(maxVisible, names.length - scrollOffset); i++) {
-                    int dataIndex = i + scrollOffset;
-                    int rowY = startY + (i * itemHeight);
-
-                    if (rowY + itemHeight > this.y + this.height - verticalPadding) {
-                        break;
+                // Draw the grid background and elements
+                if (visitHistory.isEmpty()) {
+                    // Create a simple grid with a "No visitors" message
+                    if (grid == null) {
+                        grid = new UIGridBuilder(x, y, width, height, 1, 1)
+                            .withBackgroundColor(backgroundColor)
+                            .withBorderColor(borderColor)
+                            .withMargins(15, 10)
+                            .withSpacing(15, 10)
+                            .drawBorder(true);
+                        grid.addLabel(0, 0, "No visitors recorded", textHighlight);
                     }
-
-                    // Draw name (first column)
-                    guiGraphics.drawString(
-                        Minecraft.getInstance().font,
-                        names[dataIndex],
-                        this.x + padding,
-                        rowY + 3, // Slight vertical centering
-                        textHighlight
-                    );
-
-                    // Draw job (second column)
-                    guiGraphics.drawString(
-                        Minecraft.getInstance().font,
-                        jobs[dataIndex],
-                        this.x + padding + nameWidth,
-                        rowY + 3, // Slight vertical centering
-                        textColor
-                    );
-
-                    // Draw level (third column)
-                    guiGraphics.drawString(
-                        Minecraft.getInstance().font,
-                        "Level " + levels[dataIndex],
-                        this.x + padding + nameWidth + jobWidth,
-                        rowY + 3, // Slight vertical centering
-                        textColor
-                    );
                 }
+
+                // Render the grid
+                grid.render(guiGraphics, mouseX, mouseY);
+
+                // Render scrollbar if needed
+                if (visitHistory.size() > maxVisible) {
+                    renderScrollbar(guiGraphics, mouseX, mouseY, visitHistory.size());
+                }
+            }
+
+            private void createGrid(List<ITownDataProvider.VisitHistoryRecord> visitHistory) {
+                // Calculate the number of rows based on the visit history
+                int numRows = Math.max(1, visitHistory.size());
+
+                // Use the new create method which automatically handles rows based on data
+                grid = UIGridBuilder.create(x, y, width, height, 2) // Just define columns, rows will be determined by data
+                    .withBackgroundColor(backgroundColor)
+                    .withBorderColor(borderColor)
+                    .withMargins(15, 10)
+                    .withSpacing(15, 10)
+                    .withRowHeight(itemHeight) // Use compact row height
+                    .drawBorder(true);
+
+                // Add visit history data to the grid
+                SimpleDateFormat dateFormat = new SimpleDateFormat("MMM d, yyyy HH:mm");
+                for (int i = 0; i < visitHistory.size(); i++) {
+                    ITownDataProvider.VisitHistoryRecord record = visitHistory.get(i);
+                    // Use reflection to access the record fields
+                    String playerName = getPlayerName(record);
+                    String visitTime = dateFormat.format(new Date(getVisitTime(record)));
+                    grid.addLabel(0, i, playerName, textHighlight);
+                    grid.addLabel(1, i, visitTime, textHighlight);
+                }
+
+                System.out.println("Population Tab: Created grid with " + visitHistory.size() + " visitors");
+            }
+
+            private String getPlayerName(ITownDataProvider.VisitHistoryRecord record) {
+                try {
+                    return (String) record.getClass().getMethod("getPlayerName").invoke(record);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return "Unknown";
+                }
+            }
+
+            private long getVisitTime(ITownDataProvider.VisitHistoryRecord record) {
+                try {
+                    return (long) record.getClass().getMethod("getVisitTime").invoke(record);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return System.currentTimeMillis();
+                }
+            }
+
+            private void renderScrollbar(GuiGraphics guiGraphics, int mouseX, int mouseY, int totalItems) {
+                // Calculate scrollbar dimensions
+                int scrollbarHeight = Math.max(20, (maxVisible * height) / totalItems);
+                int scrollbarY = y + padding + (scrollOffset * (height - scrollbarHeight - (padding * 2))) / (totalItems - maxVisible);
+                int scrollbarX = x + width - scrollbarWidth - padding;
+
+                // Draw scrollbar background
+                guiGraphics.fill(scrollbarX, y + padding, scrollbarX + scrollbarWidth, y + height - padding, backgroundColor);
+
+                // Draw scrollbar handle
+                guiGraphics.fill(scrollbarX, scrollbarY, scrollbarX + scrollbarWidth, scrollbarY + scrollbarHeight, borderColor);
             }
 
             @Override
             public boolean mouseClicked(double mouseX, double mouseY, int button) {
-                if (isMouseOver((int)mouseX, (int)mouseY)) {
-                    // Calculate max visible items based on available height
-                    int contentHeight = this.height - (verticalPadding * 2);
-                    maxVisible = contentHeight / itemHeight;
+                // Check if mouse is over the scrollbar
+                if (isMouseOverScrollbar((int)mouseX, (int)mouseY)) {
+                    isDraggingScrollbar = true;
+                    return true;
+                }
 
-                    // Middle mouse button for scrolling
-                    if (button == 2) { // Middle mouse button
-                        isMiddleMouseScrolling = true;
-                        lastMouseY = mouseY;
-                        return true;
-                    }
-
-                    // Left mouse button
-                    if (button == 0) {
-                        // Check if clicking on scrollbar
-                        if (names.length > maxVisible && 
-                            mouseX >= this.x + this.width - scrollbarWidth - padding &&
-                            mouseX <= this.x + this.width - padding &&
-                            mouseY >= this.y + verticalPadding &&
-                            mouseY <= this.y + this.height - verticalPadding) {
-
-                            isDraggingScrollbar = true;
-
-                            // Calculate new scroll position
-                            int trackHeight = this.height - (verticalPadding * 2);
-                            float relativeY = (float)(mouseY - (this.y + verticalPadding)) / trackHeight;
-                            int maxScrollOffset = Math.max(0, names.length - maxVisible);
-                            scrollOffset = (int)(relativeY * maxScrollOffset);
-
-                            // Clamp scroll offset
-                            if (scrollOffset < 0) {
-                                scrollOffset = 0;
-                            } else if (scrollOffset > maxScrollOffset) {
-                                scrollOffset = maxScrollOffset;
-                            }
-
-                            return true;
-                        }
-
-                        // Check if clicking on a citizen
-                        int clickedItem = -1;
-                        int startY = this.y + verticalPadding;
-                        for (int i = 0; i < Math.min(maxVisible, names.length - scrollOffset); i++) {
-                            int dataIndex = i + scrollOffset;
-                            int rowY = startY + (i * itemHeight);
-
-                            if (mouseY >= rowY && mouseY < rowY + itemHeight) {
-                                clickedItem = dataIndex;
-                                break;
-                            }
-                        }
-
-                        if (clickedItem != -1 && clickedItem < names.length) {
-                            // Handle citizen click
-                            playButtonClickSound();
-                            sendChatMessage("Selected citizen: " + names[clickedItem] + " (" + jobs[clickedItem] + ")");
-                            return true;
-                        }
-                    }
+                // Pass the event to the grid if it was created
+                if (grid != null) {
+                    return grid.mouseClicked((int)mouseX, (int)mouseY, button);
                 }
                 return false;
             }
 
             @Override
-            public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double dragDeltaY) {
-                // Left mouse button dragging (scrollbar)
-                if (isDraggingScrollbar && button == 0) {
-                    // Calculate new scrollbar position based on drag
-                    double dragDistanceY = dragDeltaY;
-                    // Calculate max visible items based on available height
-                    int contentHeight = this.height - (verticalPadding * 2);
-                    maxVisible = contentHeight / itemHeight;
+            public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+                // Handle scrollbar dragging
+                if (isDraggingScrollbar) {
+                    List<ITownDataProvider.VisitHistoryRecord> visitHistory = getVisitHistory();
+                    int totalItems = visitHistory.size();
+                    int scrollableHeight = height - (padding * 2);
+                    int scrollbarHeight = Math.max(20, (maxVisible * height) / totalItems);
+                    int maxScrollOffset = totalItems - maxVisible;
 
-                    // Calculate new scroll position based on drag
-                    int trackHeight = this.height - (verticalPadding * 2);
-                    float relativeY = (float)(mouseY - (this.y + verticalPadding)) / trackHeight;
-                    int maxScrollOffset = Math.max(0, names.length - maxVisible);
-                    scrollOffset = (int)(relativeY * maxScrollOffset);
-
-                    // Clamp scroll offset
-                    if (scrollOffset < 0) {
-                        scrollOffset = 0;
-                    } else if (scrollOffset > maxScrollOffset) {
-                        scrollOffset = maxScrollOffset;
-                    }
+                    // Calculate new scroll offset based on mouse position
+                    double scrollPercentage = (mouseY - (y + padding)) / (double)(scrollableHeight - scrollbarHeight);
+                    scrollOffset = (int)(scrollPercentage * maxScrollOffset);
+                    scrollOffset = Math.max(0, Math.min(scrollOffset, maxScrollOffset));
 
                     return true;
                 }
 
-                // Middle mouse button dragging (direct scrolling)
-                if (isMiddleMouseScrolling && button == 2) {
-                    // Calculate max visible items based on available height
-                    int contentHeight = this.height - (verticalPadding * 2);
-                    maxVisible = contentHeight / itemHeight;
-
-                    // Calculate scroll amount based on mouse movement
-                    double deltaY = mouseY - lastMouseY;
-                    lastMouseY = mouseY;
-
-                    // Convert mouse movement to scroll amount (scale factor)
-                    // Positive deltaY means dragging down, which should move content up (scroll down)
-                    int scrollAmount = (int)(deltaY * 0.5);
-
-                    // Apply scrolling
-                    int maxScrollOffset = Math.max(0, names.length - maxVisible);
-                    scrollOffset += scrollAmount;
-
-                    // Clamp scroll offset
-                    if (scrollOffset < 0) {
-                        scrollOffset = 0;
-                    } else if (scrollOffset > maxScrollOffset) {
-                        scrollOffset = maxScrollOffset;
+                // Handle middle mouse scrolling
+                if (button == 2) { // Middle mouse button
+                    if (!isMiddleMouseScrolling) {
+                        isMiddleMouseScrolling = true;
+                        lastMouseY = mouseY;
+                    } else {
+                        double delta = lastMouseY - mouseY;
+                        if (Math.abs(delta) > 5) { // Threshold to prevent tiny movements
+                            scrollOffset += (int)(delta / 10);
+                            scrollOffset = Math.max(0, Math.min(scrollOffset, getVisitHistory().size() - maxVisible));
+                            lastMouseY = mouseY;
+                        }
                     }
-
-                    // Middle mouse scrolling active
                     return true;
                 }
 
-                return super.mouseDragged(mouseX, mouseY, button, deltaX, dragDeltaY);
+                // Pass the event to the grid if it was created
+                if (grid != null) {
+                    return grid.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+                }
+                return false;
             }
 
             @Override
             public boolean mouseReleased(double mouseX, double mouseY, int button) {
-                if (isDraggingScrollbar && button == 0) {
+                // Reset dragging state
+                if (isDraggingScrollbar) {
                     isDraggingScrollbar = false;
                     return true;
                 }
 
-                if (isMiddleMouseScrolling && button == 2) {
+                // Reset middle mouse scrolling state
+                if (isMiddleMouseScrolling) {
                     isMiddleMouseScrolling = false;
                     return true;
                 }
 
+                // Pass the event to the grid if it was created
+                if (grid != null) {
+                    return grid.mouseReleased(mouseX, mouseY, button);
+                }
                 return false;
             }
 
             @Override
             public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-                // Calculate max visible items and offset
-                int contentHeight = this.height - (verticalPadding * 2);
-                maxVisible = contentHeight / itemHeight;
-                int maxScrollOffset = Math.max(0, names.length - maxVisible);
-
-                // Apply scrolling directly based on delta sign (delta > 0 means scroll up)
-                scrollOffset -= (int)Math.signum(delta);
-
-                // Clamp scroll position
-                if (scrollOffset < 0) {
-                    scrollOffset = 0;
+                // Handle mouse wheel scrolling
+                if (isMouseOver((int)mouseX, (int)mouseY)) {
+                    scrollOffset += (int)(delta * 3); // Adjust scroll speed
+                    scrollOffset = Math.max(0, Math.min(scrollOffset, getVisitHistory().size() - maxVisible));
+                    return true;
                 }
-                if (scrollOffset > maxScrollOffset) {
-                    scrollOffset = maxScrollOffset;
-                }
-
-                return true;
+                return false;
             }
 
-            private boolean isMouseOver(int mouseX, int mouseY) {
-                return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
-            }
-
-            private void playButtonClickSound() {
-                Minecraft.getInstance().getSoundManager().play(
-                    net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
-                        net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F)
-                );
-            }
-
-            private void sendChatMessage(String message) {
-                net.minecraft.client.player.LocalPlayer player = Minecraft.getInstance().player;
-                if (player != null) {
-                    player.displayClientMessage(net.minecraft.network.chat.Component.literal(message), false);
+            private boolean isMouseOverScrollbar(int mouseX, int mouseY) {
+                List<ITownDataProvider.VisitHistoryRecord> visitHistory = getVisitHistory();
+                if (visitHistory.size() <= maxVisible) {
+                    return false; // No scrollbar needed
                 }
+
+                int scrollbarHeight = Math.max(20, (maxVisible * height) / visitHistory.size());
+                int scrollbarY = y + padding + (scrollOffset * (height - scrollbarHeight - (padding * 2))) / (visitHistory.size() - maxVisible);
+                int scrollbarX = x + width - scrollbarWidth - padding;
+
+                return mouseX >= scrollbarX && mouseX < scrollbarX + scrollbarWidth &&
+                       mouseY >= scrollbarY && mouseY < scrollbarY + scrollbarHeight;
+            }
+
+            @Override
+            public boolean isMouseOver(int mouseX, int mouseY) {
+                // Use a more lenient check to capture scrolling near the edges
+                return mouseX >= x - 10 && mouseX < x + width + 10 && 
+                       mouseY >= y - 10 && mouseY < y + height + 10;
             }
         };
 
-        // Add the citizen list to the panel
-        panel.addChild(citizenList);
+        panel.addChild(populationListHost);
+    }
+
+    private List<ITownDataProvider.VisitHistoryRecord> getVisitHistory() {
+        try {
+            return (List<ITownDataProvider.VisitHistoryRecord>) screen.getClass().getDeclaredMethod("getCachedVisitHistory").invoke(screen);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
 
     public BCPanel getPanel() {
