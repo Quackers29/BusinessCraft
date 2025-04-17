@@ -12,7 +12,12 @@ import com.yourdomain.businesscraft.BusinessCraft;
 
 /**
  * Handles registration and dispatch of network packets
+ * 
+ * @deprecated This class is deprecated and will be removed in a future update.
+ * Use {@link ModMessages} instead for all packet registration and sending.
+ * This class contains duplicate functionality and is being maintained only for backward compatibility.
  */
+@Deprecated
 public class PacketHandler {
     private static final String PROTOCOL_VERSION = "1";
     public static final SimpleChannel INSTANCE = NetworkRegistry.newSimpleChannel(
@@ -27,6 +32,10 @@ public class PacketHandler {
         return packetId++;
     }
     
+    /**
+     * @deprecated Use {@link ModMessages#register()} instead
+     */
+    @Deprecated
     public static void register() {
         // Register existing packets
         // ... existing packet registrations ...
@@ -60,7 +69,10 @@ public class PacketHandler {
     
     /**
      * Sends a packet to all clients tracking a specific chunk
+     * 
+     * @deprecated Use {@link ModMessages#sendToAllTrackingChunk(Object, Level, BlockPos)} instead
      */
+    @Deprecated
     public static void sendToAllTracking(Object packet, ServerLevel level, BlockPos pos) {
         INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> 
             level.getChunkAt(pos)), packet);
@@ -68,7 +80,10 @@ public class PacketHandler {
     
     /**
      * Sends a packet to a specific player
+     * 
+     * @deprecated Use {@link ModMessages#sendToPlayer(Object, ServerPlayer)} instead
      */
+    @Deprecated
     public static void sendToPlayer(Object packet, ServerPlayer player) {
         INSTANCE.sendTo(packet, player.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
     }

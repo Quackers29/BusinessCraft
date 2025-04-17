@@ -76,3 +76,13 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 63. Avoid removing and adding entire stacks when counts remain unchanged
 64. Always send server updates for all inventory changes, regardless of client-side visual updates
 65. UI, font rendering, always use Minecraft.getInstance().font for text rendering in GuiGraphics.drawString() calls to ensure consistent font access
+66. UI, screen replacement, when replacing a screen with a newer version, update MenuScreens registration and handle any interface references (like menu.getTownBlockMenu()) in dependent classes
+67. UI, screen registration, avoid duplicate MenuScreens.register() calls for the same menu type across different classes (like BusinessCraft.java and ClientModEvents.java)
+68. UI, code deletion, when removing a UI component, check for base classes and utility methods that are only used by that component to avoid leftover unused code
+69. UI, import management, regularly clean up imports and remove duplicates to avoid compilation issues and improve code readability (TownInterfaceMenu had 500+ duplicated imports)
+70. Project structure, avoid duplicate directories for the same functionality (like network/ and networking/) to prevent code fragmentation and maintenance issues
+71. Package deprecation, mark obsolete classes with @Deprecated and provide Javadoc references to the preferred alternatives to guide future developers
+72. Unused variable cleanup, regularly check for and remove unused variables in example/demo classes to improve readability and prevent confusion
+73. Project maintainability, create README files in obsolete directories to document migration paths and preferred alternatives
+74. UI, mouse dragging, implement common behavior in base components and adjust for local coordinates, ensuring all scrollable areas follow consistent event pattern
+75. UI, state management, implement time-to-live caching to reduce direct entity/provider access and improve UI responsiveness, with graceful fallbacks

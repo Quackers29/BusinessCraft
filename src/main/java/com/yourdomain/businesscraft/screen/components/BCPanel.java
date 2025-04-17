@@ -349,30 +349,38 @@ public class BCPanel extends BCComponent {
     
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (!enabled) return false;
+        if (!enabled || !visible) {
+            return false;
+        }
         
-        // Handle scrollbar dragging
-        if (scrolling) {
+        // Handle scrolling if enabled
+        if (scrollable && scrolling) {
+            // Forward to scrollbar dragging handler
             handleScrollbarDrag(mouseY);
             return true;
         }
         
-        // Pass to children
-        for (UIComponent child : children) {
-            if (child.isVisible() && child instanceof BCComponent) {
+        // Forward event to children in reverse order to handle top components first
+        for (int i = children.size() - 1; i >= 0; i--) {
+            UIComponent child = children.get(i);
+            
+            if (child instanceof BCComponent) {
+                BCComponent component = (BCComponent) child;
+                
                 // Adjust y position for scrolling
                 double adjustedY = mouseY;
                 if (scrollable) {
                     adjustedY += scrollOffset;
                 }
                 
-                if (((BCComponent) child).mouseDragged(mouseX, adjustedY, button, dragX, dragY)) {
+                if (component.isVisible() && component.mouseDragged(mouseX, adjustedY, button, dragX, dragY)) {
                     return true;
                 }
             }
         }
         
-        return false;
+        // Fall back to default behavior
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
     
     @Override

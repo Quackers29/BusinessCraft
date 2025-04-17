@@ -11,7 +11,6 @@ import com.yourdomain.businesscraft.menu.StorageMenu;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.screen.TradeScreen;
 import com.yourdomain.businesscraft.screen.StorageScreen;
-import com.yourdomain.businesscraft.screen.TownInterfaceScreen;
 import com.yourdomain.businesscraft.town.TownManager;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.world.item.BlockItem;
@@ -115,9 +114,9 @@ public class BusinessCraft {
         LOGGER.info("BusinessCraft client setup starting");
         
         // Register screen factories
-        MenuScreens.register(ModMenuTypes.TOWN_INTERFACE.get(), TownInterfaceScreen::new);
         MenuScreens.register(TradeMenu.TRADE_MENU.get(), TradeScreen::new);
         MenuScreens.register(StorageMenu.STORAGE_MENU.get(), StorageScreen::new);
+        // TownInterfaceScreen registration is handled in ClientModEvents
         
         LOGGER.info("BusinessCraft client setup complete");
     }

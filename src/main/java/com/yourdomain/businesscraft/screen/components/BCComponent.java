@@ -334,6 +334,21 @@ public abstract class BCComponent implements UIComponent {
         }
     }
     
+    /**
+     * Handle mouse drag events
+     * By default, we just check if the mouse is within our bounds
+     * Subclasses should override to add specific drag handling
+     */
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (!enabled || !visible) {
+            return false;
+        }
+        
+        // Default implementation doesn't handle drags, but allows subclasses to check
+        // if drag is within bounds before implementing custom logic
+        return false;
+    }
+    
     // UIComponent implementation
     
     @Override

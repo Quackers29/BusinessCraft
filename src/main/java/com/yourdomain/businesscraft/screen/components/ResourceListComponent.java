@@ -2,10 +2,9 @@ package com.yourdomain.businesscraft.screen.components;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ItemStack;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -17,149 +16,105 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Component that displays a scrollable list of resources (items and their quantities)
+ * Refactored to use BCScrollableListComponent base class
  */
-public class ResourceListComponent implements UIComponent {
+public class ResourceListComponent extends BCScrollableListComponent<ResourceListComponent.ResourceEntry> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ResourceListComponent.class);
     private static final int ITEM_HEIGHT = 16;
-    private static final int MAX_VISIBLE_ITEMS = 8;
-    private static final int SCROLL_AMOUNT = 1;
     
     private final Supplier<Map<Item, Integer>> resourcesSupplier;
-    private final int width;
-    private boolean visible = true;
-    private int scrollOffset = 0;
-    private List<ResourceEntry> sortedResources = new ArrayList<>();
-    private Button scrollUpButton;
-    private Button scrollDownButton;
-    private int x, y;
+    private final boolean showItemGraphics;
 
     public ResourceListComponent(Supplier<Map<Item, Integer>> resourcesSupplier, int width) {
+        this(resourcesSupplier, width, true);
+    }
+    
+    public ResourceListComponent(Supplier<Map<Item, Integer>> resourcesSupplier, int width, boolean showItemGraphics) {
+        super(width, 
+              ITEM_HEIGHT * 8 + 25, // Display area height (8 items plus title)
+              ITEM_HEIGHT, 
+              entry -> formatResourceText(entry, showItemGraphics));
+        
         this.resourcesSupplier = resourcesSupplier;
-        this.width = width;
+        this.showItemGraphics = showItemGraphics;
+        
+        // Style customization
+        withBorderColor(0x80FFFFFF);
+        withBackgroundColor(0x80000000);
+        withItemBackgroundColor(0x20FFFFFF);
+        withHoveredItemBackgroundColor(0x40FFFFFF);
+        withSelectedItemBackgroundColor(0x60FFFFFF);
+        withItemSpacing(1);
+        withCornerRadius(4);
     }
-
+    
     @Override
-    public void init(Consumer<Button> register) {
-        scrollUpButton = new Button.Builder(Component.literal("Up"), button -> scrollUp())
-            .pos(0, 0) // Position will be set in render
-            .size(28, 20)
-            .build();
-        
-        scrollDownButton = new Button.Builder(Component.literal("Down"), button -> scrollDown())
-            .pos(0, 0) // Position will be set in render
-            .size(28, 20)
-            .build();
-        
-        register.accept(scrollUpButton);
-        register.accept(scrollDownButton);
-    }
-
-    @Override
-    public void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
-        if (!visible) return;
-        
-        this.x = x;
-        this.y = y;
-        
-        // Update the list of resources
-        updateResourceList();
-        
-        // Update button positions
-        scrollUpButton.setX(x + width - 32);
-        scrollUpButton.setY(y);
-        scrollDownButton.setX(x + width - 32);
-        scrollDownButton.setY(y + getHeight() - 20);
-        
-        // Enable/disable scroll buttons based on scroll position
-        scrollUpButton.active = scrollOffset > 0;
-        scrollDownButton.active = scrollOffset < Math.max(0, sortedResources.size() - MAX_VISIBLE_ITEMS);
-        
-        // Draw background for the list
-        int listHeight = getHeight();
-        guiGraphics.fill(x, y, x + width, y + listHeight, 0x80000000); // Semi-transparent background
-        
+    protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         // Draw the title with a divider
         guiGraphics.drawString(Minecraft.getInstance().font, "Resources", x + 5, y + 5, 0xFFFFFF);
         guiGraphics.fill(x + 5, y + 18, x + width - 5, y + 19, 0x80FFFFFF); // Divider line
         
-        // Check if we have any resources
-        if (sortedResources.isEmpty()) {
-            // Draw a message when no resources are available
-            guiGraphics.drawString(Minecraft.getInstance().font, 
-                "No resources available", x + 20, y + 40, 0xAAAAAA);
-            return;
-        }
-        
-        // Draw the resources list
-        int yOffset = y + 24; // Start below the title and divider
-        int count = 0;
-        for (int i = scrollOffset; i < sortedResources.size() && count < MAX_VISIBLE_ITEMS; i++) {
-            ResourceEntry entry = sortedResources.get(i);
-            
-            // Draw row background with alternating colors
-            int rowColor = count % 2 == 0 ? 0x30FFFFFF : 0x20FFFFFF;
-            guiGraphics.fill(x + 5, yOffset, x + width - 28, yOffset + ITEM_HEIGHT, rowColor);
-            
-            // Draw item icon
-            guiGraphics.renderItem(entry.getItemStack(), x + 7, yOffset);
-            guiGraphics.renderItemDecorations(Minecraft.getInstance().font, entry.getItemStack(), x + 7, yOffset);
-            
-            // Draw item name and count
-            String displayText = entry.getItemName() + ": " + entry.getCount();
-            guiGraphics.drawString(Minecraft.getInstance().font, displayText, x + 28, yOffset + 4, 0xFFFFFF);
-            
-            yOffset += ITEM_HEIGHT;
-            count++;
-        }
-    }
-
-    @Override
-    public void tick() {
-        // Update the list each tick to ensure it's current
+        // Update the resource list
         updateResourceList();
-    }
-
-    @Override
-    public int getWidth() {
-        return width;
-    }
-
-    @Override
-    public int getHeight() {
-        return 20 + (MAX_VISIBLE_ITEMS * ITEM_HEIGHT);
-    }
-
-    @Override
-    public void setVisible(boolean visible) {
-        this.visible = visible;
-        if (scrollUpButton != null) scrollUpButton.visible = visible;
-        if (scrollDownButton != null) scrollDownButton.visible = visible;
+        
+        // Render the scrollable content below the title
+        guiGraphics.pose().pushPose();
+        guiGraphics.pose().translate(0, 25, 0); // Move down past the title
+        super.renderContent(guiGraphics, mouseX, mouseY);
+        guiGraphics.pose().popPose();
     }
     
     @Override
-    public boolean isVisible() {
-        return visible;
+    protected void renderScrollContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        // Render each resource item with item graphics if enabled
+        super.renderScrollContent(guiGraphics, mouseX, mouseY);
+        
+        // If showing item graphics, overlay the item icons
+        if (showItemGraphics) {
+            renderItemGraphics(guiGraphics);
+        }
     }
     
-    @Override
-    public int getX() {
-        return x;
-    }
-    
-    @Override
-    public int getY() {
-        return y;
-    }
-    
-    private void scrollUp() {
-        scrollOffset = Math.max(0, scrollOffset - SCROLL_AMOUNT);
-    }
-    
-    private void scrollDown() {
-        scrollOffset = Math.min(
-            Math.max(0, sortedResources.size() - MAX_VISIBLE_ITEMS), 
-            scrollOffset + SCROLL_AMOUNT
+    private void renderItemGraphics(GuiGraphics guiGraphics) {
+        // Calculate visible range
+        int visibleStartIndex = (int) (getScrollOffset() / (ITEM_HEIGHT + 1));
+        int visibleEndIndex = Math.min(
+            getItems().size(),
+            visibleStartIndex + (getHeight() / (ITEM_HEIGHT + 1)) + 2
         );
+        
+        // Render item icons for visible items
+        int startY = y;
+        for (int i = visibleStartIndex; i < visibleEndIndex; i++) {
+            if (i >= getItems().size()) break;
+            
+            ResourceEntry entry = getItems().get(i);
+            int itemY = startY + (i * (ITEM_HEIGHT + 1));
+            
+            // Draw the item
+            ItemStack stack = new ItemStack(entry.getItem(), 1);
+            guiGraphics.renderItem(stack, x + 2, itemY);
+            
+            // Draw the quantity
+            String countText = String.valueOf(entry.getCount());
+            guiGraphics.drawString(
+                Minecraft.getInstance().font,
+                countText,
+                x + 20 + Minecraft.getInstance().font.width(entry.getItem().getDescription().getString()),
+                itemY + 4,
+                0xFFFFFF
+            );
+        }
+    }
+    
+    private static String formatResourceText(ResourceEntry entry, boolean showItemGraphics) {
+        // If showing item graphics, indent the text to make room for the icon
+        String prefix = showItemGraphics ? "   " : "";
+        return prefix + entry.getItem().getDescription().getString() + ": " + entry.getCount();
+    }
+    
+    private List<ResourceEntry> getItems() {
+        return items;
     }
     
     private void updateResourceList() {
@@ -178,38 +133,24 @@ public class ResourceListComponent implements UIComponent {
         newList.sort(Comparator.comparing(ResourceEntry::getCount).reversed());
         
         // Update our list
-        sortedResources = newList;
+        setItems(newList);
     }
     
-    // Add mouse wheel scrolling support
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollAmount) {
-        if (isMouseOver(mouseX, mouseY)) {
-            if (scrollAmount > 0) {
-                scrollUp();
-                return true;
-            } else if (scrollAmount < 0) {
-                scrollDown();
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    // Check if mouse is over the component
-    private boolean isMouseOver(double mouseX, double mouseY) {
-        // Use stored render position for more accurate hit testing
-        return mouseX >= x && mouseX <= x + width && 
-               mouseY >= y && mouseY <= y + getHeight();
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        // Forward the drag event to the scrollable list implementation
+        // Adjust mouse Y to account for the title area offset (25 pixels for the title)
+        return super.mouseDragged(mouseX, mouseY - 25, button, dragX, dragY);
     }
     
     /**
      * Helper class to store an item and its count
      */
-    private static class ResourceEntry {
+    public static class ResourceEntry {
         private final Item item;
         private final int count;
         
-        ResourceEntry(Item item, int count) {
+        public ResourceEntry(Item item, int count) {
             this.item = item;
             this.count = count;
         }
@@ -220,15 +161,6 @@ public class ResourceListComponent implements UIComponent {
         
         public int getCount() {
             return count;
-        }
-        
-        public String getItemName() {
-            // Use the item's display name for better formatting
-            return Component.translatable(item.getDescriptionId()).getString();
-        }
-        
-        public net.minecraft.world.item.ItemStack getItemStack() {
-            return new net.minecraft.world.item.ItemStack(item);
         }
     }
 } 

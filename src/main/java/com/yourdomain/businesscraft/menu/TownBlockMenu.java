@@ -290,25 +290,37 @@ public class TownBlockMenu extends AbstractContainerMenu {
     private List<VisitEntry> mapVisitHistoryToEntries(List<VisitHistoryRecord> records) {
         return records.stream()
             .map(record -> {
-                // Resolve town name from UUID for display
-                String townName = resolveTownName(record.getOriginTownId());
+                // Resolve the town name for display
+                String townName = "Unknown";
+                if (record.getOriginTownId() != null) {
+                    townName = resolveTownName(record.getOriginTownId());
+                }
                 
-                // Add logging for troubleshooting at debug level only
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Visit history entry: {} from town {} ({})",
-                        record.getTimestamp(),
-                        townName,
-                        record.getOriginTownId());
+                // Calculate direction from block position to visit origin 
+                String direction = "";
+                BlockPos originPos = record.getOriginPos();
+                if (originPos != null && blockEntity != null) {
+                    BlockPos townPos = blockEntity.getBlockPos();
+                    if (originPos.getZ() < townPos.getZ()) direction += "N";
+                    else if (originPos.getZ() > townPos.getZ()) direction += "S";
+                    
+                    if (originPos.getX() > townPos.getX()) direction += "E";
+                    else if (originPos.getX() < townPos.getX()) direction += "W";
+                    
+                    // Calculate distance
+                    int distance = (int) Math.sqrt(townPos.distSqr(originPos));
+                    direction += " " + distance + "m";
                 }
                 
                 return new VisitEntry(
+                    townName,  // visitorName (using the resolved town name)
                     record.getTimestamp(),
-                    townName,
                     record.getCount(),
+                    direction,
                     record.getOriginPos()
                 );
             })
-            .collect(Collectors.toList());
+            .collect(Collectors.<VisitEntry>toList());
     }
     
     /**
