@@ -11,9 +11,7 @@ import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
-import com.yourdomain.businesscraft.screen.TownBlockScreen;
 import com.yourdomain.businesscraft.screen.PlatformManagementScreen;
-import com.yourdomain.businesscraft.screen.TownInterfaceScreen;
 
 /**
  * Packet sent from server to client to refresh platform data
@@ -55,24 +53,12 @@ public class RefreshPlatformsPacket {
             if (be instanceof TownBlockEntity) {
                 LOGGER.debug("Received platform refresh packet for block at {}", pos);
                 
-                // If the TownBlockScreen is open, refresh it
-                if (minecraft.screen instanceof TownBlockScreen townScreen) {
-                    // Check if this screen is for the same block
-                    if (townScreen.getBlockPos().equals(pos)) {
-                        LOGGER.debug("Refreshing platforms tab in TownBlockScreen");
-                        townScreen.refreshPlatforms();
-                    }
-                }
                 // If the PlatformManagementScreen is open, refresh it by reopening
-                else if (minecraft.screen instanceof PlatformManagementScreen) {
+                if (minecraft.screen instanceof PlatformManagementScreen) {
                     LOGGER.debug("Reopening platform management screen with fresh data");
                     PlatformManagementScreen.open(pos);
                 }
-                // If the TownInterfaceScreen is open, refresh it
-                else if (minecraft.screen instanceof TownInterfaceScreen townInterface) {
-                    LOGGER.debug("Refreshing platform data in TownInterfaceScreen");
-                    // The screen will get fresh data from BlockEntity next time it's needed
-                }
+                // Additional handling for other screens can be added here if needed
             }
         }
     }

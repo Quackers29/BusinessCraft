@@ -2,7 +2,6 @@ package com.yourdomain.businesscraft.event;
 
 import com.yourdomain.businesscraft.BusinessCraft;
 import com.yourdomain.businesscraft.init.ModMenuTypes;
-import com.yourdomain.businesscraft.screen.TownBlockScreen;
 import com.yourdomain.businesscraft.screen.TownInterfaceScreen;
 import com.yourdomain.businesscraft.client.TownDebugOverlay;
 import com.yourdomain.businesscraft.client.TownDebugNetwork;
@@ -19,7 +18,8 @@ public class ClientModEvents {
     public static void clientSetup(FMLClientSetupEvent event) {
         // Register menu screens
         event.enqueueWork(() -> {
-            MenuScreens.register(ModMenuTypes.TOWN_BLOCK.get(), TownBlockScreen::new);
+            // Register the TownInterfaceScreen for the TOWN_INTERFACE menu type
+            MenuScreens.register(ModMenuTypes.TOWN_INTERFACE.get(), TownInterfaceScreen::new);
             
             // Register network handlers for debug overlay
             TownDebugNetwork.register();

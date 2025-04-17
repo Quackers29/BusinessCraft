@@ -46,10 +46,14 @@ import com.yourdomain.businesscraft.screen.components.BCModalInventoryScreen;
 import com.yourdomain.businesscraft.screen.components.BCModalInventoryFactory;
 import com.yourdomain.businesscraft.menu.TradeMenu;
 import com.yourdomain.businesscraft.menu.StorageMenu;
+import com.yourdomain.businesscraft.data.cache.TownDataCache;
+import com.yourdomain.businesscraft.api.ITownDataProvider;
+import java.util.Collections;
 
 /**
  * The Town Interface Screen showcases the BusinessCraft UI system capabilities.
  * This screen demonstrates various UI components and layouts using the enhanced BCTabPanel.
+ * It manages town-related functionalities through a tabbed interface.
  */
 public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMenu> {
     private BCTabPanel tabPanel;
@@ -90,7 +94,17 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
 
     // Add a field to track update intervals
     private int updateCounter = 0;
+    private static final int REFRESH_INTERVAL = 100; // Ticks between forced cache refreshes (5 seconds)
 
+    // State management
+    private TownDataCache dataCache;
+
+    /**
+     * Initializes the screen with custom dimensions and data cache.
+     * @param menu The TownInterfaceMenu instance
+     * @param inventory The player's inventory
+     * @param title The title component for the screen
+     */
     public TownInterfaceScreen(TownInterfaceMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         
@@ -100,6 +114,20 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         
         // Move the inventory label off-screen to hide it
         this.inventoryLabelY = 300;  // Position it below the visible area
+        
+        // Initialize cached values from the menu
+        this.cachedPopulation = menu.getTownPopulation();
+        this.cachedTourists = menu.getCurrentTourists();
+        this.cachedMaxTourists = menu.getMaxTourists();
+        this.currentSearchRadius = menu.getSearchRadius();
+        
+        // Initialize the data cache with the town data provider from the menu
+        if (menu instanceof TownInterfaceMenu) {
+            ITownDataProvider dataProvider = menu.getTownDataProvider();
+            if (dataProvider != null) {
+                this.dataCache = new TownDataCache(dataProvider);
+            }
+        }
         
         // Create a custom theme for this screen with lighter colors
         customTheme = BCTheme.builder()
@@ -179,6 +207,11 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             .withRowHeight(20); // Reduced by 50% from 40px to 20px
     }
     
+    /*
+     * TODO: Refactor tab creation methods into separate classes or a dedicated utility class
+     * to improve readability and maintainability. Each tab (Overview, Resources, Population, Settings)
+     * could be managed by its own class to reduce the size and complexity of this file.
+     */
     private void createOverviewTab() {
         // Create panel for content
         BCPanel panel = new BCPanel(this.tabPanel.getWidth(), this.tabPanel.getHeight() - 20);
@@ -215,8 +248,8 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             private UIGridBuilder createGrid() {
                 // Use the new utility method for label-value pairs
                 Map<String, String> overviewData = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
-                overviewData.put("Town Name:", getTownName());
-                overviewData.put("Population:", String.valueOf(getTownPopulation()));
+                overviewData.put("Town Name:", getCachedTownName());
+                overviewData.put("Population:", String.valueOf(getCachedPopulation()));
                 overviewData.put("Tourists:", getTouristString());
                 
                 return UIGridBuilder.createLabelValueGrid(
@@ -314,7 +347,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             @Override
             protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
                 // Get resources from menu
-                Map<Item, Integer> resources = menu.getAllResources();
+                Map<Item, Integer> resources = getCachedResources();
                 
                 // Convert to a sorted list for display
                 List<Map.Entry<Item, Integer>> sortedResources = new ArrayList<>(resources.entrySet());
@@ -878,31 +911,82 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         playButtonClickSound();
     }
     
-    // Helper methods to get data from the menu
-    private String getTownName() {
-        return this.menu.getTownName();
+    // Helper methods to get data from the cache or fall back to menu
+    private String getCachedTownName() {
+        if (dataCache != null) {
+            return dataCache.getTownName();
+        }
+        return menu.getTownName();
+    }
+    
+    private int getCachedPopulation() {
+        if (dataCache != null) {
+            return dataCache.getPopulation();
+        }
+        return menu.getTownPopulation();
+    }
+    
+    private int getCachedTouristCount() {
+        if (dataCache != null) {
+            return dataCache.getTouristCount();
+        }
+        return menu.getCurrentTourists();
+    }
+    
+    private int getCachedMaxTourists() {
+        if (dataCache != null) {
+            return dataCache.getMaxTourists();
+        }
+        return menu.getMaxTourists();
+    }
+    
+    private int getCachedSearchRadius() {
+        if (dataCache != null) {
+            return dataCache.getSearchRadius();
+        }
+        return menu.getSearchRadius();
+    }
+    
+    private Map<Item, Integer> getCachedResources() {
+        if (dataCache != null) {
+            return dataCache.getAllResources();
+        }
+        return menu.getAllResources();
+    }
+    
+    private List<ITownDataProvider.VisitHistoryRecord> getCachedVisitHistory() {
+        if (dataCache != null) {
+            return dataCache.getVisitHistory();
+        }
+        return Collections.emptyList(); // Fallback when cache is not available
     }
     
     private String getTouristString() {
         return cachedTourists + "/" + cachedMaxTourists;
     }
     
-    private int getTownPopulation() {
-        return cachedPopulation;
-    }
-    
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        // Update the cached values from the menu periodically
+        // Update the cached values periodically
         updateCounter++;
-        if (updateCounter >= 20) { // Every 20 ticks (about 1 second)
+        if (updateCounter >= REFRESH_INTERVAL) { // Every 5 seconds (100 ticks)
             updateCounter = 0;
-            // Refresh the cached values from the menu
-            if (menu != null) {
-                currentSearchRadius = menu.getSearchRadius();
-                cachedPopulation = menu.getTownPopulation();
-                cachedTourists = menu.getCurrentTourists();
-                cachedMaxTourists = menu.getMaxTourists();
+            
+            // Refresh cache if available
+            if (dataCache != null) {
+                dataCache.invalidateAll();
+                
+                // Update our local cached values from the refreshed cache
+                this.cachedPopulation = getCachedPopulation();
+                this.cachedTourists = getCachedTouristCount();
+                this.cachedMaxTourists = getCachedMaxTourists();
+                this.currentSearchRadius = getCachedSearchRadius();
+            } else {
+                // Fallback to direct menu updates if cache isn't available
+                this.cachedPopulation = menu.getTownPopulation();
+                this.cachedTourists = menu.getCurrentTourists();
+                this.cachedMaxTourists = menu.getMaxTourists();
+                this.currentSearchRadius = menu.getSearchRadius();
             }
         }
         
@@ -1065,8 +1149,36 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        // Let the tab panel handle drags first
-        if (this.tabPanel.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+        // If modal is active, let it handle drag first
+        if (activeModal != null && activeModal.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+            return true;
+        }
+        
+        // If popup is active, let it handle drag events
+        if (activePopup != null && activePopup.isVisible() && activePopup.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+            return true;
+        }
+        
+        // Get active tab and forward drag events
+        String activeTabId = this.tabPanel.getActiveTabId();
+        
+        // For scrollable tabs (Resources, Population) - forward drag events to children
+        if ("resources".equals(activeTabId) || "population".equals(activeTabId)) {
+            BCPanel panel = this.tabPanel.getTabPanel(activeTabId);
+            if (panel != null) {
+                // Forward to all children that are visible components
+                for (UIComponent child : panel.getChildren()) {
+                    if (child instanceof BCComponent && ((BCComponent) child).isVisible()) {
+                        if (((BCComponent) child).mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Let the tab panel handle drag events
+        if (this.tabPanel != null && this.tabPanel.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
             return true;
         }
         
@@ -1086,47 +1198,25 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         // If modal is active, let it handle scroll first
-        if (activeModal != null) {
-            if (activeModal.mouseScrolled(mouseX, mouseY, delta)) {
-                return true;
-            }
+        if (activeModal != null && activeModal.mouseScrolled(mouseX, mouseY, delta)) {
+            return true;
         }
         
-        // If popup is active, let it handle character input first
-        if (activePopup != null && activePopup.isVisible()) {
-            if (activePopup.mouseScrolled(mouseX, mouseY, delta)) {
-                return true;
-            }
+        // If popup is active, let it handle scroll events
+        if (activePopup != null && activePopup.isVisible() && activePopup.mouseScrolled(mouseX, mouseY, delta)) {
+            return true;
         }
         
-        // Get active tab and forward scroll events
+        // Get active tab and forward scroll events to all scrollable tabs in the same way
         String activeTabId = this.tabPanel.getActiveTabId();
         
-        // For Resources tab - ALWAYS forward scroll events without bounds checking
-        if ("resources".equals(activeTabId)) {
-            System.out.println("TownInterfaceScreen receiving scroll for Resources tab: " + delta);
+        // For scrollable tabs (Resources, Population) - forward scroll events to children
+        if ("resources".equals(activeTabId) || "population".equals(activeTabId)) {
             BCPanel panel = this.tabPanel.getTabPanel(activeTabId);
             if (panel != null) {
-                // Always forward to all children without checking bounds
-                for (UIComponent child : panel.getChildren()) {
-                    // Skip non-BCComponent children (like labels)
-                    if (child instanceof BCComponent) {
-                        // Forward the scroll event
-                        if (child.mouseScrolled(mouseX, mouseY, delta)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        } 
-        // Other scrollable tabs handle events the same way for consistency
-        else if ("population".equals(activeTabId)) {
-            BCPanel panel = this.tabPanel.getTabPanel(activeTabId);
-            if (panel != null) {
-                // Always forward to all children without checking bounds
+                // Forward to all children that are visible components
                 for (UIComponent child : panel.getChildren()) {
                     if (child instanceof BCComponent) {
-                        // Forward the scroll event directly, no bounds checking
                         if (child.mouseScrolled(mouseX, mouseY, delta)) {
                             return true;
                         }
@@ -1194,7 +1284,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         // Create a popup for changing the town name
         activePopup = BCComponentFactory.createStringInputPopup(
             "Change Town Name", 
-            getTownName(), // Initial value
+            getCachedTownName(), // Initial value
             result -> {
                 // Handle the result
                 if (result.isConfirmed() && !result.getStringValue().isEmpty()) {

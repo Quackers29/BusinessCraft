@@ -52,6 +52,12 @@ public class UIGridBuilder {
     // Custom row height (default 14px - drastically smaller than before)
     private Integer customRowHeight = 14;
     
+    // Drag scrolling state variables
+    private boolean isDraggingVertical = false;
+    private boolean isDraggingHorizontal = false;
+    private double lastMouseY = 0;
+    private double lastMouseX = 0;
+    
     /**
      * Creates a new grid builder with the specified dimensions and layout
      * 
@@ -1504,5 +1510,132 @@ public class UIGridBuilder {
         // Check if mouse is over thumb
         return mouseX >= thumbX && mouseX < thumbX + thumbWidth &&
                mouseY >= scrollTrackY && mouseY < scrollTrackY + scrollBarHeight;
+    }
+
+    /**
+     * Handle mouse dragging for scrolling
+     * @return true if the drag was handled
+     */
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        // Only handle left mouse button (button 0)
+        if (button != 0) {
+            return false;
+        }
+        
+        // Handle vertical scrollbar dragging
+        if (isDraggingVertical) {
+            if (verticalScrollEnabled && maxVerticalScrollOffset > 0) {
+                int scrollTrackHeight = height - (verticalMargin * 2);
+                
+                // Calculate drag amount in rows
+                // First determine how much to scroll per pixel of drag
+                float rowsPerPixel = (float)totalRows / scrollTrackHeight;
+                
+                // Calculate how many rows to scroll based on the drag distance
+                int rowsToScroll = (int)Math.signum(mouseY - lastMouseY);
+                
+                // If the drag is significant enough, apply it
+                if (Math.abs(mouseY - lastMouseY) > 5) {
+                    verticalScrollOffset += rowsToScroll;
+                    
+                    // Clamp scroll position
+                    if (verticalScrollOffset < 0) {
+                        verticalScrollOffset = 0;
+                    }
+                    if (verticalScrollOffset > maxVerticalScrollOffset) {
+                        verticalScrollOffset = maxVerticalScrollOffset;
+                    }
+                    
+                    lastMouseY = mouseY;
+                }
+                
+                return true;
+            }
+        }
+        
+        // Handle horizontal scrollbar dragging
+        if (isDraggingHorizontal) {
+            if (horizontalScrollEnabled && maxHorizontalScrollOffset > 0) {
+                int scrollTrackWidth = width - (horizontalMargin * 2);
+                
+                // Calculate drag amount in columns
+                float columnsPerPixel = (float)totalColumns / scrollTrackWidth;
+                
+                // Calculate how many columns to scroll based on the drag distance
+                int columnsToScroll = (int)Math.signum(mouseX - lastMouseX);
+                
+                // If the drag is significant enough, apply it
+                if (Math.abs(mouseX - lastMouseX) > 5) {
+                    horizontalScrollOffset += columnsToScroll;
+                    
+                    // Clamp scroll position
+                    if (horizontalScrollOffset < 0) {
+                        horizontalScrollOffset = 0;
+                    }
+                    if (horizontalScrollOffset > maxHorizontalScrollOffset) {
+                        horizontalScrollOffset = maxHorizontalScrollOffset;
+                    }
+                    
+                    lastMouseX = mouseX;
+                }
+                
+                return true;
+            }
+        }
+        
+        // Check if this is the start of a drag on the scrollbar area
+        if (!isDraggingVertical && !isDraggingHorizontal) {
+            // Check vertical scrollbar area
+            if (verticalScrollEnabled) {
+                int scrollBarX = x + width - scrollBarWidth - 4;
+                int scrollTrackY = y + verticalMargin;
+                int scrollTrackHeight = height - (verticalMargin * 2);
+                
+                if (mouseX >= scrollBarX && mouseX < scrollBarX + scrollBarWidth &&
+                    mouseY >= scrollTrackY && mouseY < scrollTrackY + scrollTrackHeight) {
+                    isDraggingVertical = true;
+                    lastMouseY = mouseY;
+                    return true;
+                }
+            }
+            
+            // Check horizontal scrollbar area
+            if (horizontalScrollEnabled && !useScrollButtons) {
+                int scrollTrackX = x + horizontalMargin;
+                int scrollTrackY = y + height - verticalMargin - scrollBarHeight;
+                int scrollTrackWidth = width - (horizontalMargin * 2);
+                
+                if (mouseX >= scrollTrackX && mouseX < scrollTrackX + scrollTrackWidth &&
+                    mouseY >= scrollTrackY && mouseY < scrollTrackY + scrollBarHeight) {
+                    isDraggingHorizontal = true;
+                    lastMouseX = mouseX;
+                    return true;
+                }
+            }
+            
+            // Check content area for dragging (direct dragging)
+            if (verticalScrollEnabled && 
+                mouseX >= x && mouseX < x + width &&
+                mouseY >= y && mouseY < y + height) {
+                isDraggingVertical = true;
+                lastMouseY = mouseY;
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Handle mouse release
+     */
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0) {
+            boolean wasDragging = isDraggingVertical || isDraggingHorizontal;
+            isDraggingVertical = false;
+            isDraggingHorizontal = false;
+            return wasDragging;
+        }
+        return false;
     }
 } 
