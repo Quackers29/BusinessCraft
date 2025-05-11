@@ -53,7 +53,6 @@ import java.util.Collections;
 /**
  * The Town Interface Screen showcases the BusinessCraft UI system capabilities.
  * This screen demonstrates various UI components and layouts using the enhanced BCTabPanel.
- * It manages town-related functionalities through a tabbed interface.
  */
 public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMenu> {
     private BCTabPanel tabPanel;
@@ -99,12 +98,6 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     // State management
     private TownDataCache dataCache;
 
-    /**
-     * Initializes the screen with custom dimensions and data cache.
-     * @param menu The TownInterfaceMenu instance
-     * @param inventory The player's inventory
-     * @param title The title component for the screen
-     */
     public TownInterfaceScreen(TownInterfaceMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         
@@ -207,11 +200,6 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             .withRowHeight(20); // Reduced by 50% from 40px to 20px
     }
     
-    /*
-     * TODO: Refactor tab creation methods into separate classes or a dedicated utility class
-     * to improve readability and maintainability. Each tab (Overview, Resources, Population, Settings)
-     * could be managed by its own class to reduce the size and complexity of this file.
-     */
     private void createOverviewTab() {
         // Create panel for content
         BCPanel panel = new BCPanel(this.tabPanel.getWidth(), this.tabPanel.getHeight() - 20);
