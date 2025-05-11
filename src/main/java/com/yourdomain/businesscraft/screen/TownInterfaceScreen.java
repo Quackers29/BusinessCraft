@@ -5,6 +5,7 @@ import com.yourdomain.businesscraft.BusinessCraft;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
 import com.yourdomain.businesscraft.screen.components.*;
 import com.yourdomain.businesscraft.platform.Platform;
+import com.yourdomain.businesscraft.screen.tabs.ResourcesTab;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.components.Button;
@@ -304,128 +305,18 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     }
     
     private void createResourcesTab() {
-        // Create panel for content
-        BCPanel panel = new BCPanel(this.tabPanel.getWidth(), this.tabPanel.getHeight() - 20);
-        panel.withPadding(10)
-             .withBackgroundColor(0x00000000) // Transparent background
-             .withCornerRadius(3);
+        // Create a new ResourcesTab instance
+        ResourcesTab resourcesTab = new ResourcesTab(
+            this, 
+            this.tabPanel.getWidth(), 
+            this.tabPanel.getHeight() - 20
+        );
         
-        // Create a flow layout for the panel
-        panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 10));
+        // Initialize the tab
+        resourcesTab.init(this::addRenderableWidget);
         
-        // Add title
-        BCLabel titleLabel = BCComponentFactory.createHeaderLabel("RESOURCES", panel.getInnerWidth());
-        titleLabel.withTextColor(TEXT_HIGHLIGHT).withShadow(true);
-        panel.addChild(titleLabel);
-        
-        // Calculate dimensions for the resource grid - ensure it fits within panel boundaries
-        // Account for the panel's padding and the title height
-        int titleHeight = 20; // Approximate height of the header
-        int verticalSpacing = 10; // Space between title and grid
-        
-        // Calculate available space for the grid
-        int availableWidth = panel.getInnerWidth();
-        int availableHeight = panel.getInnerHeight() - titleHeight - verticalSpacing;
-        
-        // Create a custom component to host the resource list using UIGridBuilder
-        BCComponent resourceListHost = new BCComponent(availableWidth, availableHeight) {
-            // Internal grid instance with scrolling
-            private UIGridBuilder grid;
-            
-            @Override
-            protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-                // Get resources from menu
-                Map<Item, Integer> resources = getCachedResources();
-                
-                // Convert to a sorted list for display
-                List<Map.Entry<Item, Integer>> sortedResources = new ArrayList<>(resources.entrySet());
-                
-                // Sort by item name
-                sortedResources.sort((a, b) -> {
-                    String nameA = a.getKey().getDescriptionId();
-                    String nameB = b.getKey().getDescriptionId();
-                    return nameA.compareToIgnoreCase(nameB);
-                });
-                
-                // Create or recreate the grid with the proper number of rows
-                if (grid == null) {
-                    createGrid(sortedResources);
-                }
-                
-                // Draw the grid background and elements
-                if (sortedResources.isEmpty()) {
-                    // Create a simple grid with a "No resources" message
-                    if (grid == null) {
-                        grid = new UIGridBuilder(x, y, width, height, 1, 1)
-                            .withBackgroundColor(BACKGROUND_COLOR)
-                            .withBorderColor(BORDER_COLOR)
-                            .withMargins(15, 10)
-                            .withSpacing(15, 10)
-                            .drawBorder(true);
-                        grid.addLabel(0, 0, "No resources available", TEXT_COLOR);
-                    }
-                }
-                
-                // Render the grid
-                grid.render(guiGraphics, mouseX, mouseY);
-            }
-            
-            private void createGrid(List<Map.Entry<Item, Integer>> resources) {
-                // Calculate the number of rows based on the resources
-                int numRows = Math.max(1, resources.size());
-                
-                // Use the new create method which automatically handles rows based on data
-                grid = UIGridBuilder.create(x, y, width, height, 2) // Just define columns, rows will be determined by data
-                    .withBackgroundColor(BACKGROUND_COLOR)
-                    .withBorderColor(BORDER_COLOR)
-                    .withMargins(15, 10)
-                    .withSpacing(15, 10)
-                    .withRowHeight(14) // Use 14px row height to fit more rows
-                    .drawBorder(true);
-                
-                // Convert resources list to a map
-                Map<Item, Integer> resourceMap = new HashMap<>();
-                for (Map.Entry<Item, Integer> entry : resources) {
-                    resourceMap.put(entry.getKey(), entry.getValue());
-                }
-                
-                // Use the new withItemQuantityPairs method to populate the grid
-                grid.withItemQuantityPairs(resourceMap, TEXT_HIGHLIGHT);
-                
-                System.out.println("Resources Tab: Created grid with " + resources.size() + " items");
-            }
-            
-            @Override
-            public boolean mouseClicked(double mouseX, double mouseY, int button) {
-                // Always try to handle mouse clicks if we have a grid
-                if (grid != null) {
-                    return grid.mouseClicked((int)mouseX, (int)mouseY, button);
-                }
-                return false;
-            }
-            
-            @Override
-            public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-                // Always try to handle scrolling, even if the mouse is not exactly over the grid
-                // This matches the resources tab's approach that works reliably
-                if (grid != null) {
-                    System.out.println("Resources Tab forwarding scroll: " + delta);
-                    return grid.mouseScrolled(mouseX, mouseY, delta);
-                }
-                return false;
-            }
-            
-            public boolean isMouseOver(int mouseX, int mouseY) {
-                // Use a more lenient check to capture scrolling near the edges
-                return mouseX >= x - 10 && mouseX < x + width + 10 && 
-                       mouseY >= y - 10 && mouseY < y + height + 10;
-            }
-        };
-        
-        panel.addChild(resourceListHost);
-        
-        // Add to tab panel
-        this.tabPanel.addTab("resources", Component.literal("Resources"), panel);
+        // Add the tab to the tab panel
+        this.tabPanel.addTab("resources", Component.literal("Resources"), resourcesTab.getPanel());
     }
     
     private void createPopulationTab() {
@@ -935,7 +826,8 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         return menu.getSearchRadius();
     }
     
-    private Map<Item, Integer> getCachedResources() {
+    // Changed from private to public to allow access from tab implementations
+    public Map<Item, Integer> getCachedResources() {
         if (dataCache != null) {
             return dataCache.getAllResources();
         }
@@ -1198,13 +1090,13 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         // Get active tab and forward scroll events to all scrollable tabs in the same way
         String activeTabId = this.tabPanel.getActiveTabId();
         
-        // For scrollable tabs (Resources, Population) - forward scroll events to children
-        if ("resources".equals(activeTabId) || "population".equals(activeTabId)) {
+        // Special case for resources tab since it has custom scrolling
+        if ("resources".equals(activeTabId)) {
             BCPanel panel = this.tabPanel.getTabPanel(activeTabId);
             if (panel != null) {
-                // Forward to all children that are visible components
+                // Attempt direct scrolling on the panel's children
                 for (UIComponent child : panel.getChildren()) {
-                    if (child instanceof BCComponent) {
+                    if (child instanceof BCComponent && ((BCComponent) child).isVisible()) {
                         if (child.mouseScrolled(mouseX, mouseY, delta)) {
                             return true;
                         }
@@ -1213,7 +1105,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             }
         }
         
-        // Let the tab panel handle scroll
+        // Let the tab panel handle scroll - this will properly forward to our ResourcesTab
         if (this.tabPanel != null && this.tabPanel.mouseScrolled(mouseX, mouseY, delta)) {
             return true;
         }
