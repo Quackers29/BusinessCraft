@@ -93,18 +93,47 @@ public class TownNotificationUtils {
     
     /**
      * Notifies nearby players when a tourist arrives at a platform
+     * @deprecated Use notifyTouristArrivals for grouped notifications
      */
     public static void notifyTouristArrival(ServerLevel level, BlockPos platformPos, 
                                            String originTownName, String destinationName) {
-        // Format message
-        Component message = Component.literal("A tourist from " + originTownName + " has arrived at " + destinationName + "!")
-            .withStyle(ChatFormatting.GREEN);
+        // Use the grouped method with count=1
+        notifyTouristArrivals(level, platformPos, originTownName, destinationName, 1);
+    }
+    
+    /**
+     * Notifies nearby players when multiple tourists arrive at a platform
+     * 
+     * @param level The server level
+     * @param platformPos The position of the town/platform
+     * @param originTownName The name of the origin town
+     * @param destinationName The name of the destination town
+     * @param count The number of tourists that arrived
+     */
+    public static void notifyTouristArrivals(ServerLevel level, BlockPos platformPos, 
+                                           String originTownName, String destinationName, int count) {
+        // Format different messages based on count
+        Component message;
+        if (count == 1) {
+            message = Component.literal("A tourist from " + originTownName + " has arrived at " + destinationName + "!")
+                .withStyle(ChatFormatting.GREEN);
+        } else {
+            message = Component.literal(count + " tourists from " + originTownName + " have arrived at " + destinationName + "!")
+                .withStyle(ChatFormatting.GREEN);
+        }
         
         // Find nearby players to notify
         for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
             if (player.level() == level && isNearPosition(player.blockPosition(), platformPos, NOTIFICATION_RANGE)) {
                 player.sendSystemMessage(message);
             }
+        }
+        
+        // Log the event
+        if (count == 1) {
+            LOGGER.info("Tourist from {} arrived at {}", originTownName, destinationName);
+        } else {
+            LOGGER.info("{} tourists from {} arrived at {}", count, originTownName, destinationName);
         }
     }
     
