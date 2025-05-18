@@ -693,15 +693,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                         villager.remove(Entity.RemovalReason.DISCARDED);
                         setChanged();
 
-                        // If notification config is enabled, notify nearby players of the arrival
-                        if (level instanceof ServerLevel serverLevel && ConfigLoader.notifyOnTouristDeparture) {
-                            TownNotificationUtils.notifyTouristArrival(
-                                serverLevel,
-                                worldPosition,
-                                touristInfo.originTownName,
-                                name
-                            );
-                        }
+                        // Instead of individual notifications, we now rely on the visit buffer 
+                        // to handle grouped notifications when processed
                     }
                 }
             }
@@ -719,6 +712,18 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                             // Each visitor should be processed by adding them to the town's tally
                             for (int i = 0; i < record.getCount(); i++) {
                                 thisTown.addVisitor(record.getOriginTownId());
+                            }
+                            
+                            // Send grouped notification
+                            if (level instanceof ServerLevel serverLevel && ConfigLoader.notifyOnTouristDeparture) {
+                                String originTownName = resolveTownName(record.getOriginTownId());
+                                TownNotificationUtils.notifyTouristArrivals(
+                                    serverLevel,
+                                    worldPosition,
+                                    originTownName,
+                                    name,
+                                    record.getCount()
+                                );
                             }
                         } catch (Exception e) {
                             LOGGER.error("Error processing visitor batch: {}", e.getMessage());
