@@ -96,6 +96,7 @@ import com.yourdomain.businesscraft.town.data.VisitBuffer;
 import com.yourdomain.businesscraft.town.data.PlatformVisualizationHelper;
 import com.yourdomain.businesscraft.town.data.TouristSpawningHelper;
 import com.yourdomain.businesscraft.town.data.PlatformManager;
+import com.yourdomain.businesscraft.town.data.VisitorProcessingHelper;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -168,8 +169,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private Town town;
     private static final ConfigLoader CONFIG = ConfigLoader.INSTANCE;
     private Map<UUID, Vec3> lastPositions = new HashMap<>();
-    private Map<UUID, Vec3> lastVisitorPositions = new HashMap<>();
-    private static final double VISITOR_POSITION_CHANGE_THRESHOLD = 0.001;
     private static final int DEFAULT_SEARCH_RADIUS = CONFIG.vehicleSearchRadius;
     private int searchRadius = DEFAULT_SEARCH_RADIUS;
     private final AABB searchBounds = new AABB(worldPosition).inflate(15);
@@ -220,6 +219,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     // Tourist spawning helper (handles complex spawning logic)
     private final TouristSpawningHelper touristSpawningHelper = new TouristSpawningHelper();
+
+    // Visitor processing helper (handles complex visitor detection and processing)
+    private final VisitorProcessingHelper visitorProcessingHelper = new VisitorProcessingHelper();
 
     // Special UUID for "any town" destination
     private static final UUID ANY_TOWN_DESTINATION = new UUID(0, 0);
@@ -463,9 +465,18 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                         }
                     }
 
-                    // Check for visitors
+                    // Check for visitors using helper
                     if (level.getGameTime() % 40 == 0) {
-                        checkForVisitors(level, pos);
+                        visitorProcessingHelper.processVisitors(
+                            level, 
+                            pos, 
+                            townId, 
+                            platformManager, 
+                            visitBuffer, 
+                            searchRadius, 
+                            name, 
+                            this::setChanged
+                        );
                     }
 
                     // Add scoreboard update
@@ -507,264 +518,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         platformVisualizationHelper.spawnPlatformIndicators(level, platformManager.getPlatforms(false), searchRadius);
     }
 
-    private void checkForVisitors(Level level, BlockPos pos) {
-        if (townId == null) return;
-        
-        if (level instanceof ServerLevel sLevel1) {
-            Town thisTown = TownManager.get(sLevel1).getTown(townId);
-            if (thisTown == null) return;
-            
-            // Get the town data provider
-            ITownDataProvider provider = getTownDataProvider();
-            if (provider == null) return;
 
-            // If no platforms, can't check for visitors
-            if (platformManager.getPlatformCount() == 0) return;
-            
-            // Create a list to collect all nearby villagers across all platforms
-            List<Villager> allNearbyVillagers = new ArrayList<>();
-            
-            // Check each platform for visitors
-            for (Platform platform : platformManager.getEnabledPlatforms()) {
-                
-                BlockPos startPos = platform.getStartPos();
-                BlockPos endPos = platform.getEndPos();
-                
-                // Create capsule-shaped AABB around the platform path
-                AABB platformBounds = new AABB(
-                    Math.min(startPos.getX(), endPos.getX()) - searchRadius,
-                    Math.min(startPos.getY(), endPos.getY()) - 2,
-                    Math.min(startPos.getZ(), endPos.getZ()) - searchRadius,
-                    Math.max(startPos.getX(), endPos.getX()) + searchRadius,
-                    Math.max(startPos.getY(), endPos.getY()) + 4,
-                    Math.max(startPos.getZ(), endPos.getZ()) + searchRadius
-                );
-
-                List<Villager> platformVillagers = level.getEntitiesOfClass(
-                        Villager.class,
-                        platformBounds);
-                
-                allNearbyVillagers.addAll(platformVillagers);
-            }
-
-            // Clean up positions of villagers that are no longer present
-            cleanupVisitorPositions(allNearbyVillagers);
-
-            // Process visitors that are stationary
-            for (Villager villager : allNearbyVillagers) {
-                Vec3 currentPos = villager.position();
-                Vec3 lastPos = lastVisitorPositions.get(villager.getUUID());
-                
-                // Store current position for next check
-                lastVisitorPositions.put(villager.getUUID(), currentPos);
-                
-                // Skip if this is the first time we've seen this villager
-                if (lastPos == null) continue;
-                
-                // Calculate position change
-                double positionChange = currentPos.distanceTo(lastPos);
-                
-                // Skip if villager has moved too much (likely on transport)
-                if (positionChange > VISITOR_POSITION_CHANGE_THRESHOLD) {
-                    continue;
-                }
-
-                if (TouristUtils.isTourist(villager)) {
-                    TouristUtils.TouristInfo touristInfo = TouristUtils.extractTouristInfo(villager);
-                    
-                    // Process tourists if:
-                    // 1. This is their specific destination town, OR
-                    // 2. They have the ANY_TOWN_DESTINATION and this isn't their origin town
-                    if (touristInfo != null && 
-                        !touristInfo.originTownId.equals(this.townId.toString()) && 
-                        (
-                            // Specific destination that matches this town
-                            (touristInfo.destinationTownId != null && 
-                             touristInfo.destinationTownId.equals(this.townId.toString()))
-                            ||
-                            // "Any town" destination (UUID 0-0)
-                            (touristInfo.destinationTownId != null && 
-                             touristInfo.destinationTownId.equals(ANY_TOWN_DESTINATION.toString()))
-                        )) {
-                        
-                        // Add to visit buffer using UUID instead of name
-                        BlockPos originPos = new BlockPos(touristInfo.originX, touristInfo.originY, touristInfo.originZ);
-                        visitBuffer.addVisitor(UUID.fromString(touristInfo.originTownId), originPos);
-
-                        // Calculate distance - we'll use this for rewards later
-                        double distance = Math.sqrt(villager.blockPosition().distSqr(this.getBlockPos()));
-                        
-                        // Add detailed distance logging
-                        LOGGER.info("TOURIST DISTANCE - Town: {}, From: {}, Tourist position: {}, Town position: {}, Calculated distance: {}", 
-                            this.name, touristInfo.originTownName, 
-                            villager.blockPosition(), this.getBlockPos(), distance);
-                        
-                        // Store the distance in the visitor info for later payment calculation
-                        visitBuffer.updateVisitorDistance(UUID.fromString(touristInfo.originTownId), distance);
-                        
-                        // Verify the distance was stored
-                        double storedDistance = visitBuffer.getAverageDistance(UUID.fromString(touristInfo.originTownId));
-                        LOGGER.info("TOURIST DISTANCE - After storing: townId: {}, storedDistance: {}", 
-                            touristInfo.originTownId, storedDistance);
-
-                        // Find the origin town and decrement its tourist count
-                        if (level instanceof ServerLevel serverLevel) {
-                            Town originTown = TownManager.get(serverLevel).getTown(UUID.fromString(touristInfo.originTownId));
-                            if (originTown != null) {
-                                originTown.removeTourist();
-                                
-                                // Record tourist removal in the allocation tracker
-                                UUID destId = touristInfo.destinationTownId.equals(ANY_TOWN_DESTINATION.toString()) 
-                                    ? this.townId  // Use actual town ID for stats when ANY_TOWN
-                                    : UUID.fromString(touristInfo.destinationTownId);
-                                
-                                TouristAllocationTracker.recordTouristRemoval(
-                                    UUID.fromString(touristInfo.originTownId),
-                                    destId
-                                );
-                                
-                                LOGGER.debug("Removed tourist from town {}, count now {}/{}", 
-                                    originTown.getName(), originTown.getTouristCount(), originTown.getMaxTourists());
-                            }
-                        }
-
-                        villager.remove(Entity.RemovalReason.DISCARDED);
-                        setChanged();
-
-                        // Instead of individual notifications, we now rely on the visit buffer 
-                        // to handle grouped notifications when processed
-                    }
-                }
-            }
-            
-            // Process the visit buffer if it's ready
-            if (visitBuffer.shouldProcess()) {
-                List<VisitHistoryRecord> newVisits = visitBuffer.processVisits();
-                if (!newVisits.isEmpty()) {
-                    // Add to the town data provider (single source of truth)
-                    for (VisitHistoryRecord record : newVisits) {
-                        try {
-                            // Record the visit in the Town
-                            provider.recordVisit(record.getOriginTownId(), record.getCount(), record.getOriginPos());
-                            
-                            // Each visitor should be processed by adding them to the town's tally
-                            for (int i = 0; i < record.getCount(); i++) {
-                                thisTown.addVisitor(record.getOriginTownId());
-                            }
-                            
-                            // Calculate payment based on travel distance
-                            int payment = 0;
-                            double averageDistance = visitBuffer.getAverageDistance(record.getOriginTownId());
-                            
-                            // Add detailed distance debugging
-                            LOGGER.info("PAYMENT CALCULATION - VisitBuffer state: {}", 
-                                visitBuffer.toString());
-                            LOGGER.info("PAYMENT CALCULATION - Processing visitor from townId: {}, Visitors stored in buffer: {}, Average distance: {}", 
-                                record.getOriginTownId(), visitBuffer.getVisitorCount(), averageDistance);
-                                
-                            if (averageDistance > 0) {
-                                // Calculate emeralds based on distance traveled and meters per emerald rate
-                                LOGGER.info("Tourist payment calculation: averageDistance={}, metersPerEmerald={}, touristCount={}", 
-                                    averageDistance, ConfigLoader.metersPerEmerald, record.getCount());
-                                
-                                payment = (int) Math.max(1, (averageDistance / ConfigLoader.metersPerEmerald) * record.getCount());
-                                LOGGER.info("Calculated payment: {} emeralds (distance={}, rate=1 per {} meters)", 
-                                    payment, averageDistance, ConfigLoader.metersPerEmerald);
-                                
-                                // Add emeralds to communal storage
-                                if (payment > 0) {
-                                    // Add more detailed logging
-                                    LOGGER.info("TOURIST PAYMENT - Attempting to add {} emeralds to {} communal storage",
-                                        payment, thisTown.getName());
-                                        
-                                    // Print current storage before update
-                                    Map<Item, Integer> beforeItems = thisTown.getAllCommunalStorageItems();
-                                    LOGGER.info("BEFORE payment - Communal storage for {}: {}", thisTown.getName(), 
-                                        beforeItems.entrySet().stream()
-                                            .map(e -> e.getKey().getDescription().getString() + ": " + e.getValue())
-                                            .collect(Collectors.joining(", ")));
-                                    
-                                    boolean success = thisTown.addToCommunalStorage(net.minecraft.world.item.Items.EMERALD, payment);
-                                    
-                                    LOGGER.info("TOURIST PAYMENT - Added {} emeralds to {} communal storage - success: {}", 
-                                        payment, thisTown.getName(), success);
-                                        
-                                    // Print the current communal storage content
-                                    Map<Item, Integer> communalItems = thisTown.getAllCommunalStorageItems();
-                                    LOGGER.info("AFTER payment - Communal storage for {}: {}", thisTown.getName(), 
-                                        communalItems.entrySet().stream()
-                                            .map(e -> e.getKey().getDescription().getString() + ": " + e.getValue())
-                                            .collect(Collectors.joining(", ")));
-                                }
-                                
-                                // Clear the saved distance after using it
-                                visitBuffer.clearSavedDistance(record.getOriginTownId());
-                            } else {
-                                LOGGER.warn("No distance recorded for tourists from {}, skipping payment", 
-                                    record.getOriginTownId());
-                            }
-                            
-                            // Send grouped notification with payment information
-                            if (level instanceof ServerLevel serverLevel && ConfigLoader.notifyOnTouristDeparture) {
-                                String originTownName = resolveTownName(record.getOriginTownId());
-                                TownNotificationUtils.notifyTouristArrivals(
-                                    serverLevel,
-                                    worldPosition,
-                                    originTownName,
-                                    name,
-                                    record.getCount(),
-                                    payment
-                                );
-                            }
-                        } catch (Exception e) {
-                            LOGGER.error("Error processing visitor batch: {}", e.getMessage());
-                        }
-                    }
-                    
-                    // Ensure data is saved
-                        if (level instanceof ServerLevel sLevel3) {
-                            TownManager.get(sLevel3).markDirty();
-                        }
-                    
-                    // Update clients
-                    level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
-                }
-            }
-        }
-    }
-
-    /**
-     * Cleans up the lastVisitorPositions map by removing entries for villagers 
-     * that no longer exist in the current list of nearby villagers.
-     * This prevents memory leaks from accumulating over time.
-     */
-    private void cleanupVisitorPositions(List<Villager> currentVillagers) {
-        // Skip if empty to avoid unnecessary work
-        if (lastVisitorPositions.isEmpty()) return;
-        
-        // Create a set of current villager UUIDs for efficient lookups
-        Set<UUID> currentVillagerIds = currentVillagers.stream()
-            .map(Entity::getUUID)
-            .collect(Collectors.toSet());
-            
-        // Keep track of how many entries we're removing for logging
-        int removedCount = 0;
-        
-        // Remove entries that don't correspond to current villagers
-        Iterator<UUID> iterator = lastVisitorPositions.keySet().iterator();
-        while (iterator.hasNext()) {
-            UUID id = iterator.next();
-            if (!currentVillagerIds.contains(id)) {
-                iterator.remove();
-                removedCount++;
-            }
-        }
-        
-        // Log only if we actually removed something and at debug level only
-        if (removedCount > 0 && level != null && !level.isClientSide() && LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Cleaned up {} stale visitor position entries", removedCount);
-        }
-    }
 
     public String getTownName() {
         if (townId != null) {
@@ -1220,7 +974,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public void setRemoved() {
         super.setRemoved();
         touristVehicleManager.clearTrackedVehicles();
-        lastVisitorPositions.clear();
+        visitorProcessingHelper.clearAll();
         // Clear platform indicators
         platformIndicatorSpawnTimes.clear();
         LOGGER.debug("Cleared visitor position tracking and platform indicators on block removal");
