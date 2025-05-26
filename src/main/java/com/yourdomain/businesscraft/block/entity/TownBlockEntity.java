@@ -85,8 +85,6 @@ import net.minecraft.world.phys.Vec3;
 import com.yourdomain.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
 import com.yourdomain.businesscraft.platform.Platform;
 import net.minecraft.resources.ResourceLocation;
-import com.yourdomain.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
-import com.yourdomain.businesscraft.platform.Platform;
 import net.minecraftforge.registries.ForgeRegistries;
 import com.yourdomain.businesscraft.town.utils.TouristUtils;
 import com.yourdomain.businesscraft.town.utils.TouristUtils.TouristInfo;
@@ -94,6 +92,10 @@ import com.yourdomain.businesscraft.town.utils.TouristAllocationTracker;
 import com.yourdomain.businesscraft.entity.TouristEntity;
 import com.yourdomain.businesscraft.init.ModEntityTypes;
 import com.yourdomain.businesscraft.town.utils.TownNotificationUtils;
+import com.yourdomain.businesscraft.town.data.VisitBuffer;
+import com.yourdomain.businesscraft.town.data.PlatformVisualizationHelper;
+import com.yourdomain.businesscraft.town.data.TouristSpawningHelper;
+import com.yourdomain.businesscraft.town.data.PlatformManager;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -193,137 +195,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     // Client-side cache for personal storage (player UUID -> items)
     private final Map<UUID, Map<Item, Integer>> clientPersonalStorage = new HashMap<>();
 
-    // Visit buffer for grouping arrivals
-    private static class VisitBuffer {
-        // Single value object to store visitor count and origin position
-        private static class VisitorInfo {
-            final int count;
-            final BlockPos originPos;
-            double totalDistance;
-            
-            public VisitorInfo(int count, BlockPos originPos) {
-                this.count = count;
-                this.originPos = originPos;
-                this.totalDistance = 0;
-            }
-            
-            public VisitorInfo incrementCount() {
-                return new VisitorInfo(count + 1, originPos);
-            }
-            
-            public VisitorInfo addDistance(double distance) {
-                this.totalDistance += distance;
-                return this;
-            }
-            
-            public double getAverageDistance() {
-                return count > 0 ? totalDistance / count : 0;
-            }
-            
-            @Override
-            public String toString() {
-                return "VisitorInfo{count=" + count + 
-                    ", originPos=" + originPos + 
-                    ", totalDistance=" + totalDistance + 
-                    ", avgDistance=" + getAverageDistance() + "}";
-            }
-        }
-        
-        private final Map<UUID, VisitorInfo> visitors = new HashMap<>();
-        // Add a map to store distances that persists after processing
-        private final Map<UUID, Double> distanceMap = new HashMap<>();
-        private long lastVisitTime = 0;
-        private static final long BUFFER_TIMEOUT_MS = 1000; // 1 second timeout
-
-        public void addVisitor(UUID townId, BlockPos originPos) {
-            // Update or insert a new VisitorInfo
-            visitors.compute(townId, (id, info) -> {
-                if (info == null) {
-                    return new VisitorInfo(1, originPos);
-                } else {
-                    return info.incrementCount();
-                }
-            });
-            
-            lastVisitTime = System.currentTimeMillis();
-        }
-        
-        public void updateVisitorDistance(UUID townId, double distance) {
-            visitors.computeIfPresent(townId, (id, info) -> info.addDistance(distance));
-        }
-        
-        public double getAverageDistance(UUID townId) {
-            // First check the visitor buffer
-            VisitorInfo info = visitors.get(townId);
-            if (info != null && info.getAverageDistance() > 0) {
-                return info.getAverageDistance();
-            }
-            // If not found or zero, check the persistent distance map
-            return distanceMap.getOrDefault(townId, 0.0);
-        }
-        
-        // Add method to get visitor count
-        public int getVisitorCount() {
-            return visitors.size();
-        }
-        
-        // Add a detailed toString method for debugging
-        @Override
-        public String toString() {
-            return "VisitBuffer{visitors=" + 
-                visitors.entrySet().stream()
-                    .map(e -> e.getKey() + "=" + e.getValue().count + 
-                        ", distance=" + e.getValue().totalDistance + 
-                        ", avgDist=" + e.getValue().getAverageDistance())
-                    .collect(Collectors.joining("; ")) +
-                ", distanceMap=" + distanceMap +
-                ", lastVisitTime=" + lastVisitTime + "}";
-        }
-
-        public boolean shouldProcess() {
-            return !visitors.isEmpty() && 
-                   System.currentTimeMillis() - lastVisitTime > BUFFER_TIMEOUT_MS;
-        }
-
-        public List<VisitHistoryRecord> processVisits() {
-            if (visitors.isEmpty()) return Collections.emptyList();
-            
-            LOGGER.info("VISIT BUFFER - Processing visits: {}", this.toString());
-            
-            // Store distances in the persistent map before clearing the buffer
-            visitors.forEach((townId, info) -> {
-                double avgDistance = info.getAverageDistance();
-                if (avgDistance > 0) {
-                    distanceMap.put(townId, avgDistance);
-                    LOGGER.info("VISIT BUFFER - Storing distance for townId {}: {}", townId, avgDistance);
-                }
-            });
-            
-            long now = System.currentTimeMillis();
-            List<VisitHistoryRecord> records = visitors.entrySet().stream()
-                .map(entry -> new VisitHistoryRecord(
-                    now, 
-                    entry.getKey(), 
-                    entry.getValue().count,
-                    entry.getValue().originPos
-                ))
-                .collect(Collectors.toList());
-                
-            // Clear the visitors buffer but keep the distanceMap
-            visitors.clear();
-            
-            LOGGER.info("VISIT BUFFER - After clearing: {}", this.toString());
-            
-            return records;
-        }
-        
-        // Add a method to clear saved distances after they're used
-        public void clearSavedDistance(UUID townId) {
-            Double removed = distanceMap.remove(townId);
-            LOGGER.info("VISIT BUFFER - Cleared saved distance for townId {}: {}", townId, removed != null ? removed : 0);
-        }
-    }
-
     // History buffer storage
     private final VisitBuffer visitBuffer = new VisitBuffer();
     
@@ -333,12 +204,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     // Add a client-side town name cache
     private final Map<UUID, String> townNameCache = new HashMap<>();
 
-    // Add platform support
-    private static final int MAX_PLATFORMS = 5;
-    private List<Platform> platforms = new ArrayList<>();
-    private List<Platform> clientPlatforms = new ArrayList<>();
-    private boolean isInPlatformCreationMode = false;
-    private UUID platformBeingEdited = null;
+    // Platform management (handles platform storage and operations)
+    private final PlatformManager platformManager = new PlatformManager();
 
     // Added for platform visualization
     private Map<UUID, Long> platformIndicatorSpawnTimes = new HashMap<>();
@@ -348,12 +215,22 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private Map<UUID, Long> extendedIndicatorPlayers = new HashMap<>();
     private static final long EXTENDED_INDICATOR_DURATION = 600; // 30 seconds in ticks
 
+    // Platform visualization helper (handles complex particle effects)
+    private final PlatformVisualizationHelper platformVisualizationHelper = new PlatformVisualizationHelper();
+
+    // Tourist spawning helper (handles complex spawning logic)
+    private final TouristSpawningHelper touristSpawningHelper = new TouristSpawningHelper();
+
     // Special UUID for "any town" destination
     private static final UUID ANY_TOWN_DESTINATION = new UUID(0, 0);
     private static final String ANY_TOWN_NAME = "Any Town";
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
+        
+        // Set up platform manager callback
+        platformManager.setChangeCallback(this::setChanged);
+        
         LOGGER.debug("TownBlockEntity created at position: {}", pos);
     }
 
@@ -424,14 +301,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             tag.put("PathEnd", endPos);
         }
         
-        // Save platforms
-        if (!platforms.isEmpty()) {
-            ListTag platformsTag = new ListTag();
-            for (Platform platform : platforms) {
-                platformsTag.add(platform.toNBT());
-            }
-            tag.put("platforms", platformsTag);
-        }
+        // Save platforms using platform manager
+        platformManager.saveToNBT(tag);
         
         tag.putInt("searchRadius", searchRadius);
         
@@ -558,20 +429,12 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             name = tag.getString("name");
         }
 
-        // Load platforms
-        if (tag.contains("platforms")) {
-            platforms.clear();
-            ListTag platformsTag = tag.getList("platforms", Tag.TAG_COMPOUND);
-            for (int i = 0; i < platformsTag.size(); i++) {
-                CompoundTag platformTag = platformsTag.getCompound(i);
-                platforms.add(Platform.fromNBT(platformTag));
-            }
-        } else if (pathStart != null && pathEnd != null) {
-            // If no platforms but legacy paths exist, create a platform from them
-            if (platforms.isEmpty()) {
-                Platform legacyPlatform = new Platform("Main Platform", true, pathStart, pathEnd);
-                platforms.add(legacyPlatform);
-            }
+        // Load platforms using platform manager
+        platformManager.loadFromNBT(tag);
+        
+        // Create legacy platform if needed
+        if (pathStart != null && pathEnd != null) {
+            platformManager.createLegacyPlatform(pathStart, pathEnd);
         }
     }
 
@@ -591,14 +454,12 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 if (town != null) {
                     // Platform-based villager spawning
                     if (touristSpawningEnabled && town.canSpawnTourists() && 
-                        !platforms.isEmpty() && 
+                        platformManager.getPlatformCount() > 0 && 
                         level.getGameTime() % 200 == 0) {
                         
                         // Try to spawn from each enabled platform
-                        for (Platform platform : platforms) {
-                            if (platform.isEnabled() && platform.isComplete()) {
-                                spawnTouristOnPlatform(level, town, platform);
-                            }
+                        for (Platform platform : platformManager.getEnabledPlatforms()) {
+                            touristSpawningHelper.spawnTouristOnPlatform(level, town, platform, townId);
                         }
                     }
 
@@ -626,26 +487,24 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 
                 if (currentTown != null && currentTown.canSpawnTourists()) {
                     // Process each enabled platform
-                    for (Platform platform : platforms) {
-                        if (platform.isEnabled() && platform.isComplete()) {
-                            touristVehicleManager.mountTouristsToVehicles(
-                                level, 
-                                platform.getStartPos(), 
-                                platform.getEndPos(), 
-                                searchRadius, 
-                                townId
-                            );
-                        }
+                    for (Platform platform : platformManager.getEnabledPlatforms()) {
+                        touristVehicleManager.mountTouristsToVehicles(
+                            level, 
+                            platform.getStartPos(), 
+                            platform.getEndPos(), 
+                            searchRadius, 
+                            townId
+                        );
                     }
                 }
             }
             
             // Clean up platform indicators if needed
-            cleanupPlatformIndicators();
+            platformVisualizationHelper.cleanupPlatformIndicators(platformManager.getPlatforms(false));
         }
         
-        // Spawn platform indicators
-        spawnPlatformIndicators(level);
+        // Spawn platform indicators using helper
+        platformVisualizationHelper.spawnPlatformIndicators(level, platformManager.getPlatforms(false), searchRadius);
     }
 
     private void checkForVisitors(Level level, BlockPos pos) {
@@ -660,14 +519,13 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             if (provider == null) return;
 
             // If no platforms, can't check for visitors
-            if (platforms.isEmpty()) return;
+            if (platformManager.getPlatformCount() == 0) return;
             
             // Create a list to collect all nearby villagers across all platforms
             List<Villager> allNearbyVillagers = new ArrayList<>();
             
             // Check each platform for visitors
-            for (Platform platform : platforms) {
-                if (!platform.isEnabled() || !platform.isComplete()) continue;
+            for (Platform platform : platformManager.getEnabledPlatforms()) {
                 
                 BlockPos startPos = platform.getStartPos();
                 BlockPos endPos = platform.getEndPos();
@@ -963,14 +821,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         // Add resource data for client rendering
         syncResourcesForClient(tag);
         
-        // Add platforms
-        if (!platforms.isEmpty()) {
-            ListTag platformsTag = new ListTag();
-            for (Platform platform : platforms) {
-                platformsTag.add(platform.toNBT());
-            }
-            tag.put("platforms", platformsTag);
-        }
+        // Add platforms using platform manager
+        platformManager.saveToNBT(tag);
         
         return tag;
     }
@@ -1020,17 +872,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             }
         }
         
-        // Handle platform data updates
-        if (tag.contains("platforms")) {
-            // Platform update received from server
-            clientPlatforms.clear();
-            ListTag platformsTag = tag.getList("platforms", Tag.TAG_COMPOUND);
-            for (int i = 0; i < platformsTag.size(); i++) {
-                CompoundTag platformTag = platformsTag.getCompound(i);
-                Platform platform = Platform.fromNBT(platformTag);
-                clientPlatforms.add(platform);
-            }
-        }
+        // Handle platform data updates using platform manager
+        platformManager.updateClientPlatforms(tag);
         
         // Load client resources data
         loadResourcesFromTag(tag);
@@ -1606,203 +1449,15 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         }
     }
 
-    /**
-     * Spawns a tourist villager on a platform
-     */
-    private void spawnTouristOnPlatform(Level level, Town town, Platform platform) {
-        // Skip if town can't support more tourists
-        if (!town.canAddMoreTourists()) {
-            LOGGER.debug("Cannot spawn tourist - town {} at maximum capacity ({}/{})",
-                town.getName(), town.getTouristCount(), town.getMaxTourists());
-            return;
-        }
-        
-        BlockPos startPos = platform.getStartPos();
-        BlockPos endPos = platform.getEndPos();
-        
-        if (startPos == null || endPos == null) return;
-        
-        // Count existing tourists in the platform area
-        AABB pathBounds = new AABB(
-            Math.min(startPos.getX(), endPos.getX()) - 1,
-            startPos.getY(),
-            Math.min(startPos.getZ(), endPos.getZ()) - 1,
-            Math.max(startPos.getX(), endPos.getX()) + 1,
-            startPos.getY() + 2,
-            Math.max(startPos.getZ(), endPos.getZ()) + 1
-        );
-        
-        List<Villager> existingTourists = level.getEntitiesOfClass(Villager.class, pathBounds);
-        
-        // Use configurable max tourists per platform
-        if (existingTourists.size() < ConfigLoader.maxTouristsPerTown) {
-            // Select a destination for the tourist
-            UUID destinationTownId = selectTouristDestination(level, platform);
-            if (destinationTownId == null) {
-                return;
-            }
-            
-            // Try up to 3 times to find a valid spawn location
-            for (int attempt = 0; attempt < 3; attempt++) {
-                // Calculate a random position along the path
-                double progress = random.nextDouble();
-                double exactX = startPos.getX() + (endPos.getX() - startPos.getX()) * progress;
-                double exactZ = startPos.getZ() + (endPos.getZ() - startPos.getZ()) * progress;
-                int x = (int) Math.round(exactX);
-                int z = (int) Math.round(exactZ);
-                int y = startPos.getY() + 1;
-                
-                BlockPos spawnPos = new BlockPos(x, y, z);
-                
-                // Check if the position is already occupied
-                boolean isOccupied = existingTourists.stream()
-                    .anyMatch(v -> {
-                        BlockPos villagerPos = v.blockPosition();
-                        return Math.abs(villagerPos.getX() - spawnPos.getX()) < 1 && 
-                               Math.abs(villagerPos.getZ() - spawnPos.getZ()) < 1;
-                    });
-                
-                if (!isOccupied) {
-                    // Get destination town name for the tourist tag
-                    String destinationName = "Destination N/A";
-                    if (level instanceof ServerLevel serverLevel) {
-                        Town destTown = TownManager.get(serverLevel).getTown(destinationTownId);
-                        if (destTown != null) {
-                            destinationName = destTown.getName();
-                        }
-                    }
-                    
-                    // Spawn the tourist
-                    spawnTourist(level, spawnPos, town, platform, destinationTownId, destinationName);
-                    break;
-                }
-            }
-        }
-    }
+
     
-    /**
-     * Selects a destination town for a tourist based on platform configuration and town population
-     * 
-     * @param level The level
-     * @param platform The platform the tourist is spawning from
-     * @return The selected destination town ID, or null if no valid destination found
-     */
-    private UUID selectTouristDestination(Level level, Platform platform) {
-        if (!(level instanceof ServerLevel serverLevel)) {
-            return null;
-        }
-        
-        // Get all possible destination towns
-        Map<UUID, Boolean> platformDestinations = platform.getDestinations();
-        
-        // If no specific destinations are set or all destinations are disabled,
-        // return the special ANY_TOWN_DESTINATION instead of selecting a random town
-        if (platformDestinations.isEmpty() || platform.hasNoEnabledDestinations()) {
-            return ANY_TOWN_DESTINATION;
-        }
-        
-        // Filter to only enabled destinations
-        List<UUID> enabledDestinations = new ArrayList<>();
-        for (Map.Entry<UUID, Boolean> entry : platformDestinations.entrySet()) {
-            if (entry.getValue()) {
-                enabledDestinations.add(entry.getKey());
-            }
-        }
-        
-        if (enabledDestinations.isEmpty()) {
-            return ANY_TOWN_DESTINATION;
-        }
-        
-        // Select a destination based on population weights and fairness
-        return selectFairTownByPopulation(serverLevel, enabledDestinations);
-    }
-    
-    /**
-     * Selects a town based on population and fair allocation
-     * 
-     * @param serverLevel The server level
-     * @param allowedTowns List of allowed town IDs, or null for all towns except current
-     * @return The selected town ID, or null if no valid towns found
-     */
-    private UUID selectFairTownByPopulation(ServerLevel serverLevel, List<UUID> allowedTowns) {
-        TownManager townManager = TownManager.get(serverLevel);
-        Map<UUID, Town> allTowns = townManager.getAllTowns();
-        
-        // Remove current town from options
-        Map<UUID, Town> possibleTowns = new HashMap<>(allTowns);
-        possibleTowns.remove(this.townId);
-        
-        // Filter to only allowed towns if specified
-        if (allowedTowns != null) {
-            possibleTowns.keySet().retainAll(allowedTowns);
-        }
-        
-        if (possibleTowns.isEmpty()) {
-            return null;
-        }
-        
-        // Create a map of town ID to population for the tracker
-        Map<UUID, Integer> populationMap = new HashMap<>();
-        for (Map.Entry<UUID, Town> entry : possibleTowns.entrySet()) {
-            populationMap.put(entry.getKey(), entry.getValue().getPopulation());
-        }
-        
-        // Use our new allocation tracker to select a fair destination
-        return com.yourdomain.businesscraft.town.utils.TouristAllocationTracker.selectFairDestination(
-            this.townId, populationMap);
-    }
-    
-    /**
-     * Spawns a tourist villager at the specified location
-     */
-    private void spawnTourist(Level level, BlockPos pos, Town originTown, Platform platform, UUID destinationTownId, String destinationName) {
-        if (level.getBlockState(pos).isAir() && level.getBlockState(pos.above()).isAir()) {
-            // Create our custom TouristEntity instead of a regular Villager
-            TouristEntity tourist = new TouristEntity(
-                ModEntityTypes.TOURIST.get(),
-                level,
-                originTown,
-                platform,
-                destinationTownId,
-                destinationName
-            );
-            
-            // Position the tourist
-            tourist.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-            
-            // Set expiry time based on config (convert minutes to ticks)
-            int expiryTicks = ConfigLoader.touristExpiryMinutes * 60 * 20;
-            tourist.setExpiryTicks(expiryTicks);
-            
-            // Spawn the entity into the world
-            level.addFreshEntity(tourist);
-            
-            // Log the tourist spawn
-            LOGGER.debug("Spawned tourist at {} from {} to {}", pos, originTown.getName(), destinationName);
-            
-            // Update town stats
-            originTown.addTourist();
-            
-            // Decrement bread for population (same as before)
-            int breadNeeded = CONFIG.breadPerPop;
-            if (breadNeeded > 0) {
-                originTown.addResource(Items.BREAD, -breadNeeded);
-            }
-        }
-    }
-    
-    // Platform management methods
+    // Platform management methods - delegated to PlatformManager
     
     /**
      * Gets the list of all platforms
      */
     public List<Platform> getPlatforms() {
-        // If on client side, return the client cache
-        if (level != null && level.isClientSide()) {
-            return new ArrayList<>(clientPlatforms);
-        }
-        // Otherwise return the actual platforms
-        return new ArrayList<>(platforms);
+        return platformManager.getPlatforms(level != null && level.isClientSide());
     }
     
     /**
@@ -1810,26 +1465,17 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
      * @return true if added successfully, false if at max capacity
      */
     public boolean addPlatform() {
-        if (platforms.size() >= MAX_PLATFORMS) {
-            return false;
-        }
-        
-        Platform platform = new Platform();
-        platform.setName("Platform " + (platforms.size() + 1));
-        platforms.add(platform);
-        setChanged();
-        return true;
+        return platformManager.addPlatform();
     }
     
     /**
      * Removes a platform by ID
      */
     public boolean removePlatform(UUID platformId) {
-        boolean removed = platforms.removeIf(p -> p.getId().equals(platformId));
+        boolean removed = platformManager.removePlatform(platformId);
         if (removed) {
             // Remove the platform indicator spawning data when a platform is removed
             platformIndicatorSpawnTimes.remove(platformId);
-            setChanged();
         }
         return removed;
     }
@@ -1838,272 +1484,71 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
      * Gets a platform by ID
      */
     public Platform getPlatform(UUID platformId) {
-        return platforms.stream()
-            .filter(p -> p.getId().equals(platformId))
-            .findFirst()
-            .orElse(null);
+        return platformManager.getPlatform(platformId);
     }
     
     /**
      * Sets the path start for a specific platform
      */
     public void setPlatformPathStart(UUID platformId, BlockPos pos) {
-        Platform platform = getPlatform(platformId);
-        if (platform != null) {
-            platform.setStartPos(pos);
-            setChanged();
-        }
+        platformManager.setPlatformPathStart(platformId, pos);
     }
     
     /**
      * Sets the path end for a specific platform
      */
     public void setPlatformPathEnd(UUID platformId, BlockPos pos) {
-        Platform platform = getPlatform(platformId);
-        if (platform != null) {
-            platform.setEndPos(pos);
-            setChanged();
-        }
+        platformManager.setPlatformPathEnd(platformId, pos);
     }
     
     /**
      * Toggles a platform's enabled state
      */
     public void togglePlatformEnabled(UUID platformId) {
-        Platform platform = getPlatform(platformId);
-        if (platform != null) {
-            platform.setEnabled(!platform.isEnabled());
-            setChanged();
-        }
+        platformManager.togglePlatformEnabled(platformId);
     }
     
     /**
      * Sets whether we're in platform path creation mode
      */
     public void setPlatformCreationMode(boolean mode, UUID platformId) {
-        this.isInPlatformCreationMode = mode;
-        this.platformBeingEdited = mode ? platformId : null;
+        platformManager.setPlatformCreationMode(mode, platformId);
     }
     
     /**
      * Gets whether we're in platform path creation mode
      */
     public boolean isInPlatformCreationMode() {
-        return isInPlatformCreationMode;
+        return platformManager.isInPlatformCreationMode();
     }
     
     /**
      * Gets the ID of the platform currently being edited
      */
     public UUID getPlatformBeingEdited() {
-        return platformBeingEdited;
+        return platformManager.getPlatformBeingEdited();
     }
     
     /**
      * Checks if we can add more platforms
      */
     public boolean canAddMorePlatforms() {
-        return platforms.size() < MAX_PLATFORMS;
+        return platformManager.canAddMorePlatforms();
     }
 
-    /**
-     * Spawns visual indicators at platform start and end points and along the line
-     */
-    private void spawnPlatformIndicators(Level level) {
-        if (level.isClientSide || platforms.isEmpty()) return;
-        
-        long gameTime = level.getGameTime();
-        
-        // Check if any players have recently exited the UI
-        boolean showIndicators = false;
-        Iterator<Map.Entry<UUID, Long>> iterator = extendedIndicatorPlayers.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<UUID, Long> entry = iterator.next();
-            if (gameTime - entry.getValue() > EXTENDED_INDICATOR_DURATION) {
-                // Remove expired entries
-                iterator.remove();
-                LOGGER.debug("Removed expired indicator for player {}", entry.getKey());
-            } else {
-                showIndicators = true;
-            }
-        }
-        
-        // Only show particles if players have recently exited the UI
-        if (!showIndicators) {
-            return; // Exit early if no recent UI exits
-        }
-        
-        // For each platform, spawn particles
-        for (Platform platform : platforms) {
-            if (!platform.isEnabled() || !platform.isComplete()) continue;
-            
-            UUID platformId = platform.getId();
-            
-            // Check if it's time to spawn indicators for this platform
-            boolean shouldSpawnIndicators = 
-                !platformIndicatorSpawnTimes.containsKey(platformId) || 
-                gameTime - platformIndicatorSpawnTimes.get(platformId) >= INDICATOR_SPAWN_INTERVAL;
-                
-            if (shouldSpawnIndicators) {
-                // Update spawn time
-                platformIndicatorSpawnTimes.put(platformId, gameTime);
-                
-                BlockPos startPos = platform.getStartPos();
-                BlockPos endPos = platform.getEndPos();
-                
-                // Calculate the path between start and end
-                int startX = startPos.getX();
-                int startY = startPos.getY();
-                int startZ = startPos.getZ();
-                int endX = endPos.getX();
-                int endY = endPos.getY();
-                int endZ = endPos.getZ();
-                
-                // Calculate line length for parameter
-                int dx = endX - startX;
-                int dy = endY - startY;
-                int dz = endZ - startZ;
-                double length = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                int steps = (int) Math.max(1, Math.ceil(length));
-                
-                // Spawn particles along the line, one per block
-                for (int i = 0; i <= steps; i++) {
-                    double t = (steps == 0) ? 0 : (double) i / steps;
-                    double x = startX + dx * t;
-                    double y = startY + dy * t + 1.0; // +1.0 to place above the ground
-                    double z = startZ + dz * t;
-                    
-                    ((ServerLevel)level).sendParticles(
-                        ParticleTypes.HAPPY_VILLAGER,
-                        x + 0.5,
-                        y,
-                        z + 0.5,
-                        5, // particle count (increased from 1 to 5)
-                        0.2, 0.2, 0.2, // spread
-                        0.0 // speed
-                    );
-                }
-                
-                // Add red particles to show search radius
-                spawnSearchRadiusParticles(
-                    (ServerLevel)level,
-                    startPos,
-                    endPos,
-                    searchRadius
-                );
-            }
-        }
-    }
+
     
     /**
      * Registers a player as having exited the town UI, enabling extended indicators
      * @param playerId The UUID of the player who exited the UI
      */
     public void registerPlayerExitUI(UUID playerId) {
-        extendedIndicatorPlayers.put(playerId, level.getGameTime());
+        if (level != null) {
+            platformVisualizationHelper.registerPlayerExitUI(playerId, level.getGameTime());
+        }
     }
     
-    // Clean up indicator data for removed platforms
-    private void cleanupPlatformIndicators() {
-        // Remove spawn times for platforms that no longer exist
-        platformIndicatorSpawnTimes.keySet().removeIf(platformId -> 
-            platforms.stream().noneMatch(p -> p.getId().equals(platformId))
-        );
-    }
 
-    /**
-     * Spawns red particles to show search radius around platform line
-     * 
-     * @param level The server level
-     * @param startPos Platform start position
-     * @param endPos Platform end position
-     * @param radius Search radius
-     */
-    private void spawnSearchRadiusParticles(ServerLevel level, BlockPos startPos, BlockPos endPos, int radius) {
-        // Calculate the path between start and end
-        int startX = startPos.getX();
-        int startY = startPos.getY();
-        int startZ = startPos.getZ();
-        int endX = endPos.getX();
-        int endY = endPos.getY();
-        int endZ = endPos.getZ();
-        
-        // Calculate the bounding box the same way it's used for entity search
-        int minX = Math.min(startX, endX) - radius;
-        int minZ = Math.min(startZ, endZ) - radius;
-        int maxX = Math.max(startX, endX) + radius;
-        int maxZ = Math.max(startZ, endZ) + radius;
-        
-        // Use a fixed Y for visualization
-        double particleY = Math.min(startY, endY) + 1.0;
-        
-        // Calculate perimeter length to determine number of particles
-        int perimeterLength = 2 * (maxX - minX + maxZ - minZ);
-        int totalPoints = Math.min(200, Math.max(32, perimeterLength / 2));
-        
-        // Distribute points evenly across the 4 sides of the perimeter
-        int pointsPerSide = totalPoints / 4;
-        
-        // Generate particles along the perimeter
-        
-        // Bottom edge (minX to maxX at minZ)
-        for (int i = 0; i < pointsPerSide; i++) {
-            double t = (double) i / (pointsPerSide - 1);
-            double x = minX + t * (maxX - minX);
-            level.sendParticles(
-                ParticleTypes.FLAME,
-                x,
-                particleY,
-                minZ,
-                1,
-                0.0, 0.0, 0.0,
-                0.0
-            );
-        }
-        
-        // Right edge (maxX, minZ to maxZ)
-        for (int i = 0; i < pointsPerSide; i++) {
-            double t = (double) i / (pointsPerSide - 1);
-            double z = minZ + t * (maxZ - minZ);
-            level.sendParticles(
-                ParticleTypes.FLAME,
-                maxX,
-                particleY,
-                z,
-                1,
-                0.0, 0.0, 0.0,
-                0.0
-            );
-        }
-        
-        // Top edge (maxX to minX at maxZ)
-        for (int i = 0; i < pointsPerSide; i++) {
-            double t = (double) i / (pointsPerSide - 1);
-            double x = maxX - t * (maxX - minX);
-            level.sendParticles(
-                ParticleTypes.FLAME,
-                x,
-                particleY,
-                maxZ,
-                1,
-                0.0, 0.0, 0.0,
-                0.0
-            );
-        }
-        
-        // Left edge (minX, maxZ to minZ)
-        for (int i = 0; i < pointsPerSide; i++) {
-            double t = (double) i / (pointsPerSide - 1);
-            double z = maxZ - t * (maxZ - minZ);
-            level.sendParticles(
-                ParticleTypes.FLAME,
-                minX,
-                particleY,
-                z,
-                1,
-                0.0, 0.0, 0.0,
-                0.0
-            );
-        }
-    }
+
+
 }
