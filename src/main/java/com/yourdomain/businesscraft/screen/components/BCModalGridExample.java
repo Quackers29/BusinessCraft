@@ -7,6 +7,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.core.BlockPos;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -19,6 +21,7 @@ import java.util.function.Consumer;
  * to be used directly in the game.
  */
 public class BCModalGridExample {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BCModalGridExample.class);
 
     /**
      * Example 1: Simple string list with default settings
@@ -123,7 +126,7 @@ public class BCModalGridExample {
             inventory,
             modalScreen -> {
                 // Optional callback when closing the screen
-                System.out.println("Resource screen closed");
+                LOGGER.info("Resource screen closed");
             }
         );
         

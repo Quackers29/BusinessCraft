@@ -47,8 +47,8 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import net.minecraft.world.entity.npc.VillagerProfession;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
@@ -108,7 +108,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             return !stack.isEmpty();
         }
     };
-
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
     private static final int DATA_BREAD = 0;
     private static final int DATA_POPULATION = 1;
@@ -118,9 +117,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private static final int DATA_TOURIST_COUNT = 5;
     private static final int DATA_MAX_TOURISTS = 6;
     private final ContainerData data = new SimpleContainerData(7) {
-        // Tracking time between logs to prevent spamming
+        // Rate limiting for logging
         private long lastLogTime = 0;
-        
+
         @Override
         public int get(int index) {
             if (level != null && level.isClientSide()) {
@@ -154,7 +153,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             super.set(index, value);
         }
     };
-    private static final Logger LOGGER = LogManager.getLogger("BusinessCraft/TownBlockEntity");
+    private static final Logger LOGGER = LoggerFactory.getLogger(TownBlockEntity.class);
     private Map<String, Integer> visitingPopulation = new HashMap<>();
     private BlockPos pathStart;
     private BlockPos pathEnd;

@@ -8,12 +8,16 @@ import java.util.function.Consumer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for creating grid-based UI layouts with various component types.
  * Supports dynamic generation of buttons, labels, toggles, etc. in a grid layout.
  */
 public class UIGridBuilder {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UIGridBuilder.class);
+
     // Grid configuration
     private int x, y, width, height;
     private int rows, columns;
@@ -231,12 +235,9 @@ public class UIGridBuilder {
      * @param offset The new offset
      */
     public void setVerticalScrollOffset(int offset) {
-        if (!verticalScrollEnabled) return;
-        
-        // Store old offset for comparison
         int oldOffset = verticalScrollOffset;
         
-        // Clamp scroll offset
+        // Clamp the offset to valid range
         if (offset < 0) {
             offset = 0;
         } else if (offset > maxVerticalScrollOffset) {
@@ -247,7 +248,7 @@ public class UIGridBuilder {
         
         // Debug if the offset changed
         if (oldOffset != verticalScrollOffset) {
-            System.out.println("Grid vertical offset changed: " + oldOffset + " -> " + verticalScrollOffset);
+            LOGGER.debug("Grid vertical offset changed: {} -> {}", oldOffset, verticalScrollOffset);
         }
     }
     
@@ -1031,7 +1032,7 @@ public class UIGridBuilder {
                 verticalScrollOffset = maxVerticalScrollOffset;
             }
             
-            System.out.println("UIGridBuilder scrolling: delta=" + delta + ", offset=" + verticalScrollOffset);
+            LOGGER.debug("UIGridBuilder scrolling: delta={}, offset={}", delta, verticalScrollOffset);
             return true;
         }
         
@@ -1271,10 +1272,8 @@ public class UIGridBuilder {
         // Use Math.max to ensure at least 1 row is visible
         int calculatedVisibleRows = Math.max(4, availableHeight / (effectiveRowHeight + this.verticalSpacing));
         
-        System.out.println("Row calculation: availableHeight=" + availableHeight + 
-                           ", effectiveRowHeight=" + effectiveRowHeight + 
-                           ", spacing=" + this.verticalSpacing + 
-                           ", calculatedRows=" + calculatedVisibleRows);
+        LOGGER.debug("Row calculation: availableHeight={}, effectiveRowHeight={}, spacing={}, calculatedRows={}", 
+                    availableHeight, effectiveRowHeight, this.verticalSpacing, calculatedVisibleRows);
         
         // Force vertical scrolling if we have more than 4 rows
         if (totalRows > 4) {
