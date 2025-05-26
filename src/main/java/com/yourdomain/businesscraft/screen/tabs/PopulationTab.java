@@ -9,12 +9,15 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.Minecraft;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Population tab implementation for the Town Interface.
  * Displays citizens and their information with scrolling support.
  */
 public class PopulationTab extends BaseTownTab {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PopulationTab.class);
     private static final int TEXT_COLOR = 0xFFFFFFFF;          // White text
     private static final int TEXT_HIGHLIGHT = 0xFFDDFFFF;      // Light cyan highlight text
     private static final int BACKGROUND_COLOR = 0x80222222;    // Semi-transparent dark gray
@@ -344,7 +347,7 @@ public class PopulationTab extends BaseTownTab {
         // Always forward scroll events to citizenList
         if (citizenList != null) {
             // Log for debugging
-            System.out.println("PopulationTab forwarding scroll: " + delta);
+            LOGGER.debug("PopulationTab forwarding scroll: {}", delta);
             
             // Try with original coordinates first
             if (citizenList.mouseScrolled(mouseX, mouseY, delta)) {
@@ -356,7 +359,7 @@ public class PopulationTab extends BaseTownTab {
                 double adjustedX = mouseX + (i % 3 - 1) * 5; // Try offsets of -5, 0, +5
                 double adjustedY = mouseY + (i / 3 - 1) * 5;
                 if (citizenList.mouseScrolled(adjustedX, adjustedY, delta)) {
-                    System.out.println("PopulationTab scroll succeeded with adjustment " + i);
+                    LOGGER.debug("PopulationTab scroll succeeded with adjustment {}", i);
                     return true;
                 }
             }

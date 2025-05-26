@@ -52,6 +52,8 @@ import com.yourdomain.businesscraft.menu.StorageMenu;
 import com.yourdomain.businesscraft.data.cache.TownDataCache;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
 import java.util.Collections;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The Town Interface Screen showcases the BusinessCraft UI system capabilities.
@@ -100,6 +102,8 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
 
     // State management
     private TownDataCache dataCache;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TownInterfaceScreen.class);
 
     public TownInterfaceScreen(TownInterfaceMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -1025,7 +1029,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
                 }
             } catch (Exception e) {
                 // Log the error but don't crash
-                System.out.println("Error looking up town name for UUID " + townId + ": " + e.getMessage());
+                LOGGER.error("Error looking up town name for UUID {}: {}", townId, e.getMessage());
             }
             
             // Fallback if town not found

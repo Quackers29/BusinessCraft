@@ -3,6 +3,7 @@ package com.yourdomain.businesscraft.block.entity;
 // import com.yourdomain.businesscraft.blocks.ModBlocks;
 // import com.yourdomain.businesscraft.capability.ItemHandlerCapability;
 import com.yourdomain.businesscraft.config.ConfigLoader;
+import com.yourdomain.businesscraft.init.ModBlockEntities;
 import com.yourdomain.businesscraft.menu.TownBlockMenu;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.service.TouristVehicleManager;
@@ -91,7 +92,7 @@ import com.yourdomain.businesscraft.town.utils.TouristUtils;
 import com.yourdomain.businesscraft.town.utils.TouristUtils.TouristInfo;
 import com.yourdomain.businesscraft.town.utils.TouristAllocationTracker;
 import com.yourdomain.businesscraft.entity.TouristEntity;
-import com.yourdomain.businesscraft.entity.ModEntityTypes;
+import com.yourdomain.businesscraft.init.ModEntityTypes;
 import com.yourdomain.businesscraft.town.utils.TownNotificationUtils;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {

@@ -1,7 +1,7 @@
-package com.yourdomain.businesscraft.block.entity;
+package com.yourdomain.businesscraft.init;
 
 import com.yourdomain.businesscraft.BusinessCraft;
-import com.yourdomain.businesscraft.init.ModBlocks;
+import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -16,4 +16,4 @@ public class ModBlockEntities {
                                         () -> BlockEntityType.Builder.of(TownBlockEntity::new,
                                                         ModBlocks.TOWN_BLOCK.get(),
                                                         ModBlocks.TOWN_INTERFACE.get()).build(null));
-}
+} 
