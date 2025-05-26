@@ -88,3 +88,5 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 75. UI, state management, implement time-to-live caching to reduce direct entity/provider access and improve UI responsiveness, with graceful fallbacks
 76. Notification systems, use visit buffers to group notifications by origin instead of sending individual messages, triggering grouped notifications when processing the buffer
 77. Reward systems, calculate payments based on travel distance and process rewards at the visit buffer level to correctly associate grouped tourists with their collective rewards
+78. Registry consolidation, consolidate duplicate DeferredRegister instances into init/ package classes to avoid registration conflicts and update all references to use the consolidated versions
+79. Deprecated code cleanup, remove unused deprecated classes entirely but migrate heavily-used deprecated methods to theme-based alternatives before removing to maintain compatibility

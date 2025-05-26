@@ -92,16 +92,6 @@ public class TownNotificationUtils {
     }
     
     /**
-     * Notifies nearby players when a tourist arrives at a platform
-     * @deprecated Use notifyTouristArrivals for grouped notifications
-     */
-    public static void notifyTouristArrival(ServerLevel level, BlockPos platformPos, 
-                                           String originTownName, String destinationName) {
-        // Use the grouped method with count=1
-        notifyTouristArrivals(level, platformPos, originTownName, destinationName, 1, 0);
-    }
-    
-    /**
      * Notifies nearby players when multiple tourists arrive at a platform
      * 
      * @param level The server level

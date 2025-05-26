@@ -16,6 +16,7 @@ import net.minecraftforge.registries.RegistryObject;
 
 public class ModBlocks {
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, BusinessCraft.MOD_ID);
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, BusinessCraft.MOD_ID);
     
     // Town Block
     public static final RegistryObject<Block> TOWN_BLOCK = registerBlock("town_block",
@@ -41,6 +42,6 @@ public class ModBlocks {
     
     // Helper method to register block items
     private static <T extends Block> void registerBlockItem(String name, RegistryObject<T> block) {
-        BusinessCraft.ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties()));
+        ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties()));
     }
 } 
