@@ -10,8 +10,8 @@ import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -21,7 +21,7 @@ import java.util.function.Predicate;
  * Extracted from TownBlockEntity to create a more modular and maintainable component
  */
 public class TouristVehicleManager {
-    private static final Logger LOGGER = LogManager.getLogger("BusinessCraft/TouristVehicleManager");
+    private static final Logger LOGGER = LoggerFactory.getLogger(TouristVehicleManager.class);
     private static final double VISITOR_POSITION_CHANGE_THRESHOLD = ConfigLoader.INSTANCE.minecartStopThreshold;
     private static final ConfigLoader CONFIG = ConfigLoader.INSTANCE;
     

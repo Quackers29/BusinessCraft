@@ -15,12 +15,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Resources tab implementation for the Town Interface.
  * Displays all town resources in a scrollable grid.
  */
 public class ResourcesTab extends BaseTownTab {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ResourcesTab.class);
     private static final int TEXT_COLOR = 0xFFFFFFFF;          // White text
     private static final int TEXT_HIGHLIGHT = 0xFFDDFFFF;      // Light cyan highlight text
     private static final int BACKGROUND_COLOR = 0x80222222;    // Semi-transparent dark gray
@@ -123,7 +126,7 @@ public class ResourcesTab extends BaseTownTab {
                 // Use the withItemQuantityPairs method to populate the grid
                 grid.withItemQuantityPairs(resourceMap, TEXT_HIGHLIGHT);
                 
-                System.out.println("Resources Tab: Created grid with " + resources.size() + " items");
+                LOGGER.debug("Resources Tab: Created grid with {} items", resources.size());
             }
             
             @Override
@@ -143,7 +146,7 @@ public class ResourcesTab extends BaseTownTab {
                     int scrollAmount = delta > 0 ? 1 : -1;
                     
                     // Apply scrolling to the grid - log for debugging
-                    System.out.println("Resources Tab processing scroll in component: " + scrollAmount);
+                    LOGGER.debug("Resources Tab processing scroll in component: {}", scrollAmount);
                     
                     // Always force scroll processing even if cursor isn't directly over grid
                     // This ensures consistent behavior with middle mouse wheel
@@ -172,7 +175,7 @@ public class ResourcesTab extends BaseTownTab {
         // Always forward scroll events to resourceListHost regardless of mouse position
         if (resourceListHost != null) {
             // Log for debugging
-            System.out.println("ResourcesTab forwarding scroll: " + delta);
+            LOGGER.debug("ResourcesTab forwarding scroll: {}", delta);
             
             // Try with original coordinates first
             if (resourceListHost.mouseScrolled(mouseX, mouseY, delta)) {
@@ -185,7 +188,7 @@ public class ResourcesTab extends BaseTownTab {
                 double adjustedX = mouseX + (i % 3 - 1) * 5; // Try offsets of -5, 0, +5
                 double adjustedY = mouseY + (i / 3 - 1) * 5;
                 if (resourceListHost.mouseScrolled(adjustedX, adjustedY, delta)) {
-                    System.out.println("ResourcesTab scroll succeeded with adjustment " + i);
+                    LOGGER.debug("ResourcesTab scroll succeeded with adjustment {}", i);
                     return true;
                 }
             }

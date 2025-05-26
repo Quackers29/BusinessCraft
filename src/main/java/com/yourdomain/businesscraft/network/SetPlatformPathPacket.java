@@ -8,8 +8,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.network.ModMessages;
 import net.minecraft.world.level.Level;
@@ -19,7 +19,7 @@ import com.yourdomain.businesscraft.platform.Platform;
  * Packet for setting a platform's path
  */
 public class SetPlatformPathPacket {
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LoggerFactory.getLogger(SetPlatformPathPacket.class);
     private final BlockPos blockPos;
     private final UUID platformId;
     private final BlockPos startPos;
@@ -75,8 +75,7 @@ public class SetPlatformPathPacket {
                     // Update start and end positions
                     platform.setStartPos(startPos);
                     platform.setEndPos(endPos);
-                    System.out.println("Updated platform " + platformId + " path from " + 
-                        startPos + " to " + endPos);
+                    LOGGER.info("Updated platform {} path from {} to {}", platformId, startPos, endPos);
                     
                     // Sync the town block
                     townBlock.setChanged();
