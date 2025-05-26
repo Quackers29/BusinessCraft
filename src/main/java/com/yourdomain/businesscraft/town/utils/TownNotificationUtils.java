@@ -98,7 +98,7 @@ public class TownNotificationUtils {
     public static void notifyTouristArrival(ServerLevel level, BlockPos platformPos, 
                                            String originTownName, String destinationName) {
         // Use the grouped method with count=1
-        notifyTouristArrivals(level, platformPos, originTownName, destinationName, 1);
+        notifyTouristArrivals(level, platformPos, originTownName, destinationName, 1, 0);
     }
     
     /**
@@ -112,14 +112,42 @@ public class TownNotificationUtils {
      */
     public static void notifyTouristArrivals(ServerLevel level, BlockPos platformPos, 
                                            String originTownName, String destinationName, int count) {
+        notifyTouristArrivals(level, platformPos, originTownName, destinationName, count, 0);
+    }
+    
+    /**
+     * Notifies nearby players when multiple tourists arrive at a platform, including payment information
+     * 
+     * @param level The server level
+     * @param platformPos The position of the town/platform
+     * @param originTownName The name of the origin town
+     * @param destinationName The name of the destination town
+     * @param count The number of tourists that arrived
+     * @param payment The amount of emeralds paid by tourists
+     */
+    public static void notifyTouristArrivals(ServerLevel level, BlockPos platformPos, 
+                                           String originTownName, String destinationName, 
+                                           int count, int payment) {
         // Format different messages based on count
         Component message;
         if (count == 1) {
-            message = Component.literal("A tourist from " + originTownName + " has arrived at " + destinationName + "!")
-                .withStyle(ChatFormatting.GREEN);
+            if (payment > 0) {
+                message = Component.literal("A tourist from " + originTownName + " has arrived at " + destinationName + 
+                    ", paying " + payment + " emeralds!")
+                    .withStyle(ChatFormatting.GREEN);
+            } else {
+                message = Component.literal("A tourist from " + originTownName + " has arrived at " + destinationName + "!")
+                    .withStyle(ChatFormatting.GREEN);
+            }
         } else {
-            message = Component.literal(count + " tourists from " + originTownName + " have arrived at " + destinationName + "!")
-                .withStyle(ChatFormatting.GREEN);
+            if (payment > 0) {
+                message = Component.literal(count + " tourists from " + originTownName + " have arrived at " + 
+                    destinationName + ", paying " + payment + " emeralds!")
+                    .withStyle(ChatFormatting.GREEN);
+            } else {
+                message = Component.literal(count + " tourists from " + originTownName + " have arrived at " + destinationName + "!")
+                    .withStyle(ChatFormatting.GREEN);
+            }
         }
         
         // Find nearby players to notify
@@ -131,9 +159,19 @@ public class TownNotificationUtils {
         
         // Log the event
         if (count == 1) {
-            LOGGER.info("Tourist from {} arrived at {}", originTownName, destinationName);
+            if (payment > 0) {
+                LOGGER.info("Tourist from {} arrived at {}, paying {} emeralds", 
+                    originTownName, destinationName, payment);
+            } else {
+                LOGGER.info("Tourist from {} arrived at {}", originTownName, destinationName);
+            }
         } else {
-            LOGGER.info("{} tourists from {} arrived at {}", count, originTownName, destinationName);
+            if (payment > 0) {
+                LOGGER.info("{} tourists from {} arrived at {}, paying {} emeralds", 
+                    count, originTownName, destinationName, payment);
+            } else {
+                LOGGER.info("{} tourists from {} arrived at {}", count, originTownName, destinationName);
+            }
         }
     }
     

@@ -6,6 +6,5 @@
 .env
 .env.local
 .gradle/
-run/
 build/
 bin/

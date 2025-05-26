@@ -199,18 +199,39 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         private static class VisitorInfo {
             final int count;
             final BlockPos originPos;
+            double totalDistance;
             
             public VisitorInfo(int count, BlockPos originPos) {
                 this.count = count;
                 this.originPos = originPos;
+                this.totalDistance = 0;
             }
             
             public VisitorInfo incrementCount() {
                 return new VisitorInfo(count + 1, originPos);
             }
+            
+            public VisitorInfo addDistance(double distance) {
+                this.totalDistance += distance;
+                return this;
+            }
+            
+            public double getAverageDistance() {
+                return count > 0 ? totalDistance / count : 0;
+            }
+            
+            @Override
+            public String toString() {
+                return "VisitorInfo{count=" + count + 
+                    ", originPos=" + originPos + 
+                    ", totalDistance=" + totalDistance + 
+                    ", avgDistance=" + getAverageDistance() + "}";
+            }
         }
         
         private final Map<UUID, VisitorInfo> visitors = new HashMap<>();
+        // Add a map to store distances that persists after processing
+        private final Map<UUID, Double> distanceMap = new HashMap<>();
         private long lastVisitTime = 0;
         private static final long BUFFER_TIMEOUT_MS = 1000; // 1 second timeout
 
@@ -226,6 +247,38 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             
             lastVisitTime = System.currentTimeMillis();
         }
+        
+        public void updateVisitorDistance(UUID townId, double distance) {
+            visitors.computeIfPresent(townId, (id, info) -> info.addDistance(distance));
+        }
+        
+        public double getAverageDistance(UUID townId) {
+            // First check the visitor buffer
+            VisitorInfo info = visitors.get(townId);
+            if (info != null && info.getAverageDistance() > 0) {
+                return info.getAverageDistance();
+            }
+            // If not found or zero, check the persistent distance map
+            return distanceMap.getOrDefault(townId, 0.0);
+        }
+        
+        // Add method to get visitor count
+        public int getVisitorCount() {
+            return visitors.size();
+        }
+        
+        // Add a detailed toString method for debugging
+        @Override
+        public String toString() {
+            return "VisitBuffer{visitors=" + 
+                visitors.entrySet().stream()
+                    .map(e -> e.getKey() + "=" + e.getValue().count + 
+                        ", distance=" + e.getValue().totalDistance + 
+                        ", avgDist=" + e.getValue().getAverageDistance())
+                    .collect(Collectors.joining("; ")) +
+                ", distanceMap=" + distanceMap +
+                ", lastVisitTime=" + lastVisitTime + "}";
+        }
 
         public boolean shouldProcess() {
             return !visitors.isEmpty() && 
@@ -234,6 +287,17 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
         public List<VisitHistoryRecord> processVisits() {
             if (visitors.isEmpty()) return Collections.emptyList();
+            
+            LOGGER.info("VISIT BUFFER - Processing visits: {}", this.toString());
+            
+            // Store distances in the persistent map before clearing the buffer
+            visitors.forEach((townId, info) -> {
+                double avgDistance = info.getAverageDistance();
+                if (avgDistance > 0) {
+                    distanceMap.put(townId, avgDistance);
+                    LOGGER.info("VISIT BUFFER - Storing distance for townId {}: {}", townId, avgDistance);
+                }
+            });
             
             long now = System.currentTimeMillis();
             List<VisitHistoryRecord> records = visitors.entrySet().stream()
@@ -245,9 +309,18 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 ))
                 .collect(Collectors.toList());
                 
-            // Clear the buffer
+            // Clear the visitors buffer but keep the distanceMap
             visitors.clear();
+            
+            LOGGER.info("VISIT BUFFER - After clearing: {}", this.toString());
+            
             return records;
+        }
+        
+        // Add a method to clear saved distances after they're used
+        public void clearSavedDistance(UUID townId) {
+            Double removed = distanceMap.remove(townId);
+            LOGGER.info("VISIT BUFFER - Cleared saved distance for townId {}: {}", townId, removed != null ? removed : 0);
         }
     }
 
@@ -660,14 +733,21 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                         BlockPos originPos = new BlockPos(touristInfo.originX, touristInfo.originY, touristInfo.originZ);
                         visitBuffer.addVisitor(UUID.fromString(touristInfo.originTownId), originPos);
 
-                        // Calculate distance and XP
+                        // Calculate distance - we'll use this for rewards later
                         double distance = Math.sqrt(villager.blockPosition().distSqr(this.getBlockPos()));
-                        int xpAmount = Math.max(1, (int)(distance / 10));
-
-                        ExperienceOrb xpOrb = new ExperienceOrb(level,
-                                villager.getX(), villager.getY(), villager.getZ(),
-                                xpAmount);
-                        level.addFreshEntity(xpOrb);
+                        
+                        // Add detailed distance logging
+                        LOGGER.info("TOURIST DISTANCE - Town: {}, From: {}, Tourist position: {}, Town position: {}, Calculated distance: {}", 
+                            this.name, touristInfo.originTownName, 
+                            villager.blockPosition(), this.getBlockPos(), distance);
+                        
+                        // Store the distance in the visitor info for later payment calculation
+                        visitBuffer.updateVisitorDistance(UUID.fromString(touristInfo.originTownId), distance);
+                        
+                        // Verify the distance was stored
+                        double storedDistance = visitBuffer.getAverageDistance(UUID.fromString(touristInfo.originTownId));
+                        LOGGER.info("TOURIST DISTANCE - After storing: townId: {}, storedDistance: {}", 
+                            touristInfo.originTownId, storedDistance);
 
                         // Find the origin town and decrement its tourist count
                         if (level instanceof ServerLevel serverLevel) {
@@ -714,7 +794,59 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                                 thisTown.addVisitor(record.getOriginTownId());
                             }
                             
-                            // Send grouped notification
+                            // Calculate payment based on travel distance
+                            int payment = 0;
+                            double averageDistance = visitBuffer.getAverageDistance(record.getOriginTownId());
+                            
+                            // Add detailed distance debugging
+                            LOGGER.info("PAYMENT CALCULATION - VisitBuffer state: {}", 
+                                visitBuffer.toString());
+                            LOGGER.info("PAYMENT CALCULATION - Processing visitor from townId: {}, Visitors stored in buffer: {}, Average distance: {}", 
+                                record.getOriginTownId(), visitBuffer.getVisitorCount(), averageDistance);
+                                
+                            if (averageDistance > 0) {
+                                // Calculate emeralds based on distance traveled and meters per emerald rate
+                                LOGGER.info("Tourist payment calculation: averageDistance={}, metersPerEmerald={}, touristCount={}", 
+                                    averageDistance, ConfigLoader.metersPerEmerald, record.getCount());
+                                
+                                payment = (int) Math.max(1, (averageDistance / ConfigLoader.metersPerEmerald) * record.getCount());
+                                LOGGER.info("Calculated payment: {} emeralds (distance={}, rate=1 per {} meters)", 
+                                    payment, averageDistance, ConfigLoader.metersPerEmerald);
+                                
+                                // Add emeralds to communal storage
+                                if (payment > 0) {
+                                    // Add more detailed logging
+                                    LOGGER.info("TOURIST PAYMENT - Attempting to add {} emeralds to {} communal storage",
+                                        payment, thisTown.getName());
+                                        
+                                    // Print current storage before update
+                                    Map<Item, Integer> beforeItems = thisTown.getAllCommunalStorageItems();
+                                    LOGGER.info("BEFORE payment - Communal storage for {}: {}", thisTown.getName(), 
+                                        beforeItems.entrySet().stream()
+                                            .map(e -> e.getKey().getDescription().getString() + ": " + e.getValue())
+                                            .collect(Collectors.joining(", ")));
+                                    
+                                    boolean success = thisTown.addToCommunalStorage(net.minecraft.world.item.Items.EMERALD, payment);
+                                    
+                                    LOGGER.info("TOURIST PAYMENT - Added {} emeralds to {} communal storage - success: {}", 
+                                        payment, thisTown.getName(), success);
+                                        
+                                    // Print the current communal storage content
+                                    Map<Item, Integer> communalItems = thisTown.getAllCommunalStorageItems();
+                                    LOGGER.info("AFTER payment - Communal storage for {}: {}", thisTown.getName(), 
+                                        communalItems.entrySet().stream()
+                                            .map(e -> e.getKey().getDescription().getString() + ": " + e.getValue())
+                                            .collect(Collectors.joining(", ")));
+                                }
+                                
+                                // Clear the saved distance after using it
+                                visitBuffer.clearSavedDistance(record.getOriginTownId());
+                            } else {
+                                LOGGER.warn("No distance recorded for tourists from {}, skipping payment", 
+                                    record.getOriginTownId());
+                            }
+                            
+                            // Send grouped notification with payment information
                             if (level instanceof ServerLevel serverLevel && ConfigLoader.notifyOnTouristDeparture) {
                                 String originTownName = resolveTownName(record.getOriginTownId());
                                 TownNotificationUtils.notifyTouristArrivals(
@@ -722,7 +854,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                                     worldPosition,
                                     originTownName,
                                     name,
-                                    record.getCount()
+                                    record.getCount(),
+                                    payment
                                 );
                             }
                         } catch (Exception e) {
