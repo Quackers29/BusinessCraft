@@ -98,3 +98,5 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 85. Platform management refactoring, extract platform CRUD operations into manager classes with callback patterns for change notifications to reduce BlockEntity complexity
 86. Particle visualization refactoring, when extracting particle effects ensure the correct particle types and visualization patterns are preserved (FLAME for radius, rectangular perimeter vs circles)
 87. Visitor processing refactoring, extract complex visitor detection and payment logic into helper classes with callback patterns for state changes to reduce BlockEntity complexity
+88. Client sync refactoring, extract client-server synchronization logic into helper classes but ensure setChanged() refreshes client cache from server data before syncing to prevent stale data
+89. Visitor buffer callback timing, when extracting visitor processing ensure callbacks are triggered after ALL operations complete (including visit buffer processing) not just individual visitor processing
