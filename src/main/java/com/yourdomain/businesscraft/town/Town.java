@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Collections;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import java.util.stream.Collectors;
 
 public class Town implements ITownDataProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(Town.class);
@@ -499,15 +500,27 @@ public class Town implements ITownDataProvider {
         // Find the TownManager for all loaded levels and mark the town data as dirty
         net.minecraft.server.MinecraftServer server = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
         if (server != null) {
-            server.getAllLevels().forEach(level -> {
+            boolean foundInAnyLevel = false;
+            for (net.minecraft.world.level.Level level : server.getAllLevels()) {
                 if (level instanceof net.minecraft.server.level.ServerLevel) {
                     net.minecraft.server.level.ServerLevel serverLevel = (net.minecraft.server.level.ServerLevel) level;
                     TownManager manager = TownManager.get(serverLevel);
                     if (manager.getTown(id) == this) {
                         manager.markDirty();
+                        foundInAnyLevel = true;
+                        LOGGER.debug("Successfully marked town '{}' (id: {}) as dirty in level {}", 
+                            this.name, this.id, serverLevel.dimension().location());
                     }
                 }
-            });
+            }
+            
+            if (!foundInAnyLevel) {
+                LOGGER.warn("Failed to mark town '{}' (id: {}) as dirty - not found in any loaded level", 
+                    this.name, this.id);
+            }
+        } else {
+            LOGGER.warn("Failed to mark town '{}' (id: {}) as dirty - server is null", 
+                this.name, this.id);
         }
     }
     
@@ -551,6 +564,9 @@ public class Town implements ITownDataProvider {
     public boolean addToCommunalStorage(Item item, int count) {
         if (count == 0) return true;
         
+        LOGGER.info("STORAGE UPDATE - Town '{}' - Attempting to add {} {} to communal storage", 
+            this.name, count, item.getDescription().getString());
+        
         // Get current amount
         int currentAmount = communalStorage.getOrDefault(item, 0);
         int newAmount = currentAmount + count;
@@ -565,14 +581,23 @@ public class Town implements ITownDataProvider {
         // Update storage
         if (newAmount > 0) {
             communalStorage.put(item, newAmount);
-            LOGGER.debug("Updated communal storage: {} {} (now {})", 
+            LOGGER.info("STORAGE UPDATE - Town '{}' - Updated communal storage: {} {} (now {})", 
+                this.name,
                 count > 0 ? "Added" : "Removed", 
                 Math.abs(count) + " " + item.getDescription().getString(),
                 newAmount);
+                
+            // Print current storage contents
+            LOGGER.info("STORAGE UPDATE - Town '{}' - Current communal storage contents: {}", 
+                this.name,
+                communalStorage.entrySet().stream()
+                    .map(e -> e.getKey().getDescription().getString() + ": " + e.getValue())
+                    .collect(Collectors.joining(", ")));
         } else {
             // Remove the entry if amount is zero
             communalStorage.remove(item);
-            LOGGER.debug("Removed {} from communal storage (empty)", item.getDescription().getString());
+            LOGGER.info("STORAGE UPDATE - Town '{}' - Removed {} from communal storage (empty)", 
+                this.name, item.getDescription().getString());
         }
         
         // Mark town as dirty to save changes
