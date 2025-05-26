@@ -104,7 +104,7 @@ public class VisitorProcessingHelper {
         
         // Process the visit buffer if it's ready
         if (visitBuffer.shouldProcess()) {
-            processVisitBuffer(visitBuffer, provider, thisTown, serverLevel, townBlockPos, townName);
+            processVisitBuffer(visitBuffer, provider, thisTown, serverLevel, townBlockPos, townName, changeCallback);
         }
     }
     
@@ -207,7 +207,7 @@ public class VisitorProcessingHelper {
      * Processes the visit buffer when ready, handling payments and notifications
      */
     private void processVisitBuffer(VisitBuffer visitBuffer, ITownDataProvider provider, Town thisTown, 
-                                   ServerLevel serverLevel, BlockPos townBlockPos, String townName) {
+                                   ServerLevel serverLevel, BlockPos townBlockPos, String townName, Runnable changeCallback) {
         
         List<ITownDataProvider.VisitHistoryRecord> newVisits = visitBuffer.processVisits();
         if (newVisits.isEmpty()) return;
@@ -229,6 +229,10 @@ public class VisitorProcessingHelper {
                 // Add emeralds to communal storage if payment > 0
                 if (payment > 0) {
                     addPaymentToTown(thisTown, payment);
+                    // Trigger callback to update client sync after emeralds are added
+                    if (changeCallback != null) {
+                        changeCallback.run();
+                    }
                 }
                 
                 // Send grouped notification with payment information

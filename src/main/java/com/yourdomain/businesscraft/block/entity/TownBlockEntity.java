@@ -97,6 +97,7 @@ import com.yourdomain.businesscraft.town.data.PlatformVisualizationHelper;
 import com.yourdomain.businesscraft.town.data.TouristSpawningHelper;
 import com.yourdomain.businesscraft.town.data.PlatformManager;
 import com.yourdomain.businesscraft.town.data.VisitorProcessingHelper;
+import com.yourdomain.businesscraft.town.data.ClientSyncHelper;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -185,23 +186,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     // Add a new TouristVehicleManager instance
     private final TouristVehicleManager touristVehicleManager = new TouristVehicleManager();
 
-    // Client-side caches for resource data
-    private final Map<Item, Integer> clientResources = new HashMap<>();
-    
-    // Client-side cache for communal storage
-    private final Map<Item, Integer> clientCommunalStorage = new HashMap<>();
-    
-    // Client-side cache for personal storage (player UUID -> items)
-    private final Map<UUID, Map<Item, Integer>> clientPersonalStorage = new HashMap<>();
-
     // History buffer storage
     private final VisitBuffer visitBuffer = new VisitBuffer();
-    
-    // Client-side history cache
-    private List<VisitHistoryRecord> clientVisitHistory = new ArrayList<>();
 
-    // Add a client-side town name cache
-    private final Map<UUID, String> townNameCache = new HashMap<>();
+    // Client-server synchronization helper (handles all client caching and sync logic)
+    private final ClientSyncHelper clientSyncHelper = new ClientSyncHelper();
 
     // Platform management (handles platform storage and operations)
     private final PlatformManager platformManager = new PlatformManager();
@@ -553,6 +542,13 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public void setChanged() {
         super.setChanged();
         if (level != null && !level.isClientSide()) {
+            // Update client cache from town data before syncing to ensure latest data is sent
+            if (townId != null && level instanceof ServerLevel serverLevel) {
+                Town town = TownManager.get(serverLevel).getTown(townId);
+                if (town != null) {
+                    clientSyncHelper.updateClientResourcesFromTown(town);
+                }
+            }
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
         }
     }
@@ -588,29 +584,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private void syncResourcesForClient(CompoundTag tag) {
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
-            // Create a resources tag
-            CompoundTag resourcesTag = new CompoundTag();
-            
-            // Add all resources to the tag
-            provider.getAllResources().forEach((item, count) -> {
-                String itemKey = ForgeRegistries.ITEMS.getKey(item).toString();
-                resourcesTag.putInt(itemKey, count);
-            });
-            
-            // Add resources tag to the update tag
-            tag.put("clientResources", resourcesTag);
-            
-            // Add communal storage data
-            CompoundTag communalTag = new CompoundTag();
-            provider.getAllCommunalStorageItems().forEach((item, count) -> {
-                String itemKey = ForgeRegistries.ITEMS.getKey(item).toString();
-                communalTag.putInt(itemKey, count);
-            });
-            tag.put("clientCommunalStorage", communalTag);
+            clientSyncHelper.syncResourcesForClient(tag, provider);
         }
         
         // Add visit history data
-        syncVisitHistoryForClient(tag);
+        clientSyncHelper.syncVisitHistoryForClient(tag, provider, level);
     }
 
     @Override
@@ -633,7 +611,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         loadResourcesFromTag(tag);
         
         // Load visit history data
-        loadVisitHistoryFromTag(tag);
+        clientSyncHelper.loadVisitHistoryFromTag(tag);
     }
     
     /**
@@ -641,48 +619,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
      * This centralizes our resource deserialization logic in one place
      */
     private void loadResourcesFromTag(CompoundTag tag) {
-        if (tag.contains("clientResources")) {
-            CompoundTag resourcesTag = tag.getCompound("clientResources");
-            
-            // Clear previous resources
-            clientResources.clear();
-            
-            // Load all resources from the tag
-            for (String key : resourcesTag.getAllKeys()) {
-                try {
-                    ResourceLocation resourceLocation = new ResourceLocation(key);
-                    Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
-                    if (item != null && item != Items.AIR) {
-                        int count = resourcesTag.getInt(key);
-                        clientResources.put(item, count);
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("Error loading client resource: {}", key, e);
-                }
-            }
-        }
-        
-        // Load communal storage data
-        if (tag.contains("clientCommunalStorage")) {
-            CompoundTag communalTag = tag.getCompound("clientCommunalStorage");
-            
-            // Clear previous communal storage
-            clientCommunalStorage.clear();
-            
-            // Load all communal storage items from the tag
-            for (String key : communalTag.getAllKeys()) {
-                try {
-                    ResourceLocation resourceLocation = new ResourceLocation(key);
-                    Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
-                    if (item != null && item != Items.AIR) {
-                        int count = communalTag.getInt(key);
-                        clientCommunalStorage.put(item, count);
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("Error loading client communal storage item: {}", key, e);
-                }
-            }
-        }
+        clientSyncHelper.loadResourcesFromTag(tag);
     }
 
     @Override
@@ -779,19 +716,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     if (level instanceof ServerLevel serverLevel) {
                         Town town = TownManager.get(serverLevel).getTown(townId);
                         if (town != null) {
-                            // Update client resources from the town (make sure emeralds are properly reflected)
-                            clientResources.clear();
-                            town.getAllResources().forEach((item, count) -> {
-                                clientResources.put(item, count);
-                            });
-                            LOGGER.debug("Updated client resources from town during sync, resources count: {}", clientResources.size());
-                            
-                            // Update client communal storage from the town
-                            clientCommunalStorage.clear();
-                            town.getAllCommunalStorageItems().forEach((item, count) -> {
-                                clientCommunalStorage.put(item, count);
-                            });
-                            LOGGER.debug("Updated client communal storage from town during sync, storage count: {}", clientCommunalStorage.size());
+                            clientSyncHelper.updateClientResourcesFromTown(town);
                         }
                     }
                 }
@@ -975,9 +900,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         super.setRemoved();
         touristVehicleManager.clearTrackedVehicles();
         visitorProcessingHelper.clearAll();
+        clientSyncHelper.clearAll();
         // Clear platform indicators
         platformIndicatorSpawnTimes.clear();
-        LOGGER.debug("Cleared visitor position tracking and platform indicators on block removal");
+        LOGGER.debug("Cleared visitor position tracking, client caches, and platform indicators on block removal");
     }
 
     /**
@@ -985,7 +911,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
      * @return Map of resources
      */
     public Map<Item, Integer> getClientResources() {
-        return clientResources;
+        return clientSyncHelper.getClientResources();
     }
     
     /**
@@ -993,7 +919,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
      * @return Map of communal storage items
      */
     public Map<Item, Integer> getClientCommunalStorage() {
-        return clientCommunalStorage;
+        return clientSyncHelper.getClientCommunalStorage();
     }
     
     /**
@@ -1002,7 +928,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
      * @return Map of personal storage items for that player
      */
     public Map<Item, Integer> getClientPersonalStorage(UUID playerId) {
-        return clientPersonalStorage.getOrDefault(playerId, Collections.emptyMap());
+        return clientSyncHelper.getClientPersonalStorage(playerId);
     }
     
     /**
@@ -1011,17 +937,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
      * @param items Map of items in the player's personal storage
      */
     public void updateClientPersonalStorage(UUID playerId, Map<Item, Integer> items) {
-        if (playerId == null) return;
-        
-        // Clear existing items for this player
-        Map<Item, Integer> playerItems = clientPersonalStorage.computeIfAbsent(playerId, k -> new HashMap<>());
-        playerItems.clear();
-        
-        // Add all the new items
-        playerItems.putAll(items);
-        
-        LOGGER.debug("Updated client personal storage cache for player {} with {} items", 
-            playerId, items.size());
+        clientSyncHelper.updateClientPersonalStorage(playerId, items);
     }
 
     /**
@@ -1036,160 +952,12 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
      * Gets the visit history for client-side display
      */
     public List<VisitHistoryRecord> getVisitHistory() {
-        if (level != null && level.isClientSide()) {
-            return Collections.unmodifiableList(clientVisitHistory);
-        } else {
-                ITownDataProvider provider = getTownDataProvider();
-                if (provider != null) {
-                return provider.getVisitHistory();
-            }
-            return Collections.emptyList();
-        }
+        return clientSyncHelper.getVisitHistory(level, getTownDataProvider());
     }
     
-    /**
-     * Adds visit history data to the provided tag for client-side rendering
-     */
-    private void syncVisitHistoryForClient(CompoundTag tag) {
-        ITownDataProvider provider = getTownDataProvider();
-        if (provider == null) return;
-        
-        List<VisitHistoryRecord> history = provider.getVisitHistory();
-        if (history.isEmpty()) return;
-        
-        ListTag historyTag = new ListTag();
-        for (VisitHistoryRecord record : history) {
-            CompoundTag visitTag = new CompoundTag();
-            visitTag.putLong("timestamp", record.getTimestamp());
-            
-            // Store both UUID and resolved name for client display
-            if (record.getOriginTownId() != null) {
-                UUID townId = record.getOriginTownId();
-                visitTag.putUUID("townId", townId);
-                
-                // Resolve town name using the centralized method
-                String townName = resolveTownName(townId, true);
-                visitTag.putString("townName", townName);
-            }
-            
-            visitTag.putInt("count", record.getCount());
-            
-            // Add origin position
-            if (record.getOriginPos() != null && record.getOriginPos() != BlockPos.ZERO) {
-                CompoundTag posTag = new CompoundTag();
-                posTag.putInt("x", record.getOriginPos().getX());
-                posTag.putInt("y", record.getOriginPos().getY());
-                posTag.putInt("z", record.getOriginPos().getZ());
-                visitTag.put("pos", posTag);
-            }
-            
-            historyTag.add(visitTag);
-        }
-        tag.put("visitHistory", historyTag);
-    }
-    
-    /**
-     * Loads visit history from the provided tag into the client-side cache
-     */
-    private void loadVisitHistoryFromTag(CompoundTag tag) {
-        if (tag.contains("visitHistory")) {
-            ListTag historyTag = tag.getList("visitHistory", Tag.TAG_COMPOUND);
-            
-            // Clear previous history
-            clientVisitHistory.clear();
-            
-            // Load all history entries
-            for (int i = 0; i < historyTag.size(); i++) {
-                CompoundTag visitTag = historyTag.getCompound(i);
-                
-                long timestamp = visitTag.getLong("timestamp");
-                int count = visitTag.getInt("count");
-                
-                // Handle both old and new formats
-                UUID townId = null;
-                if (visitTag.contains("townId")) {
-                    townId = visitTag.getUUID("townId");
-                } else {
-                    // Fallback to legacy format
-                    LOGGER.warn("Found legacy visit history format without townId");
-                    continue;
-                }
-                
-                // Store the pre-resolved town name from the server in a client field
-                if (visitTag.contains("townName")) {
-                    String townName = visitTag.getString("townName");
-                    // Only log when a town name is added for the first time
-                    if (!townNameCache.containsKey(townId)) {
-                        LOGGER.debug("Loaded town name for {}: {}", townId, townName);
-                    }
-                    // Store the name in a map for client-side lookup
-                    townNameCache.put(townId, townName);
-                } else {
-                    LOGGER.warn("Missing town name for visit record with ID {}", townId);
-                    // If no name is provided, use a fallback
-                    townNameCache.put(townId, "Town-" + townId.toString().substring(0, 8));
-                }
-                
-                BlockPos originPos = BlockPos.ZERO;
-                if (visitTag.contains("pos")) {
-                    CompoundTag posTag = visitTag.getCompound("pos");
-                    originPos = new BlockPos(
-                        posTag.getInt("x"),
-                        posTag.getInt("y"),
-                        posTag.getInt("z")
-                    );
-                }
-                
-                // Create the visit record
-                clientVisitHistory.add(new VisitHistoryRecord(timestamp, townId, count, originPos));
-            }
-        }
-    }
-
-    /**
-     * Resolves a town name from its UUID with flexible behavior for client/server contexts
-     * @param townId The UUID of the town to resolve
-     * @param logResolveFailure Whether to log when resolution fails
-     * @return The resolved name or a fallback
-     */
-    private String resolveTownName(UUID townId, boolean logResolveFailure) {
-        if (townId == null) return "Unknown";
-        
-        // For server-side or forced server-side lookup
-        if (!level.isClientSide()) {
-            if (level instanceof ServerLevel serverLevel) {
-                Town town = TownManager.get(serverLevel).getTown(townId);
-                if (town != null) {
-                    return town.getName();
-                } else if (logResolveFailure) {
-                    LOGGER.warn("Could not resolve town name for {}", townId);
-                }
-            }
-            return "Unknown Town";
-        }
-        
-        // For client-side lookup
-        if (townNameCache.containsKey(townId)) {
-            String cachedName = townNameCache.get(townId);
-            if (cachedName != null && !cachedName.isEmpty()) {
-                return cachedName;
-            }
-        }
-        
-        // Fallback for client-side with no cache
-        return "Town-" + townId.toString().substring(0, 8);
-    }
-
-    // Helper method to resolve town name from UUID - simplified version for backward compatibility
-    private String resolveTownName(UUID townId) {
-        return resolveTownName(townId, false);
-    }
-
     // Helper method to get town name from client cache or resolve from server
     public String getTownNameFromId(UUID townId) {
-        if (townId == null) return "Unknown";
-        
-        return resolveTownName(townId, level != null && !level.isClientSide());
+        return clientSyncHelper.getTownNameFromId(townId, level);
     }
 
     /**
