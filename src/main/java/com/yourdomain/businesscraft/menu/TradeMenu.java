@@ -1,6 +1,7 @@
 package com.yourdomain.businesscraft.menu;
 
 import com.yourdomain.businesscraft.BusinessCraft;
+import com.yourdomain.businesscraft.init.ModMenuTypes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -36,18 +37,6 @@ public class TradeMenu extends AbstractContainerMenu {
     public static final int SLOT_OUTPUT_X = 116;
     public static final int SLOT_OUTPUT_Y = 36;
     
-    // Register for the menu type
-    public static final DeferredRegister<MenuType<?>> MENUS = 
-            DeferredRegister.create(ForgeRegistries.MENU_TYPES, BusinessCraft.MOD_ID);
-    
-    @SuppressWarnings("unchecked")
-    public static final RegistryObject<MenuType<TradeMenu>> TRADE_MENU =
-            MENUS.register("trade_menu", () -> {
-                return (MenuType<TradeMenu>) net.minecraftforge.common.extensions.IForgeMenuType.create(
-                    (windowId, inv, data) -> new TradeMenu(windowId, inv, new ItemStackHandler(INVENTORY_SIZE))
-                );
-            });
-    
     // Constructor for client-side creation
     public TradeMenu(int containerId, Inventory playerInventory) {
         this(containerId, playerInventory, new ItemStackHandler(INVENTORY_SIZE));
@@ -70,7 +59,7 @@ public class TradeMenu extends AbstractContainerMenu {
     
     // Main constructor
     public TradeMenu(int containerId, Inventory playerInventory, IItemHandler tradeInventory) {
-        super(TRADE_MENU.get(), containerId);
+        super(ModMenuTypes.TRADE_MENU.get(), containerId);
         
         // Create the trade inventory if it doesn't exist
         if (tradeInventory instanceof ItemStackHandler) {

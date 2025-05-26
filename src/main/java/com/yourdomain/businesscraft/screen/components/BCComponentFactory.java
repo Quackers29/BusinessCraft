@@ -1,17 +1,19 @@
 package com.yourdomain.businesscraft.screen.components;
 
+import com.yourdomain.businesscraft.screen.components.BCFlowLayout;
+import com.yourdomain.businesscraft.screen.components.BCGridLayout;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
+
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Factory class for creating common BusinessCraft UI components with consistent styling.
- * This factory ensures all components follow the same design language and color scheme.
+ * Factory class for creating BusinessCraft UI components with consistent styling.
  */
 public class BCComponentFactory {
-    // Color constants for consistent styling
+    // Theme-based color constants
     private static final int PRIMARY_COLOR = 0xA0335599;       // Semi-transparent blue
     private static final int SECONDARY_COLOR = 0xA0884466;     // Semi-transparent purple
     private static final int SUCCESS_COLOR = 0xA0339944;       // Semi-transparent green
@@ -20,28 +22,15 @@ public class BCComponentFactory {
     private static final int BORDER_COLOR = 0xA0AAAAAA;        // Light gray
     private static final int TEXT_COLOR = 0xFFFFFFFF;          // White text
     private static final int TEXT_HIGHLIGHT = 0xFFDDFFFF;      // Light cyan highlight text
-    
-    // Standard dimension constants
+
+    // Sizing constants
     private static final int STANDARD_BUTTON_HEIGHT = 20;
     private static final int SMALL_BUTTON_HEIGHT = 16;
     private static final int LARGE_BUTTON_HEIGHT = 24;
     private static final int STANDARD_PADDING = 8;
     private static final int SMALL_PADDING = 4;
     private static final int LARGE_PADDING = 12;
-    
-    // Deprecated constants kept for backwards compatibility
-    @Deprecated
-    public static final int TEXT_LIGHT = 0xFFFFFF;
-    
-    @Deprecated
-    public static final int TEXT_DARK = 0x333333;
-    
-    @Deprecated
-    public static final int TEXT_MUTED = 0x999999;
-    
-    @Deprecated
-    public static final int BUTTON_HEIGHT = STANDARD_BUTTON_HEIGHT;
-    
+
     /**
      * Creates a primary button with consistent styling.
      * 
@@ -111,27 +100,45 @@ public class BCComponentFactory {
         return button;
     }
     
-    @Deprecated
+    /**
+     * Creates a header label with consistent styling using the theme system.
+     * 
+     * @param translationKey The translation key for the label text
+     * @param width The width of the label
+     * @return A styled header label
+     */
     public static BCLabel createHeaderLabel(String translationKey, int width) {
         BCLabel label = new BCLabel(translationKey, width, 12);
-        label.withTextColor(TEXT_HIGHLIGHT)
+        label.withTextColor(BCTheme.get().getTextLight())
               .withAlignment(BCLabel.TextAlignment.CENTER)
               .withShadow(true);
         return label;
     }
     
-    @Deprecated
+    /**
+     * Creates a body label with consistent styling using the theme system.
+     * 
+     * @param translationKey The translation key for the label text
+     * @param width The width of the label
+     * @return A styled body label
+     */
     public static BCLabel createBodyLabel(String translationKey, int width) {
         BCLabel label = new BCLabel(translationKey, width, 10);
-        label.withTextColor(TEXT_COLOR)
+        label.withTextColor(BCTheme.get().getTextLight())
               .withAlignment(BCLabel.TextAlignment.LEFT);
         return label;
     }
     
-    @Deprecated
+    /**
+     * Creates a dynamic label with consistent styling using the theme system.
+     * 
+     * @param textSupplier The supplier for dynamic text content
+     * @param width The width of the label
+     * @return A styled dynamic label
+     */
     public static BCLabel createDynamicLabel(Supplier<Component> textSupplier, int width) {
         BCLabel label = new BCLabel(textSupplier, width, 10);
-        label.withTextColor(TEXT_COLOR)
+        label.withTextColor(BCTheme.get().getTextLight())
               .withAlignment(BCLabel.TextAlignment.LEFT);
         return label;
     }

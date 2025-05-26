@@ -6,6 +6,7 @@ import com.yourdomain.businesscraft.block.entity.ModBlockEntities;
 import com.yourdomain.businesscraft.command.ClearTownsCommand;
 import com.yourdomain.businesscraft.config.ConfigLoader;
 import com.yourdomain.businesscraft.init.ModMenuTypes;
+import com.yourdomain.businesscraft.init.ModBlocks;
 import com.yourdomain.businesscraft.menu.TradeMenu;
 import com.yourdomain.businesscraft.menu.StorageMenu;
 import com.yourdomain.businesscraft.network.ModMessages;
@@ -44,24 +45,6 @@ public class BusinessCraft {
     public static final String MOD_ID = "businesscraft";
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessCraft.class);
     
-    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);
-    
-    public static final RegistryObject<Block> TOWN_BLOCK = BLOCKS.register("town_block", 
-        () -> new TownBlock());
-    
-    public static final RegistryObject<Item> TOWN_BLOCK_ITEM = ITEMS.register("town_block",
-        () -> new BlockItem(TOWN_BLOCK.get(), new Item.Properties()));
-        
-    public static final RegistryObject<Block> TOWN_INTERFACE = BLOCKS.register("town_interface", 
-        () -> new TownInterfaceBlock(BlockBehaviour.Properties.of()
-                .mapColor(MapColor.STONE)
-                .strength(3.0f, 3.0f)
-                .requiresCorrectToolForDrops()));
-    
-    public static final RegistryObject<Item> TOWN_INTERFACE_ITEM = ITEMS.register("town_interface",
-        () -> new BlockItem(TOWN_INTERFACE.get(), new Item.Properties()));
-
     // Add a static reference to the manager to use in event handlers
     public static final TouristVehicleManager TOURIST_VEHICLE_MANAGER = new TouristVehicleManager();
 
@@ -69,15 +52,11 @@ public class BusinessCraft {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         
         // Register blocks and items
-        BLOCKS.register(modEventBus);
-        ITEMS.register(modEventBus);
+        ModBlocks.BLOCKS.register(modEventBus);
+        ModBlocks.ITEMS.register(modEventBus);
         
         // Register entity types
         ModEntityTypes.ENTITY_TYPES.register(modEventBus);
-        
-        // Register menu types
-        TradeMenu.MENUS.register(modEventBus);
-        StorageMenu.MENUS.register(modEventBus);
         
         // Register our mod's event handlers
         modEventBus.addListener(this::commonSetup);
@@ -114,8 +93,8 @@ public class BusinessCraft {
         LOGGER.info("BusinessCraft client setup starting");
         
         // Register screen factories
-        MenuScreens.register(TradeMenu.TRADE_MENU.get(), TradeScreen::new);
-        MenuScreens.register(StorageMenu.STORAGE_MENU.get(), StorageScreen::new);
+        MenuScreens.register(ModMenuTypes.TRADE_MENU.get(), TradeScreen::new);
+        MenuScreens.register(ModMenuTypes.STORAGE_MENU.get(), StorageScreen::new);
         // TownInterfaceScreen registration is handled in ClientModEvents
         
         LOGGER.info("BusinessCraft client setup complete");

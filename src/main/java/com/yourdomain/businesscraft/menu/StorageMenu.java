@@ -1,6 +1,7 @@
 package com.yourdomain.businesscraft.menu;
 
 import com.yourdomain.businesscraft.BusinessCraft;
+import com.yourdomain.businesscraft.init.ModMenuTypes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -53,18 +54,6 @@ public class StorageMenu extends AbstractContainerMenu {
     // Track current storage mode
     private boolean isPersonalStorageMode = false;
     
-    // Register the menu type
-    public static final DeferredRegister<MenuType<?>> MENUS = 
-            DeferredRegister.create(ForgeRegistries.MENU_TYPES, BusinessCraft.MOD_ID);
-    
-    @SuppressWarnings("unchecked")
-    public static final RegistryObject<MenuType<StorageMenu>> STORAGE_MENU =
-            MENUS.register("storage_menu", () -> {
-                return (MenuType<StorageMenu>) net.minecraftforge.common.extensions.IForgeMenuType.create(
-                    (windowId, inv, data) -> new StorageMenu(windowId, inv, new ItemStackHandler(INVENTORY_SIZE))
-                );
-            });
-    
     // Constructor for client-side creation
     public StorageMenu(int containerId, Inventory playerInventory) {
         this(containerId, playerInventory, new ItemStackHandler(INVENTORY_SIZE));
@@ -87,7 +76,7 @@ public class StorageMenu extends AbstractContainerMenu {
     
     // Main constructor
     public StorageMenu(int containerId, Inventory playerInventory, IItemHandler storageInventory) {
-        super(STORAGE_MENU.get(), containerId);
+        super(ModMenuTypes.STORAGE_MENU.get(), containerId);
         
         // Create the storage inventory if it doesn't exist
         if (storageInventory instanceof ItemStackHandler) {
