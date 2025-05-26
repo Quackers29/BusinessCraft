@@ -93,3 +93,7 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 80. Package structure, move all registration classes (ModEntityTypes, ModBlockEntities) to init/ package for consistency and remove empty registry/ directories to avoid confusion
 81. Screen registration, consolidate all MenuScreens.register() calls in ClientModEvents for better organization and avoid split registrations across multiple files
 82. Code quality, replace System.out.println statements with proper SLF4J logging (LOGGER.info/debug/error) and add loggers to demo/template classes for better debugging
+83. BlockEntity refactoring, extract inner classes with clear responsibilities (like VisitBuffer) into separate files to reduce massive class sizes and improve maintainability
+84. Platform visualization refactoring, extract complex particle effect logic into helper classes while keeping core data storage in the main entity for better organization
+85. Platform management refactoring, extract platform CRUD operations into manager classes with callback patterns for change notifications to reduce BlockEntity complexity
+86. Particle visualization refactoring, when extracting particle effects ensure the correct particle types and visualization patterns are preserved (FLAME for radius, rectangular perimeter vs circles)
