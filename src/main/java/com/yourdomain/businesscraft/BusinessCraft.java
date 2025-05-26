@@ -2,18 +2,13 @@ package com.yourdomain.businesscraft;
 
 import com.yourdomain.businesscraft.block.TownBlock;
 import com.yourdomain.businesscraft.block.TownInterfaceBlock;
-import com.yourdomain.businesscraft.block.entity.ModBlockEntities;
+import com.yourdomain.businesscraft.init.ModBlockEntities;
 import com.yourdomain.businesscraft.command.ClearTownsCommand;
 import com.yourdomain.businesscraft.config.ConfigLoader;
 import com.yourdomain.businesscraft.init.ModMenuTypes;
 import com.yourdomain.businesscraft.init.ModBlocks;
-import com.yourdomain.businesscraft.menu.TradeMenu;
-import com.yourdomain.businesscraft.menu.StorageMenu;
 import com.yourdomain.businesscraft.network.ModMessages;
-import com.yourdomain.businesscraft.screen.TradeScreen;
-import com.yourdomain.businesscraft.screen.StorageScreen;
 import com.yourdomain.businesscraft.town.TownManager;
-import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -38,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.service.TouristVehicleManager;
 import net.minecraftforge.event.level.LevelEvent;
-import com.yourdomain.businesscraft.entity.ModEntityTypes;
+import com.yourdomain.businesscraft.init.ModEntityTypes;
 
 @Mod(BusinessCraft.MOD_ID)
 public class BusinessCraft {
@@ -92,10 +87,7 @@ public class BusinessCraft {
     private void clientSetup(final FMLClientSetupEvent event) {
         LOGGER.info("BusinessCraft client setup starting");
         
-        // Register screen factories
-        MenuScreens.register(ModMenuTypes.TRADE_MENU.get(), TradeScreen::new);
-        MenuScreens.register(ModMenuTypes.STORAGE_MENU.get(), StorageScreen::new);
-        // TownInterfaceScreen registration is handled in ClientModEvents
+        // Screen registrations are now handled in ClientModEvents for better organization
         
         LOGGER.info("BusinessCraft client setup complete");
     }

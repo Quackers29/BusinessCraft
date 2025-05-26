@@ -10,6 +10,8 @@ import net.minecraft.world.item.Items;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.Minecraft;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,6 +23,7 @@ import java.util.function.Consumer;
  * This class provides examples of creating different types of screens using the templates.
  */
 public class BCScreenTemplateDemo {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BCScreenTemplateDemo.class);
 
     /**
      * Creates a demo information screen.
@@ -29,24 +32,23 @@ public class BCScreenTemplateDemo {
             T menu, Inventory inventory) {
         
         Component title = Component.literal("Business Information");
-        Component header = Component.literal("Business Overview");
+        Component header = Component.literal("Welcome to Your Business!");
         Component content = Component.literal(
-                "Your business is currently at level 3 with 5 employees. " +
                 "You have earned 1,250 coins this week. " +
                 "Click the buttons below to manage your business.");
         
         List<BCScreenTemplates.ButtonConfig> buttons = Arrays.asList(
             BCScreenTemplates.ButtonConfig.of(
                 Component.literal("Manage Employees"),
-                () -> System.out.println("Manage Employees clicked")
+                () -> LOGGER.info("Manage Employees button clicked")
             ),
             BCScreenTemplates.ButtonConfig.of(
                 Component.literal("View Finances"),
-                () -> System.out.println("View Finances clicked")
+                () -> LOGGER.info("View Finances button clicked")
             ),
             BCScreenTemplates.ButtonConfig.of(
                 Component.literal("Upgrade Business"),
-                () -> System.out.println("Upgrade Business clicked")
+                () -> LOGGER.info("Upgrade Business button clicked")
             )
         );
         
@@ -131,11 +133,11 @@ public class BCScreenTemplateDemo {
         List<BCScreenTemplates.ButtonConfig> actions = Arrays.asList(
             BCScreenTemplates.ButtonConfig.of(
                 Component.literal("Buy Resources"),
-                () -> System.out.println("Buy Resources clicked")
+                () -> LOGGER.info("Buy Resources button clicked")
             ),
             BCScreenTemplates.ButtonConfig.of(
                 Component.literal("Sell Resources"),
-                () -> System.out.println("Sell Resources clicked")
+                () -> LOGGER.info("Sell Resources button clicked")
             )
         );
         
@@ -158,7 +160,7 @@ public class BCScreenTemplateDemo {
             Component.literal("Enabled"), 
             Component.literal("Disabled"), 
             true, 
-            button -> System.out.println("Auto-collect toggled: " + button.isToggled())
+            button -> LOGGER.info("Auto-collect toggled: {}", button.isToggled())
         );
         
         DummyToggleButton notificationsToggle = new DummyToggleButton(
@@ -166,11 +168,11 @@ public class BCScreenTemplateDemo {
             Component.literal("Enabled"), 
             Component.literal("Disabled"), 
             true, 
-            button -> System.out.println("Notifications toggled: " + button.isToggled())
+            button -> LOGGER.info("Notifications toggled: {}", button.isToggled())
         );
         
         DummyEditBoxComponent nameEditor = new DummyEditBoxComponent(
-            100, 20, Component.literal(""), text -> System.out.println("Business name changed: " + text)
+            100, 20, Component.literal(""), text -> LOGGER.info("Business name changed: {}", text)
         );
         nameEditor.setValue("My Business");
         
@@ -241,19 +243,19 @@ public class BCScreenTemplateDemo {
             BCPanel buttonsPanel = new BCPanel(210, 30);
             buttonsPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.HORIZONTAL, 10));
             
-            BCButton hireButton = BCComponentFactory.createPrimaryButton(
-                "Hire Employee", 
-                button -> System.out.println("Hire Employee clicked"), 
+            employeesPanel.addChild(BCComponentFactory.createPrimaryButtonWithTooltip(
+                "Hire Employee",
+                "Hire a new employee for your business",
+                button -> LOGGER.info("Hire Employee button clicked"),
                 100
-            );
-            BCButton fireButton = BCComponentFactory.createSecondaryButton(
-                "Fire Employee", 
-                button -> System.out.println("Fire Employee clicked"), 
-                100
-            );
+            ));
             
-            buttonsPanel.addChild(hireButton);
-            buttonsPanel.addChild(fireButton);
+            employeesPanel.addChild(BCComponentFactory.createSecondaryButtonWithTooltip(
+                "Fire Employee",
+                "Remove an employee from your business",
+                button -> LOGGER.info("Fire Employee button clicked"),
+                100
+            ));
             
             panel.addChild(buttonsPanel);
         };
@@ -291,7 +293,7 @@ public class BCScreenTemplateDemo {
             // Business name setting
             settingsPanel.addChild(BCComponentFactory.createBodyLabel("Business Name:", 100));
             DummyEditBoxComponent nameEditor = new DummyEditBoxComponent(
-                100, 20, Component.literal(""), text -> System.out.println("Business name changed: " + text)
+                100, 20, Component.literal(""), text -> LOGGER.info("Business name changed: {}", text)
             );
             nameEditor.setValue("My Business");
             settingsPanel.addChild(nameEditor);
@@ -303,7 +305,7 @@ public class BCScreenTemplateDemo {
                 Component.literal("Enabled"), 
                 Component.literal("Disabled"), 
                 true, 
-                button -> System.out.println("Auto-collect toggled: " + button.isToggled())
+                button -> LOGGER.info("Auto-collect toggled: {}", button.isToggled())
             );
             settingsPanel.addChild(autoCollectToggle);
             
@@ -314,7 +316,7 @@ public class BCScreenTemplateDemo {
                 Component.literal("Enabled"), 
                 Component.literal("Disabled"), 
                 true, 
-                button -> System.out.println("Notifications toggled: " + button.isToggled())
+                button -> LOGGER.info("Notifications toggled: {}", button.isToggled())
             );
             settingsPanel.addChild(notificationsToggle);
             

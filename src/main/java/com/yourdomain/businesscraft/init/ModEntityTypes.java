@@ -1,6 +1,7 @@
-package com.yourdomain.businesscraft.entity;
+package com.yourdomain.businesscraft.init;
 
 import com.yourdomain.businesscraft.BusinessCraft;
+import com.yourdomain.businesscraft.entity.TouristEntity;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;

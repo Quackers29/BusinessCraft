@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.block;
 
-import com.yourdomain.businesscraft.block.entity.ModBlockEntities;
+import com.yourdomain.businesscraft.init.ModBlockEntities;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.config.ConfigLoader;
 import com.yourdomain.businesscraft.town.TownManager;
