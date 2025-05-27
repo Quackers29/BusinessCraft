@@ -67,7 +67,7 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     // State tracking for toggle buttons
     private boolean pvpEnabled = false;
     private boolean publicTownEnabled = true;
-    
+
     // Manager instances specific to this screen
     private BottomButtonManager buttonManager;
     
@@ -95,7 +95,7 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
         buttonManager.updateScreenPosition(this.leftPos, this.topPos, this.imageWidth, this.imageHeight);
         buttonManager.createBottomButtonsGrid();
     }
-    
+
     @Override
     protected void performAdditionalCleanup() {
         // Send a packet to register the player exit UI to show platform indicators
@@ -131,7 +131,7 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     
     @Override
     public void onAssignJobs() {
-        sendChatMessage("Button pressed: Assign Jobs");
+        sendPlaceholderMessage("Assign Jobs");
     }
     
     @Override
@@ -141,12 +141,12 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     
     @Override
     public void onSaveSettings() {
-        sendChatMessage("Button pressed: Save Settings");
+        sendPlaceholderMessage("Save Settings");
     }
     
     @Override
     public void onResetDefaults() {
-        sendChatMessage("Button pressed: Reset Defaults");
+        sendPlaceholderMessage("Reset Defaults");
     }
     
     @Override
@@ -156,7 +156,7 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     
     @Override
     public void onGenericAction(String action) {
-        sendChatMessage("Button pressed: " + action);
+        sendPlaceholderMessage(action);
     }
     
     // ===== Specific Interface Implementations =====
@@ -176,11 +176,6 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
         return buttonManager;
     }
 
-
-    
-
-
-    
     /**
      * Opens the platform management screen
      * This method is used by tab implementations.
@@ -274,10 +269,12 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
         return cacheManager.getTouristString();
     }
     
-
-
-
-
+    // ===== Private Helper Methods =====
+    
+    private void sendPlaceholderMessage(String action) {
+        sendChatMessage("Button pressed: " + action);
+    }
+    
     /**
      * Show the change town name popup
      */
@@ -294,8 +291,6 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
         // Focus the input field
         activePopup.focusInput();
     }
-
-
 
     /**
      * Show the visitor list modal screen
@@ -356,6 +351,4 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
             }
         );
     }
-
-
 } 
