@@ -13,6 +13,7 @@ import com.yourdomain.businesscraft.screen.managers.*;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -60,7 +61,13 @@ import org.slf4j.LoggerFactory;
  * The Town Interface Screen showcases the BusinessCraft UI system capabilities.
  * This screen demonstrates various UI components and layouts using the enhanced BCTabPanel.
  */
-public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMenu> {
+public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMenu> 
+        implements BottomButtonManager.ButtonActionHandler, 
+                   TownScreenEventHandler.SoundHandler,
+                   TownScreenEventHandler.ModalStateProvider,
+                   TownScreenRenderManager.CacheUpdateProvider,
+                   TownScreenRenderManager.ScreenLayoutProvider,
+                   TownScreenRenderManager.ComponentProvider {
     private BCTabPanel tabPanel;
     private BCTheme customTheme;
 
@@ -76,9 +83,6 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     private static final int SUCCESS_COLOR = TownInterfaceTheme.SUCCESS_COLOR;
     private static final int DANGER_COLOR = TownInterfaceTheme.DANGER_COLOR;
     
-    // Grid builder for bottom buttons
-    private UIGridBuilder bottomButtonsGrid;
-    
     // State tracking for toggle buttons
     private boolean pvpEnabled = false;
     private boolean publicTownEnabled = true;
@@ -88,6 +92,11 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
 
     // Add field for modal screen
     private BCModalScreen activeModal = null;
+    
+    // Manager instances
+    private BottomButtonManager buttonManager;
+    private TownScreenEventHandler eventHandler;
+    private TownScreenRenderManager renderManager;
     
     // Cache the current search radius for UI updates
     private int currentSearchRadius;
@@ -126,6 +135,170 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         
         // Create a custom theme for this screen using the centralized theme
         customTheme = TownInterfaceTheme.createBCTheme();
+        
+        // Initialize managers
+        this.buttonManager = new BottomButtonManager(this);
+        this.eventHandler = new TownScreenEventHandler(this, this, this.buttonManager);
+        this.renderManager = new TownScreenRenderManager(this, this, this);
+    }
+    
+    // ===== Interface Implementations =====
+    
+    // ButtonActionHandler implementation
+    @Override
+    public void onEditDetails() {
+        showChangeTownNamePopup();
+    }
+    
+    @Override
+    public void onViewVisitors() {
+        showVisitorListModal();
+    }
+    
+    @Override
+    public void onTradeResources() {
+        showTradeResourcesModal();
+    }
+    
+    @Override
+    public void onManageStorage() {
+        showStorageModal();
+    }
+    
+    @Override
+    public void onAssignJobs() {
+        sendChatMessage("Button pressed: Assign Jobs");
+    }
+    
+    @Override
+    public void onViewVisitorHistory() {
+        showVisitorHistoryScreen();
+    }
+    
+    @Override
+    public void onSaveSettings() {
+        sendChatMessage("Button pressed: Save Settings");
+    }
+    
+    @Override
+    public void onResetDefaults() {
+        sendChatMessage("Button pressed: Reset Defaults");
+    }
+    
+    @Override
+    public void onManagePlatforms() {
+        openPlatformManagementScreen();
+    }
+    
+    @Override
+    public void onGenericAction(String action) {
+        sendChatMessage("Button pressed: " + action);
+    }
+    
+    // SoundHandler implementation
+    @Override
+    public void playButtonClickSound() {
+        Minecraft.getInstance().getSoundManager().play(
+            net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
+                net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F)
+        );
+    }
+    
+    // ModalStateProvider implementation
+    @Override
+    public BCModalScreen getActiveModal() {
+        return activeModal;
+    }
+    
+    @Override
+    public BCPopupScreen getActivePopup() {
+        return activePopup;
+    }
+    
+    @Override
+    public BCTabPanel getTabPanel() {
+        return tabPanel;
+    }
+    
+    // ===== CacheUpdateProvider Implementation =====
+    
+    @Override
+    public TownDataCacheManager getCacheManager() {
+        return cacheManager;
+    }
+    
+    @Override
+    public int getUpdateCounter() {
+        return updateCounter;
+    }
+    
+    @Override
+    public void setUpdateCounter(int counter) {
+        this.updateCounter = counter;
+    }
+    
+    @Override
+    public int getRefreshInterval() {
+        return REFRESH_INTERVAL;
+    }
+    
+    @Override
+    public void setCurrentSearchRadius(int radius) {
+        this.currentSearchRadius = radius;
+    }
+    
+    @Override
+    public int getSearchRadiusFromMenu() {
+        return menu.getSearchRadius();
+    }
+    
+    // ===== ScreenLayoutProvider Implementation =====
+    
+    @Override
+    public int getLeftPos() {
+        return this.leftPos;
+    }
+    
+    @Override
+    public int getTopPos() {
+        return this.topPos;
+    }
+    
+    @Override
+    public int getImageWidth() {
+        return this.imageWidth;
+    }
+    
+    @Override
+    public int getImageHeight() {
+        return this.imageHeight;
+    }
+    
+    @Override
+    public Font getFont() {
+        return this.font;
+    }
+    
+    @Override
+    public Component getTitle() {
+        return this.title;
+    }
+    
+    @Override
+    public void renderBackground(GuiGraphics graphics) {
+        super.renderBackground(graphics);
+    }
+    
+    @Override
+    public void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
+        super.renderTooltip(graphics, mouseX, mouseY);
+    }
+    
+    // ===== ComponentProvider Implementation =====
+    
+    @Override
+    public BottomButtonManager getButtonManager() {
+        return buttonManager;
     }
 
     @Override
@@ -163,31 +336,15 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             this.tabPanel.setActiveTab("overview");
         }
         
-        // Initialize the bottom buttons grid
-        createBottomButtonsGrid();
+        // Initialize the button manager with screen position
+        buttonManager.updateScreenPosition(this.leftPos, this.topPos, this.imageWidth, this.imageHeight);
+        buttonManager.createBottomButtonsGrid();
         
         // Initialize the tab panel
         this.tabPanel.init(this::addRenderableWidget);
     }
     
-    /**
-     * Create the grid builder for bottom buttons
-     */
-    private void createBottomButtonsGrid() {
-        // Calculate button panel dimensions
-        int buttonPanelWidth = this.imageWidth - 40; // Leave 20px margin on each side
-        int buttonPanelHeight = 30; // Reduced by 50% from 60px to 30px
-        int buttonPanelX = this.leftPos + (this.imageWidth - buttonPanelWidth) / 2;
-        int buttonPanelY = this.topPos + this.imageHeight + 10;
-        
-        // Create a 1x2 grid (1 row, 2 columns)
-        bottomButtonsGrid = new UIGridBuilder(buttonPanelX, buttonPanelY, buttonPanelWidth, buttonPanelHeight, 1, 2)
-            .withBackgroundColor(BACKGROUND_COLOR)
-            .withBorderColor(BORDER_COLOR)
-            .withMargins(5, 5) // Reduce margins for smaller height
-            .withSpacing(20, 0)
-            .withRowHeight(20); // Reduced by 50% from 40px to 20px
-    }
+
     
     private void createOverviewTab() {
         // Create a new OverviewTab instance
@@ -344,190 +501,16 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        // Update the cached values periodically
-        updateCounter++;
-        if (updateCounter >= REFRESH_INTERVAL) { // Every 5 seconds (100 ticks)
-            updateCounter = 0;
-            
-            // Refresh cache if available
-            if (cacheManager != null) {
-                cacheManager.invalidateCache();
-                cacheManager.refreshCachedValues();
-                this.currentSearchRadius = cacheManager.getLocalCachedSearchRadius();
-            } else {
-                // Fallback to direct menu updates if cache isn't available
-                this.currentSearchRadius = menu.getSearchRadius();
-            }
-            
-            // Update the active tab if exists
-            String activeTabId = this.tabPanel.getActiveTabId();
-            if ("overview".equals(activeTabId)) {
-                // Get the panel, which should be created by our OverviewTab
-                BCPanel panel = this.tabPanel.getTabPanel(activeTabId);
-                if (panel != null && panel instanceof BCPanel) {
-                    // Find the OverviewTab instance
-                    for (UIComponent child : panel.getChildren()) {
-                        if (child instanceof BCComponent) {
-                            // Force a refresh of the component
-                            child.setVisible(false);
-                            child.setVisible(true);
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Draw the dimmed background
-        this.renderBackground(graphics);
-        
-        // Draw a semi-transparent background for the entire window
-        graphics.fill(this.leftPos, this.topPos, this.leftPos + this.imageWidth, this.topPos + this.imageHeight, 0x80222222);
-        
-        // Draw border
-        graphics.hLine(this.leftPos, this.leftPos + this.imageWidth - 1, this.topPos, BORDER_COLOR);
-        graphics.hLine(this.leftPos, this.leftPos + this.imageWidth - 1, this.topPos + this.imageHeight - 1, BORDER_COLOR);
-        graphics.vLine(this.leftPos, this.topPos, this.topPos + this.imageHeight - 1, BORDER_COLOR);
-        graphics.vLine(this.leftPos + this.imageWidth - 1, this.topPos, this.topPos + this.imageHeight - 1, BORDER_COLOR);
-        
-        // Render the tab panel
-        this.tabPanel.render(graphics, this.tabPanel.getX(), this.tabPanel.getY(), mouseX, mouseY);
-        
-        // Update and render the bottom buttons based on active tab
-        updateBottomButtons();
-        bottomButtonsGrid.render(graphics, mouseX, mouseY);
-        
-        // Render the screen title
-        graphics.drawCenteredString(this.font, this.title, this.leftPos + this.imageWidth / 2, this.topPos - 12, TEXT_COLOR);
-        
-        // Draw any tooltips
-        graphics.pose().pushPose();
-        graphics.pose().translate(0, 0, 100);  // Move tooltips to front layer
-        this.renderTooltip(graphics, mouseX, mouseY);
-        graphics.pose().popPose();
-        
-        // IMPORTANT: Render modals and popups AFTER everything else
-        
-        // If we have an active popup, render it on top of everything with matrix transformation for Z-ordering
-        if (activePopup != null && activePopup.isVisible()) {
-            // The popup handles its own matrix transformations internally
-            activePopup.render(graphics, 0, 0, mouseX, mouseY);
-        }
-        
-        // If we have an active modal, render it last to ensure it's on top of everything
-        if (activeModal != null) {
-            // The modal now handles its own matrix transformations internally
-            activeModal.render(graphics, 0, 0, mouseX, mouseY);
-        }
+        // Delegate all rendering to the render manager
+        renderManager.render(graphics, mouseX, mouseY, partialTicks);
     }
     
-    /**
-     * Updates the bottom buttons based on the active tab
-     */
-    private void updateBottomButtons() {
-        // Calculate button panel dimensions (must be recalculated in case window was resized)
-        int buttonPanelWidth = this.imageWidth - 40;
-        int buttonPanelHeight = 30; // Reduced by 50% from 60px to 30px
-        int buttonPanelX = this.leftPos + (this.imageWidth - buttonPanelWidth) / 2;
-        int buttonPanelY = this.topPos + this.imageHeight + 10;
-        
-        // Create a new grid builder with current dimensions
-        bottomButtonsGrid = new UIGridBuilder(buttonPanelX, buttonPanelY, buttonPanelWidth, buttonPanelHeight, 1, 2)
-            .withBackgroundColor(BACKGROUND_COLOR)
-            .withBorderColor(BORDER_COLOR)
-            .withMargins(5, 5) // Reduce margins for smaller height
-            .withSpacing(20, 0)
-            .withRowHeight(20); // Reduced by 50% from 40px to 20px
-        
-        // Get the active tab ID
-        String activeTab = this.tabPanel.getActiveTabId();
-        if (activeTab == null) {
-            activeTab = "overview"; // Default
-        }
-        
-        // Configure buttons based on active tab
-        switch (activeTab) {
-            case "overview":
-                bottomButtonsGrid
-                    .addButtonWithTooltip(0, 0, "Edit Details", "Edit town details and properties", v -> {
-                        showChangeTownNamePopup();
-                    }, PRIMARY_COLOR)
-                    .addButtonWithTooltip(0, 1, "View Visitors", "View list of visitors to your town", v -> {
-                        showVisitorListModal();
-                    }, SECONDARY_COLOR);
-                break;
-                
-            case "resources":
-                bottomButtonsGrid
-                    .addButtonWithTooltip(0, 0, "Trade Resources", "Trade resources with other towns", v -> {
-                        showTradeResourcesModal();
-                    }, PRIMARY_COLOR)
-                    .addButtonWithTooltip(0, 1, "Manage Storage", "Manage town storage and inventory", v -> {
-                        showStorageModal();
-                    }, SECONDARY_COLOR);
-                break;
-                
-            case "population":
-                bottomButtonsGrid
-                    .addButtonWithTooltip(0, 0, "Assign Jobs", "Assign jobs to town citizens", v -> {
-                        sendChatMessage("Button pressed: Assign Jobs");
-                    }, PRIMARY_COLOR)
-                    .addButtonWithTooltip(0, 1, "View Visitors", "View history of visitors to your town", v -> {
-                        showVisitorHistoryScreen();
-                    }, SECONDARY_COLOR);
-                break;
-                
-            case "settings":
-                bottomButtonsGrid
-                    .addButtonWithTooltip(0, 0, "Save Settings", "Save current town settings", v -> {
-                        sendChatMessage("Button pressed: Save Settings");
-                    }, SUCCESS_COLOR)
-                    .addButtonWithTooltip(0, 1, "Reset Defaults", "Reset town settings to defaults", v -> {
-                        sendChatMessage("Button pressed: Reset Defaults");
-                    }, DANGER_COLOR);
-                break;
-        }
-    }
+
     
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        // Handle clicks on modal screens first, which take priority
-        if (activeModal != null) {
-            if (activeModal.mouseClicked(mouseX, mouseY, button)) {
-                return true;
-            }
-        }
-        
-        // If popup is active, let it handle clicks first
-        if (activePopup != null && activePopup.isVisible()) {
-            if (activePopup.mouseClicked(mouseX, mouseY, button)) {
-                return true;
-            }
-        }
-        
-        // Let the tab panel handle clicks first
-        if (this.tabPanel.mouseClicked(mouseX, mouseY, button)) {
-            return true;
-        }
-        
-        // Check if bottom buttons grid handled the click
-        if (button == 0 && bottomButtonsGrid.mouseClicked((int)mouseX, (int)mouseY, button)) {
-            // Play button click sound
-            playButtonClickSound();
-            return true;
-        }
-        
-        return super.mouseClicked(mouseX, mouseY, button);
-    }
-    
-    /**
-     * Plays the button click sound effect
-     * This method is used by tab implementations.
-     */
-    public void playButtonClickSound() {
-        Minecraft.getInstance().getSoundManager().play(
-            net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
-                net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F)
-        );
+        return eventHandler.handleMouseClicked(mouseX, mouseY, button, 
+            b -> super.mouseClicked(mouseX, mouseY, b));
     }
     
     /**
@@ -548,123 +531,23 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        // If modal is active, let it handle drag first
-        if (activeModal != null && activeModal.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
-            return true;
-        }
-        
-        // If popup is active, let it handle drag events
-        if (activePopup != null && activePopup.isVisible() && activePopup.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
-            return true;
-        }
-        
-        // Get active tab and forward drag events
-        String activeTabId = this.tabPanel.getActiveTabId();
-        
-        // For scrollable tabs (Resources, Population) - forward drag events to children
-        if ("resources".equals(activeTabId) || "population".equals(activeTabId)) {
-            BCPanel panel = this.tabPanel.getTabPanel(activeTabId);
-            if (panel != null) {
-                // Forward to all children that are visible components
-                for (UIComponent child : panel.getChildren()) {
-                    if (child instanceof BCComponent && ((BCComponent) child).isVisible()) {
-                        if (((BCComponent) child).mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Let the tab panel handle drag events
-        if (this.tabPanel != null && this.tabPanel.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
-            return true;
-        }
-        
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        return eventHandler.handleMouseDragged(mouseX, mouseY, button, dragX, dragY,
+            b -> super.mouseDragged(mouseX, mouseY, b, dragX, dragY));
     }
     
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        // Let the tab panel handle releases first
-        if (this.tabPanel.mouseReleased(mouseX, mouseY, button)) {
-            return true;
-        }
-        
-        return super.mouseReleased(mouseX, mouseY, button);
+        return eventHandler.handleMouseReleased(mouseX, mouseY, button,
+            b -> super.mouseReleased(mouseX, mouseY, b));
     }
     
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        // If modal is active, let it handle scroll first
-        if (activeModal != null && activeModal.mouseScrolled(mouseX, mouseY, delta)) {
-            return true;
-        }
-        
-        // If popup is active, let it handle scroll events
-        if (activePopup != null && activePopup.isVisible() && activePopup.mouseScrolled(mouseX, mouseY, delta)) {
-            return true;
-        }
-        
-        // Get active tab and forward scroll events to all scrollable tabs in the same way
-        String activeTabId = this.tabPanel.getActiveTabId();
-        
-        // Special case for scrollable tabs (resources and population)
-        if ("resources".equals(activeTabId) || "population".equals(activeTabId)) {
-            BCPanel panel = this.tabPanel.getTabPanel(activeTabId);
-            if (panel != null) {
-                // Attempt direct scrolling on the panel's children
-                for (UIComponent child : panel.getChildren()) {
-                    if (child instanceof BCComponent && ((BCComponent) child).isVisible()) {
-                        if (child.mouseScrolled(mouseX, mouseY, delta)) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Let the tab panel handle scroll - this will properly forward to our tabs
-        if (this.tabPanel != null && this.tabPanel.mouseScrolled(mouseX, mouseY, delta)) {
-            return true;
-        }
-        
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return eventHandler.handleMouseScrolled(mouseX, mouseY, delta,
+            d -> super.mouseScrolled(mouseX, mouseY, d));
     }
 
-    /**
-     * Create a modified button with chat message notification
-     * 
-     * @param text The button text
-     * @param onClick The original click handler
-     * @param width The button width
-     * @return A button that shows a chat message when clicked
-     */
-    private BCButton createNotifyButton(String text, Consumer<BCButton> onClick, int width) {
-        // We need to bridge between different consumer types
-        Consumer<Button> buttonHandler = b -> {
-            // Send chat message
-            sendChatMessage("Button pressed: " + text);
-            
-            // Call original handler if provided
-            if (onClick != null) {
-                onClick.accept(null);
-            }
-        };
-        
-        // Create button with the wrapped handler
-        BCButton button;
-        
-        if (text.contains("Save")) {
-            button = BCComponentFactory.createSuccessButton(text, buttonHandler, width);
-        } else if (text.contains("Reset")) {
-            button = BCComponentFactory.createDangerButton(text, buttonHandler, width);
-        } else {
-            button = BCComponentFactory.createPrimaryButton(text, buttonHandler, width);
-        }
-        
-        return button.withText(Component.literal(text));
-    }
+
 
     /**
      * Show the change town name popup
@@ -685,45 +568,14 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        // If popup is active, let it handle keyboard input first
-        if (activePopup != null && activePopup.isVisible()) {
-            // Handle escape key specially to allow closing the popup
-            if (keyCode == 256) { // ESCAPE key
-                return activePopup.keyPressed(keyCode, scanCode, modifiers);
-            }
-            
-            // For string input popups, completely consume 'e' key (inventory key) to prevent it from closing the popup
-            if (keyCode == 69 && activePopup.isInputPopup()) { // 'e' key and input popup
-                // Forward to popup for text input handling
-                activePopup.keyPressed(keyCode, scanCode, modifiers);
-                // Always consume the event
-                return true;
-            }
-            
-            // Let popup handle other keys normally
-            if (activePopup.keyPressed(keyCode, scanCode, modifiers)) {
-                return true;
-            }
-            
-            // If it's an input popup, consume all uncaught key events to prevent them from affecting the main screen
-            if (activePopup.isInputPopup()) {
-                return true;
-            }
-        }
-        
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return eventHandler.handleKeyPressed(keyCode, scanCode, modifiers,
+            k -> super.keyPressed(k, scanCode, modifiers));
     }
 
     @Override
     public boolean charTyped(char c, int modifiers) {
-        // If popup is active, let it handle character input first
-        if (activePopup != null && activePopup.isVisible()) {
-            if (activePopup.charTyped(c, modifiers)) {
-                return true;
-            }
-        }
-        
-        return super.charTyped(c, modifiers);
+        return eventHandler.handleCharTyped(c, modifiers,
+            ch -> super.charTyped(ch, modifiers));
     }
 
     /**
