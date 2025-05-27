@@ -101,3 +101,4 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 88. Client sync refactoring, extract client-server synchronization logic into helper classes but ensure setChanged() refreshes client cache from server data before syncing to prevent stale data
 89. Visitor buffer callback timing, when extracting visitor processing ensure callbacks are triggered after ALL operations complete (including visit buffer processing) not just individual visitor processing
 90. NBT data management refactoring, extract complex save/load logic with legacy migration into helper classes using result objects to cleanly return multiple values and maintain backward compatibility
+91. ContainerData refactoring, replace static hardcoded index-based ContainerData with modular ContainerDataHelper using named fields, lambda functions, and builder pattern for maintainability and type safety

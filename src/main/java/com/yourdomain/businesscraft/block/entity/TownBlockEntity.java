@@ -99,6 +99,7 @@ import com.yourdomain.businesscraft.town.data.PlatformManager;
 import com.yourdomain.businesscraft.town.data.VisitorProcessingHelper;
 import com.yourdomain.businesscraft.town.data.ClientSyncHelper;
 import com.yourdomain.businesscraft.town.data.NBTDataHelper;
+import com.yourdomain.businesscraft.town.data.ContainerDataHelper;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -114,50 +115,17 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         }
     };
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
-    private static final int DATA_BREAD = 0;
-    private static final int DATA_POPULATION = 1;
-    private static final int DATA_SPAWN_ENABLED = 2;
-    private static final int DATA_CAN_SPAWN = 3;
-    private static final int DATA_SEARCH_RADIUS = 4;
-    private static final int DATA_TOURIST_COUNT = 5;
-    private static final int DATA_MAX_TOURISTS = 6;
-    private final ContainerData data = new SimpleContainerData(7) {
-        // Rate limiting for logging
-        private long lastLogTime = 0;
-
-        @Override
-        public int get(int index) {
-            if (level != null && level.isClientSide()) {
-                return super.get(index);
-            }
-            
-            if (townId == null) return 0;
-            if (level instanceof ServerLevel sLevel) {
-                Town town = TownManager.get(sLevel).getTown(townId);
-                if (town == null) return 0;
-                
-                int value = switch (index) {
-                    case DATA_BREAD -> town.getBreadCount(); // Legacy support for bread count
-                    case DATA_POPULATION -> town.getPopulation();
-                    case DATA_SPAWN_ENABLED -> town.isTouristSpawningEnabled() ? 1 : 0;
-                    case DATA_CAN_SPAWN -> town.canSpawnTourists() ? 1 : 0;
-                    case DATA_SEARCH_RADIUS -> town.getSearchRadius();
-                    case DATA_TOURIST_COUNT -> town.getTouristCount();
-                    case DATA_MAX_TOURISTS -> town.getMaxTourists();
-                    default -> 0;
-                };
-                
-                super.set(index, value);
-                return value;
-            }
-            return 0;
-        }
-
-        @Override
-        public void set(int index, int value) {
-            super.set(index, value);
-        }
-    };
+    
+    // Modular ContainerData system - replaces hardcoded indices with named fields
+    private final ContainerDataHelper containerData = ContainerDataHelper.builder("TownBlock")
+        .addReadOnlyField("bread_count", this::getBreadCountFromTown, "Legacy bread count for compatibility")
+        .addReadOnlyField("population", this::getPopulationFromTown, "Current town population")
+        .addField("spawn_enabled", this::getTouristSpawningEnabledAsInt, this::setTouristSpawningEnabledFromInt, "Tourist spawning enabled flag")
+        .addReadOnlyField("can_spawn", this::getCanSpawnTouristsAsInt, "Whether town can currently spawn tourists")
+        .addField("search_radius", this::getSearchRadius, this::setSearchRadius, "Search radius for tourist detection")
+        .addReadOnlyField("tourist_count", this::getTouristCountFromTown, "Current number of tourists in town")
+        .addReadOnlyField("max_tourists", this::getMaxTouristsFromTown, "Maximum tourists allowed in town")
+        .build();
     private static final Logger LOGGER = LoggerFactory.getLogger(TownBlockEntity.class);
     private Map<String, Integer> visitingPopulation = new HashMap<>();
     private BlockPos pathStart;
@@ -219,6 +187,55 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     // Special UUID for "any town" destination
     private static final UUID ANY_TOWN_DESTINATION = new UUID(0, 0);
     private static final String ANY_TOWN_NAME = "Any Town";
+    
+    // Helper methods for ContainerData integration
+    private int getBreadCountFromTown() {
+        if (townId != null && level instanceof ServerLevel sLevel) {
+            Town town = TownManager.get(sLevel).getTown(townId);
+            return town != null ? town.getBreadCount() : 0;
+        }
+        return 0;
+    }
+    
+    private int getPopulationFromTown() {
+        if (townId != null && level instanceof ServerLevel sLevel) {
+            Town town = TownManager.get(sLevel).getTown(townId);
+            return town != null ? town.getPopulation() : 0;
+        }
+        return 0;
+    }
+    
+    private int getTouristSpawningEnabledAsInt() {
+        return touristSpawningEnabled ? 1 : 0;
+    }
+    
+    private void setTouristSpawningEnabledFromInt(int value) {
+        setTouristSpawningEnabled(value != 0);
+    }
+    
+    private int getCanSpawnTouristsAsInt() {
+        if (townId != null && level instanceof ServerLevel sLevel) {
+            Town town = TownManager.get(sLevel).getTown(townId);
+            return town != null && town.canSpawnTourists() ? 1 : 0;
+        }
+        return 0;
+    }
+    
+    private int getTouristCountFromTown() {
+        if (townId != null && level instanceof ServerLevel sLevel) {
+            Town town = TownManager.get(sLevel).getTown(townId);
+            return town != null ? town.getTouristCount() : 0;
+        }
+        return 0;
+    }
+    
+    private int getMaxTouristsFromTown() {
+        if (townId != null && level instanceof ServerLevel sLevel) {
+            Town town = TownManager.get(sLevel).getTown(townId);
+            return town != null ? town.getMaxTourists() : 0;
+        }
+        return 0;
+    }
 
     public TownBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
@@ -354,13 +371,13 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 if (currentTown != null && currentTown.canSpawnTourists()) {
                     // Process each enabled platform
                     for (Platform platform : platformManager.getEnabledPlatforms()) {
-                        touristVehicleManager.mountTouristsToVehicles(
-                            level, 
-                            platform.getStartPos(), 
-                            platform.getEndPos(), 
-                            searchRadius, 
-                            townId
-                        );
+                            touristVehicleManager.mountTouristsToVehicles(
+                                level, 
+                                platform.getStartPos(), 
+                                platform.getEndPos(), 
+                                searchRadius, 
+                                townId
+                            );
                     }
                 }
             }
@@ -497,7 +514,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     public ContainerData getContainerData() {
-        return data;
+        return containerData;
     }
 
     public Map<String, Integer> getVisitingPopulation() {
@@ -559,11 +576,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     public int getBreadCount() {
-        return data.get(DATA_BREAD);
+        return containerData.getValue("bread_count");
     }
 
     public int getPopulation() {
-        return data.get(DATA_POPULATION);
+        return containerData.getValue("population");
     }
 
     public void syncTownData() {
@@ -588,12 +605,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 }
             }
             
-            // Update container data
-            data.set(DATA_BREAD, data.get(DATA_BREAD));
-            data.set(DATA_POPULATION, data.get(DATA_POPULATION));
-            data.set(DATA_SPAWN_ENABLED, data.get(DATA_SPAWN_ENABLED));
-            data.set(DATA_CAN_SPAWN, data.get(DATA_CAN_SPAWN));
-            data.set(DATA_SEARCH_RADIUS, data.get(DATA_SEARCH_RADIUS));
+            // Update container data - mark all fields as dirty to refresh values
+            containerData.markAllDirty();
             
             // Force a block update to sync the latest data
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
@@ -643,7 +656,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         
         // Make sure to update the container data
         if (level != null && !level.isClientSide()) {
-            data.set(DATA_SEARCH_RADIUS, this.searchRadius);
+            containerData.markDirty("search_radius");
         }
         
         setChanged();
@@ -665,7 +678,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         
         // Update container data
         if (level != null && !level.isClientSide()) {
-            data.set(DATA_SPAWN_ENABLED, enabled ? 1 : 0);
+            containerData.markDirty("spawn_enabled");
         }
         
         setChanged();
@@ -820,7 +833,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public List<VisitHistoryRecord> getVisitHistory() {
         return clientSyncHelper.getVisitHistory(level, getTownDataProvider());
     }
-    
+
     // Helper method to get town name from client cache or resolve from server
     public String getTownNameFromId(UUID townId) {
         return clientSyncHelper.getTownNameFromId(townId, level);

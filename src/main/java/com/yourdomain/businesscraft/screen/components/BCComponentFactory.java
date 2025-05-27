@@ -22,7 +22,7 @@ public class BCComponentFactory {
     private static final int BORDER_COLOR = 0xA0AAAAAA;        // Light gray
     private static final int TEXT_COLOR = 0xFFFFFFFF;          // White text
     private static final int TEXT_HIGHLIGHT = 0xFFDDFFFF;      // Light cyan highlight text
-
+    
     // Sizing constants
     private static final int STANDARD_BUTTON_HEIGHT = 20;
     private static final int SMALL_BUTTON_HEIGHT = 16;
@@ -30,7 +30,7 @@ public class BCComponentFactory {
     private static final int STANDARD_PADDING = 8;
     private static final int SMALL_PADDING = 4;
     private static final int LARGE_PADDING = 12;
-
+    
     /**
      * Creates a primary button with consistent styling.
      * 

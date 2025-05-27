@@ -39,7 +39,7 @@ import com.yourdomain.businesscraft.init.ModEntityTypes;
 public class BusinessCraft {
     public static final String MOD_ID = "businesscraft";
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessCraft.class);
-    
+
     // Add a static reference to the manager to use in event handlers
     public static final TouristVehicleManager TOURIST_VEHICLE_MANAGER = new TouristVehicleManager();
 
