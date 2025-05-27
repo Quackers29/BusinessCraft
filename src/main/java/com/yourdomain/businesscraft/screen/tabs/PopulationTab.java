@@ -1,6 +1,7 @@
 package com.yourdomain.businesscraft.screen.tabs;
 
 import com.yourdomain.businesscraft.screen.TownInterfaceScreen;
+import com.yourdomain.businesscraft.screen.TownInterfaceTheme;
 import com.yourdomain.businesscraft.screen.components.BCComponent;
 import com.yourdomain.businesscraft.screen.components.BCFlowLayout;
 import com.yourdomain.businesscraft.screen.components.BCLabel;
@@ -18,10 +19,11 @@ import org.slf4j.LoggerFactory;
  */
 public class PopulationTab extends BaseTownTab {
     private static final Logger LOGGER = LoggerFactory.getLogger(PopulationTab.class);
-    private static final int TEXT_COLOR = 0xFFFFFFFF;          // White text
-    private static final int TEXT_HIGHLIGHT = 0xFFDDFFFF;      // Light cyan highlight text
-    private static final int BACKGROUND_COLOR = 0x80222222;    // Semi-transparent dark gray
-    private static final int BORDER_COLOR = 0xA0AAAAAA;        // Light gray
+    private static final int TEXT_COLOR = TownInterfaceTheme.TEXT_COLOR;
+    private static final int TEXT_HIGHLIGHT = TownInterfaceTheme.TEXT_HIGHLIGHT;
+    // Use centralized theme constants
+    private static final int BACKGROUND_COLOR = TownInterfaceTheme.BACKGROUND_COLOR;
+    private static final int BORDER_COLOR = TownInterfaceTheme.BORDER_COLOR;
     
     // Sample citizen data (would be replaced with real data in production)
     private static final String[] names = {"John Smith", "Emma Johnson", "Alex Lee", "Sofia Garcia", 
