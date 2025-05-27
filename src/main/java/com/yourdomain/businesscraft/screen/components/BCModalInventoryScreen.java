@@ -244,27 +244,200 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
             return;
         }
         
-        // Draw input and output labels
-        InventoryRenderer.drawLabel(guiGraphics, this.font, "Input", 
-                this.leftPos + TradeMenu.SLOT_INPUT_X, this.topPos + TradeMenu.SLOT_INPUT_Y - 12);
+        // Enhanced input section with better styling
+        renderTradeInputSection(guiGraphics, mouseX, mouseY);
         
-        InventoryRenderer.drawLabel(guiGraphics, this.font, "Output", 
-                this.leftPos + TradeMenu.SLOT_OUTPUT_X, this.topPos + TradeMenu.SLOT_OUTPUT_Y - 12);
+        // Enhanced output section with better styling
+        renderTradeOutputSection(guiGraphics, mouseX, mouseY);
         
-        // Draw arrow between slots
-        InventoryRenderer.drawArrow(guiGraphics, 
-                this.leftPos + TradeMenu.SLOT_INPUT_X + 20, 
-                this.topPos + TradeMenu.SLOT_INPUT_Y + 8,
-                this.leftPos + TradeMenu.SLOT_OUTPUT_X - 4, 
-                this.topPos + TradeMenu.SLOT_OUTPUT_Y + 8,
-                0xFFFFFFFF);
-                
-        // Draw trade button
+        // Enhanced trade processing area
+        renderTradeProcessingArea(guiGraphics, mouseX, mouseY);
+        
+        // Trade information panel
+        renderTradeInfoPanel(guiGraphics, mouseX, mouseY);
+    }
+    
+    /**
+     * Render the enhanced input section
+     */
+    private void renderTradeInputSection(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        int inputX = this.leftPos + TradeMenu.SLOT_INPUT_X;
+        int inputY = this.topPos + TradeMenu.SLOT_INPUT_Y;
+        
+        // Draw input section background with gradient effect
+        guiGraphics.fill(inputX - 8, inputY - 8, inputX + 24, inputY + 24, 0x40336699);
+        guiGraphics.fill(inputX - 7, inputY - 7, inputX + 23, inputY + 23, 0x20FFFFFF);
+        
+        // Draw input label with better styling - positioned above the slot
+        String inputLabel = "Sell";
+        int labelWidth = this.font.width(inputLabel);
+        int labelX = inputX + 8 - (labelWidth / 2); // Center the label above the slot
+        guiGraphics.drawString(this.font, inputLabel, labelX, inputY - 10, 0xFFFFAA00, true);
+        
+        // Draw helpful hint below input slot - positioned below the slot
+        String hintText = "Items";
+        int hintWidth = this.font.width(hintText);
+        int hintX = inputX + 8 - (hintWidth / 2); // Center the hint below the slot
+        guiGraphics.drawString(this.font, hintText, hintX, inputY + 18, 0xFFAAAAAA, false);
+    }
+    
+    /**
+     * Render the enhanced output section
+     */
+    private void renderTradeOutputSection(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        int outputX = this.leftPos + TradeMenu.SLOT_OUTPUT_X;
+        int outputY = this.topPos + TradeMenu.SLOT_OUTPUT_Y;
+        
+        // Draw output section background with different color
+        guiGraphics.fill(outputX - 8, outputY - 8, outputX + 24, outputY + 24, 0x40669933);
+        guiGraphics.fill(outputX - 7, outputY - 7, outputX + 23, outputY + 23, 0x20FFFFFF);
+        
+        // Draw output label - positioned above the slot
+        String outputLabel = "Earn";
+        int labelWidth = this.font.width(outputLabel);
+        int labelX = outputX + 8 - (labelWidth / 2); // Center the label above the slot
+        guiGraphics.drawString(this.font, outputLabel, labelX, outputY - 10, 0xFF00FF00, true);
+        
+        // Draw helpful hint below output slot - positioned below the slot
+        String hintText = "Emeralds";
+        int hintWidth = this.font.width(hintText);
+        int hintX = outputX + 8 - (hintWidth / 2); // Center the hint below the slot
+        guiGraphics.drawString(this.font, hintText, hintX, outputY + 18, 0xFFAAAAAA, false);
+    }
+    
+    /**
+     * Render the enhanced trade processing area
+     */
+    private void renderTradeProcessingArea(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        int centerX = this.leftPos + 88; // Center of the screen
+        int centerY = this.topPos + 65;  // Below the slots
+        
+        // Draw enhanced trade button centered below the slots
         boolean isTradeButtonHovered = isMouseOverTradeButton(mouseX, mouseY);
-        InventoryRenderer.drawButton(guiGraphics, 
-                this.leftPos + 80, this.topPos + 35, 
-                20, 20, 
-                "T", this.font, isTradeButtonHovered);
+        renderEnhancedTradeButton(guiGraphics, centerX - 16, centerY, isTradeButtonHovered);
+    }
+    
+
+    
+    /**
+     * Render enhanced trade button with better styling and animation
+     */
+    private void renderEnhancedTradeButton(GuiGraphics guiGraphics, int x, int y, boolean isHovered) {
+        // Check if there are items ready to trade for animation
+        boolean hasItemsToTrade = false;
+        if (menu instanceof TradeMenu tradeMenu) {
+            hasItemsToTrade = !tradeMenu.getSlot(0).getItem().isEmpty();
+        }
+        
+        // Calculate pulsing effect for when items are ready
+        float pulseIntensity = 1.0f;
+        if (hasItemsToTrade) {
+            long time = System.currentTimeMillis();
+            pulseIntensity = 1.0f + 0.2f * (float) Math.sin(time * 0.005);
+        }
+        
+        int buttonColor = isHovered ? 0xFF66AA44 : 0xFF448822;
+        int borderColor = isHovered ? 0xFF88CC66 : 0xFF66AA44;
+        
+        // Apply pulse effect to colors when items are ready
+        if (hasItemsToTrade && !isHovered) {
+            int pulseGreen = (int) (0x44 + (0x22 * pulseIntensity));
+            buttonColor = 0xFF000000 | (pulseGreen << 8) | 0x22;
+            borderColor = 0xFF000000 | (Math.min(255, pulseGreen + 0x22) << 8) | 0x44;
+        }
+        
+        // Make button appropriately sized
+        int buttonWidth = 32;
+        int buttonHeight = 16;
+        
+        // Draw button background with gradient
+        guiGraphics.fill(x, y, x + buttonWidth, y + buttonHeight, buttonColor);
+        guiGraphics.fill(x + 1, y + 1, x + buttonWidth - 1, y + buttonHeight / 2, 0x40FFFFFF);
+        
+        // Draw button border
+        InventoryRenderer.drawBorder(guiGraphics, x, y, buttonWidth, buttonHeight, borderColor, 1);
+        
+        // Draw button text centered
+        String buttonText = "TRADE";
+        int textWidth = this.font.width(buttonText);
+        int textX = x + (buttonWidth - textWidth) / 2; // Center horizontally
+        int textY = y + (buttonHeight - 8) / 2; // Center vertically
+        
+        if (hasItemsToTrade) {
+            guiGraphics.drawString(this.font, buttonText, textX, textY, 0xFFFFFFFF, true);
+        } else {
+            guiGraphics.drawString(this.font, buttonText, textX, textY, 0xFF999999, true);
+        }
+        
+        // Add hover glow effect
+        if (isHovered) {
+            guiGraphics.fill(x - 1, y - 1, x + buttonWidth + 1, y + buttonHeight + 1, 0x20FFFFFF);
+        }
+        
+        // Add ready-to-trade glow effect
+        if (hasItemsToTrade && !isHovered) {
+            int glowAlpha = (int) (0x10 + (0x10 * pulseIntensity));
+            guiGraphics.fill(x - 2, y - 2, x + buttonWidth + 2, y + buttonHeight + 2, (glowAlpha << 24) | 0x00FF00);
+        }
+    }
+    
+    /**
+     * Render enhanced trade information panel with status indicator
+     */
+    private void renderTradeInfoPanel(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        // Get current input item for rate calculation
+        ItemStack inputStack = ItemStack.EMPTY;
+        if (menu instanceof TradeMenu tradeMenu) {
+            inputStack = tradeMenu.getSlot(0).getItem();
+        }
+        
+        // Draw info panel background with dynamic color based on trade readiness
+        int panelX = this.leftPos + 8;
+        int panelY = this.topPos + 8;
+        int panelWidth = 160;
+        int panelHeight = 20;
+        
+        boolean hasItemsToTrade = !inputStack.isEmpty();
+        int panelBgColor = hasItemsToTrade ? 0x80004400 : 0x60000000;
+        int borderColor = hasItemsToTrade ? 0xFF448822 : 0xFF666666;
+        
+        guiGraphics.fill(panelX, panelY, panelX + panelWidth, panelY + panelHeight, panelBgColor);
+        InventoryRenderer.drawBorder(guiGraphics, panelX, panelY, panelWidth, panelHeight, borderColor, 1);
+        
+        // Draw status indicator
+        int indicatorX = panelX + panelWidth - 12;
+        int indicatorY = panelY + 6;
+        int indicatorSize = 8;
+        
+        if (hasItemsToTrade) {
+            // Green ready indicator with pulse
+            long time = System.currentTimeMillis();
+            float pulse = 0.8f + 0.2f * (float) Math.sin(time * 0.008);
+            int pulseAlpha = (int) (255 * pulse);
+            guiGraphics.fill(indicatorX, indicatorY, indicatorX + indicatorSize, indicatorY + indicatorSize, 
+                    (pulseAlpha << 24) | 0x00FF00);
+        } else {
+            // Gray not ready indicator
+            guiGraphics.fill(indicatorX, indicatorY, indicatorX + indicatorSize, indicatorY + indicatorSize, 0xFF666666);
+        }
+        
+        // Display trade rate information
+        if (hasItemsToTrade) {
+            String itemName = inputStack.getHoverName().getString();
+            int itemCount = inputStack.getCount();
+            int emeraldsEarned = Math.max(1, itemCount / 10); // 10 items = 1 emerald
+            
+            // Shorten item name to fit better
+            String shortName = itemName.length() > 6 ? itemName.substring(0, 6) + "..." : itemName;
+            String rateText = String.format("%d %s = %d emerald%s", 
+                    itemCount, shortName, emeraldsEarned, emeraldsEarned == 1 ? "" : "s");
+            
+            // Draw just the trade rate text
+            guiGraphics.drawString(this.font, rateText, panelX + 4, panelY + 6, 0xFFFFFFFF, false);
+        } else {
+            guiGraphics.drawString(this.font, "Add items to sell", 
+                    panelX + 4, panelY + 6, 0xFFAAAAAA, false);
+        }
     }
     
     /**
@@ -275,20 +448,40 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
     }
     
     /**
-     * Check if mouse is over the trade button
+     * Check if mouse is over the enhanced trade button
      */
     private boolean isMouseOverTradeButton(int mouseX, int mouseY) {
-        return InventoryRenderer.isMouseOverElement(mouseX, mouseY, this.leftPos, this.topPos, 
-                80, 35, 20, 20);
+        int centerX = this.leftPos + 88; // Center of the screen
+        int centerY = this.topPos + 65;  // Below the slots
+        int buttonX = centerX - 16;
+        int buttonY = centerY;
+        int buttonWidth = 32;
+        int buttonHeight = 16;
+        
+        return mouseX >= buttonX && mouseX < buttonX + buttonWidth && 
+               mouseY >= buttonY && mouseY < buttonY + buttonHeight;
     }
     
     /**
      * Render custom tooltips for UI elements
      */
     private void renderCustomTooltips(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        // For trade screen, add tooltip for the trade button
+        // For trade screen, add enhanced tooltip for the trade button
         if (this.inventoryType == InventoryType.TRADE && isMouseOverTradeButton(mouseX, mouseY)) {
-            guiGraphics.renderTooltip(this.font, Component.literal("Click to trade"), mouseX, mouseY);
+            ItemStack inputStack = ItemStack.EMPTY;
+            if (menu instanceof TradeMenu tradeMenu) {
+                inputStack = tradeMenu.getSlot(0).getItem();
+            }
+            
+            if (!inputStack.isEmpty()) {
+                int itemCount = inputStack.getCount();
+                int emeraldsEarned = Math.max(1, itemCount / 10);
+                String tooltipText = String.format("Click to trade!\nGet: %d emerald%s", 
+                        emeraldsEarned, emeraldsEarned == 1 ? "" : "s");
+                guiGraphics.renderTooltip(this.font, Component.literal(tooltipText), mouseX, mouseY);
+            } else {
+                guiGraphics.renderTooltip(this.font, Component.literal("Add items first"), mouseX, mouseY);
+            }
         }
         
         // For storage screen, add tooltip for the storage mode toggle button
@@ -405,15 +598,63 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
             return;
         }
         
-        // Draw input slot with special background
-        InventoryRenderer.drawSlot(guiGraphics, 
-                this.leftPos + TradeMenu.SLOT_INPUT_X, this.topPos + TradeMenu.SLOT_INPUT_Y, 
-                InventoryRenderer.PRIMARY_COLOR, InventoryRenderer.SLOT_BORDER_COLOR);
+        // Draw enhanced input slot with blue theme
+        int inputX = this.leftPos + TradeMenu.SLOT_INPUT_X;
+        int inputY = this.topPos + TradeMenu.SLOT_INPUT_Y;
+        InventoryRenderer.drawSlot(guiGraphics, inputX, inputY, 0x60336699, 0xFF4477BB);
         
-        // Draw output slot with special background
-        InventoryRenderer.drawSlot(guiGraphics, 
-                this.leftPos + TradeMenu.SLOT_OUTPUT_X, this.topPos + TradeMenu.SLOT_OUTPUT_Y, 
-                InventoryRenderer.SECONDARY_COLOR, InventoryRenderer.SLOT_BORDER_COLOR);
+        // Add subtle glow around input slot
+        guiGraphics.fill(inputX - 2, inputY - 2, inputX + 18, inputY + 18, 0x20336699);
+        
+        // Draw enhanced output slot with green theme
+        int outputX = this.leftPos + TradeMenu.SLOT_OUTPUT_X;
+        int outputY = this.topPos + TradeMenu.SLOT_OUTPUT_Y;
+        InventoryRenderer.drawSlot(guiGraphics, outputX, outputY, 0x60669933, 0xFF77BB44);
+        
+        // Add subtle glow around output slot
+        guiGraphics.fill(outputX - 2, outputY - 2, outputX + 18, outputY + 18, 0x20669933);
+        
+        // Draw connecting flow line between slots
+        renderTradeFlowLine(guiGraphics, inputX + 16, inputY + 8, outputX, outputY + 8);
+    }
+    
+    /**
+     * Render a flowing connection line between input and output with animation
+     */
+    private void renderTradeFlowLine(GuiGraphics guiGraphics, int startX, int startY, int endX, int endY) {
+        // Check if there are items to trade for flow animation
+        boolean hasItemsToTrade = false;
+        if (menu instanceof TradeMenu tradeMenu) {
+            hasItemsToTrade = !tradeMenu.getSlot(0).getItem().isEmpty();
+        }
+        
+        // Draw main flow line with different opacity based on trade readiness
+        int lineOpacity = hasItemsToTrade ? 0xC0DDDDDD : 0x60DDDDDD;
+        guiGraphics.fill(startX, startY - 1, endX, startY + 1, lineOpacity);
+        
+        // Add animated flow particles
+        if (hasItemsToTrade) {
+            long time = System.currentTimeMillis();
+            int particleSpacing = 12;
+            float animationOffset = (time * 0.01f) % particleSpacing;
+            
+            for (float x = startX + 4 + animationOffset; x < endX - 4; x += particleSpacing) {
+                int particleX = (int) x;
+                
+                // Create flowing particle effect with varying opacity
+                float distanceFromStart = (particleX - startX) / (float) (endX - startX);
+                int particleAlpha = (int) (255 * (0.5f + 0.5f * Math.sin(time * 0.01 + distanceFromStart * 6)));
+                int particleColor = (particleAlpha << 24) | 0xFFFFFF;
+                
+                guiGraphics.fill(particleX, startY - 1, particleX + 2, startY + 1, particleColor);
+            }
+        } else {
+            // Static particles when no items to trade
+            int particleSpacing = 12;
+            for (int x = startX + 6; x < endX - 4; x += particleSpacing) {
+                guiGraphics.fill(x, startY - 1, x + 1, startY + 1, 0x80AAAAAA);
+            }
+        }
     }
     
     /**
@@ -1018,7 +1259,7 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
     }
     
     /**
-     * Process a trade action
+     * Process a trade action with enhanced feedback
      */
     private boolean processTrade() {
         // Only proceed if we have a TradeMenu
@@ -1026,7 +1267,40 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
             return false;
         }
         
-        return tradeMenu.processTrade();
+        // Check if there's an item to trade
+        ItemStack inputStack = tradeMenu.getSlot(0).getItem();
+        if (inputStack.isEmpty()) {
+            // Play error sound and show message
+            if (this.minecraft != null && this.minecraft.player != null) {
+                this.minecraft.player.displayClientMessage(
+                    Component.literal("Add items first!"), true);
+            }
+            return false;
+        }
+        
+        // Calculate trade value for feedback
+        int itemCount = inputStack.getCount();
+        int emeraldsEarned = Math.max(1, itemCount / 10);
+        String itemName = inputStack.getHoverName().getString();
+        
+        boolean success = tradeMenu.processTrade();
+        if (success) {
+            playClickSound();
+            
+            // Show success message
+            if (this.minecraft != null && this.minecraft.player != null) {
+                String message = String.format("Trade Complete! Got %d emerald%s", 
+                        emeraldsEarned, emeraldsEarned == 1 ? "" : "s");
+                this.minecraft.player.displayClientMessage(Component.literal(message), true);
+            }
+        } else {
+            // Show error message
+            if (this.minecraft != null && this.minecraft.player != null) {
+                this.minecraft.player.displayClientMessage(
+                    Component.literal("Trade failed! Town doesn't want this."), true);
+            }
+        }
+        return success;
     }
     
     /**
