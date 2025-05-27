@@ -67,7 +67,8 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
                    TownScreenEventHandler.ModalStateProvider,
                    TownScreenRenderManager.CacheUpdateProvider,
                    TownScreenRenderManager.ScreenLayoutProvider,
-                   TownScreenRenderManager.ComponentProvider {
+                   TownScreenRenderManager.ComponentProvider,
+                   TownTabController.TabDataProvider {
     private BCTabPanel tabPanel;
     private BCTheme customTheme;
 
@@ -97,6 +98,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     private BottomButtonManager buttonManager;
     private TownScreenEventHandler eventHandler;
     private TownScreenRenderManager renderManager;
+    private TownTabController tabController;
     
     // Cache the current search radius for UI updates
     private int currentSearchRadius;
@@ -140,6 +142,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         this.buttonManager = new BottomButtonManager(this);
         this.eventHandler = new TownScreenEventHandler(this, this, this.buttonManager);
         this.renderManager = new TownScreenRenderManager(this, this, this);
+        this.tabController = new TownTabController(this);
     }
     
     // ===== Interface Implementations =====
@@ -300,6 +303,23 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     public BottomButtonManager getButtonManager() {
         return buttonManager;
     }
+    
+    // ===== TabDataProvider Implementation =====
+    
+    @Override
+    public int getScreenPadding() {
+        return 10; // Standard screen padding
+    }
+    
+    @Override
+    public void addRenderableWidget(Button widget) {
+        super.addRenderableWidget(widget);
+    }
+    
+    @Override
+    public TownInterfaceScreen getTabContentProvider() {
+        return this;
+    }
 
     @Override
     protected void init() {
@@ -311,100 +331,16 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         // Initialize the cached values
         currentSearchRadius = menu.getSearchRadius();
         
-        // Calculate screen dimensions and padding
-        int screenPadding = 10;
-        int screenContentWidth = this.imageWidth - (screenPadding * 2);
-        int screenContentHeight = this.imageHeight - (screenPadding * 2);
-        
-        // Create tab panel with proper dimensions, positioned with padding
-        this.tabPanel = new BCTabPanel(screenContentWidth, screenContentHeight, 20);
-        this.tabPanel.position(this.leftPos + screenPadding, this.topPos + screenPadding);
-        
-        // Set tab styling with our lighter colors
-        this.tabPanel.withTabStyle(ACTIVE_TAB_COLOR, INACTIVE_TAB_COLOR, TEXT_COLOR)
-                     .withTabBorder(true, BORDER_COLOR)
-                     .withContentStyle(BACKGROUND_COLOR, BORDER_COLOR);
-        
-        // Create and configure tabs with proper spacing
-        createOverviewTab();
-        createResourcesTab();
-        createPopulationTab();
-        createSettingsTab();
-        
-        // Make sure Overview is the default active tab
-        if (this.tabPanel.getActiveTabId() == null) {
-            this.tabPanel.setActiveTab("overview");
-        }
+        // Initialize tabs using the tab controller
+        this.tabPanel = tabController.initializeTabs();
         
         // Initialize the button manager with screen position
         buttonManager.updateScreenPosition(this.leftPos, this.topPos, this.imageWidth, this.imageHeight);
         buttonManager.createBottomButtonsGrid();
-        
-        // Initialize the tab panel
-        this.tabPanel.init(this::addRenderableWidget);
     }
     
 
-    
-    private void createOverviewTab() {
-        // Create a new OverviewTab instance
-        OverviewTab overviewTab = new OverviewTab(
-            this, 
-            this.tabPanel.getWidth(), 
-            this.tabPanel.getHeight() - 20
-        );
-        
-        // Initialize the tab
-        overviewTab.init(this::addRenderableWidget);
-        
-        // Add the tab to the tab panel
-        this.tabPanel.addTab("overview", Component.literal("Overview"), overviewTab.getPanel());
-    }
-    
-    private void createResourcesTab() {
-        // Create a new ResourcesTab instance
-        ResourcesTab resourcesTab = new ResourcesTab(
-            this, 
-            this.tabPanel.getWidth(), 
-            this.tabPanel.getHeight() - 20
-        );
-                
-        // Initialize the tab
-        resourcesTab.init(this::addRenderableWidget);
-        
-        // Add the tab to the tab panel
-        this.tabPanel.addTab("resources", Component.literal("Resources"), resourcesTab.getPanel());
-    }
-    
-    private void createPopulationTab() {
-        // Create a new PopulationTab instance
-        PopulationTab populationTab = new PopulationTab(
-            this, 
-            this.tabPanel.getWidth(), 
-            this.tabPanel.getHeight() - 20
-                    );
-                    
-        // Initialize the tab
-        populationTab.init(this::addRenderableWidget);
-                    
-        // Add the tab to the tab panel
-        this.tabPanel.addTab("population", Component.literal("Population"), populationTab.getPanel());
-    }
-    
-    private void createSettingsTab() {
-        // Create a new SettingsTab instance
-        SettingsTab settingsTab = new SettingsTab(
-            this, 
-            this.tabPanel.getWidth(), 
-            this.tabPanel.getHeight() - 20
-        );
-        
-        // Initialize the tab
-        settingsTab.init(this::addRenderableWidget);
-        
-        // Add the tab to the tab panel
-        this.tabPanel.addTab("settings", Component.literal("Settings"), settingsTab.getPanel());
-    }
+
     
     /**
      * Opens the platform management screen
@@ -639,6 +575,11 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
 
     @Override
     public void onClose() {
+        // Clean up tab controller resources
+        if (tabController != null) {
+            tabController.cleanup();
+        }
+        
         // Send a packet to register the player exit UI to show platform indicators
         BlockPos blockPos = this.menu.getBlockPos();
         if (blockPos != null) {
