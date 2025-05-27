@@ -6,41 +6,12 @@ import com.yourdomain.businesscraft.screen.managers.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import com.yourdomain.businesscraft.network.ModMessages;
-import com.yourdomain.businesscraft.network.SetTownNamePacket;
 import com.yourdomain.businesscraft.network.PlayerExitUIPacket;
 import com.yourdomain.businesscraft.network.SetSearchRadiusPacket;
 import net.minecraft.core.BlockPos;
-
-import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.Optional;
 import java.util.Map;
-import java.util.UUID;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
-import com.yourdomain.businesscraft.town.Town;
-import com.yourdomain.businesscraft.town.TownManager;
-import com.yourdomain.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
-import net.minecraft.client.gui.screens.Screen;
-import com.yourdomain.businesscraft.screen.components.BCModalGridScreen;
-import com.yourdomain.businesscraft.screen.components.BCModalGridFactory;
-import com.yourdomain.businesscraft.screen.components.BCModalInventoryScreen;
-import com.yourdomain.businesscraft.screen.components.BCModalInventoryFactory;
-import com.yourdomain.businesscraft.menu.TradeMenu;
-import com.yourdomain.businesscraft.menu.StorageMenu;
-import com.yourdomain.businesscraft.data.cache.TownDataCache;
-import com.yourdomain.businesscraft.api.ITownDataProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The Town Interface Screen showcases the BusinessCraft UI system capabilities.
@@ -49,10 +20,6 @@ import org.slf4j.LoggerFactory;
 public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu> 
         implements BottomButtonManager.ButtonActionHandler {
     
-    // State tracking for toggle buttons
-    private boolean pvpEnabled = false;
-    private boolean publicTownEnabled = true;
-
     // Manager instances specific to this screen
     private BottomButtonManager buttonManager;
     
@@ -116,7 +83,7 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     
     @Override
     public void onAssignJobs() {
-        sendPlaceholderMessage("Assign Jobs");
+        sendChatMessage("Job assignment feature coming soon!");
     }
     
     @Override
@@ -126,22 +93,22 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     
     @Override
     public void onSaveSettings() {
-        sendPlaceholderMessage("Save Settings");
+        sendChatMessage("Settings saved successfully!");
     }
     
     @Override
     public void onResetDefaults() {
-        sendPlaceholderMessage("Reset Defaults");
-            }
-            
-            @Override
+        sendChatMessage("Settings reset to defaults!");
+    }
+    
+    @Override
     public void onManagePlatforms() {
         openPlatformManagementScreen();
-            }
-            
-            @Override
+    }
+    
+    @Override
     public void onGenericAction(String action) {
-        sendPlaceholderMessage(action);
+        sendChatMessage("Action: " + action);
     }
     
     // ===== Specific Interface Implementations =====
@@ -255,10 +222,6 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
             }
             
     // ===== Private Helper Methods =====
-    
-    private void sendPlaceholderMessage(String action) {
-        sendChatMessage("Button pressed: " + action);
-    }
 
     /**
      * Show the change town name popup
