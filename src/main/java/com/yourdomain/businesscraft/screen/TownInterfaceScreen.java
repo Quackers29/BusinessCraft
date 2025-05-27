@@ -8,6 +8,8 @@ import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.screen.tabs.ResourcesTab;
 import com.yourdomain.businesscraft.screen.tabs.OverviewTab;
 import com.yourdomain.businesscraft.screen.tabs.PopulationTab;
+import com.yourdomain.businesscraft.screen.tabs.SettingsTab;
+import com.yourdomain.businesscraft.screen.managers.*;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.components.Button;
@@ -51,7 +53,6 @@ import com.yourdomain.businesscraft.menu.TradeMenu;
 import com.yourdomain.businesscraft.menu.StorageMenu;
 import com.yourdomain.businesscraft.data.cache.TownDataCache;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
-import java.util.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,17 +64,17 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     private BCTabPanel tabPanel;
     private BCTheme customTheme;
 
-    // UI colors - lighter and more visible
-    private static final int PRIMARY_COLOR = 0xA0335599;       // Semi-transparent blue
-    private static final int SECONDARY_COLOR = 0xA0884466;     // Semi-transparent purple
-    private static final int BACKGROUND_COLOR = 0x80222222;    // Semi-transparent dark gray
-    private static final int BORDER_COLOR = 0xA0AAAAAA;        // Light gray
-    private static final int ACTIVE_TAB_COLOR = 0xA0CCDDFF;    // Light blue for active tab
-    private static final int INACTIVE_TAB_COLOR = 0x80555555;  // Medium gray for inactive tabs
-    private static final int TEXT_COLOR = 0xFFFFFFFF;          // White text
-    private static final int TEXT_HIGHLIGHT = 0xFFDDFFFF;      // Light cyan highlight text
-    private static final int SUCCESS_COLOR = 0xA0339944;       // Green
-    private static final int DANGER_COLOR = 0xA0993333;        // Red
+    // Use centralized theme constants
+    private static final int PRIMARY_COLOR = TownInterfaceTheme.PRIMARY_COLOR;
+    private static final int SECONDARY_COLOR = TownInterfaceTheme.SECONDARY_COLOR;
+    private static final int BACKGROUND_COLOR = TownInterfaceTheme.BACKGROUND_COLOR;
+    private static final int BORDER_COLOR = TownInterfaceTheme.BORDER_COLOR;
+    private static final int ACTIVE_TAB_COLOR = TownInterfaceTheme.ACTIVE_TAB_COLOR;
+    private static final int INACTIVE_TAB_COLOR = TownInterfaceTheme.INACTIVE_TAB_COLOR;
+    private static final int TEXT_COLOR = TownInterfaceTheme.TEXT_COLOR;
+    private static final int TEXT_HIGHLIGHT = TownInterfaceTheme.TEXT_HIGHLIGHT;
+    private static final int SUCCESS_COLOR = TownInterfaceTheme.SUCCESS_COLOR;
+    private static final int DANGER_COLOR = TownInterfaceTheme.DANGER_COLOR;
     
     // Grid builder for bottom buttons
     private UIGridBuilder bottomButtonsGrid;
@@ -90,18 +91,13 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     
     // Cache the current search radius for UI updates
     private int currentSearchRadius;
-    
-    // Cache values for population and tourists for UI updates
-    private int cachedPopulation;
-    private int cachedTourists;
-    private int cachedMaxTourists;
 
     // Add a field to track update intervals
     private int updateCounter = 0;
     private static final int REFRESH_INTERVAL = 100; // Ticks between forced cache refreshes (5 seconds)
 
-    // State management
-    private TownDataCache dataCache;
+    // Consolidated cache management
+    private TownDataCacheManager cacheManager;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TownInterfaceScreen.class);
 
@@ -116,31 +112,20 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         this.inventoryLabelY = 300;  // Position it below the visible area
         
         // Initialize cached values from the menu
-        this.cachedPopulation = menu.getTownPopulation();
-        this.cachedTourists = menu.getCurrentTourists();
-        this.cachedMaxTourists = menu.getMaxTourists();
         this.currentSearchRadius = menu.getSearchRadius();
         
-        // Initialize the data cache with the town data provider from the menu
+        // Initialize the cache manager with the town data provider from the menu
+        TownDataCache dataCache = null;
         if (menu instanceof TownInterfaceMenu) {
             ITownDataProvider dataProvider = menu.getTownDataProvider();
             if (dataProvider != null) {
-                this.dataCache = new TownDataCache(dataProvider);
+                dataCache = new TownDataCache(dataProvider);
             }
         }
+        this.cacheManager = new TownDataCacheManager(dataCache, menu);
         
-        // Create a custom theme for this screen with lighter colors
-        customTheme = BCTheme.builder()
-            .primaryColor(PRIMARY_COLOR)
-            .secondaryColor(SECONDARY_COLOR)
-            .successColor(0xA0339944)
-            .dangerColor(0xA0993333)
-            .textLight(TEXT_COLOR)
-            .textDark(0xFF202020)
-            .panelBackground(BACKGROUND_COLOR)
-            .panelBorder(BORDER_COLOR)
-            .roundedCorners(true)
-            .build();
+        // Create a custom theme for this screen using the centralized theme
+        customTheme = TownInterfaceTheme.createBCTheme();
     }
 
     @Override
@@ -152,9 +137,6 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         
         // Initialize the cached values
         currentSearchRadius = menu.getSearchRadius();
-        cachedPopulation = menu.getTownPopulation();
-        cachedTourists = menu.getCurrentTourists();
-        cachedMaxTourists = menu.getMaxTourists();
         
         // Calculate screen dimensions and padding
         int screenPadding = 10;
@@ -253,101 +235,18 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     }
     
     private void createSettingsTab() {
-        // Create panel for content
-        BCPanel panel = new BCPanel(this.tabPanel.getWidth(), this.tabPanel.getHeight() - 20);
-        panel.withPadding(10)
-             .withBackgroundColor(0x00000000) // Transparent background
-             .withCornerRadius(3);
+        // Create a new SettingsTab instance
+        SettingsTab settingsTab = new SettingsTab(
+            this, 
+            this.tabPanel.getWidth(), 
+            this.tabPanel.getHeight() - 20
+        );
         
-        // Create a flow layout for the panel
-        panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 10));
+        // Initialize the tab
+        settingsTab.init(this::addRenderableWidget);
         
-        // Add title
-        BCLabel titleLabel = BCComponentFactory.createHeaderLabel("SETTINGS", panel.getInnerWidth());
-        titleLabel.withTextColor(TEXT_HIGHLIGHT).withShadow(true);
-        panel.addChild(titleLabel);
-        
-        // Calculate dimensions for the settings grid - ensure it fits within panel boundaries
-        // Account for the panel's padding and the title height
-        int titleHeight = 20; // Approximate height of the header
-        int verticalSpacing = 10; // Space between title and grid
-        
-        // Calculate available space for the grid
-        int availableWidth = panel.getInnerWidth();
-        int availableHeight = panel.getInnerHeight() - titleHeight - verticalSpacing;
-        
-        // Create a custom component to host the settings grid
-        BCComponent gridHost = new BCComponent(availableWidth, availableHeight) {
-            // Internal grid instance
-            private UIGridBuilder grid;
-            
-            // Initialize the grid when rendering
-            private UIGridBuilder createGrid() {
-                // Use the new utility method for label-button pairs
-                Map<String, Object[]> settingsData = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
-                
-                // Add platforms row
-                settingsData.put("Platforms:", new Object[] {
-                    "Set Platforms", 
-                    (Consumer<Void>) button -> {
-                        playButtonClickSound();
-                        // Open the platform management screen instead of just showing a message
-                        openPlatformManagementScreen();
-                    }
-                });
-                
-                // Add search radius row - use the cached value for display
-                settingsData.put("Search Radius:", new Object[] {
-                    "Radius: " + currentSearchRadius, 
-                    (Consumer<Void>) button -> {
-                        // In TownBlockScreen, this would increase the radius
-                        handleRadiusChange(0); // 0 = left click (increase)
-                    }
-                });
-                
-                return UIGridBuilder.createLabelButtonGrid(
-                    x, y, getWidth(), getHeight(),
-                    TEXT_COLOR, PRIMARY_COLOR,
-                    settingsData)
-                    .withBackgroundColor(BACKGROUND_COLOR)
-                    .withBorderColor(BORDER_COLOR)
-                    .withMargins(15, 10)
-                    .withSpacing(15, 10)
-                    .drawBorder(true);
-            }
-            
-            @Override
-            protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-                // Create/update the grid
-                grid = createGrid();
-                
-                // Render the grid
-                grid.render(guiGraphics, mouseX, mouseY);
-            }
-            
-            @Override
-            public boolean mouseClicked(double mouseX, double mouseY, int button) {
-                // If this is a right-click, handle the radius change manually
-                if (button == 1) {
-                    // Approximate if the click is in the button area
-                    // This is a simplified approach that assumes the radius button is at a specific position
-                    handleRadiusChange(1); // Handle right click
-                    return true;
-                }
-                
-                // For all other cases, delegate to the grid
-                if (grid != null) {
-                    return grid.mouseClicked((int)mouseX, (int)mouseY, button);
-                }
-                return false;
-            }
-        };
-        
-        // Add the grid host to the panel
-        panel.addChild(gridHost);
-        
-        // Add the panel to the tab
-        this.tabPanel.addTab("settings", Component.literal("Settings"), panel);
+        // Add the tab to the tab panel
+        this.tabPanel.addTab("settings", Component.literal("Settings"), settingsTab.getPanel());
     }
     
     /**
@@ -399,6 +298,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         
         // Update our cached value immediately for UI feedback
         currentSearchRadius = newRadius;
+        cacheManager.updateCachedSearchRadius(newRadius);
         
         // Send packet to update the server
         ModMessages.sendToServer(new SetSearchRadiusPacket(menu.getBlockPos(), newRadius));
@@ -424,59 +324,22 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         return currentSearchRadius;
     }
     
-    // Helper methods to get data from the cache or fall back to menu
+    // Helper methods to get data from the cache manager
     public String getCachedTownName() {
-        if (dataCache != null) {
-            return dataCache.getTownName();
-        }
-        return menu.getTownName();
+        return cacheManager.getCachedTownName();
     }
     
     public int getCachedPopulation() {
-        if (dataCache != null) {
-            return dataCache.getPopulation();
-        }
-        return menu.getTownPopulation();
-    }
-    
-    private int getCachedTouristCount() {
-        if (dataCache != null) {
-            return dataCache.getTouristCount();
-        }
-        return menu.getCurrentTourists();
-    }
-    
-    private int getCachedMaxTourists() {
-        if (dataCache != null) {
-            return dataCache.getMaxTourists();
-        }
-        return menu.getMaxTourists();
-    }
-    
-    private int getCachedSearchRadius() {
-        if (dataCache != null) {
-            return dataCache.getSearchRadius();
-        }
-        return menu.getSearchRadius();
+        return cacheManager.getCachedPopulation();
     }
     
     // Changed from private to public to allow access from tab implementations
     public Map<Item, Integer> getCachedResources() {
-        if (dataCache != null) {
-            return dataCache.getAllResources();
-        }
-        return menu.getAllResources();
-    }
-    
-    private List<ITownDataProvider.VisitHistoryRecord> getCachedVisitHistory() {
-        if (dataCache != null) {
-            return dataCache.getVisitHistory();
-        }
-        return Collections.emptyList(); // Fallback when cache is not available
+        return cacheManager.getCachedResources();
     }
     
     public String getTouristString() {
-        return cachedTourists + "/" + cachedMaxTourists;
+        return cacheManager.getTouristString();
     }
     
     @Override
@@ -487,19 +350,12 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
             updateCounter = 0;
             
             // Refresh cache if available
-            if (dataCache != null) {
-                dataCache.invalidateAll();
-                
-                // Update our local cached values from the refreshed cache
-                this.cachedPopulation = getCachedPopulation();
-                this.cachedTourists = getCachedTouristCount();
-                this.cachedMaxTourists = getCachedMaxTourists();
-                this.currentSearchRadius = getCachedSearchRadius();
+            if (cacheManager != null) {
+                cacheManager.invalidateCache();
+                cacheManager.refreshCachedValues();
+                this.currentSearchRadius = cacheManager.getLocalCachedSearchRadius();
             } else {
                 // Fallback to direct menu updates if cache isn't available
-                this.cachedPopulation = menu.getTownPopulation();
-                this.cachedTourists = menu.getCurrentTourists();
-                this.cachedMaxTourists = menu.getMaxTourists();
                 this.currentSearchRadius = menu.getSearchRadius();
             }
             
@@ -814,44 +670,11 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
      * Show the change town name popup
      */
     private void showChangeTownNamePopup() {
-        // Create a popup for changing the town name
-        activePopup = BCComponentFactory.createStringInputPopup(
-            "Change Town Name", 
-            getCachedTownName(), // Initial value
-            result -> {
-                // Handle the result
-                if (result.isConfirmed() && !result.getStringValue().isEmpty()) {
-                    String newName = result.getStringValue().trim();
-                    
-                    // Send packet to update town name on the server
-                    ModMessages.sendToServer(
-                        new SetTownNamePacket(menu.getBlockPos(), newName)
-                    );
-                    
-                    // Provide immediate client-side feedback
-                    sendChatMessage("Changing town name to: " + newName);
-                }
-            }
+        activePopup = TownNamePopupManager.showChangeTownNamePopup(
+            getCachedTownName(),
+            menu.getBlockPos(),
+            popup -> activePopup = null
         );
-        
-        // Get screen dimensions
-        Minecraft minecraft = Minecraft.getInstance();
-        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
-        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
-        
-        // Calculate exact center position
-        int popupWidth = 300; // Same as in createStringInputPopup
-        int popupHeight = 150; // Same as in createStringInputPopup
-        int centerX = screenWidth / 2 - popupWidth / 2;
-        int centerY = screenHeight / 2 - popupHeight / 2;
-        
-        // Directly position the popup at the center of the screen
-        activePopup.position(centerX, centerY);
-        
-        // Set close handler
-        activePopup.setClosePopupHandler(button -> {
-            activePopup = null; // Clear the popup when closed
-        });
         
         // Initialize the popup
         activePopup.init(this::addRenderableWidget);
@@ -907,37 +730,16 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
      * Show the visitor list modal screen
      */
     private void showVisitorListModal() {
-        // Create a modal with a list of visitors
-        // Use the 2-column constructor for an appropriately sized window
-        activeModal = new BCModalScreen(
-            "Town Visitors", 
-            result -> {
-                // Handle the result (OK or Back)
-                if (result) {
-                    sendChatMessage("Selected visitors from the list");
-                }
-                activeModal = null; // Clear the modal when closed
-            },
-            2 // Explicitly specify 2 columns for a narrower width
+        activeModal = VisitorModalManager.showVisitorListModal(
+            modal -> activeModal = null
         );
-        
-        // Create some example data - just 5 items for a more compact display
-        List<String> visitorNames = new ArrayList<>();
-        for (int i = 1; i <= 12; i++) {
-            visitorNames.add("Visitor " + i + " - Town " + (i * 10));
-        }
-        
-        // Set the data - this will adjust the height automatically
-        activeModal.setData(visitorNames);
     }
 
     /**
      * Shows the trade resources modal screen with input and output slots
      */
     private void showTradeResourcesModal() {
-        // Create a modal trade screen using the factory
-        BCModalInventoryScreen<TradeMenu> tradeScreen = BCModalInventoryFactory.createTradeScreen(
-            Component.literal("Trade Resources"),
+        TradeModalManager.showTradeResourcesModal(
             this,
             this.menu.getBlockPos(),
             screen -> {
@@ -945,42 +747,21 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
                 // We can use this to refresh data if needed
             }
         );
-        
-        // Show the trade screen as a modal overlay
-        this.minecraft.setScreen(tradeScreen);
     }
     
     /**
      * Shows the storage modal screen with 2x9 chest-like storage
      */
     private void showStorageModal() {
-        // Create a modal storage screen using the factory
-        BCModalInventoryScreen<StorageMenu> storageScreen = BCModalInventoryFactory.createStorageScreen(
-            Component.literal("Town Storage"),
+        StorageModalManager.showStorageModal(
             this,
             this.menu.getBlockPos(),
+            this.menu,
             screen -> {
                 // Optional callback when screen is closed
                 // We can use this to refresh data if needed
             }
         );
-        
-        // Initialize the storage inventory with the town's communal storage items
-        if (storageScreen.getMenu() != null) {
-            StorageMenu storageMenu = storageScreen.getMenu();
-            
-            // Start with communal storage by default
-            boolean isPersonalMode = false;
-            storageMenu.updateStorageItems(this.menu.getAllCommunalStorageItems());
-            
-            // If at some point we want to start with personal mode, we would do:
-            // isPersonalMode = true;
-            // storageMenu.toggleStorageMode();
-            // storageMenu.updatePersonalStorageItems(this.menu.getPersonalStorageItems(this.minecraft.player.getUUID()));
-        }
-        
-        // Show the storage screen as a modal overlay
-        this.minecraft.setScreen(storageScreen);
     }
     
     /**
@@ -994,69 +775,14 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
      * Show the visitor history screen
      */
     private void showVisitorHistoryScreen() {
-        // Get the block entity and visit history
-        List<VisitHistoryRecord> visitHistory = new ArrayList<>();
-        BlockPos townPos = menu.getBlockPos();
-        
-        if (this.minecraft != null && this.minecraft.level != null) {
-            BlockEntity blockEntity = this.minecraft.level.getBlockEntity(townPos);
-            if (blockEntity instanceof TownBlockEntity townBlock) {
-                // Request the town block entity to sync its town data with the server
-                ModMessages.sendToServer(new PlayerExitUIPacket(townPos));
-                
-                // Get the visit history
-                visitHistory.addAll(townBlock.getVisitHistory());
-            }
-        }
-        
-        // Create a town name lookup function
-        Function<UUID, String> townNameLookup = townId -> {
-            if (townId == null) return "Unknown";
-            
-            try {
-                // On the client side, we need to rely on the TownBlockEntity to get the town name
-                if (this.minecraft != null && this.minecraft.level != null) {
-                    BlockEntity blockEntity = this.minecraft.level.getBlockEntity(townPos);
-                    if (blockEntity instanceof TownBlockEntity townBlock) {
-                        // Use the getTownNameFromId method to look up the town name
-                        String townName = townBlock.getTownNameFromId(townId);
-                        
-                        // If we got a name, return it
-                        if (townName != null) {
-                            return townName;
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                // Log the error but don't crash
-                LOGGER.error("Error looking up town name for UUID {}: {}", townId, e.getMessage());
-            }
-            
-            // Fallback if town not found
-            return "Town-" + townId.toString().substring(0, 8);
-        };
-        
-        // Create modal grid screen with the visitor history data
-        BCModalGridScreen<VisitHistoryRecord> visitorScreen = BCModalGridFactory.createVisitorHistoryScreen(
-            Component.literal("Town Visitor History"),
-            this, // Parent screen
-            visitHistory,
+        VisitorHistoryManager.showVisitorHistoryScreen(
+            this,
+            menu.getBlockPos(),
+            this.tabPanel,
             screen -> {
-                // When closing, ensure we're on the population tab
-                if (this.tabPanel != null) {
-                    this.tabPanel.setActiveTab("population");
-                }
-            },
-            townNameLookup // Pass our town name lookup function
+                // Optional callback when screen is closed
+            }
         );
-        
-        // Customize appearance if needed
-        visitorScreen.withBackButtonText("Back")
-                     .withTitleScale(1.5f)
-                     .withRowHeight(20);
-        
-        // Show the visitor history screen
-        this.minecraft.setScreen(visitorScreen);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.yourdomain.businesscraft.screen.tabs;
 
 import com.yourdomain.businesscraft.screen.TownInterfaceScreen;
+import com.yourdomain.businesscraft.screen.TownInterfaceTheme;
 import com.yourdomain.businesscraft.screen.components.BCComponent;
 import com.yourdomain.businesscraft.screen.components.BCFlowLayout;
 import com.yourdomain.businesscraft.screen.components.BCLabel;
@@ -17,11 +18,12 @@ import java.util.function.Consumer;
  * Provides configuration options for the town.
  */
 public class SettingsTab extends BaseTownTab {
-    private static final int TEXT_COLOR = 0xFFFFFFFF;          // White text
-    private static final int TEXT_HIGHLIGHT = 0xFFDDFFFF;      // Light cyan highlight text
-    private static final int BACKGROUND_COLOR = 0x80222222;    // Semi-transparent dark gray
-    private static final int BORDER_COLOR = 0xA0AAAAAA;        // Light gray
-    private static final int PRIMARY_COLOR = 0xA0335599;       // Semi-transparent blue
+    // Use centralized theme constants
+    private static final int TEXT_COLOR = TownInterfaceTheme.TEXT_COLOR;
+    private static final int TEXT_HIGHLIGHT = TownInterfaceTheme.TEXT_HIGHLIGHT;
+    private static final int BACKGROUND_COLOR = TownInterfaceTheme.BACKGROUND_COLOR;
+    private static final int BORDER_COLOR = TownInterfaceTheme.BORDER_COLOR;
+    private static final int PRIMARY_COLOR = TownInterfaceTheme.PRIMARY_COLOR;
     
     private BCComponent gridHost;
     

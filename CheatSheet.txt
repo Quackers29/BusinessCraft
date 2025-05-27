@@ -102,3 +102,8 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 89. Visitor buffer callback timing, when extracting visitor processing ensure callbacks are triggered after ALL operations complete (including visit buffer processing) not just individual visitor processing
 90. NBT data management refactoring, extract complex save/load logic with legacy migration into helper classes using result objects to cleanly return multiple values and maintain backward compatibility
 91. ContainerData refactoring, replace static hardcoded index-based ContainerData with modular ContainerDataHelper using named fields, lambda functions, and builder pattern for maintainability and type safety
+92. Project cleanup, regularly remove empty directories (capability/, systems/, network/packet/, network/messages/, screen/archive/) to maintain clean package structure and avoid confusion
+93. Theme centralization, extract hardcoded color constants to centralized theme classes with factory methods to ensure consistent styling across all related components
+94. Tab extraction completion, when tab classes already exist, replace inline implementations with proper tab class instantiation to maintain consistent architecture patterns
+95. Modal management refactoring, extract modal creation logic into dedicated manager classes with static factory methods to reduce screen class complexity and improve reusability
+96. Cache management consolidation, create unified cache manager classes to centralize data access patterns and eliminate duplicate cache handling code across UI components
