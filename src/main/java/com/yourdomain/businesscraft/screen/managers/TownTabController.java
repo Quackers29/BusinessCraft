@@ -29,7 +29,7 @@ public class TownTabController {
         void addRenderableWidget(Button widget);
         
         // Tab content provider (for tab implementations)
-        TownInterfaceScreen getTabContentProvider();
+        Object getTabContentProvider();
     }
     
     // Tab styling constants
@@ -109,7 +109,11 @@ public class TownTabController {
         int tabHeight = this.tabPanel.getHeight() - 20; // Account for tab header
         
         // Get the content provider for tab implementations
-        TownInterfaceScreen contentProvider = dataProvider.getTabContentProvider();
+        Object provider = dataProvider.getTabContentProvider();
+        if (!(provider instanceof TownInterfaceScreen)) {
+            throw new IllegalStateException("Tab content provider must be a TownInterfaceScreen instance");
+        }
+        TownInterfaceScreen contentProvider = (TownInterfaceScreen) provider;
         
         // Create and configure each tab
         createOverviewTab(contentProvider, tabWidth, tabHeight);

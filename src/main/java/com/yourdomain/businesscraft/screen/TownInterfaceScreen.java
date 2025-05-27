@@ -61,88 +61,49 @@ import org.slf4j.LoggerFactory;
  * The Town Interface Screen showcases the BusinessCraft UI system capabilities.
  * This screen demonstrates various UI components and layouts using the enhanced BCTabPanel.
  */
-public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMenu> 
-        implements BottomButtonManager.ButtonActionHandler, 
-                   TownScreenEventHandler.SoundHandler,
-                   TownScreenEventHandler.ModalStateProvider,
-                   TownScreenRenderManager.CacheUpdateProvider,
-                   TownScreenRenderManager.ScreenLayoutProvider,
-                   TownScreenRenderManager.ComponentProvider,
-                   TownTabController.TabDataProvider {
-    private BCTabPanel tabPanel;
-    private BCTheme customTheme;
-
-    // Use centralized theme constants
-    private static final int PRIMARY_COLOR = TownInterfaceTheme.PRIMARY_COLOR;
-    private static final int SECONDARY_COLOR = TownInterfaceTheme.SECONDARY_COLOR;
-    private static final int BACKGROUND_COLOR = TownInterfaceTheme.BACKGROUND_COLOR;
-    private static final int BORDER_COLOR = TownInterfaceTheme.BORDER_COLOR;
-    private static final int ACTIVE_TAB_COLOR = TownInterfaceTheme.ACTIVE_TAB_COLOR;
-    private static final int INACTIVE_TAB_COLOR = TownInterfaceTheme.INACTIVE_TAB_COLOR;
-    private static final int TEXT_COLOR = TownInterfaceTheme.TEXT_COLOR;
-    private static final int TEXT_HIGHLIGHT = TownInterfaceTheme.TEXT_HIGHLIGHT;
-    private static final int SUCCESS_COLOR = TownInterfaceTheme.SUCCESS_COLOR;
-    private static final int DANGER_COLOR = TownInterfaceTheme.DANGER_COLOR;
+public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu> 
+        implements BottomButtonManager.ButtonActionHandler {
     
     // State tracking for toggle buttons
     private boolean pvpEnabled = false;
     private boolean publicTownEnabled = true;
-
-    // Add a field for the active popup
-    private BCPopupScreen activePopup = null;
-
-    // Add field for modal screen
-    private BCModalScreen activeModal = null;
     
-    // Manager instances
+    // Manager instances specific to this screen
     private BottomButtonManager buttonManager;
-    private TownScreenEventHandler eventHandler;
-    private TownScreenRenderManager renderManager;
-    private TownTabController tabController;
     
     // Cache the current search radius for UI updates
     private int currentSearchRadius;
 
-    // Add a field to track update intervals
-    private int updateCounter = 0;
-    private static final int REFRESH_INTERVAL = 100; // Ticks between forced cache refreshes (5 seconds)
-
-    // Consolidated cache management
-    private TownDataCacheManager cacheManager;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(TownInterfaceScreen.class);
-
     public TownInterfaceScreen(TownInterfaceMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         
-        // Set custom dimensions for the screen
-        this.imageWidth = 256;
-        this.imageHeight = 204;
-        
-        // Move the inventory label off-screen to hide it
-        this.inventoryLabelY = 300;  // Position it below the visible area
-        
         // Initialize cached values from the menu
         this.currentSearchRadius = menu.getSearchRadius();
-        
-        // Initialize the cache manager with the town data provider from the menu
-        TownDataCache dataCache = null;
-        if (menu instanceof TownInterfaceMenu) {
-            ITownDataProvider dataProvider = menu.getTownDataProvider();
-            if (dataProvider != null) {
-                dataCache = new TownDataCache(dataProvider);
-            }
-        }
-        this.cacheManager = new TownDataCacheManager(dataCache, menu);
-        
-        // Create a custom theme for this screen using the centralized theme
-        customTheme = TownInterfaceTheme.createBCTheme();
-        
-        // Initialize managers
+    }
+    
+    @Override
+    protected void initializeSpecificManagers() {
+        // Initialize managers specific to TownInterfaceScreen
         this.buttonManager = new BottomButtonManager(this);
         this.eventHandler = new TownScreenEventHandler(this, this, this.buttonManager);
         this.renderManager = new TownScreenRenderManager(this, this, this);
-        this.tabController = new TownTabController(this);
+    }
+    
+    @Override
+    protected void performAdditionalInit() {
+        // Initialize the button manager with screen position
+        buttonManager.updateScreenPosition(this.leftPos, this.topPos, this.imageWidth, this.imageHeight);
+        buttonManager.createBottomButtonsGrid();
+    }
+    
+    @Override
+    protected void performAdditionalCleanup() {
+        // Send a packet to register the player exit UI to show platform indicators
+        BlockPos blockPos = this.menu.getBlockPos();
+        if (blockPos != null) {
+            // Send a packet to the server to register player exit UI
+            ModMessages.sendToServer(new PlayerExitUIPacket(blockPos));
+        }
     }
     
     // ===== Interface Implementations =====
@@ -198,52 +159,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         sendChatMessage("Button pressed: " + action);
     }
     
-    // SoundHandler implementation
-    @Override
-    public void playButtonClickSound() {
-        Minecraft.getInstance().getSoundManager().play(
-            net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
-                net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F)
-        );
-    }
-    
-    // ModalStateProvider implementation
-    @Override
-    public BCModalScreen getActiveModal() {
-        return activeModal;
-    }
-    
-    @Override
-    public BCPopupScreen getActivePopup() {
-        return activePopup;
-    }
-    
-    @Override
-    public BCTabPanel getTabPanel() {
-        return tabPanel;
-    }
-    
-    // ===== CacheUpdateProvider Implementation =====
-    
-    @Override
-    public TownDataCacheManager getCacheManager() {
-        return cacheManager;
-    }
-    
-    @Override
-    public int getUpdateCounter() {
-        return updateCounter;
-    }
-    
-    @Override
-    public void setUpdateCounter(int counter) {
-        this.updateCounter = counter;
-    }
-    
-    @Override
-    public int getRefreshInterval() {
-        return REFRESH_INTERVAL;
-    }
+    // ===== Specific Interface Implementations =====
     
     @Override
     public void setCurrentSearchRadius(int radius) {
@@ -255,89 +171,12 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         return menu.getSearchRadius();
     }
     
-    // ===== ScreenLayoutProvider Implementation =====
-    
-    @Override
-    public int getLeftPos() {
-        return this.leftPos;
-    }
-    
-    @Override
-    public int getTopPos() {
-        return this.topPos;
-    }
-    
-    @Override
-    public int getImageWidth() {
-        return this.imageWidth;
-    }
-    
-    @Override
-    public int getImageHeight() {
-        return this.imageHeight;
-    }
-    
-    @Override
-    public Font getFont() {
-        return this.font;
-    }
-    
-    @Override
-    public Component getTitle() {
-        return this.title;
-    }
-    
-    @Override
-    public void renderBackground(GuiGraphics graphics) {
-        super.renderBackground(graphics);
-    }
-    
-    @Override
-    public void renderTooltip(GuiGraphics graphics, int mouseX, int mouseY) {
-        super.renderTooltip(graphics, mouseX, mouseY);
-    }
-    
-    // ===== ComponentProvider Implementation =====
-    
     @Override
     public BottomButtonManager getButtonManager() {
         return buttonManager;
     }
-    
-    // ===== TabDataProvider Implementation =====
-    
-    @Override
-    public int getScreenPadding() {
-        return 10; // Standard screen padding
-    }
-    
-    @Override
-    public void addRenderableWidget(Button widget) {
-        super.addRenderableWidget(widget);
-    }
-    
-    @Override
-    public TownInterfaceScreen getTabContentProvider() {
-        return this;
-    }
 
-    @Override
-    protected void init() {
-        super.init();
-        
-        // Apply our custom theme for this screen
-        BCTheme.setActiveTheme(customTheme);
-        
-        // Initialize the cached values
-        currentSearchRadius = menu.getSearchRadius();
-        
-        // Initialize tabs using the tab controller
-        this.tabPanel = tabController.initializeTabs();
-        
-        // Initialize the button manager with screen position
-        buttonManager.updateScreenPosition(this.leftPos, this.topPos, this.imageWidth, this.imageHeight);
-        buttonManager.createBottomButtonsGrid();
-    }
+
     
 
 
@@ -435,53 +274,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         return cacheManager.getTouristString();
     }
     
-    @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        // Delegate all rendering to the render manager
-        renderManager.render(graphics, mouseX, mouseY, partialTicks);
-    }
-    
 
-    
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        return eventHandler.handleMouseClicked(mouseX, mouseY, button, 
-            b -> super.mouseClicked(mouseX, mouseY, b));
-    }
-    
-    /**
-     * Helper method to send a chat message to the player
-     * This method is used by tab implementations.
-     */
-    public void sendChatMessage(String message) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player != null) {
-            player.displayClientMessage(Component.literal(message), false);
-        }
-    }
-    
-    @Override
-    protected void renderBg(GuiGraphics graphics, float partialTicks, int mouseX, int mouseY) {
-        // Background rendering is handled in render() method
-    }
-    
-    @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        return eventHandler.handleMouseDragged(mouseX, mouseY, button, dragX, dragY,
-            b -> super.mouseDragged(mouseX, mouseY, b, dragX, dragY));
-    }
-    
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        return eventHandler.handleMouseReleased(mouseX, mouseY, button,
-            b -> super.mouseReleased(mouseX, mouseY, b));
-    }
-    
-    @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        return eventHandler.handleMouseScrolled(mouseX, mouseY, delta,
-            d -> super.mouseScrolled(mouseX, mouseY, d));
-    }
 
 
 
@@ -502,17 +295,7 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         activePopup.focusInput();
     }
 
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        return eventHandler.handleKeyPressed(keyCode, scanCode, modifiers,
-            k -> super.keyPressed(k, scanCode, modifiers));
-    }
 
-    @Override
-    public boolean charTyped(char c, int modifiers) {
-        return eventHandler.handleCharTyped(c, modifiers,
-            ch -> super.charTyped(ch, modifiers));
-    }
 
     /**
      * Show the visitor list modal screen
@@ -555,7 +338,8 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
     /**
      * Close the active modal if one exists
      */
-    private void closeActiveModal() {
+    @Override
+    protected void closeActiveModal() {
         this.activeModal = null;
     }
     
@@ -573,20 +357,5 @@ public class TownInterfaceScreen extends AbstractContainerScreen<TownInterfaceMe
         );
     }
 
-    @Override
-    public void onClose() {
-        // Clean up tab controller resources
-        if (tabController != null) {
-            tabController.cleanup();
-        }
-        
-        // Send a packet to register the player exit UI to show platform indicators
-        BlockPos blockPos = this.menu.getBlockPos();
-        if (blockPos != null) {
-            // Send a packet to the server to register player exit UI
-            ModMessages.sendToServer(new PlayerExitUIPacket(blockPos));
-        }
-        
-        super.onClose();
-    }
+
 } 
