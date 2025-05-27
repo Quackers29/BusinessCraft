@@ -1,25 +1,10 @@
 package com.yourdomain.businesscraft.screen;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.yourdomain.businesscraft.BusinessCraft;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
-import com.yourdomain.businesscraft.screen.components.*;
 import com.yourdomain.businesscraft.platform.Platform;
-import com.yourdomain.businesscraft.screen.tabs.ResourcesTab;
-import com.yourdomain.businesscraft.screen.tabs.OverviewTab;
-import com.yourdomain.businesscraft.screen.tabs.PopulationTab;
-import com.yourdomain.businesscraft.screen.tabs.SettingsTab;
 import com.yourdomain.businesscraft.screen.managers.*;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.LocalPlayer;
-import org.lwjgl.opengl.GL11;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.SetTownNamePacket;
 import com.yourdomain.businesscraft.network.PlayerExitUIPacket;
@@ -87,8 +72,8 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
         this.buttonManager = new BottomButtonManager(this);
         this.eventHandler = new TownScreenEventHandler(this, this, this.buttonManager);
         this.renderManager = new TownScreenRenderManager(this, this, this);
-    }
-    
+            }
+
     @Override
     protected void performAdditionalInit() {
         // Initialize the button manager with screen position
@@ -103,7 +88,7 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
         if (blockPos != null) {
             // Send a packet to the server to register player exit UI
             ModMessages.sendToServer(new PlayerExitUIPacket(blockPos));
-        }
+    }
     }
     
     // ===== Interface Implementations =====
@@ -147,14 +132,14 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     @Override
     public void onResetDefaults() {
         sendPlaceholderMessage("Reset Defaults");
-    }
-    
-    @Override
+            }
+            
+            @Override
     public void onManagePlatforms() {
         openPlatformManagementScreen();
-    }
-    
-    @Override
+            }
+            
+            @Override
     public void onGenericAction(String action) {
         sendPlaceholderMessage(action);
     }
@@ -164,18 +149,18 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     @Override
     public void setCurrentSearchRadius(int radius) {
         this.currentSearchRadius = radius;
-    }
-    
+                }
+                
     @Override
     public int getSearchRadiusFromMenu() {
         return menu.getSearchRadius();
-    }
+                }
     
     @Override
     public BottomButtonManager getButtonManager() {
         return buttonManager;
     }
-
+    
     /**
      * Opens the platform management screen
      * This method is used by tab implementations.
@@ -267,14 +252,14 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     
     public String getTouristString() {
         return cacheManager.getTouristString();
-    }
-    
+            }
+            
     // ===== Private Helper Methods =====
     
     private void sendPlaceholderMessage(String action) {
         sendChatMessage("Button pressed: " + action);
     }
-    
+
     /**
      * Show the change town name popup
      */

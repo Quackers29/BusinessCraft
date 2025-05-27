@@ -1,12 +1,8 @@
 package com.yourdomain.businesscraft.screen.tabs;
 
 import com.yourdomain.businesscraft.screen.TownInterfaceScreen;
-import com.yourdomain.businesscraft.screen.TownInterfaceTheme;
-import com.yourdomain.businesscraft.screen.components.BCComponent;
 import com.yourdomain.businesscraft.screen.components.BCFlowLayout;
-import com.yourdomain.businesscraft.screen.components.BCLabel;
-import com.yourdomain.businesscraft.screen.components.BCComponentFactory;
-import com.yourdomain.businesscraft.screen.components.UIGridBuilder;
+import com.yourdomain.businesscraft.screen.components.StandardTabContent;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import java.util.LinkedHashMap;
@@ -16,16 +12,10 @@ import java.util.function.Consumer;
 /**
  * Settings tab implementation for the Town Interface.
  * Provides configuration options for the town.
+ * Now uses standardized tab content for consistency.
  */
 public class SettingsTab extends BaseTownTab {
-    // Use centralized theme constants
-    private static final int TEXT_COLOR = TownInterfaceTheme.TEXT_COLOR;
-    private static final int TEXT_HIGHLIGHT = TownInterfaceTheme.TEXT_HIGHLIGHT;
-    private static final int BACKGROUND_COLOR = TownInterfaceTheme.BACKGROUND_COLOR;
-    private static final int BORDER_COLOR = TownInterfaceTheme.BORDER_COLOR;
-    private static final int PRIMARY_COLOR = TownInterfaceTheme.PRIMARY_COLOR;
-    
-    private BCComponent gridHost;
+    private StandardTabContent contentComponent;
     
     /**
      * Creates a new Settings tab.
@@ -43,102 +33,65 @@ public class SettingsTab extends BaseTownTab {
     
     @Override
     public void init(Consumer<Button> registerWidget) {
-        // Add title
-        BCLabel titleLabel = BCComponentFactory.createHeaderLabel("SETTINGS", panel.getInnerWidth());
-        titleLabel.withTextColor(TEXT_HIGHLIGHT).withShadow(true);
-        panel.addChild(titleLabel);
+        // Add title first (like other tabs)
+        panel.addChild(createHeaderLabel("SETTINGS"));
         
-        // Calculate dimensions for the settings grid
-        int titleHeight = 20; // Approximate height of the header
-        int verticalSpacing = 10; // Space between title and grid
+        // Create standardized content component
+        contentComponent = createStandardContent(
+            StandardTabContent.ContentType.BUTTON_GRID, 
+            "SETTINGS"
+        );
         
-        // Calculate available space for the grid
-        int availableWidth = panel.getInnerWidth();
-        int availableHeight = panel.getInnerHeight() - titleHeight - verticalSpacing;
-        
-        // Create a custom component to host the settings grid
-        gridHost = new BCComponent(availableWidth, availableHeight) {
-            // Internal grid instance
-            private UIGridBuilder grid;
+        // Configure with settings data supplier
+        contentComponent.withButtonGridData(() -> {
+            Map<String, Object[]> settingsData = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
             
-            // Initialize the grid when rendering
-            private UIGridBuilder createGrid() {
-                // Use the new utility method for label-button pairs
-                Map<String, Object[]> settingsData = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
-                
-                // Add platforms row
-                settingsData.put("Platforms:", new Object[] {
-                    "Set Platforms", 
-                    (Consumer<Void>) button -> {
-                        parentScreen.playButtonClickSound();
-                        // Open the platform management screen instead of just showing a message
-                        parentScreen.openPlatformManagementScreen();
-                    }
-                });
-                
-                // Add search radius row - use the cached value for display
-                settingsData.put("Search Radius:", new Object[] {
-                    "Radius: " + parentScreen.getCurrentSearchRadius(), 
-                    (Consumer<Void>) button -> {
-                        // In TownBlockScreen, this would increase the radius
-                        parentScreen.handleRadiusChange(0); // 0 = left click (increase)
-                    }
-                });
-                
-                return UIGridBuilder.createLabelButtonGrid(
-                    x, y, getWidth(), getHeight(),
-                    TEXT_COLOR, PRIMARY_COLOR,
-                    settingsData)
-                    .withBackgroundColor(BACKGROUND_COLOR)
-                    .withBorderColor(BORDER_COLOR)
-                    .withMargins(15, 10)
-                    .withSpacing(15, 10)
-                    .drawBorder(true);
-            }
-            
-            @Override
-            protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-                // Create/update the grid
-                grid = createGrid();
-                
-                // Render the grid
-                grid.render(guiGraphics, mouseX, mouseY);
-            }
-            
-            @Override
-            public boolean mouseClicked(double mouseX, double mouseY, int button) {
-                // If this is a right-click, handle the radius change manually
-                if (button == 1) {
-                    // Approximate if the click is in the button area
-                    // This is a simplified approach that assumes the radius button is at a specific position
-                    parentScreen.handleRadiusChange(1); // Handle right click
-                    return true;
+            // Add platforms row
+            settingsData.put("Platforms:", new Object[] {
+                "Set Platforms", 
+                (Consumer<Void>) button -> {
+                    parentScreen.playButtonClickSound();
+                    // Open the platform management screen instead of just showing a message
+                    parentScreen.openPlatformManagementScreen();
                 }
-                
-                // For all other cases, delegate to the grid
-                if (grid != null) {
-                    return grid.mouseClicked((int)mouseX, (int)mouseY, button);
+            });
+            
+            // Add search radius row - use the cached value for display
+            settingsData.put("Search Radius:", new Object[] {
+                "Radius: " + parentScreen.getCurrentSearchRadius(), 
+                (Consumer<Void>) button -> {
+                    // In TownBlockScreen, this would increase the radius
+                    parentScreen.handleRadiusChange(0); // 0 = left click (increase)
                 }
-                return false;
-            }
-        };
+            });
+            
+            return settingsData;
+        });
         
-        // Add the grid host to the panel
-        panel.addChild(gridHost);
+        // Configure custom click handler for right-click on radius button
+        contentComponent.withCustomClickHandler(button -> {
+            if (button == 1) { // Right-click
+                parentScreen.handleRadiusChange(1); // Handle right click
+                return true;
+            }
+            return false; // Let normal handling proceed
+        });
+        
+        // Add to panel
+        panel.addChild(contentComponent);
     }
     
     @Override
     public void update() {
-        // Force a refresh of the grid to update displayed values
-        if (gridHost != null) {
-            gridHost.setVisible(false);
-            gridHost.setVisible(true);
+        // Force a refresh of the content to update displayed values (like radius)
+        if (contentComponent != null) {
+            contentComponent.refresh();
         }
     }
     
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         // Settings tab doesn't need scrolling, but we'll forward the event anyway
-        return gridHost != null && gridHost.mouseScrolled(mouseX, mouseY, delta);
+        return contentComponent != null && contentComponent.mouseScrolled(mouseX, mouseY, delta);
     }
 } 
