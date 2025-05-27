@@ -128,3 +128,8 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 115. Tab title consistency, when standardizing tabs ensure title labels are added first before content components to maintain consistent layout and prevent title overlap
 116. Button grid standardization, use supplier functions for dynamic button text updates and custom click handlers for special cases like right-click behavior
 117. Interactive UI components, recreate grids on every render for button grids to ensure dynamic text updates (like radius values) are reflected immediately
+118. Post-standardization cleanup, remove unused imports, redundant state variables, and helper methods after major refactoring to improve code maintainability
+119. User feedback improvement, replace generic placeholder messages with specific, user-friendly feedback messages for better UX
+120. UI enhancement, break complex rendering into smaller methods (renderTradeInputSection, renderTradeOutputSection) for better organization and maintainability
+121. UI animation, use System.currentTimeMillis() with Math.sin() for smooth pulsing effects and vary opacity/color based on UI state for better visual feedback
+122. UI visual hierarchy, use different background colors and border styles to indicate UI state (ready vs not ready) and provide clear visual cues to users
