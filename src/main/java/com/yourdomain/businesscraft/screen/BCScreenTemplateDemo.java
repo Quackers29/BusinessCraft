@@ -244,14 +244,14 @@ public class BCScreenTemplateDemo {
             buttonsPanel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.HORIZONTAL, 10));
             
             employeesPanel.addChild(BCComponentFactory.createPrimaryButtonWithTooltip(
-                "Hire Employee",
+                "Hire Employee", 
                 "Hire a new employee for your business",
                 button -> LOGGER.info("Hire Employee button clicked"),
                 100
             ));
             
             employeesPanel.addChild(BCComponentFactory.createSecondaryButtonWithTooltip(
-                "Fire Employee",
+                "Fire Employee", 
                 "Remove an employee from your business",
                 button -> LOGGER.info("Fire Employee button clicked"),
                 100
