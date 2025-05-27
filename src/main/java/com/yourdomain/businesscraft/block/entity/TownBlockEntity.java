@@ -98,6 +98,7 @@ import com.yourdomain.businesscraft.town.data.TouristSpawningHelper;
 import com.yourdomain.businesscraft.town.data.PlatformManager;
 import com.yourdomain.businesscraft.town.data.VisitorProcessingHelper;
 import com.yourdomain.businesscraft.town.data.ClientSyncHelper;
+import com.yourdomain.businesscraft.town.data.NBTDataHelper;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -212,6 +213,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     // Visitor processing helper (handles complex visitor detection and processing)
     private final VisitorProcessingHelper visitorProcessingHelper = new VisitorProcessingHelper();
 
+    // NBT data management helper (handles complex save/load operations)
+    private final NBTDataHelper nbtDataHelper = new NBTDataHelper();
+
     // Special UUID for "any town" destination
     private static final UUID ANY_TOWN_DESTINATION = new UUID(0, 0);
     private static final String ANY_TOWN_NAME = "Any Town";
@@ -266,167 +270,29 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     @Override
     public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
-        tag.put("inventory", itemHandler.serializeNBT());
-        
-        // Save local data to tag
-        if (townId != null) {
-            tag.putUUID("TownId", townId);
-        }
-        
-        tag.putString("name", name != null ? name : "");
-        
-        // Save legacy path data for backward compatibility
-        if (pathStart != null) {
-            CompoundTag startPos = new CompoundTag();
-            startPos.putInt("x", pathStart.getX());
-            startPos.putInt("y", pathStart.getY());
-            startPos.putInt("z", pathStart.getZ());
-            tag.put("PathStart", startPos);
-        }
-        
-        if (pathEnd != null) {
-            CompoundTag endPos = new CompoundTag();
-            endPos.putInt("x", pathEnd.getX());
-            endPos.putInt("y", pathEnd.getY());
-            endPos.putInt("z", pathEnd.getZ());
-            tag.put("PathEnd", endPos);
-        }
-        
-        // Save platforms using platform manager
-        platformManager.saveToNBT(tag);
-        
-        tag.putInt("searchRadius", searchRadius);
-        
-        // Visit history is now saved in the Town object
+        nbtDataHelper.saveToNBT(tag, itemHandler, townId, name, pathStart, pathEnd, platformManager, searchRadius);
     }
 
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
         
-        // First load paths from the tag itself as a fallback
-        if (tag.contains("PathStart")) {
-            CompoundTag startPos = tag.getCompound("PathStart");
-            pathStart = new BlockPos(
-                startPos.getInt("x"),
-                startPos.getInt("y"),
-                startPos.getInt("z")
-            );
+        NBTDataHelper.LoadResult result = nbtDataHelper.loadFromNBT(tag, itemHandler, level, platformManager);
+        
+        // Apply loaded data to instance variables
+        this.townId = result.townId;
+        this.name = result.name;
+        this.town = result.town;
+        this.pathStart = result.pathStart;
+        this.pathEnd = result.pathEnd;
+        this.touristSpawningEnabled = result.touristSpawningEnabled;
+        
+        // Apply search radius if loaded
+        if (result.hasSearchRadius()) {
+            this.searchRadius = result.searchRadius;
         }
         
-        if (tag.contains("PathEnd")) {
-            CompoundTag endPos = tag.getCompound("PathEnd");
-            pathEnd = new BlockPos(
-                endPos.getInt("x"),
-                endPos.getInt("y"),
-                endPos.getInt("z")
-            );
-        }
-        
-        if (tag.contains("searchRadius")) {
-            searchRadius = tag.getInt("searchRadius");
-        }
-        
-        // Then try to get the town data
-        if (tag.contains("TownId")) {
-            townId = tag.getUUID("TownId");
-            if (level instanceof ServerLevel sLevel1) {
-                town = TownManager.get(sLevel1).getTown(townId);
-                
-                // Migrate any legacy visit history from block entity to Town
-                if (town != null && tag.contains("visitHistory")) {
-                    ITownDataProvider provider = town;
-                    ListTag historyTag = tag.getList("visitHistory", Tag.TAG_COMPOUND);
-                    LOGGER.info("Migrating {} visit history records to Town {}", historyTag.size(), town.getName());
-                    
-                    for (int i = 0; i < historyTag.size(); i++) {
-                        CompoundTag visitTag = historyTag.getCompound(i);
-                        
-                        long timestamp = visitTag.getLong("timestamp");
-                        int count = visitTag.getInt("count");
-                        
-                        // Get the town ID or generate one from the name
-                        UUID originTownId = null;
-                        if (visitTag.contains("townId")) {
-                            originTownId = visitTag.getUUID("townId");
-                        } else if (visitTag.contains("town")) {
-                            // Legacy format - generate a UUID from the name
-                            String townName = visitTag.getString("town");
-                            originTownId = UUID.nameUUIDFromBytes(townName.getBytes());
-                            LOGGER.info("Converted legacy town name '{}' to UUID: {}", townName, originTownId);
-                        } else {
-                            continue; // Skip if no town identifier
-                        }
-                        
-                        BlockPos originPos = BlockPos.ZERO;
-                        if (visitTag.contains("pos")) {
-                            CompoundTag posTag = visitTag.getCompound("pos");
-                            originPos = new BlockPos(
-                                posTag.getInt("x"),
-                                posTag.getInt("y"),
-                                posTag.getInt("z")
-                            );
-                        }
-                        
-                        // Add the record to the Town using the provider
-                        try {
-                            // Use reflection to access the private list directly (to preserve exact timestamps)
-                            java.lang.reflect.Field historyField = Town.class.getDeclaredField("visitHistory");
-                            historyField.setAccessible(true);
-                            @SuppressWarnings("unchecked")
-                            List<VisitHistoryRecord> visitHistory = (List<VisitHistoryRecord>) historyField.get(town);
-                            visitHistory.add(new VisitHistoryRecord(timestamp, originTownId, count, originPos));
-                            
-                            // Ensure list is sorted by timestamp (newest first)
-                            visitHistory.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
-                            
-                            // Trim if needed
-                            while (visitHistory.size() > 50) { // MAX_HISTORY_SIZE
-                                visitHistory.remove(visitHistory.size() - 1);
-                            }
-                            
-                            // Mark town as dirty
-                            provider.markDirty();
-                        } catch (Exception e) {
-                            // Fallback to the standard method if reflection fails
-                            LOGGER.error("Error migrating visit history: {}", e.getMessage());
-                            provider.recordVisit(originTownId, count, originPos);
-                        }
-                    }
-                }
-                
-                if (town != null) {
-                    // Update local values from the Town object, but prefer the ones we already loaded
-                    touristSpawningEnabled = town.isTouristSpawningEnabled();
-                    
-                    // Only use town paths if we don't have any
-                    if (pathStart == null && town.getPathStart() != null) {
-                        pathStart = town.getPathStart();
-                    }
-                    
-                    if (pathEnd == null && town.getPathEnd() != null) {
-                        pathEnd = town.getPathEnd();
-                    }
-                    
-                    // Use town search radius if already set
-                    if (searchRadius <= 0 && town.getSearchRadius() > 0) {
-                        searchRadius = town.getSearchRadius();
-                    }
-                }
-            }
-        }
-        
-        if (tag.contains("name")) {
-            name = tag.getString("name");
-        }
-
-        // Load platforms using platform manager
-        platformManager.loadFromNBT(tag);
-        
-        // Create legacy platform if needed
-        if (pathStart != null && pathEnd != null) {
-            platformManager.createLegacyPlatform(pathStart, pathEnd);
-        }
+        LOGGER.debug("Loaded NBT data: {}", result.getSummary());
     }
 
     @Override
