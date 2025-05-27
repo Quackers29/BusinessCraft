@@ -6,6 +6,7 @@ import com.yourdomain.businesscraft.screen.components.BCPanel;
 import com.yourdomain.businesscraft.screen.components.BCFlowLayout;
 import com.yourdomain.businesscraft.screen.components.BCLabel;
 import com.yourdomain.businesscraft.screen.components.BCComponentFactory;
+import com.yourdomain.businesscraft.screen.components.StandardTabContent;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import java.util.function.Consumer;
@@ -64,6 +65,18 @@ public abstract class BaseTownTab {
         int availableHeight = panel.getInnerHeight() - titleHeight - verticalSpacing;
         
         return new int[]{availableWidth, availableHeight};
+    }
+    
+    /**
+     * Creates a standardized content component for this tab.
+     * 
+     * @param contentType The type of content to create
+     * @param title The title for the content (can be null)
+     * @return A configured StandardTabContent component
+     */
+    protected StandardTabContent createStandardContent(StandardTabContent.ContentType contentType, String title) {
+        int[] dimensions = getContentDimensions();
+        return new StandardTabContent(dimensions[0], dimensions[1], contentType, title);
     }
     
     /**

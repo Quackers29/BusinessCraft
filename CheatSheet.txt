@@ -118,3 +118,13 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 105. Tab creation pattern extraction, use generic methods for repetitive tab creation patterns to reduce code duplication in controller classes
 106. Placeholder action consolidation, extract common placeholder actions into helper methods to reduce repetitive sendChatMessage calls
 107. Helper method extraction, create common utility methods in base classes (like createHeaderLabel, getContentDimensions) to standardize tab implementations
+108. Tab standardization, create unified content components (StandardTabContent) with enum-based content types to eliminate duplicate rendering patterns across tabs
+109. Component refactoring, use supplier functions for dynamic data binding to decouple content generation from rendering logic and improve maintainability
+110. Import cleanup, remove unused imports after major refactoring to reduce file size and improve compilation performance
+111. UI scrolling, preserve grid instances to maintain scroll state - recreating UIGridBuilder on every render resets scroll position to top
+112. Component extraction, when preserving complex custom functionality (like PopulationTab scrolling), extract into dedicated component classes rather than forcing into generic patterns
+113. Tab standardization completion, use supplier functions and enum-based content types to unify different tab implementations while preserving unique features through specialized components
+114. Component render positioning, BCComponent.render(GuiGraphics, x, y, mouseX, mouseY) - x,y are positioning coordinates, mouseX,mouseY are mouse coordinates, not the other way around
+115. Tab title consistency, when standardizing tabs ensure title labels are added first before content components to maintain consistent layout and prevent title overlap
+116. Button grid standardization, use supplier functions for dynamic button text updates and custom click handlers for special cases like right-click behavior
+117. Interactive UI components, recreate grids on every render for button grids to ensure dynamic text updates (like radius values) are reflected immediately
