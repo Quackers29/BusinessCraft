@@ -3,6 +3,7 @@ package com.yourdomain.businesscraft.screen.managers;
 import com.yourdomain.businesscraft.screen.TownInterfaceScreen;
 import com.yourdomain.businesscraft.screen.TownInterfaceTheme;
 import com.yourdomain.businesscraft.screen.components.BCTabPanel;
+import com.yourdomain.businesscraft.screen.tabs.BaseTownTab;
 import com.yourdomain.businesscraft.screen.tabs.OverviewTab;
 import com.yourdomain.businesscraft.screen.tabs.ResourcesTab;
 import com.yourdomain.businesscraft.screen.tabs.PopulationTab;
@@ -123,75 +124,50 @@ public class TownTabController {
     }
     
     /**
-     * Creates and configures the Overview tab.
+     * Generic method to create and configure a tab.
      * 
-     * @param contentProvider The content provider for the tab
-     * @param width Tab content width
-     * @param height Tab content height
+     * @param tabId The tab identifier
+     * @param tabTitle The tab display title
+     * @param tabInstance The tab instance to configure
      */
-    private void createOverviewTab(TownInterfaceScreen contentProvider, int width, int height) {
-        // Create a new OverviewTab instance
-        overviewTab = new OverviewTab(contentProvider, width, height);
-        
+    private void createTab(String tabId, String tabTitle, BaseTownTab tabInstance) {
         // Initialize the tab
-        overviewTab.init(dataProvider::addRenderableWidget);
+        tabInstance.init(dataProvider::addRenderableWidget);
         
         // Add the tab to the tab panel
-        tabPanel.addTab("overview", Component.literal("Overview"), overviewTab.getPanel());
+        tabPanel.addTab(tabId, Component.literal(tabTitle), tabInstance.getPanel());
+    }
+    
+    /**
+     * Creates and configures the Overview tab.
+     */
+    private void createOverviewTab(TownInterfaceScreen contentProvider, int width, int height) {
+        overviewTab = new OverviewTab(contentProvider, width, height);
+        createTab("overview", "Overview", overviewTab);
     }
     
     /**
      * Creates and configures the Resources tab.
-     * 
-     * @param contentProvider The content provider for the tab
-     * @param width Tab content width
-     * @param height Tab content height
      */
     private void createResourcesTab(TownInterfaceScreen contentProvider, int width, int height) {
-        // Create a new ResourcesTab instance
         resourcesTab = new ResourcesTab(contentProvider, width, height);
-        
-        // Initialize the tab
-        resourcesTab.init(dataProvider::addRenderableWidget);
-        
-        // Add the tab to the tab panel
-        tabPanel.addTab("resources", Component.literal("Resources"), resourcesTab.getPanel());
+        createTab("resources", "Resources", resourcesTab);
     }
     
     /**
      * Creates and configures the Population tab.
-     * 
-     * @param contentProvider The content provider for the tab
-     * @param width Tab content width
-     * @param height Tab content height
      */
     private void createPopulationTab(TownInterfaceScreen contentProvider, int width, int height) {
-        // Create a new PopulationTab instance
         populationTab = new PopulationTab(contentProvider, width, height);
-        
-        // Initialize the tab
-        populationTab.init(dataProvider::addRenderableWidget);
-        
-        // Add the tab to the tab panel
-        tabPanel.addTab("population", Component.literal("Population"), populationTab.getPanel());
+        createTab("population", "Population", populationTab);
     }
     
     /**
      * Creates and configures the Settings tab.
-     * 
-     * @param contentProvider The content provider for the tab
-     * @param width Tab content width
-     * @param height Tab content height
      */
     private void createSettingsTab(TownInterfaceScreen contentProvider, int width, int height) {
-        // Create a new SettingsTab instance
         settingsTab = new SettingsTab(contentProvider, width, height);
-        
-        // Initialize the tab
-        settingsTab.init(dataProvider::addRenderableWidget);
-        
-        // Add the tab to the tab panel
-        tabPanel.addTab("settings", Component.literal("Settings"), settingsTab.getPanel());
+        createTab("settings", "Settings", settingsTab);
     }
     
     /**

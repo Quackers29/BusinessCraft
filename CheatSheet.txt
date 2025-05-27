@@ -113,3 +113,8 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 100. Rendering pipeline extraction, create dedicated render managers with interface-based delegation to separate rendering phases (cache updates, background, components, overlays) for better organization and testability
 101. Tab lifecycle management extraction, create dedicated tab controllers with interface-based providers to handle tab creation, configuration, initialization, and cleanup for better separation of concerns
 102. Base class extraction, create abstract base classes with template methods and interface implementations to eliminate duplicate code across similar screen types and improve maintainability
+103. Import cleanup, regularly remove unused imports to reduce file size and improve compilation performance - TownInterfaceScreen had 30+ unused imports
+104. Modal pattern consolidation, create unified modal managers with builder patterns to reduce repetitive modal creation code across multiple manager classes
+105. Tab creation pattern extraction, use generic methods for repetitive tab creation patterns to reduce code duplication in controller classes
+106. Placeholder action consolidation, extract common placeholder actions into helper methods to reduce repetitive sendChatMessage calls
+107. Helper method extraction, create common utility methods in base classes (like createHeaderLabel, getContentDimensions) to standardize tab implementations

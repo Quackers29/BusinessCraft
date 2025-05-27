@@ -1,7 +1,11 @@
 package com.yourdomain.businesscraft.screen.tabs;
 
 import com.yourdomain.businesscraft.screen.TownInterfaceScreen;
+import com.yourdomain.businesscraft.screen.TownInterfaceTheme;
 import com.yourdomain.businesscraft.screen.components.BCPanel;
+import com.yourdomain.businesscraft.screen.components.BCFlowLayout;
+import com.yourdomain.businesscraft.screen.components.BCLabel;
+import com.yourdomain.businesscraft.screen.components.BCComponentFactory;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import java.util.function.Consumer;
@@ -28,11 +32,38 @@ public abstract class BaseTownTab {
         this.tabWidth = width;
         this.tabHeight = height;
         
-        // Create the panel with appropriate dimensions
+        // Create the panel with appropriate dimensions and common styling
         this.panel = new BCPanel(width, height);
         this.panel.withPadding(10)
                  .withBackgroundColor(0x00000000) // Transparent background
                  .withCornerRadius(3);
+    }
+    
+    /**
+     * Creates a standard header label for the tab.
+     * 
+     * @param title The title text
+     * @return Configured header label
+     */
+    protected BCLabel createHeaderLabel(String title) {
+        BCLabel titleLabel = BCComponentFactory.createHeaderLabel(title, panel.getInnerWidth());
+        titleLabel.withTextColor(TownInterfaceTheme.TEXT_HIGHLIGHT).withShadow(true);
+        return titleLabel;
+    }
+    
+    /**
+     * Calculates available dimensions for content after accounting for header.
+     * 
+     * @return Array with [width, height] of available content area
+     */
+    protected int[] getContentDimensions() {
+        int titleHeight = 20; // Approximate height of the header
+        int verticalSpacing = 10; // Space between title and content
+        
+        int availableWidth = panel.getInnerWidth();
+        int availableHeight = panel.getInnerHeight() - titleHeight - verticalSpacing;
+        
+        return new int[]{availableWidth, availableHeight};
     }
     
     /**
