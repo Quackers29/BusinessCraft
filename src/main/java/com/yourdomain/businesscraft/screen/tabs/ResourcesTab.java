@@ -14,12 +14,18 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Resources tab implementation for the Town Interface.
- * Displays all town resources in a scrollable grid.
- * Now uses standardized tab content for consistency.
+ * Displays all town resources in a scrollable grid with auto-refresh.
+ * Now uses standardized tab content for consistency and includes
+ * automatic refresh when resources change.
  */
 public class ResourcesTab extends BaseTownTab {
     private static final Logger LOGGER = LoggerFactory.getLogger(ResourcesTab.class);
     private StandardTabContent contentComponent;
+    
+    // Auto-refresh tracking
+    private Map<Item, Integer> lastKnownResources = null;
+    private int refreshCounter = 0;
+    private static final int REFRESH_CHECK_INTERVAL = 20; // Check every 20 ticks (1 second)
     
     /**
      * Creates a new Resources tab.
@@ -49,16 +55,90 @@ public class ResourcesTab extends BaseTownTab {
             // Get resources from the parent screen using the public getter
             Map<Item, Integer> resources = parentScreen.getCachedResources();
             LOGGER.debug("Resources Tab: Providing {} items to content component", resources.size());
+            
+            // Check for resource changes and trigger refresh if needed
+            checkForResourceChanges(resources);
+            
             return resources;
         });
         
         // Add the content component to the panel
         panel.addChild(contentComponent);
+        
+        // Initialize last known resources
+        lastKnownResources = parentScreen.getCachedResources();
     }
     
     @Override
     public void update() {
-        // This tab doesn't need any periodic updates beyond the standard rendering
+        // Increment refresh counter
+        refreshCounter++;
+        
+        // Check for resource changes periodically
+        if (refreshCounter >= REFRESH_CHECK_INTERVAL) {
+            refreshCounter = 0;
+            
+            // Force a cache refresh from the parent screen
+            if (parentScreen.getCacheManager() != null) {
+                parentScreen.getCacheManager().refreshCachedValues();
+            }
+            
+            // Check if resources have changed
+            Map<Item, Integer> currentResources = parentScreen.getCachedResources();
+            if (hasResourcesChanged(currentResources)) {
+                LOGGER.debug("Resources changed detected, refreshing content component");
+                
+                // Force refresh the content component
+                if (contentComponent != null) {
+                    contentComponent.refresh();
+                }
+                
+                // Update our tracking
+                lastKnownResources = Map.copyOf(currentResources);
+            }
+        }
+    }
+    
+    /**
+     * Checks if resources have changed since last update
+     */
+    private boolean hasResourcesChanged(Map<Item, Integer> currentResources) {
+        if (lastKnownResources == null) {
+            return !currentResources.isEmpty();
+        }
+        
+        // Check if the maps are different
+        if (lastKnownResources.size() != currentResources.size()) {
+            return true;
+        }
+        
+        // Check if any values have changed
+        for (Map.Entry<Item, Integer> entry : currentResources.entrySet()) {
+            Integer lastValue = lastKnownResources.get(entry.getKey());
+            if (lastValue == null || !lastValue.equals(entry.getValue())) {
+                return true;
+            }
+        }
+        
+        // Check if any items were removed
+        for (Item item : lastKnownResources.keySet()) {
+            if (!currentResources.containsKey(item)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Called during data supplier execution to check for immediate changes
+     */
+    private void checkForResourceChanges(Map<Item, Integer> currentResources) {
+        if (hasResourcesChanged(currentResources)) {
+            // Update our tracking immediately
+            lastKnownResources = Map.copyOf(currentResources);
+            LOGGER.debug("Immediate resource change detected during data supply");
+        }
     }
     
     @Override
@@ -69,5 +149,27 @@ public class ResourcesTab extends BaseTownTab {
             return contentComponent.mouseScrolled(mouseX, mouseY, delta);
         }
         return false;
+    }
+    
+    /**
+     * Force refresh the resources display
+     * Can be called externally when resource changes are detected
+     */
+    public void forceRefresh() {
+        LOGGER.debug("Force refresh requested for ResourcesTab");
+        
+        // Force cache refresh
+        if (parentScreen.getCacheManager() != null) {
+            parentScreen.getCacheManager().refreshCachedValues();
+        }
+        
+        // Force content component refresh
+        if (contentComponent != null) {
+            contentComponent.refresh();
+        }
+        
+        // Update tracking
+        lastKnownResources = parentScreen.getCachedResources();
+        refreshCounter = 0; // Reset counter
     }
 } 

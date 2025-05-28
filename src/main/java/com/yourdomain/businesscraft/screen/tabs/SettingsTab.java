@@ -44,36 +44,36 @@ public class SettingsTab extends BaseTownTab {
         
         // Configure with settings data supplier
         contentComponent.withButtonGridData(() -> {
-            Map<String, Object[]> settingsData = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
-            
-            // Add platforms row
-            settingsData.put("Platforms:", new Object[] {
-                "Set Platforms", 
-                (Consumer<Void>) button -> {
-                    parentScreen.playButtonClickSound();
-                    // Open the platform management screen instead of just showing a message
-                    parentScreen.openPlatformManagementScreen();
-                }
-            });
-            
-            // Add search radius row - use the cached value for display
-            settingsData.put("Search Radius:", new Object[] {
-                "Radius: " + parentScreen.getCurrentSearchRadius(), 
-                (Consumer<Void>) button -> {
-                    // In TownBlockScreen, this would increase the radius
-                    parentScreen.handleRadiusChange(0); // 0 = left click (increase)
-                }
-            });
-            
+                Map<String, Object[]> settingsData = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
+                
+                // Add platforms row
+                settingsData.put("Platforms:", new Object[] {
+                    "Set Platforms", 
+                    (Consumer<Void>) button -> {
+                        parentScreen.playButtonClickSound();
+                        // Open the platform management screen instead of just showing a message
+                        parentScreen.openPlatformManagementScreen();
+                    }
+                });
+                
+                // Add search radius row - use the cached value for display
+                settingsData.put("Search Radius:", new Object[] {
+                    "Radius: " + parentScreen.getCurrentSearchRadius(), 
+                    (Consumer<Void>) button -> {
+                        // In TownBlockScreen, this would increase the radius
+                        parentScreen.handleRadiusChange(0); // 0 = left click (increase)
+                    }
+                });
+                
             return settingsData;
         });
         
         // Configure custom click handler for right-click on radius button
         contentComponent.withCustomClickHandler(button -> {
             if (button == 1) { // Right-click
-                parentScreen.handleRadiusChange(1); // Handle right click
-                return true;
-            }
+                    parentScreen.handleRadiusChange(1); // Handle right click
+                    return true;
+                }
             return false; // Let normal handling proceed
         });
         

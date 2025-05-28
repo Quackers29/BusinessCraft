@@ -184,6 +184,9 @@ public class StandardTabContent extends BCComponent {
                 // This method automatically enables scrolling if needed
                 grid.withItemQuantityPairs(items, TEXT_HIGHLIGHT);
                 LOGGER.debug("Grid created with scrolling enabled: {}", items.size() > 4);
+            } else {
+                // Update existing grid with new data while preserving scroll state
+                grid.updateItemQuantityPairs(items, TEXT_HIGHLIGHT);
             }
             
             // Render the grid (preserves scroll state)
