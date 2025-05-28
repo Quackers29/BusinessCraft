@@ -432,7 +432,29 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                     clientSyncHelper.updateClientResourcesFromTown(town);
                 }
             }
+            
+            // Refresh ContainerData for any open TownInterfaceMenu instances
+            refreshOpenMenus();
+            
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
+        }
+    }
+    
+    /**
+     * Refreshes ContainerData for any open TownInterfaceMenu instances
+     * This ensures population and tourist values are updated in real-time
+     */
+    private void refreshOpenMenus() {
+        if (level instanceof ServerLevel serverLevel) {
+            // Find all players with open menus for this block
+            for (net.minecraft.server.level.ServerPlayer player : serverLevel.players()) {
+                if (player.containerMenu instanceof com.yourdomain.businesscraft.menu.TownInterfaceMenu menu) {
+                    // Check if this menu is for our block position
+                    if (getBlockPos().equals(menu.getBlockPos())) {
+                        menu.refreshDataSlots();
+                    }
+                }
+            }
         }
     }
 

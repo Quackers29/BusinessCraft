@@ -139,3 +139,4 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 126. Auto-refresh implementation: use periodic checks (every 20 ticks) combined with data change detection for responsive UI updates
 127. UIGridBuilder update pattern: create updateItemQuantityPairs method to preserve scroll state while updating data
 128. Resource change detection: compare Map sizes and values to detect when UI refresh is needed
+129. ContainerData synchronization: add refreshDataSlots() method to menus and call it from BlockEntity.setChanged() to update server-side ContainerData when town data changes, ensuring UI population/tourist values sync properly
