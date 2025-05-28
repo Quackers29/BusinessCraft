@@ -469,6 +469,30 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
             data.set(DATA_SEARCH_RADIUS, townEntity.getSearchRadius());
         }
     }
+    
+    /**
+     * Refreshes the ContainerData slots with current town data.
+     * This method should be called when town data changes to ensure
+     * the UI displays up-to-date population and tourist values.
+     */
+    public void refreshDataSlots() {
+        // Re-fetch the town data if needed
+        if (town == null && level instanceof ServerLevel serverLevel) {
+            TownManager townManager = TownManager.get(serverLevel);
+            
+            // Try to get town from block entity
+            if (level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+                UUID entityTownId = townEntity.getTownId();
+                if (entityTownId != null) {
+                    this.town = townManager.getTown(entityTownId);
+                    this.townId = entityTownId;
+                }
+            }
+        }
+        
+        // Update the data slots with current values
+        updateDataSlots();
+    }
 
     /**
      * Get the town data provider for this menu
