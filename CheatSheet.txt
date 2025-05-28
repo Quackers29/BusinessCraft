@@ -133,3 +133,9 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 120. UI enhancement, break complex rendering into smaller methods (renderTradeInputSection, renderTradeOutputSection) for better organization and maintainability
 121. UI animation, use System.currentTimeMillis() with Math.sin() for smooth pulsing effects and vary opacity/color based on UI state for better visual feedback
 122. UI visual hierarchy, use different background colors and border styles to indicate UI state (ready vs not ready) and provide clear visual cues to users
+123. When standardizing tabs, use supplier functions for dynamic data binding to maintain real-time updates
+124. After major refactoring, clean up unused imports to avoid compilation warnings
+125. Component refresh patterns: reset grid to null to force recreation with new data while preserving scroll state
+126. Auto-refresh implementation: use periodic checks (every 20 ticks) combined with data change detection for responsive UI updates
+127. UIGridBuilder update pattern: create updateItemQuantityPairs method to preserve scroll state while updating data
+128. Resource change detection: compare Map sizes and values to detect when UI refresh is needed

@@ -1299,85 +1299,85 @@ public class UIGridBuilder {
     }
     
     /**
-     * Creates a grid with label-value pairs, which is a very common pattern
+     * Updates an existing grid with new item-quantity pairs while preserving scroll state
      * 
-     * @param x X position 
-     * @param y Y position
-     * @param width Width
-     * @param height Height
-     * @param labelColor Color for labels
-     * @param valueColor Color for values
-     * @param pairs Map of label-value pairs
-     * @return A new grid builder with the pairs added
+     * @param itemQuantityPairs Map of items to their quantities
+     * @param textColor Color for the item name text
+     * @return This builder for chaining
      */
-    public static UIGridBuilder createLabelValueGrid(
-            int x, int y, int width, int height, 
-            int labelColor, int valueColor, 
-            Map<String, String> pairs) {
+    public UIGridBuilder updateItemQuantityPairs(Map<net.minecraft.world.item.Item, Integer> itemQuantityPairs, int textColor) {
+        // Store current scroll state
+        int savedVerticalScrollOffset = this.verticalScrollOffset;
+        int savedHorizontalScrollOffset = this.horizontalScrollOffset;
+        boolean wasVerticalScrollEnabled = this.verticalScrollEnabled;
+        boolean wasHorizontalScrollEnabled = this.horizontalScrollEnabled;
+        int savedVisibleRows = this.visibleRows;
+        int savedMaxVerticalScrollOffset = this.maxVerticalScrollOffset;
+        int savedMaxHorizontalScrollOffset = this.maxHorizontalScrollOffset;
         
-        UIGridBuilder grid = create(x, y, width, height, 2)
-            .withRowHeight(26); // Use consistent row height
+        // Clear existing elements and rebuild with new data
+        this.elements.clear();
         
-        // Create column data arrays
-        @SuppressWarnings("unchecked")
-        List<GridContent>[] columnData = new List[2];
-        columnData[0] = new ArrayList<>(); // Label column
-        columnData[1] = new ArrayList<>(); // Value column
+        // Sort items by name
+        List<Map.Entry<net.minecraft.world.item.Item, Integer>> sortedEntries = 
+            new ArrayList<>(itemQuantityPairs.entrySet());
         
-        // Add pairs
-        for (Map.Entry<String, String> entry : pairs.entrySet()) {
-            columnData[0].add(GridContent.text(entry.getKey(), labelColor));
-            columnData[1].add(GridContent.text(entry.getValue(), valueColor));
-        }
+        sortedEntries.sort((a, b) -> {
+            String nameA = a.getKey().getDescriptionId();
+            String nameB = b.getKey().getDescriptionId();
+            return nameA.compareToIgnoreCase(nameB);
+        });
         
-        // Use the column data
-        grid.withColumnData(columnData);
+        // Calculate total rows needed
+        int totalRows = sortedEntries.size();
         
-        return grid;
-    }
-    
-    /**
-     * Creates a grid with label-button pairs, which is a common pattern
-     * 
-     * @param x X position
-     * @param y Y position
-     * @param width Width
-     * @param height Height
-     * @param labelColor Color for labels
-     * @param buttonColor Color for buttons
-     * @param pairs Map of label to button data (text and click handler)
-     * @return A new grid builder with the pairs added
-     */
-    public static UIGridBuilder createLabelButtonGrid(
-            int x, int y, int width, int height,
-            int labelColor, int buttonColor,
-            Map<String, Object[]> pairs) {
+        // Adjust rows and columns based on data
+        this.columns = 2; // Item and quantity
+        this.rows = totalRows;
+        this.totalRows = totalRows;
         
-        UIGridBuilder grid = create(x, y, width, height, 2)
-            .withRowHeight(26); // Use consistent row height
-        
-        // Create column data arrays
-        @SuppressWarnings("unchecked")
-        List<GridContent>[] columnData = new List[2];
-        columnData[0] = new ArrayList<>(); // Label column
-        columnData[1] = new ArrayList<>(); // Button column
-        
-        // Add pairs
-        for (Map.Entry<String, Object[]> entry : pairs.entrySet()) {
-            String label = entry.getKey();
-            Object[] buttonData = entry.getValue();
-            String buttonText = (String)buttonData[0];
-            @SuppressWarnings("unchecked") 
-            Consumer<Void> onClick = (Consumer<Void>)buttonData[1];
+        // Restore scroll settings if they were enabled
+        if (wasVerticalScrollEnabled && totalRows > 4) {
+            this.verticalScrollEnabled = true;
+            this.visibleRows = savedVisibleRows;
+            this.maxVerticalScrollOffset = Math.max(0, totalRows - this.visibleRows);
             
-            columnData[0].add(GridContent.text(label, labelColor));
-            columnData[1].add(GridContent.button(buttonText, onClick, buttonColor));
+            // Restore scroll offset, but clamp it to the new max
+            this.verticalScrollOffset = Math.min(savedVerticalScrollOffset, this.maxVerticalScrollOffset);
+        } else if (totalRows > 4) {
+            // Enable scrolling if we have more than 4 rows
+            int effectiveRowHeight = this.customRowHeight != null ? this.customRowHeight : 16;
+            int availableHeight = this.height - (this.verticalMargin * 2);
+            int calculatedVisibleRows = Math.max(4, availableHeight / (effectiveRowHeight + this.verticalSpacing));
+            
+            this.withVerticalScroll(true, calculatedVisibleRows);
+            this.verticalScrollOffset = 0; // Start at top for new data
         }
         
-        // Use the column data
-        grid.withColumnData(columnData);
+        if (wasHorizontalScrollEnabled) {
+            this.horizontalScrollEnabled = true;
+            this.maxHorizontalScrollOffset = savedMaxHorizontalScrollOffset;
+            this.horizontalScrollOffset = Math.min(savedHorizontalScrollOffset, this.maxHorizontalScrollOffset);
+        }
         
-        return grid;
+        // Add item elements
+        for (int i = 0; i < sortedEntries.size(); i++) {
+            Map.Entry<net.minecraft.world.item.Item, Integer> entry = sortedEntries.get(i);
+            
+            // Create a formatted item name
+            String itemName = formatItemName(entry.getKey().getDescriptionId());
+            
+            // Add label for item name (first column)
+            addLabel(i, 0, itemName, textColor);
+            
+            // Add item with quantity (second column)
+            UIGridElement element = addItem(i, 1, entry.getKey(), entry.getValue(), null).elements.get(elements.size() - 1);
+            element.showQuantity = true; // Always show quantity
+        }
+        
+        LOGGER.debug("Updated grid with {} items, preserved scroll offset: {}", sortedEntries.size(), this.verticalScrollOffset);
+        
+        return this;
     }
 
     /**
@@ -1636,5 +1636,87 @@ public class UIGridBuilder {
             return wasDragging;
         }
         return false;
+    }
+
+    /**
+     * Creates a grid with label-value pairs, which is a very common pattern
+     * 
+     * @param x X position 
+     * @param y Y position
+     * @param width Width
+     * @param height Height
+     * @param labelColor Color for labels
+     * @param valueColor Color for values
+     * @param pairs Map of label-value pairs
+     * @return A new grid builder with the pairs added
+     */
+    public static UIGridBuilder createLabelValueGrid(
+            int x, int y, int width, int height, 
+            int labelColor, int valueColor, 
+            Map<String, String> pairs) {
+        
+        UIGridBuilder grid = create(x, y, width, height, 2)
+            .withRowHeight(26); // Use consistent row height
+        
+        // Create column data arrays
+        @SuppressWarnings("unchecked")
+        List<GridContent>[] columnData = new List[2];
+        columnData[0] = new ArrayList<>(); // Label column
+        columnData[1] = new ArrayList<>(); // Value column
+        
+        // Add pairs
+        for (Map.Entry<String, String> entry : pairs.entrySet()) {
+            columnData[0].add(GridContent.text(entry.getKey(), labelColor));
+            columnData[1].add(GridContent.text(entry.getValue(), valueColor));
+        }
+        
+        // Use the column data
+        grid.withColumnData(columnData);
+        
+        return grid;
+    }
+    
+    /**
+     * Creates a grid with label-button pairs, which is a common pattern
+     * 
+     * @param x X position
+     * @param y Y position
+     * @param width Width
+     * @param height Height
+     * @param labelColor Color for labels
+     * @param buttonColor Color for buttons
+     * @param pairs Map of label to button data (text and click handler)
+     * @return A new grid builder with the pairs added
+     */
+    public static UIGridBuilder createLabelButtonGrid(
+            int x, int y, int width, int height,
+            int labelColor, int buttonColor,
+            Map<String, Object[]> pairs) {
+        
+        UIGridBuilder grid = create(x, y, width, height, 2)
+            .withRowHeight(26); // Use consistent row height
+        
+        // Create column data arrays
+        @SuppressWarnings("unchecked")
+        List<GridContent>[] columnData = new List[2];
+        columnData[0] = new ArrayList<>(); // Label column
+        columnData[1] = new ArrayList<>(); // Button column
+        
+        // Add pairs
+        for (Map.Entry<String, Object[]> entry : pairs.entrySet()) {
+            String label = entry.getKey();
+            Object[] buttonData = entry.getValue();
+            String buttonText = (String)buttonData[0];
+            @SuppressWarnings("unchecked") 
+            Consumer<Void> onClick = (Consumer<Void>)buttonData[1];
+            
+            columnData[0].add(GridContent.text(label, labelColor));
+            columnData[1].add(GridContent.button(buttonText, onClick, buttonColor));
+        }
+        
+        // Use the column data
+        grid.withColumnData(columnData);
+        
+        return grid;
     }
 } 

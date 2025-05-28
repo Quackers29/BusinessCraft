@@ -3,6 +3,7 @@ package com.yourdomain.businesscraft.screen;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.screen.managers.*;
+import com.yourdomain.businesscraft.screen.tabs.ResourcesTab;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import com.yourdomain.businesscraft.network.ModMessages;
@@ -19,7 +20,7 @@ import net.minecraft.world.item.Item;
  */
 public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu> 
         implements BottomButtonManager.ButtonActionHandler {
-    
+
     // Manager instances specific to this screen
     private BottomButtonManager buttonManager;
     
@@ -99,14 +100,14 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     @Override
     public void onResetDefaults() {
         sendChatMessage("Settings reset to defaults!");
-    }
-    
-    @Override
+            }
+            
+            @Override
     public void onManagePlatforms() {
         openPlatformManagementScreen();
-    }
-    
-    @Override
+            }
+            
+            @Override
     public void onGenericAction(String action) {
         sendChatMessage("Action: " + action);
     }
@@ -298,5 +299,26 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
                 // Optional callback when screen is closed
             }
         );
+    }
+    
+    /**
+     * Force refresh the resources tab when resource changes are detected
+     * This can be called externally when resource updates occur
+     */
+    public void forceRefreshResourcesTab() {
+        if (tabController != null) {
+            Object resourcesTab = tabController.getTab("resources");
+            if (resourcesTab instanceof ResourcesTab) {
+                ((ResourcesTab) resourcesTab).forceRefresh();
+            }
+        }
+    }
+    
+    /**
+     * Gets the cache manager for external access
+     * @return The cache manager instance
+     */
+    public TownDataCacheManager getCacheManager() {
+        return cacheManager;
     }
 } 

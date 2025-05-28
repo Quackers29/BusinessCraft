@@ -45,13 +45,13 @@ public class PopulationTab extends BaseTownTab {
     public void init(Consumer<Button> registerWidget) {
         // Add title first (like other tabs)
         panel.addChild(createHeaderLabel("POPULATION"));
-        
+                
         // Create standardized content component
         contentComponent = createStandardContent(
             StandardTabContent.ContentType.CUSTOM_LIST, 
             "POPULATION"
         );
-        
+                            
         // Configure with population data supplier
         contentComponent.withCustomData(() -> new Object[]{names, jobs, levels});
         

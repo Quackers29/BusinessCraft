@@ -47,10 +47,10 @@ public class OverviewTab extends BaseTownTab {
         
         // Configure the data supplier for the overview information
         contentComponent.withLabelValueData(() -> {
-            Map<String, String> overviewData = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
-            overviewData.put("Town Name:", parentScreen.getCachedTownName());
-            overviewData.put("Population:", String.valueOf(parentScreen.getCachedPopulation()));
-            overviewData.put("Tourists:", parentScreen.getTouristString());
+                Map<String, String> overviewData = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
+                overviewData.put("Town Name:", parentScreen.getCachedTownName());
+                overviewData.put("Population:", String.valueOf(parentScreen.getCachedPopulation()));
+                overviewData.put("Tourists:", parentScreen.getTouristString());
             return overviewData;
         });
         
