@@ -177,6 +177,13 @@ public class ModMessages {
                 .encoder(PersonalStorageRequestPacket::encode)
                 .consumerMainThread(PersonalStorageRequestPacket::handle)
                 .add();
+                
+        // Register the open town interface packet for proper menu synchronization
+        net.messageBuilder(OpenTownInterfacePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(OpenTownInterfacePacket::new)
+                .encoder(OpenTownInterfacePacket::toBytes)
+                .consumerMainThread(OpenTownInterfacePacket::handle)
+                .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {
