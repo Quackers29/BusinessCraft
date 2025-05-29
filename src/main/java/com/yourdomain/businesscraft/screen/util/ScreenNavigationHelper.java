@@ -1,9 +1,8 @@
 package com.yourdomain.businesscraft.screen.util;
 
-import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
-import com.yourdomain.businesscraft.screen.TownInterfaceScreen;
+import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.network.OpenTownInterfacePacket;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.core.BlockPos;
 
@@ -14,21 +13,15 @@ public class ScreenNavigationHelper {
     
     /**
      * Returns to the main town interface screen from any other screen
+     * Uses proper server-side menu opening for ContainerData synchronization
      * 
      * @param minecraft The Minecraft client instance
      * @param player The player whose inventory will be used in the new screen
      * @param townBlockPos The position of the town block entity
      */
     public static void returnToTownInterface(Minecraft minecraft, Player player, BlockPos townBlockPos) {
-        // Create the menu with the town block position to ensure town data is correctly retrieved
-        TownInterfaceMenu containerMenu = new TownInterfaceMenu(
-            0, player.getInventory(), 
-            townBlockPos);
-        
-        // Create and set the new screen
-        minecraft.setScreen(new TownInterfaceScreen(
-            containerMenu,
-            player.getInventory(),
-            Component.literal("Town Interface")));
+        // Send a packet to the server to open the TownInterface menu properly
+        // This ensures proper ContainerData synchronization unlike direct client-side creation
+        ModMessages.sendToServer(new OpenTownInterfacePacket(townBlockPos));
     }
 } 
