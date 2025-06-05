@@ -1233,6 +1233,114 @@ public class UIGridBuilder {
         
         return this;
     }
+
+    /**
+     * Updates an existing grid with new column data while preserving scroll state
+     * 
+     * @param columnData Arrays of GridContent objects for each column
+     * @return This builder for chaining
+     */
+    public UIGridBuilder updateColumnData(List<GridContent>[] columnData) {
+        if (columnData == null || columnData.length == 0) {
+            return this;
+        }
+        
+        // Store current scroll state
+        int savedVerticalScrollOffset = this.verticalScrollOffset;
+        int savedHorizontalScrollOffset = this.horizontalScrollOffset;
+        boolean wasVerticalScrollEnabled = this.verticalScrollEnabled;
+        boolean wasHorizontalScrollEnabled = this.horizontalScrollEnabled;
+        int savedVisibleRows = this.visibleRows;
+        int savedMaxVerticalScrollOffset = this.maxVerticalScrollOffset;
+        int savedMaxHorizontalScrollOffset = this.maxHorizontalScrollOffset;
+        
+        // Clear existing elements and rebuild with new data
+        this.elements.clear();
+        
+        // Determine the number of rows needed (use the longest column)
+        int maxRows = 0;
+        for (List<GridContent> column : columnData) {
+            maxRows = Math.max(maxRows, column.size());
+        }
+        
+        // Update total rows for scrolling calculations
+        this.rows = maxRows;
+        this.totalRows = maxRows;
+        
+        // Restore scroll settings if they were enabled
+        if (wasVerticalScrollEnabled) {
+            this.verticalScrollEnabled = true;
+            this.visibleRows = savedVisibleRows;
+            this.maxVerticalScrollOffset = Math.max(0, this.totalRows - this.visibleRows);
+            
+            // Restore scroll offset, but clamp it to the new valid range
+            this.verticalScrollOffset = Math.min(savedVerticalScrollOffset, this.maxVerticalScrollOffset);
+        }
+        
+        if (wasHorizontalScrollEnabled) {
+            this.horizontalScrollEnabled = true;
+            this.horizontalScrollOffset = Math.min(savedHorizontalScrollOffset, savedMaxHorizontalScrollOffset);
+            this.maxHorizontalScrollOffset = savedMaxHorizontalScrollOffset;
+        }
+        
+        // Add all content elements to the grid
+        for (int colIndex = 0; colIndex < columnData.length; colIndex++) {
+            List<GridContent> column = columnData[colIndex];
+            
+            for (int rowIndex = 0; rowIndex < column.size(); rowIndex++) {
+                GridContent content = column.get(rowIndex);
+                
+                switch (content.type) {
+                    case TEXT:
+                        addLabel(rowIndex, colIndex, (String)content.value, content.textColor);
+                        if (content.tooltip != null) {
+                            elements.get(elements.size() - 1).tooltip = content.tooltip;
+                        }
+                        if (content.onClick != null) {
+                            elements.get(elements.size() - 1).onClick = content.onClick;
+                        }
+                        break;
+                        
+                    case ITEM:
+                        addItem(rowIndex, colIndex, (net.minecraft.world.item.Item)content.value, 1, content.onClick);
+                        if (content.tooltip != null) {
+                            elements.get(elements.size() - 1).tooltip = content.tooltip;
+                        }
+                        break;
+                        
+                    case ITEM_WITH_QUANTITY:
+                        Object[] itemData = (Object[])content.value;
+                        net.minecraft.world.item.Item item = (net.minecraft.world.item.Item)itemData[0];
+                        int quantity = (Integer)itemData[1];
+                        addItem(rowIndex, colIndex, item, quantity, content.onClick);
+                        if (content.tooltip != null) {
+                            elements.get(elements.size() - 1).tooltip = content.tooltip;
+                        }
+                        break;
+                        
+                    case TOGGLE:
+                        Object[] toggleData = (Object[])content.value;
+                        String toggleText = (String)toggleData[0];
+                        boolean initialState = (Boolean)toggleData[1];
+                        addToggle(rowIndex, colIndex, toggleText, initialState, content.onToggle, 
+                                 content.bgColor, 0x80555555);
+                        if (content.tooltip != null) {
+                            elements.get(elements.size() - 1).tooltip = content.tooltip;
+                        }
+                        break;
+                        
+                    case BUTTON:
+                        addButton(rowIndex, colIndex, (String)content.value, content.onClick, content.bgColor);
+                        if (content.tooltip != null) {
+                            elements.get(elements.size() - 1).tooltip = content.tooltip;
+                        }
+                        break;
+                }
+            }
+        }
+        
+        return this;
+    }
     
     /**
      * Utility method to create a grid from item-quantity pairs
@@ -1337,7 +1445,7 @@ public class UIGridBuilder {
         this.totalRows = totalRows;
         
         // Restore scroll settings if they were enabled
-        if (wasVerticalScrollEnabled && totalRows > 4) {
+        if (wasVerticalScrollEnabled) {
             this.verticalScrollEnabled = true;
             this.visibleRows = savedVisibleRows;
             this.maxVerticalScrollOffset = Math.max(0, totalRows - this.visibleRows);
@@ -1719,4 +1827,6 @@ public class UIGridBuilder {
         
         return grid;
     }
+
+
 } 
