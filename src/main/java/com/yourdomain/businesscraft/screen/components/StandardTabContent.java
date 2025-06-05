@@ -35,7 +35,6 @@ public class StandardTabContent extends BCComponent {
     private final ContentType contentType;
     private final String title;
     private UIGridBuilder grid;
-    private PopulationListComponent customListComponent;
     
     // Animation state for LABEL_VALUE_GRID
     private float alpha = 0.0f;
@@ -195,7 +194,7 @@ public class StandardTabContent extends BCComponent {
     }
     
     /**
-     * Render custom list (Population tab style) - preserves all original functionality
+     * Render custom list (Population tab style) - now uses UIGridBuilder's modular approach
      */
     private void renderCustomList(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (customDataSupplier != null) {
@@ -206,14 +205,40 @@ public class StandardTabContent extends BCComponent {
             String[] jobs = (String[]) data[1];
             int[] levels = (int[]) data[2];
             
-            // Create the custom list component only once to preserve scroll state
-            if (customListComponent == null) {
-                LOGGER.debug("Creating new custom list component for population with {} citizens", names.length);
-                customListComponent = new PopulationListComponent(x, y, width, height, names, jobs, levels);
+            // Create column data arrays for 3 columns using UIGridBuilder's modular approach
+            @SuppressWarnings("unchecked")
+            java.util.List<UIGridBuilder.GridContent>[] columnData = new java.util.List[3];
+            columnData[0] = new java.util.ArrayList<>(); // Name column
+            columnData[1] = new java.util.ArrayList<>(); // Job column  
+            columnData[2] = new java.util.ArrayList<>(); // Level column
+            
+            // Populate column data
+            for (int i = 0; i < names.length; i++) {
+                columnData[0].add(UIGridBuilder.GridContent.text(names[i], TEXT_HIGHLIGHT));
+                columnData[1].add(UIGridBuilder.GridContent.text(jobs[i], TEXT_COLOR));
+                columnData[2].add(UIGridBuilder.GridContent.text("Level " + levels[i], TEXT_COLOR));
             }
             
-            // Render the custom list component (x, y are already set in constructor)
-            customListComponent.render(guiGraphics, customListComponent.getX(), customListComponent.getY(), mouseX, mouseY);
+            // Create the grid only once to preserve scroll state
+            if (grid == null) {
+                LOGGER.debug("Creating new UIGridBuilder for population with {} citizens", names.length);
+                grid = UIGridBuilder.create(x, y, width, height, 3)
+                    .withRowHeight(16) // Match PopulationTab's itemHeight
+                    .withMargins(8, 5) // Match PopulationTab's padding and verticalPadding
+                    .withSpacing(10, 0) // Horizontal spacing between columns
+                    .withBackgroundColor(BACKGROUND_COLOR)
+                    .withBorderColor(BORDER_COLOR)
+                    .drawBorder(true)
+                    .withColumnData(columnData);
+                
+                LOGGER.debug("Population grid created with scrolling enabled: {}", names.length > 4);
+            } else {
+                // Update existing grid with new data while preserving scroll state
+                grid.updateColumnData(columnData);
+            }
+            
+            // Render the grid (preserves scroll state)
+            grid.render(guiGraphics, mouseX, mouseY);
         }
     }
     
@@ -244,10 +269,6 @@ public class StandardTabContent extends BCComponent {
     
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (contentType == ContentType.CUSTOM_LIST && customListComponent != null) {
-            return customListComponent.mouseClicked(mouseX, mouseY, button);
-        }
-        
         // For button grids, check if we have a custom click handler first
         if (contentType == ContentType.BUTTON_GRID && customClickHandler != null) {
             if (customClickHandler.apply(button)) {
@@ -263,25 +284,22 @@ public class StandardTabContent extends BCComponent {
     
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        if (contentType == ContentType.CUSTOM_LIST && customListComponent != null) {
-            return customListComponent.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        if (grid != null) {
+            return grid.mouseDragged(mouseX, mouseY, button, dragX, dragY);
         }
         return false;
     }
     
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (contentType == ContentType.CUSTOM_LIST && customListComponent != null) {
-            return customListComponent.mouseReleased(mouseX, mouseY, button);
+        if (grid != null) {
+            return grid.mouseReleased(mouseX, mouseY, button);
         }
         return false;
     }
     
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        if (contentType == ContentType.CUSTOM_LIST && customListComponent != null) {
-            return customListComponent.mouseScrolled(mouseX, mouseY, delta);
-        }
         if (grid != null) {
             return grid.mouseScrolled(mouseX, mouseY, delta);
         }
@@ -300,8 +318,5 @@ public class StandardTabContent extends BCComponent {
         
         // Force grid recreation
         grid = null;
-        
-        // Force custom list recreation
-        customListComponent = null;
     }
 } 
