@@ -52,23 +52,23 @@ public class ResourcesTab extends BaseTownTab {
         
         // Configure the data supplier for the resource information
         contentComponent.withItemListData(() -> {
-            // Get resources from the parent screen using the public getter
-            Map<Item, Integer> resources = parentScreen.getCachedResources();
+                // Get resources from the parent screen using the public getter
+                Map<Item, Integer> resources = parentScreen.getCachedResources();
             LOGGER.debug("Resources Tab: Providing {} items to content component", resources.size());
-            
+                
             // Check for resource changes and trigger refresh if needed
             checkForResourceChanges(resources);
             
             return resources;
-        });
-        
+                });
+                
         // Add the content component to the panel
         panel.addChild(contentComponent);
         
         // Initialize last known resources
         lastKnownResources = parentScreen.getCachedResources();
-    }
-    
+                }
+                
     @Override
     public void update() {
         // Increment refresh counter
@@ -81,8 +81,8 @@ public class ResourcesTab extends BaseTownTab {
             // Force a cache refresh from the parent screen
             if (parentScreen.getCacheManager() != null) {
                 parentScreen.getCacheManager().refreshCachedValues();
-            }
-            
+                }
+                
             // Check if resources have changed
             Map<Item, Integer> currentResources = parentScreen.getCachedResources();
             if (hasResourcesChanged(currentResources)) {
@@ -105,8 +105,8 @@ public class ResourcesTab extends BaseTownTab {
     private boolean hasResourcesChanged(Map<Item, Integer> currentResources) {
         if (lastKnownResources == null) {
             return !currentResources.isEmpty();
-        }
-        
+                }
+                
         // Check if the maps are different
         if (lastKnownResources.size() != currentResources.size()) {
             return true;
@@ -124,12 +124,12 @@ public class ResourcesTab extends BaseTownTab {
         for (Item item : lastKnownResources.keySet()) {
             if (!currentResources.containsKey(item)) {
                 return true;
-            }
+                }
         }
         
-        return false;
-    }
-    
+                return false;
+            }
+            
     /**
      * Called during data supplier execution to check for immediate changes
      */
