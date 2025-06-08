@@ -195,17 +195,21 @@ public class BCComponentFactory {
     }
     
     /**
-     * Creates an edit box with consistent styling.
+     * Creates an edit box with consistent styling using BC components.
      */
-    public static EditBoxComponent createEditBox(int width, Supplier<String> initialText, Consumer<String> onTextChanged, int maxLength) {
-        return new EditBoxComponent(width, STANDARD_BUTTON_HEIGHT, initialText, onTextChanged, maxLength);
+    public static BCEditBoxComponent createEditBox(int width, Supplier<String> initialText, Consumer<String> onTextChanged, int maxLength) {
+        return new BCEditBoxComponent(width, STANDARD_BUTTON_HEIGHT, initialText, onTextChanged, maxLength);
     }
     
     /**
-     * Creates a toggle button with consistent styling.
+     * Creates a toggle button with consistent styling using BC components.
      */
-    public static ToggleButtonComponent createToggleButton(Component text, Consumer<Button> onPress, int width) {
-        return new ToggleButtonComponent(0, 0, width, STANDARD_BUTTON_HEIGHT, text, onPress);
+    public static BCToggleButton createToggleButton(Component text, Consumer<Button> onPress, int width) {
+        // Note: BCToggleButton constructor already sets default size, we can create with custom text
+        BCToggleButton toggleButton = new BCToggleButton(false, onPress);
+        toggleButton.withText(text.getString());
+        // TODO: Add method to BCToggleButton for custom sizing if needed
+        return toggleButton;
     }
     
     /**
