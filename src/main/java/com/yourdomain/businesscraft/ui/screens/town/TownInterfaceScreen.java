@@ -19,12 +19,16 @@ import com.yourdomain.businesscraft.ui.screens.platform.PlatformManagementScreen
 /**
  * The Town Interface Screen showcases the BusinessCraft UI system capabilities.
  * This screen demonstrates various UI components and layouts using the enhanced BCTabPanel.
+ * Refactored to use dependency injection and extracted managers for better separation of concerns.
  */
 public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu> 
         implements BottomButtonManager.ButtonActionHandler {
 
     // Manager instances specific to this screen
     private BottomButtonManager buttonManager;
+    
+    // Dependency container for coordinated functionality
+    private TownScreenDependencies dependencies;
     
     // Cache the current search radius for UI updates
     private int currentSearchRadius;
@@ -34,15 +38,27 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
         
         // Initialize cached values from the menu
         this.currentSearchRadius = menu.getSearchRadius();
+        
+        LOGGER.debug("TownInterfaceScreen created with radius: {}", currentSearchRadius);
     }
     
     @Override
     protected void initializeSpecificManagers() {
-        // Initialize managers specific to TownInterfaceScreen
-        this.buttonManager = new BottomButtonManager(this);
-        this.eventHandler = new TownScreenEventHandler(this, this, this.buttonManager);
-        this.renderManager = new TownScreenRenderManager(this, this, this);
-            }
+        try {
+            // Create dependency container with all coordinated functionality
+            this.dependencies = TownScreenDependencies.create(menu, this, cacheManager);
+            
+            // Initialize managers specific to TownInterfaceScreen
+            this.buttonManager = new BottomButtonManager(this);
+            this.eventHandler = new TownScreenEventHandler(this, this, this.buttonManager);
+            this.renderManager = new TownScreenRenderManager(this, this, this);
+            
+            LOGGER.debug("TownInterfaceScreen managers initialized successfully");
+        } catch (Exception e) {
+            LOGGER.error("Failed to initialize TownInterfaceScreen managers", e);
+            throw new RuntimeException("Screen initialization failed", e);
+        }
+    }
 
     @Override
     protected void performAdditionalInit() {
@@ -53,65 +69,117 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
 
     @Override
     protected void performAdditionalCleanup() {
-        // Send a packet to register the player exit UI to show platform indicators
-        BlockPos blockPos = this.menu.getBlockPos();
-        if (blockPos != null) {
-            // Send a packet to the server to register player exit UI
-            ModMessages.sendToServer(new PlayerExitUIPacket(blockPos));
-    }
+        try {
+            // Clean up dependencies first
+            if (dependencies != null) {
+                dependencies.cleanup();
+                dependencies = null;
+                LOGGER.debug("Dependencies cleaned up successfully");
+            }
+            
+            // Send a packet to register the player exit UI to show platform indicators
+            BlockPos blockPos = this.menu.getBlockPos();
+            if (blockPos != null) {
+                // Send a packet to the server to register player exit UI
+                ModMessages.sendToServer(new PlayerExitUIPacket(blockPos));
+                LOGGER.debug("Player exit UI packet sent");
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Error during additional cleanup", e);
+        }
     }
     
     // ===== Interface Implementations =====
     
-    // ButtonActionHandler implementation
+    // ButtonActionHandler implementation - delegates to ButtonActionCoordinator
     @Override
     public void onEditDetails() {
-        showChangeTownNamePopup();
+        if (dependencies != null) {
+            dependencies.getButtonCoordinator().handleEditDetails();
+        } else {
+            LOGGER.warn("Dependencies not available for onEditDetails");
+        }
     }
     
     @Override
     public void onViewVisitors() {
-        showVisitorListModal();
+        if (dependencies != null) {
+            dependencies.getButtonCoordinator().handleViewVisitors();
+        } else {
+            LOGGER.warn("Dependencies not available for onViewVisitors");
+        }
     }
     
     @Override
     public void onTradeResources() {
-        showTradeResourcesModal();
+        if (dependencies != null) {
+            dependencies.getButtonCoordinator().handleTradeResources();
+        } else {
+            LOGGER.warn("Dependencies not available for onTradeResources");
+        }
     }
     
     @Override
     public void onManageStorage() {
-        showStorageModal();
+        if (dependencies != null) {
+            dependencies.getButtonCoordinator().handleManageStorage();
+        } else {
+            LOGGER.warn("Dependencies not available for onManageStorage");
+        }
     }
     
     @Override
     public void onAssignJobs() {
-        sendChatMessage("Job assignment feature coming soon!");
+        if (dependencies != null) {
+            dependencies.getButtonCoordinator().handleAssignJobs();
+        } else {
+            sendChatMessage("Job assignment feature coming soon!");
+        }
     }
     
     @Override
     public void onViewVisitorHistory() {
-        showVisitorHistoryScreen();
+        if (dependencies != null) {
+            dependencies.getButtonCoordinator().handleViewVisitorHistory();
+        } else {
+            LOGGER.warn("Dependencies not available for onViewVisitorHistory");
+        }
     }
     
     @Override
     public void onSaveSettings() {
-        sendChatMessage("Settings saved successfully!");
+        if (dependencies != null) {
+            dependencies.getButtonCoordinator().handleSaveSettings();
+        } else {
+            sendChatMessage("Settings saved successfully!");
+        }
     }
     
     @Override
     public void onResetDefaults() {
-        sendChatMessage("Settings reset to defaults!");
-            }
+        if (dependencies != null) {
+            dependencies.getButtonCoordinator().handleResetDefaults();
+        } else {
+            sendChatMessage("Settings reset to defaults!");
+        }
+    }
             
-            @Override
+    @Override
     public void onManagePlatforms() {
-        openPlatformManagementScreen();
-            }
+        if (dependencies != null) {
+            dependencies.getButtonCoordinator().handleManagePlatforms();
+        } else {
+            openPlatformManagementScreen(); // Fallback to legacy method
+        }
+    }
             
-            @Override
+    @Override
     public void onGenericAction(String action) {
-        sendChatMessage("Action: " + action);
+        if (dependencies != null) {
+            dependencies.getButtonCoordinator().handleGenericAction(action);
+        } else {
+            sendChatMessage("Action: " + action);
+        }
     }
     
     // ===== Specific Interface Implementations =====
@@ -150,52 +218,37 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     }
     
     /**
-     * Handles changes to the search radius
-     * Implements the behavior from TownBlockScreen
+     * Handles changes to the search radius using the extracted SearchRadiusManager.
      * This method is used by tab implementations.
      */
     public void handleRadiusChange(int mouseButton) {
-        // Get the current radius from our cached value
-        int newRadius = currentSearchRadius;
-        
-        // Calculate new radius based on key combinations
-        boolean isShift = hasShiftDown();
-        
-        // Use mouseButton to determine increase/decrease
-        // mouseButton 0 = left click (increase), 1 = right click (decrease)
-        boolean isDecrease = (mouseButton == 1);
-        
-        if (isShift && isDecrease) {
-            newRadius -= 10;
-        } else if (isDecrease) {
-            newRadius -= 1;
-        } else if (isShift) {
-            newRadius += 10;
-        } else {
-            newRadius += 1;
+        if (dependencies == null) {
+            LOGGER.warn("Dependencies not initialized, cannot handle radius change");
+            sendChatMessage("Unable to change search radius");
+            return;
         }
         
-        // Clamp to reasonable values
-        newRadius = Math.max(1, Math.min(newRadius, 100));
-        
-        // Update our cached value immediately for UI feedback
-        currentSearchRadius = newRadius;
-        cacheManager.updateCachedSearchRadius(newRadius);
-        
-        // Send packet to update the server
-        ModMessages.sendToServer(new SetSearchRadiusPacket(menu.getBlockPos(), newRadius));
-        
-        // Use feedback message since we can't update the UI directly
-        String message = "Search radius " + (isDecrease ? "decreased" : "increased") + " to " + newRadius;
-        sendChatMessage(message);
-        
-        // Also update the menu's cached value if the method is available
-        if (menu instanceof TownInterfaceMenu) {
-            ((TownInterfaceMenu) menu).setClientSearchRadius(newRadius);
+        try {
+            SearchRadiusManager radiusManager = dependencies.getRadiusManager();
+            boolean isShift = hasShiftDown();
+            
+            SearchRadiusManager.RadiusChangeResult result = radiusManager.handleRadiusChange(mouseButton, isShift);
+            
+            // Update our cached value
+            currentSearchRadius = result.getNewRadius();
+            
+            // Provide user feedback
+            sendChatMessage(result.getFeedbackMessage());
+            
+            // Play a click sound for feedback
+            playButtonClickSound();
+            
+            LOGGER.debug("Search radius changed to: {}", result.getNewRadius());
+            
+        } catch (Exception e) {
+            LOGGER.error("Error handling radius change", e);
+            sendChatMessage("Error updating search radius");
         }
-        
-        // Play a click sound for feedback
-        playButtonClickSound();
     }
     
     /**
@@ -224,62 +277,8 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
         return cacheManager.getTouristString();
             }
             
-    // ===== Private Helper Methods =====
-
-    /**
-     * Show the change town name popup
-     */
-    private void showChangeTownNamePopup() {
-        activePopup = TownNamePopupManager.showChangeTownNamePopup(
-            getCachedTownName(),
-            menu.getBlockPos(),
-            popup -> activePopup = null
-        );
-        
-        // Initialize the popup
-        activePopup.init(this::addRenderableWidget);
-        
-        // Focus the input field
-        activePopup.focusInput();
-    }
-
-    /**
-     * Show the visitor list modal screen
-     */
-    private void showVisitorListModal() {
-        activeModal = VisitorModalManager.showVisitorListModal(
-            modal -> activeModal = null
-        );
-    }
-
-    /**
-     * Shows the trade resources modal screen with input and output slots
-     */
-    private void showTradeResourcesModal() {
-        TradeModalManager.showTradeResourcesModal(
-            this,
-            this.menu.getBlockPos(),
-            screen -> {
-                // Optional callback when screen is closed
-                // We can use this to refresh data if needed
-            }
-        );
-    }
-    
-    /**
-     * Shows the storage modal screen with 2x9 chest-like storage
-     */
-    private void showStorageModal() {
-        StorageModalManager.showStorageModal(
-            this,
-            this.menu.getBlockPos(),
-            this.menu,
-            screen -> {
-                // Optional callback when screen is closed
-                // We can use this to refresh data if needed
-            }
-        );
-    }
+    // ===== Legacy Modal Methods - Now Handled by Coordinators =====
+    // These methods are kept for backwards compatibility but delegate to coordinators
     
     /**
      * Close the active modal if one exists
@@ -287,20 +286,6 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     @Override
     protected void closeActiveModal() {
         this.activeModal = null;
-    }
-    
-    /**
-     * Show the visitor history screen
-     */
-    private void showVisitorHistoryScreen() {
-        VisitorHistoryManager.showVisitorHistoryScreen(
-            this,
-            menu.getBlockPos(),
-            this.tabPanel,
-            screen -> {
-                // Optional callback when screen is closed
-            }
-        );
     }
     
     /**

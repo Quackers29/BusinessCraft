@@ -11,7 +11,8 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 
 # List of Lessons learned
 
-1. UI, component rendering, use direct rendering at absolute positions for complex layouts and matrix transformations (pushPose/popPose) for nested components
+1. PowerShell scripts, execution policy bypass, use "powershell -ExecutionPolicy Bypass -File script.ps1" to run unsigned scripts in restricted environments like WSL
+2. UI, component rendering, use direct rendering at absolute positions for complex layouts and matrix transformations (pushPose/popPose) for nested components
 2. UI, mouse events, always convert global mouse coordinates to panel-local coordinates and properly forward to child components
 3. UI, component hierarchy, extend appropriate base classes and size panels to fit content rather than repositioning them
 4. UI, color management, define color constants in one place and use semi-transparent colors (0xA0RRGGBB) for better UI contrast

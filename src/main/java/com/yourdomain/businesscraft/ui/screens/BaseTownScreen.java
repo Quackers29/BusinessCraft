@@ -2,12 +2,12 @@ package com.yourdomain.businesscraft.ui.screens;
 
 import com.yourdomain.businesscraft.ui.templates.TownInterfaceTheme;
 import com.yourdomain.businesscraft.ui.templates.BCTheme;
-
+import com.yourdomain.businesscraft.ui.interfaces.ScreenRenderingCapabilities;
+import com.yourdomain.businesscraft.ui.interfaces.ScreenEventCapabilities;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
 import com.yourdomain.businesscraft.ui.modal.core.BCModalScreen;
 import com.yourdomain.businesscraft.ui.modal.core.BCPopupScreen;
 import com.yourdomain.businesscraft.ui.components.containers.BCTabPanel;
-import com.yourdomain.businesscraft.ui.templates.BCTheme;
 import com.yourdomain.businesscraft.ui.managers.*;
 import com.yourdomain.businesscraft.data.cache.TownDataCache;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
@@ -21,30 +21,20 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.function.Consumer;
 
 /**
  * Base class for town-related screens providing common functionality.
  * Extracted from TownInterfaceScreen to improve code reusability.
+ * Refactored to use composite interfaces and reduce coupling.
  */
 public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends AbstractContainerScreen<T> 
-        implements TownScreenEventHandler.SoundHandler,
-                   TownScreenEventHandler.ModalStateProvider,
-                   TownScreenRenderManager.CacheUpdateProvider,
-                   TownScreenRenderManager.ScreenLayoutProvider,
-                   TownScreenRenderManager.ComponentProvider,
+        implements ScreenRenderingCapabilities,
+                   ScreenEventCapabilities,
                    TownTabController.TabDataProvider {
     
-    // Theme constants - centralized for all town screens
-    protected static final int PRIMARY_COLOR = TownInterfaceTheme.PRIMARY_COLOR;
-    protected static final int SECONDARY_COLOR = TownInterfaceTheme.SECONDARY_COLOR;
-    protected static final int BACKGROUND_COLOR = TownInterfaceTheme.BACKGROUND_COLOR;
-    protected static final int BORDER_COLOR = TownInterfaceTheme.BORDER_COLOR;
-    protected static final int ACTIVE_TAB_COLOR = TownInterfaceTheme.ACTIVE_TAB_COLOR;
-    protected static final int INACTIVE_TAB_COLOR = TownInterfaceTheme.INACTIVE_TAB_COLOR;
-    protected static final int TEXT_COLOR = TownInterfaceTheme.TEXT_COLOR;
-    protected static final int TEXT_HIGHLIGHT = TownInterfaceTheme.TEXT_HIGHLIGHT;
-    protected static final int SUCCESS_COLOR = TownInterfaceTheme.SUCCESS_COLOR;
-    protected static final int DANGER_COLOR = TownInterfaceTheme.DANGER_COLOR;
+    // Theme access - use static constants directly from TownInterfaceTheme
+    // No need for instance since it's a utility class
     
     // Common screen components
     protected BCTabPanel tabPanel;
@@ -63,6 +53,9 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
     protected int updateCounter = 0;
     protected static final int REFRESH_INTERVAL = 100; // Ticks between forced cache refreshes (5 seconds)
     protected TownDataCacheManager cacheManager;
+    
+    // Resource cleanup management
+    private boolean isCleanedUp = false;
     
     // Logger for all town screens
     protected static final Logger LOGGER = LoggerFactory.getLogger(BaseTownScreen.class);
@@ -95,6 +88,8 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
         
         // Initialize specific managers for subclasses
         initializeSpecificManagers();
+        
+        LOGGER.debug("BaseTownScreen initialized: {}", this.getClass().getSimpleName());
     }
     
     /**
@@ -339,6 +334,15 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
     }
     
     /**
+     * Gets the menu instance. Provides protected access to coordinators.
+     * 
+     * @return The menu instance
+     */
+    public T getMenu() {
+        return this.menu;
+    }
+    
+    /**
      * Closes the active modal if one exists.
      */
     protected void closeActiveModal() {
@@ -349,15 +353,82 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
     
     @Override
     public void onClose() {
-        // Clean up tab controller resources
-        if (tabController != null) {
-            tabController.cleanup();
+        if (!isCleanedUp) {
+            try {
+                performSafeCleanup();
+            } catch (Exception e) {
+                LOGGER.error("Error during screen cleanup", e);
+            } finally {
+                isCleanedUp = true;
+                super.onClose();
+            }
         }
+    }
+    
+    /**
+     * Performs safe cleanup of all resources.
+     */
+    private void performSafeCleanup() {
+        LOGGER.debug("Starting cleanup for {}", this.getClass().getSimpleName());
+        
+        // Clean up managers
+        cleanupManagers();
+        
+        // Clean up modals and popups
+        cleanupUIComponents();
         
         // Allow subclasses to perform additional cleanup
         performAdditionalCleanup();
         
-        super.onClose();
+        LOGGER.debug("Cleanup completed for {}", this.getClass().getSimpleName());
+    }
+    
+    /**
+     * Safely cleans up all manager instances.
+     */
+    private void cleanupManagers() {
+        safeCleanup(tabController, "TabController", TownTabController::cleanup);
+        // Note: RenderManager and EventHandler don't currently have cleanup methods
+        // but this provides a place to add them in the future if needed
+        safeCleanup(renderManager, "RenderManager", mgr -> {
+            LOGGER.debug("RenderManager cleanup placeholder");
+        });
+        safeCleanup(eventHandler, "EventHandler", mgr -> {
+            LOGGER.debug("EventHandler cleanup placeholder");
+        });
+    }
+    
+    /**
+     * Cleans up UI components like modals and popups.
+     */
+    private void cleanupUIComponents() {
+        if (activeModal != null) {
+            LOGGER.debug("Closing active modal");
+            activeModal = null;
+        }
+        
+        if (activePopup != null) {
+            LOGGER.debug("Closing active popup");
+            activePopup = null;
+        }
+    }
+    
+    /**
+     * Safely executes cleanup actions with error handling.
+     * 
+     * @param resource The resource to clean up
+     * @param resourceName Name for logging
+     * @param cleanupAction The cleanup action to perform
+     */
+    private <T> void safeCleanup(T resource, String resourceName, Consumer<T> cleanupAction) {
+        if (resource != null) {
+            try {
+                cleanupAction.accept(resource);
+                LOGGER.debug("{} cleanup completed", resourceName);
+            } catch (Exception e) {
+                LOGGER.warn("Failed to cleanup {}: {}", resourceName, e.getMessage());
+            }
+        }
     }
     
     /**

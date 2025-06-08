@@ -28,7 +28,7 @@ public class TownNameEditorComponent implements UIComponent {
     private final Consumer<String> onNameConfirmed;
     private final Runnable onCancel;
     
-    private EditBoxComponent editBox;
+    private BCEditBoxComponent editBox;
     private Button confirmButton;
     private Button cancelButton;
     private final List<UIComponent> subComponents = new ArrayList<>();
@@ -50,7 +50,7 @@ public class TownNameEditorComponent implements UIComponent {
     
     private void createComponents() {
         // Create the edit box for name input
-        editBox = new EditBoxComponent(
+        editBox = new BCEditBoxComponent(
             width - 10, 
             20, 
             getCurrentName, 
@@ -303,7 +303,7 @@ public class TownNameEditorComponent implements UIComponent {
      * Gets the edit box component to allow external control like focusing
      * @return The edit box component
      */
-    public EditBoxComponent getEditBox() {
+    public BCEditBoxComponent getEditBox() {
         return editBox;
     }
     
