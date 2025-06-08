@@ -2,7 +2,7 @@ package com.yourdomain.businesscraft.client;
 
 import com.yourdomain.businesscraft.BusinessCraft;
 import com.yourdomain.businesscraft.network.ModMessages;
-import com.yourdomain.businesscraft.network.SetPlatformPathCreationModePacket;
+import com.yourdomain.businesscraft.network.packets.platform.SetPlatformPathCreationModePacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;

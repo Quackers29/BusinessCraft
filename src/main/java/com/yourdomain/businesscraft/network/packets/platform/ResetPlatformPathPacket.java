@@ -1,4 +1,4 @@
-package com.yourdomain.businesscraft.network;
+package com.yourdomain.businesscraft.network.packets.platform;
 
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.platform.Platform;

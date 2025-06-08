@@ -1,4 +1,4 @@
-package com.yourdomain.businesscraft.network;
+package com.yourdomain.businesscraft.network.packets.storage;
 
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
@@ -14,33 +14,40 @@ import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
+import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageResponsePacket;
+import com.yourdomain.businesscraft.network.ModMessages;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
+import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
- * Packet for interacting with town communal storage.
- * Allows players to add or remove items from the storage.
+ * Packet for interacting with a player's personal storage in a town.
+ * Allows players to add or remove items from their own personal storage.
  */
-public class CommunalStoragePacket extends BaseBlockEntityPacket {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CommunalStoragePacket.class);
+public class PersonalStoragePacket extends BaseBlockEntityPacket {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PersonalStoragePacket.class);
     private final ItemStack itemStack;
     private final int slotId;
     private final boolean isAddOperation; // true = add to storage, false = remove from storage
+    private final UUID playerId; // The player's UUID for personal storage
 
-    public CommunalStoragePacket(BlockPos pos, ItemStack itemStack, int slotId, boolean isAddOperation) {
+    public PersonalStoragePacket(BlockPos pos, ItemStack itemStack, int slotId, boolean isAddOperation, UUID playerId) {
         super(pos);
         this.itemStack = itemStack;
         this.slotId = slotId;
         this.isAddOperation = isAddOperation;
+        this.playerId = playerId;
     }
 
-    public CommunalStoragePacket(FriendlyByteBuf buf) {
+    public PersonalStoragePacket(FriendlyByteBuf buf) {
         super(buf);
         this.itemStack = buf.readItem();
         this.slotId = buf.readInt();
         this.isAddOperation = buf.readBoolean();
+        this.playerId = buf.readUUID();
     }
 
     @Override
@@ -49,20 +56,21 @@ public class CommunalStoragePacket extends BaseBlockEntityPacket {
         buf.writeItem(itemStack);
         buf.writeInt(slotId);
         buf.writeBoolean(isAddOperation);
+        buf.writeUUID(playerId);
     }
     
     /**
      * Static encode method needed by ModMessages registration
      */
-    public static void encode(CommunalStoragePacket msg, FriendlyByteBuf buf) {
+    public static void encode(PersonalStoragePacket msg, FriendlyByteBuf buf) {
         msg.toBytes(buf);
     }
     
     /**
      * Static decode method needed by ModMessages registration
      */
-    public static CommunalStoragePacket decode(FriendlyByteBuf buf) {
-        return new CommunalStoragePacket(buf);
+    public static PersonalStoragePacket decode(FriendlyByteBuf buf) {
+        return new PersonalStoragePacket(buf);
     }
 
     public void handle(Supplier<NetworkEvent.Context> ctx) {
@@ -71,9 +79,22 @@ public class CommunalStoragePacket extends BaseBlockEntityPacket {
             ServerPlayer player = ctx.get().getSender();
             if (player == null) return;
             
+            // Verify player ID matches sender (security check)
+            if (!player.getUUID().equals(playerId)) {
+                LOGGER.warn("Player {} attempted to access personal storage of another player {}!", 
+                    player.getName().getString(), playerId);
+                return;
+            }
+            
+            // Check if the item is empty
+            if (itemStack.isEmpty()) {
+                LOGGER.warn("Received empty item in personal storage packet from player {}", player.getName().getString());
+                return;
+            }
+            
             // If position is null, we can't process the operation
             if (pos == null) {
-                LOGGER.warn("Received null position in communal storage packet from player {}", player.getName().getString());
+                LOGGER.warn("Received null position in personal storage packet from player {}", player.getName().getString());
                 return;
             }
             
@@ -105,52 +126,33 @@ public class CommunalStoragePacket extends BaseBlockEntityPacket {
                 return;
             }
             
-            // Special case: If slotId is -1, this is a request for all communal storage data
-            if (slotId == -1) {
-                LOGGER.debug("Received request for all communal storage data from player {}", player.getName().getString());
-                
-                // Get the current communal storage contents
-                var storageItems = town.getAllCommunalStorageItems();
-                
-                // Send a response with all communal storage items
-                ModMessages.sendToPlayer(new CommunalStorageResponsePacket(storageItems), player);
-                return;
-            }
-            
-            // Check if the item is empty (only do this check for regular operations, not for data requests)
-            if (itemStack.isEmpty()) {
-                LOGGER.warn("Empty item in communal storage packet from player {} for slot {}", 
-                    player.getName().getString(), slotId);
-                return;
-            }
-            
             // Process the storage operation
             int itemCount = itemStack.getCount();
             Item item = itemStack.getItem();
             
-            // Add to or remove from communal storage
+            // Add to or remove from personal storage
             boolean success;
             if (isAddOperation) {
                 // Add items to storage
-                success = town.addToCommunalStorage(item, itemCount);
+                success = town.addToPersonalStorage(playerId, item, itemCount);
                 
                 if (success) {
                     // Send success message to player
                     player.sendSystemMessage(Component.literal("Added " + itemCount + " " + 
-                        item.getDescription().getString() + " to " + town.getName() + "'s communal storage."));
+                        item.getDescription().getString() + " to your personal storage."));
                 }
             } else {
                 // Remove items from storage (negative count)
-                success = town.addToCommunalStorage(item, -itemCount);
+                success = town.addToPersonalStorage(playerId, item, -itemCount);
                 
                 if (success) {
                     // Send success message to player
                     player.sendSystemMessage(Component.literal("Removed " + itemCount + " " + 
-                        item.getDescription().getString() + " from " + town.getName() + "'s communal storage."));
+                        item.getDescription().getString() + " from your personal storage."));
                 } else {
                     // Send failure message
                     player.sendSystemMessage(Component.literal("Not enough " + 
-                        item.getDescription().getString() + " in communal storage."));
+                        item.getDescription().getString() + " in your personal storage."));
                 }
             }
             
@@ -172,7 +174,7 @@ public class CommunalStoragePacket extends BaseBlockEntityPacket {
                 townManager.markDirty();
                 
                 // Send a response to update the UI
-                ModMessages.sendToPlayer(new CommunalStorageResponsePacket(town.getAllCommunalStorageItems()), player);
+                ModMessages.sendToPlayer(new PersonalStorageResponsePacket(town.getPersonalStorageItems(playerId)), player);
             }
         });
         

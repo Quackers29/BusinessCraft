@@ -1,4 +1,4 @@
-package com.yourdomain.businesscraft.network;
+package com.yourdomain.businesscraft.network.packets.storage;
 
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
@@ -15,6 +15,9 @@ import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
+import com.yourdomain.businesscraft.network.packets.misc.PaymentResultPacket;
+import com.yourdomain.businesscraft.network.ModMessages;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import com.yourdomain.businesscraft.menu.TradeMenu;

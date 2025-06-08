@@ -11,7 +11,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import com.yourdomain.businesscraft.BusinessCraft;
 import com.yourdomain.businesscraft.network.ModMessages;
-import com.yourdomain.businesscraft.network.SetPlatformDestinationPacket;
+import com.yourdomain.businesscraft.network.packets.platform.SetPlatformDestinationPacket;
 import net.minecraft.client.gui.Font;
 import net.minecraft.util.FormattedCharSequence;
 

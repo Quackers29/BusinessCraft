@@ -1,4 +1,4 @@
-package com.yourdomain.businesscraft.network;
+package com.yourdomain.businesscraft.network.packets.platform;
 
 import java.util.UUID;
 import java.util.function.Supplier;

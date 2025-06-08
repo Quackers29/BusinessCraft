@@ -1,4 +1,4 @@
-package com.yourdomain.businesscraft.network;
+package com.yourdomain.businesscraft.network.packets.platform;
 
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -8,28 +8,27 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 import net.minecraft.world.level.Level;
 import com.yourdomain.businesscraft.platform.Platform;
 
 /**
- * Packet for setting a platform's path
+ * Packet for toggling platform enabled state
  */
-public class SetPlatformPathPacket {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SetPlatformPathPacket.class);
+public class SetPlatformEnabledPacket {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final BlockPos blockPos;
     private final UUID platformId;
-    private final BlockPos startPos;
-    private final BlockPos endPos;
+    private final boolean enabled;
     
-    public SetPlatformPathPacket(BlockPos blockPos, UUID platformId, BlockPos startPos, BlockPos endPos) {
+    public SetPlatformEnabledPacket(BlockPos blockPos, UUID platformId, boolean enabled) {
         this.blockPos = blockPos;
         this.platformId = platformId;
-        this.startPos = startPos;
-        this.endPos = endPos;
+        this.enabled = enabled;
     }
     
     /**
@@ -38,20 +37,14 @@ public class SetPlatformPathPacket {
     public void encode(FriendlyByteBuf buf) {
         buf.writeBlockPos(blockPos);
         buf.writeUUID(platformId);
-        buf.writeBlockPos(startPos);
-        buf.writeBlockPos(endPos);
+        buf.writeBoolean(enabled);
     }
     
     /**
      * Decode the packet data from the buffer
      */
-    public static SetPlatformPathPacket decode(FriendlyByteBuf buf) {
-        return new SetPlatformPathPacket(
-            buf.readBlockPos(),
-            buf.readUUID(),
-            buf.readBlockPos(),
-            buf.readBlockPos()
-        );
+    public static SetPlatformEnabledPacket decode(FriendlyByteBuf buf) {
+        return new SetPlatformEnabledPacket(buf.readBlockPos(), buf.readUUID(), buf.readBoolean());
     }
     
     /**
@@ -72,15 +65,21 @@ public class SetPlatformPathPacket {
                 // Find the platform
                 Platform platform = townBlock.getPlatform(platformId);
                 if (platform != null) {
-                    // Update start and end positions
-                    platform.setStartPos(startPos);
-                    platform.setEndPos(endPos);
-                    LOGGER.info("Updated platform {} path from {} to {}", platformId, startPos, endPos);
+                    // Update enabled state
+                    platform.setEnabled(enabled);
+                    LOGGER.debug("Player {} is setting platform {} enabled state to {} at {}", 
+                        player.getName().getString(), platformId, enabled, blockPos);
                     
                     // Sync the town block
                     townBlock.setChanged();
                     level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), 
                         level.getBlockState(blockPos), 3);
+                    
+                    // Notify clients of the update
+                    ModMessages.sendToAllTrackingChunk(new RefreshPlatformsPacket(blockPos), level, blockPos);
+                } else {
+                    LOGGER.debug("Failed to set platform {} enabled state - platform not found at {}", 
+                        platformId, blockPos);
                 }
             }
         });

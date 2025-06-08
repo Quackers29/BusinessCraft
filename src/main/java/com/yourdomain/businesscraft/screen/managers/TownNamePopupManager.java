@@ -1,7 +1,7 @@
 package com.yourdomain.businesscraft.screen.managers;
 
 import com.yourdomain.businesscraft.network.ModMessages;
-import com.yourdomain.businesscraft.network.SetTownNamePacket;
+import com.yourdomain.businesscraft.network.packets.town.SetTownNamePacket;
 import com.yourdomain.businesscraft.screen.components.BCComponentFactory;
 import com.yourdomain.businesscraft.screen.components.BCPopupScreen;
 import net.minecraft.client.Minecraft;

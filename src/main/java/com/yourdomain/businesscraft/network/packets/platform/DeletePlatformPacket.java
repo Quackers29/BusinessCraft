@@ -1,4 +1,4 @@
-package com.yourdomain.businesscraft.network;
+package com.yourdomain.businesscraft.network.packets.platform;
 
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -11,22 +11,21 @@ import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 import net.minecraft.world.level.Level;
-import com.yourdomain.businesscraft.platform.Platform;
 
 /**
- * Packet for toggling platform enabled state
+ * Packet for deleting a platform from a town
  */
-public class SetPlatformEnabledPacket {
+public class DeletePlatformPacket {
     private static final Logger LOGGER = LogManager.getLogger();
     private final BlockPos blockPos;
     private final UUID platformId;
-    private final boolean enabled;
     
-    public SetPlatformEnabledPacket(BlockPos blockPos, UUID platformId, boolean enabled) {
+    public DeletePlatformPacket(BlockPos blockPos, UUID platformId) {
         this.blockPos = blockPos;
         this.platformId = platformId;
-        this.enabled = enabled;
     }
     
     /**
@@ -35,14 +34,13 @@ public class SetPlatformEnabledPacket {
     public void encode(FriendlyByteBuf buf) {
         buf.writeBlockPos(blockPos);
         buf.writeUUID(platformId);
-        buf.writeBoolean(enabled);
     }
     
     /**
      * Decode the packet data from the buffer
      */
-    public static SetPlatformEnabledPacket decode(FriendlyByteBuf buf) {
-        return new SetPlatformEnabledPacket(buf.readBlockPos(), buf.readUUID(), buf.readBoolean());
+    public static DeletePlatformPacket decode(FriendlyByteBuf buf) {
+        return new DeletePlatformPacket(buf.readBlockPos(), buf.readUUID());
     }
     
     /**
@@ -60,13 +58,10 @@ public class SetPlatformEnabledPacket {
             // Check if the block entity is valid
             BlockEntity be = level.getBlockEntity(blockPos);
             if (be instanceof TownBlockEntity townBlock) {
-                // Find the platform
-                Platform platform = townBlock.getPlatform(platformId);
-                if (platform != null) {
-                    // Update enabled state
-                    platform.setEnabled(enabled);
-                    LOGGER.debug("Player {} is setting platform {} enabled state to {} at {}", 
-                        player.getName().getString(), platformId, enabled, blockPos);
+                // Delete the platform
+                boolean deleted = townBlock.removePlatform(platformId);
+                if (deleted) {
+                    LOGGER.debug("Deleted platform {} from town at {}", platformId, blockPos);
                     
                     // Sync the town block
                     townBlock.setChanged();
@@ -76,8 +71,7 @@ public class SetPlatformEnabledPacket {
                     // Notify clients of the update
                     ModMessages.sendToAllTrackingChunk(new RefreshPlatformsPacket(blockPos), level, blockPos);
                 } else {
-                    LOGGER.debug("Failed to set platform {} enabled state - platform not found at {}", 
-                        platformId, blockPos);
+                    LOGGER.debug("Failed to delete platform {} from town at {}", platformId, blockPos);
                 }
             }
         });

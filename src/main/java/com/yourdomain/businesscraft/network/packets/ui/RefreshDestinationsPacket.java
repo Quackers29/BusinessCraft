@@ -1,4 +1,4 @@
-package com.yourdomain.businesscraft.network;
+package com.yourdomain.businesscraft.network.packets.ui;
 
 import java.util.UUID;
 import java.util.Map;

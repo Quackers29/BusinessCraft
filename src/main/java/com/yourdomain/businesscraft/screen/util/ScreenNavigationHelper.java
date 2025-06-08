@@ -1,7 +1,7 @@
 package com.yourdomain.businesscraft.screen.util;
 
 import com.yourdomain.businesscraft.network.ModMessages;
-import com.yourdomain.businesscraft.network.OpenTownInterfacePacket;
+import com.yourdomain.businesscraft.network.packets.ui.OpenTownInterfacePacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.core.BlockPos;

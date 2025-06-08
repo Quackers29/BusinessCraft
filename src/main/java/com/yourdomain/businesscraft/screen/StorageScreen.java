@@ -15,10 +15,10 @@ import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.core.BlockPos;
-import com.yourdomain.businesscraft.network.PersonalStorageRequestPacket;
+import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
 import com.yourdomain.businesscraft.network.ModMessages;
-import com.yourdomain.businesscraft.network.CommunalStoragePacket;
-import com.yourdomain.businesscraft.network.PersonalStoragePacket;
+import com.yourdomain.businesscraft.network.packets.storage.CommunalStoragePacket;
+import com.yourdomain.businesscraft.network.packets.storage.PersonalStoragePacket;
 
 import java.util.Map;
 import java.util.Set;
