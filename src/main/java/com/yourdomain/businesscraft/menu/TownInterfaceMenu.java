@@ -469,7 +469,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
             data.set(DATA_SEARCH_RADIUS, townEntity.getSearchRadius());
         }
     }
-    
+
     /**
      * Refreshes the ContainerData slots with current town data.
      * This method should be called when town data changes to ensure
