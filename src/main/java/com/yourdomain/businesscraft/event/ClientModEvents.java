@@ -2,9 +2,9 @@ package com.yourdomain.businesscraft.event;
 
 import com.yourdomain.businesscraft.BusinessCraft;
 import com.yourdomain.businesscraft.init.ModMenuTypes;
-import com.yourdomain.businesscraft.screen.TownInterfaceScreen;
-import com.yourdomain.businesscraft.screen.TradeScreen;
-import com.yourdomain.businesscraft.screen.StorageScreen;
+import com.yourdomain.businesscraft.ui.screens.town.TownInterfaceScreen;
+import com.yourdomain.businesscraft.ui.screens.town.TradeScreen;
+import com.yourdomain.businesscraft.ui.screens.town.StorageScreen;
 import com.yourdomain.businesscraft.client.TownDebugOverlay;
 import com.yourdomain.businesscraft.client.TownDebugNetwork;
 import net.minecraft.client.gui.screens.MenuScreens;

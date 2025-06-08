@@ -87,10 +87,10 @@ public class CommunalStorageResponsePacket {
         client.execute(() -> {
             try {
                 // If the current screen is StorageScreen, update its inventory
-                if (client.screen instanceof com.yourdomain.businesscraft.screen.StorageScreen storageScreen) {
+                if (client.screen instanceof com.yourdomain.businesscraft.ui.screens.town.StorageScreen storageScreen) {
                     LOGGER.debug("Updating StorageScreen with communal storage data");
                     storageScreen.updateStorageItems(storageItems);
-                } else if (client.screen instanceof com.yourdomain.businesscraft.screen.components.BCModalInventoryScreen<?> modalScreen) {
+                } else if (client.screen instanceof com.yourdomain.businesscraft.ui.modal.specialized.BCModalInventoryScreen<?> modalScreen) {
                     // Check if the container is a StorageMenu
                     if (modalScreen.getMenu() instanceof com.yourdomain.businesscraft.menu.StorageMenu storageMenu) {
                         LOGGER.debug("Updating communal storage in BCModalInventoryScreen");

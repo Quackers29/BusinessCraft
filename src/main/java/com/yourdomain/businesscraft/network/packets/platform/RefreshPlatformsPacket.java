@@ -11,7 +11,7 @@ import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
-import com.yourdomain.businesscraft.screen.PlatformManagementScreen;
+import com.yourdomain.businesscraft.ui.screens.platform.PlatformManagementScreen;
 
 /**
  * Packet sent from server to client to refresh platform data

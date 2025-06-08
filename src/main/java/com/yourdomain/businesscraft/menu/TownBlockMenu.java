@@ -6,7 +6,7 @@ import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
 import com.yourdomain.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
-import com.yourdomain.businesscraft.screen.components.VisitHistoryComponent.VisitEntry;
+import com.yourdomain.businesscraft.ui.components.display.VisitHistoryComponent.VisitEntry;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
