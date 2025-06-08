@@ -3,7 +3,7 @@ package com.yourdomain.businesscraft.screen.managers;
 import com.yourdomain.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.network.ModMessages;
-import com.yourdomain.businesscraft.network.PlayerExitUIPacket;
+import com.yourdomain.businesscraft.network.packets.ui.PlayerExitUIPacket;
 import com.yourdomain.businesscraft.screen.components.BCModalGridFactory;
 import com.yourdomain.businesscraft.screen.components.BCModalGridScreen;
 import com.yourdomain.businesscraft.screen.components.BCTabPanel;

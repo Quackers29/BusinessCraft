@@ -13,7 +13,7 @@ import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import com.yourdomain.businesscraft.network.ModMessages;
-import com.yourdomain.businesscraft.network.TradeResourcePacket;
+import com.yourdomain.businesscraft.network.packets.storage.TradeResourcePacket;
 import net.minecraft.core.BlockPos;
 
 public class TradeMenu extends AbstractContainerMenu {

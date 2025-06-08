@@ -1,4 +1,4 @@
-package com.yourdomain.businesscraft.network;
+package com.yourdomain.businesscraft.network.packets.platform;
 
 import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
@@ -11,6 +11,8 @@ import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 
 /**
  * Packet for adding a new platform to a town

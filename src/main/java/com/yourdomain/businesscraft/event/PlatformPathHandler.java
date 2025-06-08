@@ -3,7 +3,7 @@ package com.yourdomain.businesscraft.event;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.network.ModMessages;
-import com.yourdomain.businesscraft.network.RefreshPlatformsPacket;
+import com.yourdomain.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;

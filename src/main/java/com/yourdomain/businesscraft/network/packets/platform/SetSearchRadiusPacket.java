@@ -1,7 +1,8 @@
-package com.yourdomain.businesscraft.network;
+package com.yourdomain.businesscraft.network.packets.platform;
 
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
+import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;

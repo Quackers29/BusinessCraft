@@ -1,4 +1,4 @@
-package com.yourdomain.businesscraft.network;
+package com.yourdomain.businesscraft.network.packets.misc;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;

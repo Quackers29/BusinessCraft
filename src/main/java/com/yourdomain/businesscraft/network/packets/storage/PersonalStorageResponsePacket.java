@@ -1,9 +1,8 @@
-package com.yourdomain.businesscraft.network;
+package com.yourdomain.businesscraft.network.packets.storage;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.slf4j.Logger;
@@ -14,17 +13,17 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * Client-bound packet that sends the current state of communal storage to the client.
+ * Client-bound packet that sends the current state of a player's personal storage to the client.
  */
-public class CommunalStorageResponsePacket {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CommunalStorageResponsePacket.class);
+public class PersonalStorageResponsePacket {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PersonalStorageResponsePacket.class);
     private final Map<Item, Integer> storageItems;
 
-    public CommunalStorageResponsePacket(Map<Item, Integer> storageItems) {
+    public PersonalStorageResponsePacket(Map<Item, Integer> storageItems) {
         this.storageItems = new HashMap<>(storageItems);
     }
 
-    public CommunalStorageResponsePacket(FriendlyByteBuf buf) {
+    public PersonalStorageResponsePacket(FriendlyByteBuf buf) {
         this.storageItems = new HashMap<>();
         int size = buf.readInt();
         for (int i = 0; i < size; i++) {
@@ -56,15 +55,15 @@ public class CommunalStorageResponsePacket {
     /**
      * Static encode method needed by ModMessages registration
      */
-    public static void encode(CommunalStorageResponsePacket msg, FriendlyByteBuf buf) {
+    public static void encode(PersonalStorageResponsePacket msg, FriendlyByteBuf buf) {
         msg.toBytes(buf);
     }
     
     /**
      * Static decode method needed by ModMessages registration
      */
-    public static CommunalStorageResponsePacket decode(FriendlyByteBuf buf) {
-        return new CommunalStorageResponsePacket(buf);
+    public static PersonalStorageResponsePacket decode(FriendlyByteBuf buf) {
+        return new PersonalStorageResponsePacket(buf);
     }
 
     public void handle(Supplier<NetworkEvent.Context> supplier) {
@@ -79,27 +78,24 @@ public class CommunalStorageResponsePacket {
     }
 
     private void handleClientSide() {
-        LOGGER.debug("Received communal storage update with {} items", storageItems.size());
+        LOGGER.debug("Received personal storage update with {} items", storageItems.size());
         
         // Get the current screen
         net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
         
         client.execute(() -> {
-            try {
-                // If the current screen is StorageScreen, update its inventory
-                if (client.screen instanceof com.yourdomain.businesscraft.screen.StorageScreen storageScreen) {
-                    LOGGER.debug("Updating StorageScreen with communal storage data");
-                    storageScreen.updateStorageItems(storageItems);
-                } else if (client.screen instanceof com.yourdomain.businesscraft.screen.components.BCModalInventoryScreen<?> modalScreen) {
-                    // Check if the container is a StorageMenu
-                    if (modalScreen.getMenu() instanceof com.yourdomain.businesscraft.menu.StorageMenu storageMenu) {
-                        LOGGER.debug("Updating communal storage in BCModalInventoryScreen");
-                        // Update the storage menu's inventory with the communal storage items
-                        storageMenu.updateStorageItems(storageItems);
-                    }
+            // If the current screen is StorageScreen, update its inventory
+            if (client.screen instanceof com.yourdomain.businesscraft.screen.StorageScreen storageScreen) {
+                storageScreen.updatePersonalStorageItems(storageItems);
+            }
+            // Also check for our modal inventory screen
+            else if (client.screen instanceof com.yourdomain.businesscraft.screen.components.BCModalInventoryScreen<?> modalScreen) {
+                // Check if the container is a StorageMenu
+                if (modalScreen.getMenu() instanceof com.yourdomain.businesscraft.menu.StorageMenu storageMenu) {
+                    LOGGER.debug("Updating personal storage in modal screen");
+                    // Update the storage menu's inventory with the personal storage items
+                    storageMenu.updatePersonalStorageItems(storageItems);
                 }
-            } catch (Exception e) {
-                LOGGER.error("Error handling communal storage update", e);
             }
         });
     }

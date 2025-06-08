@@ -1,4 +1,4 @@
-package com.yourdomain.businesscraft.network;
+package com.yourdomain.businesscraft.network.packets.platform;
 
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -16,6 +16,8 @@ import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
+import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.network.packets.ui.RefreshDestinationsPacket;
 
 /**
  * Packet sent from client to server to set a destination for a platform

@@ -14,6 +14,31 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 
+// Import all packet classes from their new package locations
+import com.yourdomain.businesscraft.network.packets.town.ToggleTouristSpawningPacket;
+import com.yourdomain.businesscraft.network.packets.town.SetTownNamePacket;
+import com.yourdomain.businesscraft.network.packets.platform.SetSearchRadiusPacket;
+import com.yourdomain.businesscraft.network.packets.platform.AddPlatformPacket;
+import com.yourdomain.businesscraft.network.packets.platform.DeletePlatformPacket;
+import com.yourdomain.businesscraft.network.packets.platform.SetPlatformEnabledPacket;
+import com.yourdomain.businesscraft.network.packets.platform.SetPlatformPathPacket;
+import com.yourdomain.businesscraft.network.packets.platform.ResetPlatformPathPacket;
+import com.yourdomain.businesscraft.network.packets.platform.SetPlatformPathCreationModePacket;
+import com.yourdomain.businesscraft.network.packets.platform.RefreshPlatformsPacket;
+import com.yourdomain.businesscraft.network.packets.platform.SetPlatformDestinationPacket;
+import com.yourdomain.businesscraft.network.packets.ui.SetPathCreationModePacket;
+import com.yourdomain.businesscraft.network.packets.ui.OpenDestinationsUIPacket;
+import com.yourdomain.businesscraft.network.packets.ui.RefreshDestinationsPacket;
+import com.yourdomain.businesscraft.network.packets.ui.PlayerExitUIPacket;
+import com.yourdomain.businesscraft.network.packets.ui.OpenTownInterfacePacket;
+import com.yourdomain.businesscraft.network.packets.storage.TradeResourcePacket;
+import com.yourdomain.businesscraft.network.packets.storage.CommunalStoragePacket;
+import com.yourdomain.businesscraft.network.packets.storage.CommunalStorageResponsePacket;
+import com.yourdomain.businesscraft.network.packets.storage.PersonalStoragePacket;
+import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageResponsePacket;
+import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
+import com.yourdomain.businesscraft.network.packets.misc.PaymentResultPacket;
+
 /**
  * Handles registration and sending of network packets
  */

@@ -1,4 +1,4 @@
-package com.yourdomain.businesscraft.network;
+package com.yourdomain.businesscraft.network.packets.ui;
 
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import net.minecraft.core.BlockPos;
