@@ -17,7 +17,7 @@ import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
-import com.yourdomain.businesscraft.screen.DestinationsScreen;
+import com.yourdomain.businesscraft.ui.screens.platform.DestinationsScreen;
 
 /**
  * Packet sent from server to client to refresh the destinations UI

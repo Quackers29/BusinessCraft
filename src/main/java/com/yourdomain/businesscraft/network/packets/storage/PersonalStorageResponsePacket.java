@@ -85,11 +85,11 @@ public class PersonalStorageResponsePacket {
         
         client.execute(() -> {
             // If the current screen is StorageScreen, update its inventory
-            if (client.screen instanceof com.yourdomain.businesscraft.screen.StorageScreen storageScreen) {
+            if (client.screen instanceof com.yourdomain.businesscraft.ui.screens.town.StorageScreen storageScreen) {
                 storageScreen.updatePersonalStorageItems(storageItems);
             }
             // Also check for our modal inventory screen
-            else if (client.screen instanceof com.yourdomain.businesscraft.screen.components.BCModalInventoryScreen<?> modalScreen) {
+            else if (client.screen instanceof com.yourdomain.businesscraft.ui.modal.specialized.BCModalInventoryScreen<?> modalScreen) {
                 // Check if the container is a StorageMenu
                 if (modalScreen.getMenu() instanceof com.yourdomain.businesscraft.menu.StorageMenu storageMenu) {
                     LOGGER.debug("Updating personal storage in modal screen");

@@ -5,7 +5,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.yourdomain.businesscraft.screen.components.BCModalInventoryScreen;
+import com.yourdomain.businesscraft.ui.modal.specialized.BCModalInventoryScreen;
 import com.yourdomain.businesscraft.menu.TradeMenu;
 
 import java.util.function.Supplier;
@@ -62,7 +62,7 @@ public class PaymentResultPacket {
         
         client.execute(() -> {
             // Handle traditional TradeScreen first
-            if (client.screen instanceof com.yourdomain.businesscraft.screen.TradeScreen tradeScreen) {
+            if (client.screen instanceof com.yourdomain.businesscraft.ui.screens.town.TradeScreen tradeScreen) {
                 tradeScreen.setOutputItem(paymentItem);
             } 
             // Also check for our new modal inventory screen
