@@ -24,8 +24,9 @@ import java.util.function.Function;
 /**
  * Manages visitor history modal creation and handling.
  * Extracted from TownInterfaceScreen to improve code organization.
+ * Refactored to use BaseModalManager for common functionality.
  */
-public class VisitorHistoryManager {
+public class VisitorHistoryManager extends BaseModalManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(VisitorHistoryManager.class);
     
     /**
@@ -48,32 +49,16 @@ public class VisitorHistoryManager {
         // Create town name lookup function
         Function<UUID, String> townNameLookup = createTownNameLookup(blockPos);
         
-        // Save the current tab before opening modal
-        if (parentScreen instanceof com.yourdomain.businesscraft.ui.screens.BaseTownScreen) {
-            ((com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?>) parentScreen).saveActiveTab();
-        }
+        // Validate inputs and prepare parent screen
+        validateParentScreen(parentScreen, "parentScreen");
+        prepareParentScreen(parentScreen);
         
-        // Create modal grid screen with the visitor history data
+        // Create modal grid screen with the visitor history data using standardized callback
         BCModalGridScreen<VisitHistoryRecord> visitorScreen = BCModalGridFactory.createVisitorHistoryScreen(
             Component.literal("Town Visitor History"),
             parentScreen,
             visitHistory,
-            screen -> {
-                // Refresh data when modal closes
-                if (parentScreen instanceof com.yourdomain.businesscraft.ui.screens.BaseTownScreen) {
-                    com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?> townScreen = 
-                        (com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?>) parentScreen;
-                    
-                    // Refresh data
-                    if (townScreen.getCacheManager() != null) {
-                        townScreen.getCacheManager().refreshCachedValues();
-                    }
-                }
-                
-                if (onScreenClosed != null) {
-                    onScreenClosed.accept(screen);
-                }
-            },
+            createStandardCallback(parentScreen, onScreenClosed),
             townNameLookup
         );
         
@@ -83,7 +68,7 @@ public class VisitorHistoryManager {
                      .withRowHeight(20);
         
         // Show the visitor history screen
-        Minecraft.getInstance().setScreen(visitorScreen);
+        displayModal(visitorScreen);
     }
     
     /**
