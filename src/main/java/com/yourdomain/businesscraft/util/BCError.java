@@ -36,6 +36,10 @@ public class BCError {
      * Errors related to validation failures.
      */
     public static class ValidationError extends Error {
+        public ValidationError(String code, String message) {
+            super(code, message);
+        }
+        
         public ValidationError(String message) {
             super("VALIDATION_ERROR", message);
         }
@@ -140,6 +144,29 @@ public class BCError {
         public static DataError corruptedData(String dataType) {
             return new DataError("CORRUPTED_DATA", 
                 "Data corruption detected in " + dataType);
+        }
+    }
+    
+    /**
+     * Errors related to configuration operations.
+     */
+    public static class ConfigError extends Error {
+        public ConfigError(String code, String message) {
+            super(code, message);
+        }
+        
+        public static ConfigError fileNotFound(String filePath) {
+            return new ConfigError("CONFIG_FILE_NOT_FOUND", "Configuration file not found: " + filePath);
+        }
+        
+        public static ConfigError invalidFormat(String filePath, String reason) {
+            return new ConfigError("INVALID_CONFIG_FORMAT", 
+                String.format("Invalid configuration format in %s: %s", filePath, reason));
+        }
+        
+        public static ConfigError reloadFailed(String configName, String reason) {
+            return new ConfigError("CONFIG_RELOAD_FAILED", 
+                String.format("Failed to reload configuration %s: %s", configName, reason));
         }
     }
     

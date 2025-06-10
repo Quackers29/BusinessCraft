@@ -27,7 +27,6 @@ public class Town implements ITownDataProvider {
     private final Map<UUID, Integer> visitors = new HashMap<>();
     private int touristCount = 0; // Track tourists separately from population
     private boolean touristSpawningEnabled;
-    private boolean cachedResult;
     private BlockPos pathStart;
     private BlockPos pathEnd;
     private int searchRadius = 10;
@@ -74,14 +73,17 @@ public class Town implements ITownDataProvider {
         return economy.getResources().getAllResources();
     }
     
+    /**
+     * @deprecated Use TownService.canSpawnTourists() instead
+     */
+    @Deprecated
     public boolean canSpawnTourists() {
-        boolean result = touristSpawningEnabled && economy.getPopulation() >= ConfigLoader.minPopForTourists;
-        if (result != cachedResult) {
-            LOGGER.info("SPAWN STATE CHANGE [{}] - Enabled: {}, Population: {}/{}, Tourists: {}, Result: {}",
-                id, touristSpawningEnabled, economy.getPopulation(), ConfigLoader.minPopForTourists, touristCount, result);
-            cachedResult = result;
-        }
-        return result;
+        // Delegate to service layer for business logic
+        com.yourdomain.businesscraft.town.service.TownService service = 
+            new com.yourdomain.businesscraft.town.service.TownService(
+                new com.yourdomain.businesscraft.town.service.TownValidationService());
+        
+        return service.canSpawnTourists(this).getOrElse(false);
     }
     
     /**
@@ -106,49 +108,73 @@ public class Town implements ITownDataProvider {
     }
     
     /**
-     * Calculate the maximum number of tourists this town can support based on population
-     * 
-     * @return the maximum number of tourists allowed
+     * @deprecated Use TownService.calculateMaxTourists() instead
      */
+    @Deprecated
     public int calculateMaxTouristsFromPopulation() {
-        // Calculate based on population / populationPerTourist ratio
-        int popBasedLimit = economy.getPopulation() / ConfigLoader.populationPerTourist;
+        // Delegate to service layer
+        com.yourdomain.businesscraft.town.service.TownService service = 
+            new com.yourdomain.businesscraft.town.service.TownService(
+                new com.yourdomain.businesscraft.town.service.TownValidationService());
         
-        // Cap at the configured maximum
-        return Math.min(popBasedLimit, ConfigLoader.maxPopBasedTourists);
+        return service.calculateMaxTourists(this).getOrElse(0);
     }
     
     /**
-     * Get the maximum number of tourists this town can currently support
-     * 
-     * @return the maximum tourist capacity
+     * @deprecated Use TownService.calculateMaxTourists() instead
      */
+    @Deprecated
     public int getMaxTourists() {
-        return Math.min(calculateMaxTouristsFromPopulation(), ConfigLoader.maxTouristsPerTown);
+        return calculateMaxTouristsFromPopulation();
     }
     
+    /**
+     * @deprecated Use TownService.addTourist() instead
+     */
+    @Deprecated
     public void addTourist() {
-        // Only add tourist if we haven't reached the limit
-        if (canAddMoreTourists()) {
-            touristCount++;
-            LOGGER.debug("Tourist added to town {}, count now {}/{}", 
-                name, touristCount, getMaxTourists());
-        } else {
-            LOGGER.debug("Cannot add tourist to town {}, at capacity {}/{}", 
-                name, touristCount, getMaxTourists());
+        // Delegate to service layer for business logic
+        com.yourdomain.businesscraft.town.service.TownService service = 
+            new com.yourdomain.businesscraft.town.service.TownService(
+                new com.yourdomain.businesscraft.town.service.TownValidationService());
+        
+        com.yourdomain.businesscraft.util.Result<Void, com.yourdomain.businesscraft.util.BCError.TownError> result = 
+            service.addTourist(this);
+        
+        if (result.isFailure()) {
+            LOGGER.debug("Cannot add tourist to town {}: {}", name, result.getError().getMessage());
         }
     }
     
+    /**
+     * @deprecated Use TownService.removeTourist() instead
+     */
+    @Deprecated
     public void removeTourist() {
-        if (touristCount > 0) {
-            touristCount--;
-            LOGGER.debug("Tourist removed from town {}, count now {}/{}", 
-                name, touristCount, getMaxTourists());
+        // Delegate to service layer for business logic
+        com.yourdomain.businesscraft.town.service.TownService service = 
+            new com.yourdomain.businesscraft.town.service.TownService(
+                new com.yourdomain.businesscraft.town.service.TownValidationService());
+        
+        com.yourdomain.businesscraft.util.Result<Void, com.yourdomain.businesscraft.util.BCError.TownError> result = 
+            service.removeTourist(this);
+        
+        if (result.isFailure()) {
+            LOGGER.debug("Cannot remove tourist from town {}: {}", name, result.getError().getMessage());
         }
     }
     
     public int getTouristCount() {
         return touristCount;
+    }
+    
+    /**
+     * Sets the tourist count directly. Used by TownService.
+     * @param count The new tourist count
+     */
+    public void setTouristCount(int count) {
+        this.touristCount = count;
+        markDirty();
     }
     
     public void save(CompoundTag tag) {
