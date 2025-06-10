@@ -33,13 +33,13 @@ public class VisitorHistoryManager {
      * 
      * @param parentScreen The parent screen to return to
      * @param blockPos The position of the town block
-     * @param tabPanel The tab panel to set active tab on close (optional)
+     * @param targetTab The tab to return to when modal closes (optional, defaults to "population")
      * @param onScreenClosed Optional callback when screen is closed
      */
     public static void showVisitorHistoryScreen(
             Screen parentScreen,
             BlockPos blockPos,
-            BCTabPanel tabPanel,
+            String targetTab,
             Consumer<BCModalGridScreen<VisitHistoryRecord>> onScreenClosed) {
         
         // Get the block entity and visit history
@@ -48,16 +48,28 @@ public class VisitorHistoryManager {
         // Create town name lookup function
         Function<UUID, String> townNameLookup = createTownNameLookup(blockPos);
         
+        // Save the current tab before opening modal
+        if (parentScreen instanceof com.yourdomain.businesscraft.ui.screens.BaseTownScreen) {
+            ((com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?>) parentScreen).saveActiveTab();
+        }
+        
         // Create modal grid screen with the visitor history data
         BCModalGridScreen<VisitHistoryRecord> visitorScreen = BCModalGridFactory.createVisitorHistoryScreen(
             Component.literal("Town Visitor History"),
             parentScreen,
             visitHistory,
             screen -> {
-                // When closing, ensure we're on the population tab
-                if (tabPanel != null) {
-                    tabPanel.setActiveTab("population");
+                // Refresh data when modal closes
+                if (parentScreen instanceof com.yourdomain.businesscraft.ui.screens.BaseTownScreen) {
+                    com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?> townScreen = 
+                        (com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?>) parentScreen;
+                    
+                    // Refresh data
+                    if (townScreen.getCacheManager() != null) {
+                        townScreen.getCacheManager().refreshCachedValues();
+                    }
                 }
+                
                 if (onScreenClosed != null) {
                     onScreenClosed.accept(screen);
                 }

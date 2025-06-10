@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 1. First, read the codebase for relevant files, and write a plan to tasks/todo.md.
 2. Read tasks/toImprove.md, this is a log of future improvements to be made but not the current task, update as needed
 3. The plan should have a list of todo items that you can check off as you complete them.
-4. Before you begin working, check in with me and I will verify the plan. Use the Notify user command to notify me prior to any input to get my attention.
+4. Before you begin working, check in with me and I will verify the plan. Use the 'Notify User' command to notify me prior to any input to get my attention (including when you complete).
 5. Then, begin working on the todo items, keep on marking them off as you go in the file so I can track progress.
 6. Finally, add a review section to the todo.md file with a summary of the changes you made and any other relevant information.
 
@@ -22,7 +22,7 @@ BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete
 - **Run client**: `./gradlew runClient`
 - **Run server**: `./gradlew runServer`
 - **Clean build**: `./gradlew clean build`
-- **Notify User**: 'printf '\a''
+- **Notify User**: `powershell.exe -Command "[console]::beep(800,200); Start-Sleep -Milliseconds 100; [console]::beep(800,200); Start-Sleep -Milliseconds 100; [console]::beep(800,200)" && echo "🔔 ATTENTION: Task completed - please check results 🔔"`
 
 ### Testing
 - **Run all tests**: `./gradlew test`

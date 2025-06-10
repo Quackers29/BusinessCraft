@@ -1342,12 +1342,12 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
      */
     @Override
     public void onClose() {
-        // Notify callback if provided
+        // Execute callback BEFORE switching screens to preserve state
         if (this.onCloseCallback != null) {
             this.onCloseCallback.accept(this);
         }
         
-        // Return to parent screen
+        // Return to parent screen AFTER callback executes
         this.minecraft.setScreen(this.parentScreen);
     }
     

@@ -51,20 +51,36 @@ public class TownNamePopupManager {
                 throw new IllegalStateException("Block position is not available");
             }
             
-            activePopup = showChangeTownNamePopup(
-                currentTownName,
-                blockPos,
-                popup -> {
+            // Create the popup
+            activePopup = BCComponentFactory.createStringInputPopup(
+                "Change Town Name", 
+                currentTownName, // Initial value
+                result -> {
+                    // Handle the result
+                    if (result.isConfirmed() && !result.getStringValue().isEmpty()) {
+                        String newName = result.getStringValue().trim();
+                        
+                        // Send packet to update town name on the server
+                        ModMessages.sendToServer(
+                            new SetTownNamePacket(blockPos, newName)
+                        );
+                        
+                        // Provide immediate client-side feedback
+                        TownNamePopupManager.sendChatMessage("Changing town name to: " + newName);
+                    }
+                    
+                    // Close the popup by clearing it from the screen
+                    clearScreenActivePopup(screen);
                     activePopup = null;
                     LOGGER.debug("Town name popup closed");
                 }
             );
             
-            // Initialize the popup
+            // Set the popup as active for rendering
             if (activePopup != null) {
-                activePopup.init(screen::addRenderableWidget);
-                activePopup.focusInput();
-                LOGGER.debug("Town name popup shown successfully");
+                setScreenActivePopup(screen, activePopup);
+                activePopup.focusInput(); // Focus the input field for immediate typing
+                LOGGER.debug("Town name popup set as active with input focused");
             }
             
         } catch (Exception e) {
@@ -198,6 +214,43 @@ public class TownNamePopupManager {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player != null) {
             player.displayClientMessage(Component.literal(message), false);
+        }
+    }
+    
+    /**
+     * Sets the active popup on the screen using reflection to access the protected field.
+     * 
+     * @param screen The screen to set the popup on
+     * @param popup The popup to set as active
+     */
+    private void setScreenActivePopup(BaseTownScreen<?> screen, BCPopupScreen popup) {
+        try {
+            // Use reflection to access the protected activePopup field
+            java.lang.reflect.Field activePopupField = BaseTownScreen.class.getDeclaredField("activePopup");
+            activePopupField.setAccessible(true);
+            activePopupField.set(screen, popup);
+            LOGGER.debug("Successfully set activePopup on screen via reflection");
+        } catch (Exception e) {
+            LOGGER.error("Failed to set activePopup on screen", e);
+            throw new RuntimeException("Cannot set popup on screen", e);
+        }
+    }
+    
+    /**
+     * Clears the active popup from the screen using reflection to access the protected field.
+     * 
+     * @param screen The screen to clear the popup from
+     */
+    private void clearScreenActivePopup(BaseTownScreen<?> screen) {
+        try {
+            // Use reflection to access the protected activePopup field
+            java.lang.reflect.Field activePopupField = BaseTownScreen.class.getDeclaredField("activePopup");
+            activePopupField.setAccessible(true);
+            activePopupField.set(screen, null);
+            LOGGER.debug("Successfully cleared activePopup on screen via reflection");
+        } catch (Exception e) {
+            LOGGER.error("Failed to clear activePopup on screen", e);
+            throw new RuntimeException("Cannot clear popup on screen", e);
         }
     }
 } 

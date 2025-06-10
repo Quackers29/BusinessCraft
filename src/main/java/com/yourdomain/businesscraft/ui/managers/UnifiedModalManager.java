@@ -41,6 +41,7 @@ public class UnifiedModalManager {
         private Screen parentScreen;
         private TownInterfaceMenu townMenu;
         private BCTabPanel tabPanel;
+        private String targetTab;
         private Consumer<Object> onCloseCallback;
         
         private ModalConfig(ModalType type) {
@@ -76,6 +77,11 @@ public class UnifiedModalManager {
             return this;
         }
         
+        public ModalConfig withTargetTab(String targetTab) {
+            this.targetTab = targetTab;
+            return this;
+        }
+        
         public ModalConfig withCloseCallback(Consumer<Object> callback) {
             this.onCloseCallback = callback;
             return this;
@@ -88,6 +94,7 @@ public class UnifiedModalManager {
         public Screen getParentScreen() { return parentScreen; }
         public TownInterfaceMenu getTownMenu() { return townMenu; }
         public BCTabPanel getTabPanel() { return tabPanel; }
+        public String getTargetTab() { return targetTab; }
         public Consumer<Object> getOnCloseCallback() { return onCloseCallback; }
     }
     
@@ -112,27 +119,32 @@ public class UnifiedModalManager {
                 );
                 
             case TRADE_RESOURCES:
+                String tradeTargetTab = config.getTargetTab() != null ? config.getTargetTab() : "resources";
                 TradeModalManager.showTradeResourcesModal(
                     config.getParentScreen(),
                     config.getBlockPos(),
+                    tradeTargetTab,
                     screen -> safeCallback(config.getOnCloseCallback(), screen)
                 );
                 return null; // TradeModalManager doesn't return the modal
                 
             case STORAGE:
+                String storageTargetTab = config.getTargetTab() != null ? config.getTargetTab() : "resources";
                 StorageModalManager.showStorageModal(
                     config.getParentScreen(),
                     config.getBlockPos(),
                     config.getTownMenu(),
+                    storageTargetTab,
                     screen -> safeCallback(config.getOnCloseCallback(), screen)
                 );
                 return null; // StorageModalManager doesn't return the modal
                 
             case VISITOR_HISTORY:
+                String historyTargetTab = config.getTargetTab() != null ? config.getTargetTab() : "population";
                 VisitorHistoryManager.showVisitorHistoryScreen(
                     config.getParentScreen(),
                     config.getBlockPos(),
-                    config.getTabPanel(),
+                    historyTargetTab,
                     screen -> safeCallback(config.getOnCloseCallback(), screen)
                 );
                 return null; // VisitorHistoryManager doesn't return the modal
@@ -177,10 +189,11 @@ public class UnifiedModalManager {
     /**
      * Convenience method for creating trade resources modal.
      */
-    public static void createTradeResourcesModal(Screen parent, BlockPos blockPos, Consumer<Object> onClose) {
+    public static void createTradeResourcesModal(Screen parent, BlockPos blockPos, String targetTab, Consumer<Object> onClose) {
         ModalConfig config = ModalConfig.of(ModalType.TRADE_RESOURCES)
             .withParentScreen(parent)
             .withBlockPos(blockPos)
+            .withTargetTab(targetTab)
             .withCloseCallback(onClose);
         createModal(config);
     }
@@ -188,11 +201,12 @@ public class UnifiedModalManager {
     /**
      * Convenience method for creating storage modal.
      */
-    public static void createStorageModal(Screen parent, BlockPos blockPos, TownInterfaceMenu townMenu, Consumer<Object> onClose) {
+    public static void createStorageModal(Screen parent, BlockPos blockPos, TownInterfaceMenu townMenu, String targetTab, Consumer<Object> onClose) {
         ModalConfig config = ModalConfig.of(ModalType.STORAGE)
             .withParentScreen(parent)
             .withBlockPos(blockPos)
             .withTownMenu(townMenu)
+            .withTargetTab(targetTab)
             .withCloseCallback(onClose);
         createModal(config);
     }
@@ -200,11 +214,11 @@ public class UnifiedModalManager {
     /**
      * Convenience method for creating visitor history modal.
      */
-    public static void createVisitorHistoryModal(Screen parent, BlockPos blockPos, BCTabPanel tabPanel, Consumer<Object> onClose) {
+    public static void createVisitorHistoryModal(Screen parent, BlockPos blockPos, String targetTab, Consumer<Object> onClose) {
         ModalConfig config = ModalConfig.of(ModalType.VISITOR_HISTORY)
             .withParentScreen(parent)
             .withBlockPos(blockPos)
-            .withTabPanel(tabPanel)
+            .withTargetTab(targetTab)
             .withCloseCallback(onClose);
         createModal(config);
     }
