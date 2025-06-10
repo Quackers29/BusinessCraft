@@ -1,6 +1,8 @@
 package com.yourdomain.businesscraft.config;
 
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -8,6 +10,7 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.mojang.logging.LogUtils;
+import com.yourdomain.businesscraft.util.Result;
 
 public class ConfigLoader {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -39,6 +42,33 @@ public class ConfigLoader {
     public static int metersPerEmerald = 50; // How many meters a tourist needs to travel to earn 1 emerald
     
     private ConfigLoader() {
+        loadConfig();
+        registerWithHotReload();
+    }
+    
+    /**
+     * Registers this configuration with the hot-reloadable configuration service.
+     */
+    private void registerWithHotReload() {
+        try {
+            Path configPath = Paths.get("config/businesscraft.properties");
+            ConfigurationService.getInstance().registerConfiguration(
+                "businesscraft-main",
+                configPath,
+                this::reloadFromFile
+            );
+            LOGGER.info("Registered BusinessCraft configuration for hot-reloading");
+        } catch (Exception e) {
+            LOGGER.warn("Failed to register configuration for hot-reloading: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * Reloads configuration from the specified file path.
+     * Used as a callback for the hot-reload service.
+     */
+    private void reloadFromFile(Path filePath) {
+        LOGGER.info("Hot-reloading configuration from: {}", filePath);
         loadConfig();
     }
     
