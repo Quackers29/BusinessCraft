@@ -22,7 +22,7 @@ BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete
 - **Run client**: `./gradlew runClient`
 - **Run server**: `./gradlew runServer`
 - **Clean build**: `./gradlew clean build`
-- **Notify User**: `nohup bash -c 'while true; do powershell.exe -Command "[console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200)"; sleep 30; done' &`
+- **Notify User**: `powershell.exe -Command "[console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200)"`
 
 ### Testing
 - **Run all tests**: `./gradlew test`
