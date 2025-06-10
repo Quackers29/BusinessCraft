@@ -4,7 +4,6 @@ import com.yourdomain.businesscraft.menu.StorageMenu;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
 import com.yourdomain.businesscraft.ui.modal.factories.BCModalInventoryFactory;
 import com.yourdomain.businesscraft.ui.modal.specialized.BCModalInventoryScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -13,8 +12,9 @@ import java.util.function.Consumer;
 /**
  * Manages storage modal creation and handling.
  * Extracted from TownInterfaceScreen to improve code organization.
+ * Refactored to use BaseModalManager for common functionality.
  */
-public class StorageModalManager {
+public class StorageModalManager extends BaseModalManager {
     
     /**
      * Creates and shows a storage modal screen.
@@ -32,40 +32,25 @@ public class StorageModalManager {
             String targetTab,
             Consumer<BCModalInventoryScreen<StorageMenu>> onScreenClosed) {
         
-        // Save the current tab before opening modal
-        if (parentScreen instanceof com.yourdomain.businesscraft.ui.screens.BaseTownScreen) {
-            ((com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?>) parentScreen).saveActiveTab();
-        }
+        // Validate inputs
+        validateParentScreen(parentScreen, "parentScreen");
         
-        // Create a modal storage screen using the factory
+        // Prepare parent screen for modal display
+        prepareParentScreen(parentScreen);
+        
+        // Create a modal storage screen using the factory with standardized callback
         BCModalInventoryScreen<StorageMenu> storageScreen = BCModalInventoryFactory.createStorageScreen(
             Component.literal("Town Storage"),
             parentScreen,
             blockPos,
-            modalScreen -> {
-                // Call the original callback first
-                if (onScreenClosed != null) {
-                    onScreenClosed.accept(modalScreen);
-                }
-                
-                // Refresh data when modal closes
-                if (parentScreen instanceof com.yourdomain.businesscraft.ui.screens.BaseTownScreen) {
-                    com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?> townScreen = 
-                        (com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?>) parentScreen;
-                    
-                    // Refresh data
-                    if (townScreen.getCacheManager() != null) {
-                        townScreen.getCacheManager().refreshCachedValues();
-                    }
-                }
-            }
+            createStandardCallback(parentScreen, onScreenClosed)
         );
         
         // Initialize the storage inventory with the town's communal storage items
         initializeStorageInventory(storageScreen, townMenu);
         
         // Show the storage screen as a modal overlay
-        Minecraft.getInstance().setScreen(storageScreen);
+        displayModal(storageScreen);
     }
     
     /**
