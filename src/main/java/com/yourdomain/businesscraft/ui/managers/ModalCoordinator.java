@@ -37,15 +37,17 @@ public class ModalCoordinator {
     /**
      * Shows the trade resources modal screen with input and output slots.
      * 
+     * @param targetTab The tab to return to when modal closes
      * @param onClose Optional callback when modal is closed
      */
-    public void showTradeModal(Consumer<Void> onClose) {
+    public void showTradeModal(String targetTab, Consumer<Void> onClose) {
         try {
             TradeModalManager.showTradeResourcesModal(
                 screen,
                 blockPos,
-                screen -> {
-                    LOGGER.debug("Trade modal closed");
+                targetTab,
+                modalScreen -> {
+                    LOGGER.debug("Trade modal closed, returning to tab: {}", targetTab);
                     if (onClose != null) {
                         onClose.accept(null);
                     }
@@ -60,16 +62,18 @@ public class ModalCoordinator {
     /**
      * Shows the storage modal screen with chest-like storage interface.
      * 
+     * @param targetTab The tab to return to when modal closes
      * @param onClose Optional callback when modal is closed
      */
-    public void showStorageModal(Consumer<Void> onClose) {
+    public void showStorageModal(String targetTab, Consumer<Void> onClose) {
         try {
             StorageModalManager.showStorageModal(
                 screen,
                 blockPos,
                 menu,
-                screen -> {
-                    LOGGER.debug("Storage modal closed");
+                targetTab,
+                modalScreen -> {
+                    LOGGER.debug("Storage modal closed, returning to tab: {}", targetTab);
                     if (onClose != null) {
                         onClose.accept(null);
                     }
@@ -108,25 +112,17 @@ public class ModalCoordinator {
     /**
      * Shows the visitor history screen.
      * 
+     * @param targetTab The tab to return to when modal closes
      * @param onClose Optional callback when screen is closed
      */
-    public void showVisitorHistoryModal(Consumer<Void> onClose) {
+    public void showVisitorHistoryModal(String targetTab, Consumer<Void> onClose) {
         try {
-            // Get the tab panel from the screen
-            Object tabPanelObj = screen.getTabPanel();
-            if (!(tabPanelObj instanceof com.yourdomain.businesscraft.ui.components.containers.BCTabPanel)) {
-                throw new IllegalStateException("Tab panel not available or wrong type");
-            }
-            
-            com.yourdomain.businesscraft.ui.components.containers.BCTabPanel tabPanel = 
-                (com.yourdomain.businesscraft.ui.components.containers.BCTabPanel) tabPanelObj;
-            
             VisitorHistoryManager.showVisitorHistoryScreen(
                 screen,
                 blockPos,
-                tabPanel,
+                targetTab,
                 screen -> {
-                    LOGGER.debug("Visitor history screen closed");
+                    LOGGER.debug("Visitor history screen closed, returning to tab: {}", targetTab);
                     if (onClose != null) {
                         onClose.accept(null);
                     }

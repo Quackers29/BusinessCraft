@@ -410,13 +410,13 @@ public class BCModalGridScreen<T> extends Screen {
      */
     @Override
     public void onClose() {
-        // Return to parent screen
-        this.minecraft.setScreen(parentScreen);
-        
-        // Execute close callback if provided
+        // Execute close callback BEFORE switching screens to preserve state
         if (onCloseCallback != null) {
             onCloseCallback.accept(this);
         }
+        
+        // Return to parent screen AFTER callback executes
+        this.minecraft.setScreen(parentScreen);
     }
     
     /**

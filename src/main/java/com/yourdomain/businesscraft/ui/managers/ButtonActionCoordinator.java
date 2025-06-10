@@ -53,7 +53,15 @@ public class ButtonActionCoordinator {
     public void handleViewVisitors() {
         try {
             LOGGER.debug("Handling view visitors action");
-            modalCoordinator.showVisitorModal(null);
+            // Save current tab before opening modal
+            if (screen instanceof com.yourdomain.businesscraft.ui.screens.BaseTownScreen) {
+                ((com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?>) screen).saveActiveTab();
+            }
+            
+            modalCoordinator.showVisitorModal(closedModal -> {
+                // Trigger data refresh when modal closes
+                refreshScreenData();
+            });
         } catch (Exception e) {
             LOGGER.error("Failed to handle view visitors action", e);
             screen.sendChatMessage("Unable to open visitor list");
@@ -66,7 +74,10 @@ public class ButtonActionCoordinator {
     public void handleTradeResources() {
         try {
             LOGGER.debug("Handling trade resources action");
-            modalCoordinator.showTradeModal(null);
+            modalCoordinator.showTradeModal("resources", result -> {
+                // Additional refresh if needed
+                refreshScreenData();
+            });
         } catch (Exception e) {
             LOGGER.error("Failed to handle trade resources action", e);
             screen.sendChatMessage("Unable to open trade interface");
@@ -79,7 +90,10 @@ public class ButtonActionCoordinator {
     public void handleManageStorage() {
         try {
             LOGGER.debug("Handling manage storage action");
-            modalCoordinator.showStorageModal(null);
+            modalCoordinator.showStorageModal("resources", result -> {
+                // Additional refresh if needed
+                refreshScreenData();
+            });
         } catch (Exception e) {
             LOGGER.error("Failed to handle manage storage action", e);
             screen.sendChatMessage("Unable to open storage interface");
@@ -101,7 +115,12 @@ public class ButtonActionCoordinator {
     public void handleViewVisitorHistory() {
         try {
             LOGGER.debug("Handling view visitor history action");
-            modalCoordinator.showVisitorHistoryModal(null);
+            String currentTab = getCurrentActiveTab();
+            // Pass the current tab to the modal so it knows where to return
+            modalCoordinator.showVisitorHistoryModal(currentTab, result -> {
+                // Additional refresh if needed
+                refreshScreenData();
+            });
         } catch (Exception e) {
             LOGGER.error("Failed to handle view visitor history action", e);
             screen.sendChatMessage("Unable to open visitor history");
@@ -137,12 +156,18 @@ public class ButtonActionCoordinator {
     }
     
     /**
-     * Handles the manage platforms action by opening the platform management screen.
+     * Handles the manage platforms action by opening the platform management modal.
      */
     public void handleManagePlatforms() {
         try {
             LOGGER.debug("Handling manage platforms action");
-            openPlatformManagementScreen();
+            // Save current tab before opening platform management screen
+            if (screen instanceof com.yourdomain.businesscraft.ui.screens.BaseTownScreen) {
+                ((com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?>) screen).saveActiveTab();
+            }
+            
+            String currentTab = getCurrentActiveTab();
+            openPlatformManagementModal(currentTab);
         } catch (Exception e) {
             LOGGER.error("Failed to handle manage platforms action", e);
             screen.sendChatMessage("Unable to open platform management");
@@ -160,9 +185,14 @@ public class ButtonActionCoordinator {
     }
     
     /**
-     * Opens the platform management screen with proper error handling.
+     * Opens the platform management modal with proper error handling.
+     * 
+     * @param originalTab The tab to return to when modal closes
      */
-    private void openPlatformManagementScreen() {
+    private void openPlatformManagementModal(String originalTab) {
+        // TODO: Implement platform management as a modal instead of separate screen
+        // For now, keep the existing behavior but ensure proper tab return
+        
         // Validate menu state
         if (screen.getMenu() == null) {
             throw new IllegalStateException("Menu is not available");
@@ -179,14 +209,18 @@ public class ButtonActionCoordinator {
             throw new IllegalStateException("Block position not available");
         }
         
-        // Create and open the platform management screen
+        // For now, we'll keep the separate screen approach but add a callback
+        // In the future, this should be converted to use BCModalGridScreen
         PlatformManagementScreen platformScreen = new PlatformManagementScreen(
             screen.getMenu().getBlockPos(), 
             platforms
         );
         
+        // Store reference to return to correct tab (this needs platform screen modification)
+        LOGGER.debug("Platform management screen opened from tab: {}", originalTab);
+        LOGGER.warn("Platform management should be converted to modal to stay within main UI");
+        
         Minecraft.getInstance().setScreen(platformScreen);
-        LOGGER.debug("Platform management screen opened successfully");
     }
     
     /**
@@ -211,6 +245,83 @@ public class ButtonActionCoordinator {
         }
         
         return true;
+    }
+    
+    /**
+     * Gets the currently active tab ID.
+     * 
+     * @return The active tab ID, or "overview" as fallback
+     */
+    private String getCurrentActiveTab() {
+        try {
+            if (screen.getTabPanel() != null) {
+                String activeTab = screen.getTabPanel().getActiveTabId();
+                return activeTab != null ? activeTab : "overview";
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Failed to get current active tab", e);
+        }
+        return "overview";
+    }
+    
+    /**
+     * Returns to the specified tab, with fallback to current tab.
+     * 
+     * @param targetTab The tab to return to
+     * @param fallbackTab The fallback tab if target is not available
+     */
+    private void returnToTab(String targetTab, String fallbackTab) {
+        try {
+            if (screen.getTabPanel() != null) {
+                // Try target tab first, then fallback, then overview
+                String tabToActivate = targetTab;
+                if (!isTabAvailable(targetTab)) {
+                    tabToActivate = fallbackTab;
+                    if (!isTabAvailable(fallbackTab)) {
+                        tabToActivate = "overview";
+                    }
+                }
+                
+                screen.getTabPanel().setActiveTab(tabToActivate);
+                LOGGER.debug("Returned to tab: {}", tabToActivate);
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Failed to return to tab: {}", targetTab, e);
+        }
+    }
+    
+    /**
+     * Checks if a tab is available in the tab panel.
+     * 
+     * @param tabId The tab ID to check
+     * @return True if the tab exists
+     */
+    private boolean isTabAvailable(String tabId) {
+        try {
+            return screen.getTabPanel() != null && screen.getTabPanel().getTabPanel(tabId) != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Refreshes screen data after modal operations.
+     */
+    private void refreshScreenData() {
+        try {
+            // Refresh cache data
+            if (screen.getCacheManager() != null) {
+                screen.getCacheManager().refreshCachedValues();
+                LOGGER.debug("Screen data refreshed after modal close");
+            }
+            
+            // Force refresh specific tabs that might have changed
+            if (screen instanceof com.yourdomain.businesscraft.ui.screens.town.TownInterfaceScreen) {
+                ((com.yourdomain.businesscraft.ui.screens.town.TownInterfaceScreen) screen).forceRefreshResourcesTab();
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Failed to refresh screen data", e);
+        }
     }
     
     /**

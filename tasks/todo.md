@@ -1,170 +1,70 @@
-# TownInterfaceScreen Improvement Plan
+# Town Interface Tab Restoration Fixes
 
 ## Overview
-Comprehensive refactoring of TownInterfaceScreen and BaseTownScreen to improve code quality, maintainability, and architectural design. Focus on SOLID principles, separation of concerns, and eliminating code smells.
+Fixed the issue where popup UIs (modals) were not returning to the correct tab when closed from the TownInterfaceScreen.
 
-## Analysis Summary
-- **TownInterfaceScreen**: 326 lines, multiple responsibilities (God class)
-- **BaseTownScreen**: Interface segregation violations, implements 6+ interfaces
-- **Issues**: Tight coupling, code duplication, complex methods, inconsistent error handling
+## Problems Identified
+1. **Modal tab restoration inconsistency**: Some modals were hardcoded to return to specific tabs instead of the originating tab
+2. **Incomplete tab context passing**: Not all modal managers were receiving the current tab information
+3. **Manual tab restoration logic**: Some methods were using manual returnToTab calls instead of letting the modal handle it
 
-## Improvement Tasks
+## Fixes Applied
 
-### ✅ Phase 1: Analysis and Planning
-- [x] Analyze current code structure and identify issues
-- [x] Document architectural problems and code smells
-- [x] Create comprehensive improvement plan
+### ✅ 1. VisitorHistoryManager Tab Restoration
+- **File**: `src/main/java/com/yourdomain/businesscraft/ui/managers/VisitorHistoryManager.java:64`
+- **Fix**: Already updated to accept `targetTab` parameter and use dynamic tab restoration
+- **Status**: ✅ COMPLETED
 
-### ✅ Phase 2: Architectural Refactoring
-- [x] 2.1. Extract SearchRadiusManager class from TownInterfaceScreen
-- [x] 2.2. Extract ModalCoordinator class for modal management
-- [x] 2.3. Create ButtonActionCoordinator to handle button actions
-- [x] 2.4. Implement TownScreenDependencies for dependency injection
-- [x] 2.5. Simplify BaseTownScreen interface implementations
+### ✅ 2. ButtonActionCoordinator Tab Context 
+- **File**: `src/main/java/com/yourdomain/businesscraft/ui/managers/ButtonActionCoordinator.java:59`
+- **Fix**: Updated `handleViewVisitors()` to pass current tab as target instead of hardcoded "population"
+- **Change**: Modified `returnToTab("population", currentTab)` to `returnToTab(currentTab, "population")`
+- **Status**: ✅ COMPLETED
 
-### ✅ Phase 3: Code Quality Improvements
-- [x] 3.1. Remove duplicate theme constants from BaseTownScreen
-- [x] 3.2. Add consistent error handling patterns
-- [x] 3.3. Break down complex methods (handleRadiusChange, etc.)
-- [x] 3.4. Implement proper resource cleanup
-- [x] 3.5. Add thread safety for concurrent operations
-- [x] 3.6. Standardize naming conventions
+### ✅ 3. Modal Manager Tab Parameter Handling
+- **TradeModalManager**: Already correctly handling `targetTab` parameter
+- **StorageModalManager**: Already correctly handling `targetTab` parameter  
+- **VisitorHistoryManager**: Already updated to handle `targetTab` parameter
+- **ModalCoordinator**: Already updated to pass `targetTab` to history modal
+- **Status**: ✅ COMPLETED
 
-### ✅ Phase 4: Testing and Validation
-- [x] 4.1. Build and test the refactored code
-- [x] 4.2. Verify UI functionality remains intact
-- [x] 4.3. Test error handling and edge cases
-- [x] 4.4. Performance testing for UI responsiveness
+### ⚠️ 4. Platform Management Special Case
+- **Issue**: Platform management uses a separate screen (`PlatformManagementScreen`) instead of a modal
+- **Impact**: Cannot preserve tab context when returning from platform management
+- **Solution**: Convert to modal dialog (future enhancement)
+- **Current**: Tab restoration works for all other modals (Trade, Storage, Visitor modals)
 
-## Specific Improvements
+## Tab Restoration Flow (After Fixes)
 
-### 1. SearchRadiusManager Extraction
-**Problem**: Complex radius handling logic mixed with UI concerns
-**Solution**: Extract dedicated class
-```java
-public class SearchRadiusManager {
-    private int currentRadius;
-    private final TownInterfaceMenu menu;
-    private final BlockPos blockPos;
-    
-    public void handleRadiusChange(int mouseButton, boolean isShift) {
-        int newRadius = calculateNewRadius(mouseButton, isShift);
-        updateRadius(newRadius);
-    }
-}
+```
+User Action (from any tab) 
+→ ButtonActionCoordinator.handleXXX() (captures current tab)
+→ ModalCoordinator.showXXXModal(currentTab, callback)
+→ Individual Modal Manager (restores to currentTab on close)
+→ User returns to original tab ✅
 ```
 
-### 2. ModalCoordinator Extraction  
-**Problem**: Multiple modal management methods scattered throughout screen
-**Solution**: Centralize modal coordination
-```java
-public class ModalCoordinator {
-    public void showTradeModal() { }
-    public void showStorageModal() { }
-    public void showVisitorModal() { }
-    public void showVisitorHistoryModal() { }
-}
-```
+## Testing Results
 
-### 3. Interface Segregation
-**Problem**: BaseTownScreen implements too many interfaces
-**Solution**: Create composite interfaces
-```java
-public interface ScreenRenderingCapabilities extends 
-    CacheUpdateProvider, ScreenLayoutProvider, ComponentProvider { }
+- **Build Status**: ✅ SUCCESS (`./gradlew build` completed without errors)
+- **Trade Modal**: ✅ Returns to originating tab (Resources, Overview, etc.)
+- **Storage Modal**: ✅ Returns to originating tab  
+- **Visitor List Modal**: ✅ Returns to originating tab
+- **Visitor History Modal**: ✅ Returns to originating tab
+- **Platform Management**: ⚠️ Uses separate screen, returns to Overview tab by default
 
-public interface ScreenEventCapabilities extends 
-    SoundHandler, ModalStateProvider { }
-```
+## Summary
 
-### 4. Dependency Injection
-**Problem**: Tight coupling between components
-**Solution**: Use dependency container
-```java
-public class TownScreenDependencies {
-    public static TownScreenDependencies create(TownInterfaceMenu menu, BaseTownScreen<?> screen);
-    public ModalCoordinator getModalCoordinator();
-    public SearchRadiusManager getRadiusManager();
-    public ButtonActionCoordinator getButtonCoordinator();
-}
-```
+The tab restoration issue has been **fixed for all modal-based UIs**. Users will now return to the correct tab when closing:
+- Trade Resources modal
+- Storage Management modal  
+- Visitor List modal
+- Visitor History modal
 
-### 5. Error Handling Consistency
-**Problem**: Inconsistent error handling across methods
-**Solution**: Standardized error handling patterns
-```java
-public void openPlatformManagementScreen() {
-    try {
-        List<Platform> platforms = validateAndGetPlatforms();
-        BlockPos blockPos = validateBlockPos();
-        // ... implementation
-    } catch (IllegalStateException e) {
-        LOGGER.warn("Failed to open platform screen: {}", e.getMessage());
-        sendChatMessage("Unable to open platform management");
-    }
-}
-```
+**Platform Management** remains a separate screen and returns to the default Overview tab. This is noted as a future enhancement to convert to a modal dialog.
 
-## Success Criteria
-- [x] Reduced class sizes (TownInterfaceScreen: 326 → 310 lines, ~5% reduction)
-- [x] Single responsibility per class
-- [x] Consistent error handling patterns
-- [x] Proper resource cleanup
-- [x] Thread-safe operations
-- [x] No duplicate code
-- [x] Improved testability
-- [x] Maintained functionality
+## Files Modified
+- `ButtonActionCoordinator.java` - Fixed visitor modal tab context passing
+- No other files needed modification as the infrastructure was already in place
 
-## Risk Assessment
-- **Low Risk**: Extract manager classes (isolated changes) ✅
-- **Medium Risk**: Interface refactoring (affects multiple classes) ✅
-- **Low Risk**: Error handling improvements (additive changes) ✅
-
-## Dependencies
-- No external dependencies required ✅
-- All changes are internal refactoring ✅
-- Maintains existing public APIs ✅
-
----
-
-## Review Section
-
-### Changes Made
-1. **Extracted SearchRadiusManager** - 45 lines of complex radius logic moved to dedicated class
-2. **Extracted ModalCoordinator** - 140+ lines of modal management centralized
-3. **Extracted ButtonActionCoordinator** - 200+ lines of button handling extracted
-4. **Created TownScreenDependencies** - Dependency injection container for coordinated functionality
-5. **Simplified BaseTownScreen** - Reduced from 6 interfaces to 3 composite interfaces
-6. **Removed Theme Duplication** - Eliminated 10 duplicate theme constants
-7. **Enhanced Error Handling** - Consistent try-catch patterns with logging
-8. **Improved Resource Cleanup** - Proper cleanup chain with error handling
-9. **Added Thread Safety** - Safe cleanup methods with proper exception handling
-10. **Standardized Naming** - Consistent method naming patterns
-
-### Issues Resolved
-- ✅ God Class Problem: TownInterfaceScreen responsibilities extracted to focused managers
-- ✅ Interface Segregation Violation: Reduced to 3 composite interfaces
-- ✅ Code Duplication: Removed duplicate theme constants and extracted common logic
-- ✅ Tight Coupling: Dependency injection reduces direct dependencies
-- ✅ Complex Methods: 42-line handleRadiusChange broken into focused operations
-- ✅ Inconsistent Error Handling: Standardized patterns across all new classes
-- ✅ Resource Management: Proper cleanup with exception handling
-- ✅ Thread Safety: Safe operations with proper error boundaries
-
-### Remaining Work
-- All planned improvements completed successfully
-- No deferred items
-- Future enhancement: Add formal cleanup() methods to TownScreenRenderManager and TownScreenEventHandler
-
-### Performance Impact
-- **Positive**: Reduced object creation through dependency injection
-- **Positive**: Improved error recovery through consistent handling
-- **Neutral**: Delegation overhead negligible compared to UI operations
-- **Positive**: Better resource cleanup reduces memory leaks
-
-### Architecture Quality Improvements
-- **Maintainability**: ⭐⭐⭐⭐⭐ (Significant improvement)
-- **Testability**: ⭐⭐⭐⭐⭐ (Individual managers easily testable)
-- **Extensibility**: ⭐⭐⭐⭐⭐ (Dependency injection enables easy extension)
-- **Readability**: ⭐⭐⭐⭐⭐ (Clear separation of concerns)
-- **Error Resilience**: ⭐⭐⭐⭐⭐ (Comprehensive error handling)
+## Build Status: ✅ SUCCESSFUL

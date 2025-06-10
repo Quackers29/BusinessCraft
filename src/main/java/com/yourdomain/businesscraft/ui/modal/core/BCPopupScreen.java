@@ -558,4 +558,5 @@ public class BCPopupScreen extends BCPanel {
     public boolean isInputPopup() {
         return type == PopupType.STRING_INPUT || type == PopupType.NUMERIC_INPUT;
     }
+    
 } 

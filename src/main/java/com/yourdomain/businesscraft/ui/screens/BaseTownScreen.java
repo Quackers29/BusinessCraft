@@ -33,6 +33,9 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
                    ScreenEventCapabilities,
                    TownTabController.TabDataProvider {
     
+    // Static field to preserve active tab across screen switches
+    private static String lastActiveTab = "overview";
+    
     // Theme access - use static constants directly from TownInterfaceTheme
     // No need for instance since it's a utility class
     
@@ -131,6 +134,9 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
         // Initialize tabs using the tab controller
         this.tabPanel = tabController.initializeTabs();
         
+        // Restore the last active tab after initialization
+        restoreActiveTab();
+        
         // Allow subclasses to perform additional initialization
         performAdditionalInit();
     }
@@ -139,6 +145,26 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
      * Template method for subclasses to perform additional initialization.
      */
     protected abstract void performAdditionalInit();
+    
+    /**
+     * Saves the currently active tab for restoration after screen switches.
+     */
+    public void saveActiveTab() {
+        if (tabPanel != null && tabPanel.getActiveTabId() != null) {
+            lastActiveTab = tabPanel.getActiveTabId();
+            LOGGER.debug("Saved active tab: {}", lastActiveTab);
+        }
+    }
+    
+    /**
+     * Restores the previously saved active tab.
+     */
+    private void restoreActiveTab() {
+        if (tabPanel != null && lastActiveTab != null) {
+            tabPanel.setActiveTab(lastActiveTab);
+            LOGGER.debug("Restored active tab: {}", lastActiveTab);
+        }
+    }
     
     // ===== Common Interface Implementations =====
     

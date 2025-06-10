@@ -22,20 +22,43 @@ public class StorageModalManager {
      * @param parentScreen The parent screen to return to
      * @param blockPos The position of the town block
      * @param townMenu The town interface menu for accessing storage data
+     * @param targetTab The tab to activate when returning
      * @param onScreenClosed Optional callback when screen is closed
      */
     public static void showStorageModal(
             Screen parentScreen, 
             BlockPos blockPos, 
             TownInterfaceMenu townMenu,
+            String targetTab,
             Consumer<BCModalInventoryScreen<StorageMenu>> onScreenClosed) {
+        
+        // Save the current tab before opening modal
+        if (parentScreen instanceof com.yourdomain.businesscraft.ui.screens.BaseTownScreen) {
+            ((com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?>) parentScreen).saveActiveTab();
+        }
         
         // Create a modal storage screen using the factory
         BCModalInventoryScreen<StorageMenu> storageScreen = BCModalInventoryFactory.createStorageScreen(
             Component.literal("Town Storage"),
             parentScreen,
             blockPos,
-            onScreenClosed
+            modalScreen -> {
+                // Call the original callback first
+                if (onScreenClosed != null) {
+                    onScreenClosed.accept(modalScreen);
+                }
+                
+                // Refresh data when modal closes
+                if (parentScreen instanceof com.yourdomain.businesscraft.ui.screens.BaseTownScreen) {
+                    com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?> townScreen = 
+                        (com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?>) parentScreen;
+                    
+                    // Refresh data
+                    if (townScreen.getCacheManager() != null) {
+                        townScreen.getCacheManager().refreshCachedValues();
+                    }
+                }
+            }
         );
         
         // Initialize the storage inventory with the town's communal storage items
