@@ -35,7 +35,16 @@ import org.slf4j.LoggerFactory;
  * A modal inventory screen that allows for inventory-based interactions
  * within a modal overlay, rather than opening a separate screen.
  * This provides a consistent UI experience with other modal components.
+ * 
+ * @deprecated This class has been refactored into component-based architecture.
+ *             Use BCModalInventoryScreenV2 instead, which provides the same functionality
+ *             with improved maintainability through focused components:
+ *             - ModalRenderingEngine: Handles all rendering operations
+ *             - TradeOperationsManager: Manages trade-specific functionality
+ *             - StorageOperationsManager: Manages storage-specific functionality
+ *             - ModalEventHandler: Handles mouse events and user interactions
  */
+@Deprecated
 public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends AbstractContainerScreen<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(BCModalInventoryScreen.class);
     
