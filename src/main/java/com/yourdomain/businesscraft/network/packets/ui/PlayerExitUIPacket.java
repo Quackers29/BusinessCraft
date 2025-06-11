@@ -14,6 +14,7 @@ import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Packet sent when a player exits a Town UI
@@ -63,14 +64,16 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
             // First try to handle as a TownBlockEntity (original behavior)
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof TownBlockEntity townBlock) {
-                LOGGER.debug("Player {} exited TownBlockEntity UI at {}", player.getUUID(), pos);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                    "Player {} exited TownBlockEntity UI at {}", player.getUUID(), pos);
                 townBlock.registerPlayerExitUI(player.getUUID());
             } 
             // Then check if it's a TownInterfaceBlock
             else {
                 BlockState blockState = level.getBlockState(pos);
                 if (blockState.getBlock() instanceof TownInterfaceBlock townInterfaceBlock) {
-                    LOGGER.debug("Player {} exited TownInterfaceBlock UI at {}", player.getUUID(), pos);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        "Player {} exited TownInterfaceBlock UI at {}", player.getUUID(), pos);
                     townInterfaceBlock.registerPlayerExitUI(player.getUUID(), level, pos);
                 }
             }

@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 import java.util.function.Supplier;
 
@@ -53,7 +54,7 @@ public class SetTownNamePacket extends BaseBlockEntityPacket {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> {
             handlePacket(context, (player, townBlock) -> {
-                LOGGER.debug("Processing SetTownNamePacket for position {} with new name: '{}'", 
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing SetTownNamePacket for position {} with new name: '{}'", 
                     pos, newName);
                     
                 ITownDataProvider provider = townBlock.getTownDataProvider();
@@ -84,7 +85,7 @@ public class SetTownNamePacket extends BaseBlockEntityPacket {
                     player.level().sendBlockUpdated(pos, state, state, Block.UPDATE_ALL);
                     
                     // Only keep one debug log for verification
-                    LOGGER.debug("Town renamed successfully from {} to {}", 
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Town renamed successfully from {} to {}", 
                         town.getName(), trimmedName);
                     
                     // Send confirmation message to player

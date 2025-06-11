@@ -18,6 +18,7 @@ import net.minecraft.world.level.Level;
 
 import java.util.UUID;
 import java.util.function.Supplier;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Packet to request personal storage data from the server.
@@ -108,7 +109,8 @@ public class PersonalStorageRequestPacket extends BaseBlockEntityPacket {
             }
             
             // Send a response with the player's personal storage data
-            LOGGER.debug("Sending personal storage data to player {} for town {}", player.getName().getString(), townId);
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                "Sending personal storage data to player {} for town {}", player.getName().getString(), townId);
             ModMessages.sendToPlayer(new PersonalStorageResponsePacket(town.getPersonalStorageItems(playerId)), player);
         });
         

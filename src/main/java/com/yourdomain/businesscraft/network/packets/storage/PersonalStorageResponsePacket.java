@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Client-bound packet that sends the current state of a player's personal storage to the client.
@@ -78,7 +79,8 @@ public class PersonalStorageResponsePacket {
     }
 
     private void handleClientSide() {
-        LOGGER.debug("Received personal storage update with {} items", storageItems.size());
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+            "Received personal storage update with {} items", storageItems.size());
         
         // Get the current screen
         net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
@@ -92,7 +94,8 @@ public class PersonalStorageResponsePacket {
             else if (client.screen instanceof com.yourdomain.businesscraft.ui.modal.specialized.BCModalInventoryScreen<?> modalScreen) {
                 // Check if the container is a StorageMenu
                 if (modalScreen.getMenu() instanceof com.yourdomain.businesscraft.menu.StorageMenu storageMenu) {
-                    LOGGER.debug("Updating personal storage in modal screen");
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        "Updating personal storage in modal screen");
                     // Update the storage menu's inventory with the personal storage items
                     storageMenu.updatePersonalStorageItems(storageItems);
                 }
