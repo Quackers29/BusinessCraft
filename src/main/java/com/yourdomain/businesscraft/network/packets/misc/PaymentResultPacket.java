@@ -9,6 +9,7 @@ import com.yourdomain.businesscraft.ui.modal.specialized.BCModalInventoryScreen;
 import com.yourdomain.businesscraft.menu.TradeMenu;
 
 import java.util.function.Supplier;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Client-bound packet that sends the result of a resource trade (emerald payment) back to the client.
@@ -55,7 +56,8 @@ public class PaymentResultPacket {
     }
 
     private void handleClientSide() {
-        LOGGER.debug("Payment result received: {}", paymentItem);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+            "Payment result received: {}", paymentItem);
         
         // Get the current screen and update the output slot on either TradeScreen or BCModalInventoryScreen
         net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
@@ -69,7 +71,8 @@ public class PaymentResultPacket {
             else if (client.screen instanceof BCModalInventoryScreen<?> modalScreen) {
                 // Check if the container is a TradeMenu
                 if (modalScreen.getMenu() instanceof TradeMenu tradeMenu) {
-                    LOGGER.debug("Setting payment item in BCModalInventoryScreen: {}", paymentItem);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        "Setting payment item in BCModalInventoryScreen: {}", paymentItem);
                     tradeMenu.setOutputItem(paymentItem.copy());
                 }
             }

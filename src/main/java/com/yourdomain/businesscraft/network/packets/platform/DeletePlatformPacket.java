@@ -14,6 +14,7 @@ import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 import net.minecraft.world.level.Level;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Packet for deleting a platform from a town
@@ -61,7 +62,8 @@ public class DeletePlatformPacket {
                 // Delete the platform
                 boolean deleted = townBlock.removePlatform(platformId);
                 if (deleted) {
-                    LOGGER.debug("Deleted platform {} from town at {}", platformId, blockPos);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        "Deleted platform {} from town at {}", platformId, blockPos);
                     
                     // Sync the town block
                     townBlock.setChanged();
@@ -71,7 +73,8 @@ public class DeletePlatformPacket {
                     // Notify clients of the update
                     ModMessages.sendToAllTrackingChunk(new RefreshPlatformsPacket(blockPos), level, blockPos);
                 } else {
-                    LOGGER.debug("Failed to delete platform {} from town at {}", platformId, blockPos);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        "Failed to delete platform {} from town at {}", platformId, blockPos);
                 }
             }
         });

@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.ui.screens.platform.PlatformManagementScreen;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Packet sent from server to client to refresh platform data
@@ -51,11 +52,13 @@ public class RefreshPlatformsPacket {
             BlockEntity be = minecraft.level.getBlockEntity(pos);
             
             if (be instanceof TownBlockEntity) {
-                LOGGER.debug("Received platform refresh packet for block at {}", pos);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                    "Received platform refresh packet for block at {}", pos);
                 
                 // If the PlatformManagementScreen is open, refresh it by reopening
                 if (minecraft.screen instanceof PlatformManagementScreen) {
-                    LOGGER.debug("Reopening platform management screen with fresh data");
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        "Reopening platform management screen with fresh data");
                     PlatformManagementScreen.open(pos);
                 }
                 // Additional handling for other screens can be added here if needed

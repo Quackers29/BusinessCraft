@@ -21,6 +21,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
 import java.util.function.Supplier;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Packet for interacting with town communal storage.
@@ -110,7 +111,8 @@ public class CommunalStoragePacket extends BaseBlockEntityPacket {
             
             // Special case: If slotId is -1, this is a request for all communal storage data
             if (slotId == -1) {
-                LOGGER.debug("Received request for all communal storage data from player {}", player.getName().getString());
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                    "Received request for all communal storage data from player {}", player.getName().getString());
                 
                 // Get the current communal storage contents
                 var storageItems = town.getAllCommunalStorageItems();

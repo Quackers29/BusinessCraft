@@ -18,6 +18,7 @@ import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.ui.RefreshDestinationsPacket;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Packet sent from client to server to set a destination for a platform
@@ -60,7 +61,8 @@ public class SetPlatformDestinationPacket {
             BlockEntity be = level.getBlockEntity(pos);
             
             if (be instanceof TownBlockEntity townBlock) {
-                LOGGER.debug("Player {} is setting destination {} to {} for platform {} at {}", 
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                    "Player {} is setting destination {} to {} for platform {} at {}", 
                     player.getName().getString(), townId, enabled, platformId, pos);
                 
                 // Find the platform with this ID
@@ -123,7 +125,8 @@ public class SetPlatformDestinationPacket {
                         ModMessages.sendToPlayer(refreshPacket, player);
                     }
                     
-                    LOGGER.debug("Successfully set destination {} to {} for platform {} at {}", 
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        "Successfully set destination {} to {} for platform {} at {}", 
                         townId, enabled, platformId, pos);
                 }
             }

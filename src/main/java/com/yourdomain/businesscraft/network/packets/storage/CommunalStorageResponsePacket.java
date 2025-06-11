@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Client-bound packet that sends the current state of communal storage to the client.
@@ -79,7 +80,8 @@ public class CommunalStorageResponsePacket {
     }
 
     private void handleClientSide() {
-        LOGGER.debug("Received communal storage update with {} items", storageItems.size());
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+            "Received communal storage update with {} items", storageItems.size());
         
         // Get the current screen
         net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
@@ -88,12 +90,14 @@ public class CommunalStorageResponsePacket {
             try {
                 // If the current screen is StorageScreen, update its inventory
                 if (client.screen instanceof com.yourdomain.businesscraft.ui.screens.town.StorageScreen storageScreen) {
-                    LOGGER.debug("Updating StorageScreen with communal storage data");
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        "Updating StorageScreen with communal storage data");
                     storageScreen.updateStorageItems(storageItems);
                 } else if (client.screen instanceof com.yourdomain.businesscraft.ui.modal.specialized.BCModalInventoryScreen<?> modalScreen) {
                     // Check if the container is a StorageMenu
                     if (modalScreen.getMenu() instanceof com.yourdomain.businesscraft.menu.StorageMenu storageMenu) {
-                        LOGGER.debug("Updating communal storage in BCModalInventoryScreen");
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                            "Updating communal storage in BCModalInventoryScreen");
                         // Update the storage menu's inventory with the communal storage items
                         storageMenu.updateStorageItems(storageItems);
                     }

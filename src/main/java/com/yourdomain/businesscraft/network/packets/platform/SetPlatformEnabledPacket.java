@@ -15,6 +15,7 @@ import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 import net.minecraft.world.level.Level;
 import com.yourdomain.businesscraft.platform.Platform;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Packet for toggling platform enabled state
@@ -67,7 +68,8 @@ public class SetPlatformEnabledPacket {
                 if (platform != null) {
                     // Update enabled state
                     platform.setEnabled(enabled);
-                    LOGGER.debug("Player {} is setting platform {} enabled state to {} at {}", 
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        "Player {} is setting platform {} enabled state to {} at {}", 
                         player.getName().getString(), platformId, enabled, blockPos);
                     
                     // Sync the town block
@@ -78,7 +80,8 @@ public class SetPlatformEnabledPacket {
                     // Notify clients of the update
                     ModMessages.sendToAllTrackingChunk(new RefreshPlatformsPacket(blockPos), level, blockPos);
                 } else {
-                    LOGGER.debug("Failed to set platform {} enabled state - platform not found at {}", 
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        "Failed to set platform {} enabled state - platform not found at {}", 
                         platformId, blockPos);
                 }
             }

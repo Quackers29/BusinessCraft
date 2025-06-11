@@ -102,6 +102,35 @@ public class DebugConfig {
     }
     
     /**
+     * Conditional debug logging helper with message formatting for Log4J loggers.
+     * Only logs if the component flag is enabled.
+     * 
+     * @param logger The Log4J logger instance to use
+     * @param componentFlag The component's debug flag
+     * @param message The message to log
+     * @param args Optional message arguments for formatting
+     */
+    public static void debug(org.apache.logging.log4j.Logger logger, boolean componentFlag, String message, Object... args) {
+        if (isEnabled(componentFlag)) {
+            logger.info("[DEBUG] " + message, args);
+        }
+    }
+    
+    /**
+     * Conditional debug logging helper for simple messages for Log4J loggers.
+     * Only logs if the component flag is enabled.
+     * 
+     * @param logger The Log4J logger instance to use
+     * @param componentFlag The component's debug flag
+     * @param message The message to log
+     */
+    public static void debug(org.apache.logging.log4j.Logger logger, boolean componentFlag, String message) {
+        if (isEnabled(componentFlag)) {
+            logger.info("[DEBUG] " + message);
+        }
+    }
+    
+    /**
      * Reports all active debug loggers at startup.
      * This provides transparency about which systems have debug logging enabled.
      */

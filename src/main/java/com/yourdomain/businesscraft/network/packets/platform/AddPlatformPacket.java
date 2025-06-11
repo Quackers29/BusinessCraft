@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.platform.RefreshPlatformsPacket;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Packet for adding a new platform to a town
@@ -54,12 +55,14 @@ public class AddPlatformPacket {
             // Check if the block entity is valid
             BlockEntity be = level.getBlockEntity(blockPos);
             if (be instanceof TownBlockEntity townBlock) {
-                LOGGER.debug("Player {} is adding a new platform to town block at {}", player.getName().getString(), blockPos);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                    "Player {} is adding a new platform to town block at {}", player.getName().getString(), blockPos);
                 
                 if (townBlock.canAddMorePlatforms()) {
                     boolean added = townBlock.addPlatform();
                     if (added) {
-                        LOGGER.debug("Successfully added new platform to town block at {}", blockPos);
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                            "Successfully added new platform to town block at {}", blockPos);
                         townBlock.setChanged();
                         
                         // Force a block update to ensure clients get the updated data
@@ -68,10 +71,12 @@ public class AddPlatformPacket {
                         // Notify client of the update
                         ModMessages.sendToAllTrackingChunk(new RefreshPlatformsPacket(blockPos), level, blockPos);
                     } else {
-                        LOGGER.debug("Failed to add platform to town block at {} - already at max capacity", blockPos);
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        "Failed to add platform to town block at {} - already at max capacity", blockPos);
                     }
                 } else {
-                    LOGGER.debug("Failed to add platform to town block at {} - already at max capacity", blockPos);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        "Failed to add platform to town block at {} - already at max capacity", blockPos);
                 }
             }
         });

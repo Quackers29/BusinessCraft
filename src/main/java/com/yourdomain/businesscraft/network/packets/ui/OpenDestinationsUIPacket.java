@@ -17,6 +17,7 @@ import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
 import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Packet for opening the destinations UI for a platform
@@ -76,7 +77,8 @@ public class OpenDestinationsUIPacket {
                     BlockPos originPos = blockPos;
                     Town originTown = townBlock.getTown();
                     if (originTown != null) {
-                        LOGGER.debug("Found origin town: {}", originTown.getName());
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                            "Found origin town: {}", originTown.getName());
                     }
                     
                     // Add all towns except the current one to the packet
@@ -114,7 +116,8 @@ public class OpenDestinationsUIPacket {
                     
                     // Send response packet to open UI on client
                     ModMessages.sendToPlayer(responsePacket, player);
-                    LOGGER.debug("Sent destinations data for {} towns to player {}", 
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        "Sent destinations data for {} towns to player {}", 
                         addedTowns, player.getName().getString());
                 }
             }
