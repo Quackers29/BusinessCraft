@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 public class TouristEntity extends Villager {
     private static final Logger LOGGER = LoggerFactory.getLogger(TouristEntity.class);
@@ -134,7 +135,7 @@ public class TouristEntity extends Villager {
             
             if (distanceSquared > MOVEMENT_THRESHOLD * MOVEMENT_THRESHOLD) {
                 hasMoved = true;
-                LOGGER.debug("Tourist has moved from spawn position, distance: {}", Math.sqrt(distanceSquared));
+                DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Tourist has moved from spawn position, distance: {}", Math.sqrt(distanceSquared));
             }
         }
         
@@ -173,7 +174,7 @@ public class TouristEntity extends Villager {
                     this.blockPosition()
                 );
             } else {
-                LOGGER.debug("Tourist quit without moving from spawn position, skipping visual notification");
+                DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Tourist quit without moving from spawn position, skipping visual notification");
             }
         }
     }
@@ -359,7 +360,7 @@ public class TouristEntity extends Villager {
                 // Recalculate expiry ticks from current config value instead of using static constant
                 this.expiryTicks = ConfigLoader.touristExpiryMinutes * 60 * 20;
                 hasReceivedRideExtension = true;
-                LOGGER.debug("Resetting expiry timer for tourist to {} minutes ({})", 
+                DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Resetting expiry timer for tourist to {} minutes ({})", 
                     ConfigLoader.touristExpiryMinutes, this.expiryTicks);
             }
         }

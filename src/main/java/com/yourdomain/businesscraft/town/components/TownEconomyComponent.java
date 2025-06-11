@@ -6,6 +6,7 @@ import net.minecraft.world.item.Items;
 import com.yourdomain.businesscraft.config.ConfigLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 public class TownEconomyComponent implements TownComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownEconomyComponent.class);
@@ -48,7 +49,7 @@ public class TownEconomyComponent implements TownComponent {
                 // Consume the bread used for population
                 resources.consumeResource(Items.BREAD, popToAdd * ConfigLoader.breadPerPop);
                 this.population += popToAdd;
-                LOGGER.debug("Population increased by {} to {}", popToAdd, population);
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Population increased by {} to {}", popToAdd, population);
             }
         }
     }
@@ -89,7 +90,7 @@ public class TownEconomyComponent implements TownComponent {
     public void setPopulation(int amount) {
         if (amount >= 0) {
             population = amount;
-            LOGGER.debug("Population set to {}", population);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Population set to {}", population);
         }
     }
 

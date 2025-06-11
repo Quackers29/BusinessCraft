@@ -9,6 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.Item;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 import java.util.List;
 import java.util.Map;
@@ -37,7 +38,7 @@ public class TownService {
      * @return Result containing the created Town or validation errors
      */
     public Result<Town, BCError.TownError> createTown(CreateTownRequest request) {
-        LOGGER.debug("Attempting to create town: {}", request.getName());
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_SERVICE, "Attempting to create town: {}", request.getName());
         
         // Validate the request
         Result<Void, BCError.ValidationError> validation = validationService.validateTownCreation(request);
@@ -119,7 +120,7 @@ public class TownService {
             // Apply absolute maximum limit
             int maxTourists = Math.min(popBasedMax, ConfigLoader.maxTouristsPerTown);
             
-            LOGGER.debug("Max tourists calculation for town {}: pop={}, popBased={}, configMax={}, absMax={}, result={}", 
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_SERVICE, "Max tourists calculation for town {}: pop={}, popBased={}, configMax={}, absMax={}, result={}", 
                         town.getId(), population, populationBasedLimit, ConfigLoader.maxPopBasedTourists, ConfigLoader.maxTouristsPerTown, maxTourists);
             
             return Result.success(maxTourists);
@@ -227,7 +228,7 @@ public class TownService {
         try {
             town.addResource(item, amount);
             
-            LOGGER.debug("Added {} {} to town {}", amount, item, town.getId());
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_SERVICE, "Added {} {} to town {}", amount, item, town.getId());
             return Result.success(null);
             
         } catch (Exception e) {
@@ -249,7 +250,7 @@ public class TownService {
             // Update visitor count using existing Town method
             town.addVisitor(originTownId);
             
-            LOGGER.debug("Processed visitor {} to town {} from origin {}", 
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_SERVICE, "Processed visitor {} to town {} from origin {}", 
                         visitorId, town.getId(), originTownId);
             return Result.success(null);
             
@@ -271,7 +272,7 @@ public class TownService {
         try {
             // Population growth is currently handled automatically by Town.addVisitor()
             // This method is prepared for future extraction of that logic
-            LOGGER.debug("Population growth check completed for town {}", town.getId());
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_SERVICE, "Population growth check completed for town {}", town.getId());
             return Result.success(null);
             
         } catch (Exception e) {

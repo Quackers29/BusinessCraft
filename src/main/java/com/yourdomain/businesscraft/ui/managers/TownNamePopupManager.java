@@ -13,6 +13,7 @@ import net.minecraft.client.player.LocalPlayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.function.Consumer;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Manages town name popup creation and handling.
@@ -32,7 +33,7 @@ public class TownNamePopupManager {
      */
     public TownNamePopupManager(BaseTownScreen<?> screen) {
         this.screen = screen;
-        LOGGER.debug("TownNamePopupManager instance created");
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "TownNamePopupManager instance created");
     }
     
     /**
@@ -72,7 +73,7 @@ public class TownNamePopupManager {
                     // Close the popup by clearing it from the screen
                     clearScreenActivePopup(screen);
                     activePopup = null;
-                    LOGGER.debug("Town name popup closed");
+                    DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town name popup closed");
                 }
             );
             
@@ -80,7 +81,7 @@ public class TownNamePopupManager {
             if (activePopup != null) {
                 setScreenActivePopup(screen, activePopup);
                 activePopup.focusInput(); // Focus the input field for immediate typing
-                LOGGER.debug("Town name popup set as active with input focused");
+                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town name popup set as active with input focused");
             }
             
         } catch (Exception e) {
@@ -126,7 +127,7 @@ public class TownNamePopupManager {
     public void closeActivePopup() {
         if (activePopup != null) {
             activePopup = null;
-            LOGGER.debug("Active popup closed");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Active popup closed");
         }
     }
     
@@ -135,7 +136,7 @@ public class TownNamePopupManager {
      */
     public void cleanup() {
         closeActivePopup();
-        LOGGER.debug("TownNamePopupManager cleanup completed");
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "TownNamePopupManager cleanup completed");
     }
     
     /**
@@ -229,7 +230,7 @@ public class TownNamePopupManager {
             java.lang.reflect.Field activePopupField = BaseTownScreen.class.getDeclaredField("activePopup");
             activePopupField.setAccessible(true);
             activePopupField.set(screen, popup);
-            LOGGER.debug("Successfully set activePopup on screen via reflection");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Successfully set activePopup on screen via reflection");
         } catch (Exception e) {
             LOGGER.error("Failed to set activePopup on screen", e);
             throw new RuntimeException("Cannot set popup on screen", e);
@@ -247,7 +248,7 @@ public class TownNamePopupManager {
             java.lang.reflect.Field activePopupField = BaseTownScreen.class.getDeclaredField("activePopup");
             activePopupField.setAccessible(true);
             activePopupField.set(screen, null);
-            LOGGER.debug("Successfully cleared activePopup on screen via reflection");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Successfully cleared activePopup on screen via reflection");
         } catch (Exception e) {
             LOGGER.error("Failed to clear activePopup on screen", e);
             throw new RuntimeException("Cannot clear popup on screen", e);

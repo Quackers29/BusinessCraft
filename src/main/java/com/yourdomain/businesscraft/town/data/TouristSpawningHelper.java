@@ -15,6 +15,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 import java.util.*;
 
@@ -46,7 +47,7 @@ public class TouristSpawningHelper {
     public boolean spawnTouristOnPlatform(Level level, Town town, Platform platform, UUID originTownId) {
         // Skip if town can't support more tourists
         if (!town.canAddMoreTourists()) {
-            LOGGER.debug("Cannot spawn tourist - town {} at maximum capacity ({}/{})",
+            DebugConfig.debug(LOGGER, DebugConfig.TOURIST_SPAWNING, "Cannot spawn tourist - town {} at maximum capacity ({}/{})",
                 town.getName(), town.getTouristCount(), town.getMaxTourists());
             return false;
         }
@@ -223,7 +224,7 @@ public class TouristSpawningHelper {
             level.addFreshEntity(tourist);
             
             // Log the tourist spawn
-            LOGGER.debug("Spawned tourist at {} from {} to {}", pos, originTown.getName(), destinationName);
+            DebugConfig.debug(LOGGER, DebugConfig.TOURIST_SPAWNING, "Spawned tourist at {} from {} to {}", pos, originTown.getName(), destinationName);
             
             // Update town stats
             originTown.addTourist();

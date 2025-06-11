@@ -1,5 +1,6 @@
 package com.yourdomain.businesscraft.ui.managers;
 
+import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.ui.screens.BaseTownScreen;
 import com.yourdomain.businesscraft.ui.screens.platform.PlatformManagementScreen;
@@ -31,7 +32,7 @@ public class ButtonActionCoordinator {
         this.modalCoordinator = modalCoordinator;
         this.popupManager = new TownNamePopupManager(screen);
         
-        LOGGER.debug("ButtonActionCoordinator initialized");
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "ButtonActionCoordinator initialized");
     }
     
     /**
@@ -39,7 +40,7 @@ public class ButtonActionCoordinator {
      */
     public void handleEditDetails() {
         try {
-            LOGGER.debug("Handling edit details action");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling edit details action");
             popupManager.showChangeTownNamePopup();
         } catch (Exception e) {
             LOGGER.error("Failed to handle edit details action", e);
@@ -52,7 +53,7 @@ public class ButtonActionCoordinator {
      */
     public void handleViewVisitors() {
         try {
-            LOGGER.debug("Handling view visitors action");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling view visitors action");
             // Save current tab before opening modal
             if (screen instanceof com.yourdomain.businesscraft.ui.screens.BaseTownScreen) {
                 ((com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?>) screen).saveActiveTab();
@@ -73,7 +74,7 @@ public class ButtonActionCoordinator {
      */
     public void handleTradeResources() {
         try {
-            LOGGER.debug("Handling trade resources action");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling trade resources action");
             modalCoordinator.showTradeModal("resources", result -> {
                 // Additional refresh if needed
                 refreshScreenData();
@@ -89,7 +90,7 @@ public class ButtonActionCoordinator {
      */
     public void handleManageStorage() {
         try {
-            LOGGER.debug("Handling manage storage action");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling manage storage action");
             modalCoordinator.showStorageModal("resources", result -> {
                 // Additional refresh if needed
                 refreshScreenData();
@@ -105,7 +106,7 @@ public class ButtonActionCoordinator {
      * Currently shows a placeholder message as the feature is not yet implemented.
      */
     public void handleAssignJobs() {
-        LOGGER.debug("Handling assign jobs action (placeholder)");
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling assign jobs action (placeholder)");
         screen.sendChatMessage("Job assignment feature coming soon!");
     }
     
@@ -114,7 +115,7 @@ public class ButtonActionCoordinator {
      */
     public void handleViewVisitorHistory() {
         try {
-            LOGGER.debug("Handling view visitor history action");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling view visitor history action");
             String currentTab = getCurrentActiveTab();
             // Pass the current tab to the modal so it knows where to return
             modalCoordinator.showVisitorHistoryModal(currentTab, result -> {
@@ -132,7 +133,7 @@ public class ButtonActionCoordinator {
      */
     public void handleSaveSettings() {
         try {
-            LOGGER.debug("Handling save settings action");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling save settings action");
             // TODO: Implement actual settings save logic
             screen.sendChatMessage("Settings saved successfully!");
         } catch (Exception e) {
@@ -146,7 +147,7 @@ public class ButtonActionCoordinator {
      */
     public void handleResetDefaults() {
         try {
-            LOGGER.debug("Handling reset defaults action");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling reset defaults action");
             // TODO: Implement actual reset logic
             screen.sendChatMessage("Settings reset to defaults!");
         } catch (Exception e) {
@@ -160,7 +161,7 @@ public class ButtonActionCoordinator {
      */
     public void handleManagePlatforms() {
         try {
-            LOGGER.debug("Handling manage platforms action");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling manage platforms action");
             // Save current tab before opening platform management screen
             if (screen instanceof com.yourdomain.businesscraft.ui.screens.BaseTownScreen) {
                 ((com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?>) screen).saveActiveTab();
@@ -180,7 +181,7 @@ public class ButtonActionCoordinator {
      * @param action The action identifier
      */
     public void handleGenericAction(String action) {
-        LOGGER.debug("Handling generic action: {}", action);
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling generic action: {}", action);
         screen.sendChatMessage("Action: " + action);
     }
     
@@ -217,7 +218,7 @@ public class ButtonActionCoordinator {
         );
         
         // Store reference to return to correct tab (this needs platform screen modification)
-        LOGGER.debug("Platform management screen opened from tab: {}", originalTab);
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Platform management screen opened from tab: {}", originalTab);
         LOGGER.warn("Platform management should be converted to modal to stay within main UI");
         
         Minecraft.getInstance().setScreen(platformScreen);
@@ -283,7 +284,7 @@ public class ButtonActionCoordinator {
                 }
                 
                 screen.getTabPanel().setActiveTab(tabToActivate);
-                LOGGER.debug("Returned to tab: {}", tabToActivate);
+                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Returned to tab: {}", tabToActivate);
             }
         } catch (Exception e) {
             LOGGER.warn("Failed to return to tab: {}", targetTab, e);
@@ -312,7 +313,7 @@ public class ButtonActionCoordinator {
             // Refresh cache data
             if (screen.getCacheManager() != null) {
                 screen.getCacheManager().refreshCachedValues();
-                LOGGER.debug("Screen data refreshed after modal close");
+                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Screen data refreshed after modal close");
             }
             
             // Force refresh specific tabs that might have changed
@@ -332,7 +333,7 @@ public class ButtonActionCoordinator {
             if (popupManager != null) {
                 popupManager.cleanup();
             }
-            LOGGER.debug("ButtonActionCoordinator cleanup completed");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "ButtonActionCoordinator cleanup completed");
         } catch (Exception e) {
             LOGGER.warn("Error during ButtonActionCoordinator cleanup", e);
         }

@@ -3,6 +3,7 @@ package com.yourdomain.businesscraft.town.utils;
 import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Utility class for tracking tourist allocations between towns
@@ -27,7 +28,7 @@ public class TouristAllocationTracker {
             id -> new DestinationTracker());
         
         tracker.recordSpawn(destinationTownId);
-        LOGGER.debug("Recorded tourist spawn from {} to {}, current allocation: {}", 
+        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Recorded tourist spawn from {} to {}, current allocation: {}", 
             originTownId, destinationTownId, tracker.getAllocationStats());
     }
     
@@ -43,7 +44,7 @@ public class TouristAllocationTracker {
         DestinationTracker tracker = originTrackers.get(originTownId);
         if (tracker != null) {
             tracker.recordRemoval(destinationTownId);
-            LOGGER.debug("Recorded tourist removal from {} to {}, current allocation: {}", 
+            DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Recorded tourist removal from {} to {}, current allocation: {}", 
                 originTownId, destinationTownId, tracker.getAllocationStats());
         }
     }
