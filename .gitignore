@@ -4,3 +4,6 @@
 /build
 /run
 /TS-RTS-master
+/.claude
+/.cursor
+.cursorignore

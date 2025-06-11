@@ -19,7 +19,7 @@ public class ConfigLoader {
     // Vehicle-related config
     public static boolean enableCreateTrains = true;
     public static boolean enableMinecarts = true;
-    public static int vehicleSearchRadius = 10;
+    public static int vehicleSearchRadius = 3;
     public static double minecartStopThreshold = 0.001;
     
     // Town-related config
@@ -90,7 +90,7 @@ public class ConfigLoader {
             // Vehicle settings
             enableCreateTrains = Boolean.parseBoolean(props.getProperty("enableCreateTrains", "true"));
             enableMinecarts = Boolean.parseBoolean(props.getProperty("enableMinecarts", "true"));
-            vehicleSearchRadius = Integer.parseInt(props.getProperty("vehicleSearchRadius", "10"));
+            vehicleSearchRadius = Integer.parseInt(props.getProperty("vehicleSearchRadius", "3"));
             minecartStopThreshold = Double.parseDouble(props.getProperty("minecartStopThreshold", "0.001"));
             
             // Town settings

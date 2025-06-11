@@ -107,10 +107,11 @@ public class TownScreenRenderManager {
             if (cacheManager != null) {
                 cacheManager.invalidateCache();
                 cacheManager.refreshCachedValues();
-                cacheProvider.setCurrentSearchRadius(cacheManager.getLocalCachedSearchRadius());
+                // DON'T override search radius during refresh - it may have been manually changed
+                // cacheProvider.setCurrentSearchRadius(cacheManager.getLocalCachedSearchRadius());
             } else {
-                // Fallback to direct menu updates if cache isn't available
-                cacheProvider.setCurrentSearchRadius(cacheProvider.getSearchRadiusFromMenu());
+                // DON'T override search radius during refresh - it may have been manually changed
+                // cacheProvider.setCurrentSearchRadius(cacheProvider.getSearchRadiusFromMenu());
             }
             
             // Update the active tab if exists

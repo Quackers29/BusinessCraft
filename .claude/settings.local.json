@@ -12,7 +12,9 @@
       "Bash(awk:*)",
       "Bash(sed:*)",
       "Bash(echo:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(rg:*)",
+      "Bash(printf:*)"
     ],
     "deny": []
   }

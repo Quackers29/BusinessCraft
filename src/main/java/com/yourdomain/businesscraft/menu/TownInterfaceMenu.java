@@ -62,7 +62,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     // Settings
     private boolean autoCollectEnabled = false;
     private boolean taxesEnabled = false;
-    // Local cache for client-side
+    // Local cache for client-side  
     private int clientSearchRadius = 10;
 
     /**
@@ -73,8 +73,13 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         this.pos = pos;
         this.level = inv.player.level();
         
-        // Initialize container data with 4 slots
+        // Initialize container data with 4 slots and sensible defaults
         this.data = new SimpleContainerData(4);
+        // Set default values to avoid returning 0 when data isn't synced yet
+        this.data.set(DATA_SEARCH_RADIUS, 10); // Default search radius
+        this.data.set(DATA_POPULATION, 5); // Default population
+        this.data.set(DATA_TOURIST_COUNT, 0); // Default tourist count
+        this.data.set(DATA_MAX_TOURISTS, 5); // Default max tourists
         addDataSlots(this.data);
         
         // Get town from TownManager
@@ -284,28 +289,38 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      * @return the search radius value
      */
     public int getSearchRadius() {
-        // First try to get from our ContainerData which is synced between client and server
-        int radiusFromData = data.get(DATA_SEARCH_RADIUS);
-        if (radiusFromData > 0) {
-            // Update our client cache for immediate UI feedback
-            this.clientSearchRadius = radiusFromData;
-            return radiusFromData;
-        }
-        
-        // If data isn't available yet, try to get from town object if available
-        if (town != null) {
-            return town.getSearchRadius();
-        }
-        
-        // Try to get search radius from town entity
+        // Try to get search radius from town entity first (most up-to-date)
         if (level != null) {
             if (level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
-                // Get the value directly from the entity
-                return townEntity.getSearchRadius();
+                int entityRadius = townEntity.getSearchRadius();
+                // Update cache for consistency
+                this.clientSearchRadius = entityRadius;
+                data.set(DATA_SEARCH_RADIUS, entityRadius);
+                LOGGER.debug("getSearchRadius() returning entity value: {}", entityRadius);
+                return entityRadius;
             }
         }
         
-        // Last resort - return our client-side cached value
+        // If block entity isn't available, try town object
+        if (town != null) {
+            int townRadius = town.getSearchRadius();
+            // Update cache for consistency
+            this.clientSearchRadius = townRadius;
+            data.set(DATA_SEARCH_RADIUS, townRadius);
+            LOGGER.debug("getSearchRadius() returning town value: {}", townRadius);
+            return townRadius;
+        }
+        
+        // Then try our ContainerData as fallback
+        int radiusFromData = data.get(DATA_SEARCH_RADIUS);
+        if (radiusFromData > 0 && radiusFromData <= 100) {
+            this.clientSearchRadius = radiusFromData;
+            LOGGER.debug("getSearchRadius() returning data value: {}", radiusFromData);
+            return radiusFromData;
+        }
+        
+        // Last resort - return cached value or default
+        LOGGER.debug("getSearchRadius() returning cached value: {}", clientSearchRadius);
         return clientSearchRadius;
     }
     
@@ -457,16 +472,22 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
 
     private void updateDataSlots() {
         if (town != null) {
+            int townSearchRadius = town.getSearchRadius();
+            LOGGER.debug("updateDataSlots() setting town search radius: {}", townSearchRadius);
             data.set(DATA_POPULATION, town.getPopulation());
             data.set(DATA_TOURIST_COUNT, town.getTouristCount());
             data.set(DATA_MAX_TOURISTS, town.getMaxTourists());
-            data.set(DATA_SEARCH_RADIUS, town.getSearchRadius());
+            data.set(DATA_SEARCH_RADIUS, townSearchRadius);
         } else if (level != null && level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
             // Try to get values from TownBlockEntity if town is not available
+            int entitySearchRadius = townEntity.getSearchRadius();
+            LOGGER.debug("updateDataSlots() setting entity search radius: {}", entitySearchRadius);
             data.set(DATA_POPULATION, townEntity.getPopulation());
             data.set(DATA_TOURIST_COUNT, 0); // Default to 0 tourists
             data.set(DATA_MAX_TOURISTS, 5);  // Default max tourists
-            data.set(DATA_SEARCH_RADIUS, townEntity.getSearchRadius());
+            data.set(DATA_SEARCH_RADIUS, entitySearchRadius);
+        } else {
+            LOGGER.debug("updateDataSlots() no data source available");
         }
     }
 
@@ -476,22 +497,26 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      * the UI displays up-to-date population and tourist values.
      */
     public void refreshDataSlots() {
-        // Re-fetch the town data if needed
-        if (town == null && level instanceof ServerLevel serverLevel) {
+        // Force re-fetch the town data
+        if (level instanceof ServerLevel serverLevel && townId != null) {
             TownManager townManager = TownManager.get(serverLevel);
-            
-            // Try to get town from block entity
-            if (level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
-                UUID entityTownId = townEntity.getTownId();
-                if (entityTownId != null) {
-                    this.town = townManager.getTown(entityTownId);
-                    this.townId = entityTownId;
-                }
-            }
+            this.town = townManager.getTown(townId);
         }
         
         // Update the data slots with current values
         updateDataSlots();
+    }
+    
+    /**
+     * Forces a refresh of the search radius data specifically.
+     * This should be called when the search radius is updated on the server.
+     */
+    public void refreshSearchRadius() {
+        if (town != null) {
+            data.set(DATA_SEARCH_RADIUS, town.getSearchRadius());
+        } else if (level != null && level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+            data.set(DATA_SEARCH_RADIUS, townEntity.getSearchRadius());
+        }
     }
 
     /**
