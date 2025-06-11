@@ -30,6 +30,7 @@ import java.util.UUID;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * A modal inventory screen that allows for inventory-based interactions
@@ -778,7 +779,7 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                 BlockPos townPos = storageMenu.getTownBlockPos();
                 if (townPos != null) {
                     // First, request personal storage data from the server
-                    LOGGER.debug("Requesting personal storage data for player {} at position {}", playerId, townPos);
+                    DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Requesting personal storage data for player {} at position {}", playerId, townPos);
                     ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
                     
                     // Then try to fetch from local cache as a fallback
@@ -789,7 +790,7 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                         
                         // Update with personal storage items
                         storageMenu.updatePersonalStorageItems(personalItems);
-                        LOGGER.debug("Updated personal storage display with {} items from local cache", personalItems.size());
+                        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Updated personal storage display with {} items from local cache", personalItems.size());
                     } else {
                         LOGGER.warn("Could not access TownBlockMenu for personal storage");
                     }
@@ -978,7 +979,7 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                         ItemStack itemToAdd = slotAfter.copy();
                         itemToAdd.setCount(itemsAdded);
                         
-                        LOGGER.debug("Adding {} items to storage at slot {}", itemsAdded, slotId);
+                        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Adding {} items to storage at slot {}", itemsAdded, slotId);
                         
                         // Process the storage add operation based on mode
                         if (isPersonalMode) {

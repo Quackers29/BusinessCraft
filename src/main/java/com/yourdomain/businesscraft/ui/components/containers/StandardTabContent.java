@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Standardized tab content component that provides unified rendering patterns
@@ -173,7 +174,7 @@ public class StandardTabContent extends BCComponent {
             
             // Create the grid only once to preserve scroll state
             if (grid == null) {
-                LOGGER.debug("Creating new UIGridBuilder for item list with {} items", items.size());
+                DebugConfig.debug(LOGGER, DebugConfig.UI_STANDARD_TAB_CONTENT, "Creating new UIGridBuilder for item list with {} items", items.size());
                 grid = UIGridBuilder.create(x, y, width, height, 2)
                     .withBackgroundColor(BACKGROUND_COLOR)
                     .withBorderColor(BORDER_COLOR)
@@ -184,7 +185,7 @@ public class StandardTabContent extends BCComponent {
                 
                 // This method automatically enables scrolling if needed
                 grid.withItemQuantityPairs(items, TEXT_HIGHLIGHT);
-                LOGGER.debug("Grid created with scrolling enabled: {}", items.size() > 4);
+                DebugConfig.debug(LOGGER, DebugConfig.UI_STANDARD_TAB_CONTENT, "Grid created with scrolling enabled: {}", items.size() > 4);
             } else {
                 // Update existing grid with new data while preserving scroll state
                 grid.updateItemQuantityPairs(items, TEXT_HIGHLIGHT);
@@ -223,7 +224,7 @@ public class StandardTabContent extends BCComponent {
             
             // Create the grid only once to preserve scroll state
             if (grid == null) {
-                LOGGER.debug("Creating new UIGridBuilder for population with {} citizens", names.length);
+                DebugConfig.debug(LOGGER, DebugConfig.UI_STANDARD_TAB_CONTENT, "Creating new UIGridBuilder for population with {} citizens", names.length);
                 grid = UIGridBuilder.create(x, y, width, height, 3)
                     .withRowHeight(16) // Match PopulationTab's itemHeight
                     .withMargins(8, 5) // Match PopulationTab's padding and verticalPadding
@@ -233,7 +234,7 @@ public class StandardTabContent extends BCComponent {
                     .drawBorder(true)
                     .withColumnData(columnData);
                 
-                LOGGER.debug("Population grid created with scrolling enabled: {}", names.length > 4);
+                DebugConfig.debug(LOGGER, DebugConfig.UI_STANDARD_TAB_CONTENT, "Population grid created with scrolling enabled: {}", names.length > 4);
             } else {
                 // Update existing grid with new data while preserving scroll state
                 grid.updateColumnData(columnData);

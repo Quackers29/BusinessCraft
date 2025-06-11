@@ -165,7 +165,7 @@ public class VisitorProcessingHelper {
                 double distance = Math.sqrt(villager.blockPosition().distSqr(townBlockPos));
                 
                 // Add detailed distance logging
-                LOGGER.info("TOURIST DISTANCE - Town: {}, From: {}, Tourist position: {}, Town position: {}, Calculated distance: {}", 
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "TOURIST DISTANCE - Town: {}, From: {}, Tourist position: {}, Town position: {}, Calculated distance: {}", 
                     townId, touristInfo.originTownName, 
                     villager.blockPosition(), townBlockPos, distance);
                 
@@ -174,7 +174,7 @@ public class VisitorProcessingHelper {
                 
                 // Verify the distance was stored
                 double storedDistance = visitBuffer.getAverageDistance(UUID.fromString(touristInfo.originTownId));
-                LOGGER.info("TOURIST DISTANCE - After storing: townId: {}, storedDistance: {}", 
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "TOURIST DISTANCE - After storing: townId: {}, storedDistance: {}", 
                     touristInfo.originTownId, storedDistance);
 
                 // Find the origin town and decrement its tourist count
@@ -264,17 +264,17 @@ public class VisitorProcessingHelper {
         double averageDistance = visitBuffer.getAverageDistance(record.getOriginTownId());
         
         // Add detailed distance debugging
-        LOGGER.info("PAYMENT CALCULATION - VisitBuffer state: {}", visitBuffer.toString());
-        LOGGER.info("PAYMENT CALCULATION - Processing visitor from townId: {}, Visitors stored in buffer: {}, Average distance: {}", 
+        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "PAYMENT CALCULATION - VisitBuffer state: {}", visitBuffer.toString());
+        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "PAYMENT CALCULATION - Processing visitor from townId: {}, Visitors stored in buffer: {}, Average distance: {}", 
             record.getOriginTownId(), visitBuffer.getVisitorCount(), averageDistance);
             
         if (averageDistance > 0) {
             // Calculate emeralds based on distance traveled and meters per emerald rate
-            LOGGER.info("Tourist payment calculation: averageDistance={}, metersPerEmerald={}, touristCount={}", 
+            DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "Tourist payment calculation: averageDistance={}, metersPerEmerald={}, touristCount={}", 
                 averageDistance, ConfigLoader.metersPerEmerald, record.getCount());
             
             int payment = (int) Math.max(1, (averageDistance / ConfigLoader.metersPerEmerald) * record.getCount());
-            LOGGER.info("Calculated payment: {} emeralds (distance={}, rate=1 per {} meters)", 
+            DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "Calculated payment: {} emeralds (distance={}, rate=1 per {} meters)", 
                 payment, averageDistance, ConfigLoader.metersPerEmerald);
             
             // Clear the saved distance after using it
@@ -292,24 +292,24 @@ public class VisitorProcessingHelper {
      */
     private void addPaymentToTown(Town town, int payment) {
         // Add more detailed logging
-        LOGGER.info("TOURIST PAYMENT - Attempting to add {} emeralds to {} communal storage",
+        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "TOURIST PAYMENT - Attempting to add {} emeralds to {} communal storage",
             payment, town.getName());
             
         // Print current storage before update
         Map<Item, Integer> beforeItems = town.getAllCommunalStorageItems();
-        LOGGER.info("BEFORE payment - Communal storage for {}: {}", town.getName(), 
+        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "BEFORE payment - Communal storage for {}: {}", town.getName(), 
             beforeItems.entrySet().stream()
                 .map(e -> e.getKey().getDescription().getString() + ": " + e.getValue())
                 .collect(Collectors.joining(", ")));
         
         boolean success = town.addToCommunalStorage(Items.EMERALD, payment);
         
-        LOGGER.info("TOURIST PAYMENT - Added {} emeralds to {} communal storage - success: {}", 
+        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "TOURIST PAYMENT - Added {} emeralds to {} communal storage - success: {}", 
             payment, town.getName(), success);
             
         // Print the current communal storage content
         Map<Item, Integer> communalItems = town.getAllCommunalStorageItems();
-        LOGGER.info("AFTER payment - Communal storage for {}: {}", town.getName(), 
+        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "AFTER payment - Communal storage for {}: {}", town.getName(), 
             communalItems.entrySet().stream()
                 .map(e -> e.getKey().getDescription().getString() + ": " + e.getValue())
                 .collect(Collectors.joining(", ")));

@@ -10,6 +10,7 @@ import java.util.Collections;
 import com.yourdomain.businesscraft.data.TownSavedData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 import java.util.HashMap;
 import net.minecraft.world.item.Item;
 import com.yourdomain.businesscraft.config.ConfigLoader;
@@ -31,7 +32,7 @@ public class TownManager {
             TownSavedData::create,
             TownSavedData.NAME
         );
-        LOGGER.info("TownManager initialized for level: {}", level.dimension().location());
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "TownManager initialized for level: {}", level.dimension().location());
     }
 
     public static TownManager get(ServerLevel level) {
@@ -43,7 +44,7 @@ public class TownManager {
      * Call this when server is stopping or restarting
      */
     public static void clearInstances() {
-        LOGGER.info("Clearing {} TownManager instances", INSTANCES.size());
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Clearing {} TownManager instances", INSTANCES.size());
         INSTANCES.clear();
     }
 
@@ -55,7 +56,7 @@ public class TownManager {
         }
         
         UUID townId = UUID.randomUUID();
-        LOGGER.info("Registering new town. ID: {}, Name: {}, Position: {}", townId, name, pos);
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Registering new town. ID: {}, Name: {}, Position: {}", townId, name, pos);
         savedData.getTowns().put(townId, new Town(townId, pos, name));
         savedData.setDirty();
         return townId;
@@ -75,7 +76,7 @@ public class TownManager {
             double distanceSquared = pos.distSqr(townPos);
             
             if (distanceSquared < minDistanceSquared) {
-                LOGGER.info("Town placement check failed: distance {} < min required {}", 
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Town placement check failed: distance {} < min required {}", 
                     Math.sqrt(distanceSquared), ConfigLoader.minDistanceBetweenTowns);
                 return false;
             }
@@ -157,7 +158,7 @@ public class TownManager {
     
     public void onServerStopping() {
         if (savedData != null) {
-            LOGGER.info("Server stopping, marking {} towns as dirty", savedData.getTowns().size());
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Server stopping, marking {} towns as dirty", savedData.getTowns().size());
             savedData.setDirty();
         }
     }

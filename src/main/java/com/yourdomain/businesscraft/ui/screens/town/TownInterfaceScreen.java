@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import net.minecraft.world.item.Item;
 import com.yourdomain.businesscraft.ui.screens.platform.PlatformManagementScreen;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * The Town Interface Screen showcases the BusinessCraft UI system capabilities.
@@ -39,7 +40,7 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
         // Initialize cached values from the menu
         this.currentSearchRadius = menu.getSearchRadius();
         
-        LOGGER.debug("TownInterfaceScreen created with radius: {}", currentSearchRadius);
+        DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "TownInterfaceScreen created with radius: {}", currentSearchRadius);
     }
     
     @Override
@@ -53,7 +54,7 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
             this.eventHandler = new TownScreenEventHandler(this, this, this.buttonManager);
             this.renderManager = new TownScreenRenderManager(this, this, this);
             
-            LOGGER.debug("TownInterfaceScreen managers initialized successfully");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "TownInterfaceScreen managers initialized successfully");
         } catch (Exception e) {
             LOGGER.error("Failed to initialize TownInterfaceScreen managers", e);
             throw new RuntimeException("Screen initialization failed", e);
@@ -74,7 +75,7 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
             if (dependencies != null) {
                 dependencies.cleanup();
                 dependencies = null;
-                LOGGER.debug("Dependencies cleaned up successfully");
+                DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "Dependencies cleaned up successfully");
             }
             
             // Send a packet to register the player exit UI to show platform indicators
@@ -82,7 +83,7 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
             if (blockPos != null) {
                 // Send a packet to the server to register player exit UI
                 ModMessages.sendToServer(new PlayerExitUIPacket(blockPos));
-                LOGGER.debug("Player exit UI packet sent");
+                DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "Player exit UI packet sent");
             }
         } catch (Exception e) {
             LOGGER.warn("Error during additional cleanup", e);
@@ -224,7 +225,7 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     public void handleRadiusChange(int mouseButton) {
         if (dependencies == null) {
             LOGGER.warn("Dependencies not initialized, cannot handle radius change");
-            sendChatMessage("Unable to change search radius");
+            // Chat message removed
             return;
         }
         
@@ -237,17 +238,16 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
             // Update our cached value
             currentSearchRadius = result.getNewRadius();
             
-            // Provide user feedback
-            sendChatMessage(result.getFeedbackMessage());
+            // User feedback removed - no chat message for radius changes
             
             // Play a click sound for feedback
             playButtonClickSound();
             
-            LOGGER.debug("Search radius changed to: {}", result.getNewRadius());
+            DebugConfig.debug(LOGGER, DebugConfig.SEARCH_RADIUS_MANAGER, "Search radius changed to: {}", result.getNewRadius());
             
         } catch (Exception e) {
             LOGGER.error("Error handling radius change", e);
-            sendChatMessage("Error updating search radius");
+            // Error chat message removed
         }
     }
     

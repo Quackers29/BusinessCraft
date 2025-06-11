@@ -21,6 +21,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 import java.util.function.Consumer;
 
 /**
@@ -92,7 +93,7 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
         // Initialize specific managers for subclasses
         initializeSpecificManagers();
         
-        LOGGER.debug("BaseTownScreen initialized: {}", this.getClass().getSimpleName());
+        DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "BaseTownScreen initialized: {}", this.getClass().getSimpleName());
     }
     
     /**
@@ -152,7 +153,7 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
     public void saveActiveTab() {
         if (tabPanel != null && tabPanel.getActiveTabId() != null) {
             lastActiveTab = tabPanel.getActiveTabId();
-            LOGGER.debug("Saved active tab: {}", lastActiveTab);
+            DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "Saved active tab: {}", lastActiveTab);
         }
     }
     
@@ -162,7 +163,7 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
     private void restoreActiveTab() {
         if (tabPanel != null && lastActiveTab != null) {
             tabPanel.setActiveTab(lastActiveTab);
-            LOGGER.debug("Restored active tab: {}", lastActiveTab);
+            DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "Restored active tab: {}", lastActiveTab);
         }
     }
     
@@ -395,7 +396,7 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
      * Performs safe cleanup of all resources.
      */
     private void performSafeCleanup() {
-        LOGGER.debug("Starting cleanup for {}", this.getClass().getSimpleName());
+        DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "Starting cleanup for {}", this.getClass().getSimpleName());
         
         // Clean up managers
         cleanupManagers();
@@ -406,7 +407,7 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
         // Allow subclasses to perform additional cleanup
         performAdditionalCleanup();
         
-        LOGGER.debug("Cleanup completed for {}", this.getClass().getSimpleName());
+        DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "Cleanup completed for {}", this.getClass().getSimpleName());
     }
     
     /**
@@ -417,10 +418,10 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
         // Note: RenderManager and EventHandler don't currently have cleanup methods
         // but this provides a place to add them in the future if needed
         safeCleanup(renderManager, "RenderManager", mgr -> {
-            LOGGER.debug("RenderManager cleanup placeholder");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "RenderManager cleanup placeholder");
         });
         safeCleanup(eventHandler, "EventHandler", mgr -> {
-            LOGGER.debug("EventHandler cleanup placeholder");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "EventHandler cleanup placeholder");
         });
     }
     
@@ -429,12 +430,12 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
      */
     private void cleanupUIComponents() {
         if (activeModal != null) {
-            LOGGER.debug("Closing active modal");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "Closing active modal");
             activeModal = null;
         }
         
         if (activePopup != null) {
-            LOGGER.debug("Closing active popup");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "Closing active popup");
             activePopup = null;
         }
     }
@@ -450,7 +451,7 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
         if (resource != null) {
             try {
                 cleanupAction.accept(resource);
-                LOGGER.debug("{} cleanup completed", resourceName);
+                DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "{} cleanup completed", resourceName);
             } catch (Exception e) {
                 LOGGER.warn("Failed to cleanup {}: {}", resourceName, e.getMessage());
             }

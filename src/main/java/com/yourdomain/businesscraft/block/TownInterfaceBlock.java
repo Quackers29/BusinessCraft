@@ -38,6 +38,7 @@ import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 import java.util.Random;
 import java.util.UUID;
 import java.util.List;
@@ -165,7 +166,7 @@ public class TownInterfaceBlock extends BaseEntityBlock {
         super.setPlacedBy(level, pos, state, placer, stack);
         
         if (!level.isClientSide()) {
-            LOGGER.info("Setting up town interface block at position: {}", pos);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Setting up town interface block at position: {}", pos);
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof TownBlockEntity townBlock) {
                 if (level instanceof ServerLevel serverLevel) {
@@ -188,9 +189,9 @@ public class TownInterfaceBlock extends BaseEntityBlock {
                     }
                     
                     String newTownName = getRandomTownName();
-                    LOGGER.info("Generated town name: {}", newTownName);
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Generated town name: {}", newTownName);
                     UUID townId = townManager.registerTown(pos, newTownName);
-                    LOGGER.info("Registered new town with ID: {}", townId);
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Registered new town with ID: {}", townId);
                     townBlock.setTownId(townId);
                     
                     // Create default platform layout
@@ -285,7 +286,7 @@ public class TownInterfaceBlock extends BaseEntityBlock {
         platform.setName("Platform 1");
         platform.setEnabled(true);
         
-        LOGGER.info("Created default platform for town at {} with start {} and end {}", 
+        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Created default platform for town at {} with start {} and end {}", 
             townPos, platformStart, platformEnd);
     }
 

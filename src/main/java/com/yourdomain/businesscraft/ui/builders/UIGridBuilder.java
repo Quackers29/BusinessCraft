@@ -10,6 +10,7 @@ import net.minecraft.client.gui.Font;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Utility class for creating grid-based UI layouts with various component types.
@@ -248,7 +249,7 @@ public class UIGridBuilder {
         
         // Debug if the offset changed
         if (oldOffset != verticalScrollOffset) {
-            LOGGER.debug("Grid vertical offset changed: {} -> {}", oldOffset, verticalScrollOffset);
+            DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, "Grid vertical offset changed: {} -> {}", oldOffset, verticalScrollOffset);
         }
     }
     
@@ -1032,7 +1033,7 @@ public class UIGridBuilder {
                 verticalScrollOffset = maxVerticalScrollOffset;
             }
             
-            LOGGER.debug("UIGridBuilder scrolling: delta={}, offset={}", delta, verticalScrollOffset);
+            DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, "UIGridBuilder scrolling: delta={}, offset={}", delta, verticalScrollOffset);
             return true;
         }
         
@@ -1380,7 +1381,7 @@ public class UIGridBuilder {
         // Use Math.max to ensure at least 1 row is visible
         int calculatedVisibleRows = Math.max(4, availableHeight / (effectiveRowHeight + this.verticalSpacing));
         
-        LOGGER.debug("Row calculation: availableHeight={}, effectiveRowHeight={}, spacing={}, calculatedRows={}", 
+        DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, "Row calculation: availableHeight={}, effectiveRowHeight={}, spacing={}, calculatedRows={}", 
                     availableHeight, effectiveRowHeight, this.verticalSpacing, calculatedVisibleRows);
         
         // Force vertical scrolling if we have more than 4 rows
@@ -1483,7 +1484,7 @@ public class UIGridBuilder {
             element.showQuantity = true; // Always show quantity
         }
         
-        LOGGER.debug("Updated grid with {} items, preserved scroll offset: {}", sortedEntries.size(), this.verticalScrollOffset);
+        DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, "Updated grid with {} items, preserved scroll offset: {}", sortedEntries.size(), this.verticalScrollOffset);
         
         return this;
     }

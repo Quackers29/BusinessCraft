@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Resources tab implementation for the Town Interface.
@@ -54,7 +55,7 @@ public class ResourcesTab extends BaseTownTab {
         contentComponent.withItemListData(() -> {
                 // Get resources from the parent screen using the public getter
                 Map<Item, Integer> resources = parentScreen.getCachedResources();
-            LOGGER.debug("Resources Tab: Providing {} items to content component", resources.size());
+            DebugConfig.debug(LOGGER, DebugConfig.UI_RESOURCES_TAB, "Resources Tab: Providing {} items to content component", resources.size());
                 
             // Check for resource changes and trigger refresh if needed
             checkForResourceChanges(resources);
@@ -86,7 +87,7 @@ public class ResourcesTab extends BaseTownTab {
             // Check if resources have changed
             Map<Item, Integer> currentResources = parentScreen.getCachedResources();
             if (hasResourcesChanged(currentResources)) {
-                LOGGER.debug("Resources changed detected, refreshing content component");
+                DebugConfig.debug(LOGGER, DebugConfig.UI_RESOURCES_TAB, "Resources changed detected, refreshing content component");
                 
                 // Force refresh the content component
                 if (contentComponent != null) {
@@ -137,7 +138,7 @@ public class ResourcesTab extends BaseTownTab {
         if (hasResourcesChanged(currentResources)) {
             // Update our tracking immediately
             lastKnownResources = Map.copyOf(currentResources);
-            LOGGER.debug("Immediate resource change detected during data supply");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_RESOURCES_TAB, "Immediate resource change detected during data supply");
         }
     }
     
@@ -145,7 +146,7 @@ public class ResourcesTab extends BaseTownTab {
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         // Forward scroll events to the standardized content component
         if (contentComponent != null) {
-            LOGGER.debug("ResourcesTab forwarding scroll: {}", delta);
+            DebugConfig.debug(LOGGER, DebugConfig.UI_RESOURCES_TAB, "ResourcesTab forwarding scroll: {}", delta);
             return contentComponent.mouseScrolled(mouseX, mouseY, delta);
         }
         return false;
@@ -156,7 +157,7 @@ public class ResourcesTab extends BaseTownTab {
      * Can be called externally when resource changes are detected
      */
     public void forceRefresh() {
-        LOGGER.debug("Force refresh requested for ResourcesTab");
+        DebugConfig.debug(LOGGER, DebugConfig.UI_RESOURCES_TAB, "Force refresh requested for ResourcesTab");
         
         // Force cache refresh
         if (parentScreen.getCacheManager() != null) {
