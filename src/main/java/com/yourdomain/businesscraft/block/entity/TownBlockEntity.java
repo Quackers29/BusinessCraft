@@ -100,6 +100,7 @@ import com.yourdomain.businesscraft.town.data.VisitorProcessingHelper;
 import com.yourdomain.businesscraft.town.data.ClientSyncHelper;
 import com.yourdomain.businesscraft.town.data.NBTDataHelper;
 import com.yourdomain.businesscraft.town.data.ContainerDataHelper;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
@@ -243,7 +244,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         // Set up platform manager callback
         platformManager.setChangeCallback(this::setChanged);
         
-        LOGGER.debug("TownBlockEntity created at position: {}", pos);
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "TownBlockEntity created at position: {}", pos);
     }
 
     @Override
@@ -291,7 +292,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         if (!level.isClientSide()) {
             updateFromTownProvider();
         }
-        LOGGER.debug("Saving TownBlockEntity with searchRadius: {}", searchRadius);
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Saving TownBlockEntity with searchRadius: {}", searchRadius);
         nbtDataHelper.saveToNBT(tag, itemHandler, townId, name, pathStart, pathEnd, platformManager, searchRadius);
     }
 
@@ -310,16 +311,16 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         this.touristSpawningEnabled = result.touristSpawningEnabled;
         
         // Apply search radius if loaded, otherwise use default
-        LOGGER.debug("Before NBT load: searchRadius={}", this.searchRadius);
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Before NBT load: searchRadius={}", this.searchRadius);
         if (result.hasSearchRadius()) {
             this.searchRadius = result.searchRadius;
-            LOGGER.debug("Loaded searchRadius from NBT: {} -> {}", result.searchRadius, this.searchRadius);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Loaded searchRadius from NBT: {} -> {}", result.searchRadius, this.searchRadius);
         } else {
             this.searchRadius = DEFAULT_SEARCH_RADIUS;
-            LOGGER.debug("Using default searchRadius: {} -> {}", DEFAULT_SEARCH_RADIUS, this.searchRadius);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Using default searchRadius: {} -> {}", DEFAULT_SEARCH_RADIUS, this.searchRadius);
         }
         
-        LOGGER.debug("Loaded NBT data: {}", result.getSummary());
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Loaded NBT data: {}", result.getSummary());
     }
 
     @Override
@@ -412,7 +413,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 if (town != null) {
                     // Always update our local cached name with the latest town name
                     if (!town.getName().equals(name)) {
-                        LOGGER.debug("[DEBUG] Updating cached name from {} to {}", name, town.getName());
+                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Updating cached name from {} to {}", name, town.getName());
                         name = town.getName();
                     }
                     return town.getName();
@@ -517,7 +518,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         if (tag.contains("name")) {
             String newName = tag.getString("name");
             if (!newName.equals(name)) {
-                LOGGER.debug("Updating town name from {} to {}", name, newName);
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Updating town name from {} to {}", name, newName);
                 name = newName;
             }
         }
@@ -526,7 +527,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         if (tag.contains("searchRadius")) {
             int newSearchRadius = tag.getInt("searchRadius");
             if (newSearchRadius != this.searchRadius) {
-                LOGGER.debug("Client updating search radius from {} to {}", this.searchRadius, newSearchRadius);
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Client updating search radius from {} to {}", this.searchRadius, newSearchRadius);
                 this.searchRadius = newSearchRadius;
             }
         }
@@ -665,7 +666,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
         int mounted = touristVehicleManager.mountTouristsToVehicles(level, pathStart, pathEnd, searchRadius, townId);
         if (mounted > 0) {
-            LOGGER.debug("Mounted {} tourists to vehicles for town {}", mounted, name);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Mounted {} tourists to vehicles for town {}", mounted, name);
         }
     }
 
@@ -676,14 +677,14 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public int getSearchRadius() {
         // Use default if not yet initialized from NBT
         int result = searchRadius > 0 ? searchRadius : DEFAULT_SEARCH_RADIUS;
-        LOGGER.debug("getSearchRadius() field={}, result={}", searchRadius, result);
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "getSearchRadius() field={}, result={}", searchRadius, result);
         return result;
     }
 
     public void setSearchRadius(int radius) {
         int oldValue = this.searchRadius;
         this.searchRadius = Math.max(1, Math.min(radius, 100)); // Limit between 1-100 blocks
-        LOGGER.debug("setSearchRadius() {} -> {}", oldValue, this.searchRadius);
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "setSearchRadius() {} -> {}", oldValue, this.searchRadius);
         
         // Also update in the Town object
         if (townId != null && level instanceof ServerLevel sLevel) {
@@ -824,7 +825,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         clientSyncHelper.clearAll();
         // Clear platform indicators
         platformIndicatorSpawnTimes.clear();
-        LOGGER.debug("Cleared visitor position tracking, client caches, and platform indicators on block removal");
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Cleared visitor position tracking, client caches, and platform indicators on block removal");
     }
 
     /**

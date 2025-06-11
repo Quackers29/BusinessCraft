@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Menu container for the Town Interface block.
@@ -92,26 +93,26 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                 if (t.getPosition().equals(pos)) {
                     this.town = t;
                     this.townId = t.getId();
-                    LOGGER.debug("Found town with ID {} at position {}", this.townId, pos);
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "Found town with ID {} at position {}", this.townId, pos);
                     break;
                 }
             }
             
             // If no town found, try to get from block entity
             if (this.town == null) {
-                LOGGER.debug("No town found exactly at position {}, checking block entity", pos);
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "No town found exactly at position {}, checking block entity", pos);
                 if (level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
                     UUID entityTownId = townEntity.getTownId();
                     if (entityTownId != null) {
                         this.town = townManager.getTown(entityTownId);
                         this.townId = entityTownId;
-                        LOGGER.debug("Found town with ID {} from block entity", this.townId);
+                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "Found town with ID {} from block entity", this.townId);
                     }
                 }
             }
             
             if (this.town == null) {
-                LOGGER.debug("No town found at or associated with position {}", pos);
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "No town found at or associated with position {}", pos);
             } else {
                 // Initialize data values from town
                 updateDataSlots();
@@ -296,7 +297,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                 // Update cache for consistency
                 this.clientSearchRadius = entityRadius;
                 data.set(DATA_SEARCH_RADIUS, entityRadius);
-                LOGGER.debug("getSearchRadius() returning entity value: {}", entityRadius);
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "getSearchRadius() returning entity value: {}", entityRadius);
                 return entityRadius;
             }
         }
@@ -307,7 +308,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
             // Update cache for consistency
             this.clientSearchRadius = townRadius;
             data.set(DATA_SEARCH_RADIUS, townRadius);
-            LOGGER.debug("getSearchRadius() returning town value: {}", townRadius);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "getSearchRadius() returning town value: {}", townRadius);
             return townRadius;
         }
         
@@ -315,12 +316,12 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         int radiusFromData = data.get(DATA_SEARCH_RADIUS);
         if (radiusFromData > 0 && radiusFromData <= 100) {
             this.clientSearchRadius = radiusFromData;
-            LOGGER.debug("getSearchRadius() returning data value: {}", radiusFromData);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "getSearchRadius() returning data value: {}", radiusFromData);
             return radiusFromData;
         }
         
         // Last resort - return cached value or default
-        LOGGER.debug("getSearchRadius() returning cached value: {}", clientSearchRadius);
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "getSearchRadius() returning cached value: {}", clientSearchRadius);
         return clientSearchRadius;
     }
     
@@ -473,7 +474,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     private void updateDataSlots() {
         if (town != null) {
             int townSearchRadius = town.getSearchRadius();
-            LOGGER.debug("updateDataSlots() setting town search radius: {}", townSearchRadius);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "updateDataSlots() setting town search radius: {}", townSearchRadius);
             data.set(DATA_POPULATION, town.getPopulation());
             data.set(DATA_TOURIST_COUNT, town.getTouristCount());
             data.set(DATA_MAX_TOURISTS, town.getMaxTourists());
@@ -481,13 +482,13 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         } else if (level != null && level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
             // Try to get values from TownBlockEntity if town is not available
             int entitySearchRadius = townEntity.getSearchRadius();
-            LOGGER.debug("updateDataSlots() setting entity search radius: {}", entitySearchRadius);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "updateDataSlots() setting entity search radius: {}", entitySearchRadius);
             data.set(DATA_POPULATION, townEntity.getPopulation());
             data.set(DATA_TOURIST_COUNT, 0); // Default to 0 tourists
             data.set(DATA_MAX_TOURISTS, 5);  // Default max tourists
             data.set(DATA_SEARCH_RADIUS, entitySearchRadius);
         } else {
-            LOGGER.debug("updateDataSlots() no data source available");
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "updateDataSlots() no data source available");
         }
     }
 

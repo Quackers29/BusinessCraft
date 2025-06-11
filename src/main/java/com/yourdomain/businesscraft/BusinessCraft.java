@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.service.TouristVehicleManager;
 import net.minecraftforge.event.level.LevelEvent;
 import com.yourdomain.businesscraft.init.ModEntityTypes;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 @Mod(BusinessCraft.MOD_ID)
 public class BusinessCraft {
@@ -81,6 +82,10 @@ public class BusinessCraft {
 
     private void commonSetup(final FMLCommonSetupEvent event) {
         ConfigLoader.loadConfig();
+        
+        // Report active debug logging configuration
+        DebugConfig.logActiveDebuggers();
+        
         LOGGER.info("BusinessCraft initialized. Press F3+K in-game to toggle town debug overlay.");
     }
 
@@ -129,7 +134,7 @@ public class BusinessCraft {
     // Add a level unload event handler (replacing WorldEvent with LevelEvent)
     private void onLevelUnload(LevelEvent.Unload event) {
         if (event.getLevel() instanceof ServerLevel) {
-            LOGGER.debug("Clearing tracked vehicles on level unload");
+            DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "Clearing tracked vehicles on level unload");
             TOURIST_VEHICLE_MANAGER.clearTrackedVehicles();
         }
     }

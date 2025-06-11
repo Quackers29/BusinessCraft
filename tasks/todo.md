@@ -127,9 +127,7 @@ LOGGER.debug("SearchRadiusManager initialized with radius: {}", currentRadius);
 
 ### After (New Pattern):
 ```java
-if (DebugConfig.isEnabled(DebugConfig.SEARCH_RADIUS_MANAGER)) {
-    LOGGER.info("[DEBUG] SearchRadiusManager initialized with radius: {}", currentRadius);
-}
+DebugConfig.debug(LOGGER, DebugConfig.SEARCH_RADIUS_MANAGER, "SearchRadiusManager initialized with radius: {}", currentRadius);
 ```
 
 ## Expected Outcome
