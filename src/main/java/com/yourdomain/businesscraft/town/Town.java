@@ -480,7 +480,7 @@ public class Town implements ITownDataProvider {
             // Reset counter, subtracting any excess tourists
             touristsReceivedCounter -= ConfigLoader.touristsPerPopulationIncrease;
             
-            LOGGER.info("Town [{}] population increased to {} after receiving {} tourists", 
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Town [{}] population increased to {} after receiving {} tourists", 
                 name, economy.getPopulation(), ConfigLoader.touristsPerPopulationIncrease);
         }
     }
@@ -591,7 +591,7 @@ public class Town implements ITownDataProvider {
     public boolean addToCommunalStorage(Item item, int count) {
         if (count == 0) return true;
         
-        LOGGER.info("STORAGE UPDATE - Town '{}' - Attempting to add {} {} to communal storage", 
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "STORAGE UPDATE - Town '{}' - Attempting to add {} {} to communal storage", 
             this.name, count, item.getDescription().getString());
         
         // Get current amount
@@ -608,14 +608,14 @@ public class Town implements ITownDataProvider {
         // Update storage
         if (newAmount > 0) {
             communalStorage.put(item, newAmount);
-            LOGGER.info("STORAGE UPDATE - Town '{}' - Updated communal storage: {} {} (now {})", 
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "STORAGE UPDATE - Town '{}' - Updated communal storage: {} {} (now {})", 
                 this.name,
                 count > 0 ? "Added" : "Removed", 
                 Math.abs(count) + " " + item.getDescription().getString(),
                 newAmount);
                 
             // Print current storage contents
-            LOGGER.info("STORAGE UPDATE - Town '{}' - Current communal storage contents: {}", 
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "STORAGE UPDATE - Town '{}' - Current communal storage contents: {}", 
                 this.name,
                 communalStorage.entrySet().stream()
                     .map(e -> e.getKey().getDescription().getString() + ": " + e.getValue())
@@ -623,7 +623,7 @@ public class Town implements ITownDataProvider {
         } else {
             // Remove the entry if amount is zero
             communalStorage.remove(item);
-            LOGGER.info("STORAGE UPDATE - Town '{}' - Removed {} from communal storage (empty)", 
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "STORAGE UPDATE - Town '{}' - Removed {} from communal storage (empty)", 
                 this.name, item.getDescription().getString());
         }
         

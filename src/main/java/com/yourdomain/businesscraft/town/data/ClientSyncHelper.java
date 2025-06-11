@@ -228,7 +228,7 @@ public class ClientSyncHelper {
                 if (town != null) {
                     return town.getName();
                 } else if (logResolveFailure) {
-                    LOGGER.warn("Could not resolve town name for {}", townId);
+                    DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Could not resolve town name for {}", townId);
                 }
             }
             return "Unknown Town";

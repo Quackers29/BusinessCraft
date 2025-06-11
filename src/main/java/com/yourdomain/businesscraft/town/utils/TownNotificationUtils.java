@@ -11,6 +11,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.npc.Villager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 import java.util.UUID;
 
@@ -88,7 +89,7 @@ public class TownNotificationUtils {
         }
         
         // Log the event
-        LOGGER.info("Tourist from {} heading to {} has {}", originTownName, destinationName, actionText);
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Tourist from {} heading to {} has {}", originTownName, destinationName, actionText);
     }
     
     /**
@@ -150,17 +151,17 @@ public class TownNotificationUtils {
         // Log the event
         if (count == 1) {
             if (payment > 0) {
-                LOGGER.info("Tourist from {} arrived at {}, paying {} emeralds", 
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Tourist from {} arrived at {}, paying {} emeralds", 
                     originTownName, destinationName, payment);
             } else {
-                LOGGER.info("Tourist from {} arrived at {}", originTownName, destinationName);
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Tourist from {} arrived at {}", originTownName, destinationName);
             }
         } else {
             if (payment > 0) {
-                LOGGER.info("{} tourists from {} arrived at {}, paying {} emeralds", 
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "{} tourists from {} arrived at {}, paying {} emeralds", 
                     count, originTownName, destinationName, payment);
             } else {
-                LOGGER.info("{} tourists from {} arrived at {}", count, originTownName, destinationName);
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "{} tourists from {} arrived at {}", count, originTownName, destinationName);
             }
         }
     }

@@ -23,7 +23,7 @@ public class TownResources {
     private final String instanceId = java.util.UUID.randomUUID().toString().substring(0, 8);
     
     public TownResources() {
-        LOGGER.info("Created new TownResources instance {}", instanceId);
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Created new TownResources instance {}", instanceId);
     }
     
     /**

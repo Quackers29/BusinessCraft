@@ -4,6 +4,7 @@ import com.yourdomain.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
 import net.minecraft.core.BlockPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -123,14 +124,14 @@ public class VisitBuffer {
     public List<VisitHistoryRecord> processVisits() {
         if (visitors.isEmpty()) return Collections.emptyList();
         
-        LOGGER.info("VISIT BUFFER - Processing visits: {}", this.toString());
+        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "VISIT BUFFER - Processing visits: {}", this.toString());
         
         // Store distances in the persistent map before clearing the buffer
         visitors.forEach((townId, info) -> {
             double avgDistance = info.getAverageDistance();
             if (avgDistance > 0) {
                 distanceMap.put(townId, avgDistance);
-                LOGGER.info("VISIT BUFFER - Storing distance for townId {}: {}", townId, avgDistance);
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "VISIT BUFFER - Storing distance for townId {}: {}", townId, avgDistance);
             }
         });
         
@@ -147,7 +148,7 @@ public class VisitBuffer {
         // Clear the visitors buffer but keep the distanceMap
         visitors.clear();
         
-        LOGGER.info("VISIT BUFFER - After clearing: {}", this.toString());
+        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "VISIT BUFFER - After clearing: {}", this.toString());
         
         return records;
     }
@@ -158,7 +159,7 @@ public class VisitBuffer {
      */
     public void clearSavedDistance(UUID townId) {
         Double removed = distanceMap.remove(townId);
-        LOGGER.info("VISIT BUFFER - Cleared saved distance for townId {}: {}", townId, removed != null ? removed : 0);
+        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "VISIT BUFFER - Cleared saved distance for townId {}: {}", townId, removed != null ? removed : 0);
     }
     
     /**

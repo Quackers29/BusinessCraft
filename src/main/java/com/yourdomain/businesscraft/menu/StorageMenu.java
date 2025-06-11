@@ -19,6 +19,7 @@ import com.yourdomain.businesscraft.network.packets.storage.PersonalStoragePacke
 import net.minecraft.world.item.Item;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
 import com.yourdomain.businesscraft.menu.TownBlockMenu;
 import net.minecraft.world.level.Level;
@@ -200,7 +201,7 @@ public class StorageMenu extends AbstractContainerMenu {
      */
     public boolean toggleStorageMode() {
         isPersonalStorageMode = !isPersonalStorageMode;
-        LOGGER.debug("Toggled storage mode to: {}", isPersonalStorageMode ? "Personal" : "Communal");
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Toggled storage mode to: {}", isPersonalStorageMode ? "Personal" : "Communal");
         return isPersonalStorageMode;
     }
     
@@ -310,15 +311,15 @@ public class StorageMenu extends AbstractContainerMenu {
     public void updateStorageItems(Map<Item, Integer> items) {
         // Only update if we're in communal storage mode
         if (isPersonalStorageMode) {
-            LOGGER.info("MENU: Ignoring communal storage update because we're in personal mode");
+            DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Ignoring communal storage update because we're in personal mode");
             return;
         }
         
-        LOGGER.info("MENU: Updating communal storage inventory with {} items from server", items.size());
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Updating communal storage inventory with {} items from server", items.size());
         
         // Log each item being added to communal storage
         items.forEach((storageItem, count) -> {
-            LOGGER.info("MENU: Communal storage item: {} x{}", storageItem.getDescription().getString(), count);
+            DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Communal storage item: {} x{}", storageItem.getDescription().getString(), count);
         });
         
         updateInventoryWithItems(items);
@@ -333,15 +334,15 @@ public class StorageMenu extends AbstractContainerMenu {
     public void updatePersonalStorageItems(Map<Item, Integer> items) {
         // Only update if we're in personal storage mode
         if (!isPersonalStorageMode) {
-            LOGGER.info("MENU: Ignoring personal storage update because we're in communal mode");
+            DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Ignoring personal storage update because we're in communal mode");
             return;
         }
         
-        LOGGER.info("MENU: Updating personal storage inventory with {} items from server", items.size());
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Updating personal storage inventory with {} items from server", items.size());
         
         // Log each item being added to personal storage
         items.forEach((storageItem, count) -> {
-            LOGGER.info("MENU: Personal storage item: {} x{}", storageItem.getDescription().getString(), count);
+            DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Personal storage item: {} x{}", storageItem.getDescription().getString(), count);
         });
         
         updateInventoryWithItems(items);
@@ -351,33 +352,33 @@ public class StorageMenu extends AbstractContainerMenu {
      * Helper method to update the inventory with the provided items
      */
     private void updateInventoryWithItems(Map<Item, Integer> items) {
-        LOGGER.info("MENU: Starting updateInventoryWithItems with {} items", items.size());
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Starting updateInventoryWithItems with {} items", items.size());
         
         // Log the current inventory state before clearing
-        LOGGER.info("MENU: Current inventory state before clearing:");
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Current inventory state before clearing:");
         for (int i = 0; i < storageInventory.getSlots(); i++) {
             ItemStack stack = storageInventory.getStackInSlot(i);
             if (!stack.isEmpty()) {
-                LOGGER.info("MENU:   Slot {}: {} x{}", i, stack.getHoverName().getString(), stack.getCount());
+                DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU:   Slot {}: {} x{}", i, stack.getHoverName().getString(), stack.getCount());
             }
         }
         
         // Clear current inventory
-        LOGGER.info("MENU: Clearing all {} inventory slots", storageInventory.getSlots());
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Clearing all {} inventory slots", storageInventory.getSlots());
         for (int i = 0; i < storageInventory.getSlots(); i++) {
             storageInventory.setStackInSlot(i, ItemStack.EMPTY);
         }
         
         // Fill slots with items from the storage
         int slotIndex = 0;
-        LOGGER.info("MENU: Filling slots with items from storage map");
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Filling slots with items from storage map");
         for (Map.Entry<Item, Integer> entry : items.entrySet()) {
             Item item = entry.getKey();
             int count = entry.getValue();
             
             // Skip empty items or zero counts
             if (item == null || count <= 0) {
-                LOGGER.info("MENU:   Skipping null or empty item (count: {})", count);
+                DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU:   Skipping null or empty item (count: {})", count);
                 continue;
             }
             
@@ -386,13 +387,13 @@ public class StorageMenu extends AbstractContainerMenu {
             int fullStacks = count / maxStackSize;
             int remainder = count % maxStackSize;
             
-            LOGGER.info("MENU:   Processing item {} - count: {}, maxStackSize: {}, fullStacks: {}, remainder: {}", 
+            DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU:   Processing item {} - count: {}, maxStackSize: {}, fullStacks: {}, remainder: {}", 
                 item.getDescription().getString(), count, maxStackSize, fullStacks, remainder);
             
             // Add full stacks
             for (int i = 0; i < fullStacks && slotIndex < INVENTORY_SIZE; i++) {
                 ItemStack stack = new ItemStack(item, maxStackSize);
-                LOGGER.info("MENU:     Adding full stack to slot {}: {} x{}", 
+                DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU:     Adding full stack to slot {}: {} x{}", 
                     slotIndex, stack.getHoverName().getString(), stack.getCount());
                 storageInventory.setStackInSlot(slotIndex++, stack);
             }
@@ -400,7 +401,7 @@ public class StorageMenu extends AbstractContainerMenu {
             // Add the remainder as a partial stack (if any)
             if (remainder > 0 && slotIndex < INVENTORY_SIZE) {
                 ItemStack stack = new ItemStack(item, remainder);
-                LOGGER.info("MENU:     Adding remainder to slot {}: {} x{}", 
+                DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU:     Adding remainder to slot {}: {} x{}", 
                     slotIndex, stack.getHoverName().getString(), stack.getCount());
                 storageInventory.setStackInSlot(slotIndex++, stack);
             } else if (remainder > 0) {
@@ -416,16 +417,16 @@ public class StorageMenu extends AbstractContainerMenu {
         }
         
         // Log the final inventory state
-        LOGGER.info("MENU: Final inventory state after updates:");
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Final inventory state after updates:");
         int filledSlots = 0;
         for (int i = 0; i < storageInventory.getSlots(); i++) {
             ItemStack stack = storageInventory.getStackInSlot(i);
             if (!stack.isEmpty()) {
-                LOGGER.info("MENU:   Slot {}: {} x{}", i, stack.getHoverName().getString(), stack.getCount());
+                DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU:   Slot {}: {} x{}", i, stack.getHoverName().getString(), stack.getCount());
                 filledSlots++;
             }
         }
-        LOGGER.info("MENU: Update complete - {} out of {} slots filled", filledSlots, storageInventory.getSlots());
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Update complete - {} out of {} slots filled", filledSlots, storageInventory.getSlots());
         
         // Notify clients of inventory changes (handled by container system)
     }

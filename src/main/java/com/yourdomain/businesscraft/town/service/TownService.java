@@ -85,7 +85,7 @@ public class TownService {
             if (previousResult == null || previousResult != canSpawn) {
                 // Only log if the result actually changed to avoid spam
                 if (previousResult != null) {
-                    LOGGER.info("Tourist spawning eligibility changed for town [{}]: {} -> {} (pop: {}, tourists: {})",
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_SERVICE, "Tourist spawning eligibility changed for town [{}]: {} -> {} (pop: {}, tourists: {})",
                         town.getId().toString().substring(0, 8), previousResult, canSpawn, population, town.getTouristCount());
                 }
                 cachedResults.put(town.getId(), canSpawn);
@@ -168,7 +168,7 @@ public class TownService {
             // Perform the actual tourist addition (business logic moved from Town.addTourist())
             town.setTouristCount(currentTourists + 1);
             
-            LOGGER.info("Added tourist to town {}: {}/{}", town.getId(), currentTourists + 1, maxTourists);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_SERVICE, "Added tourist to town {}: {}/{}", town.getId(), currentTourists + 1, maxTourists);
             return Result.success(null);
             
         } catch (Exception e) {
@@ -196,7 +196,7 @@ public class TownService {
             // Perform the actual tourist removal (business logic moved from Town.removeTourist())
             town.setTouristCount(currentTourists - 1);
             
-            LOGGER.info("Removed tourist from town {}: {}/{}", town.getId(), currentTourists - 1, 
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_SERVICE, "Removed tourist from town {}: {}/{}", town.getId(), currentTourists - 1, 
                        calculateMaxTourists(town).getOrElse(0));
             return Result.success(null);
             

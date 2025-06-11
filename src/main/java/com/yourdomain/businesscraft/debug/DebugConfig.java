@@ -28,6 +28,9 @@ public class DebugConfig {
     public static final boolean SEARCH_RADIUS_MANAGER = false;
     public static final boolean MODAL_MANAGERS = false;
     public static final boolean TOWN_SCREEN_DEPENDENCIES = false;
+    public static final boolean UI_RESOURCES_TAB = false;
+    public static final boolean UI_GRID_BUILDER = false;
+    public static final boolean UI_STANDARD_TAB_CONTENT = false;
     
     // Town & Data Systems (Milestone 3)
     public static final boolean TOWN_DATA_SYSTEMS = false;
@@ -35,6 +38,8 @@ public class DebugConfig {
     public static final boolean TOWN_MANAGER = false;
     public static final boolean NBT_DATA_HELPER = false;
     public static final boolean SYNC_HELPERS = false;
+    public static final boolean VISITOR_PROCESSING = false;
+    public static final boolean UI_BASE_SCREEN = false;
     
     // Platform System
     public static final boolean PLATFORM_SYSTEM = false;

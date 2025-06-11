@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.yourdomain.businesscraft.network.packets.misc.PaymentResultPacket;
@@ -122,7 +123,7 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
             // MARK DIRTY AFTER ADDING RESOURCES
             townManager.markDirty();
             
-            LOGGER.info("Player {} traded {} x{} to town {}", 
+            DebugConfig.debug(LOGGER, DebugConfig.TRADE_OPERATIONS, "Player {} traded {} x{} to town {}", 
                 player.getName().getString(), 
                 itemToTrade.getItem().getDescription().getString(), 
                 itemCount,
@@ -130,7 +131,7 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
             
             // Get current emerald count before calculation
             int currentEmeralds = town.getResourceCount(Items.EMERALD);
-            LOGGER.info("BEFORE TRADE: Town {} has {} emeralds", town.getName(), currentEmeralds);
+            DebugConfig.debug(LOGGER, DebugConfig.TRADE_OPERATIONS, "BEFORE TRADE: Town {} has {} emeralds", town.getName(), currentEmeralds);
             
             // Calculate emeralds to give based on the trade
             int emeraldsToGive = calculateEmeralds(itemToTrade, town);
@@ -155,7 +156,7 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
                 // Get updated emerald count after deduction
                 int newEmeralds = town.getResourceCount(Items.EMERALD);
                 
-                LOGGER.info("AFTER TRADE: Town {} now has {} emeralds (deducted {})", 
+                DebugConfig.debug(LOGGER, DebugConfig.TRADE_OPERATIONS, "AFTER TRADE: Town {} now has {} emeralds (deducted {})", 
                     town.getName(), newEmeralds, emeraldsToGive);
                     
                 // Send feedback to the player about the trade AND the deduction
@@ -198,7 +199,7 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
         
         // Check if town has enough emeralds
         int availableEmeralds = town.getResourceCount(Items.EMERALD);
-        LOGGER.info("Trade calculation: {} items = {} emeralds, town has {} emeralds available", 
+        DebugConfig.debug(LOGGER, DebugConfig.TRADE_OPERATIONS, "Trade calculation: {} items = {} emeralds, town has {} emeralds available", 
             itemCount, emeraldCount, availableEmeralds);
         
         // If no emeralds would be awarded, return early
