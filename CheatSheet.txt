@@ -143,3 +143,11 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 129. ContainerData synchronization: add refreshDataSlots() method to menus and call it from BlockEntity.setChanged() to update server-side ContainerData when town data changes, ensuring UI population/tourist values sync properly
 130. Menu opening synchronization: use NetworkHooks.openScreen() with MenuProvider on server-side for proper ContainerData synchronization, avoid direct client-side menu creation which bypasses Minecraft's sync system and causes blank data after navigation
 131. Component modularity: use existing modular methods (like UIGridBuilder.withColumnData()) rather than creating specific factory methods - keeps components flexible and reusable for any number of columns and content types
+132. Service layer organization: consolidate related services into manager classes with clear interfaces to avoid fragmented functionality and improve maintainability
+133. State management: implement proper state containers with thread-safe collections and clear synchronization patterns to prevent race conditions
+134. Error handling: implement consistent error recovery patterns with proper state restoration and user feedback mechanisms
+135. Cache invalidation: use version-based cache invalidation with proper client-server sync to prevent stale data issues
+136. Network optimization: batch related packets and implement proper validation to reduce network traffic and improve reliability
+137. Memory management: use object pooling for frequently created objects and implement proper cleanup in component lifecycle methods
+138. Codebase analysis: when conducting comprehensive codebase reviews, focus on architectural patterns and critical issues rather than individual method implementations to identify systemic problems
+139. Technical debt prioritization: prioritize massive monolithic classes (500+ lines) and global state coupling as highest impact issues that compound over time and prevent testing

@@ -15,6 +15,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 import java.util.*;
 
@@ -184,7 +185,7 @@ public class ClientSyncHelper {
                     String townName = visitTag.getString("townName");
                     // Only log when a town name is added for the first time
                     if (!townNameCache.containsKey(townId)) {
-                        LOGGER.debug("Loaded town name for {}: {}", townId, townName);
+                        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Loaded town name for {}: {}", townId, townName);
                     }
                     // Store the name in a map for client-side lookup
                     townNameCache.put(townId, townName);
@@ -276,7 +277,7 @@ public class ClientSyncHelper {
         // Add all the new items
         playerItems.putAll(items);
         
-        LOGGER.debug("Updated client personal storage cache for player {} with {} items", 
+        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Updated client personal storage cache for player {} with {} items", 
             playerId, items.size());
     }
     
@@ -291,14 +292,14 @@ public class ClientSyncHelper {
         town.getAllResources().forEach((item, count) -> {
             clientResources.put(item, count);
         });
-        LOGGER.debug("Updated client resources from town during sync, resources count: {}", clientResources.size());
+        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Updated client resources from town during sync, resources count: {}", clientResources.size());
         
         // Update client communal storage from the town
         clientCommunalStorage.clear();
         town.getAllCommunalStorageItems().forEach((item, count) -> {
             clientCommunalStorage.put(item, count);
         });
-        LOGGER.debug("Updated client communal storage from town during sync, storage count: {}", clientCommunalStorage.size());
+        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Updated client communal storage from town during sync, storage count: {}", clientCommunalStorage.size());
     }
     
     // Getters for client-side data access

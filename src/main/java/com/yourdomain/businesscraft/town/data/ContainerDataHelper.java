@@ -3,6 +3,7 @@ package com.yourdomain.businesscraft.town.data;
 import net.minecraft.world.inventory.ContainerData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 import java.util.*;
 import java.util.function.IntSupplier;
@@ -105,7 +106,7 @@ public class ContainerDataHelper implements ContainerData {
         fieldsByIndex.add(field);
         
         int index = fieldsByIndex.size() - 1;
-        LOGGER.debug("Registered field '{}' at index {} in context '{}': {}", name, index, contextName, description);
+        DebugConfig.debug(LOGGER, DebugConfig.NBT_DATA_HELPER, "Registered field '{}' at index {} in context '{}': {}", name, index, contextName, description);
         return index;
     }
     

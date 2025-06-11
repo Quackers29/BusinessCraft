@@ -1,5 +1,6 @@
 package com.yourdomain.businesscraft.ui.managers;
 
+import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.ui.screens.BaseTownScreen;
 import com.yourdomain.businesscraft.util.Result;
 import com.yourdomain.businesscraft.util.BCError;
@@ -25,7 +26,7 @@ public abstract class BaseModalManager {
     protected static void prepareParentScreen(Screen parentScreen) {
         if (parentScreen instanceof BaseTownScreen) {
             ((BaseTownScreen<?>) parentScreen).saveActiveTab();
-            LOGGER.debug("Saved active tab for parent screen: {}", parentScreen.getClass().getSimpleName());
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Saved active tab for parent screen: {}", parentScreen.getClass().getSimpleName());
         }
     }
     
@@ -63,7 +64,7 @@ public abstract class BaseModalManager {
             
             if (townScreen.getCacheManager() != null) {
                 townScreen.getCacheManager().refreshCachedValues();
-                LOGGER.debug("Refreshed cache data for parent screen");
+                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Refreshed cache data for parent screen");
             }
         }
     }
@@ -76,7 +77,7 @@ public abstract class BaseModalManager {
      */
     protected static <T extends Screen> void displayModal(T modalScreen) {
         Minecraft.getInstance().setScreen(modalScreen);
-        LOGGER.debug("Displayed modal screen: {}", modalScreen.getClass().getSimpleName());
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Displayed modal screen: {}", modalScreen.getClass().getSimpleName());
     }
     
     /**

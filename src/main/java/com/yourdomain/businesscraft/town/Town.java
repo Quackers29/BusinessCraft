@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.town.components.TownEconomyComponent;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
 import net.minecraft.world.item.Item;
@@ -142,7 +143,7 @@ public class Town implements ITownDataProvider {
             service.addTourist(this);
         
         if (result.isFailure()) {
-            LOGGER.debug("Cannot add tourist to town {}: {}", name, result.getError().getMessage());
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Cannot add tourist to town {}: {}", name, result.getError().getMessage());
         }
     }
     
@@ -160,7 +161,7 @@ public class Town implements ITownDataProvider {
             service.removeTourist(this);
         
         if (result.isFailure()) {
-            LOGGER.debug("Cannot remove tourist from town {}: {}", name, result.getError().getMessage());
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Cannot remove tourist from town {}: {}", name, result.getError().getMessage());
         }
     }
     
@@ -534,7 +535,7 @@ public class Town implements ITownDataProvider {
                     if (manager.getTown(id) == this) {
                         manager.markDirty();
                         foundInAnyLevel = true;
-                        LOGGER.debug("Successfully marked town '{}' (id: {}) as dirty in level {}", 
+                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Successfully marked town '{}' (id: {}) as dirty in level {}", 
                             this.name, this.id, serverLevel.dimension().location());
                     }
                 }
@@ -678,7 +679,7 @@ public class Town implements ITownDataProvider {
         // Update storage
         if (newAmount > 0) {
             playerStorage.put(item, newAmount);
-            LOGGER.debug("Updated personal storage for player {}: {} {} (now {})", 
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Updated personal storage for player {}: {} {} (now {})", 
                 playerId,
                 count > 0 ? "Added" : "Removed", 
                 Math.abs(count) + " " + item.getDescription().getString(),
@@ -686,7 +687,7 @@ public class Town implements ITownDataProvider {
         } else {
             // Remove the entry if amount is zero
             playerStorage.remove(item);
-            LOGGER.debug("Removed {} from personal storage of player {} (empty)", item.getDescription().getString(), playerId);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Removed {} from personal storage of player {} (empty)", item.getDescription().getString(), playerId);
         }
         
         // Mark town as dirty to save changes

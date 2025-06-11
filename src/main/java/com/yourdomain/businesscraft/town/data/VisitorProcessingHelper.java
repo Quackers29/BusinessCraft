@@ -19,6 +19,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -191,7 +192,7 @@ public class VisitorProcessingHelper {
                         destId
                     );
                     
-                    LOGGER.debug("Removed tourist from town {}, count now {}/{}", 
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Removed tourist from town {}, count now {}/{}", 
                         originTown.getName(), originTown.getTouristCount(), originTown.getMaxTourists());
                 }
 
@@ -357,7 +358,7 @@ public class VisitorProcessingHelper {
         
         // Log only if we actually removed something and at debug level only
         if (removedCount > 0 && LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Cleaned up {} stale visitor position entries", removedCount);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Cleaned up {} stale visitor position entries", removedCount);
         }
     }
     

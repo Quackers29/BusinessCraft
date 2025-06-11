@@ -11,6 +11,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.core.BlockPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 import java.util.Map;
 import java.util.UUID;
@@ -179,7 +180,7 @@ public class StorageOperationsManager {
                 boolean newPersonalMode = !storageMenu.isPersonalStorageMode();
                 // storageMenu.setPersonalStorageMode(newPersonalMode); // TODO: Implement when API is available
                 
-                LOGGER.debug("Toggled storage mode to: {}", newPersonalMode ? "Personal" : "Communal");
+                DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Toggled storage mode to: {}", newPersonalMode ? "Personal" : "Communal");
                 return true;
             } catch (Exception e) {
                 LOGGER.error("Failed to toggle storage mode", e);
@@ -197,7 +198,7 @@ public class StorageOperationsManager {
         
         try {
             // TODO: Replace with actual storage data request when StorageMenu API is expanded
-            LOGGER.debug("Personal storage ready (placeholder implementation)");
+            DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Personal storage ready (placeholder implementation)");
         } catch (Exception e) {
             LOGGER.error("Failed to load personal storage items", e);
         }
@@ -209,7 +210,7 @@ public class StorageOperationsManager {
      */
     private void requestPersonalStorageData(StorageMenu storageMenu) {
         // Placeholder implementation
-        LOGGER.debug("Personal storage data request (placeholder)");
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Personal storage data request (placeholder)");
     }
     
     /**
@@ -218,7 +219,7 @@ public class StorageOperationsManager {
      */
     private void requestCommunalStorageData(StorageMenu storageMenu) {
         // Placeholder implementation
-        LOGGER.debug("Communal storage data request (placeholder)");
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Communal storage data request (placeholder)");
     }
     
     /**
@@ -229,7 +230,7 @@ public class StorageOperationsManager {
         
         try {
             // TODO: Implement actual storage transfers when StorageMenu API is expanded
-            LOGGER.debug("Storage transfer {} (placeholder implementation)", toStorage ? "to storage" : "from storage");
+            DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Storage transfer {} (placeholder implementation)", toStorage ? "to storage" : "from storage");
             return true; // Placeholder success
         } catch (Exception e) {
             LOGGER.error("Failed to transfer storage item", e);

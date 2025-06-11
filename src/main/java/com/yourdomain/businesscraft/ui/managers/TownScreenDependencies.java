@@ -4,6 +4,7 @@ import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
 import com.yourdomain.businesscraft.ui.screens.BaseTownScreen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Dependency container for town screen components.
@@ -29,7 +30,7 @@ public class TownScreenDependencies {
         this.buttonCoordinator = buttonCoordinator;
         this.cacheManager = cacheManager;
         
-        LOGGER.debug("TownScreenDependencies container created");
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_SCREEN_DEPENDENCIES, "TownScreenDependencies container created");
     }
     
     /**
@@ -73,7 +74,7 @@ public class TownScreenDependencies {
                 cacheManager
             );
             
-            LOGGER.debug("TownScreenDependencies created successfully");
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_SCREEN_DEPENDENCIES, "TownScreenDependencies created successfully");
             return dependencies;
             
         } catch (Exception e) {
@@ -199,7 +200,7 @@ public class TownScreenDependencies {
      */
     public void cleanup() {
         try {
-            LOGGER.debug("Starting TownScreenDependencies cleanup");
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_SCREEN_DEPENDENCIES, "Starting TownScreenDependencies cleanup");
             
             if (modalCoordinator != null) {
                 modalCoordinator.cleanup();
@@ -212,7 +213,7 @@ public class TownScreenDependencies {
             // Note: radiusManager and cacheManager don't currently have cleanup methods
             // but this provides a place to add them in the future if needed
             
-            LOGGER.debug("TownScreenDependencies cleanup completed successfully");
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_SCREEN_DEPENDENCIES, "TownScreenDependencies cleanup completed successfully");
             
         } catch (Exception e) {
             LOGGER.warn("Error during TownScreenDependencies cleanup", e);

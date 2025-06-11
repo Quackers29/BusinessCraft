@@ -1,5 +1,6 @@
 package com.yourdomain.businesscraft.ui.managers;
 
+import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
 import com.yourdomain.businesscraft.ui.modal.core.BCModalScreen;
 import com.yourdomain.businesscraft.ui.screens.BaseTownScreen;
@@ -31,7 +32,7 @@ public class ModalCoordinator {
         this.menu = menu;
         this.blockPos = menu.getBlockPos();
         
-        LOGGER.debug("ModalCoordinator initialized for screen: {}", screen.getClass().getSimpleName());
+        DebugConfig.debug(LOGGER, DebugConfig.MODAL_MANAGERS, "ModalCoordinator initialized for screen: {}", screen.getClass().getSimpleName());
     }
     
     /**
@@ -47,7 +48,7 @@ public class ModalCoordinator {
                 blockPos,
                 targetTab,
                 modalScreen -> {
-                    LOGGER.debug("Trade modal closed, returning to tab: {}", targetTab);
+                    DebugConfig.debug(LOGGER, DebugConfig.MODAL_MANAGERS, "Trade modal closed, returning to tab: {}", targetTab);
                     if (onClose != null) {
                         onClose.accept(null);
                     }
@@ -73,7 +74,7 @@ public class ModalCoordinator {
                 menu,
                 targetTab,
                 modalScreen -> {
-                    LOGGER.debug("Storage modal closed, returning to tab: {}", targetTab);
+                    DebugConfig.debug(LOGGER, DebugConfig.MODAL_MANAGERS, "Storage modal closed, returning to tab: {}", targetTab);
                     if (onClose != null) {
                         onClose.accept(null);
                     }
@@ -94,13 +95,13 @@ public class ModalCoordinator {
     public BCModalScreen showVisitorModal(Consumer<BCModalScreen> onClose) {
         try {
             BCModalScreen createdModal = VisitorModalManager.showVisitorListModal(closedModal -> {
-                LOGGER.debug("Visitor modal closed");
+                DebugConfig.debug(LOGGER, DebugConfig.MODAL_MANAGERS, "Visitor modal closed");
                 if (onClose != null) {
                     onClose.accept(closedModal);
                 }
             });
             
-            LOGGER.debug("Visitor modal created successfully");
+            DebugConfig.debug(LOGGER, DebugConfig.MODAL_MANAGERS, "Visitor modal created successfully");
             return createdModal;
         } catch (Exception e) {
             LOGGER.error("Failed to show visitor modal", e);
@@ -122,7 +123,7 @@ public class ModalCoordinator {
                 blockPos,
                 targetTab,
                 screen -> {
-                    LOGGER.debug("Visitor history screen closed, returning to tab: {}", targetTab);
+                    DebugConfig.debug(LOGGER, DebugConfig.MODAL_MANAGERS, "Visitor history screen closed, returning to tab: {}", targetTab);
                     if (onClose != null) {
                         onClose.accept(null);
                     }
@@ -162,7 +163,7 @@ public class ModalCoordinator {
      * Performs cleanup when the coordinator is no longer needed.
      */
     public void cleanup() {
-        LOGGER.debug("ModalCoordinator cleanup completed");
+        DebugConfig.debug(LOGGER, DebugConfig.MODAL_MANAGERS, "ModalCoordinator cleanup completed");
         // Currently no resources to clean up, but method provided for future use
     }
 }

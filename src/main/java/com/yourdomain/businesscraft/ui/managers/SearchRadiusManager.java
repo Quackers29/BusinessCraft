@@ -1,5 +1,6 @@
 package com.yourdomain.businesscraft.ui.managers;
 
+import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.platform.SetSearchRadiusPacket;
@@ -37,7 +38,7 @@ public class SearchRadiusManager {
         this.cacheManager = cacheManager;
         this.currentRadius = menu.getSearchRadius();
         
-        LOGGER.debug("SearchRadiusManager initialized with radius: {}", currentRadius);
+        DebugConfig.debug(LOGGER, DebugConfig.SEARCH_RADIUS_MANAGER, "SearchRadiusManager initialized with radius: {}", currentRadius);
     }
     
     /**
@@ -74,7 +75,7 @@ public class SearchRadiusManager {
     public void updateRadius(int newRadius) {
         if (isValidRadius(newRadius)) {
             this.currentRadius = newRadius;
-            LOGGER.debug("Radius updated to: {}", newRadius);
+            DebugConfig.debug(LOGGER, DebugConfig.SEARCH_RADIUS_MANAGER, "Radius updated to: {}", newRadius);
         } else {
             LOGGER.warn("Attempted to set invalid radius: {}", newRadius);
         }
@@ -108,7 +109,7 @@ public class SearchRadiusManager {
         // Generate feedback message
         String feedbackMessage = generateFeedbackMessage(newRadius, isDecrease);
         
-        LOGGER.debug("Radius changed to: {} ({})", newRadius, isDecrease ? "decreased" : "increased");
+        DebugConfig.debug(LOGGER, DebugConfig.SEARCH_RADIUS_MANAGER, "Radius changed to: {} ({})", newRadius, isDecrease ? "decreased" : "increased");
         
         return new RadiusChangeResult(newRadius, feedbackMessage);
     }

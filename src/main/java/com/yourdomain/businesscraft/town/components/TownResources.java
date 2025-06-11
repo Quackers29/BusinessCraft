@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Stores various resources in a town with their quantities
@@ -37,7 +38,7 @@ public class TownResources {
         if (count > 0) {
             // Adding resources
             resources.merge(item, count, Integer::sum);
-            LOGGER.debug("Added {} of resource {}", count, ForgeRegistries.ITEMS.getKey(item));
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Added {} of resource {}", count, ForgeRegistries.ITEMS.getKey(item));
         } else if (count < 0) {
             // Removing resources (count is negative)
             int currentAmount = resources.getOrDefault(item, 0);
@@ -51,7 +52,7 @@ public class TownResources {
                     LOGGER.info("Emerald change: {} -> {} (removed {})", 
                         currentAmount, newAmount, -count);
                 } else {
-                    LOGGER.debug("Removed {} of resource {} (new amount: {})", 
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Removed {} of resource {} (new amount: {})", 
                         -count, ForgeRegistries.ITEMS.getKey(item), newAmount);
                 }
                 

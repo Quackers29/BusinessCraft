@@ -8,6 +8,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Manages trade-specific operations and rendering for modal inventory screens.
@@ -254,7 +255,7 @@ public class TradeOperationsManager {
         if (tradeMenu != null) {
             try {
                 // TODO: Replace with actual trade execution when TradeMenu API is expanded
-                LOGGER.debug("Trade button clicked (placeholder implementation)");
+                DebugConfig.debug(LOGGER, DebugConfig.TRADE_OPERATIONS, "Trade button clicked (placeholder implementation)");
                 return true;
             } catch (Exception e) {
                 LOGGER.error("Failed to execute trade", e);
