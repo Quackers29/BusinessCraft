@@ -140,7 +140,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private static final ConfigLoader CONFIG = ConfigLoader.INSTANCE;
     private Map<UUID, Vec3> lastPositions = new HashMap<>();
     private static final int DEFAULT_SEARCH_RADIUS = CONFIG.vehicleSearchRadius;
-    private int searchRadius = DEFAULT_SEARCH_RADIUS;
+    private int searchRadius = -1; // Will be set from NBT or default
     private final AABB searchBounds = new AABB(worldPosition).inflate(15);
     private List<LivingEntity> tourists = new ArrayList<>();
     private ITownDataProvider townDataProvider;
@@ -287,6 +287,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     @Override
     public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
+        // Ensure we have the latest search radius from the town before saving
+        if (!level.isClientSide()) {
+            updateFromTownProvider();
+        }
+        LOGGER.debug("Saving TownBlockEntity with searchRadius: {}", searchRadius);
         nbtDataHelper.saveToNBT(tag, itemHandler, townId, name, pathStart, pathEnd, platformManager, searchRadius);
     }
 
@@ -304,9 +309,14 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         this.pathEnd = result.pathEnd;
         this.touristSpawningEnabled = result.touristSpawningEnabled;
         
-        // Apply search radius if loaded
+        // Apply search radius if loaded, otherwise use default
+        LOGGER.debug("Before NBT load: searchRadius={}", this.searchRadius);
         if (result.hasSearchRadius()) {
             this.searchRadius = result.searchRadius;
+            LOGGER.debug("Loaded searchRadius from NBT: {} -> {}", result.searchRadius, this.searchRadius);
+        } else {
+            this.searchRadius = DEFAULT_SEARCH_RADIUS;
+            LOGGER.debug("Using default searchRadius: {} -> {}", DEFAULT_SEARCH_RADIUS, this.searchRadius);
         }
         
         LOGGER.debug("Loaded NBT data: {}", result.getSummary());
@@ -473,6 +483,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         // Add name for client display
         tag.putString("name", name != null ? name : "");
         
+        // Add search radius for client sync
+        tag.putInt("searchRadius", getSearchRadius());
+        
         // Add resource data for client rendering
         syncResourcesForClient(tag);
         
@@ -506,6 +519,15 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             if (!newName.equals(name)) {
                 LOGGER.debug("Updating town name from {} to {}", name, newName);
                 name = newName;
+            }
+        }
+        
+        // Handle search radius updates
+        if (tag.contains("searchRadius")) {
+            int newSearchRadius = tag.getInt("searchRadius");
+            if (newSearchRadius != this.searchRadius) {
+                LOGGER.debug("Client updating search radius from {} to {}", this.searchRadius, newSearchRadius);
+                this.searchRadius = newSearchRadius;
             }
         }
         
@@ -607,23 +629,14 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
 
     public void syncTownData() {
         if (level != null && !level.isClientSide()) {
-            // Get latest name from provider if needed
-            if (townId != null) {
-                ITownDataProvider provider = getTownDataProvider();
-                if (provider != null) {
-                    String latestName = provider.getTownName();
-                    if (!latestName.equals(name)) {
-                        LOGGER.debug("Updating town name from '{}' to '{}'", name, latestName);
-                        name = latestName;
-                    }
-                    
-                    // Explicitly update client resources when syncing town data
-                    if (level instanceof ServerLevel serverLevel) {
-                        Town town = TownManager.get(serverLevel).getTown(townId);
-                        if (town != null) {
-                            clientSyncHelper.updateClientResourcesFromTown(town);
-                        }
-                    }
+            // Sync all data from town provider
+            updateFromTownProvider();
+            
+            // Explicitly update client resources when syncing town data
+            if (townId != null && level instanceof ServerLevel serverLevel) {
+                Town town = TownManager.get(serverLevel).getTown(townId);
+                if (town != null) {
+                    clientSyncHelper.updateClientResourcesFromTown(town);
                 }
             }
             
@@ -661,11 +674,16 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     public int getSearchRadius() {
-        return searchRadius;
+        // Use default if not yet initialized from NBT
+        int result = searchRadius > 0 ? searchRadius : DEFAULT_SEARCH_RADIUS;
+        LOGGER.debug("getSearchRadius() field={}, result={}", searchRadius, result);
+        return result;
     }
 
     public void setSearchRadius(int radius) {
+        int oldValue = this.searchRadius;
         this.searchRadius = Math.max(1, Math.min(radius, 100)); // Limit between 1-100 blocks
+        LOGGER.debug("setSearchRadius() {} -> {}", oldValue, this.searchRadius);
         
         // Also update in the Town object
         if (townId != null && level instanceof ServerLevel sLevel) {
@@ -679,6 +697,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         // Make sure to update the container data
         if (level != null && !level.isClientSide()) {
             containerData.markDirty("search_radius");
+            // Force client sync when search radius changes
+            level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
         }
         
         setChanged();

@@ -79,11 +79,14 @@ public class TownService {
             
             boolean canSpawn = enabled && population >= minRequired;
             
-            // Log state changes (moved from Town class)
+            // Log state changes only when significant (moved from Town class)
             Boolean previousResult = cachedResults.get(town.getId());
             if (previousResult == null || previousResult != canSpawn) {
-                LOGGER.info("SPAWN STATE CHANGE [{}] - Enabled: {}, Population: {}/{}, Tourists: {}, Result: {}",
-                    town.getId(), enabled, population, minRequired, town.getTouristCount(), canSpawn);
+                // Only log if the result actually changed to avoid spam
+                if (previousResult != null) {
+                    LOGGER.info("Tourist spawning eligibility changed for town [{}]: {} -> {} (pop: {}, tourists: {})",
+                        town.getId().toString().substring(0, 8), previousResult, canSpawn, population, town.getTouristCount());
+                }
                 cachedResults.put(town.getId(), canSpawn);
             }
             

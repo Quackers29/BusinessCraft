@@ -43,6 +43,11 @@ public class SetSearchRadiusPacket extends BaseBlockEntityPacket {
                     // Also directly update the block entity
                     townBlock.setSearchRadius(radius);
                     
+                    // If the player has the TownInterface menu open, refresh it
+                    if (player.containerMenu instanceof com.yourdomain.businesscraft.menu.TownInterfaceMenu townMenu) {
+                        townMenu.refreshSearchRadius();
+                    }
+                    
                     // Sync with block entity
                     townBlock.syncTownData();
                 }
