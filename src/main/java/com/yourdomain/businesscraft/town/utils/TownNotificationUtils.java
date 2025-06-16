@@ -3,16 +3,19 @@ package com.yourdomain.businesscraft.town.utils;
 import com.yourdomain.businesscraft.entity.TouristEntity;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
+import com.yourdomain.businesscraft.town.data.DistanceMilestoneHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -164,6 +167,65 @@ public class TownNotificationUtils {
                 DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "{} tourists from {} arrived at {}", count, originTownName, destinationName);
             }
         }
+    }
+    
+    /**
+     * Notifies nearby players of tourist arrivals with payment and milestone information
+     * 
+     * @param level The server level
+     * @param platformPos The position of the town/platform
+     * @param originTownName The name of the origin town
+     * @param destinationName The name of the destination town
+     * @param count The number of tourists that arrived
+     * @param payment The amount of emeralds paid by tourists
+     * @param milestoneResult The milestone achievement result (if any)
+     */
+    public static void notifyTouristArrivals(ServerLevel level, BlockPos platformPos, 
+                                           String originTownName, String destinationName, 
+                                           int count, int payment, DistanceMilestoneHelper.MilestoneResult milestoneResult) {
+        // Send the standard arrival notification first
+        notifyTouristArrivals(level, platformPos, originTownName, destinationName, count, payment);
+        
+        // Send milestone achievement notification if applicable
+        if (milestoneResult != null && milestoneResult.hasRewards()) {
+            notifyMilestoneAchievement(level, platformPos, destinationName, milestoneResult);
+        }
+    }
+    
+    /**
+     * Sends a milestone achievement notification to nearby players
+     * 
+     * @param level The server level
+     * @param platformPos The position of the town/platform
+     * @param destinationName The name of the destination town
+     * @param milestoneResult The milestone achievement result
+     */
+    public static void notifyMilestoneAchievement(ServerLevel level, BlockPos platformPos, 
+                                                String destinationName, DistanceMilestoneHelper.MilestoneResult milestoneResult) {
+        if (!milestoneResult.hasRewards()) return;
+        
+        // Create milestone achievement message
+        StringBuilder rewardText = new StringBuilder();
+        for (int i = 0; i < milestoneResult.rewards.size(); i++) {
+            ItemStack reward = milestoneResult.rewards.get(i);
+            if (i > 0) rewardText.append(", ");
+            rewardText.append(reward.getCount()).append(" ").append(reward.getItem().getDescription().getString());
+        }
+        
+        Component milestoneMessage = Component.literal("🏆 Milestone Achievement! " + milestoneResult.distance + "m journey to " + 
+            destinationName + " earned: " + rewardText.toString())
+            .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
+        
+        // Find nearby players to notify
+        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
+            if (player.level() == level && isNearPosition(player.blockPosition(), platformPos, NOTIFICATION_RANGE)) {
+                player.sendSystemMessage(milestoneMessage);
+            }
+        }
+        
+        // Log the milestone achievement
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Milestone achievement: {}m journey to {} earned {} rewards", 
+            milestoneResult.distance, destinationName, milestoneResult.rewards.size());
     }
     
     /**
