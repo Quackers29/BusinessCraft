@@ -224,8 +224,23 @@ public class VisitorProcessingHelper {
                     thisTown.addVisitor(record.getOriginTownId());
                 }
                 
+                // Get distance before it gets cleared by payment calculation
+                double averageDistance = visitBuffer.getAverageDistance(record.getOriginTownId());
+                
                 // Calculate payment based on travel distance
                 int payment = calculatePayment(visitBuffer, record);
+                
+                // Check for milestone achievements and deliver rewards (using distance from before payment clearing)
+                DistanceMilestoneHelper.MilestoneResult milestoneResult = 
+                    DistanceMilestoneHelper.checkMilestones(averageDistance, record.getCount());
+                
+                if (milestoneResult.hasRewards()) {
+                    DistanceMilestoneHelper.deliverRewards(thisTown, milestoneResult);
+                    // Trigger callback to update client sync after milestone rewards are added
+                    if (changeCallback != null) {
+                        changeCallback.run();
+                    }
+                }
                 
                 // Add emeralds to communal storage if payment > 0
                 if (payment > 0) {
@@ -236,7 +251,7 @@ public class VisitorProcessingHelper {
                     }
                 }
                 
-                // Send grouped notification with payment information
+                // Send grouped notification with payment and milestone information
                 if (ConfigLoader.notifyOnTouristDeparture) {
                     String originTownName = resolveTownName(serverLevel, record.getOriginTownId());
                     TownNotificationUtils.notifyTouristArrivals(
@@ -245,7 +260,8 @@ public class VisitorProcessingHelper {
                         originTownName,
                         townName,
                         record.getCount(),
-                        payment
+                        payment,
+                        milestoneResult
                     );
                 }
             } catch (Exception e) {

@@ -5,7 +5,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +42,10 @@ public class ConfigLoader {
     
     // Tourism economy config
     public static int metersPerEmerald = 50; // How many meters a tourist needs to travel to earn 1 emerald
+    
+    // Distance milestone config
+    public static boolean enableMilestones = true; // Whether distance milestone rewards are enabled
+    public static Map<Integer, List<String>> milestoneRewards = new HashMap<>(); // Distance -> List of "item:count" rewards
     
     private ConfigLoader() {
         loadConfig();
@@ -111,6 +117,11 @@ public class ConfigLoader {
             // Load tourism economy config
             metersPerEmerald = Integer.parseInt(props.getProperty("metersPerEmerald", "50"));
             
+            // Load milestone config
+            enableMilestones = Boolean.parseBoolean(props.getProperty("enableMilestones", "true"));
+            LOGGER.info("Loading milestone config - enableMilestones: {}", enableMilestones);
+            loadMilestoneRewards(props);
+            
             // Load town names
             String namesStr = props.getProperty("townNames", "");
             townNames = new ArrayList<>(Arrays.asList(namesStr.split(",")));
@@ -141,6 +152,8 @@ public class ConfigLoader {
         LOGGER.info("Notify On Tourist Departure: {}", notifyOnTouristDeparture);
         LOGGER.info("Tourists Per Population Increase: {}", touristsPerPopulationIncrease);
         LOGGER.info("Meters Per Emerald: {}", metersPerEmerald);
+        LOGGER.info("Enable Milestones: {}", enableMilestones);
+        LOGGER.info("Milestone Rewards: {}", milestoneRewards.size() + " configured");
     }
     
     public static void saveConfig() {
@@ -171,6 +184,10 @@ public class ConfigLoader {
         // Save tourism economy config
         props.setProperty("metersPerEmerald", String.valueOf(metersPerEmerald));
         
+        // Save milestone config
+        props.setProperty("enableMilestones", String.valueOf(enableMilestones));
+        saveMilestoneRewards(props);
+        
         try {
             File configFile = new File("config/businesscraft.properties");
             configFile.getParentFile().mkdirs();
@@ -179,6 +196,77 @@ public class ConfigLoader {
             writer.close();
         } catch (IOException e) {
             LOGGER.error("Failed to save config: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * Loads milestone rewards from properties file.
+     * Expected format: milestone1_distance=10, milestone1_rewards=minecraft:bread:1,minecraft:experience_bottle:2
+     */
+    private static void loadMilestoneRewards(Properties props) {
+        // Ensure milestoneRewards is initialized
+        if (milestoneRewards == null) {
+            milestoneRewards = new HashMap<>();
+        }
+        milestoneRewards.clear();
+        
+        // Set default milestone for testing if none exist
+        boolean hasAnyMilestone = false;
+        for (String key : props.stringPropertyNames()) {
+            if (key.startsWith("milestone") && key.endsWith("_distance")) {
+                hasAnyMilestone = true;
+                break;
+            }
+        }
+        
+        if (!hasAnyMilestone) {
+            // Add default test milestone: 10m distance with bread and XP bottle
+            List<String> defaultRewards = Arrays.asList("minecraft:bread:1", "minecraft:experience_bottle:2");
+            milestoneRewards.put(10, defaultRewards);
+            LOGGER.info("Added default test milestone: 10m -> bread + XP bottle");
+            return;
+        }
+        
+        // Load configured milestones
+        for (String key : props.stringPropertyNames()) {
+            if (key.startsWith("milestone") && key.endsWith("_distance")) {
+                try {
+                    // Extract milestone number from key (e.g., "milestone1_distance" -> "1")
+                    String milestoneNum = key.substring(9, key.length() - 9); // Remove "milestone" and "_distance"
+                    int distance = Integer.parseInt(props.getProperty(key));
+                    
+                    // Look for corresponding rewards
+                    String rewardsKey = "milestone" + milestoneNum + "_rewards";
+                    String rewardsStr = props.getProperty(rewardsKey, "");
+                    
+                    if (!rewardsStr.isEmpty()) {
+                        List<String> rewards = Arrays.asList(rewardsStr.split(","));
+                        milestoneRewards.put(distance, rewards);
+                        LOGGER.info("MILESTONE CONFIG - Loaded milestone: {}m -> {}", distance, rewards);
+                    } else {
+                        LOGGER.warn("MILESTONE CONFIG - Milestone distance {} found but no rewards configured", distance);
+                    }
+                } catch (NumberFormatException e) {
+                    LOGGER.warn("Invalid milestone distance in config: {}", key);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Saves milestone rewards to properties file.
+     */
+    private static void saveMilestoneRewards(Properties props) {
+        // Ensure milestoneRewards is initialized
+        if (milestoneRewards == null) {
+            milestoneRewards = new HashMap<>();
+        }
+        
+        int milestoneIndex = 1;
+        for (Map.Entry<Integer, List<String>> entry : milestoneRewards.entrySet()) {
+            props.setProperty("milestone" + milestoneIndex + "_distance", String.valueOf(entry.getKey()));
+            props.setProperty("milestone" + milestoneIndex + "_rewards", String.join(",", entry.getValue()));
+            milestoneIndex++;
         }
     }
 }
