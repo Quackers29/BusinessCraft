@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.town.components.TownEconomyComponent;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
+import com.yourdomain.businesscraft.town.data.TownPaymentBoard;
 import net.minecraft.world.item.Item;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,8 +40,8 @@ public class Town implements ITownDataProvider {
     private final List<VisitHistoryRecord> visitHistory = new ArrayList<>();
     private static final int MAX_HISTORY_SIZE = 50; // Maximum history entries to keep
     
-    // Communal storage - accessible to all players
-    private final Map<Item, Integer> communalStorage = new HashMap<>();
+    // Payment board system - replaces communal storage
+    private final TownPaymentBoard paymentBoard = new TownPaymentBoard();
     
     // Personal storage - individual storage for each player (UUID -> items)
     private final Map<UUID, Map<Item, Integer>> personalStorage = new HashMap<>();
@@ -242,15 +243,8 @@ public class Town implements ITownDataProvider {
             tag.put("visitHistory", historyTag);
         }
         
-        // Save communal storage
-        if (!communalStorage.isEmpty()) {
-            CompoundTag storageTag = new CompoundTag();
-            communalStorage.forEach((item, count) -> {
-                String itemKey = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(item).toString();
-                storageTag.putInt(itemKey, count);
-            });
-            tag.put("communalStorage", storageTag);
-        }
+        // Save payment board (replaces communal storage)
+        tag.put("paymentBoard", paymentBoard.toNBT());
         
         // Save personal storage
         if (!personalStorage.isEmpty()) {
@@ -369,8 +363,11 @@ public class Town implements ITownDataProvider {
             }
         }
         
-        // Load communal storage
-        if (tag.contains("communalStorage")) {
+        // Load payment board (replaces communal storage)
+        if (tag.contains("paymentBoard")) {
+            town.paymentBoard.fromNBT(tag.getCompound("paymentBoard"));
+        } else if (tag.contains("communalStorage")) {
+            // Migration: convert old communal storage to payment buffer
             CompoundTag storageTag = tag.getCompound("communalStorage");
             storageTag.getAllKeys().forEach(key -> {
                 try {
@@ -379,11 +376,12 @@ public class Town implements ITownDataProvider {
                     if (item != null) {
                         int count = storageTag.getInt(key);
                         if (count > 0) {
-                            town.communalStorage.put(item, count);
+                            town.paymentBoard.addToBuffer(item, count);
+                            LOGGER.info("Migrated {} {} from old communal storage to payment buffer", count, item.getDescription().getString());
                         }
                     }
                 } catch (Exception e) {
-                    LOGGER.error("Error loading communal storage item: {}", key, e);
+                    LOGGER.error("Error migrating communal storage item: {}", key, e);
                 }
             });
         }
@@ -582,7 +580,7 @@ public class Town implements ITownDataProvider {
     }
     
     /**
-     * Add a resource to the town's communal storage
+     * Add items to the payment buffer (replaces communal storage for direct item management)
      * 
      * @param item The item to add
      * @param count The amount to add (can be negative to remove)
@@ -591,64 +589,56 @@ public class Town implements ITownDataProvider {
     public boolean addToCommunalStorage(Item item, int count) {
         if (count == 0) return true;
         
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "STORAGE UPDATE - Town '{}' - Attempting to add {} {} to communal storage", 
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "BUFFER UPDATE - Town '{}' - Attempting to add {} {} to payment buffer", 
             this.name, count, item.getDescription().getString());
         
-        // Get current amount
-        int currentAmount = communalStorage.getOrDefault(item, 0);
-        int newAmount = currentAmount + count;
-        
-        // Check if removing more than available
-        if (newAmount < 0) {
-            LOGGER.warn("Attempted to remove {} {} from communal storage but only {} available", 
-                Math.abs(count), item.getDescription().getString(), currentAmount);
-            return false;
-        }
-        
-        // Update storage
-        if (newAmount > 0) {
-            communalStorage.put(item, newAmount);
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "STORAGE UPDATE - Town '{}' - Updated communal storage: {} {} (now {})", 
-                this.name,
-                count > 0 ? "Added" : "Removed", 
-                Math.abs(count) + " " + item.getDescription().getString(),
-                newAmount);
-                
-            // Print current storage contents
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "STORAGE UPDATE - Town '{}' - Current communal storage contents: {}", 
-                this.name,
-                communalStorage.entrySet().stream()
-                    .map(e -> e.getKey().getDescription().getString() + ": " + e.getValue())
-                    .collect(Collectors.joining(", ")));
+        if (count > 0) {
+            // Adding items to buffer
+            boolean success = paymentBoard.addToBuffer(item, count);
+            if (success) {
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "BUFFER UPDATE - Town '{}' - Added {} {} to payment buffer", 
+                    this.name, count, item.getDescription().getString());
+                markDirty();
+            }
+            return success;
         } else {
-            // Remove the entry if amount is zero
-            communalStorage.remove(item);
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "STORAGE UPDATE - Town '{}' - Removed {} from communal storage (empty)", 
-                this.name, item.getDescription().getString());
+            // Removing items from buffer
+            boolean success = paymentBoard.removeFromBuffer(item, Math.abs(count));
+            if (success) {
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "BUFFER UPDATE - Town '{}' - Removed {} {} from payment buffer", 
+                    this.name, Math.abs(count), item.getDescription().getString());
+                markDirty();
+            }
+            return success;
         }
-        
-        // Mark town as dirty to save changes
-        markDirty();
-        return true;
     }
     
     /**
-     * Get the count of a specific item in the communal storage
+     * Get the count of a specific item in the payment buffer
      * 
      * @param item The item to check
      * @return The amount stored
      */
     public int getCommunalStorageCount(Item item) {
-        return communalStorage.getOrDefault(item, 0);
+        return paymentBoard.getBufferStorage().getOrDefault(item, 0);
     }
     
     /**
-     * Get all items in the communal storage
+     * Get all items in the payment buffer
      * 
      * @return Map of all items and their counts
      */
     public Map<Item, Integer> getAllCommunalStorageItems() {
-        return Collections.unmodifiableMap(communalStorage);
+        return paymentBoard.getBufferStorage();
+    }
+    
+    /**
+     * Get the payment board for this town
+     * 
+     * @return The TownPaymentBoard instance
+     */
+    public TownPaymentBoard getPaymentBoard() {
+        return paymentBoard;
     }
     
     /**
