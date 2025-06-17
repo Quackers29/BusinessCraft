@@ -241,3 +241,130 @@ Before implementing any improvement:
 - Advanced optimizations
 
 Each phase should be fully implemented and tested before moving to the next phase.
+
+## 🏦 Advanced Economic System - Town Economic Center
+
+### Core Concept: Replace Basic Communal Storage with Economic Hub
+**Current Problem**: Communal storage is a placeholder solution that doesn't scale for the mod's economic vision
+**Solution**: Transform into a comprehensive economic management system
+
+### **"Town Economic Center" - Multi-Tab Interface**
+
+#### **Tab 1: Payment Board** (Primary Focus)
+**Concept**: Replace communal storage with a "Town Payment Board" - like a job board for earned rewards
+
+**Features**:
+- **Reward Entries** displaying:
+  - Source (Tourist Transport, Milestone Achievement, Trade Profits, Job Completions)
+  - Item/Currency amounts with icons
+  - Timestamp and expiration dates
+  - Eligible players (individual vs community rewards)
+- **Claim Status Tracking**: Unclaimed, Partially Claimed, Expired, Auto-Claimed
+- **Collection Options**:
+  - Direct to Player Inventory (instant)
+  - To 2x9 Buffer Storage (for hopper automation)
+  - Auto-Claim Toggle (background collection)
+- **Reward Categories**: Tourist Payments, Milestone Bonuses, Trade Profits, Job Completions
+- **Filtering/Sorting**: By player, source, date, reward type, claim status
+- **Bulk Collection**: "Claim All" buttons with smart inventory management
+
+#### **Tab 2: Town Treasury**
+**Concept**: Central bank system for town-wide economic management
+
+**Features**:
+- **Treasury Overview**: Total town wealth and resource stockpiles
+- **Player Account System**: Each player has a balance/share in town profits
+- **Withdrawal System**: Convert town credits to items or direct transfers
+- **Investment Options**: Players reinvest earnings into town improvements
+- **Historical Data**: Economic performance over time
+- **Community Funds**: Pooled resources for town projects
+
+#### **Tab 3: Distribution Settings**
+**Concept**: Smart reward routing based on player preferences and automation needs
+
+**Features**:
+- **Player Preference Profiles**: Each player sets preferred reward delivery method
+- **Auto-Claim Configuration**: 
+  - Enable/disable per reward type
+  - Inventory space management (limit to 2x9 equivalent)
+  - Fallback options when inventory full
+- **Hopper Integration**: Dedicated output stream for automation
+- **Smart Distribution Logic**:
+  ```
+  Rewards → Distribution Engine → Multiple Destinations
+                                ├── Active Player Inventories
+                                ├── Player Mailboxes (offline players)  
+                                ├── Town Buffer Storage (2x9)
+                                ├── Hopper Output (automation)
+                                └── Town Treasury (unclaimed surplus)
+  ```
+- **Permission Management**: Who can claim what rewards
+- **Notification Settings**: Alert preferences for new rewards
+
+#### **Tab 4: Economic Analytics**
+**Concept**: Real-time economic dashboard for town performance insights
+
+**Features**:
+- **Tourist Traffic Analytics**: Visitor patterns, peak times, popular routes
+- **Revenue Breakdown**: Sources of income with percentages
+- **Performance Metrics**: Growth trends, efficiency ratings
+- **Reward Forecasting**: Predict future earnings based on current traffic
+- **Comparative Analysis**: Compare with other towns (if applicable)
+- **Economic Health Score**: Overall town economic vitality rating
+
+### **Technical Implementation Architecture**
+
+#### **Smart Reward Processing System**
+```java
+// New reward processing pipeline
+RewardEvent → RewardProcessor → DistributionEngine → DeliveryMethod
+                              ├── PaymentBoard Entry
+                              ├── Direct Delivery
+                              ├── Treasury Deposit
+                              └── Buffer Storage
+```
+
+#### **Enhanced Data Structures**
+- **RewardEntry**: Source, amount, timestamp, eligibility, claim status
+- **PlayerEconomicProfile**: Preferences, claim history, account balance
+- **TownTreasury**: Community funds, investment tracking, economic history
+- **DistributionRules**: Configurable routing logic for different reward types
+
+#### **New UI Components**
+- **PaymentBoardComponent**: Scrollable list with claim interactions
+- **TreasuryDashboard**: Financial overview with charts and metrics  
+- **DistributionSettings**: Preference management interface
+- **EconomicAnalytics**: Data visualization components
+
+### **Benefits of This Approach**
+
+#### **Scalability**
+- **Future-Proof**: Ready for trade systems, job systems, taxation, etc.
+- **Modular Design**: New reward types easily integrated
+- **Configurable**: Adapts to different server economic philosophies
+
+#### **Player Experience**
+- **Engagement**: Players actively manage their economic participation
+- **Transparency**: Clear visibility into town economic activity
+- **Flexibility**: Multiple ways to handle rewards based on playstyle
+- **Automation**: Supports both hands-on and automated approaches
+
+#### **Technical Excellence**
+- **Performance**: Efficient processing of large reward volumes
+- **Reliability**: Robust handling of edge cases (offline players, full inventories)
+- **Compatibility**: Works with existing hopper automation setups
+- **Extensibility**: Plugin-ready architecture for future economic modules
+
+### **Implementation Priority**
+1. **Phase 1**: Core Payment Board replacing communal storage
+2. **Phase 2**: Basic Treasury system with player accounts
+3. **Phase 3**: Advanced distribution settings and automation
+4. **Phase 4**: Full analytics dashboard and economic insights
+
+### **Integration with Existing Systems**
+- **Milestone Rewards**: Automatically create payment board entries
+- **Tourist Payments**: Route through distribution engine
+- **Storage Menu**: Repurpose as economic center interface
+- **Network Packets**: Extend for economic data synchronization
+
+This transforms the simple storage problem into a comprehensive economic foundation that supports the mod's grand vision while maintaining backward compatibility and automation support.
