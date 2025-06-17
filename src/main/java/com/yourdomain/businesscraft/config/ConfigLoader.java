@@ -119,7 +119,6 @@ public class ConfigLoader {
             
             // Load milestone config
             enableMilestones = Boolean.parseBoolean(props.getProperty("enableMilestones", "true"));
-            LOGGER.info("Loading milestone config - enableMilestones: {}", enableMilestones);
             loadMilestoneRewards(props);
             
             // Load town names
