@@ -28,6 +28,11 @@ BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete
 - **Run all tests**: `./gradlew test`
 - **Run specific test**: `./gradlew test --tests "ClassName.methodName"`
 
+### Debug Configuration
+- **Toggle debug logging**: Edit `DebugConfig.java` boolean flags (requires rebuild)
+- **Current debug status**: All systems disabled for clean production logs
+- **VISITOR_PROCESSING**: Recently disabled after fixing distance calculation bugs
+
 ## Current Implementation Status
 
 ### ✅ Fully Implemented Core Systems

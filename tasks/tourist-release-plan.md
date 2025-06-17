@@ -21,13 +21,17 @@ Create a complete tourism experience where players transport tourists between to
   - [ ] Ensure tourists maintain origin/destination data during transport
 
 #### **1.3 Distance-Based Reward System** ⭐
-- **Status**: ❌ NEEDS IMPLEMENTATION
+- **Status**: ✅ IMPLEMENTED
 - **Description**: Rewards calculated based on distance between origin and destination towns
 - **Tasks**:
-  - [ ] Implement distance calculation algorithm
-  - [ ] Create reward scaling system (emeralds, resources)
-  - [ ] Add milestone bonuses for long-distance transport
-  - [ ] Store rewards in destination town's communal storage
+  - [x] Implement distance calculation algorithm (FIXED - now uses actual town positions)
+  - [x] Create reward scaling system (emeralds, resources)
+  - [x] Add milestone bonuses for long-distance transport (configurable distances/rewards)
+  - [x] Store rewards in destination town's communal storage
+- **Recent Fixes**:
+  - Fixed origin town position calculation bug (was using 0,0,0)
+  - Fixed distance accumulation for multiple tourists from same town
+  - Added configurable milestone system with item rewards
 
 #### **1.4 Tourist Delivery Detection** ⭐
 - **Status**: ❓ NEEDS VERIFICATION
@@ -39,7 +43,16 @@ Create a complete tourism experience where players transport tourists between to
 
 ### **Phase 2: Progression & Feedback (Priority: High)**
 
-#### **2.1 Scoreboard Integration** ⭐
+#### **2.1 Storage System Enhancement** ⭐
+- **Status**: ❌ NEEDS IMPLEMENTATION
+- **Description**: Fix communal storage overflow issue
+- **Tasks**:
+  - [ ] Investigate current 2x9 slot system with infinite overflow
+  - [ ] Design solution: enforce max slots or create expanded storage interface
+  - [ ] Implement chosen solution to prevent rapid storage fill
+  - [ ] Test with milestone rewards and tourist payments
+
+#### **2.2 Scoreboard Integration** ⭐
 - **Status**: ❌ NEEDS IMPLEMENTATION
 - **Description**: Use Minecraft scoreboard to track town statistics
 - **Tasks**:
@@ -48,12 +61,12 @@ Create a complete tourism experience where players transport tourists between to
   - [ ] Add per-player statistics (deliveries made, total distance)
   - [ ] Create scoreboard display commands (/bc stats, /bc leaderboard)
 
-#### **2.2 Achievement/Milestone System** 
-- **Status**: ❌ NEEDS IMPLEMENTATION
+#### **2.3 Achievement/Milestone System** 
+- **Status**: ✅ IMPLEMENTED (Distance Milestones)
 - **Description**: Reward players for tourism milestones
 - **Tasks**:
+  - [x] Distance milestones (configurable thresholds with item rewards)
   - [ ] First tourist delivery bonus
-  - [ ] Distance milestones (100, 500, 1000+ blocks)
   - [ ] Volume milestones (10, 50, 100+ tourists)
   - [ ] Special rewards for connecting distant towns
 
@@ -101,13 +114,13 @@ Create a complete tourism experience where players transport tourists between to
 
 ### **Week 1: Core Mechanics Verification & Fixes**
 1. **Day 1-2**: Verify and fix tourist transport system
-2. **Day 3-4**: Implement distance-based reward calculation
+2. **Day 3-4**: ✅ COMPLETED - Implement distance-based reward calculation
 3. **Day 5-7**: Test and refine delivery detection system
 
-### **Week 2: Progression Systems**
-1. **Day 1-3**: Enhance scoreboard system with tourism stats
-2. **Day 4-5**: Implement milestone/achievement system
-3. **Day 6-7**: Add reward distribution and feedback
+### **Week 2: Storage & Progression Systems**
+1. **Day 1-3**: Fix communal storage overflow issue (2x9 slots filling rapidly)
+2. **Day 4-5**: Enhance scoreboard system with tourism stats
+3. **Day 6-7**: Complete remaining milestone/achievement features
 
 ### **Week 3: Polish & Configuration**
 1. **Day 1-2**: Create town block crafting recipe system
@@ -122,12 +135,13 @@ Create a complete tourism experience where players transport tourists between to
 
 ### **Minimum Viable Release:**
 - [ ] Tourists can be transported between towns
-- [ ] Distance-based rewards work correctly
+- [x] Distance-based rewards work correctly (COMPLETED with bug fixes)
+- [ ] Communal storage overflow resolved
 - [ ] Scoreboard tracks basic town statistics
 - [ ] Town blocks have custom crafting recipe (configurable)
 
 ### **Complete Release:**
-- [ ] All above + milestone system
+- [x] All above + milestone system (COMPLETED - configurable distance thresholds)
 - [ ] Visual polish and improved textures
 - [ ] In-game guidebook
 - [ ] Comprehensive balance testing
@@ -153,11 +167,11 @@ Create a complete tourism experience where players transport tourists between to
 
 ## 🎯 **Next Steps**
 
-1. **Start with Phase 1.2**: Verify tourist transport system
-2. **Implement Phase 1.3**: Distance-based rewards (highest impact)
-3. **Continue systematically**: Follow implementation order
-4. **Test frequently**: Verify each component before moving forward
-5. **Get feedback**: Test with multiple towns and distances
+1. **✅ COMPLETED Phase 1.3**: Distance-based rewards with bug fixes
+2. **HIGH PRIORITY Phase 2.1**: Fix communal storage overflow (2x9 slots filling rapidly)
+3. **Continue with Phase 1.2**: Verify tourist transport system
+4. **Phase 2.2**: Implement scoreboard integration
+5. **Test frequently**: Verify each component before moving forward
 
 ---
 

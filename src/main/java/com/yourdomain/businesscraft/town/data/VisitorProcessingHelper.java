@@ -157,17 +157,29 @@ public class VisitorProcessingHelper {
                      touristInfo.destinationTownId.equals(ANY_TOWN_DESTINATION.toString()))
                 )) {
                 
-                // Add to visit buffer using UUID instead of name
-                BlockPos originPos = new BlockPos(touristInfo.originX, touristInfo.originY, touristInfo.originZ);
-                visitBuffer.addVisitor(UUID.fromString(touristInfo.originTownId), originPos);
+                // Look up the origin town to get its actual current position
+                UUID originTownUuid = UUID.fromString(touristInfo.originTownId);
+                Town lookupOriginTown = TownManager.get(serverLevel).getTown(originTownUuid);
+                BlockPos originPos;
+                
+                if (lookupOriginTown != null) {
+                    // Use the actual town's position
+                    originPos = lookupOriginTown.getPosition();
+                } else {
+                    // Fallback to stored coordinates if town is not found
+                    originPos = new BlockPos(touristInfo.originX, touristInfo.originY, touristInfo.originZ);
+                    LOGGER.warn("Origin town {} not found, using stored coordinates: {}", originTownUuid, originPos);
+                }
+                
+                visitBuffer.addVisitor(originTownUuid, originPos);
 
-                // Calculate distance - we'll use this for rewards later
-                double distance = Math.sqrt(villager.blockPosition().distSqr(townBlockPos));
+                // Calculate distance from origin town to destination town (not tourist's current position)
+                double distance = Math.sqrt(originPos.distSqr(townBlockPos));
                 
                 // Add detailed distance logging
-                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "TOURIST DISTANCE - Town: {}, From: {}, Tourist position: {}, Town position: {}, Calculated distance: {}", 
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "TOURIST DISTANCE - Town: {}, From: {}, Origin town pos: {}, Destination town pos: {}, Calculated distance: {}", 
                     townId, touristInfo.originTownName, 
-                    villager.blockPosition(), townBlockPos, distance);
+                    originPos, townBlockPos, distance);
                 
                 // Store the distance in the visitor info for later payment calculation
                 visitBuffer.updateVisitorDistance(UUID.fromString(touristInfo.originTownId), distance);
@@ -261,6 +273,7 @@ public class VisitorProcessingHelper {
                         townName,
                         record.getCount(),
                         payment,
+                        averageDistance,
                         milestoneResult
                     );
                 }

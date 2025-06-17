@@ -27,12 +27,14 @@ public class DistanceMilestoneHelper {
      * Represents a milestone achievement result
      */
     public static class MilestoneResult {
-        public final int distance;
+        public final double actualDistance;    // The actual distance traveled
+        public final int milestoneAchieved;   // The milestone threshold achieved
         public final List<ItemStack> rewards;
         public final int touristCount;
         
-        public MilestoneResult(int distance, List<ItemStack> rewards, int touristCount) {
-            this.distance = distance;
+        public MilestoneResult(double actualDistance, int milestoneAchieved, List<ItemStack> rewards, int touristCount) {
+            this.actualDistance = actualDistance;
+            this.milestoneAchieved = milestoneAchieved;
             this.rewards = rewards;
             this.touristCount = touristCount;
         }
@@ -57,7 +59,7 @@ public class DistanceMilestoneHelper {
         // Return empty result if milestones are disabled
         if (!ConfigLoader.enableMilestones) {
             DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "Milestones disabled in config, skipping check for distance: {}", distance);
-            return new MilestoneResult((int) distance, new ArrayList<>(), touristCount);
+            return new MilestoneResult(distance, -1, new ArrayList<>(), touristCount);
         }
         
         // Find the highest milestone that this distance achieves
@@ -74,7 +76,7 @@ public class DistanceMilestoneHelper {
         // No milestone achieved
         if (achievedMilestone == -1) {
             DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "No milestone achieved for distance: {} blocks", distance);
-            return new MilestoneResult((int) distance, new ArrayList<>(), touristCount);
+            return new MilestoneResult(distance, -1, new ArrayList<>(), touristCount);
         }
         
         // Process rewards for achieved milestone
@@ -84,7 +86,7 @@ public class DistanceMilestoneHelper {
         DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "Milestone achieved! Distance: {} blocks, Milestone: {} blocks, Rewards: {}", 
                         distance, achievedMilestone, rewards.size());
         
-        return new MilestoneResult(achievedMilestone, rewards, touristCount);
+        return new MilestoneResult(distance, achievedMilestone, rewards, touristCount);
     }
     
     /**
@@ -188,7 +190,7 @@ public class DistanceMilestoneHelper {
             }
             
             LOGGER.info("Delivered milestone rewards to town '{}' for {}m journey: {} items", 
-                       town.getName(), milestoneResult.distance, milestoneResult.rewards.size());
+                       town.getName(), (int) Math.round(milestoneResult.actualDistance), milestoneResult.rewards.size());
             return true;
             
         } catch (Exception e) {

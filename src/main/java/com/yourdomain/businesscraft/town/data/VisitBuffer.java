@@ -32,7 +32,9 @@ public class VisitBuffer {
         }
         
         public VisitorInfo incrementCount() {
-            return new VisitorInfo(count + 1, originPos);
+            VisitorInfo newInfo = new VisitorInfo(count + 1, originPos);
+            newInfo.totalDistance = this.totalDistance; // Preserve the accumulated distance
+            return newInfo;
         }
         
         public VisitorInfo addDistance(double distance) {
