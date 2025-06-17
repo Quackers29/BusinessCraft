@@ -167,7 +167,7 @@ public class DistanceMilestoneHelper {
     }
     
     /**
-     * Delivers milestone rewards to the destination town's communal storage.
+     * Delivers milestone rewards to the destination town's payment board.
      * 
      * @param town The destination town to receive the rewards
      * @param milestoneResult The milestone achievement result containing rewards
@@ -179,19 +179,29 @@ public class DistanceMilestoneHelper {
         }
         
         try {
-            for (ItemStack reward : milestoneResult.rewards) {
-                if (!reward.isEmpty()) {
-                    // Add to communal storage
-                    town.addToCommunalStorage(reward.getItem(), reward.getCount());
-                    
-                    DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "Delivered milestone reward to {}: {} x{}", 
-                                    town.getName(), reward.getItem().getDescription().getString(), reward.getCount());
-                }
-            }
+            // Create a reward entry for the milestone achievement
+            List<ItemStack> rewardList = new ArrayList<>(milestoneResult.rewards);
+            java.util.UUID rewardId = town.getPaymentBoard().addReward(
+                RewardSource.MILESTONE, 
+                rewardList, 
+                "ALL"
+            );
             
-            LOGGER.info("Delivered milestone rewards to town '{}' for {}m journey: {} items", 
-                       town.getName(), (int) Math.round(milestoneResult.actualDistance), milestoneResult.rewards.size());
-            return true;
+            if (rewardId != null) {
+                // Add metadata about the milestone
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, 
+                    "Created milestone reward entry {} for town {}: {}m journey, {} tourists, {} items", 
+                    rewardId, town.getName(), (int) Math.round(milestoneResult.actualDistance), 
+                    milestoneResult.touristCount, milestoneResult.rewards.size());
+                
+                LOGGER.info("Added milestone reward to payment board for town '{}': {}m journey with {} tourists resulted in {} reward items", 
+                    town.getName(), (int) Math.round(milestoneResult.actualDistance), 
+                    milestoneResult.touristCount, milestoneResult.rewards.size());
+                return true;
+            } else {
+                LOGGER.warn("Failed to create milestone reward entry for town '{}'", town.getName());
+                return false;
+            }
             
         } catch (Exception e) {
             LOGGER.error("Failed to deliver milestone rewards to town '{}': {}", town.getName(), e.getMessage());

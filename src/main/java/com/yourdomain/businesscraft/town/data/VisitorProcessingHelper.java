@@ -317,31 +317,38 @@ public class VisitorProcessingHelper {
     }
     
     /**
-     * Adds payment to the town's communal storage
+     * Adds tourist payment to the town's payment board as a reward entry
      */
     private void addPaymentToTown(Town town, int payment) {
         // Add more detailed logging
-        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "TOURIST PAYMENT - Attempting to add {} emeralds to {} communal storage",
+        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "TOURIST PAYMENT - Creating reward entry for {} emeralds in town {}",
             payment, town.getName());
-            
-        // Print current storage before update
-        Map<Item, Integer> beforeItems = town.getAllCommunalStorageItems();
-        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "BEFORE payment - Communal storage for {}: {}", town.getName(), 
-            beforeItems.entrySet().stream()
-                .map(e -> e.getKey().getDescription().getString() + ": " + e.getValue())
-                .collect(Collectors.joining(", ")));
         
-        boolean success = town.addToCommunalStorage(Items.EMERALD, payment);
-        
-        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "TOURIST PAYMENT - Added {} emeralds to {} communal storage - success: {}", 
-            payment, town.getName(), success);
+        try {
+            // Create a reward entry for the tourist payment
+            List<net.minecraft.world.item.ItemStack> rewardItems = new ArrayList<>();
+            rewardItems.add(new net.minecraft.world.item.ItemStack(Items.EMERALD, payment));
             
-        // Print the current communal storage content
-        Map<Item, Integer> communalItems = town.getAllCommunalStorageItems();
-        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "AFTER payment - Communal storage for {}: {}", town.getName(), 
-            communalItems.entrySet().stream()
-                .map(e -> e.getKey().getDescription().getString() + ": " + e.getValue())
-                .collect(Collectors.joining(", ")));
+            UUID rewardId = town.getPaymentBoard().addReward(
+                RewardSource.TOURIST_PAYMENT,
+                rewardItems,
+                "ALL"
+            );
+            
+            if (rewardId != null) {
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, 
+                    "TOURIST PAYMENT - Created reward entry {} for {} emeralds in town {}", 
+                    rewardId, payment, town.getName());
+                
+                LOGGER.info("Added tourist payment reward to town '{}': {} emeralds", 
+                    town.getName(), payment);
+            } else {
+                LOGGER.warn("Failed to create tourist payment reward entry for town '{}'", town.getName());
+            }
+            
+        } catch (Exception e) {
+            LOGGER.error("Error creating tourist payment reward for town '{}': {}", town.getName(), e.getMessage(), e);
+        }
     }
     
     /**
