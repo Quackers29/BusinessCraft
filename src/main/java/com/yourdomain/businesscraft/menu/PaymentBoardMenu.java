@@ -201,10 +201,88 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
         if (townMenu != null) {
             // Access the town's payment board through the town menu
             // This will need to be implemented when we integrate with Town.java
-            // For now, return empty list
-            return new ArrayList<>();
+            // For now, return static test data for UI testing
+            return getStaticTestRewards();
         }
-        return new ArrayList<>();
+        // Return static test data for UI development and testing
+        return getStaticTestRewards();
+    }
+    
+    /**
+     * Generate static test rewards for UI development and visual testing
+     * This method will be removed once the real payment board integration is complete
+     */
+    private List<RewardEntry> getStaticTestRewards() {
+        List<RewardEntry> testRewards = new ArrayList<>();
+        
+        try {
+            // Create some test rewards with different sources and items
+            
+            // 1. Milestone reward with emeralds
+            List<ItemStack> milestoneRewards = new ArrayList<>();
+            milestoneRewards.add(new ItemStack(net.minecraft.world.item.Items.EMERALD, 3));
+            milestoneRewards.add(new ItemStack(net.minecraft.world.item.Items.BREAD, 2));
+            RewardEntry milestoneReward = new RewardEntry(
+                com.yourdomain.businesscraft.town.data.RewardSource.MILESTONE, 
+                milestoneRewards, 
+                "ALL"
+            );
+            milestoneReward.addMetadata("distance", "500");
+            testRewards.add(milestoneReward);
+            
+            // 2. Tourist payment with coins and XP
+            List<ItemStack> touristRewards = new ArrayList<>();
+            touristRewards.add(new ItemStack(net.minecraft.world.item.Items.GOLD_INGOT, 2));
+            touristRewards.add(new ItemStack(net.minecraft.world.item.Items.EXPERIENCE_BOTTLE, 1));
+            RewardEntry touristReward = new RewardEntry(
+                com.yourdomain.businesscraft.town.data.RewardSource.TOURIST_PAYMENT, 
+                touristRewards, 
+                "ALL"
+            );
+            touristReward.addMetadata("tourist_count", "5");
+            testRewards.add(touristReward);
+            
+            // 3. Trade profit with diamonds
+            List<ItemStack> tradeRewards = new ArrayList<>();
+            tradeRewards.add(new ItemStack(net.minecraft.world.item.Items.DIAMOND, 1));
+            tradeRewards.add(new ItemStack(net.minecraft.world.item.Items.IRON_INGOT, 5));
+            RewardEntry tradeReward = new RewardEntry(
+                com.yourdomain.businesscraft.town.data.RewardSource.TRADE, 
+                tradeRewards, 
+                "ALL"
+            );
+            tradeReward.addMetadata("trade_type", "villager_trade");
+            testRewards.add(tradeReward);
+            
+            // 4. Job completion with tools
+            List<ItemStack> jobRewards = new ArrayList<>();
+            jobRewards.add(new ItemStack(net.minecraft.world.item.Items.WOODEN_PICKAXE, 1));
+            jobRewards.add(new ItemStack(net.minecraft.world.item.Items.COOKED_BEEF, 3));
+            RewardEntry jobReward = new RewardEntry(
+                com.yourdomain.businesscraft.town.data.RewardSource.JOB_COMPLETION, 
+                jobRewards, 
+                "ALL"
+            );
+            jobReward.addMetadata("job_id", "mine_stone");
+            testRewards.add(jobReward);
+            
+            // 5. Admin reward with special items
+            List<ItemStack> adminRewards = new ArrayList<>();
+            adminRewards.add(new ItemStack(net.minecraft.world.item.Items.ENCHANTED_GOLDEN_APPLE, 1));
+            adminRewards.add(new ItemStack(net.minecraft.world.item.Items.NETHERITE_INGOT, 1));
+            RewardEntry adminReward = new RewardEntry(
+                com.yourdomain.businesscraft.town.data.RewardSource.ADMIN_REWARD, 
+                adminRewards, 
+                "ALL"
+            );
+            adminReward.addMetadata("reason", "special_event");
+            testRewards.add(adminReward);
+            
+        } catch (Exception e) {
+            LOGGER.error("Error creating static test rewards", e);
+        }
+        
+        return testRewards;
     }
     
     /**

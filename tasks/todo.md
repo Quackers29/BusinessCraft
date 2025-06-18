@@ -26,26 +26,77 @@ Replace the existing communal storage UI with a comprehensive Payment Board syst
   - Ensure all reward sources create proper RewardEntry objects
   - Add source tracking (MILESTONE, TOURIST_PAYMENT, etc.)
 
-#### **Phase 2: Payment Board UI Implementation (Three-Section Layout)**
-- [ ] **2.1 Create PaymentBoardScreen with Three-Section Layout**
+#### **Phase 2: Payment Board UI Implementation (Three-Section Layout)** 🔄 REFINEMENT NEEDED
+
+**Current Status:** Basic UI structure complete, but needs refinements based on latest testing:
+- ✅ Three-section layout working
+- ✅ Static test data displaying 
+- ✅ Inventory label positioning fixed
+- ❌ Scroll functionality broken/non-functional
+- 🔄 UI can be expanded to use more available space
+- 🔄 Interface can be simplified (single claim button)
+- [x] **2.1 Create PaymentBoardScreen with Three-Section Layout**
   - **Top Section**: Scrollable Payment Board (4-6 visible reward rows)
   - **Middle Section**: Payment Buffer (2x9 slots) replacing communal storage
   - **Bottom Section**: Standard player inventory + hotbar
   - Add "Back" button (top-right) returning to Resources tab
 
-- [ ] **2.2 Implement Payment Board Section using UIGridBuilder**
+- [x] **2.2 Implement Payment Board Section using UIGridBuilder**
   - Use `UIGridBuilder` with vertical scrolling for reward list display
   - Configure 5 columns: Source Icon, Rewards, Time, "Claim", "→Buffer" 
   - Enable vertical scrolling with minimum 2 visible rows, scalable up to 4-6 rows
   - Add claim buttons: "Claim" (to inventory) and "→Buffer" (to 2x9 buffer)
 
-- [ ] **2.3 Implement Payment Buffer Section (2x9 Inventory)**
+- [x] **2.3 Implement Payment Buffer Section (2x9 Inventory)**
   - Repurpose existing 2x9 storage slot system as Payment Buffer
   - Use standard `ItemStackHandler` and slot rendering from existing storage
   - Maintain hopper compatibility underneath buffer slots
   - Allow manual drag-and-drop from buffer to player inventory
 
-- [ ] **2.4 Enhance UIGridBuilder with Hover Tooltips**
+- [x] **2.4 Fix "Inventory" Label Positioning Issue**
+  - ✅ Fixed inventory label to use static positioning instead of following slots
+  - ✅ Set inventoryLabelX and inventoryLabelY to static positions
+  - ✅ Updated render method to use static positioning
+  - ✅ Label no longer moves with slot interactions
+
+- [ ] **2.5 Fix Unclaimed Rewards Scroll Area (NEEDS REWORK)**
+  - ❌ Current scroll bar still extends outside margins and is non-functional
+  - ❌ Scroll interaction not working - cannot scroll through items
+  - 🔄 Need to investigate UIGridBuilder scrolling implementation
+  - 🔄 Fix scroll bar positioning to stay within component bounds
+
+- [x] **2.6 Add Static Reward Items for Visual Testing**
+  - ✅ Added getStaticTestRewards() method with 5 different test rewards
+  - ✅ Included variety: emeralds, bread, gold, diamonds, XP bottles, tools
+  - ✅ Used all different reward sources (MILESTONE, TOURIST_PAYMENT, TRADE, JOB_COMPLETION, ADMIN_REWARD)
+  - ✅ Added metadata for each reward type for realistic testing
+
+- [ ] **2.7 Expand Unclaimed Rewards UI Width**
+  - 🆕 Double the width of the unclaimed rewards section to utilize available space
+  - 🆕 Update PAYMENT_BOARD_WIDTH from 160 to ~320 pixels
+  - 🆕 Expand grid columns to better display reward information
+  - 🆕 Allow more space for reward descriptions and better readability
+
+- [ ] **2.8 Simplify Reward Claim Interface**
+  - 🆕 Remove dual button system (Claim + →Buffer)
+  - 🆕 Replace with single "Claim" button that goes directly to buffer
+  - 🆕 Reduce grid from 5 columns to 4 columns: Source, Rewards, Time, Claim
+  - 🆕 Simplify user interaction - one click to claim to buffer
+
+- [ ] **2.9 Fix UIGridBuilder Scroll Functionality**
+  - 🆕 Debug why scroll bar extends beyond margins
+  - 🆕 Fix scroll interaction - currently cannot scroll through items
+  - 🆕 Ensure scroll bar stays within component boundaries
+  - 🆕 Test mouse wheel and scroll bar drag functionality
+  - 🆕 May need to investigate UIGridBuilder implementation
+
+- [ ] **2.10 Add Future Setting for Claim Destination**
+  - 🆕 Plan for future toggle setting: "Claim to Inventory" vs "Claim to Buffer"
+  - 🆕 Design interface to be compatible with future setting toggle
+  - 🆕 Current implementation defaults to buffer for automation compatibility
+  - 🆕 Framework for future player preference system
+
+- [ ] **2.11 Enhance UIGridBuilder with Hover Tooltips**
   - Add tooltip functionality to UIGridBuilder elements for text overflow
   - Implement hover detection for grid cells with truncated content
   - Show full text content in Minecraft-style tooltips on hover

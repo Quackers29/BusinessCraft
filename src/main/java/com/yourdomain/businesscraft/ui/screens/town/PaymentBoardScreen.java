@@ -80,7 +80,9 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
         // Title positioning in compact header
         this.titleLabelX = BACK_BUTTON_X + BACK_BUTTON_WIDTH + 6; // Reduced spacing
         this.titleLabelY = SECTION_PADDING + 4; // Adjusted for smaller header
-        this.inventoryLabelX = INV_START_X;
+        // Fix: Set inventory label to static position, not following slots
+        this.inventoryLabelX = 8; // Static position
+        this.inventoryLabelY = INV_START_Y - 12; // Static position above inventory
         
         // Initialize payment board grid
         initializePaymentBoardGrid();
@@ -91,10 +93,10 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
             PAYMENT_BOARD_X, PAYMENT_BOARD_Y, 
             PAYMENT_BOARD_WIDTH, PAYMENT_BOARD_HEIGHT, 
             5) // 5 columns: Source, Rewards, Time, Claim, Buffer
-            .withRowHeight(18) // Slightly increased row height for better readability
-            .withVerticalScroll(true, 4) // Show 4 rows at once for better visibility
-            .withSpacing(6, 3) // Better spacing for readability
-            .withMargins(INNER_PADDING, INNER_PADDING)
+            .withRowHeight(16) // Reduced to fit better within designated area
+            .withVerticalScroll(true, 2) // Reduced to 2 rows to fit in constrained height
+            .withSpacing(4, 2) // Tighter spacing for constrained area
+            .withMargins(4, 4) // Smaller margins to maximize usable area
             .drawBackground(true)
             .drawBorder(true);
     }
@@ -246,9 +248,9 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
         InventoryRenderer.drawBorder(guiGraphics, sectionX, sectionY, sectionWidth, sectionHeight, 
                 InventoryRenderer.INVENTORY_BORDER_COLOR, 2);
         
-        // Inventory label with more noticeable positioning
+        // Inventory label with static positioning (fixed position, doesn't follow slots)
         guiGraphics.drawString(this.font, "Inventory", 
-                x + this.inventoryLabelX + 6, y + INV_START_Y - 12, HEADER_COLOR);
+                x + this.inventoryLabelX, y + this.inventoryLabelY, HEADER_COLOR);
         
         // Player inventory with proper spacing
         InventoryRenderer.drawInventoryWithHotbar(guiGraphics, 
@@ -268,15 +270,15 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     }
     
     private void rebuildPaymentBoardGrid() {
-        // Clear existing grid - using corrected coordinates
+        // Clear existing grid - using corrected coordinates with same constraints as init
         paymentBoardGrid = UIGridBuilder.create(
             PAYMENT_BOARD_X, PAYMENT_BOARD_Y, 
             PAYMENT_BOARD_WIDTH, PAYMENT_BOARD_HEIGHT, 
             5) // 5 columns
-            .withRowHeight(18)
-            .withVerticalScroll(true, 4)
-            .withSpacing(6, 3)
-            .withMargins(INNER_PADDING, INNER_PADDING)
+            .withRowHeight(16) // Match init method
+            .withVerticalScroll(true, 2) // Match init method
+            .withSpacing(4, 2) // Match init method
+            .withMargins(4, 4) // Match init method  
             .drawBackground(false) // Don't draw background, we handle it ourselves
             .drawBorder(false);
         
