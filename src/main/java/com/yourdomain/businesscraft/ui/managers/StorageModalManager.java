@@ -1,12 +1,16 @@
 package com.yourdomain.businesscraft.ui.managers;
 
 import com.yourdomain.businesscraft.menu.StorageMenu;
+import com.yourdomain.businesscraft.menu.PaymentBoardMenu;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
 import com.yourdomain.businesscraft.ui.modal.factories.BCModalInventoryFactory;
 import com.yourdomain.businesscraft.ui.modal.specialized.BCModalInventoryScreen;
+import com.yourdomain.businesscraft.ui.screens.town.PaymentBoardScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 import java.util.function.Consumer;
 
 /**
@@ -17,7 +21,7 @@ import java.util.function.Consumer;
 public class StorageModalManager extends BaseModalManager {
     
     /**
-     * Creates and shows a storage modal screen.
+     * Creates and shows a payment board screen (replacing storage modal).
      * 
      * @param parentScreen The parent screen to return to
      * @param blockPos The position of the town block
@@ -35,44 +39,27 @@ public class StorageModalManager extends BaseModalManager {
         // Validate inputs
         validateParentScreen(parentScreen, "parentScreen");
         
-        // Prepare parent screen for modal display
-        prepareParentScreen(parentScreen);
+        // Get the player
+        Player player = Minecraft.getInstance().player;
+        if (player == null) {
+            throw new IllegalStateException("Player cannot be null when creating payment board screen");
+        }
         
-        // Create a modal storage screen using the factory with standardized callback
-        BCModalInventoryScreen<StorageMenu> storageScreen = BCModalInventoryFactory.createStorageScreen(
-            Component.literal("Town Storage"),
-            parentScreen,
-            blockPos,
-            createStandardCallback(parentScreen, onScreenClosed)
+        // Create a payment board menu
+        int containerId = player.containerMenu.containerId + 1;
+        PaymentBoardMenu paymentBoardMenu = new PaymentBoardMenu(containerId, player.getInventory(), blockPos);
+        
+        // Set the player's active container menu to the new payment board menu
+        player.containerMenu = paymentBoardMenu;
+        
+        // Create the payment board screen
+        PaymentBoardScreen paymentBoardScreen = new PaymentBoardScreen(
+            paymentBoardMenu, 
+            player.getInventory(), 
+            Component.literal("Payment Board")
         );
         
-        // Initialize the storage inventory with the town's communal storage items
-        initializeStorageInventory(storageScreen, townMenu);
-        
-        // Show the storage screen as a modal overlay
-        displayModal(storageScreen);
-    }
-    
-    /**
-     * Initializes the storage inventory with communal storage items.
-     * 
-     * @param storageScreen The storage screen to initialize
-     * @param townMenu The town menu containing storage data
-     */
-    private static void initializeStorageInventory(
-            BCModalInventoryScreen<StorageMenu> storageScreen, 
-            TownInterfaceMenu townMenu) {
-        
-        if (storageScreen.getMenu() != null && townMenu != null) {
-            StorageMenu storageMenu = storageScreen.getMenu();
-            
-            // Start with communal storage by default
-            storageMenu.updateStorageItems(townMenu.getAllCommunalStorageItems());
-            
-            // If at some point we want to start with personal mode, we would do:
-            // boolean isPersonalMode = true;
-            // storageMenu.toggleStorageMode();
-            // storageMenu.updatePersonalStorageItems(townMenu.getPersonalStorageItems(Minecraft.getInstance().player.getUUID()));
-        }
+        // Show the payment board screen
+        Minecraft.getInstance().setScreen(paymentBoardScreen);
     }
 } 

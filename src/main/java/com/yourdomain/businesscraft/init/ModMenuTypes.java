@@ -5,6 +5,7 @@ import com.yourdomain.businesscraft.menu.TownBlockMenu;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
 import com.yourdomain.businesscraft.menu.TradeMenu;
 import com.yourdomain.businesscraft.menu.StorageMenu;
+import com.yourdomain.businesscraft.menu.PaymentBoardMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -44,6 +45,12 @@ public class ModMenuTypes {
     public static final RegistryObject<MenuType<StorageMenu>> STORAGE_MENU = registerMenu(
             "storage_menu",
             (windowId, inv, data) -> new StorageMenu(windowId, inv, new ItemStackHandler(18))
+    );
+    
+    // Payment Board Menu
+    public static final RegistryObject<MenuType<PaymentBoardMenu>> PAYMENT_BOARD_MENU = registerMenu(
+            "payment_board_menu",
+            (windowId, inv, data) -> new PaymentBoardMenu(windowId, inv, new ItemStackHandler(18))
     );
 
     private static <T extends AbstractContainerMenu> RegistryObject<MenuType<T>> registerMenu(String name, IContainerFactory<T> factory) {
