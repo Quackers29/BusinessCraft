@@ -759,22 +759,44 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
             return;
         }
         
-        // Handle regular clicks
+        // Handle regular left-click (pickup entire stack)
         if (type == ClickType.PICKUP && mouseButton == 0) {
             if (!this.menu.getCarried().isEmpty()) {
                 // BLOCK: User trying to add item to buffer - prevent this
                 // Do nothing, effectively blocking the action
                 return;
             } else if (!slot.getItem().isEmpty()) {
-                // ALLOW: User trying to remove item from buffer - allow this
+                // ALLOW: User trying to remove entire stack from buffer - allow this
                 ItemStack itemToRemove = slot.getItem().copy();
                 super.slotClicked(slot, slotId, mouseButton, type);
                 this.menu.processBufferStorageRemove(this.minecraft.player, slotId, itemToRemove);
             }
+        }
+        // Handle right-click (pickup half stack)
+        else if (type == ClickType.PICKUP && mouseButton == 1) {
+            if (!this.menu.getCarried().isEmpty()) {
+                // BLOCK: User trying to add item to buffer - prevent this
+                return;
+            } else if (!slot.getItem().isEmpty()) {
+                // ALLOW: User trying to remove half stack from buffer - allow this with proper sync
+                super.slotClicked(slot, slotId, mouseButton, type);
+                
+                // Calculate what was actually removed and send to server
+                ItemStack slotAfter = slot.hasItem() ? slot.getItem().copy() : ItemStack.EMPTY;
+                int countBefore = slotBefore.getCount();
+                int countAfter = slotAfter.isEmpty() ? 0 : slotAfter.getCount();
+                int itemsTaken = countBefore - countAfter;
+                
+                if (itemsTaken > 0) {
+                    ItemStack itemsToRemove = slotBefore.copy();
+                    itemsToRemove.setCount(itemsTaken);
+                    this.menu.processBufferStorageRemove(this.minecraft.player, slotId, itemsToRemove);
+                }
+            }
         } else {
-            // For other click types (right-click, etc.), only allow if removing items
+            // For other click types, only allow if removing items and not carrying anything
             if (!slot.getItem().isEmpty() && this.menu.getCarried().isEmpty()) {
-                // Allow removal operations
+                // Allow other removal operations but don't sync (they should be rare edge cases)
                 super.slotClicked(slot, slotId, mouseButton, type);
             }
             // Block all other operations that could add items

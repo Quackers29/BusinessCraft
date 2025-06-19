@@ -127,17 +127,17 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
             
             // If shift-clicking from the buffer inventory
             if (index < BUFFER_SIZE) {
-                // Try to move to player inventory
+                // Allow: Try to move to player inventory (withdrawal-only buffer)
                 if (!this.moveItemStackTo(slotStack, BUFFER_SIZE, this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
             } 
             // If shift-clicking from player inventory
             else {
-                // Try to move to buffer inventory
-                if (!this.moveItemStackTo(slotStack, 0, BUFFER_SIZE, false)) {
-                    return ItemStack.EMPTY;
-                }
+                // BLOCK: Do not allow any movement from player inventory to buffer
+                // This prevents unintended stacking into existing buffer stacks
+                // Buffer should only be populated by reward claims, not user items
+                return ItemStack.EMPTY;
             }
             
             if (slotStack.isEmpty()) {

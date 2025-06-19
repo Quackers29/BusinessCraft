@@ -260,6 +260,42 @@ Replace the existing communal storage UI with a comprehensive Payment Board syst
     - ✅ Build successful with no compilation errors
     - ✅ Ready for in-game testing
 
+- [x] **2.21 Fix Payment Buffer Unintended Item Stacking Issue** ✅
+  - **Problem**: Shift-clicking emeralds from player inventory could stack with partial emerald stacks in buffer
+  - **Goal**: Maintain strict withdrawal-only buffer behavior while preserving reward claims and hopper automation
+  - [x] **2.21.1 Identify current buffer slot handling implementation** ✅
+    - ✅ Found BufferSlot.mayPlace() correctly returns false to prevent direct placement
+    - ✅ Located issue in PaymentBoardMenu.quickMoveStack() method attempting moveItemStackTo()
+    - ✅ Confirmed existing withdrawal functionality working correctly
+  - [x] **2.21.2 Prevent shift-click item stacking into existing buffer stacks** ✅
+    - ✅ Modified quickMoveStack() to return ItemStack.EMPTY for player inventory → buffer movements
+    - ✅ Preserved buffer → player inventory movement (withdrawal functionality)
+    - ✅ Added detailed comments explaining withdrawal-only behavior
+    - ✅ Build successful with no compilation errors
+  - [x] **2.21.3 Test that buffer remains withdrawal-only for users** ✅
+    - ✅ Verified shift-click from player inventory is now completely blocked
+    - ✅ Confirmed reward claiming still works correctly via dedicated claim system
+    - ✅ Maintained hopper automation capability for reward delivery
+
+- [x] **2.22 Fix Payment Buffer Right-Click Item Duplication Issue** ✅
+  - **Problem**: Right-clicking to remove half a stack didn't sync with server, causing item duplication when UI reopened
+  - **Goal**: Ensure all buffer removal operations properly sync with server to prevent duplication
+  - [x] **2.22.1 Investigate right-click handling in handleBufferSlotClick method** ✅
+    - ✅ Identified right-click operations falling through to generic handling without server sync
+    - ✅ Found left-click and shift-click properly calling processBufferStorageRemove()
+    - ✅ Located right-click handling in "else" block that skipped server synchronization
+  - [x] **2.22.2 Fix server sync for right-click half-stack removal** ✅
+    - ✅ Added specific handling for ClickType.PICKUP with mouseButton == 1 (right-click)
+    - ✅ Implemented before/after item count calculation for accurate removal tracking
+    - ✅ Added processBufferStorageRemove() call for proper server synchronization
+    - ✅ Used existing slotBefore variable to avoid variable name conflicts
+    - ✅ Build successful with no compilation errors
+  - [x] **2.22.3 Test right-click removal with UI reopen to verify no duplication** ✅
+    - ✅ Right-click half-stack removal now properly syncs with server
+    - ✅ Item amounts persist correctly when reopening payment board UI
+    - ✅ No more infinite item generation through right-click operations
+    - ✅ All buffer removal methods (left-click, right-click, shift-click) now working correctly
+
 #### **Phase 3: UI Navigation and Controls**
 - [x] **3.1 Enhanced Timestamp Display in Payment Board** ✅
   - ✅ Replace "Just now" text with hh:mm:ss timestamp format
