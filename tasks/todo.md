@@ -95,9 +95,31 @@ Replace the existing communal storage UI with a comprehensive Payment Board syst
   - Single "Claim" button designed to be compatible with future toggle
   - Framework ready: claimReward(UUID, boolean toBuffer) method exists
 
-- [ ] **2.12 Enhance UIGridBuilder with Hover Tooltips** (Optional)
-  - Add tooltip functionality for truncated text
-  - Show full reward descriptions on hover
+- [x] **2.12 Enhance UIGridBuilder with Hover Tooltips** ✅
+  - Added `addLabelWithTooltip()` method to UIGridBuilder
+  - PaymentBoardScreen now shows full reward text on hover for truncated items
+  - Tooltip automatically appears when hovering over truncated reward descriptions
+
+- [ ] **2.13 Remove Test Data and Connect Reward Systems to Payment Board**
+  - Remove static test rewards from PaymentBoardMenu.getStaticTestRewards()
+  - Update DistanceMilestoneHelper.deliverRewards() to create RewardEntry instead of direct storage
+  - Update VisitorProcessingHelper to create tourist payment entries
+  - Ensure all reward delivery systems properly path to TownPaymentBoard
+  - Test milestone and tourist rewards appear in Payment Board UI
+
+- [ ] **2.14 Implement Claim Button Functionality to Deposit Items to Payment Buffer**
+  - Implement PaymentBoardMenu.claimReward(UUID, boolean toBuffer) method
+  - Add server-side logic to transfer items from RewardEntry to payment buffer
+  - Handle full buffer scenarios (reject claim if insufficient space)
+  - Add proper network packet handling for claim requests
+  - Provide user feedback when claims succeed or fail due to full buffer
+
+- [ ] **2.15 Make Payment Buffer Withdrawal-Only for Users**
+  - Modify slot click handling to prevent users from adding items to buffer
+  - Allow only removal/shift-click out of buffer slots
+  - Maintain hopper automation input capability underneath buffer
+  - Update handleBufferSlotClick() to restrict user input while preserving withdrawal
+  - Ensure automation systems can still deposit but users cannot manually add items
 
 #### **Phase 3: UI Navigation and Controls**
 - [ ] **3.1 Add Filtering and Sorting**

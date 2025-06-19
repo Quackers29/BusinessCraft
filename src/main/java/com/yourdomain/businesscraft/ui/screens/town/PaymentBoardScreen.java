@@ -325,7 +325,13 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
             // Column 1: Rewards summary (truncated to 12 chars max to prevent overlap)
             String fullRewardsText = reward.getRewardsDisplay();
             String rewardsText = truncateTextStable(fullRewardsText, 12); // Reduced from 20 to 12
-            paymentBoardGrid.addLabel(i, 1, rewardsText, TEXT_COLOR);
+            
+            // Add tooltip if text was truncated
+            if (fullRewardsText.length() > 12) {
+                paymentBoardGrid.addLabelWithTooltip(i, 1, rewardsText, fullRewardsText, TEXT_COLOR);
+            } else {
+                paymentBoardGrid.addLabel(i, 1, rewardsText, TEXT_COLOR);
+            }
             
             // Column 2: Time ago (using static "Just now" for test data stability)
             String timeText = "Just now"; // Static for test data to prevent text changing
