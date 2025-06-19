@@ -47,9 +47,18 @@ public class PaymentBoardResponsePacket {
                     rewardItems.add(stack);
                 }
                 
-                // Create RewardEntry using the network factory method
-                RewardEntry entry = RewardEntry.fromNetwork(id, timestamp, expirationTime, 
-                                                          source, rewardItems, status, eligibility);
+                // Read metadata map
+                java.util.Map<String, String> metadata = new java.util.HashMap<>();
+                int metadataCount = buf.readInt();
+                for (int j = 0; j < metadataCount; j++) {
+                    String key = buf.readUtf();
+                    String value = buf.readUtf();
+                    metadata.put(key, value);
+                }
+                
+                // Create RewardEntry using the network factory method with metadata
+                RewardEntry entry = RewardEntry.fromNetworkWithMetadata(id, timestamp, expirationTime, 
+                                                          source, rewardItems, status, eligibility, metadata);
                 
                 rewards.add(entry);
             } catch (Exception e) {
@@ -75,6 +84,14 @@ public class PaymentBoardResponsePacket {
                 buf.writeInt(rewardItems.size());
                 for (ItemStack stack : rewardItems) {
                     buf.writeItem(stack);
+                }
+                
+                // Write metadata map
+                java.util.Map<String, String> metadata = entry.getMetadata();
+                buf.writeInt(metadata.size());
+                for (java.util.Map.Entry<String, String> metaEntry : metadata.entrySet()) {
+                    buf.writeUtf(metaEntry.getKey());
+                    buf.writeUtf(metaEntry.getValue());
                 }
             } catch (Exception e) {
                 LOGGER.error("Error encoding reward entry: {}", entry.getId(), e);

@@ -577,6 +577,30 @@ public class UIGridBuilder {
     }
     
     /**
+     * Adds multiple overlapping items for visual display (up to 4 items)
+     * @param row Row in the grid
+     * @param column Column in the grid
+     * @param itemStacks List of ItemStacks to display overlapping
+     * @param tooltip Tooltip text for the items
+     * @param onClick Click handler
+     * @return This builder for chaining
+     */
+    public UIGridBuilder addMultiItemDisplay(int row, int column, List<net.minecraft.world.item.ItemStack> itemStacks, 
+                                           String tooltip, Consumer<Void> onClick) {
+        if (itemStacks == null || itemStacks.isEmpty()) {
+            return this;
+        }
+        
+        UIGridElement element = new UIGridElement(UIElementType.MULTI_ITEM, row, column, 1, 1);
+        element.multiItems = new ArrayList<>(itemStacks.subList(0, Math.min(4, itemStacks.size()))); // Max 4 items
+        element.tooltip = tooltip;
+        element.onClick = onClick;
+        element.showQuantity = false; // Don't show quantities for multi-item display
+        elements.add(element);
+        return this;
+    }
+    
+    /**
      * Renders the grid and its elements
      */
     public void render(GuiGraphics graphics, int mouseX, int mouseY) {
@@ -655,6 +679,9 @@ public class UIGridBuilder {
                     break;
                 case ITEM:
                     renderItem(graphics, element, elementX, elementY, elementWidth, elementHeight);
+                    break;
+                case MULTI_ITEM:
+                    renderMultiItem(graphics, element, elementX, elementY, elementWidth, elementHeight);
                     break;
             }
         }
@@ -849,13 +876,60 @@ public class UIGridBuilder {
     }
     
     /**
+     * Renders multiple overlapping items for visual display
+     */
+    private void renderMultiItem(GuiGraphics graphics, UIGridElement element, 
+                                 int x, int y, int width, int height) {
+        if (element.multiItems == null || element.multiItems.isEmpty()) {
+            return;
+        }
+        
+        // Draw a background for the items (lighter when hovered)
+        int bgColor = element.isHovered ? 0x80444444 : 0x60222222;
+        graphics.fill(x, y, x + width, y + height, bgColor);
+        
+        int itemSize = 16; // Standard Minecraft item size
+        int itemY = y + (height - itemSize) / 2; // Center vertically
+        int startX = x + 5; // Starting position with padding
+        
+        // Calculate overlap offset for up to 4 items
+        int overlapOffset = Math.min(6, Math.max(3, (width - 10 - itemSize) / Math.max(1, element.multiItems.size() - 1)));
+        
+        // Render up to 4 items with overlapping effect
+        int itemCount = Math.min(4, element.multiItems.size());
+        for (int i = 0; i < itemCount; i++) {
+            net.minecraft.world.item.ItemStack stack = element.multiItems.get(i);
+            if (!stack.isEmpty()) {
+                int itemX = startX + (i * overlapOffset);
+                
+                // Make sure we don't go out of bounds
+                if (itemX + itemSize <= x + width - 5) {
+                    graphics.renderItem(stack, itemX, itemY);
+                }
+            }
+        }
+        
+        // If we have more than 4 items, show a "+" indicator
+        if (element.multiItems.size() > 4) {
+            Font font = Minecraft.getInstance().font;
+            String plusText = "+" + (element.multiItems.size() - 4);
+            int textWidth = font.width(plusText);
+            int textX = x + width - textWidth - 5;
+            int textY = y + (height - font.lineHeight) / 2;
+            
+            graphics.drawString(font, plusText, textX, textY, 0xFFFFFFFF);
+        }
+    }
+    
+    /**
      * Types of UI elements supported in the grid
      */
     private enum UIElementType {
         BUTTON,
         LABEL,
         TOGGLE,
-        ITEM   // New element type for Minecraft items with quantity indicator
+        ITEM,       // Single Minecraft item with quantity indicator
+        MULTI_ITEM  // Multiple overlapping Minecraft items
     }
     
     /**
@@ -880,6 +954,7 @@ public class UIGridBuilder {
         int quantity = 1;    // Quantity to display
         boolean showQuantity = true; // Whether to show quantity indicator
         net.minecraft.world.item.ItemStack itemStack; // Full itemstack for rendering
+        List<net.minecraft.world.item.ItemStack> multiItems; // Multiple items for overlapping display
         
         public UIGridElement(UIElementType type, int row, int column, int rowSpan, int colSpan) {
             this.type = type;
@@ -1051,6 +1126,12 @@ public class UIGridBuilder {
                         break;
                         
                     case ITEM:
+                        if (element.onClick != null) {
+                            element.onClick.accept(null);
+                            return true;
+                        }
+                        break;
+                    case MULTI_ITEM:
                         if (element.onClick != null) {
                             element.onClick.accept(null);
                             return true;

@@ -357,26 +357,42 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
         for (int i = 0; i < currentRewards.size(); i++) {
             RewardEntry reward = currentRewards.get(i);
             
-            // Column 0: Source icon (using first reward item as icon)
-            if (!reward.getRewards().isEmpty()) {
-                ItemStack firstItem = reward.getRewards().get(0);
-                paymentBoardGrid.addItemStack(i, 0, firstItem, null);
-            }
+            // Create enhanced tooltip for both columns
+            String enhancedTooltip = createRewardTooltip(reward);
             
-            // Column 1: Rewards summary (truncated to 12 chars max to prevent overlap)
-            String fullRewardsText = reward.getRewardsDisplay();
-            String rewardsText = truncateTextStable(fullRewardsText, 12); // Reduced from 20 to 12
-            
-            // Create enhanced tooltip for tourist arrival rewards
-            String rewardTooltip = createRewardTooltip(reward, fullRewardsText);
-            
-            // Add tooltip (enhanced for tourist arrivals or standard for others)
-            if (rewardTooltip != null && !rewardTooltip.equals(fullRewardsText)) {
-                paymentBoardGrid.addLabelWithTooltip(i, 1, rewardsText, rewardTooltip, TEXT_COLOR);
-            } else if (fullRewardsText.length() > 12) {
-                paymentBoardGrid.addLabelWithTooltip(i, 1, rewardsText, fullRewardsText, TEXT_COLOR);
+            if (reward.getSource() == RewardSource.TOURIST_ARRIVAL) {
+                // Column 0: Tourist info "[quantity] x [origin town]" for tourist arrivals
+                String touristInfo = createTouristInfoDisplay(reward);
+                if (enhancedTooltip != null) {
+                    paymentBoardGrid.addLabelWithTooltip(i, 0, touristInfo, enhancedTooltip, TEXT_COLOR);
+                } else {
+                    paymentBoardGrid.addLabel(i, 0, touristInfo, TEXT_COLOR);
+                }
+                
+                // Column 1: Multi-item visual display for tourist arrivals
+                addMultiItemDisplay(i, 1, reward, enhancedTooltip);
             } else {
-                paymentBoardGrid.addLabel(i, 1, rewardsText, TEXT_COLOR);
+                // Column 0: Source icon (using first reward item as icon) for other rewards
+                if (!reward.getRewards().isEmpty()) {
+                    ItemStack firstItem = reward.getRewards().get(0);
+                    if (enhancedTooltip != null) {
+                        paymentBoardGrid.addItemStackWithTooltip(i, 0, firstItem, enhancedTooltip, null);
+                    } else {
+                        paymentBoardGrid.addItemStack(i, 0, firstItem, null);
+                    }
+                }
+                
+                // Column 1: Rewards summary (truncated to 12 chars max to prevent overlap) for other rewards
+                String fullRewardsText = reward.getRewardsDisplay();
+                String rewardsText = truncateTextStable(fullRewardsText, 12);
+                
+                if (enhancedTooltip != null) {
+                    paymentBoardGrid.addLabelWithTooltip(i, 1, rewardsText, enhancedTooltip, TEXT_COLOR);
+                } else if (fullRewardsText.length() > 12) {
+                    paymentBoardGrid.addLabelWithTooltip(i, 1, rewardsText, fullRewardsText, TEXT_COLOR);
+                } else {
+                    paymentBoardGrid.addLabel(i, 1, rewardsText, TEXT_COLOR);
+                }
             }
             
             // Column 2: Time in HH:mm:ss format with full date/time tooltip
@@ -435,7 +451,7 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     /**
      * Creates enhanced tooltips for rewards, especially tourist arrival rewards
      */
-    private String createRewardTooltip(RewardEntry reward, String defaultTooltip) {
+    private String createRewardTooltip(RewardEntry reward) {
         if (reward.getSource() == RewardSource.TOURIST_ARRIVAL) {
             StringBuilder tooltip = new StringBuilder();
             
@@ -460,14 +476,118 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
                        .append(milestoneItems).append(" items)");
             }
             
-            // If we built a tooltip, return it, otherwise fall back to default
+            // If we built a tooltip, return it
             if (tooltip.length() > 0) {
                 return tooltip.toString().trim();
             }
         }
         
-        // For non-tourist arrivals or if metadata is missing, return default
-        return defaultTooltip;
+        // For non-tourist arrivals or if metadata is missing, return null
+        return null;
+    }
+    
+    /**
+     * Creates tourist info display text "[quantity] x [origin town]"
+     */
+    private String createTouristInfoDisplay(RewardEntry reward) {
+        String originTown = reward.getMetadata().get("originTown");
+        String touristCountStr = reward.getMetadata().get("touristCount");
+        
+        int touristCount = 1; // Default fallback
+        if (touristCountStr != null && !touristCountStr.isEmpty()) {
+            try {
+                touristCount = Integer.parseInt(touristCountStr);
+            } catch (NumberFormatException e) {
+                // Fallback to calculating from emeralds if metadata is corrupted
+                int totalEmeralds = 0;
+                for (ItemStack stack : reward.getRewards()) {
+                    if (stack.getItem() == net.minecraft.world.item.Items.EMERALD) {
+                        totalEmeralds += stack.getCount();
+                    }
+                }
+                touristCount = Math.max(1, totalEmeralds / 10); // Rough estimate: 10 emeralds per tourist
+            }
+        }
+        
+        if (originTown != null && !originTown.isEmpty()) {
+            return touristCount + " x " + originTown;
+        } else {
+            return touristCount + " x Unknown";
+        }
+    }
+    
+    /**
+     * Adds multi-item visual display (up to 4 overlapping items)
+     */
+    private void addMultiItemDisplay(int row, int col, RewardEntry reward, String tooltip) {
+        List<ItemStack> items = reward.getRewards();
+        
+        if (!items.isEmpty()) {
+            // For the multi-item display, prioritize showing variety over quantities
+            List<ItemStack> uniqueItems = getUniqueItems(items, 4);
+            
+            if (uniqueItems.size() == 1) {
+                // Single item - show normally
+                ItemStack item = uniqueItems.get(0);
+                if (tooltip != null) {
+                    paymentBoardGrid.addItemStackWithTooltip(row, col, item, tooltip, null);
+                } else {
+                    paymentBoardGrid.addItemStack(row, col, item, null);
+                }
+            } else {
+                // Multiple items - use the new multi-item display component
+                String multiItemTooltip = createMultiItemTooltip(reward, tooltip);
+                
+                paymentBoardGrid.addMultiItemDisplay(row, col, uniqueItems, multiItemTooltip, null);
+            }
+        }
+    }
+    
+    /**
+     * Gets unique items from a list, prioritizing emeralds first, then other items
+     */
+    private List<ItemStack> getUniqueItems(List<ItemStack> items, int maxItems) {
+        List<ItemStack> unique = new ArrayList<>();
+        Set<net.minecraft.world.item.Item> seenItems = new HashSet<>();
+        
+        // First, add emeralds if present
+        for (ItemStack stack : items) {
+            if (stack.getItem() == net.minecraft.world.item.Items.EMERALD && 
+                !seenItems.contains(stack.getItem()) && unique.size() < maxItems) {
+                unique.add(stack);
+                seenItems.add(stack.getItem());
+                break;
+            }
+        }
+        
+        // Then add other unique items
+        for (ItemStack stack : items) {
+            if (stack.getItem() != net.minecraft.world.item.Items.EMERALD && 
+                !seenItems.contains(stack.getItem()) && unique.size() < maxItems) {
+                unique.add(stack);
+                seenItems.add(stack.getItem());
+            }
+        }
+        
+        return unique;
+    }
+    
+    /**
+     * Creates tooltip showing both enhanced info and item breakdown
+     */
+    private String createMultiItemTooltip(RewardEntry reward, String enhancedTooltip) {
+        StringBuilder tooltip = new StringBuilder();
+        
+        // Add enhanced tooltip if available
+        if (enhancedTooltip != null && !enhancedTooltip.trim().isEmpty()) {
+            tooltip.append(enhancedTooltip).append("\n\nItems:\n");
+        }
+        
+        // Add item breakdown
+        String itemsText = reward.getRewardsDisplay();
+        tooltip.append(itemsText);
+        
+        return tooltip.toString();
     }
     
     private void claimReward(UUID rewardId, boolean toBuffer) {
