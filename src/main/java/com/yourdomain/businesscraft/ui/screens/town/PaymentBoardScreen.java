@@ -468,8 +468,8 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
      * Creates tourist info display text "[quantity] x [origin town]"
      */
     private String createTouristInfoDisplay(RewardEntry reward) {
-        String originTown = reward.getMetadata().get("originTown");
         String touristCountStr = reward.getMetadata().get("touristCount");
+        String milestoneDistanceStr = reward.getMetadata().get("milestoneDistance");
         
         int touristCount = 1; // Default fallback
         if (touristCountStr != null && !touristCountStr.isEmpty()) {
@@ -487,10 +487,20 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
             }
         }
         
-        if (originTown != null && !originTown.isEmpty()) {
-            return touristCount + " x " + originTown;
+        // Get distance traveled from milestone distance metadata
+        int metersTravel = 0;
+        if (milestoneDistanceStr != null && !milestoneDistanceStr.isEmpty()) {
+            try {
+                metersTravel = Integer.parseInt(milestoneDistanceStr);
+            } catch (NumberFormatException e) {
+                metersTravel = 0; // Default fallback
+            }
+        }
+        
+        if (metersTravel > 0) {
+            return touristCount + " x " + metersTravel + "m";
         } else {
-            return touristCount + " x Unknown";
+            return touristCount + " x 0m";
         }
     }
     
@@ -568,24 +578,40 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     private List<net.minecraft.network.chat.Component> createTouristArrivalTooltip(RewardEntry reward) {
         List<net.minecraft.network.chat.Component> tooltipLines = new ArrayList<>();
         
-        // Add origin town information with gray color
         String originTown = reward.getMetadata().get("originTown");
-        if (originTown != null && !originTown.isEmpty()) {
-            tooltipLines.add(net.minecraft.network.chat.Component.literal("From: " + originTown)
-                .withStyle(ChatFormatting.GRAY));
-        }
-        
-        // Add fare information with green color (like emerald-related text)
         String fareAmount = reward.getMetadata().get("fareAmount");
+        String milestoneDistance = reward.getMetadata().get("milestoneDistance");
+        
+        // Line 1: "Origin: [TOWN] ([DISTANCE])"
+        String originText = "Origin: " + (originTown != null ? originTown : "Unknown");
+        if (milestoneDistance != null && !milestoneDistance.isEmpty()) {
+            originText += " (" + milestoneDistance + "m)";
+        }
+        tooltipLines.add(net.minecraft.network.chat.Component.literal(originText)
+            .withStyle(ChatFormatting.GRAY));
+        
+        // Line 2: "Fare: [Emeralds paid for travel]"
         if (fareAmount != null && !fareAmount.isEmpty()) {
             tooltipLines.add(net.minecraft.network.chat.Component.literal("Fare: " + fareAmount + " emeralds")
                 .withStyle(ChatFormatting.GREEN));
         }
         
-        // Add milestone information with gold color
-        String milestoneDistance = reward.getMetadata().get("milestoneDistance");
-        if (milestoneDistance != null && !milestoneDistance.isEmpty()) {
-            tooltipLines.add(net.minecraft.network.chat.Component.literal("Milestone: " + milestoneDistance + "m journey")
+        // Line 3: "Milestone: [Rewards]" (milestone rewards only, no distance)
+        List<String> milestoneRewards = new ArrayList<>();
+        for (ItemStack stack : reward.getRewards()) {
+            if (stack.getItem() != net.minecraft.world.item.Items.EMERALD) {
+                String itemName = stack.getHoverName().getString();
+                if (stack.getCount() > 1) {
+                    milestoneRewards.add(stack.getCount() + "x" + itemName);
+                } else {
+                    milestoneRewards.add("1x" + itemName);
+                }
+            }
+        }
+        
+        if (!milestoneRewards.isEmpty()) {
+            String milestoneText = "Milestone: " + String.join(", ", milestoneRewards);
+            tooltipLines.add(net.minecraft.network.chat.Component.literal(milestoneText)
                 .withStyle(ChatFormatting.GOLD));
         }
         
