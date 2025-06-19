@@ -224,6 +224,15 @@ public class TownPaymentBoard {
     }
     
     /**
+     * Get a reward by ID (public method for metadata access)
+     */
+    public Optional<RewardEntry> getRewardById(UUID rewardId) {
+        return rewards.stream()
+                .filter(entry -> entry.getId().equals(rewardId))
+                .findFirst();
+    }
+    
+    /**
      * Get statistics about the payment board
      */
     public PaymentBoardStats getStats() {

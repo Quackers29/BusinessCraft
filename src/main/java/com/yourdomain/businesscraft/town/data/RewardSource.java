@@ -15,6 +15,11 @@ public enum RewardSource {
     TOURIST_PAYMENT("🚂", "Tourist Payment"),
     
     /**
+     * Bundled tourist arrival (fare + milestone rewards combined)
+     */
+    TOURIST_ARRIVAL("🚂🏆", "Tourist Arrival"),
+    
+    /**
      * Reward from trading activities
      */
     TRADE("💰", "Trade Profit"),

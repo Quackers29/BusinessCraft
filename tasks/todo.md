@@ -129,6 +129,30 @@ Replace the existing communal storage UI with a comprehensive Payment Board syst
   - ✅ Updated BufferSlot.mayPlace() to return false, blocking user item placement
   - ✅ Fixed claim packet to send BufferStorageResponsePacket after claiming rewards
 
+- [ ] **2.16 Bundle Tourist Fare and Milestone Rewards into Single Payment Board Rows**
+  - **Problem**: Each tourist arrival creates 2 separate reward entries (🚂 fare + 🏆 milestone)
+  - **Goal**: Combine into single row per source town with detailed tooltip
+  - [x] **2.16.1 Add TOURIST_ARRIVAL reward source type** ✅
+    - ✅ Added RewardSource.TOURIST_ARRIVAL("🚂🏆", "Tourist Arrival") to RewardSource enum
+    - ✅ Combined icon represents both transportation fare and milestone achievement
+  - [x] **2.16.2 Modify VisitorProcessingHelper reward creation logic** ✅
+    - ✅ Replaced separate addPaymentToTown() and DistanceMilestoneHelper.deliverRewards() calls
+    - ✅ Created addBundledTouristReward() method combining fare emeralds + milestone items
+    - ✅ Store origin town name, fare amount, milestone distance, and item count in reward metadata
+    - ✅ Preserved existing payment calculation and milestone detection logic
+    - ✅ Added TownPaymentBoard.getRewardById() method for metadata access
+  - [x] **2.16.3 Update reward display and tooltip system** ✅
+    - ✅ Modified PaymentBoardScreen.populateGridWithRewards() to handle TOURIST_ARRIVAL source
+    - ✅ Created createRewardTooltip() method for enhanced tourist arrival tooltips
+    - ✅ Tooltip displays: "From: [Origin Town]", "Fare: X emeralds", "Milestone: Xm journey (Y items)"
+    - ✅ Reward description combines emerald count + milestone items in single row
+    - ✅ Preserved existing claiming functionality for bundled rewards
+  - [ ] **2.16.4 Test bundled reward functionality**
+    - Verify single row appears per tourist batch instead of two separate rows
+    - Test tooltip displays origin town, fare amount, and milestone details
+    - Confirm claiming works correctly for combined emerald + item rewards
+    - Ensure backward compatibility with existing separate reward types
+
 #### **Phase 3: UI Navigation and Controls**
 - [x] **3.1 Enhanced Timestamp Display in Payment Board** ✅
   - ✅ Replace "Just now" text with hh:mm:ss timestamp format
@@ -488,6 +512,37 @@ grid.addItem(row, 0, getSourceIcon(entry)) // Source icon
 - Consistent with existing UI tooltip patterns in the payment board
 - Better temporal awareness for reward claim timing
 
+### Task 2.16 Complete (2025-06-19)
+**✅ Bundle Tourist Fare and Milestone Rewards into Single Payment Board Rows**
+
+**Status**: FULLY IMPLEMENTED - Tourist arrivals now create single bundled reward entries with enhanced tooltips.
+
+**Key Achievements:**
+- Added new RewardSource.TOURIST_ARRIVAL for bundled tourist rewards with 🚂🏆 combined icon
+- Replaced separate reward creation with single addBundledTouristReward() method in VisitorProcessingHelper
+- Enhanced PaymentBoardScreen tooltip system to display origin town, fare amount, and milestone details
+- Preserved all existing functionality while reducing UI clutter from 2 rows per tourist batch to 1 row
+
+**Technical Implementation:**
+- **RewardSource Enhancement**: Added TOURIST_ARRIVAL("🚂🏆", "Tourist Arrival") enum value
+- **VisitorProcessingHelper.addBundledTouristReward()**: Combines emerald fare + milestone items into single reward
+- **Metadata System**: Stores originTown, fareAmount, milestoneDistance, milestoneItems in reward metadata
+- **TownPaymentBoard.getRewardById()**: Added public method for accessing reward entries and metadata
+- **PaymentBoardScreen.createRewardTooltip()**: Enhanced tooltip generation for tourist arrival rewards
+- **Build Status**: Successful compilation with no errors or warnings
+
+**User Experience Improvements:**
+- **Reduced Clutter**: Single row per tourist batch instead of separate fare + milestone rows
+- **Enhanced Tooltips**: Hover shows "From: [Town]", "Fare: X emeralds", "Milestone: Xm journey (Y items)"
+- **Preserved Functionality**: Claiming works identically for bundled emerald + item rewards
+- **Backward Compatibility**: Existing separate TOURIST_PAYMENT and MILESTONE rewards still work
+
+**Reward Flow Changes:**
+```
+BEFORE: Tourist Batch → 2 Separate Rewards (🚂 Fare + 🏆 Milestone)
+AFTER:  Tourist Batch → 1 Bundled Reward (🚂🏆 Tourist Arrival)
+```
+
 ---
-**Status**: Phase 3 Task 3.1 Complete - Enhanced Timestamp Display Implemented
+**Status**: Phase 2 Task 2.16 Complete - Tourist Reward Bundling Implemented
 **Next Steps**: Phase 3 - UI Navigation and Controls (Task 3.2 - Add Filtering and Sorting)
