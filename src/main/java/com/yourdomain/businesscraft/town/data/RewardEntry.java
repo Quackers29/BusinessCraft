@@ -202,6 +202,15 @@ public class RewardEntry {
                                         ClaimStatus status, String eligibility) {
         return new RewardEntry(id, timestamp, expirationTime, source, rewards, status, eligibility, new HashMap<>());
     }
+    
+    /**
+     * Create a reward entry from network data with metadata (for client-side sync)
+     */
+    public static RewardEntry fromNetworkWithMetadata(UUID id, long timestamp, long expirationTime, 
+                                        RewardSource source, List<ItemStack> rewards, 
+                                        ClaimStatus status, String eligibility, Map<String, String> metadata) {
+        return new RewardEntry(id, timestamp, expirationTime, source, rewards, status, eligibility, metadata);
+    }
 
     /**
      * Deserialize a reward entry from NBT

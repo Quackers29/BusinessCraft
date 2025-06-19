@@ -249,7 +249,7 @@ public class VisitorProcessingHelper {
                 // Create bundled tourist arrival reward (combines fare + milestone rewards)
                 String originTownName = resolveTownName(serverLevel, record.getOriginTownId());
                 if (payment > 0 || milestoneResult.hasRewards()) {
-                    addBundledTouristReward(thisTown, originTownName, payment, milestoneResult);
+                    addBundledTouristReward(thisTown, originTownName, payment, milestoneResult, record.getCount());
                     // Trigger callback to update client sync after bundled reward is added
                     if (changeCallback != null) {
                         changeCallback.run();
@@ -349,7 +349,7 @@ public class VisitorProcessingHelper {
     /**
      * Creates a bundled tourist arrival reward combining fare payment and milestone rewards
      */
-    private void addBundledTouristReward(Town town, String originTownName, int payment, DistanceMilestoneHelper.MilestoneResult milestoneResult) {
+    private void addBundledTouristReward(Town town, String originTownName, int payment, DistanceMilestoneHelper.MilestoneResult milestoneResult, int touristCount) {
         DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, 
             "BUNDLED TOURIST REWARD - Creating bundled reward for town {} from {} with {} emeralds and {} milestone items",
             town.getName(), originTownName, payment, milestoneResult.hasRewards() ? milestoneResult.rewards.size() : 0);
@@ -379,6 +379,7 @@ public class VisitorProcessingHelper {
                 // Add metadata about the origin town and reward breakdown
                 town.getPaymentBoard().getRewardById(rewardId).ifPresent(rewardEntry -> {
                     rewardEntry.addMetadata("originTown", originTownName);
+                    rewardEntry.addMetadata("touristCount", String.valueOf(touristCount));
                     if (payment > 0) {
                         rewardEntry.addMetadata("fareAmount", String.valueOf(payment));
                     }
