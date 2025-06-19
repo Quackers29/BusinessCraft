@@ -9,6 +9,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Represents a reward entry in the town payment board system.
@@ -133,6 +138,28 @@ public class RewardEntry {
         if (hours > 0) return hours + "h ago";
         if (minutes > 0) return minutes + "m ago";
         return "Just now";
+    }
+    
+    /**
+     * Get timestamp in HH:mm:ss format for display
+     */
+    public String getTimeDisplay() {
+        LocalDateTime dateTime = LocalDateTime.ofInstant(
+            Instant.ofEpochMilli(timestamp), 
+            ZoneId.systemDefault()
+        );
+        return dateTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+    }
+    
+    /**
+     * Get full date and time string for tooltip display
+     */
+    public String getFullDateTimeDisplay() {
+        LocalDateTime dateTime = LocalDateTime.ofInstant(
+            Instant.ofEpochMilli(timestamp), 
+            ZoneId.systemDefault()
+        );
+        return dateTime.format(DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm:ss"));
     }
     
     /**

@@ -374,9 +374,10 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
                 paymentBoardGrid.addLabel(i, 1, rewardsText, TEXT_COLOR);
             }
             
-            // Column 2: Time ago (using static "Just now" for test data stability)
-            String timeText = "Just now"; // Static for test data to prevent text changing
-            paymentBoardGrid.addLabel(i, 2, timeText, TEXT_COLOR);
+            // Column 2: Time in HH:mm:ss format with full date/time tooltip
+            String timeText = reward.getTimeDisplay(); // HH:mm:ss format
+            String fullDateTime = reward.getFullDateTimeDisplay(); // Full date/time for tooltip
+            paymentBoardGrid.addLabelWithTooltip(i, 2, timeText, fullDateTime, TEXT_COLOR);
             
             // Column 3: Single Claim button (goes directly to buffer)
             if (reward.canBeClaimed("ALL") && reward.getStatus() == ClaimStatus.UNCLAIMED) {
