@@ -46,9 +46,9 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
     // Store the position of the town block
     private BlockPos townBlockPos;
     
-    // Buffer grid positions - dramatically increased spacing for much better UI layout
-    private static final int BUFFER_START_X = 8;
-    private static final int BUFFER_START_Y = 140; // Moved way down from 110 to create massive space after payment board
+    // Buffer grid positions - centered in wider screen layout
+    private static final int BUFFER_START_X = 90; // Centered for 340px screen width
+    private static final int BUFFER_START_Y = 140; // Back to original position
     private static final int SLOT_SIZE = 18;
     
     // Constructor for client-side creation
@@ -92,17 +92,17 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
             }
         }
         
-        // Add slots for player inventory (3 rows of 9) - moved way down for massive spacing
+        // Add slots for player inventory (3 rows of 9) - centered in wider screen
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 this.addSlot(new Slot(playerInventory, col + row * 9 + 9, 
-                        8 + col * SLOT_SIZE, 200 + row * SLOT_SIZE)); // Moved way down from 158
+                        90 + col * SLOT_SIZE, 200 + row * SLOT_SIZE)); // Back to y=200
             }
         }
         
-        // Add slots for player hotbar (1 row of 9) - moved way down for massive spacing
+        // Add slots for player hotbar (1 row of 9) - centered in wider screen
         for (int col = 0; col < 9; col++) {
-            this.addSlot(new Slot(playerInventory, col, 8 + col * SLOT_SIZE, 270)); // Moved way down from 220
+            this.addSlot(new Slot(playerInventory, col, 90 + col * SLOT_SIZE, 270)); // Back to y=270
         }
     }
     
@@ -277,6 +277,29 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
             );
             adminReward.addMetadata("reason", "special_event");
             testRewards.add(adminReward);
+            
+            // 6. Additional milestone reward to test scrolling
+            List<ItemStack> extraMilestone = new ArrayList<>();
+            extraMilestone.add(new ItemStack(net.minecraft.world.item.Items.EMERALD, 1));
+            extraMilestone.add(new ItemStack(net.minecraft.world.item.Items.BOOK, 1));
+            RewardEntry extraMilestoneReward = new RewardEntry(
+                com.yourdomain.businesscraft.town.data.RewardSource.MILESTONE, 
+                extraMilestone, 
+                "ALL"
+            );
+            extraMilestoneReward.addMetadata("distance", "1000");
+            testRewards.add(extraMilestoneReward);
+            
+            // 7. Extra tourist payment to test scrolling
+            List<ItemStack> extraTourist = new ArrayList<>();
+            extraTourist.add(new ItemStack(net.minecraft.world.item.Items.COPPER_INGOT, 4));
+            RewardEntry extraTouristReward = new RewardEntry(
+                com.yourdomain.businesscraft.town.data.RewardSource.TOURIST_PAYMENT, 
+                extraTourist, 
+                "ALL"
+            );
+            extraTouristReward.addMetadata("tourist_count", "3");
+            testRewards.add(extraTouristReward);
             
         } catch (Exception e) {
             LOGGER.error("Error creating static test rewards", e);
