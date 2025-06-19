@@ -130,19 +130,25 @@ Replace the existing communal storage UI with a comprehensive Payment Board syst
   - ✅ Fixed claim packet to send BufferStorageResponsePacket after claiming rewards
 
 #### **Phase 3: UI Navigation and Controls**
-- [ ] **3.1 Add Filtering and Sorting**
+- [x] **3.1 Enhanced Timestamp Display in Payment Board** ✅
+  - ✅ Replace "Just now" text with hh:mm:ss timestamp format
+  - ✅ Add tooltip on hover showing full date/time information
+  - ✅ Implement time formatting utility for consistent timestamp display across UI
+  - ✅ Update PaymentBoardScreen timestamp column to use new format
+
+- [ ] **3.2 Add Filtering and Sorting**
   - Filter by source type (All, Milestones, Tourist Payments, etc.)
   - Sort by timestamp (newest/oldest first)
   - Filter by claim status (unclaimed, claimed, expired)
   - Add search functionality for large reward lists
 
-- [ ] **3.2 Implement Bulk Operations**
+- [ ] **3.3 Implement Bulk Operations**
   - "Claim All" button with smart inventory management
   - "Claim All [Source Type]" for specific reward categories
   - Bulk expiration cleanup for old rewards
   - Select multiple rewards for batch claiming
 
-- [ ] **3.3 Add Status Indicators**
+- [ ] **3.4 Add Status Indicators**
   - Show total unclaimed rewards count
   - Display reward expiration warnings
   - Add visual indicators for new rewards since last visit
@@ -459,6 +465,29 @@ grid.addItem(row, 0, getSourceIcon(entry)) // Source icon
 - **Automation**: Hoppers and other automation can still deposit items from underneath
 - **Claims**: Reward claiming populates buffer storage and immediately updates client display
 
+### Task 3.1 Complete (2025-06-19)
+**✅ Enhanced Timestamp Display in Payment Board**
+
+**Status**: FULLY IMPLEMENTED - Payment Board now displays HH:mm:ss timestamps with full date/time tooltips.
+
+**Key Achievements:**
+- Enhanced RewardEntry class with two new timestamp formatting methods
+- Replaced hardcoded "Just now" text with dynamic HH:mm:ss format display
+- Added comprehensive tooltip system showing full date/time on hover
+- Successfully compiled and tested with no errors
+
+**Technical Implementation:**
+- **RewardEntry.getTimeDisplay()**: Returns HH:mm:ss format (e.g., "14:30:45")
+- **RewardEntry.getFullDateTimeDisplay()**: Returns full date/time for tooltips (e.g., "Jun 19, 2025 14:30:45")
+- **PaymentBoardScreen**: Updated to use addLabelWithTooltip() for timestamp column
+- **Build Status**: Successful compilation with no errors or warnings
+
+**User Experience Improvements:**
+- Precise timestamp display instead of generic "Just now" text
+- Hover tooltips provide complete date and time context
+- Consistent with existing UI tooltip patterns in the payment board
+- Better temporal awareness for reward claim timing
+
 ---
-**Status**: Phase 2 Core Functionality Complete - Payment Board fully functional with withdrawal-only buffer
-**Next Steps**: Phase 3 - UI Navigation and Controls (Task 3.1 - Add Filtering and Sorting)
+**Status**: Phase 3 Task 3.1 Complete - Enhanced Timestamp Display Implemented
+**Next Steps**: Phase 3 - UI Navigation and Controls (Task 3.2 - Add Filtering and Sorting)
