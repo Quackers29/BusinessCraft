@@ -152,16 +152,23 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
         return itemstack;
     }
     
-    // Custom slot implementation for buffer storage
+    // Custom slot implementation for buffer storage - WITHDRAWAL-ONLY for users
     private static class BufferSlot extends SlotItemHandler {
         public BufferSlot(IItemHandler itemHandler, int index, int xPosition, int yPosition) {
             super(itemHandler, index, xPosition, yPosition);
         }
         
-        // Allow any item to be placed in buffer slots
+        // BLOCK user placement of items - withdrawal-only buffer
+        // This prevents users from manually adding items while maintaining hopper automation
         @Override
         public boolean mayPlace(ItemStack stack) {
-            return true;
+            return false; // Users cannot place items in buffer slots
+        }
+        
+        // Allow taking items from buffer (for withdrawal functionality)
+        @Override
+        public boolean mayPickup(net.minecraft.world.entity.player.Player player) {
+            return true; // Users can always take items from buffer
         }
     }
     
@@ -253,9 +260,17 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
     public void claimReward(UUID rewardId, boolean toBuffer) {
         if (townBlockPos != null) {
             // Send reward claim packet to server
-            // This will need to be implemented with proper networking
             DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
                 "Claiming reward {} to {}", rewardId, toBuffer ? "buffer" : "inventory");
+            
+            try {
+                ModMessages.sendToServer(new com.yourdomain.businesscraft.network.packets.storage.PaymentBoardClaimPacket(
+                    townBlockPos, rewardId, toBuffer));
+            } catch (Exception e) {
+                LOGGER.error("Error sending claim request for reward {}", rewardId, e);
+            }
+        } else {
+            LOGGER.warn("Cannot claim reward - no town block position available");
         }
     }
     
@@ -264,14 +279,21 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
      */
     public boolean processBufferStorageAdd(Player player, int slotId, ItemStack itemStack) {
         // Only process slots in the buffer inventory (0-17)
-        if (slotId >= BUFFER_SIZE || itemStack.isEmpty()) {
+        if (slotId >= BUFFER_SIZE || itemStack.isEmpty() || townBlockPos == null) {
             return false;
         }
         
         // Send a packet to the server to add the item to buffer storage
-        // For now, just log the action
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
             "Adding {} items to buffer storage at slot {}", itemStack.getCount(), slotId);
+        
+        try {
+            ModMessages.sendToServer(new com.yourdomain.businesscraft.network.packets.storage.BufferStoragePacket(
+                townBlockPos, itemStack, slotId, true)); // true = add operation
+        } catch (Exception e) {
+            LOGGER.error("Error sending buffer storage add request", e);
+            return false;
+        }
         
         return true;
     }
@@ -281,16 +303,38 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
      */
     public boolean processBufferStorageRemove(Player player, int slotId, ItemStack itemStack) {
         // Only process slots in the buffer inventory (0-17)
-        if (slotId >= BUFFER_SIZE || itemStack.isEmpty()) {
+        if (slotId >= BUFFER_SIZE || itemStack.isEmpty() || townBlockPos == null) {
             return false;
         }
         
         // Send a packet to the server to remove the item from buffer storage
-        // For now, just log the action
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
             "Removing {} items from buffer storage at slot {}", itemStack.getCount(), slotId);
         
+        try {
+            ModMessages.sendToServer(new com.yourdomain.businesscraft.network.packets.storage.BufferStoragePacket(
+                townBlockPos, itemStack, slotId, false)); // false = remove operation
+        } catch (Exception e) {
+            LOGGER.error("Error sending buffer storage remove request", e);
+            return false;
+        }
+        
         return true;
+    }
+    
+    /**
+     * Request buffer storage data from the server
+     */
+    public void requestBufferStorageData() {
+        if (townBlockPos != null) {
+            try {
+                // Send a request packet with slotId -1 to get all buffer storage data
+                ModMessages.sendToServer(new com.yourdomain.businesscraft.network.packets.storage.BufferStoragePacket(
+                    townBlockPos, ItemStack.EMPTY, -1, true)); // slotId -1 = data request
+            } catch (Exception e) {
+                LOGGER.error("Error sending buffer storage data request", e);
+            }
+        }
     }
     
     /**

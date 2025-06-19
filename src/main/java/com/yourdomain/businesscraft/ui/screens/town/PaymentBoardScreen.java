@@ -104,6 +104,9 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
         
         // Request reward data from server after screen is fully initialized
         requestPaymentBoardData();
+        
+        // Request buffer storage data from server
+        this.menu.requestBufferStorageData();
     }
     
     /**
@@ -492,13 +495,15 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     }
     
     private void handleBufferSlotClick(Slot slot, int slotId, int mouseButton, ClickType type) {
-        // Similar logic to the original storage screen but for buffer storage
+        // WITHDRAWAL-ONLY BUFFER: Users can only remove items, not add them
+        // This maintains hopper automation input capability while preventing manual user additions
+        
         ItemStack slotBefore = slot.hasItem() ? slot.getItem().copy() : ItemStack.EMPTY;
         
-        // Handle shift-clicking
+        // Handle shift-clicking - ALLOW (removal only)
         if (type == ClickType.QUICK_MOVE) {
             if (!slotBefore.isEmpty()) {
-                // Let standard handling happen
+                // Allow shift-click to remove items from buffer to player inventory
                 super.slotClicked(slot, slotId, mouseButton, type);
                 
                 // Calculate what was removed and send to server
@@ -517,31 +522,24 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
         }
         
         // Handle regular clicks
-        if (type == ClickType.PICKUP && mouseButton == 0 && !this.menu.getCarried().isEmpty()) {
-            // Adding item to buffer
-            super.slotClicked(slot, slotId, mouseButton, type);
-            
-            ItemStack slotAfter = slot.getItem();
-            if (slotAfter.getCount() > slotBefore.getCount() || 
-                (slotBefore.isEmpty() && !slotAfter.isEmpty())) {
-                
-                int itemsAdded = slotBefore.isEmpty() ? slotAfter.getCount() : 
-                               slotAfter.getCount() - slotBefore.getCount();
-                
-                if (itemsAdded > 0) {
-                    ItemStack itemToAdd = slotAfter.copy();
-                    itemToAdd.setCount(itemsAdded);
-                    this.menu.processBufferStorageAdd(this.minecraft.player, slotId, itemToAdd);
-                }
+        if (type == ClickType.PICKUP && mouseButton == 0) {
+            if (!this.menu.getCarried().isEmpty()) {
+                // BLOCK: User trying to add item to buffer - prevent this
+                // Do nothing, effectively blocking the action
+                return;
+            } else if (!slot.getItem().isEmpty()) {
+                // ALLOW: User trying to remove item from buffer - allow this
+                ItemStack itemToRemove = slot.getItem().copy();
+                super.slotClicked(slot, slotId, mouseButton, type);
+                this.menu.processBufferStorageRemove(this.minecraft.player, slotId, itemToRemove);
             }
-        } else if (type == ClickType.PICKUP && mouseButton == 0 && !slot.getItem().isEmpty()) {
-            // Removing item from buffer
-            ItemStack itemToRemove = slot.getItem().copy();
-            super.slotClicked(slot, slotId, mouseButton, type);
-            this.menu.processBufferStorageRemove(this.minecraft.player, slotId, itemToRemove);
         } else {
-            // Other click types
-            super.slotClicked(slot, slotId, mouseButton, type);
+            // For other click types (right-click, etc.), only allow if removing items
+            if (!slot.getItem().isEmpty() && this.menu.getCarried().isEmpty()) {
+                // Allow removal operations
+                super.slotClicked(slot, slotId, mouseButton, type);
+            }
+            // Block all other operations that could add items
         }
     }
     

@@ -21,7 +21,7 @@ public class DebugConfig {
     // Core Systems - High Priority (Milestone 2)
     public static final boolean TOWN_BLOCK_ENTITY = false;
     public static final boolean TOWN_INTERFACE_MENU = false;
-    public static final boolean NETWORK_PACKETS = true;
+    public static final boolean NETWORK_PACKETS = false;
     
     // UI Management Systems (Milestone 3)
     public static final boolean UI_MANAGERS = false;
@@ -33,7 +33,7 @@ public class DebugConfig {
     public static final boolean UI_STANDARD_TAB_CONTENT = false;
     
     // Town & Data Systems (Milestone 3)
-    public static final boolean TOWN_DATA_SYSTEMS = true;
+    public static final boolean TOWN_DATA_SYSTEMS = false;
     public static final boolean TOWN_SERVICE = false;
     public static final boolean TOWN_MANAGER = false;
     public static final boolean NBT_DATA_HELPER = false;
