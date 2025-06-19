@@ -367,8 +367,13 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
             String fullRewardsText = reward.getRewardsDisplay();
             String rewardsText = truncateTextStable(fullRewardsText, 12); // Reduced from 20 to 12
             
-            // Add tooltip if text was truncated
-            if (fullRewardsText.length() > 12) {
+            // Create enhanced tooltip for tourist arrival rewards
+            String rewardTooltip = createRewardTooltip(reward, fullRewardsText);
+            
+            // Add tooltip (enhanced for tourist arrivals or standard for others)
+            if (rewardTooltip != null && !rewardTooltip.equals(fullRewardsText)) {
+                paymentBoardGrid.addLabelWithTooltip(i, 1, rewardsText, rewardTooltip, TEXT_COLOR);
+            } else if (fullRewardsText.length() > 12) {
                 paymentBoardGrid.addLabelWithTooltip(i, 1, rewardsText, fullRewardsText, TEXT_COLOR);
             } else {
                 paymentBoardGrid.addLabel(i, 1, rewardsText, TEXT_COLOR);
@@ -425,6 +430,44 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
         }
         
         return truncated + "...";
+    }
+    
+    /**
+     * Creates enhanced tooltips for rewards, especially tourist arrival rewards
+     */
+    private String createRewardTooltip(RewardEntry reward, String defaultTooltip) {
+        if (reward.getSource() == RewardSource.TOURIST_ARRIVAL) {
+            StringBuilder tooltip = new StringBuilder();
+            
+            // Add origin town information
+            String originTown = reward.getMetadata().get("originTown");
+            if (originTown != null && !originTown.isEmpty()) {
+                tooltip.append("From: ").append(originTown).append("\n");
+            }
+            
+            // Add fare information
+            String fareAmount = reward.getMetadata().get("fareAmount");
+            if (fareAmount != null && !fareAmount.isEmpty()) {
+                tooltip.append("Fare: ").append(fareAmount).append(" emeralds\n");
+            }
+            
+            // Add milestone information
+            String milestoneDistance = reward.getMetadata().get("milestoneDistance");
+            String milestoneItems = reward.getMetadata().get("milestoneItems");
+            if (milestoneDistance != null && milestoneItems != null && 
+                !milestoneDistance.isEmpty() && !milestoneItems.isEmpty()) {
+                tooltip.append("Milestone: ").append(milestoneDistance).append("m journey (")
+                       .append(milestoneItems).append(" items)");
+            }
+            
+            // If we built a tooltip, return it, otherwise fall back to default
+            if (tooltip.length() > 0) {
+                return tooltip.toString().trim();
+            }
+        }
+        
+        // For non-tourist arrivals or if metadata is missing, return default
+        return defaultTooltip;
     }
     
     private void claimReward(UUID rewardId, boolean toBuffer) {

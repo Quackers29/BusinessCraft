@@ -246,18 +246,11 @@ public class VisitorProcessingHelper {
                 DistanceMilestoneHelper.MilestoneResult milestoneResult = 
                     DistanceMilestoneHelper.checkMilestones(averageDistance, record.getCount());
                 
-                if (milestoneResult.hasRewards()) {
-                    DistanceMilestoneHelper.deliverRewards(thisTown, milestoneResult);
-                    // Trigger callback to update client sync after milestone rewards are added
-                    if (changeCallback != null) {
-                        changeCallback.run();
-                    }
-                }
-                
-                // Add emeralds to communal storage if payment > 0
-                if (payment > 0) {
-                    addPaymentToTown(thisTown, payment);
-                    // Trigger callback to update client sync after emeralds are added
+                // Create bundled tourist arrival reward (combines fare + milestone rewards)
+                String originTownName = resolveTownName(serverLevel, record.getOriginTownId());
+                if (payment > 0 || milestoneResult.hasRewards()) {
+                    addBundledTouristReward(thisTown, originTownName, payment, milestoneResult);
+                    // Trigger callback to update client sync after bundled reward is added
                     if (changeCallback != null) {
                         changeCallback.run();
                     }
@@ -265,7 +258,6 @@ public class VisitorProcessingHelper {
                 
                 // Send grouped notification with payment and milestone information
                 if (ConfigLoader.notifyOnTouristDeparture) {
-                    String originTownName = resolveTownName(serverLevel, record.getOriginTownId());
                     TownNotificationUtils.notifyTouristArrivals(
                         serverLevel,
                         townBlockPos,
@@ -354,6 +346,63 @@ public class VisitorProcessingHelper {
     /**
      * Resolves a town name from its UUID
      */
+    /**
+     * Creates a bundled tourist arrival reward combining fare payment and milestone rewards
+     */
+    private void addBundledTouristReward(Town town, String originTownName, int payment, DistanceMilestoneHelper.MilestoneResult milestoneResult) {
+        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, 
+            "BUNDLED TOURIST REWARD - Creating bundled reward for town {} from {} with {} emeralds and {} milestone items",
+            town.getName(), originTownName, payment, milestoneResult.hasRewards() ? milestoneResult.rewards.size() : 0);
+        
+        try {
+            // Combine all reward items into a single list
+            List<net.minecraft.world.item.ItemStack> rewardItems = new ArrayList<>();
+            
+            // Add emerald payment if any
+            if (payment > 0) {
+                rewardItems.add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.EMERALD, payment));
+            }
+            
+            // Add milestone rewards if any
+            if (milestoneResult.hasRewards()) {
+                rewardItems.addAll(milestoneResult.rewards);
+            }
+            
+            // Create the bundled reward entry
+            UUID rewardId = town.getPaymentBoard().addReward(
+                RewardSource.TOURIST_ARRIVAL,
+                rewardItems,
+                "ALL"
+            );
+            
+            if (rewardId != null) {
+                // Add metadata about the origin town and reward breakdown
+                town.getPaymentBoard().getRewardById(rewardId).ifPresent(rewardEntry -> {
+                    rewardEntry.addMetadata("originTown", originTownName);
+                    if (payment > 0) {
+                        rewardEntry.addMetadata("fareAmount", String.valueOf(payment));
+                    }
+                    if (milestoneResult.hasRewards()) {
+                        rewardEntry.addMetadata("milestoneDistance", String.valueOf((int) Math.round(milestoneResult.actualDistance)));
+                        rewardEntry.addMetadata("milestoneItems", String.valueOf(milestoneResult.rewards.size()));
+                    }
+                });
+                
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, 
+                    "BUNDLED TOURIST REWARD - Created reward entry {} for {} emeralds + {} milestone items from {} in town {}", 
+                    rewardId, payment, milestoneResult.hasRewards() ? milestoneResult.rewards.size() : 0, originTownName, town.getName());
+                
+                LOGGER.info("Added bundled tourist arrival reward to town '{}' from '{}': {} emeralds + {} milestone items", 
+                    town.getName(), originTownName, payment, milestoneResult.hasRewards() ? milestoneResult.rewards.size() : 0);
+            } else {
+                LOGGER.warn("Failed to create bundled tourist reward entry for town '{}'", town.getName());
+            }
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to create bundled tourist reward for town '{}': {}", town.getName(), e.getMessage());
+        }
+    }
+    
     private String resolveTownName(ServerLevel serverLevel, UUID townId) {
         if (townId == null) return "Unknown";
         
