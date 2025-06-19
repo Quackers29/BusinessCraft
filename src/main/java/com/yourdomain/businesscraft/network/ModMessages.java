@@ -34,6 +34,8 @@ import com.yourdomain.businesscraft.network.packets.ui.OpenTownInterfacePacket;
 import com.yourdomain.businesscraft.network.packets.storage.TradeResourcePacket;
 import com.yourdomain.businesscraft.network.packets.storage.CommunalStoragePacket;
 import com.yourdomain.businesscraft.network.packets.storage.CommunalStorageResponsePacket;
+import com.yourdomain.businesscraft.network.packets.storage.PaymentBoardResponsePacket;
+import com.yourdomain.businesscraft.network.packets.storage.PaymentBoardRequestPacket;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStoragePacket;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageResponsePacket;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
@@ -182,6 +184,18 @@ public class ModMessages {
                 .decoder(CommunalStorageResponsePacket::decode)
                 .encoder(CommunalStorageResponsePacket::encode)
                 .consumerMainThread(CommunalStorageResponsePacket::handle)
+                .add();
+                
+        net.messageBuilder(PaymentBoardResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(PaymentBoardResponsePacket::decode)
+                .encoder(PaymentBoardResponsePacket::encode)
+                .consumerMainThread(PaymentBoardResponsePacket::handle)
+                .add();
+                
+        net.messageBuilder(PaymentBoardRequestPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PaymentBoardRequestPacket::decode)
+                .encoder(PaymentBoardRequestPacket::encode)
+                .consumerMainThread(PaymentBoardRequestPacket::handle)
                 .add();
                 
         // Register personal storage packets

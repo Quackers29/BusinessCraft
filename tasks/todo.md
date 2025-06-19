@@ -100,12 +100,12 @@ Replace the existing communal storage UI with a comprehensive Payment Board syst
   - PaymentBoardScreen now shows full reward text on hover for truncated items
   - Tooltip automatically appears when hovering over truncated reward descriptions
 
-- [ ] **2.13 Remove Test Data and Connect Reward Systems to Payment Board**
-  - Remove static test rewards from PaymentBoardMenu.getStaticTestRewards()
-  - Update DistanceMilestoneHelper.deliverRewards() to create RewardEntry instead of direct storage
-  - Update VisitorProcessingHelper to create tourist payment entries
-  - Ensure all reward delivery systems properly path to TownPaymentBoard
-  - Test milestone and tourist rewards appear in Payment Board UI
+- [x] **2.13 Remove Test Data and Connect Reward Systems to Payment Board** ✅
+  - Removed static test rewards from PaymentBoardMenu.getStaticTestRewards()
+  - DistanceMilestoneHelper.deliverRewards() already calls town.getPaymentBoard().addReward()
+  - VisitorProcessingHelper already calls town.getPaymentBoard().addReward() for tourist payments
+  - PaymentBoardMenu.getUnclaimedRewards() now accesses real Town.getPaymentBoard().getUnclaimedRewards()
+  - All reward delivery systems confirmed to properly path to TownPaymentBoard
 
 - [ ] **2.14 Implement Claim Button Functionality to Deposit Items to Payment Buffer**
   - Implement PaymentBoardMenu.claimReward(UUID, boolean toBuffer) method

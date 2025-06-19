@@ -19,6 +19,7 @@ import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.core.BlockPos;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 import java.util.*;
 import java.util.List;
@@ -62,6 +63,9 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     private UIGridBuilder paymentBoardGrid;
     private List<RewardEntry> currentRewards = new ArrayList<>();
     
+    // Client-side cached rewards data (synced from server)
+    private List<RewardEntry> cachedRewards = new ArrayList<>();
+    
     // Enhanced color scheme for better visual hierarchy
     private static final int SUCCESS_COLOR = 0xB0228B22; // Slightly more opaque green
     private static final int INFO_COLOR = 0xB0336699;    // Slightly more opaque blue
@@ -92,6 +96,40 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
         // The grid will be created on first data update - this preserves scroll state
         // No need to create it here since we'll create it in updatePaymentBoardData
         paymentBoardGrid = null;
+    }
+    
+    @Override
+    protected void init() {
+        super.init();
+        
+        // Request reward data from server after screen is fully initialized
+        requestPaymentBoardData();
+    }
+    
+    /**
+     * Request payment board data from the server (proper timing after init)
+     */
+    private void requestPaymentBoardData() {
+        if (this.minecraft != null && this.minecraft.level != null && this.minecraft.level.isClientSide()) {
+            BlockPos townBlockPos = this.menu.getTownBlockPos();
+            if (townBlockPos != null) {
+                try {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        "PaymentBoardScreen.requestPaymentBoardData() - Requesting data from server for town block at {}", 
+                        townBlockPos);
+                    com.yourdomain.businesscraft.network.ModMessages.sendToServer(
+                        new com.yourdomain.businesscraft.network.packets.storage.PaymentBoardRequestPacket(townBlockPos));
+                } catch (Exception e) {
+                    LOGGER.error("Error sending payment board data request", e);
+                }
+            } else {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                    "PaymentBoardScreen.requestPaymentBoardData() - No town block position available");
+            }
+        } else {
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                "PaymentBoardScreen.requestPaymentBoardData() - Not on client side or minecraft not available");
+        }
     }
     
     @Override
@@ -525,5 +563,18 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     private void returnToMainUI() {
         this.onClose();
         ScreenNavigationHelper.returnToTownInterface(this.minecraft, this.minecraft.player, this.menu.getTownBlockPos());
+    }
+    
+    /**
+     * Update the cached reward data from the server
+     * Called by PaymentBoardResponsePacket
+     */
+    public void updateRewardData(List<RewardEntry> rewards) {
+        this.cachedRewards = new ArrayList<>(rewards);
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
+            "PaymentBoardScreen.updateRewardData() - received {} rewards from server", rewards.size());
+        
+        // Trigger a UI update
+        updatePaymentBoardData();
     }
 }

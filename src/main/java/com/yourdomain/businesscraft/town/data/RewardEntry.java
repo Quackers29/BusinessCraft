@@ -168,6 +168,15 @@ public class RewardEntry {
     }
     
     /**
+     * Create a reward entry from network data (for client-side sync)
+     */
+    public static RewardEntry fromNetwork(UUID id, long timestamp, long expirationTime, 
+                                        RewardSource source, List<ItemStack> rewards, 
+                                        ClaimStatus status, String eligibility) {
+        return new RewardEntry(id, timestamp, expirationTime, source, rewards, status, eligibility, new HashMap<>());
+    }
+
+    /**
      * Deserialize a reward entry from NBT
      */
     public static RewardEntry fromNBT(CompoundTag tag) {
