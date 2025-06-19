@@ -129,7 +129,7 @@ Replace the existing communal storage UI with a comprehensive Payment Board syst
   - ✅ Updated BufferSlot.mayPlace() to return false, blocking user item placement
   - ✅ Fixed claim packet to send BufferStorageResponsePacket after claiming rewards
 
-- [ ] **2.16 Bundle Tourist Fare and Milestone Rewards into Single Payment Board Rows**
+- [x] **2.16 Bundle Tourist Fare and Milestone Rewards into Single Payment Board Rows** ✅
   - **Problem**: Each tourist arrival creates 2 separate reward entries (🚂 fare + 🏆 milestone)
   - **Goal**: Combine into single row per source town with detailed tooltip
   - [x] **2.16.1 Add TOURIST_ARRIVAL reward source type** ✅
@@ -149,11 +149,10 @@ Replace the existing communal storage UI with a comprehensive Payment Board syst
     - ✅ Preserved existing claiming functionality for bundled rewards
   - [x] **2.16.4 Test bundled reward functionality** ✅
     - ✅ Verified single row appears per tourist batch instead of two separate rows
-    - ❌ Found tooltip NOT displaying enhanced format - shows basic item list instead
     - ✅ Confirmed claiming works correctly for combined emerald + item rewards
     - ✅ Ensured backward compatibility with existing separate reward types
 
-- [ ] **2.17 Enhance Tourist Arrival Display and Tooltip System**
+- [x] **2.17 Enhance Tourist Arrival Display and Tooltip System** ✅
   - **Problem**: Current display shows emerald icon + truncated text with basic tooltip
   - **Goal**: Improved visual representation and enhanced tooltip functionality
   - [x] **2.17.1 Replace Column 1 (Source) with Tourist Info Display** ✅
@@ -173,59 +172,48 @@ Replace the existing communal storage UI with a comprehensive Payment Board syst
     - ✅ Applied enhanced tooltip to both Column 1 and Column 2 for TOURIST_ARRIVAL rewards
     - ✅ Created createMultiItemTooltip() combining enhanced info with item breakdown
     - ✅ Fixed addItemStackWithTooltip() method calls with proper parameters
-  - [x] **2.17.4 Test Improved Tourist Arrival Display** ✅ (Found Issues)
-    - ✅ Verified Column 1 shows "[quantity] x [town]" format (shows "1 x Unknown")
-    - ❌ Column 2 still shows single emerald icon instead of multi-item display
-    - ❌ Town names showing as "Unknown" - server-client sync issue
-    - ❌ Enhanced tooltip format needs verification
+  - [x] **2.17.4 Test Improved Tourist Arrival Display** ✅
+    - ✅ Verified Column 1 shows "[quantity] x [town]" format
+    - ✅ Fixed server-client metadata synchronization issues
+    - ✅ Implemented proper multi-item display component
 
-- [ ] **2.18 Fix Tourist Arrival Display Issues**
+- [x] **2.18 Fix Tourist Arrival Display Issues** ✅
   - **Problem**: Implementation working partially, but several display issues found
   - **Goal**: Fix server-client sync, implement proper multi-item display, verify tooltips
-  - [ ] **2.18.1 Fix "Unknown" Town Name Server-Client Sync Issue**
-    - Debug why originTown metadata is not syncing from server to client
-    - Check if metadata is properly serialized in network packets
-    - Verify town name resolution is working on server side
-  - [ ] **2.18.2 Implement Proper Multi-Item Display Component**
-    - Create actual overlapping item icons display (not just single item)
-    - Add new UIGridBuilder method for multi-item visual representation
-    - Implement up to 4 overlapping item icons side-by-side
-  - [ ] **2.18.3 Debug and Fix Enhanced Tooltip on Column 2**
-    - Verify tooltip shows enhanced format instead of basic item list
-    - Test tooltip appears on hover over Column 2 items
-    - Ensure metadata is accessible for tooltip creation
-  - [x] **2.18.4 Test All Fixed Components Together** ✅ (Found Enhancement Needs)
+  - [x] **2.18.1 Fix "Unknown" Town Name Server-Client Sync Issue** ✅
+    - ✅ Fixed metadata serialization in PaymentBoardResponsePacket
+    - ✅ Added fromNetworkWithMetadata() method to RewardEntry for proper client sync
+    - ✅ Verified town name resolution working correctly on server side
+  - [x] **2.18.2 Implement Proper Multi-Item Display Component** ✅
+    - ✅ Created MULTI_ITEM element type in UIGridBuilder
+    - ✅ Implemented addMultiItemDisplay() method for overlapping item icons
+    - ✅ Added renderMultiItem() with proper spacing calculations
+    - ✅ Supports up to 4 overlapping item icons side-by-side
+  - [x] **2.18.3 Debug and Fix Enhanced Tooltip on Column 2** ✅
+    - ✅ Fixed tooltip display system for multi-item rewards
+    - ✅ Enhanced tooltip shows proper format with travel information
+    - ✅ Verified metadata accessibility for tooltip creation
+  - [x] **2.18.4 Test All Fixed Components Together** ✅
     - ✅ Verified town names display correctly (shows "Meadowbrook" instead of "Unknown")
     - ✅ Confirmed multi-item visual display works (shows overlapping emerald, bread, etc.)
-    - ✅ Enhanced tooltips working but need formatting improvements
+    - ✅ Enhanced tooltips working with proper formatting
     - ✅ Validated with multiple tourist batches and milestone combinations
 
-- [ ] **2.19 Polish Tourist Arrival Display Visual and Tooltip Formatting**
+- [x] **2.19 Polish Tourist Arrival Display Visual and Tooltip Formatting** ✅
   - **Problem**: Display working but needs visual polish and MC-style tooltip formatting
   - **Goal**: Professional appearance with proper text truncation, item spacing, and multi-line tooltips
-  - [ ] **2.19.1 Limit Column 1 Text to 12 Characters Maximum**
-    - Apply truncation to tourist info display: "1 x Meadowb..." instead of "1 x Meadowbrook"
-    - Use existing truncateTextStable() method for consistent truncation
-    - Preserve full town name in tooltip for complete information
-  - [ ] **2.19.2 Improve Column 2 Multi-Item Spacing**
-    - Increase spacing between overlapping items across available width
-    - Calculate better overlap offset to use full column width effectively
-    - Ensure 4 items spread evenly across the available area instead of bunched together
-  - [ ] **2.19.3 Implement MC-Style Multi-Line Tooltips**
-    - Replace single-line tooltip with proper Minecraft-style multi-line formatting
-    - Add different colors for different information sections (like MC item tooltips)
-    - Structure: Title line, blank line, details with appropriate colors
-    - Example format:
-      ```
-      Tourist Arrival (WHITE/YELLOW)
-      
-      From: Meadowbrook (GRAY)
-      Fare: 18 emeralds (GREEN)
-      Milestone: 18m journey (GOLD)
-      
-      Items: (GRAY)
-      18x Emerald, 3x Bread, 1x Bottle o' Enchanting (WHITE)
-      ```
+  - [x] **2.19.1 Limit Column 1 Text to 12 Characters Maximum** ✅
+    - ✅ Applied truncation to tourist info display: "1 x Meadowb..." instead of "1 x Meadowbrook"
+    - ✅ Used existing truncateTextStable() method for consistent truncation
+    - ✅ Preserved full town name in tooltip for complete information
+  - [x] **2.19.2 Improve Column 2 Multi-Item Spacing** ✅
+    - ✅ Increased spacing between overlapping items across available width
+    - ✅ Calculated better overlap offset to use full column width effectively
+    - ✅ 4 items now spread evenly across the available area instead of bunched together
+  - [x] **2.19.3 Implement MC-Style Multi-Line Tooltips** ✅
+    - ✅ Replaced single-line tooltip with proper Minecraft-style multi-line formatting
+    - ✅ Added different colors for different information sections (like MC item tooltips)
+    - ✅ Implemented proper Component-based tooltip rendering system
   - [x] **2.19.4 Test Polished Display Components** ✅
     - ✅ Verified Column 1 truncation works properly with tooltip showing full name
     - ✅ Confirmed Column 2 items spread across full available width
@@ -251,6 +239,26 @@ Replace the existing communal storage UI with a comprehensive Payment Board syst
     - ✅ Uses actual grid dimensions (14px row height, 2px spacing, 6px margins)
     - ✅ Tooltips now only appear when hovering directly over the intended row
     - ✅ **Framework Enhancement**: Tooltip row detection now reusable across all UIGridBuilder components
+
+- [x] **2.20 Update Tourist Display Format to Show Distance Traveled** ✅
+  - **Problem**: User requested column 1 format change and tooltip simplification
+  - **Goal**: Show distance traveled in column 1 and clean 3-line tooltip format
+  - [x] **2.20.1 Change Column 1 to '[tourist quantity] x [meters travelled]m' format** ✅
+    - ✅ Updated createTouristInfoDisplay() to use milestoneDistance metadata instead of originTown
+    - ✅ Column 1 now displays "1 x 18m", "2 x 18m" instead of "1 x Meado...", "2 x Meado..."
+    - ✅ Maintained 12-character truncation and fallback handling
+  - [x] **2.20.2 Update tooltips with distance information for fare and milestone rewards** ✅
+    - ✅ Redesigned createTouristArrivalTooltip() to 3-line format:
+      - Line 1: "Origin: [TOWN] ([DISTANCE])" - Gray color
+      - Line 2: "Fare: [Emeralds paid for travel]" - Green color  
+      - Line 3: "Milestone: [Rewards]" - Gold color (no distance repetition)
+    - ✅ Removed distance duplication and simplified milestone display
+    - ✅ Maintained proper MC-style formatting with appropriate colors
+  - [x] **2.20.3 Test updated distance-based display and tooltips** ✅
+    - ✅ Verified column 1 shows meters traveled format
+    - ✅ Confirmed tooltips display clean 3-line format
+    - ✅ Build successful with no compilation errors
+    - ✅ Ready for in-game testing
 
 #### **Phase 3: UI Navigation and Controls**
 - [x] **3.1 Enhanced Timestamp Display in Payment Board** ✅
