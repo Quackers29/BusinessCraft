@@ -340,6 +340,25 @@ public class UIGridBuilder {
     }
     
     /**
+     * Adds a label with a tooltip to the grid
+     * 
+     * @param row Grid row
+     * @param column Grid column
+     * @param text Label text
+     * @param tooltip Tooltip text to show on hover
+     * @param textColor Text color
+     * @return This builder for chaining
+     */
+    public UIGridBuilder addLabelWithTooltip(int row, int column, String text, String tooltip, int textColor) {
+        UIGridElement element = new UIGridElement(UIElementType.LABEL, row, column, 1, 1);
+        element.text = text;
+        element.tooltip = tooltip;
+        element.textColor = textColor;
+        elements.add(element);
+        return this;
+    }
+    
+    /**
      * Adds a toggle button to the grid
      */
     public UIGridBuilder addToggle(int row, int column, String text, boolean initialState,
