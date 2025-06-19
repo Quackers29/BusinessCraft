@@ -95,31 +95,24 @@ public class RewardEntry {
     
     /**
      * Get a formatted string representation of the rewards
+     * Uses LinkedHashMap to maintain consistent order and prevent text flipping
      */
     public String getRewardsDisplay() {
         if (rewards.isEmpty()) return "No rewards";
         
-        Map<ItemStack, Integer> combinedRewards = new HashMap<>();
+        // Use LinkedHashMap to maintain insertion order and prevent text flipping
+        Map<String, Integer> combinedRewards = new LinkedHashMap<>();
         
-        // Combine identical items
+        // Combine identical items by item name (maintains order)
         for (ItemStack stack : rewards) {
-            boolean found = false;
-            for (Map.Entry<ItemStack, Integer> entry : combinedRewards.entrySet()) {
-                if (ItemStack.isSameItemSameTags(entry.getKey(), stack)) {
-                    entry.setValue(entry.getValue() + stack.getCount());
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                combinedRewards.put(stack.copy(), stack.getCount());
-            }
+            String itemName = stack.getHoverName().getString();
+            combinedRewards.merge(itemName, stack.getCount(), Integer::sum);
         }
         
-        // Format the display
+        // Format the display in consistent order
         List<String> rewardStrings = new ArrayList<>();
-        for (Map.Entry<ItemStack, Integer> entry : combinedRewards.entrySet()) {
-            String itemName = entry.getKey().getHoverName().getString();
+        for (Map.Entry<String, Integer> entry : combinedRewards.entrySet()) {
+            String itemName = entry.getKey();
             int count = entry.getValue();
             rewardStrings.add(count > 1 ? count + "x " + itemName : itemName);
         }

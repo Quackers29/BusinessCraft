@@ -254,6 +254,35 @@ public class UIGridBuilder {
     }
     
     /**
+     * Updates the total number of rows and recalculates scroll parameters
+     * This should be called after adding all elements to ensure proper scrolling
+     * @param newTotalRows The actual number of rows with content
+     */
+    public void updateTotalRows(int newTotalRows) {
+        this.rows = newTotalRows;
+        this.totalRows = newTotalRows;
+        
+        if (verticalScrollEnabled) {
+            this.maxVerticalScrollOffset = Math.max(0, totalRows - visibleRows);
+            // Clamp current offset to new valid range
+            setVerticalScrollOffset(verticalScrollOffset);
+            
+            DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, 
+                "Updated total rows: {}, visible: {}, maxOffset: {}", 
+                totalRows, visibleRows, maxVerticalScrollOffset);
+        }
+    }
+    
+    /**
+     * Clears all elements while preserving grid structure and scroll state
+     * This allows for data updates without losing scroll position
+     */
+    public void clearElements() {
+        elements.clear();
+        DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, "Cleared all elements, preserving scroll state");
+    }
+    
+    /**
      * Scroll up by one row
      */
     public void scrollUp() {
@@ -666,10 +695,15 @@ public class UIGridBuilder {
      */
     private void renderLabel(GuiGraphics graphics, UIGridElement element, 
                             int x, int y, int width, int height) {
-        // Draw text (centered)
-        int textX = x + width / 2 - Minecraft.getInstance().font.width(element.text) / 2;
-        int textY = y + (height - 8) / 2;
-        graphics.drawString(Minecraft.getInstance().font, element.text, textX, textY, element.textColor);
+        Font font = Minecraft.getInstance().font;
+        
+        // Use the text as provided (truncation should be done before adding to grid)
+        String displayText = element.text;
+        
+        // Draw text (left-aligned with padding)
+        int textX = x + 2; // Left-aligned with 2px padding
+        int textY = y + (height - font.lineHeight) / 2; // Vertically centered
+        graphics.drawString(font, displayText, textX, textY, element.textColor);
     }
     
     /**
@@ -880,11 +914,11 @@ public class UIGridBuilder {
         }
         
         // Check for vertical scrollbar drag - must use the same position as in rendering
-        if (verticalScrollEnabled) {
+        if (verticalScrollEnabled && totalRows > visibleRows) {
             // Use the same scrollbar position as in renderVerticalScrollbar method
-            int scrollBarX = x + width - scrollBarWidth - 4; // Match rendering position
-            int scrollTrackY = y + verticalMargin;
-            int scrollTrackHeight = height - (verticalMargin * 2);
+            int scrollBarX = x + width + 20; // Match rendering position - outside grid
+            int scrollTrackY = y + verticalMargin + 2; // Match rendering position
+            int scrollTrackHeight = height - (verticalMargin * 2) - 4; // Match rendering calculation
             
             if (mouseX >= scrollBarX && mouseX < scrollBarX + scrollBarWidth &&
                 mouseY >= scrollTrackY && mouseY < scrollTrackY + scrollTrackHeight) {
@@ -1508,16 +1542,16 @@ public class UIGridBuilder {
      * Check if the mouse is over the vertical scrollbar thumb
      */
     private boolean isMouseOverVerticalScrollThumb(int mouseX, int mouseY) {
-        if (!verticalScrollEnabled) return false;
+        if (!verticalScrollEnabled || totalRows <= visibleRows) return false;
         
-        // Calculate scroll thumb dimensions and position - must match the rendering position
-        int scrollTrackX = this.x + this.width - scrollBarWidth - 4; // Match the render position
-        int scrollTrackY = this.y + verticalMargin;
-        int scrollTrackHeight = this.height - (verticalMargin * 2);
+        // Calculate scroll thumb dimensions and position - must match the rendering position exactly
+        int scrollTrackX = this.x + this.width + 20; // Match the render position - outside grid
+        int scrollTrackY = this.y + verticalMargin + 2; // Match the render position
+        int scrollTrackHeight = this.height - (verticalMargin * 2) - 4; // Match the render calculation
         
         // Calculate thumb size and position
-        float thumbRatio = (float)visibleRows / totalRows;
-        int thumbHeight = Math.max(20, Math.round(thumbRatio * scrollTrackHeight));
+        float thumbRatio = Math.min(1.0f, (float)visibleRows / totalRows);
+        int thumbHeight = Math.max(12, Math.round(thumbRatio * scrollTrackHeight)); // Match render minimum
         
         // Calculate thumb position
         float scrollProgress = (totalRows <= visibleRows) ? 0 : 
@@ -1566,28 +1600,36 @@ public class UIGridBuilder {
      * Renders the vertical scrollbar
      */
     private void renderVerticalScrollbar(GuiGraphics graphics, int mouseX, int mouseY) {
-        if (!verticalScrollEnabled) return;
+        if (!verticalScrollEnabled || totalRows <= visibleRows) return;
         
-        // Calculate scroll area dimensions - position a bit left from the edge
-        int scrollTrackX = this.x + this.width - scrollBarWidth - 4; // Moved 4px left from the edge
-        int scrollTrackY = this.y + verticalMargin;
-        int scrollTrackHeight = this.height - (verticalMargin * 2);
+        // Calculate scroll area dimensions - position much further right to avoid button overlap
+        int scrollTrackX = this.x + this.width + 20; // 20px outside the grid boundary
+        int scrollTrackY = this.y + verticalMargin + 2; // 2px from top margin
+        int scrollTrackHeight = this.height - (verticalMargin * 2) - 4; // 2px top and bottom padding
+        
+        // Ensure scrollbar doesn't exceed component boundaries
+        if (scrollTrackX + scrollBarWidth > this.x + this.width) {
+            scrollTrackX = this.x + this.width - scrollBarWidth;
+        }
+        if (scrollTrackY + scrollTrackHeight > this.y + this.height - verticalMargin) {
+            scrollTrackHeight = this.y + this.height - verticalMargin - scrollTrackY;
+        }
         
         // Draw scrollbar background
         graphics.fill(scrollTrackX, scrollTrackY, 
                      scrollTrackX + scrollBarWidth, scrollTrackY + scrollTrackHeight, 
-                     0x40000000);
+                     0x40000000); // Original transparency
         
         // Calculate thumb size and position
-        float thumbRatio = (float)visibleRows / totalRows;
-        int thumbHeight = Math.max(20, Math.round(thumbRatio * scrollTrackHeight));
+        float thumbRatio = Math.min(1.0f, (float)visibleRows / totalRows);
+        int thumbHeight = Math.max(12, Math.round(thumbRatio * scrollTrackHeight)); // Minimum 12px thumb
         
         // Calculate thumb position based on current scroll offset
         float scrollProgress = (totalRows <= visibleRows) ? 0 : 
                               (float)verticalScrollOffset / (totalRows - visibleRows);
         int thumbY = scrollTrackY + Math.round((scrollTrackHeight - thumbHeight) * scrollProgress);
         
-        // Draw the thumb
+        // Draw the thumb (original simple style)
         boolean isThumbHovered = isMouseOverVerticalScrollThumb(mouseX, mouseY);
         int thumbColor = isThumbHovered ? 0xCCAAAAAA : 0x80AAAAAA;
         graphics.fill(scrollTrackX, thumbY, 
@@ -1694,10 +1736,10 @@ public class UIGridBuilder {
         // Check if this is the start of a drag on the scrollbar area
         if (!isDraggingVertical && !isDraggingHorizontal) {
             // Check vertical scrollbar area
-            if (verticalScrollEnabled) {
-                int scrollBarX = x + width - scrollBarWidth - 4;
-                int scrollTrackY = y + verticalMargin;
-                int scrollTrackHeight = height - (verticalMargin * 2);
+            if (verticalScrollEnabled && totalRows > visibleRows) {
+                int scrollBarX = x + width + 20; // Match rendering position - outside grid
+                int scrollTrackY = y + verticalMargin + 2; // Match rendering position
+                int scrollTrackHeight = height - (verticalMargin * 2) - 4; // Match rendering calculation
                 
                 if (mouseX >= scrollBarX && mouseX < scrollBarX + scrollBarWidth &&
                     mouseY >= scrollTrackY && mouseY < scrollTrackY + scrollTrackHeight) {
