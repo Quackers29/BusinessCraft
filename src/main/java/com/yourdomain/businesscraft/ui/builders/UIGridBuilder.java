@@ -601,6 +601,64 @@ public class UIGridBuilder {
     }
     
     /**
+     * Checks if the mouse is over a specific row in the grid with proper spacing
+     * @param mouseX Mouse X coordinate (screen relative)
+     * @param mouseY Mouse Y coordinate (screen relative)
+     * @param rowIndex The row index to check (0-based)
+     * @param columnsToCheck Number of columns to check (typically 1-2 for tooltips)
+     * @return True if mouse is over the specified row area
+     */
+    public boolean isMouseOverRow(int mouseX, int mouseY, int rowIndex, int columnsToCheck) {
+        if (rowIndex < 0) {
+            return false;
+        }
+        
+        // Calculate actual row dimensions based on grid layout
+        int rowHeight = customRowHeight != null ? customRowHeight : 20;
+        int rowY = y + verticalMargin + (rowIndex * (rowHeight + verticalSpacing));
+        
+        // Apply vertical scroll offset if scrolling is enabled
+        if (verticalScrollEnabled) {
+            rowY -= (verticalScrollOffset * (rowHeight + verticalSpacing));
+        }
+        
+        // Calculate column area - typically first 1-2 columns for tooltips
+        int columnStartX = x + horizontalMargin;
+        int cellWidth = (width - 2 * horizontalMargin - (columns - 1) * horizontalSpacing) / columns;
+        int columnWidth = (cellWidth * columnsToCheck) + ((columnsToCheck - 1) * horizontalSpacing);
+        
+        // Add small margins to prevent tooltip overlap between rows
+        int rowMargin = 1; // 1px margin between rows to prevent bleed
+        
+        return mouseX >= columnStartX && mouseX <= columnStartX + columnWidth &&
+               mouseY >= rowY + rowMargin && mouseY <= rowY + rowHeight - rowMargin;
+    }
+    
+    /**
+     * Gets the number of visible rows in the grid (accounting for scrolling)
+     * @return Number of rows currently displayed
+     */
+    public int getVisibleRowCount() {
+        return verticalScrollEnabled ? visibleRows : totalRows;
+    }
+    
+    /**
+     * Gets the total number of rows in the grid
+     * @return Total number of rows
+     */
+    public int getTotalRowCount() {
+        return totalRows;
+    }
+    
+    /**
+     * Gets the current vertical scroll offset
+     * @return Current scroll offset in rows
+     */
+    public int getVerticalScrollOffset() {
+        return verticalScrollOffset;
+    }
+    
+    /**
      * Renders the grid and its elements
      */
     public void render(GuiGraphics graphics, int mouseX, int mouseY) {
@@ -892,11 +950,19 @@ public class UIGridBuilder {
         int itemY = y + (height - itemSize) / 2; // Center vertically
         int startX = x + 5; // Starting position with padding
         
-        // Calculate overlap offset for up to 4 items
-        int overlapOffset = Math.min(6, Math.max(3, (width - 10 - itemSize) / Math.max(1, element.multiItems.size() - 1)));
-        
-        // Render up to 4 items with overlapping effect
+        // Calculate spacing to spread items across full available width
+        int availableWidth = width - 10 - itemSize; // Total width minus padding and one item width
         int itemCount = Math.min(4, element.multiItems.size());
+        int overlapOffset;
+        
+        if (itemCount <= 1) {
+            overlapOffset = 0; // Single item, no offset needed
+        } else {
+            // Spread items across available width, minimum 8px spacing, maximum 20px
+            overlapOffset = Math.min(20, Math.max(8, availableWidth / (itemCount - 1)));
+        }
+        
+        // Render up to 4 items with improved spacing
         for (int i = 0; i < itemCount; i++) {
             net.minecraft.world.item.ItemStack stack = element.multiItems.get(i);
             if (!stack.isEmpty()) {
