@@ -36,6 +36,9 @@ import com.yourdomain.businesscraft.network.packets.storage.CommunalStoragePacke
 import com.yourdomain.businesscraft.network.packets.storage.CommunalStorageResponsePacket;
 import com.yourdomain.businesscraft.network.packets.storage.PaymentBoardResponsePacket;
 import com.yourdomain.businesscraft.network.packets.storage.PaymentBoardRequestPacket;
+import com.yourdomain.businesscraft.network.packets.storage.PaymentBoardClaimPacket;
+import com.yourdomain.businesscraft.network.packets.storage.BufferStoragePacket;
+import com.yourdomain.businesscraft.network.packets.storage.BufferStorageResponsePacket;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStoragePacket;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageResponsePacket;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
@@ -196,6 +199,24 @@ public class ModMessages {
                 .decoder(PaymentBoardRequestPacket::decode)
                 .encoder(PaymentBoardRequestPacket::encode)
                 .consumerMainThread(PaymentBoardRequestPacket::handle)
+                .add();
+                
+        net.messageBuilder(PaymentBoardClaimPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PaymentBoardClaimPacket::decode)
+                .encoder(PaymentBoardClaimPacket::encode)
+                .consumerMainThread(PaymentBoardClaimPacket::handle)
+                .add();
+                
+        net.messageBuilder(BufferStoragePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(BufferStoragePacket::decode)
+                .encoder(BufferStoragePacket::encode)
+                .consumerMainThread(BufferStoragePacket::handle)
+                .add();
+                
+        net.messageBuilder(BufferStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(BufferStorageResponsePacket::decode)
+                .encoder(BufferStorageResponsePacket::encode)
+                .consumerMainThread(BufferStorageResponsePacket::handle)
                 .add();
                 
         // Register personal storage packets
