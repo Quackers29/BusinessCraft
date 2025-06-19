@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.core.BlockPos;
 import com.yourdomain.businesscraft.debug.DebugConfig;
+import net.minecraft.ChatFormatting;
+import net.minecraft.util.FormattedCharSequence;
 
 import java.util.*;
 import java.util.List;
@@ -157,6 +159,9 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
             paymentBoardGrid.render(guiGraphics, mouseX - screenX, mouseY - screenY);
             guiGraphics.pose().popPose();
         }
+        
+        // Render custom multi-line tooltips for tourist arrivals
+        renderCustomTooltips(guiGraphics, mouseX, mouseY);
         
         // Render tooltips for slots
         this.renderTooltip(guiGraphics, mouseX, mouseY);
@@ -363,14 +368,12 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
             if (reward.getSource() == RewardSource.TOURIST_ARRIVAL) {
                 // Column 0: Tourist info "[quantity] x [origin town]" for tourist arrivals
                 String touristInfo = createTouristInfoDisplay(reward);
-                if (enhancedTooltip != null) {
-                    paymentBoardGrid.addLabelWithTooltip(i, 0, touristInfo, enhancedTooltip, TEXT_COLOR);
-                } else {
-                    paymentBoardGrid.addLabel(i, 0, touristInfo, TEXT_COLOR);
-                }
+                String truncatedTouristInfo = truncateTextStable(touristInfo, 12); // Limit to 12 chars
+                // Don't add UIGrid tooltips for tourist arrivals - use custom tooltips only
+                paymentBoardGrid.addLabel(i, 0, truncatedTouristInfo, TEXT_COLOR);
                 
                 // Column 1: Multi-item visual display for tourist arrivals
-                addMultiItemDisplay(i, 1, reward, enhancedTooltip);
+                addMultiItemDisplay(i, 1, reward, null); // No UIGrid tooltip - use custom tooltips only
             } else {
                 // Column 0: Source icon (using first reward item as icon) for other rewards
                 if (!reward.getRewards().isEmpty()) {
@@ -453,33 +456,8 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
      */
     private String createRewardTooltip(RewardEntry reward) {
         if (reward.getSource() == RewardSource.TOURIST_ARRIVAL) {
-            StringBuilder tooltip = new StringBuilder();
-            
-            // Add origin town information
-            String originTown = reward.getMetadata().get("originTown");
-            if (originTown != null && !originTown.isEmpty()) {
-                tooltip.append("From: ").append(originTown).append("\n");
-            }
-            
-            // Add fare information
-            String fareAmount = reward.getMetadata().get("fareAmount");
-            if (fareAmount != null && !fareAmount.isEmpty()) {
-                tooltip.append("Fare: ").append(fareAmount).append(" emeralds\n");
-            }
-            
-            // Add milestone information
-            String milestoneDistance = reward.getMetadata().get("milestoneDistance");
-            String milestoneItems = reward.getMetadata().get("milestoneItems");
-            if (milestoneDistance != null && milestoneItems != null && 
-                !milestoneDistance.isEmpty() && !milestoneItems.isEmpty()) {
-                tooltip.append("Milestone: ").append(milestoneDistance).append("m journey (")
-                       .append(milestoneItems).append(" items)");
-            }
-            
-            // If we built a tooltip, return it
-            if (tooltip.length() > 0) {
-                return tooltip.toString().trim();
-            }
+            // Return a marker string that we'll detect and replace with custom rendering
+            return "TOURIST_ARRIVAL_TOOLTIP:" + reward.getId().toString();
         }
         
         // For non-tourist arrivals or if metadata is missing, return null
@@ -527,18 +505,12 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
             List<ItemStack> uniqueItems = getUniqueItems(items, 4);
             
             if (uniqueItems.size() == 1) {
-                // Single item - show normally
+                // Single item - show normally (no UIGrid tooltip for tourist arrivals)
                 ItemStack item = uniqueItems.get(0);
-                if (tooltip != null) {
-                    paymentBoardGrid.addItemStackWithTooltip(row, col, item, tooltip, null);
-                } else {
-                    paymentBoardGrid.addItemStack(row, col, item, null);
-                }
+                paymentBoardGrid.addItemStack(row, col, item, null);
             } else {
-                // Multiple items - use the new multi-item display component
-                String multiItemTooltip = createMultiItemTooltip(reward, tooltip);
-                
-                paymentBoardGrid.addMultiItemDisplay(row, col, uniqueItems, multiItemTooltip, null);
+                // Multiple items - use the new multi-item display component (no UIGrid tooltip for tourist arrivals)
+                paymentBoardGrid.addMultiItemDisplay(row, col, uniqueItems, null, null);
             }
         }
     }
@@ -588,6 +560,82 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
         tooltip.append(itemsText);
         
         return tooltip.toString();
+    }
+    
+    /**
+     * Creates simplified MC-style multi-line tooltip components for tourist arrival rewards
+     */
+    private List<net.minecraft.network.chat.Component> createTouristArrivalTooltip(RewardEntry reward) {
+        List<net.minecraft.network.chat.Component> tooltipLines = new ArrayList<>();
+        
+        // Add origin town information with gray color
+        String originTown = reward.getMetadata().get("originTown");
+        if (originTown != null && !originTown.isEmpty()) {
+            tooltipLines.add(net.minecraft.network.chat.Component.literal("From: " + originTown)
+                .withStyle(ChatFormatting.GRAY));
+        }
+        
+        // Add fare information with green color (like emerald-related text)
+        String fareAmount = reward.getMetadata().get("fareAmount");
+        if (fareAmount != null && !fareAmount.isEmpty()) {
+            tooltipLines.add(net.minecraft.network.chat.Component.literal("Fare: " + fareAmount + " emeralds")
+                .withStyle(ChatFormatting.GREEN));
+        }
+        
+        // Add milestone information with gold color
+        String milestoneDistance = reward.getMetadata().get("milestoneDistance");
+        if (milestoneDistance != null && !milestoneDistance.isEmpty()) {
+            tooltipLines.add(net.minecraft.network.chat.Component.literal("Milestone: " + milestoneDistance + "m journey")
+                .withStyle(ChatFormatting.GOLD));
+        }
+        
+        return tooltipLines;
+    }
+    
+    /**
+     * Renders custom multi-line tooltips for tourist arrival rewards
+     */
+    private void renderCustomTooltips(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        if (paymentBoardGrid == null || currentRewards.isEmpty()) {
+            return;
+        }
+        
+        // Check if mouse is over any tourist arrival reward
+        for (int i = 0; i < currentRewards.size(); i++) {
+            RewardEntry reward = currentRewards.get(i);
+            if (reward.getSource() == RewardSource.TOURIST_ARRIVAL) {
+                // Check if mouse is over this reward's row (columns 0 or 1)
+                if (isMouseOverRewardRow(mouseX, mouseY, i)) {
+                    // Render the multi-line tooltip
+                    List<net.minecraft.network.chat.Component> tooltipLines = createTouristArrivalTooltip(reward);
+                    // Convert Component list to FormattedCharSequence list for rendering
+                    List<FormattedCharSequence> formattedLines = new ArrayList<>();
+                    for (Component component : tooltipLines) {
+                        formattedLines.add(component.getVisualOrderText());
+                    }
+                    guiGraphics.renderTooltip(this.font, formattedLines, mouseX, mouseY);
+                    return; // Only show one tooltip at a time
+                }
+            }
+        }
+    }
+    
+    /**
+     * Checks if the mouse is over a specific reward row (columns 0 or 1) using UIGridBuilder
+     */
+    private boolean isMouseOverRewardRow(int mouseX, int mouseY, int rowIndex) {
+        if (paymentBoardGrid == null) {
+            return false;
+        }
+        
+        // Calculate grid-relative mouse position
+        int screenX = (this.width - this.imageWidth) / 2;
+        int screenY = (this.height - this.imageHeight) / 2;
+        int gridMouseX = mouseX - screenX;
+        int gridMouseY = mouseY - screenY;
+        
+        // Use UIGridBuilder's built-in row detection for columns 0 and 1 (tooltip area)
+        return paymentBoardGrid.isMouseOverRow(gridMouseX, gridMouseY, rowIndex, 2);
     }
     
     private void claimReward(UUID rewardId, boolean toBuffer) {
