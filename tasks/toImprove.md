@@ -242,6 +242,166 @@ Before implementing any improvement:
 
 Each phase should be fully implemented and tested before moving to the next phase.
 
+## 📋 Additional Lower Priority Tasks
+
+### Minecraft Scoreboard System
+- Create scoreboard objectives for town statistics
+- Track tourists, population, visits, and other key metrics
+- Set up automatic scoreboard updates when stats change
+- Display scoreboard stats in-game
+
+### /bc Chat Commands System
+- Implement base /bc command structure
+- Add subcommands for viewing town statistics
+  - `/bc stats` - general town statistics
+  - `/bc tourists` - tourist-related data
+  - `/bc population` - population information
+- Ensure proper permissions and error handling
+
+## 🔄 Detailed Technical Specifications (Moved from todo.md)
+
+### RewardEntry Data Structure
+```java
+public class RewardEntry {
+    private UUID id;
+    private long timestamp;
+    private long expirationTime;
+    private RewardSource source; // MILESTONE, TOURIST_PAYMENT, TRADE, etc.
+    private List<ItemStack> rewards;
+    private ClaimStatus status; // UNCLAIMED, CLAIMED, EXPIRED
+    private String eligibility; // "ALL" for now, expandable for player tracking
+    private Map<String, Object> metadata; // Source-specific data
+}
+```
+
+### UI Component Integration Plan
+
+**Option A: StandardTabContent Integration (Recommended)**
+```java
+// Replace Storage tab in town interface
+StandardTabContent paymentTab = new StandardTabContent(width, height, 
+    StandardTabContent.ContentType.CUSTOM_LIST, "Payment Board")
+    .withCustomData(() -> buildRewardGridData());
+```
+
+**Option B: BCModalGridScreen Implementation**
+```java
+// Modal payment board screen
+BCModalGridScreen<RewardEntry> paymentBoard = new BCModalGridScreen<>(
+    Component.literal("Payment Board"), parentScreen, null)
+    .withData(getUnclaimedRewards())
+    .addColumn("Source", entry -> getSourceIcon(entry.getSource()))
+    .addColumn("Rewards", entry -> formatRewardItems(entry.getRewards()))
+    .addColumn("Time", entry -> formatTimeAgo(entry.getTimestamp()))
+    .addColumn("Actions", entry -> "") // Claim/Hopper buttons
+    .withRowClickHandler(this::handleRewardInteraction);
+```
+
+**UIGridBuilder Configuration**
+```java
+// Payment board grid with interactive buttons
+UIGridBuilder grid = UIGridBuilder.create(x, y, width, height, 5) // 5 columns
+    .enableVerticalScrolling(visibleRows, totalRewards)
+    .setCustomRowHeight(24); // Larger rows for buttons
+
+// For each reward entry:
+grid.addItem(row, 0, getSourceIcon(entry)) // Source icon
+    .addLabel(row, 1, formatRewards(entry)) // Reward description  
+    .addLabel(row, 2, formatTimeAgo(entry)) // Timestamp
+    .addButton(row, 3, "Claim", this::claimReward, SUCCESS_COLOR)
+    .addButton(row, 4, "→🪣", this::claimToHopper, INFO_COLOR);
+```
+
+### Payment Board Integration Points
+- **Town.java**: Replace `Map<Item, Integer> communalStorage` with `TownPaymentBoard paymentBoard`
+- **TownInterfaceScreen**: Replace storage tab with payment board tab
+- **StandardTabContent**: Use CUSTOM_LIST type for reward display
+- **DistanceMilestoneHelper**: Create RewardEntry instead of direct storage calls
+- **VisitorProcessingHelper**: Generate tourist payment RewardEntry objects
+- **Network Packets**: Extend existing storage packet patterns for payment board
+
+### UI Layout Design (Three-Section Layout)
+```
+┌─────────────────────────────────────────────────────────[Back]┐
+│                    Payment Board                              │
+├─────────────────────────────────────────────────────────────────┤
+│ [All ▼] [Newest ▼] [Claim All] | Unclaimed: 12 | Total: 45    │
+├───────┬─────────────────┬────────┬─────────┬─────────────────────┤
+│Source │ Rewards         │ Time   │ Claim   │ To Buffer           │
+├───────┼─────────────────┼────────┼─────────┼─────────────────────┤
+│ 🏆    │ 2x Bread, 1x XP │ 5m ago │[Claim]  │ [→Buffer]          │
+│ 🚂    │ 3x Emerald      │ 1h ago │[Claim]  │ [→Buffer]          │
+│ 🏆    │ 1x Diamond      │ 2h ago │[Claim]  │ [→Buffer]          │
+│       │ (scrollable, minimum 2 rows visible, scales to 4-6)  │
+├─────────────────────────────────────────────────────────────────┤
+│                   Payment Buffer (2x9)                         │
+│ [slot][slot][slot][slot][slot][slot][slot][slot][slot]         │
+│ [slot][slot][slot][slot][slot][slot][slot][slot][slot]         │
+│                      ↑ hopper automation ↑                     │
+├─────────────────────────────────────────────────────────────────┤
+│                    Player Inventory                            │
+│ [slot][slot][slot][slot][slot][slot][slot][slot][slot]         │
+│ [slot][slot][slot][slot][slot][slot][slot][slot][slot]         │
+│ [slot][slot][slot][slot][slot][slot][slot][slot][slot]         │
+├─────────────────────────────────────────────────────────────────┤
+│                      Player Hotbar                             │
+│ [slot][slot][slot][slot][slot][slot][slot][slot][slot]         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Claim Button Behavior:**
+- **"Claim" Button**: Attempts to place items directly in player inventory
+  - If inventory full → automatically places in Payment Buffer instead
+  - Shows feedback message indicating where items went
+- **"→Buffer" Button**: Always places items in Payment Buffer (2x9 slots)
+  - Preferred for automation setups with hoppers
+  - Guaranteed to work unless buffer is full
+
+**Navigation:**
+- **Back Button**: Returns to Resources tab of town interface
+- **Screen Integration**: Replaces current storage screen completely
+
+### Existing Component Reuse Benefits
+- **BCModalGridScreen**: Built-in scrolling, alternating rows, hover effects
+- **UIGridBuilder**: Interactive buttons, item rendering, click handlers  
+- **StandardTabContent**: Seamless tab integration with existing interface
+- **TownInterfaceTheme**: Consistent colors and styling
+- **BaseBlockEntityPacket**: Proven network synchronization patterns
+
+### Important Considerations
+
+#### Player Tracking Scope
+- **Current Implementation**: All rewards claimable by anyone ("ALL" eligibility)
+- **Future Expansion**: Framework ready for player-specific rewards
+- **Design Decision**: Eligibility system designed for easy future enhancement
+
+#### Backward Compatibility
+- Existing towns with communal storage will need migration
+- Migration script to convert existing storage items to reward entries
+- Preserve existing hopper automation functionality
+- Maintain network packet compatibility during transition
+
+#### Performance Considerations
+- Reward list pagination for towns with many rewards
+- Efficient NBT serialization for large reward datasets
+- Client-side caching to reduce server requests
+- Optimized rendering for real-time reward updates
+
+### Success Criteria
+1. **Functional Replacement**: Payment board completely replaces communal storage
+2. **Reward Processing**: All milestone and tourist rewards flow through payment board
+3. **User Experience**: Intuitive claiming interface with proper feedback
+4. **Automation Support**: Hopper integration maintains existing automation
+5. **Performance**: System handles 100+ rewards without lag
+6. **Expandability**: Architecture ready for future player tracking
+
+### Estimated Timeline
+- **Phase 1-2**: Core infrastructure and basic UI (Foundation)
+- **Phase 3-4**: Advanced UI features and backend integration (Core functionality)
+- **Phase 5-6**: Enhanced features and polish (Production ready)
+
+**Total estimated effort**: Comprehensive replacement of storage system with modern payment board architecture.
+
 ## 🏦 Advanced Economic System - Town Economic Center
 
 ### Core Concept: Replace Basic Communal Storage with Economic Hub
