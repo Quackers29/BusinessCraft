@@ -175,6 +175,46 @@ public class InventoryRenderer {
     }
     
     /**
+     * Draws a button with proper styling, hover effects, and custom color.
+     * 
+     * @param guiGraphics The GuiGraphics instance to draw with
+     * @param x The x position
+     * @param y The y position
+     * @param width The button width
+     * @param height The button height
+     * @param text The button text
+     * @param font The font to use
+     * @param isHovered Whether the button is being hovered over
+     * @param customColor Custom button color to use instead of default
+     */
+    public static void drawButton(GuiGraphics guiGraphics, int x, int y, int width, int height, 
+            String text, Font font, boolean isHovered, int customColor) {
+        
+        int buttonColor = isHovered ? adjustBrightness(customColor, 1.3f) : customColor;
+        
+        // Draw button background
+        guiGraphics.fill(x, y, x + width, y + height, buttonColor);
+        
+        // Draw button border
+        drawBorder(guiGraphics, x, y, width, height, TEXT_COLOR, 1);
+        
+        // Draw centered text
+        drawCenteredString(guiGraphics, font, text, x + width / 2, y + (height - 8) / 2, TEXT_COLOR, true);
+    }
+    
+    /**
+     * Adjust the brightness of a color for hover effects
+     */
+    private static int adjustBrightness(int color, float factor) {
+        int alpha = (color >> 24) & 0xFF;
+        int red = (int) Math.min(255, ((color >> 16) & 0xFF) * factor);
+        int green = (int) Math.min(255, ((color >> 8) & 0xFF) * factor);
+        int blue = (int) Math.min(255, (color & 0xFF) * factor);
+        
+        return (alpha << 24) | (red << 16) | (green << 8) | blue;
+    }
+    
+    /**
      * Draws a text label with background for better visibility.
      * 
      * @param guiGraphics The GuiGraphics instance to draw with

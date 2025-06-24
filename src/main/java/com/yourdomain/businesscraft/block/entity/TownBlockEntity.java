@@ -100,6 +100,7 @@ import com.yourdomain.businesscraft.town.data.VisitorProcessingHelper;
 import com.yourdomain.businesscraft.town.data.ClientSyncHelper;
 import com.yourdomain.businesscraft.town.data.NBTDataHelper;
 import com.yourdomain.businesscraft.town.data.ContainerDataHelper;
+import com.yourdomain.businesscraft.town.data.TownBufferManager;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 
 public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
@@ -116,6 +117,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         }
     };
     private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
+    
+    // Buffer management - extracted to separate class for better organization  
+    private TownBufferManager bufferManager;
+    private LazyOptional<IItemHandler> lazyBufferHandler = LazyOptional.empty();
     
     // Modular ContainerData system - replaces hardcoded indices with named fields
     private final ContainerDataHelper containerData = ContainerDataHelper.builder("TownBlock")
@@ -263,6 +268,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
         if (cap == ForgeCapabilities.ITEM_HANDLER) {
+            // Return buffer handler for hopper extraction from below
+            if (side == Direction.DOWN && bufferManager != null) {
+                return lazyBufferHandler.cast();
+            }
+            // Return regular resource input handler for other sides
             return lazyItemHandler.cast();
         }
         return super.getCapability(cap, side);
@@ -271,11 +281,22 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     @Override
     public void onLoad() {
         super.onLoad();
+        
+        // Initialize buffer manager now that level is available
+        if (bufferManager == null) {
+            bufferManager = new TownBufferManager(this, level);
+            if (townId != null) {
+                bufferManager.setTownId(townId);
+            }
+        }
+        
         lazyItemHandler = LazyOptional.of(() -> itemHandler);
+        lazyBufferHandler = LazyOptional.of(() -> bufferManager.getBufferHandler());
         
         // Update from provider when loaded
         if (!level.isClientSide()) {
             updateFromTownProvider();
+            bufferManager.onLoad(); // Delegate buffer initialization to manager
         }
     }
 
@@ -283,6 +304,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public void invalidateCaps() {
         super.invalidateCaps();
         lazyItemHandler.invalidate();
+        lazyBufferHandler.invalidate();
     }
 
     @Override
@@ -310,6 +332,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         this.pathEnd = result.pathEnd;
         this.touristSpawningEnabled = result.touristSpawningEnabled;
         
+        // Update buffer manager with townId if it exists
+        if (bufferManager != null && townId != null) {
+            bufferManager.setTownId(townId);
+        }
+        
         // Apply search radius if loaded, otherwise use default
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Before NBT load: searchRadius={}", this.searchRadius);
         if (result.hasSearchRadius()) {
@@ -331,6 +358,10 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         // Sync town data from the provider
         if (level.getGameTime() % 60 == 0) { // Every 3 seconds
             updateFromTownProvider();
+            // Delegate buffer synchronization to manager
+            if (bufferManager != null) {
+                bufferManager.tick();
+            }
         }
         
         if (!level.isClientSide && townId != null) {
@@ -992,7 +1023,44 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         }
     }
     
+    /**
+     * Called when items are added to town buffer storage externally (e.g., from claim system)
+     * Forces a buffer sync to ensure ItemStackHandler reflects the new items
+     */
+    public void onTownBufferChanged() {
+        if (bufferManager != null) {
+            bufferManager.onTownBufferChanged();
+        }
+    }
+    
+    /**
+     * Get the buffer handler for direct access (used by PaymentBoardMenu)
+     * @return The buffer ItemStackHandler or null if not initialized
+     */
+    public net.minecraftforge.items.ItemStackHandler getBufferHandler() {
+        return bufferManager != null ? bufferManager.getBufferHandler() : null;
+    }
 
+    /**
+     * Creates a Payment Board menu provider for proper server-client synchronization
+     */
+    public MenuProvider createPaymentBoardMenuProvider() {
+        return new MenuProvider() {
+            @Override
+            public Component getDisplayName() {
+                return Component.literal("Payment Board");
+            }
 
+            @Override
+            public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
+                // Create a FriendlyByteBuf to pass the BlockPos
+                io.netty.buffer.ByteBuf buf = io.netty.buffer.Unpooled.buffer();
+                net.minecraft.network.FriendlyByteBuf friendlyBuf = new net.minecraft.network.FriendlyByteBuf(buf);
+                friendlyBuf.writeBlockPos(TownBlockEntity.this.getBlockPos());
+                
+                return new com.yourdomain.businesscraft.menu.PaymentBoardMenu(containerId, playerInventory, friendlyBuf);
+            }
+        };
+    }
 
 }

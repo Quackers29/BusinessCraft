@@ -34,12 +34,18 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     private static final int INNER_PADDING = 6; // Reduced from 12
     private static final int ELEMENT_SPACING = 20;
     
-    // Header section (back button + title)
+    // Header section (back button + title + auto-claim toggle)
     private static final int HEADER_HEIGHT = 35; // Reduced from 45
     private static final int BACK_BUTTON_X = SECTION_PADDING;
     private static final int BACK_BUTTON_Y = SECTION_PADDING;
     private static final int BACK_BUTTON_WIDTH = 28;
     private static final int BACK_BUTTON_HEIGHT = 20;
+    
+    // Auto-claim toggle button (top-right area)
+    private static final int AUTO_CLAIM_BUTTON_WIDTH = 70;
+    private static final int AUTO_CLAIM_BUTTON_HEIGHT = 20;
+    private static final int AUTO_CLAIM_BUTTON_X = 340 - SECTION_PADDING - AUTO_CLAIM_BUTTON_WIDTH; // Right-aligned
+    private static final int AUTO_CLAIM_BUTTON_Y = SECTION_PADDING;
     
     // Payment board section - centered to screen width with slight right adjustment
     private static final int PAYMENT_BOARD_X = SECTION_PADDING + 12; // Move right for better centering
@@ -67,6 +73,9 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     
     // Client-side cached rewards data (synced from server)
     private List<RewardEntry> cachedRewards = new ArrayList<>();
+    
+    // Auto-claim functionality state
+    private boolean autoClaimEnabled = false;
     
     // Enhanced color scheme for better visual hierarchy
     private static final int SUCCESS_COLOR = 0xB0228B22; // Slightly more opaque green
@@ -170,6 +179,14 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
         if (isMouseOverBackButton(mouseX, mouseY)) {
             guiGraphics.renderTooltip(this.font, Component.literal("Return to Town Interface"), mouseX, mouseY);
         }
+        
+        // Render tooltip for auto-claim button if mouse is over it
+        if (isMouseOverAutoClaimButton(mouseX, mouseY)) {
+            String tooltipText = autoClaimEnabled ? 
+                "Auto-claim is enabled - new rewards will be automatically claimed to buffer" :
+                "Auto-claim is disabled - rewards must be claimed manually";
+            guiGraphics.renderTooltip(this.font, Component.literal(tooltipText), mouseX, mouseY);
+        }
     }
     
     @Override
@@ -206,6 +223,15 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
                 x + BACK_BUTTON_X, y + BACK_BUTTON_Y, 
                 BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT, 
                 "◀", this.font, isBackButtonHovered);
+        
+        // Draw auto-claim toggle button (top-right)
+        boolean isAutoClaimButtonHovered = isMouseOverAutoClaimButton(mouseX, mouseY);
+        String autoClaimText = autoClaimEnabled ? "Auto: ON" : "Auto: OFF";
+        int autoClaimColor = autoClaimEnabled ? SUCCESS_COLOR : 0xB0663333; // Green when ON, red when OFF
+        InventoryRenderer.drawButton(guiGraphics, 
+                x + AUTO_CLAIM_BUTTON_X, y + AUTO_CLAIM_BUTTON_Y, 
+                AUTO_CLAIM_BUTTON_WIDTH, AUTO_CLAIM_BUTTON_HEIGHT, 
+                autoClaimText, this.font, isAutoClaimButtonHovered, autoClaimColor);
         
         // Draw screen title
         guiGraphics.drawString(this.font, "Payment Board", 
@@ -687,6 +713,19 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
             return true;
         }
         
+        // Check if the auto-claim toggle button was clicked
+        if (button == 0 && isMouseOverAutoClaimButton((int)mouseX, (int)mouseY)) {
+            // Play a click sound
+            net.minecraft.client.resources.sounds.SimpleSoundInstance sound = 
+                net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
+                    net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F);
+            this.minecraft.getSoundManager().play(sound);
+            
+            // Toggle auto-claim state
+            toggleAutoClaim();
+            return true;
+        }
+        
         // Handle payment board grid clicks
         if (paymentBoardGrid != null) {
             int screenX = (this.width - this.imageWidth) / 2;
@@ -818,6 +857,14 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
                 BACK_BUTTON_X, BACK_BUTTON_Y, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT);
     }
     
+    private boolean isMouseOverAutoClaimButton(int mouseX, int mouseY) {
+        int x = (this.width - this.imageWidth) / 2;
+        int y = (this.height - this.imageHeight) / 2;
+        
+        return InventoryRenderer.isMouseOverElement(mouseX, mouseY, x, y, 
+                AUTO_CLAIM_BUTTON_X, AUTO_CLAIM_BUTTON_Y, AUTO_CLAIM_BUTTON_WIDTH, AUTO_CLAIM_BUTTON_HEIGHT);
+    }
+    
     private void returnToMainUI() {
         this.onClose();
         ScreenNavigationHelper.returnToTownInterface(this.minecraft, this.minecraft.player, this.menu.getTownBlockPos());
@@ -834,5 +881,51 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
         
         // Trigger a UI update
         updatePaymentBoardData();
+        
+        // Auto-claim new rewards if enabled
+        if (autoClaimEnabled) {
+            autoClaimNewRewards(rewards);
+        }
+    }
+    
+    /**
+     * Toggle the auto-claim functionality
+     */
+    private void toggleAutoClaim() {
+        autoClaimEnabled = !autoClaimEnabled;
+        
+        // Send auto-claim toggle state to server
+        sendAutoClaimToggleToServer(autoClaimEnabled);
+        
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
+            "Auto-claim toggled to: {}", autoClaimEnabled);
+    }
+    
+    /**
+     * Send auto-claim toggle state to server for persistence
+     */
+    private void sendAutoClaimToggleToServer(boolean enabled) {
+        BlockPos townBlockPos = this.menu.getTownBlockPos();
+        if (townBlockPos != null) {
+            // TODO: Create and send AutoClaimTogglePacket to server
+            // For now, just log the state change
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                "Sending auto-claim toggle to server: {} for town block at {}", enabled, townBlockPos);
+        }
+    }
+    
+    /**
+     * Auto-claim new rewards to buffer if space is available
+     */
+    private void autoClaimNewRewards(List<RewardEntry> rewards) {
+        for (RewardEntry reward : rewards) {
+            if (reward.canBeClaimed("ALL") && reward.getStatus() == ClaimStatus.UNCLAIMED) {
+                // Claim the reward to buffer
+                claimReward(reward.getId(), true);
+                
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
+                    "Auto-claimed reward: {} from {}", reward.getId(), reward.getSource());
+            }
+        }
     }
 }
