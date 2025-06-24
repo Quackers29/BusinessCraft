@@ -380,7 +380,7 @@ public class ClientSyncHelper {
     public static void notifyBufferStorageChange(ServerLevel level, UUID townId, Map<Item, Integer> bufferItems) {
         if (level == null || townId == null) return;
         
-        // Send BufferStorageResponsePacket to all players in the area
+        // Send legacy BufferStorageResponsePacket to all players in the area
         // This ensures Payment Board UI updates in real-time when hoppers extract items
         com.yourdomain.businesscraft.network.packets.storage.BufferStorageResponsePacket packet = 
             new com.yourdomain.businesscraft.network.packets.storage.BufferStorageResponsePacket(bufferItems);
@@ -392,6 +392,28 @@ public class ClientSyncHelper {
         });
         
         DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, 
-            "Sent buffer storage update for town {} to {} players", townId, level.players().size());
+            "Sent legacy buffer storage update for town {} to {} players", townId, level.players().size());
+    }
+    
+    /**
+     * Notifies all nearby players of slot-based buffer storage changes for real-time UI updates
+     * This is the new method that preserves exact slot positions
+     */
+    public static void notifyBufferSlotStorageChange(ServerLevel level, UUID townId, SlotBasedStorage slotStorage) {
+        if (level == null || townId == null || slotStorage == null) return;
+        
+        // Send new BufferSlotStorageResponsePacket to all players in the area
+        // This ensures Payment Board UI updates in real-time with exact slot preservation
+        com.yourdomain.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket packet = 
+            new com.yourdomain.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket(slotStorage);
+        
+        // Send to all players within a reasonable distance of any town blocks
+        level.players().forEach(player -> {
+            // Send to all players - the client will filter based on which UI is open
+            com.yourdomain.businesscraft.network.ModMessages.sendToPlayer(packet, player);
+        });
+        
+        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, 
+            "Sent slot-based buffer storage update for town {} to {} players", townId, level.players().size());
     }
 } 

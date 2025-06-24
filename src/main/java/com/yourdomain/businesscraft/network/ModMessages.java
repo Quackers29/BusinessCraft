@@ -40,6 +40,7 @@ import com.yourdomain.businesscraft.network.packets.storage.PaymentBoardRequestP
 import com.yourdomain.businesscraft.network.packets.storage.PaymentBoardClaimPacket;
 import com.yourdomain.businesscraft.network.packets.storage.BufferStoragePacket;
 import com.yourdomain.businesscraft.network.packets.storage.BufferStorageResponsePacket;
+import com.yourdomain.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStoragePacket;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageResponsePacket;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
@@ -218,6 +219,13 @@ public class ModMessages {
                 .decoder(BufferStorageResponsePacket::decode)
                 .encoder(BufferStorageResponsePacket::encode)
                 .consumerMainThread(BufferStorageResponsePacket::handle)
+                .add();
+                
+        // Register new slot-based buffer storage response packet
+        net.messageBuilder(BufferSlotStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(BufferSlotStorageResponsePacket::decode)
+                .encoder(BufferSlotStorageResponsePacket::encode)
+                .consumerMainThread(BufferSlotStorageResponsePacket::handle)
                 .add();
                 
         // Register personal storage packets
