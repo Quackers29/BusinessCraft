@@ -57,7 +57,15 @@ public class TownBufferManager {
         @Override
         public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
             // Allow extraction for hopper automation
-            return super.extractItem(slot, amount, simulate);
+            ItemStack extracted = super.extractItem(slot, amount, simulate);
+            
+            // If not simulating and we actually extracted something, trigger sync
+            if (!simulate && !extracted.isEmpty() && !suppressBufferCallbacks) {
+                // Ensure sync happens after extraction
+                syncBufferToTownData();
+            }
+            
+            return extracted;
         }
         
         @Override
@@ -197,7 +205,13 @@ public class TownBufferManager {
      * Also notifies clients of buffer changes for UI updates
      */
     private void syncBufferToTownData() {
-        if (level == null || level.isClientSide() || townId == null) return;
+        if (level == null || level.isClientSide() || townId == null) {
+            LOGGER.debug("syncBufferToTownData skipped: level={}, isClientSide={}, townId={}", 
+                level != null ? "exists" : "null", 
+                level != null ? level.isClientSide() : "unknown", 
+                townId);
+            return;
+        }
         
         if (level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
@@ -244,10 +258,14 @@ public class TownBufferManager {
                 // Update our tracking if buffer changed
                 if (bufferChanged) {
                     lastKnownTownBuffer = new HashMap<>(town.getPaymentBoard().getBufferStorage());
+                    LOGGER.debug("Buffer storage changed, updated tracking and notifying clients");
+                    
+                    // Notify clients of buffer storage changes for UI updates
+                    notifyClientsOfBufferChange(town);
+                } else {
+                    // Always notify clients, even if no changes detected, in case of sync issues
+                    notifyClientsOfBufferChange(town);
                 }
-                
-                // Notify clients of buffer storage changes for UI updates
-                notifyClientsOfBufferChange(town);
             }
         }
     }
