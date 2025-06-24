@@ -5,6 +5,7 @@ import com.yourdomain.businesscraft.init.ModMenuTypes;
 import com.yourdomain.businesscraft.ui.screens.town.TownInterfaceScreen;
 import com.yourdomain.businesscraft.ui.screens.town.TradeScreen;
 import com.yourdomain.businesscraft.ui.screens.town.StorageScreen;
+import com.yourdomain.businesscraft.ui.screens.town.PaymentBoardScreen;
 import com.yourdomain.businesscraft.client.TownDebugOverlay;
 import com.yourdomain.businesscraft.client.TownDebugNetwork;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -28,6 +29,9 @@ public class ClientModEvents {
             
             // Register the StorageScreen for the STORAGE_MENU menu type
             MenuScreens.register(ModMenuTypes.STORAGE_MENU.get(), StorageScreen::new);
+            
+            // Register the PaymentBoardScreen for the PAYMENT_BOARD_MENU menu type
+            MenuScreens.register(ModMenuTypes.PAYMENT_BOARD_MENU.get(), PaymentBoardScreen::new);
             
             // Note: TOWN_BLOCK menu type is used internally only and doesn't need a screen registration
             

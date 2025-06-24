@@ -31,6 +31,7 @@ import com.yourdomain.businesscraft.network.packets.ui.OpenDestinationsUIPacket;
 import com.yourdomain.businesscraft.network.packets.ui.RefreshDestinationsPacket;
 import com.yourdomain.businesscraft.network.packets.ui.PlayerExitUIPacket;
 import com.yourdomain.businesscraft.network.packets.ui.OpenTownInterfacePacket;
+import com.yourdomain.businesscraft.network.packets.ui.OpenPaymentBoardPacket;
 import com.yourdomain.businesscraft.network.packets.storage.TradeResourcePacket;
 import com.yourdomain.businesscraft.network.packets.storage.CommunalStoragePacket;
 import com.yourdomain.businesscraft.network.packets.storage.CommunalStorageResponsePacket;
@@ -243,6 +244,13 @@ public class ModMessages {
                 .decoder(OpenTownInterfacePacket::new)
                 .encoder(OpenTownInterfacePacket::toBytes)
                 .consumerMainThread(OpenTownInterfacePacket::handle)
+                .add();
+                
+        // Register the open payment board packet for proper menu synchronization
+        net.messageBuilder(OpenPaymentBoardPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(OpenPaymentBoardPacket::new)
+                .encoder(OpenPaymentBoardPacket::toBytes)
+                .consumerMainThread(OpenPaymentBoardPacket::handle)
                 .add();
     }
 

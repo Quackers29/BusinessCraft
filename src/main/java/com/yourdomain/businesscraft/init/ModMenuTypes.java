@@ -50,7 +50,7 @@ public class ModMenuTypes {
     // Payment Board Menu
     public static final RegistryObject<MenuType<PaymentBoardMenu>> PAYMENT_BOARD_MENU = registerMenu(
             "payment_board_menu",
-            (windowId, inv, data) -> new PaymentBoardMenu(windowId, inv, new ItemStackHandler(18))
+            (windowId, inv, data) -> new PaymentBoardMenu(windowId, inv, data)
     );
 
     private static <T extends AbstractContainerMenu> RegistryObject<MenuType<T>> registerMenu(String name, IContainerFactory<T> factory) {

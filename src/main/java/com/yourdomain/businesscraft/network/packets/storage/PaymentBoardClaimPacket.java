@@ -113,6 +113,8 @@ public class PaymentBoardClaimPacket {
                                 }
                                 
                                 if (inventoryFull) {
+                                    // Notify town block entity that buffer has changed due to overflow
+                                    townBlockEntity.onTownBufferChanged();
                                     player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
                                         "Some items were sent to buffer storage due to full inventory"));
                                 }
@@ -120,6 +122,9 @@ public class PaymentBoardClaimPacket {
                             
                             // Mark town as dirty for saving
                             town.markDirty();
+                            
+                            // Notify town block entity that buffer has changed
+                            townBlockEntity.onTownBufferChanged();
                             
                             // Send updated payment board data to client
                             var rewards = town.getPaymentBoard().getUnclaimedRewards();

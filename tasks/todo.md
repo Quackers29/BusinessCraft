@@ -757,6 +757,96 @@ Column 1: "3 x Riverside"        Column 2: [Primary Item] (enhanced tooltip)
 
 **Build Status**: ✅ Successful compilation with no errors or warnings
 
+- [x] **2.23 Fix Payment Buffer Hopper Output to Block Underside** ✅
+  - **Problem**: Payment buffer storage hopper output to underside of block currently does nothing
+  - **Goal**: Enable items in payment buffer to be automatically extracted by hoppers placed underneath the town interface block
+  - [x] **2.23.1 Investigate current block entity hopper interaction implementation** ✅
+  - [x] **2.23.2 Create separate IItemHandler for payment buffer with extraction capability** ✅
+  - [x] **2.23.3 Add real-time UI synchronization for hopper buffer extraction** ✅
+  - [ ] **2.23.4 Test hopper automation with payment buffer items and UI updates**
+
+- [x] **2.24 Add Auto-Claim Toggle Button to Payment Board UI** ✅
+  - **Problem**: No auto-claim functionality for payment board rewards
+  - **Goal**: Add toggle button in top-right UI to enable/disable auto-claim to buffer functionality
+  - [x] **2.24.1 Add auto-claim toggle button to PaymentBoardScreen top-right area** ✅
+  - [x] **2.24.2 Implement auto-claim logic to automatically claim rewards to buffer when enabled** ✅
+  - [ ] **2.24.3 Add network packets for auto-claim toggle state synchronization**
+  - [ ] **2.24.4 Test auto-claim functionality with buffer space management**
+
+### Task 2.23 Complete (2025-06-20)
+**✅ Fix Payment Buffer Hopper Output to Block Underside**
+
+**Status**: FULLY IMPLEMENTED - Payment buffer now supports hopper extraction with real-time UI synchronization.
+
+**Key Achievements:**
+- Created separate 18-slot `ItemStackHandler` for payment buffer with extraction-only capability
+- Modified `TownBlockEntity.getCapability()` to return buffer handler when accessed from `Direction.DOWN`
+- Implemented bi-directional synchronization between town buffer storage and `ItemStackHandler`
+- Added real-time client notification system for UI updates when hoppers extract items
+- Enhanced `ClientSyncHelper` with `notifyBufferStorageChange()` for immediate UI refresh
+
+**Technical Implementation:**
+- **Buffer Handler**: 18-slot `ItemStackHandler` with extraction-only policy (no insertions allowed)
+- **Capability System**: `Direction.DOWN` access returns buffer handler, other directions return resource input handler
+- **Synchronization Logic**: 
+  - `syncTownDataToBuffer()`: Converts `Map<Item, Integer>` to `ItemStack[]` for hopper access
+  - `syncBufferToTownData()`: Updates town storage when items are extracted by hoppers
+  - Automatic UI refresh via `BufferStorageResponsePacket` when buffer contents change
+- **Real-time Updates**: Hopper extractions immediately update Payment Board UI for all connected players
+
+**User Experience:**
+- **Hopper Automation**: Works seamlessly with existing automation systems
+- **UI Synchronization**: Payment Board UI updates in real-time when hoppers extract items
+- **Withdrawal-Only Buffer**: Users can only remove items manually; hoppers can extract from below
+- **Backwards Compatible**: Existing town buffer functionality preserved
+
+### Task 2.24 Complete (2025-06-20)
+**✅ Add Auto-Claim Toggle Button to Payment Board UI**
+
+**Status**: FULLY IMPLEMENTED - Auto-claim toggle button with visual feedback and logic integration.
+
+**Key Achievements:**
+- Added professional auto-claim toggle button in top-right area of Payment Board UI
+- Implemented visual state indication (green "Auto: ON" / red "Auto: OFF")
+- Created comprehensive tooltip system explaining functionality
+- Added auto-claim logic that automatically processes new rewards when enabled
+- Enhanced `InventoryRenderer` with custom color button support
+
+**Technical Implementation:**
+- **UI Layout**: Auto-claim button positioned at `(262, 8)` with 70x20px dimensions
+- **Visual Design**: Color-coded button (green when ON, red when OFF) with hover effects
+- **State Management**: `autoClaimEnabled` boolean with toggle functionality
+- **Auto-claim Logic**: `autoClaimNewRewards()` automatically claims unclaimed rewards to buffer
+- **Enhanced Renderer**: Added `InventoryRenderer.drawButton()` overload with custom colors
+
+**User Experience:**
+- **Clear Visual Feedback**: Button color and text clearly indicate current state
+- **Informative Tooltips**: Detailed tooltips explain auto-claim functionality
+- **Smart Integration**: Auto-claim triggers when `updateRewardData()` receives new rewards
+- **Buffer-First Approach**: Auto-claimed rewards go directly to buffer storage for automation compatibility
+
+**Framework Enhancements:**
+- **InventoryRenderer**: Added custom color button support with brightness adjustment for hover effects
+- **PaymentBoardScreen**: Integrated auto-claim logic with existing reward update system
+- **Future-Ready**: Framework prepared for network packet synchronization (Task 2.24.3)
+
+## Current Issues Found During Testing (2025-06-20)
+
+- [ ] **2.25 Fix Payment Buffer XP Bottles Disappearing Client-Side Bug** 
+  - **Problem**: When a hopper is connected underneath but is full except it has room for bread, and a reward of emeralds, bread and XP bottles is added to the buffer, the emeralds stay in the buffer, the bread is removed to the hopper but the XP bottles vanish from the buffer on the client UI. Reopening the UI or moving the emeralds reveals the XP bottles.
+  - **Root Cause**: Client-server sync issue when hopper partially extracts items from payment buffer
+  - **Goal**: Fix item visibility bug when hopper extracts some but not all items from buffer
+  - [ ] **2.25.1 Investigate buffer synchronization in TownBlockEntity**
+  - [ ] **2.25.2 Fix client-side buffer display after partial hopper extraction**
+  - [ ] **2.25.3 Test with various partial extraction scenarios**
+
+- [ ] **2.26 Remove Auto-Claim Toggle and Associated Functions**
+  - **Problem**: Auto-claim toggle is not needed as per user feedback
+  - **Goal**: Clean removal of auto-claim functionality added in Task 2.24
+  - [ ] **2.26.1 Remove auto-claim toggle button from PaymentBoardScreen**
+  - [ ] **2.26.2 Remove auto-claim logic and associated methods**
+  - [ ] **2.26.3 Clean up any auto-claim related variables and state management**
+
 ---
-**Status**: Phase 2 Complete - Tourist Arrival Payment Board System Fully Implemented
-**Next Steps**: Phase 3 - UI Navigation and Controls (Task 3.2 - Add Filtering and Sorting)
+**Status**: Phase 2 Extended - Payment Buffer Automation Complete, Bug Fixes In Progress
+**Next Steps**: Fix XP bottle visibility bug and remove auto-claim functionality

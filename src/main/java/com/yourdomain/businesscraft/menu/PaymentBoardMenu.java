@@ -46,6 +46,9 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
     // Store the position of the town block
     private BlockPos townBlockPos;
     
+    // Track if buffer slots are connected to real buffer handler
+    private boolean connectedToRealBufferHandler = false;
+    
     // Client-side cached rewards (synced from server via packets)
     private List<RewardEntry> cachedRewards = new ArrayList<>();
     
@@ -65,6 +68,10 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
         // Read the BlockPos from the extra data if available
         if (extraData != null && extraData.readableBytes() > 0) {
             this.townBlockPos = extraData.readBlockPos();
+            // Try to connect to the actual TownBlockEntity's buffer handler on server side only
+            if (!playerInventory.player.level().isClientSide()) {
+                connectToTownBlockEntity(playerInventory.player.level());
+            }
         }
     }
     
@@ -72,6 +79,10 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
     public PaymentBoardMenu(int containerId, Inventory playerInventory, BlockPos pos) {
         this(containerId, playerInventory, new ItemStackHandler(BUFFER_SIZE));
         this.townBlockPos = pos;
+        // Try to connect to the actual TownBlockEntity's buffer handler on server side only
+        if (!playerInventory.player.level().isClientSide()) {
+            connectToTownBlockEntity(playerInventory.player.level());
+        }
     }
     
     // Main constructor
@@ -91,7 +102,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
                 int index = col + row * BUFFER_COLS;
                 int x = BUFFER_START_X + col * SLOT_SIZE;
                 int y = BUFFER_START_Y + row * SLOT_SIZE;
-                this.addSlot(new BufferSlot(this.bufferInventory, index, x, y));
+                this.addSlot(new BufferSlot(this, this.bufferInventory, index, x, y));
             }
         }
         
@@ -153,9 +164,12 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
     }
     
     // Custom slot implementation for buffer storage - WITHDRAWAL-ONLY for users
-    private static class BufferSlot extends SlotItemHandler {
-        public BufferSlot(IItemHandler itemHandler, int index, int xPosition, int yPosition) {
+    private class BufferSlot extends SlotItemHandler {
+        private final PaymentBoardMenu menu;
+        
+        public BufferSlot(PaymentBoardMenu menu, IItemHandler itemHandler, int index, int xPosition, int yPosition) {
             super(itemHandler, index, xPosition, yPosition);
+            this.menu = menu;
         }
         
         // BLOCK user placement of items - withdrawal-only buffer
@@ -170,6 +184,18 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
         public boolean mayPickup(net.minecraft.world.entity.player.Player player) {
             return true; // Users can always take items from buffer
         }
+        
+        // Override onTake to sync with server-side buffer storage
+        @Override
+        public void onTake(net.minecraft.world.entity.player.Player player, ItemStack stack) {
+            super.onTake(player, stack);
+            
+            // Only sync if slots are NOT connected to real buffer handler
+            // If they are connected, the TownBufferManager.onContentsChanged will handle the sync
+            if (!player.level().isClientSide() && menu.townBlockPos != null && !menu.isConnectedToRealBufferHandler()) {
+                menu.processBufferStorageRemove(player, this.getSlotIndex(), stack);
+            }
+        }
     }
     
     /**
@@ -180,6 +206,61 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
         return this.townBlockPos;
     }
     
+    /**
+     * Check if buffer slots are connected to the real buffer handler
+     * @return true if connected to real handler, false if using local handler
+     */
+    public boolean isConnectedToRealBufferHandler() {
+        return connectedToRealBufferHandler;
+    }
+    
+    /**
+     * Connect to the TownBlockEntity's actual buffer handler to prevent ghost items
+     * This method is only called on the server side
+     */
+    private void connectToTownBlockEntity(Level level) {
+        LOGGER.info("connectToTownBlockEntity called on SERVER - townBlockPos: {}", townBlockPos);
+            
+        if (townBlockPos != null && level != null) {
+            BlockEntity blockEntity = level.getBlockEntity(townBlockPos);
+            LOGGER.info("BlockEntity at {}: {}", townBlockPos, blockEntity);
+            
+            if (blockEntity instanceof com.yourdomain.businesscraft.block.entity.TownBlockEntity townBlockEntity) {
+                // Get the real buffer handler from the TownBlockEntity
+                var bufferHandler = townBlockEntity.getBufferHandler();
+                LOGGER.info("Got buffer handler: {}", bufferHandler != null);
+                
+                if (bufferHandler != null) {
+                    // Replace our buffer slots with ones connected to the real handler
+                    reconnectBufferSlots(bufferHandler);
+                    connectedToRealBufferHandler = true;
+                    LOGGER.info("Successfully reconnected buffer slots to real handler");
+                } else {
+                    LOGGER.warn("Buffer handler is null from TownBlockEntity");
+                }
+            } else {
+                LOGGER.warn("BlockEntity is not a TownBlockEntity: {}", blockEntity);
+            }
+        } else {
+            LOGGER.warn("Cannot connect - townBlockPos: {}, level: {}", townBlockPos, level != null);
+        }
+    }
+    
+    /**
+     * Reconnect buffer slots to use the real buffer handler
+     */
+    private void reconnectBufferSlots(net.minecraftforge.items.ItemStackHandler realBufferHandler) {
+        // Replace the buffer slots (slots 0-17) with ones connected to the real handler
+        for (int i = 0; i < BUFFER_SIZE; i++) {
+            if (i < this.slots.size()) {
+                // Remove old slot and add new one connected to real handler
+                this.slots.set(i, new BufferSlot(this, realBufferHandler, i, 
+                    BUFFER_START_X + (i % BUFFER_COLS) * SLOT_SIZE,
+                    BUFFER_START_Y + (i / BUFFER_COLS) * SLOT_SIZE));
+            }
+        }
+    }
+
     /**
      * Gets a TownBlockMenu instance for accessing town data
      * 
@@ -307,19 +388,35 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
             return false;
         }
         
-        // Send a packet to the server to remove the item from buffer storage
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
-            "Removing {} items from buffer storage at slot {}", itemStack.getCount(), slotId);
-        
-        try {
-            ModMessages.sendToServer(new com.yourdomain.businesscraft.network.packets.storage.BufferStoragePacket(
-                townBlockPos, itemStack, slotId, false)); // false = remove operation
-        } catch (Exception e) {
-            LOGGER.error("Error sending buffer storage remove request", e);
-            return false;
+        // Server-side: directly update the Payment Board buffer storage
+        if (!player.level().isClientSide()) {
+            // Get the town directly from the TownBlockEntity
+            if (townBlockPos != null) {
+                net.minecraft.world.level.block.entity.BlockEntity blockEntity = player.level().getBlockEntity(townBlockPos);
+                if (blockEntity instanceof com.yourdomain.businesscraft.block.entity.TownBlockEntity townBlockEntity) {
+                    // Get town using the same pattern as TownBlockMenu
+                    java.util.UUID townId = townBlockEntity.getTownId();
+                    if (townId != null && player.level() instanceof net.minecraft.server.level.ServerLevel sLevel) {
+                        com.yourdomain.businesscraft.town.Town town = com.yourdomain.businesscraft.town.TownManager.get(sLevel).getTown(townId);
+                        if (town != null) {
+                            // Remove item from Payment Board buffer storage
+                            boolean success = town.getPaymentBoard().removeFromBuffer(itemStack.getItem(), itemStack.getCount());
+                            
+                            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
+                                "Directly removed {} {} from payment board buffer storage: {}", 
+                                itemStack.getCount(), itemStack.getItem(), success);
+                            
+                            // Trigger buffer change notification to sync UI
+                            townBlockEntity.onTownBufferChanged();
+                            
+                            return success;
+                        }
+                    }
+                }
+            }
         }
         
-        return true;
+        return false;
     }
     
     /**

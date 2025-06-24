@@ -372,4 +372,26 @@ public class ClientSyncHelper {
             clientVisitHistory.size(),
             townNameCache.size());
     }
+    
+    /**
+     * Notifies all nearby players of buffer storage changes for real-time UI updates
+     * This is a static method for easy access from TownBlockEntity
+     */
+    public static void notifyBufferStorageChange(ServerLevel level, UUID townId, Map<Item, Integer> bufferItems) {
+        if (level == null || townId == null) return;
+        
+        // Send BufferStorageResponsePacket to all players in the area
+        // This ensures Payment Board UI updates in real-time when hoppers extract items
+        com.yourdomain.businesscraft.network.packets.storage.BufferStorageResponsePacket packet = 
+            new com.yourdomain.businesscraft.network.packets.storage.BufferStorageResponsePacket(bufferItems);
+        
+        // Send to all players within a reasonable distance of any town blocks
+        level.players().forEach(player -> {
+            // Send to all players - the client will filter based on which UI is open
+            com.yourdomain.businesscraft.network.ModMessages.sendToPlayer(packet, player);
+        });
+        
+        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, 
+            "Sent buffer storage update for town {} to {} players", townId, level.players().size());
+    }
 } 

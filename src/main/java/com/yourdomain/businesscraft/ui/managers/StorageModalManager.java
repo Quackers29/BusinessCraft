@@ -11,6 +11,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
+import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.network.packets.ui.OpenPaymentBoardPacket;
 import java.util.function.Consumer;
 
 /**
@@ -21,7 +23,7 @@ import java.util.function.Consumer;
 public class StorageModalManager extends BaseModalManager {
     
     /**
-     * Creates and shows a payment board screen (replacing storage modal).
+     * Creates and shows a payment board screen using proper Minecraft container system.
      * 
      * @param parentScreen The parent screen to return to
      * @param blockPos The position of the town block
@@ -45,21 +47,8 @@ public class StorageModalManager extends BaseModalManager {
             throw new IllegalStateException("Player cannot be null when creating payment board screen");
         }
         
-        // Create a payment board menu
-        int containerId = player.containerMenu.containerId + 1;
-        PaymentBoardMenu paymentBoardMenu = new PaymentBoardMenu(containerId, player.getInventory(), blockPos);
-        
-        // Set the player's active container menu to the new payment board menu
-        player.containerMenu = paymentBoardMenu;
-        
-        // Create the payment board screen
-        PaymentBoardScreen paymentBoardScreen = new PaymentBoardScreen(
-            paymentBoardMenu, 
-            player.getInventory(), 
-            Component.literal("Payment Board")
-        );
-        
-        // Show the payment board screen
-        Minecraft.getInstance().setScreen(paymentBoardScreen);
+        // Send packet to server to open Payment Board using proper container system
+        // This ensures proper server-client synchronization via NetworkHooks
+        ModMessages.sendToServer(new OpenPaymentBoardPacket(blockPos));
     }
 } 
