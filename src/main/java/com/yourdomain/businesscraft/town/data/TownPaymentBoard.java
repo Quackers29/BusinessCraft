@@ -19,7 +19,7 @@ public class TownPaymentBoard {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownPaymentBoard.class);
     
     private final List<RewardEntry> rewards = new ArrayList<>();
-    private final Map<Item, Integer> bufferStorage = new HashMap<>(); // 2x9 buffer storage
+    private final SlotBasedStorage bufferStorage = new SlotBasedStorage(18); // 2x9 buffer storage (18 slots)
     
     // Configuration
     private static final int MAX_REWARDS = 100; // Maximum number of rewards to keep
@@ -131,60 +131,59 @@ public class TownPaymentBoard {
      * Add items to buffer storage (2x9 grid)
      */
     private boolean addToBufferStorage(List<ItemStack> items) {
-        // Calculate available space in buffer (18 slots total)
-        int usedSlots = 0;
-        for (Integer count : bufferStorage.values()) {
-            usedSlots += (count + 63) / 64; // Ceiling division for stack sizes
-        }
-        
-        if (usedSlots >= 18) {
-            return false; // Buffer is full
-        }
-        
-        // Add items to buffer storage
+        // Try to add all items to buffer using smart allocation
+        boolean allAdded = true;
         for (ItemStack stack : items) {
-            bufferStorage.merge(stack.getItem(), stack.getCount(), Integer::sum);
+            if (!bufferStorage.addItem(stack)) {
+                allAdded = false;
+                // Could implement partial addition here if needed
+                break;
+            }
         }
         
-        return true;
+        return allAdded;
     }
     
     /**
-     * Get buffer storage items
+     * Get buffer storage items (legacy compatibility method)
+     * Converts SlotBasedStorage to Map format for existing code
      */
     public Map<Item, Integer> getBufferStorage() {
-        return Collections.unmodifiableMap(bufferStorage);
+        Map<Item, Integer> itemMap = new HashMap<>();
+        for (int i = 0; i < bufferStorage.getSlotCount(); i++) {
+            ItemStack stack = bufferStorage.getSlot(i);
+            if (!stack.isEmpty()) {
+                itemMap.merge(stack.getItem(), stack.getCount(), Integer::sum);
+            }
+        }
+        return Collections.unmodifiableMap(itemMap);
     }
     
     /**
-     * Add items to buffer storage directly
+     * Get buffer storage as SlotBasedStorage (new method)
+     */
+    public SlotBasedStorage getBufferStorageSlots() {
+        return bufferStorage;
+    }
+    
+    /**
+     * Add items to buffer storage directly (legacy compatibility)
      */
     public boolean addToBuffer(Item item, int count) {
         if (count <= 0) return true;
         
-        bufferStorage.merge(item, count, Integer::sum);
-        return true;
+        ItemStack stackToAdd = new ItemStack(item, count);
+        return bufferStorage.addItem(stackToAdd);
     }
     
     /**
-     * Remove items from buffer storage
+     * Remove items from buffer storage (legacy compatibility)
      */
     public boolean removeFromBuffer(Item item, int count) {
         if (count <= 0) return true;
         
-        int currentAmount = bufferStorage.getOrDefault(item, 0);
-        if (currentAmount < count) {
-            return false; // Not enough items
-        }
-        
-        int newAmount = currentAmount - count;
-        if (newAmount > 0) {
-            bufferStorage.put(item, newAmount);
-        } else {
-            bufferStorage.remove(item);
-        }
-        
-        return true;
+        ItemStack removed = bufferStorage.removeItem(item, count);
+        return removed.getCount() == count; // Return true if we removed the requested amount
     }
     
     /**
@@ -258,13 +257,8 @@ public class TownPaymentBoard {
         }
         tag.put("rewards", rewardsList);
         
-        // Save buffer storage
-        CompoundTag bufferTag = new CompoundTag();
-        for (Map.Entry<Item, Integer> entry : bufferStorage.entrySet()) {
-            String itemKey = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(entry.getKey()).toString();
-            bufferTag.putInt(itemKey, entry.getValue());
-        }
-        tag.put("bufferStorage", bufferTag);
+        // Save buffer storage using SlotBasedStorage NBT serialization
+        tag.put("bufferStorage", bufferStorage.toNBT());
         
         return tag;
     }
@@ -290,25 +284,45 @@ public class TownPaymentBoard {
         // Load buffer storage
         if (tag.contains("bufferStorage")) {
             CompoundTag bufferTag = tag.getCompound("bufferStorage");
-            for (String key : bufferTag.getAllKeys()) {
-                try {
-                    net.minecraft.resources.ResourceLocation itemId = new net.minecraft.resources.ResourceLocation(key);
-                    Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(itemId);
-                    if (item != null) {
-                        int count = bufferTag.getInt(key);
-                        if (count > 0) {
-                            bufferStorage.put(item, count);
-                        }
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("Error loading buffer storage item: {}", key, e);
-                }
+            
+            // Check if this is new slot-based format or legacy Map format
+            if (bufferTag.contains("SlotCount")) {
+                // New slot-based format
+                bufferStorage.fromNBT(bufferTag);
+            } else {
+                // Legacy Map format - migrate to slot-based
+                migrateFromLegacyBufferStorage(bufferTag);
             }
         }
         
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
-            "Loaded payment board with {} rewards and {} buffer items", 
-            rewards.size(), bufferStorage.size());
+            "Loaded payment board with {} rewards and buffer storage", 
+            rewards.size());
+    }
+    
+    /**
+     * Migrate legacy Map<Item, Integer> buffer storage to SlotBasedStorage
+     */
+    private void migrateFromLegacyBufferStorage(CompoundTag bufferTag) {
+        LOGGER.info("Migrating legacy buffer storage to slot-based format");
+        
+        for (String key : bufferTag.getAllKeys()) {
+            try {
+                net.minecraft.resources.ResourceLocation itemId = new net.minecraft.resources.ResourceLocation(key);
+                Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(itemId);
+                if (item != null) {
+                    int count = bufferTag.getInt(key);
+                    if (count > 0) {
+                        ItemStack stackToMigrate = new ItemStack(item, count);
+                        bufferStorage.addItem(stackToMigrate);
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.error("Error migrating legacy buffer storage item: {}", key, e);
+            }
+        }
+        
+        LOGGER.info("Legacy buffer storage migration complete");
     }
     
     /**

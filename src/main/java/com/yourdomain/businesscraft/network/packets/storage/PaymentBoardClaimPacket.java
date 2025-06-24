@@ -130,9 +130,9 @@ public class PaymentBoardClaimPacket {
                             var rewards = town.getPaymentBoard().getUnclaimedRewards();
                             ModMessages.sendToPlayer(new PaymentBoardResponsePacket(rewards), player);
                             
-                            // Send updated buffer storage data to client
-                            var bufferItems = town.getAllCommunalStorageItems(); // Buffer storage uses communal storage
-                            ModMessages.sendToPlayer(new BufferStorageResponsePacket(bufferItems), player);
+                            // Send updated buffer storage data to client using new slot-based packet
+                            var bufferSlots = town.getPaymentBoard().getBufferStorageSlots();
+                            ModMessages.sendToPlayer(new com.yourdomain.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket(bufferSlots), player);
                             
                             // Send success message to player
                             player.sendSystemMessage(net.minecraft.network.chat.Component.literal(

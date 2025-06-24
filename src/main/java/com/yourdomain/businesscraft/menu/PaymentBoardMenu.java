@@ -435,11 +435,12 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
     }
     
     /**
-     * Update the buffer inventory with items from the server
+     * Update the buffer inventory with items from the server (legacy method)
+     * Converts Map<Item, Integer> to slot-based display for backward compatibility
      */
     public void updateBufferStorageItems(Map<Item, Integer> items) {
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
-            "Updating buffer storage inventory with {} items from server", items.size());
+            "Updating buffer storage inventory with {} items from server (legacy format)", items.size());
         
         // Clear current inventory
         for (int i = 0; i < bufferInventory.getSlots(); i++) {
@@ -479,6 +480,27 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
                 LOGGER.warn("Buffer inventory full, some items not displayed");
                 break;
             }
+        }
+    }
+    
+    /**
+     * Update the buffer inventory with slot-based data from server (new method)
+     * Preserves exact slot positions using SlotBasedStorage data
+     */
+    public void updateBufferStorageSlots(com.yourdomain.businesscraft.town.data.SlotBasedStorage slotStorage) {
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
+            "Updating buffer storage inventory with slot-based data from server");
+        
+        // Copy each slot directly from SlotBasedStorage to local inventory
+        int copySlots = Math.min(bufferInventory.getSlots(), slotStorage.getSlotCount());
+        for (int i = 0; i < copySlots; i++) {
+            ItemStack slotStack = slotStorage.getSlot(i);
+            bufferInventory.setStackInSlot(i, slotStack);
+        }
+        
+        // Clear any remaining slots if local inventory is larger
+        for (int i = copySlots; i < bufferInventory.getSlots(); i++) {
+            bufferInventory.setStackInSlot(i, ItemStack.EMPTY);
         }
     }
 }

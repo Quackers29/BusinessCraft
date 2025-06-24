@@ -165,44 +165,42 @@ public class TownBufferManager {
     
     /**
      * Synchronizes town payment buffer data to the ItemStackHandler for hopper access
+     * Now preserves exact slot positions using SlotBasedStorage
      */
     private void syncTownDataToBuffer(Map<Item, Integer> bufferStorage) {
         if (level == null || level.isClientSide() || townId == null) return;
         
-        // Suppress callbacks while we're syncing to prevent infinite loops
-        suppressBufferCallbacks = true;
-        
-        try {
-            // Clear the handler first
-            for (int i = 0; i < bufferHandler.getSlots(); i++) {
-                bufferHandler.setStackInSlot(i, ItemStack.EMPTY);
-            }
-            
-            // Fill handler with items from town buffer storage
-            int slot = 0;
-            for (Map.Entry<Item, Integer> entry : bufferStorage.entrySet()) {
-                Item item = entry.getKey();
-                int totalCount = entry.getValue();
+        if (level instanceof ServerLevel sLevel) {
+            Town town = TownManager.get(sLevel).getTown(townId);
+            if (town != null) {
+                // Get the actual SlotBasedStorage from the town
+                SlotBasedStorage slotStorage = town.getPaymentBoard().getBufferStorageSlots();
                 
-                // Split large stacks across multiple slots
-                while (totalCount > 0 && slot < bufferHandler.getSlots()) {
-                    int stackSize = Math.min(totalCount, item.getMaxStackSize());
-                    bufferHandler.setStackInSlot(slot, new ItemStack(item, stackSize));
-                    totalCount -= stackSize;
-                    slot++;
+                // Suppress callbacks while we're syncing to prevent infinite loops
+                suppressBufferCallbacks = true;
+                
+                try {
+                    // Copy each slot directly from SlotBasedStorage to ItemStackHandler
+                    for (int i = 0; i < bufferHandler.getSlots() && i < slotStorage.getSlotCount(); i++) {
+                        ItemStack slotStack = slotStorage.getSlot(i);
+                        bufferHandler.setStackInSlot(i, slotStack);
+                    }
+                    
+                    // Clear any remaining slots if handler is larger
+                    for (int i = slotStorage.getSlotCount(); i < bufferHandler.getSlots(); i++) {
+                        bufferHandler.setStackInSlot(i, ItemStack.EMPTY);
+                    }
+                } finally {
+                    // Always re-enable callbacks
+                    suppressBufferCallbacks = false;
                 }
-                
-                if (slot >= bufferHandler.getSlots()) break;
             }
-        } finally {
-            // Always re-enable callbacks
-            suppressBufferCallbacks = false;
         }
     }
     
     /**
      * Synchronizes ItemStackHandler changes back to town payment buffer data
-     * Also notifies clients of buffer changes for UI updates
+     * Now preserves exact slot positions using SlotBasedStorage
      */
     private void syncBufferToTownData() {
         if (level == null || level.isClientSide() || townId == null) {
@@ -216,41 +214,20 @@ public class TownBufferManager {
         if (level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
             if (town != null) {
-                // Calculate current items in handler
-                Map<Item, Integer> handlerItems = new HashMap<>();
-                for (int i = 0; i < bufferHandler.getSlots(); i++) {
-                    ItemStack stack = bufferHandler.getStackInSlot(i);
-                    if (!stack.isEmpty()) {
-                        handlerItems.merge(stack.getItem(), stack.getCount(), Integer::sum);
-                    }
-                }
-                
-                // Update town payment board buffer storage to match handler
-                Map<Item, Integer> currentBuffer = new HashMap<>(town.getPaymentBoard().getBufferStorage());
+                // Get the SlotBasedStorage and update it directly from ItemStackHandler
+                SlotBasedStorage slotStorage = town.getPaymentBoard().getBufferStorageSlots();
                 boolean bufferChanged = false;
                 
-                // Remove items that are no longer in handler
-                for (Item item : currentBuffer.keySet()) {
-                    if (!handlerItems.containsKey(item)) {
-                        int removeCount = currentBuffer.get(item);
-                        town.getPaymentBoard().removeFromBuffer(item, removeCount);
-                        bufferChanged = true;
-                    }
-                }
-                
-                // Update counts for items in handler
-                for (Map.Entry<Item, Integer> entry : handlerItems.entrySet()) {
-                    Item item = entry.getKey();
-                    int newCount = entry.getValue();
-                    int currentCount = currentBuffer.getOrDefault(item, 0);
+                // Copy each slot from ItemStackHandler to SlotBasedStorage
+                for (int i = 0; i < bufferHandler.getSlots() && i < slotStorage.getSlotCount(); i++) {
+                    ItemStack handlerStack = bufferHandler.getStackInSlot(i);
+                    ItemStack storageStack = slotStorage.getSlot(i);
                     
-                    if (newCount != currentCount) {
-                        int difference = newCount - currentCount;
-                        if (difference > 0) {
-                            town.getPaymentBoard().addToBuffer(item, difference);
-                        } else {
-                            town.getPaymentBoard().removeFromBuffer(item, -difference);
-                        }
+                    // Check if slot contents changed
+                    if (!ItemStack.isSameItemSameTags(handlerStack, storageStack) || 
+                        handlerStack.getCount() != storageStack.getCount()) {
+                        
+                        slotStorage.setSlot(i, handlerStack);
                         bufferChanged = true;
                     }
                 }
@@ -260,24 +237,35 @@ public class TownBufferManager {
                     lastKnownTownBuffer = new HashMap<>(town.getPaymentBoard().getBufferStorage());
                     LOGGER.debug("Buffer storage changed, updated tracking and notifying clients");
                     
-                    // Notify clients of buffer storage changes for UI updates
-                    notifyClientsOfBufferChange(town);
+                    // Notify clients of buffer storage changes for UI updates using new slot-based method
+                    notifyClientsOfSlotBasedBufferChange(town);
                 } else {
                     // Always notify clients, even if no changes detected, in case of sync issues
-                    notifyClientsOfBufferChange(town);
+                    notifyClientsOfSlotBasedBufferChange(town);
                 }
             }
         }
     }
     
     /**
-     * Notifies all clients with the Payment Board UI open of buffer storage changes
+     * Notifies all clients with the Payment Board UI open of buffer storage changes (legacy method)
      */
     private void notifyClientsOfBufferChange(Town town) {
         if (level instanceof ServerLevel sLevel) {
-            // Send buffer update packet to all players with Payment Board UI open
+            // Send legacy buffer update packet to all players with Payment Board UI open
             // This ensures real-time UI updates when hoppers extract items
             ClientSyncHelper.notifyBufferStorageChange(sLevel, townId, town.getPaymentBoard().getBufferStorage());
+        }
+    }
+    
+    /**
+     * Notifies all clients with the Payment Board UI open of slot-based buffer storage changes
+     */
+    private void notifyClientsOfSlotBasedBufferChange(Town town) {
+        if (level instanceof ServerLevel sLevel) {
+            // Send slot-based buffer update packet to all players with Payment Board UI open
+            // This ensures real-time UI updates with exact slot preservation when hoppers extract items
+            ClientSyncHelper.notifyBufferSlotStorageChange(sLevel, townId, town.getPaymentBoard().getBufferStorageSlots());
         }
     }
 }
