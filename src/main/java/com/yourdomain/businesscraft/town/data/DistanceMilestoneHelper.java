@@ -194,7 +194,7 @@ public class DistanceMilestoneHelper {
                     rewardId, town.getName(), (int) Math.round(milestoneResult.actualDistance), 
                     milestoneResult.touristCount, milestoneResult.rewards.size());
                 
-                LOGGER.info("Added milestone reward to payment board for town '{}': {}m journey with {} tourists resulted in {} reward items", 
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "Added milestone reward to payment board for town '{}': {}m journey with {} tourists resulted in {} reward items", 
                     town.getName(), (int) Math.round(milestoneResult.actualDistance), 
                     milestoneResult.touristCount, milestoneResult.rewards.size());
                 return true;

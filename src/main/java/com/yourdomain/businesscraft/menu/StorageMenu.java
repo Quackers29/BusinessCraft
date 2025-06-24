@@ -435,17 +435,17 @@ public class StorageMenu extends AbstractContainerMenu {
      * Debug method to log the current state of all storage slots
      */
     public void debugLogStorageState(String context) {
-        LOGGER.info("STORAGE-DEBUG [{}]: Current storage state:", context);
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "STORAGE-DEBUG [{}]: Current storage state:", context);
         int filledSlots = 0;
         for (int i = 0; i < storageInventory.getSlots(); i++) {
             ItemStack stack = storageInventory.getStackInSlot(i);
             if (!stack.isEmpty()) {
-                LOGGER.info("STORAGE-DEBUG [{}]:   Slot {}: {} x{}", 
+                DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "STORAGE-DEBUG [{}]:   Slot {}: {} x{}", 
                     context, i, stack.getHoverName().getString(), stack.getCount());
                 filledSlots++;
             }
         }
-        LOGGER.info("STORAGE-DEBUG [{}]: {} out of {} slots filled. Storage mode: {}", 
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "STORAGE-DEBUG [{}]: {} out of {} slots filled. Storage mode: {}", 
             context, filledSlots, storageInventory.getSlots(), 
             isPersonalStorageMode ? "PERSONAL" : "COMMUNAL");
     }

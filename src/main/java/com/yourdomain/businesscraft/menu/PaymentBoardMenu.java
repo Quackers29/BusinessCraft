@@ -219,22 +219,22 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
      * This method is only called on the server side
      */
     private void connectToTownBlockEntity(Level level) {
-        LOGGER.info("connectToTownBlockEntity called on SERVER - townBlockPos: {}", townBlockPos);
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "connectToTownBlockEntity called on SERVER - townBlockPos: {}", townBlockPos);
             
         if (townBlockPos != null && level != null) {
             BlockEntity blockEntity = level.getBlockEntity(townBlockPos);
-            LOGGER.info("BlockEntity at {}: {}", townBlockPos, blockEntity);
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "BlockEntity at {}: {}", townBlockPos, blockEntity);
             
             if (blockEntity instanceof com.yourdomain.businesscraft.block.entity.TownBlockEntity townBlockEntity) {
                 // Get the real buffer handler from the TownBlockEntity
                 var bufferHandler = townBlockEntity.getBufferHandler();
-                LOGGER.info("Got buffer handler: {}", bufferHandler != null);
+                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Got buffer handler: {}", bufferHandler != null);
                 
                 if (bufferHandler != null) {
                     // Replace our buffer slots with ones connected to the real handler
                     reconnectBufferSlots(bufferHandler);
                     connectedToRealBufferHandler = true;
-                    LOGGER.info("Successfully reconnected buffer slots to real handler");
+                    DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Successfully reconnected buffer slots to real handler");
                 } else {
                     LOGGER.warn("Buffer handler is null from TownBlockEntity");
                 }

@@ -51,9 +51,20 @@ BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete
 - **Run specific test**: `./gradlew test --tests "ClassName.methodName"`
 
 ### Debug Configuration
-- **Toggle debug logging**: Edit `DebugConfig.java` boolean flags (requires rebuild)
+- **Debug Control File**: `src/main/java/com/yourdomain/businesscraft/debug/DebugConfig.java`
+- **Toggle debug logging**: Edit boolean flags in DebugConfig.java (requires rebuild)
 - **Current debug status**: All systems disabled for clean production logs
-- **VISITOR_PROCESSING**: Recently disabled after fixing distance calculation bugs
+- **Clean Logs**: Excessive INFO logs converted to debug-controlled logging:
+  - Payment Board UI operations (`UI_MANAGERS`)
+  - Storage operations (`STORAGE_OPERATIONS`) 
+  - Tourist arrival processing (`VISITOR_PROCESSING`)
+  - Milestone reward processing (`VISITOR_PROCESSING`)
+- **Global override**: Set `FORCE_ALL_DEBUG = true` to enable all debugging
+- **Component-specific flags**: 25+ individual flags for targeted debugging
+  - `TOWN_BLOCK_ENTITY`, `NETWORK_PACKETS`, `UI_MANAGERS`, etc.
+  - `VISITOR_PROCESSING`, `STORAGE_OPERATIONS`, `TRADE_OPERATIONS`
+  - `PLATFORM_SYSTEM`, `TOURIST_ENTITY`, `CLIENT_HANDLERS`
+- **Usage**: `DebugConfig.debug(LOGGER, DebugConfig.COMPONENT_FLAG, "Message");`
 
 ## Current Implementation Status
 

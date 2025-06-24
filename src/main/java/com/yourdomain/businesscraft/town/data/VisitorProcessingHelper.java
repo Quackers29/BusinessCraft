@@ -332,7 +332,7 @@ public class VisitorProcessingHelper {
                     "TOURIST PAYMENT - Created reward entry {} for {} emeralds in town {}", 
                     rewardId, payment, town.getName());
                 
-                LOGGER.info("Added tourist payment reward to town '{}': {} emeralds", 
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "Added tourist payment reward to town '{}': {} emeralds", 
                     town.getName(), payment);
             } else {
                 LOGGER.warn("Failed to create tourist payment reward entry for town '{}'", town.getName());
@@ -393,7 +393,7 @@ public class VisitorProcessingHelper {
                     "BUNDLED TOURIST REWARD - Created reward entry {} for {} emeralds + {} milestone items from {} in town {}", 
                     rewardId, payment, milestoneResult.hasRewards() ? milestoneResult.rewards.size() : 0, originTownName, town.getName());
                 
-                LOGGER.info("Added bundled tourist arrival reward to town '{}' from '{}': {} emeralds + {} milestone items", 
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "Added bundled tourist arrival reward to town '{}' from '{}': {} emeralds + {} milestone items", 
                     town.getName(), originTownName, payment, milestoneResult.hasRewards() ? milestoneResult.rewards.size() : 0);
             } else {
                 LOGGER.warn("Failed to create bundled tourist reward entry for town '{}'", town.getName());

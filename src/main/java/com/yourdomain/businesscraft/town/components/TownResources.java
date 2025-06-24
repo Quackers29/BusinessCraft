@@ -49,7 +49,7 @@ public class TownResources {
             
             if (currentAmount > 0) {
                 if (isEmerald && count <= -5) {
-                    LOGGER.info("Emerald change: {} -> {} (removed {})", 
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Emerald change: {} -> {} (removed {})", 
                         currentAmount, newAmount, -count);
                 } else {
                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Removed {} of resource {} (new amount: {})", 
