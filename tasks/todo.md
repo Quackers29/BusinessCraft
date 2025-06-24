@@ -847,45 +847,59 @@ Column 1: "3 x Riverside"        Column 2: [Primary Item] (enhanced tooltip)
   - [x] **2.26.2 Remove auto-claim logic and associated methods** ✅
   - [x] **2.26.3 Clean up any auto-claim related variables and state management** ✅
 
-- [ ] **2.27 Major Architecture Change: Implement Slot-Based Buffer Storage System**
+- [ ] **2.27 Major Architecture Change: Implement Modular Slot-Based Storage System**
   - **Problem**: Items don't remain where you put them between UI opens/closes. Partial hopper extraction causes item ghosting and slot redistribution.
   - **Root Cause**: Buffer storage uses `Map<Item, Integer>` which loses slot position information. `updateBufferStorageItems()` redistributes items sequentially from slot 0.
-  - **Current Architecture Issues**:
-    - `Map<Item, Integer> bufferStorage` collapses slot-specific information into generic item counts
-    - `updateBufferStorageItems()` always starts from slot 0, causing visual "ghosting" when items move positions
-    - Hopper partial extraction triggers full redistribution instead of preserving remaining item positions
-    - Two-layer system (UI ItemStackHandler + Data Map) creates sync complexity
-  - **Proposed Solution**: Replace `Map<Item, Integer>` with `ItemStack[]` slot-based storage
+  - **Current Systems Analysis**:
+    - **PaymentBoardMenu**: Uses `ItemStackHandler` (18 slots) → `Map<Item, Integer>` → redistribution ghosting
+    - **TradeMenu**: Uses `ItemStackHandler` (2 slots) → direct ItemStackHandler → no ghosting issues
+    - **Architecture Issue**: Inconsistent storage backends cause different behaviors
+  - **Proposed Solution**: Create modular `SlotBasedStorage` system that both UIs can use
   
-  ### **Phase 1: Core Data Structure Migration** 
-  - [ ] **2.27.1 Update TownPaymentBoard buffer storage from Map to ItemStack array** 
-    - Replace `Map<Item, Integer> bufferStorage` with `ItemStack[] bufferSlots` (18 slots)
-    - Add methods: `getBufferSlot(int slot)`, `setBufferSlot(int slot, ItemStack stack)`
-    - Maintain compatibility methods: `addToBuffer()`, `removeFromBuffer()` with slot-aware logic
-    - Update NBT save/load to serialize ItemStack array instead of Map
+  ### **Phase 1: Create Modular Slot Storage Framework**
+  - [ ] **2.27.1 Create SlotBasedStorage utility class**
+    - Create reusable `SlotBasedStorage<T extends NBTSerializable>` class
+    - Support variable slot counts (2 for trade, 18 for payment buffer, etc.)
+    - Provide methods: `getSlot(int)`, `setSlot(int, ItemStack)`, `toNBT()`, `fromNBT()`
+    - Include helper methods: `findEmptySlot()`, `findStackableSlot(ItemStack)`, `getTotalCount(Item)`
+    - Support hopper interaction via `IItemHandler` capability
   
-  - [ ] **2.27.2 Update TownBufferManager to use slot-based synchronization**
-    - Modify `syncTownDataToBuffer()` to copy ItemStack array directly to ItemStackHandler
+  - [ ] **2.27.2 Update TownPaymentBoard to use SlotBasedStorage** 
+    - Replace `Map<Item, Integer> bufferStorage` with `SlotBasedStorage bufferSlots` (18 slots)
+    - Migrate existing `addToBuffer()`, `removeFromBuffer()` to slot-aware logic
+    - Update NBT save/load to use SlotBasedStorage serialization
+    - Add migration method for converting existing Map data to slots
+  
+  - [ ] **2.27.3 Update TownBufferManager to use SlotBasedStorage**
+    - Modify `syncTownDataToBuffer()` to copy SlotBasedStorage directly to ItemStackHandler
     - Modify `syncBufferToTownData()` to update specific slots instead of rebuilding entire storage
     - Remove sequential redistribution logic - preserve exact slot positions
     - Update client notification system to send slot-specific changes
   
-  - [ ] **2.27.3 Update PaymentBoardMenu buffer system**
-    - Modify `updateBufferStorageItems()` to accept `ItemStack[]` instead of `Map<Item, Integer>`
-    - Remove redistribution logic - directly copy slots: `bufferInventory.setStackInSlot(i, bufferSlots[i])`
-    - Update network packets to send slot-based data
+  - [ ] **2.27.4 Update PaymentBoardMenu to use modular system**
+    - Replace `updateBufferStorageItems(Map<Item, Integer>)` with `updateSlots(ItemStack[])`
+    - Remove redistribution logic - directly copy slots: `bufferInventory.setStackInSlot(i, slots[i])`
+    - Use `SlotBasedStorage.createItemHandler()` to generate compatible ItemStackHandler
     - Ensure BufferSlot interactions update specific slots only
   
   ### **Phase 2: Network and UI Updates**
-  - [ ] **2.27.4 Update network packets for slot-based data**
+  - [ ] **2.27.5 Update network packets for slot-based data**
     - Modify `BufferStorageResponsePacket` to send `ItemStack[]` instead of `Map<Item, Integer>`
     - Update packet serialization to handle ItemStack array efficiently
+    - Create `SlotBasedStoragePacket` base class for reusable slot-based network data
     - Ensure backward compatibility during transition
   
-  - [ ] **2.27.5 Update claim system to be slot-aware**
-    - Modify reward claiming to find appropriate empty slots instead of generic "addToBuffer"
-    - Implement smart slot allocation (stack similar items, use empty slots efficiently)
+  - [ ] **2.27.6 Update claim system to be slot-aware**
+    - Modify reward claiming to use `SlotBasedStorage.addItem()` with smart slot allocation
+    - Implement stack-similar-items logic and empty slot finding
     - Update `PaymentBoardClaimPacket` handling to maintain slot consistency
+    - Use modular methods: `findStackableSlot()`, `findEmptySlot()`
+  
+  - [ ] **2.27.7 Future-proof trade system integration**
+    - Update `TradeMenu` to optionally use `SlotBasedStorage` for persistence (if needed)
+    - Create `TradeSlotHandler` extending the modular framework
+    - Ensure both trade and payment buffer use same slot management patterns
+    - Document framework for future UI chest implementations
   
   ### **Phase 3: Compatibility and Migration**
   - [ ] **2.27.6 Add migration system for existing towns**
@@ -910,12 +924,44 @@ Column 1: "3 x Riverside"        Column 2: [Primary Item] (enhanced tooltip)
     - Implement incremental sync (only changed slots) instead of full buffer sync
     - Add slot-based caching to reduce unnecessary network traffic
   
+  ### **Modular Framework Design**:
+  ```java
+  // Core reusable class
+  public class SlotBasedStorage {
+      private ItemStack[] slots;
+      private int slotCount;
+      
+      // Core methods
+      public ItemStack getSlot(int index);
+      public void setSlot(int index, ItemStack stack);
+      public ItemStackHandler createItemHandler(); // For UI compatibility
+      
+      // Smart allocation methods  
+      public int findEmptySlot();
+      public int findStackableSlot(ItemStack stack);
+      public boolean addItem(ItemStack stack); // Auto-finds best slot
+      
+      // Utility methods
+      public int getTotalCount(Item item);
+      public void clearSlot(int index);
+      public CompoundTag toNBT();
+      public void fromNBT(CompoundTag nbt);
+  }
+  
+  // Usage examples:
+  SlotBasedStorage paymentBuffer = new SlotBasedStorage(18); // Payment Board
+  SlotBasedStorage tradeSlots = new SlotBasedStorage(2);     // Trade UI
+  SlotBasedStorage futureChest = new SlotBasedStorage(27);   // Future implementations
+  ```
+  
   ### **Expected Benefits**:
-  - ✅ Items stay in their exact slots between UI sessions
-  - ✅ Hopper partial extraction won't cause item redistribution
-  - ✅ No more "ghosting" effect when items are removed
-  - ✅ Predictable item organization for users
-  - ✅ More efficient network updates (slot-specific changes only)
+  - ✅ **Consistent Behavior**: All UI chests use same slot persistence logic
+  - ✅ **No Ghosting**: Items stay in their exact slots between UI sessions
+  - ✅ **Hopper Compatible**: Partial extraction preserves remaining item positions
+  - ✅ **Modular Design**: Reusable for trade window, payment buffer, future UIs
+  - ✅ **Smart Allocation**: Automatic slot finding for claiming rewards
+  - ✅ **Efficient Networking**: Slot-specific updates instead of full rebuilds
+  - ✅ **Future-Proof**: Easy to add new UI chest storage systems
   
   ### **Technical Complexity**: **HIGH** - Requires changes across 6+ classes and data migration
   ### **Risk Level**: **MEDIUM** - Existing save data needs careful migration
