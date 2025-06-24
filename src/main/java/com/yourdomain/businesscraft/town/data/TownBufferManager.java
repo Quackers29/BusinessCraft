@@ -204,10 +204,6 @@ public class TownBufferManager {
      */
     private void syncBufferToTownData() {
         if (level == null || level.isClientSide() || townId == null) {
-            LOGGER.debug("syncBufferToTownData skipped: level={}, isClientSide={}, townId={}", 
-                level != null ? "exists" : "null", 
-                level != null ? level.isClientSide() : "unknown", 
-                townId);
             return;
         }
         
@@ -235,7 +231,6 @@ public class TownBufferManager {
                 // Update our tracking if buffer changed
                 if (bufferChanged) {
                     lastKnownTownBuffer = new HashMap<>(town.getPaymentBoard().getBufferStorage());
-                    LOGGER.debug("Buffer storage changed, updated tracking and notifying clients");
                     
                     // Notify clients of buffer storage changes for UI updates using new slot-based method
                     notifyClientsOfSlotBasedBufferChange(town);
