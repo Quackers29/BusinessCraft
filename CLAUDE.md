@@ -12,6 +12,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 5. Then, begin working on the todo items, keep on marking them off as you go in the file so I can track progress.
 6. Finally, add a review section to the todo.md file with a summary of the changes you made and any other relevant information.
 
+## Task Management Files
+
+### **tasks/todo.md** - Current Active Tasks
+- Contains current priority tasks and implementation plans
+- Focus on immediate and near-term work items
+- Medium priority maintenance tasks and bug fixes
+- Keep this file clean and focused on active work
+
+### **tasks/done.md** - Completed Task Archive
+- Contains all completed tasks with full implementation details
+- Comprehensive achievement summaries and technical specifications
+- Reference for understanding what has been implemented
+- **Do not modify** - this is historical record
+
+### **tasks/toImprove.md** - Future Enhancements and Technical Specs
+- Future architectural improvements and optimization ideas
+- Detailed technical specifications and design patterns
+- Lower priority tasks and enhancement suggestions
+- Excessive implementation details that would clutter todo.md
+- **Add new improvement ideas here** when they come up
+
 ## Project Overview
 
 BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete town management and tourism economy system. The codebase is production-ready with advanced architectural patterns and enterprise-grade implementation quality.
