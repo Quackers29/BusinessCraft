@@ -9,6 +9,7 @@ import net.minecraftforge.network.NetworkHooks;
 import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 import java.util.function.Supplier;
 
@@ -36,11 +37,11 @@ public class OpenPaymentBoardPacket extends BaseBlockEntityPacket {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> {
             handlePacket(context, (player, townBlockEntity) -> {
-                LOGGER.info("Opening Payment Board for player {} at position {}", player.getName().getString(), pos);
+                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Opening Payment Board for player {} at position {}", player.getName().getString(), pos);
                 
                 // Use NetworkHooks to properly open the container with server-client sync
                 NetworkHooks.openScreen(player, townBlockEntity.createPaymentBoardMenuProvider(), pos);
-                LOGGER.info("Successfully opened Payment Board for player {}", player.getName().getString());
+                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Successfully opened Payment Board for player {}", player.getName().getString());
             });
         });
         return true;
