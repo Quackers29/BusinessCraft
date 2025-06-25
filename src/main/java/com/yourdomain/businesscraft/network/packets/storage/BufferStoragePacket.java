@@ -113,8 +113,8 @@ public class BufferStoragePacket extends BaseBlockEntityPacket {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "Received request for all buffer storage data from player {}", player.getName().getString());
                 
-                // Send a response with all buffer storage items
-                ModMessages.sendToPlayer(new BufferStorageResponsePacket(town.getAllCommunalStorageItems()), player);
+                // Send a response with slot-based buffer storage data
+                ModMessages.sendToPlayer(new BufferSlotStorageResponsePacket(town.getPaymentBoard().getBufferStorageSlots()), player);
                 return;
             }
             
@@ -166,8 +166,8 @@ public class BufferStoragePacket extends BaseBlockEntityPacket {
                 level.sendBlockUpdated(pos, townBlockEntity.getBlockState(), townBlockEntity.getBlockState(), 
                     Block.UPDATE_ALL);
                 
-                // Send a response to update the UI
-                ModMessages.sendToPlayer(new BufferStorageResponsePacket(town.getAllCommunalStorageItems()), player);
+                // Send a response to update the UI with slot-based data
+                ModMessages.sendToPlayer(new BufferSlotStorageResponsePacket(town.getPaymentBoard().getBufferStorageSlots()), player);
             }
         });
         

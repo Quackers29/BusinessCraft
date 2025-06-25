@@ -12,6 +12,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 5. Then, begin working on the todo items, keep on marking them off as you go in the file so I can track progress.
 6. Finally, add a review section to the todo.md file with a summary of the changes you made and any other relevant information.
 
+## Project Overview
+
+BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete town management and tourism economy system. The codebase is production-ready with advanced architectural patterns and enterprise-grade implementation quality.
+
+## Development Commands
+
+### Build and Run
+- **Build the mod**: `./gradlew build`
+- **Run client**: `./gradlew runClient`
+- **Run server**: `./gradlew runServer`
+- **Clean build**: `./gradlew clean build`
+- **Notify User**: `powershell.exe -Command "[console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200)"`
+
+### Testing
+- **Run all tests**: `./gradlew test`
+- **Run specific test**: `./gradlew test --tests "ClassName.methodName"`
+
 ## Task Management Files
 
 ### **tasks/todo.md** - Current Active Tasks
@@ -32,23 +49,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Lower priority tasks and enhancement suggestions
 - Excessive implementation details that would clutter todo.md
 - **Add new improvement ideas here** when they come up
-
-## Project Overview
-
-BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete town management and tourism economy system. The codebase is production-ready with advanced architectural patterns and enterprise-grade implementation quality.
-
-## Development Commands
-
-### Build and Run
-- **Build the mod**: `./gradlew build`
-- **Run client**: `./gradlew runClient`
-- **Run server**: `./gradlew runServer`
-- **Clean build**: `./gradlew clean build`
-- **Notify User**: `powershell.exe -Command "[console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200)"`
-
-### Testing
-- **Run all tests**: `./gradlew test`
-- **Run specific test**: `./gradlew test --tests "ClassName.methodName"`
 
 ### Debug Configuration
 - **Debug Control File**: `src/main/java/com/yourdomain/businesscraft/debug/DebugConfig.java`
