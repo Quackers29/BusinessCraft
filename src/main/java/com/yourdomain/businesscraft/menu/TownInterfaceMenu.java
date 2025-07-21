@@ -66,6 +66,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     private boolean taxesEnabled = false;
     // Local cache for client-side  
     private int clientSearchRadius = 10;
+    private long lastUpdateTick = 0;
 
     /**
      * Constructor for server-side menu creation
@@ -152,6 +153,10 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         if (needsImmediateSync && level != null && !level.isClientSide()) {
             updateDataSlots();
             needsImmediateSync = false;
+        }
+        if (level != null && !level.isClientSide() && level.getGameTime() - lastUpdateTick >= 20) {
+            updateDataSlots();
+            lastUpdateTick = level.getGameTime();
         }
         super.broadcastChanges();
     }
