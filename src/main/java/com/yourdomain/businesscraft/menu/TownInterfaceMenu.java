@@ -37,6 +37,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     private final Level level;
     private Town town;
     private UUID townId;
+    private boolean needsImmediateSync = true;
     
     // Add ContainerData field for syncing values between server and client
     private static final int DATA_SEARCH_RADIUS = 0;
@@ -83,6 +84,9 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         this.data.set(DATA_MAX_TOURISTS, 5); // Default max tourists
         addDataSlots(this.data);
         
+        if (level.isClientSide()) {
+            for(int i=0; i<4; i++) data.set(i, -1);
+        } else {
         // Get town from TownManager
         if (level instanceof ServerLevel serverLevel) {
             TownManager townManager = TownManager.get(serverLevel);
@@ -116,6 +120,10 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
             } else {
                 // Initialize data values from town
                 updateDataSlots();
+                    if (level != null && !level.isClientSide()) {
+                        broadcastChanges();
+                    }
+                }
             }
         }
     }
@@ -136,6 +144,16 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player player) {
         return player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) < 64;
+    }
+    
+    @Override
+    public void broadcastChanges() {
+        // Force immediate data sync on first broadcast to eliminate initial delay
+        if (needsImmediateSync && level != null && !level.isClientSide()) {
+            updateDataSlots();
+            needsImmediateSync = false;
+        }
+        super.broadcastChanges();
     }
     
     // Getters for UI data
@@ -189,6 +207,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     public int getCurrentTourists() {
         // First try to get from our ContainerData which is synced between server and client
         int touristsFromData = data.get(DATA_TOURIST_COUNT);
+        if(touristsFromData < 0) return -1;
         if (touristsFromData >= 0) {  // Tourist count can be 0
             return touristsFromData;
         }
@@ -481,12 +500,23 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
             data.set(DATA_SEARCH_RADIUS, townSearchRadius);
         } else if (level != null && level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
             // Try to get values from TownBlockEntity if town is not available
-            int entitySearchRadius = townEntity.getSearchRadius();
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "updateDataSlots() setting entity search radius: {}", entitySearchRadius);
-            data.set(DATA_POPULATION, townEntity.getPopulation());
-            data.set(DATA_TOURIST_COUNT, 0); // Default to 0 tourists
-            data.set(DATA_MAX_TOURISTS, 5);  // Default max tourists
-            data.set(DATA_SEARCH_RADIUS, entitySearchRadius);
+            // First try to get town data through the entity's town provider
+            ITownDataProvider provider = townEntity.getTownDataProvider();
+            if (provider != null) {
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "updateDataSlots() using data provider from entity");
+                data.set(DATA_POPULATION, provider.getPopulation());
+                data.set(DATA_TOURIST_COUNT, provider.getTouristCount());
+                data.set(DATA_MAX_TOURISTS, provider.getMaxTourists());
+                data.set(DATA_SEARCH_RADIUS, provider.getSearchRadius());
+            } else {
+                // Fallback to entity methods if no provider available
+                int entitySearchRadius = townEntity.getSearchRadius();
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "updateDataSlots() using entity fallback, search radius: {}", entitySearchRadius);
+                data.set(DATA_POPULATION, townEntity.getPopulation());
+                data.set(DATA_TOURIST_COUNT, 0);
+                data.set(DATA_MAX_TOURISTS, 5);
+                data.set(DATA_SEARCH_RADIUS, entitySearchRadius);
+            }
         } else {
             DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "updateDataSlots() no data source available");
         }

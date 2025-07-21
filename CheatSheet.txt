@@ -151,3 +151,4 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 137. Memory management: use object pooling for frequently created objects and implement proper cleanup in component lifecycle methods
 138. Codebase analysis: when conducting comprehensive codebase reviews, focus on architectural patterns and critical issues rather than individual method implementations to identify systemic problems
 139. Technical debt prioritization: prioritize massive monolithic classes (500+ lines) and global state coupling as highest impact issues that compound over time and prevent testing
+140. UI, TownInterfaceMenu.java, call broadcastChanges after initial updateDataSlots in constructor for immediate client sync

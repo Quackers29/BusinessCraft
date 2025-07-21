@@ -39,10 +39,6 @@ public class StandardTabContent extends BCComponent {
     private final String title;
     private UIGridBuilder grid;
     
-    // Animation state for LABEL_VALUE_GRID
-    private float alpha = 0.0f;
-    private long startTime;
-    private boolean animationStarted = false;
     
     // Data suppliers for different content types
     private Supplier<Map<String, String>> labelValueSupplier;
@@ -121,29 +117,10 @@ public class StandardTabContent extends BCComponent {
     }
     
     /**
-     * Render animated label-value grid (Overview tab style)
+     * Render label-value grid (Overview tab style)
      */
     private void renderLabelValueGrid(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        // Start animation if not started
-        if (!animationStarted) {
-            startTime = System.currentTimeMillis();
-            animationStarted = true;
-        }
-        
-        // Calculate alpha based on time (fade in over 500ms, starting after title appears)
-        long elapsed = System.currentTimeMillis() - startTime;
-        if (elapsed > 300) { // Start after title animation
-            alpha = Math.min(1.0f, (elapsed - 300) / 500.0f);
-        }
-        
-        // Only render if we have some visibility
-        if (alpha > 0.01f && labelValueSupplier != null) {
-            // Save current pose
-            guiGraphics.pose().pushPose();
-            
-            // Apply alpha transformation
-            guiGraphics.setColor(1.0f, 1.0f, 1.0f, alpha);
-            
+        if (labelValueSupplier != null) {
             // Create/update the grid
             Map<String, String> data = labelValueSupplier.get();
             grid = UIGridBuilder.createLabelValueGrid(
@@ -156,12 +133,8 @@ public class StandardTabContent extends BCComponent {
                 .withSpacing(15, 10)
                 .drawBorder(true);
             
-            // Render the grid with alpha applied
+            // Render the grid
             grid.render(guiGraphics, mouseX, mouseY);
-            
-            // Restore original pose and color
-            guiGraphics.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-            guiGraphics.pose().popPose();
         }
     }
     
@@ -313,12 +286,6 @@ public class StandardTabContent extends BCComponent {
      * Force refresh of the content (for external updates)
      */
     public void refresh() {
-        // Reset animation for label-value grids
-        if (contentType == ContentType.LABEL_VALUE_GRID) {
-            animationStarted = false;
-            alpha = 0.0f;
-        }
-        
         // Force grid recreation
         grid = null;
     }

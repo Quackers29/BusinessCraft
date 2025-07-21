@@ -138,7 +138,10 @@ public class TownDataCacheManager {
      * @return Formatted string like "5/10"
      */
     public String getTouristString() {
-        return cachedTourists + "/" + cachedMaxTourists;
+        int current = menu.getCurrentTourists();
+        int max = getCachedMaxTourists();
+        if(current < 0) return "Loading...";
+        return current + "/" + max;
     }
     
     /**
