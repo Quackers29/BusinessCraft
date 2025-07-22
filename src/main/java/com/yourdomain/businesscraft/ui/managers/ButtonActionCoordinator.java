@@ -3,7 +3,7 @@ package com.yourdomain.businesscraft.ui.managers;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.ui.screens.BaseTownScreen;
-import com.yourdomain.businesscraft.ui.screens.platform.PlatformManagementScreen;
+import com.yourdomain.businesscraft.ui.screens.platform.PlatformManagementScreenV2;
 import net.minecraft.client.Minecraft;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -212,7 +212,7 @@ public class ButtonActionCoordinator {
         
         // For now, we'll keep the separate screen approach but add a callback
         // In the future, this should be converted to use BCModalGridScreen
-        PlatformManagementScreen platformScreen = new PlatformManagementScreen(
+        PlatformManagementScreenV2 platformScreen = new PlatformManagementScreenV2(
             screen.getMenu().getBlockPos(), 
             platforms
         );

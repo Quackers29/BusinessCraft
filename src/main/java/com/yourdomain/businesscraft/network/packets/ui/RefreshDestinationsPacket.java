@@ -17,7 +17,7 @@ import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
-import com.yourdomain.businesscraft.ui.screens.platform.DestinationsScreen;
+import com.yourdomain.businesscraft.ui.screens.platform.DestinationsScreenV2;
 
 /**
  * Packet sent from server to client to refresh the destinations UI
@@ -107,8 +107,8 @@ public class RefreshDestinationsPacket {
                     }
                     
                     if (platform != null) {
-                        // Open destinations screen
-                        minecraft.setScreen(new DestinationsScreen(
+                        // Open destinations screen V2 (using BC UI framework)
+                        minecraft.setScreen(new DestinationsScreenV2(
                             pos, 
                             platformId, 
                             platform.getName(),
