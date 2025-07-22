@@ -171,7 +171,7 @@ public class PlatformManagementScreenV2 extends Screen {
                 destTooltip,
                 (v) -> openDestinationsByIndex(platformIndex), INFO_COLOR);
             
-            // Column 4: Actions (Set Path / Reset Path / Delete)
+            // Column 4: Actions (Set Path / Reset Path)
             if (platform.isComplete()) {
                 // Show Reset button
                 platformListGrid.addButtonWithTooltip(i, 4, "Reset",
@@ -228,9 +228,13 @@ public class PlatformManagementScreenV2 extends Screen {
             guiGraphics.renderTooltip(this.font, Component.literal("Return to Town Interface"), mouseX, mouseY);
         }
         
-        // Render add button tooltip if no platforms
-        if (platforms.isEmpty() && isMouseOverAddButton(mouseX, mouseY)) {
-            guiGraphics.renderTooltip(this.font, Component.literal("Add a new platform"), mouseX, mouseY);
+        // Render header button tooltips (when platforms exist)
+        if (!platforms.isEmpty()) {
+            if (isMouseOverDeleteLastButton(mouseX, mouseY)) {
+                guiGraphics.renderTooltip(this.font, Component.literal("Delete the last platform"), mouseX, mouseY);
+            } else if (isMouseOverAddButton(mouseX, mouseY)) {
+                guiGraphics.renderTooltip(this.font, Component.literal("Add a new platform"), mouseX, mouseY);
+            }
         }
     }
     
@@ -256,8 +260,16 @@ public class PlatformManagementScreenV2 extends Screen {
         guiGraphics.drawString(this.font, "Platform Management", 
             x + BACK_BUTTON_X + BACK_BUTTON_WIDTH + 6, y + SECTION_PADDING + 4, HEADER_COLOR);
         
-        // Add platform button (right side)
+        // Header buttons (right side)
         if (!platforms.isEmpty()) {
+            // Delete Last button (only if we have platforms)
+            boolean isDeleteLastHovered = isMouseOverDeleteLastButton(mouseX, mouseY);
+            InventoryRenderer.drawButton(guiGraphics,
+                x + imageWidth - 160, y + BACK_BUTTON_Y,
+                70, BACK_BUTTON_HEIGHT,
+                "Delete Last", this.font, isDeleteLastHovered);
+            
+            // Add platform button
             boolean isAddButtonHovered = isMouseOverAddButton(mouseX, mouseY);
             InventoryRenderer.drawButton(guiGraphics,
                 x + imageWidth - 80, y + BACK_BUTTON_Y,
@@ -294,6 +306,12 @@ public class PlatformManagementScreenV2 extends Screen {
             // Check back button
             if (isMouseOverBackButton((int)mouseX, (int)mouseY)) {
                 onBackButtonClick();
+                return true;
+            }
+            
+            // Check delete last button (when not empty)
+            if (!platforms.isEmpty() && isMouseOverDeleteLastButton((int)mouseX, (int)mouseY)) {
+                deleteLastPlatform();
                 return true;
             }
             
@@ -342,6 +360,14 @@ public class PlatformManagementScreenV2 extends Screen {
         
         return InventoryRenderer.isMouseOverElement(mouseX, mouseY, x, y,
             imageWidth - 80, BACK_BUTTON_Y, 70, BACK_BUTTON_HEIGHT);
+    }
+    
+    private boolean isMouseOverDeleteLastButton(int mouseX, int mouseY) {
+        int x = (this.width - imageWidth) / 2;
+        int y = (this.height - imageHeight) / 2;
+        
+        return InventoryRenderer.isMouseOverElement(mouseX, mouseY, x, y,
+            imageWidth - 160, BACK_BUTTON_Y, 70, BACK_BUTTON_HEIGHT);
     }
     
     // Platform action methods - using indices to avoid stale object references
@@ -428,6 +454,21 @@ public class PlatformManagementScreenV2 extends Screen {
         // Stay open - server will send RefreshPlatformsPacket to update the UI
     }
     
+    private void deleteLastPlatform() {
+        if (platforms.isEmpty()) return;
+        
+        // Get the last platform
+        Platform lastPlatform = platforms.get(platforms.size() - 1);
+        
+        // Send delete platform packet
+        ModMessages.sendToServer(new DeletePlatformPacket(
+            townBlockPos,
+            lastPlatform.getId()
+        ));
+        
+        // Stay open - server will send RefreshPlatformsPacket to update the UI
+    }
+    
     private void onBackButtonClick() {
         // Play click sound
         net.minecraft.client.resources.sounds.SimpleSoundInstance sound = 
@@ -471,10 +512,19 @@ public class PlatformManagementScreenV2 extends Screen {
      * Refresh platform data without reopening the screen (for packet updates)
      */
     public void refreshPlatformData() {
-        // Don't refresh if we just did a toggle action (prevents conflicts)
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastToggleTime < TOGGLE_PROTECTION_MS) {
-            return; // Skip refresh to avoid overriding local toggle state
+        refreshPlatformData(false);
+    }
+    
+    /**
+     * Refresh platform data with optional force flag
+     */
+    public void refreshPlatformData(boolean force) {
+        // Don't refresh if we just did a toggle action (prevents conflicts) unless forced
+        if (!force) {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastToggleTime < TOGGLE_PROTECTION_MS) {
+                return; // Skip refresh to avoid overriding local toggle state
+            }
         }
         
         Minecraft minecraft = Minecraft.getInstance();
@@ -487,7 +537,8 @@ public class PlatformManagementScreenV2 extends Screen {
                 // Update our platform list with fresh data from the server
                 this.platforms = new ArrayList<>(townBlock.getPlatforms());
                 
-                // Force UI update
+                // Force UI update by clearing currentPlatforms to ensure refresh
+                currentPlatforms.clear();
                 updatePlatformListData();
             }
         }
