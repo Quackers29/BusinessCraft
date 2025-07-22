@@ -425,8 +425,7 @@ public class PlatformManagementScreenV2 extends Screen {
     private void addPlatform() {
         ModMessages.sendToServer(new AddPlatformPacket(townBlockPos));
         
-        // Close screen for now - could stay open and refresh in future
-        minecraft.setScreen(null);
+        // Stay open - server will send RefreshPlatformsPacket to update the UI
     }
     
     private void onBackButtonClick() {
