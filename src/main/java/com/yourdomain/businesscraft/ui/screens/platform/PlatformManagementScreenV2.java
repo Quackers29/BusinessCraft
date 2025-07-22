@@ -98,8 +98,8 @@ public class PlatformManagementScreenV2 extends Screen {
             PLATFORM_LIST_WIDTH - 8, PLATFORM_LIST_HEIGHT - 10,
             5) // 5 columns: Status, Name, Toggle, Destinations, Actions
             .withRowHeight(18)
-            .withSpacing(4, 3) // Reduced horizontal spacing from 8 to 4 to move names left
-            .withMargins(8, 4)
+            .withSpacing(8, 3) // Back to normal spacing
+            .withMargins(4, 4) // Reduced left margin from 8 to 4 to move content left
             .drawBackground(false)
             .drawBorder(false);
         
@@ -351,7 +351,12 @@ public class PlatformManagementScreenV2 extends Screen {
         
         // Update local state for immediate feedback
         platform.setEnabled(newState);
-        updatePlatformListGridData();
+        
+        // Force the grid to refresh immediately by clearing and repopulating
+        if (platformListGrid != null) {
+            platformListGrid.clearElements();
+            populateGridWithPlatforms();
+        }
     }
     
     private void openDestinations(Platform platform) {
@@ -393,7 +398,11 @@ public class PlatformManagementScreenV2 extends Screen {
                 Component.translatable("businesscraft.platform_path_reset"), false);
         }
         
-        updatePlatformListGridData();
+        // Force the grid to refresh immediately by clearing and repopulating
+        if (platformListGrid != null) {
+            platformListGrid.clearElements();
+            populateGridWithPlatforms();
+        }
     }
     
     private void addPlatform() {
