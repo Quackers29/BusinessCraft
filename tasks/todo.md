@@ -68,6 +68,23 @@
 
 **Ready for:** Old screen cleanup when approved by user.
 
+## 🔧 **IMMEDIATE FIXES APPLIED** - July 22, 2025
+
+### Issue: Game Pausing (ESC Menu Behavior)
+**Problem:** Platform UI was pausing the game like ESC menu instead of staying non-blocking like Payment Board
+**Solution:** Added `isPauseScreen() { return false; }` override to both screens
+- ✅ PlatformManagementScreenV2.java - Added isPauseScreen() override 
+- ✅ DestinationsScreenV2.java - Added isPauseScreen() override
+- ✅ Build tested successfully
+
+### Issue: Platform Names Too Far Right  
+**Problem:** Platform names in the grid were positioned too far to the right
+**Solution:** Reduced UIGridBuilder horizontal spacing from 8 to 4 pixels
+- ✅ PlatformManagementScreenV2.java - Updated withSpacing(4, 3) 
+- ✅ Build tested successfully
+
+**Status:** Both issues resolved and ready for testing in-game.
+
 ### 🎯 **PREVIOUS TASKS** (Platform UI Redesign - Completed)
 
 #### Platform UI Redesign  

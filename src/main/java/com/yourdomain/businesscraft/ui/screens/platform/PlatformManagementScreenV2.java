@@ -98,7 +98,7 @@ public class PlatformManagementScreenV2 extends Screen {
             PLATFORM_LIST_WIDTH - 8, PLATFORM_LIST_HEIGHT - 10,
             5) // 5 columns: Status, Name, Toggle, Destinations, Actions
             .withRowHeight(18)
-            .withSpacing(8, 3)
+            .withSpacing(4, 3) // Reduced horizontal spacing from 8 to 4 to move names left
             .withMargins(8, 4)
             .drawBackground(false)
             .drawBorder(false);
@@ -413,6 +413,11 @@ public class PlatformManagementScreenV2 extends Screen {
         // Return to town interface
         this.minecraft.setScreen(null);
         ScreenNavigationHelper.returnToTownInterface(this.minecraft, this.minecraft.player, townBlockPos);
+    }
+    
+    @Override
+    public boolean isPauseScreen() {
+        return false; // Don't pause the game like Payment Board and other BC screens
     }
     
     /**

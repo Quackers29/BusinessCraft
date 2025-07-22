@@ -343,6 +343,6 @@ public class DestinationsScreenV2 extends Screen {
     
     @Override
     public boolean isPauseScreen() {
-        return false; // Don't pause the game
+        return false; // Don't pause the game like Payment Board and other BC screens
     }
 }
