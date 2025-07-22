@@ -99,13 +99,13 @@ public class PlatformManagementScreenV2 extends Screen {
             5) // 5 columns: Status, Name, Toggle, Destinations, Actions
             .withRowHeight(18)
             .withSpacing(8, 3) // Back to normal spacing
-            .withMargins(4, 4) // Reduced left margin from 8 to 4 to move content left
+            .withMargins(4, 2) // Reduced vertical margin from 4 to 2 to fit more rows
             .drawBackground(false)
             .drawBorder(false);
         
         // Enable auto-scrolling - let UIGrid calculate visible rows from available height
         platformListGrid.withVerticalScrollAuto(true);
-        platformListGrid.updateTotalRows(Math.max(platforms.size(), 6));
+        platformListGrid.updateTotalRows(platforms.size()); // Use actual platform count, not forced minimum
         
         // Populate with initial data
         populateGridWithPlatforms();
@@ -129,7 +129,7 @@ public class PlatformManagementScreenV2 extends Screen {
         platformListGrid.clearElements();
         
         // Always update total rows to handle dynamic changes
-        platformListGrid.updateTotalRows(Math.max(platforms.size(), 6));
+        platformListGrid.updateTotalRows(platforms.size());
         
         populateGridWithPlatforms();
     }
