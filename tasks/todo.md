@@ -3,11 +3,11 @@
 ## CURRENT PRIORITY: Platform UI Grid Status Indicator Fix
 
 ### 🎯 **IMMEDIATE TASKS**
-- [ ] **Part Two: Update Tourist Models (User will handle this)**
-- [ ] Create hat texture variations (tourist_hat_red.png, tourist_hat_blue.png, tourist_hat_green.png) in src/main/resources/assets/businesscraft/textures/entity/
-- [ ] Update TouristHatLayer to select texture based on profession with HAT_TEXTURES array and getColorIndex method
-- [ ] Create NoHatProfessionLayer extending VillagerProfessionLayer to skip hat model parts
-- [ ] Replace VillagerProfessionLayer with NoHatProfessionLayer in TouristRenderer constructor
+- [x] **Part Two: Update Tourist Models - COMPLETED**
+- [x] Create hat texture variations (tourist_hat_red.png, tourist_hat_blue.png, tourist_hat_green.png) in src/main/resources/assets/businesscraft/textures/entity/
+- [x] Update TouristHatLayer to select texture based on profession with HAT_TEXTURES array and getColorIndex method
+- [x] Create NoHatProfessionLayer extending VillagerProfessionLayer to skip hat model parts
+- [x] Replace VillagerProfessionLayer with NoHatProfessionLayer in TouristRenderer constructor
 
 ### 🎯 **FUTURE TASKS**
 

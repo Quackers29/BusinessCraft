@@ -1,6 +1,7 @@
 package com.yourdomain.businesscraft.client.renderer;
 
 import com.yourdomain.businesscraft.BusinessCraft;
+import com.yourdomain.businesscraft.client.renderer.layer.NoHatProfessionLayer;
 import com.yourdomain.businesscraft.client.renderer.layer.TouristHatLayer;
 import com.yourdomain.businesscraft.entity.TouristEntity;
 import net.minecraft.client.model.VillagerModel;
@@ -30,7 +31,8 @@ public class TouristRenderer extends MobRenderer<TouristEntity, VillagerModel<To
         this.addLayer(new CustomHeadLayer<>(this, context.getModelSet(), context.getItemInHandRenderer()));
         
         // Add the profession layer with type "villager" - this is what gives them their profession hats
-        this.addLayer(new VillagerProfessionLayer<>(this, context.getResourceManager(), "villager"));
+        // Using NoHatProfessionLayer to prevent conflicts with our custom tourist hat
+        this.addLayer(new NoHatProfessionLayer<>(this, context.getResourceManager(), "villager"));
         
         // Add our custom tourist hat layer
         this.addLayer(new TouristHatLayer(this, new VillagerModel<>(context.bakeLayer(ModelLayers.VILLAGER))));

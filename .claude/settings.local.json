@@ -14,7 +14,8 @@
       "Bash(echo:*)",
       "Bash(mv:*)",
       "Bash(rg:*)",
-      "Bash(printf:*)"
+      "Bash(printf:*)",
+      "Bash(cp:*)"
     ],
     "deny": []
   }
