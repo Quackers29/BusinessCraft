@@ -337,8 +337,8 @@ public class DestinationsScreenV2 extends Screen {
                 net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F);
         this.minecraft.getSoundManager().play(sound);
         
-        // Close this screen - it will return to platform management
-        this.minecraft.setScreen(null);
+        // Return to platform management screen
+        PlatformManagementScreenV2.open(blockPos);
     }
     
     @Override

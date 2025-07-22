@@ -27,6 +27,7 @@
   "businesscraft.set_platform_path": "Set platform path",
   "businesscraft.delete_platform": "Delete this platform (only available for the last platform)",
   "businesscraft.set_platform_path_instructions": "Right-click a block to set the start point, then right-click another block to set the end point. Press ESC to cancel.",
+  "businesscraft.platform_path_instructions": "Platform Path Mode: Right-click to set START position, then right-click to set END position. Press ESC to cancel.",
   "businesscraft.platform_path_start_set": "Platform start point set at [%s, %s, %s]! Now click to set the end point.",
   "businesscraft.platform_path_end_set": "Platform end point set at [%s, %s, %s]! Path created successfully.",
   "businesscraft.platform_path_canceled": "Platform path creation canceled.",
