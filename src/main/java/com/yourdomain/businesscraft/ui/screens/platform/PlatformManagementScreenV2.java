@@ -185,19 +185,17 @@ public class PlatformManagementScreenV2 extends Screen {
             }
         }
         
-        // If no platforms, show message
+        // If no platforms, show message (should rarely happen due to minimum limit of 1)
         if (platforms.isEmpty()) {
             platformListGrid.addLabel(0, 1, "No platforms configured", DISABLED_COLOR);
-            platformListGrid.addButtonWithTooltip(0, 2, "Add Platform",
-                "Add your first platform",
-                (v) -> addPlatform(), SUCCESS_COLOR);
+            platformListGrid.addLabel(0, 2, "Use 'Add Platform' button above", TEXT_COLOR);
         }
     }
     
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        // Update platform list data if needed
-        updatePlatformListData();
+        // Update platform list data if needed (like PaymentBoardScreen)
+        refreshPlatformDataFromServer();
         
         // Render background
         this.renderBackground(guiGraphics);
@@ -228,13 +226,11 @@ public class PlatformManagementScreenV2 extends Screen {
             guiGraphics.renderTooltip(this.font, Component.literal("Return to Town Interface"), mouseX, mouseY);
         }
         
-        // Render header button tooltips (when platforms exist)
-        if (!platforms.isEmpty()) {
-            if (isMouseOverDeleteLastButton(mouseX, mouseY)) {
-                guiGraphics.renderTooltip(this.font, Component.literal("Delete the last platform"), mouseX, mouseY);
-            } else if (isMouseOverAddButton(mouseX, mouseY)) {
-                guiGraphics.renderTooltip(this.font, Component.literal("Add a new platform"), mouseX, mouseY);
-            }
+        // Render header button tooltips
+        if (isMouseOverAddButton(mouseX, mouseY)) {
+            guiGraphics.renderTooltip(this.font, Component.literal("Add a new platform"), mouseX, mouseY);
+        } else if (platforms.size() > 1 && isMouseOverDeleteLastButton(mouseX, mouseY)) {
+            guiGraphics.renderTooltip(this.font, Component.literal("Delete the last platform"), mouseX, mouseY);
         }
     }
     
@@ -261,20 +257,20 @@ public class PlatformManagementScreenV2 extends Screen {
             x + BACK_BUTTON_X + BACK_BUTTON_WIDTH + 6, y + SECTION_PADDING + 4, HEADER_COLOR);
         
         // Header buttons (right side)
-        if (!platforms.isEmpty()) {
-            // Delete Last button (only if we have platforms)
+        // Always show Add Platform button
+        boolean isAddButtonHovered = isMouseOverAddButton(mouseX, mouseY);
+        InventoryRenderer.drawButton(guiGraphics,
+            x + imageWidth - 80, y + BACK_BUTTON_Y,
+            70, BACK_BUTTON_HEIGHT,
+            "Add Platform", this.font, isAddButtonHovered);
+        
+        // Delete Last button (only if we have more than 1 platform - minimum limit of 1)
+        if (platforms.size() > 1) {
             boolean isDeleteLastHovered = isMouseOverDeleteLastButton(mouseX, mouseY);
             InventoryRenderer.drawButton(guiGraphics,
                 x + imageWidth - 160, y + BACK_BUTTON_Y,
                 70, BACK_BUTTON_HEIGHT,
                 "Delete Last", this.font, isDeleteLastHovered);
-            
-            // Add platform button
-            boolean isAddButtonHovered = isMouseOverAddButton(mouseX, mouseY);
-            InventoryRenderer.drawButton(guiGraphics,
-                x + imageWidth - 80, y + BACK_BUTTON_Y,
-                70, BACK_BUTTON_HEIGHT,
-                "Add Platform", this.font, isAddButtonHovered);
         }
     }
     
@@ -309,14 +305,14 @@ public class PlatformManagementScreenV2 extends Screen {
                 return true;
             }
             
-            // Check delete last button (when not empty)
-            if (!platforms.isEmpty() && isMouseOverDeleteLastButton((int)mouseX, (int)mouseY)) {
+            // Check delete last button (only when more than 1 platform - minimum limit of 1)
+            if (platforms.size() > 1 && isMouseOverDeleteLastButton((int)mouseX, (int)mouseY)) {
                 deleteLastPlatform();
                 return true;
             }
             
-            // Check add button (when not empty)
-            if (!platforms.isEmpty() && isMouseOverAddButton((int)mouseX, (int)mouseY)) {
+            // Check add button (always available)
+            if (isMouseOverAddButton((int)mouseX, (int)mouseY)) {
                 addPlatform();
                 return true;
             }
@@ -451,11 +447,13 @@ public class PlatformManagementScreenV2 extends Screen {
     private void addPlatform() {
         ModMessages.sendToServer(new AddPlatformPacket(townBlockPos));
         
-        // Stay open - server will send RefreshPlatformsPacket to update the UI
+        // Immediately refresh the UI (like PaymentBoardScreen does)
+        refreshPlatformDataFromServer();
     }
     
     private void deleteLastPlatform() {
-        if (platforms.isEmpty()) return;
+        // Enforce minimum platform limit of 1
+        if (platforms.size() <= 1) return;
         
         // Get the last platform
         Platform lastPlatform = platforms.get(platforms.size() - 1);
@@ -466,7 +464,36 @@ public class PlatformManagementScreenV2 extends Screen {
             lastPlatform.getId()
         ));
         
-        // Stay open - server will send RefreshPlatformsPacket to update the UI
+        // Immediately refresh the UI (like PaymentBoardScreen does)  
+        refreshPlatformDataFromServer();
+    }
+    
+    /**
+     * Immediately refresh platform data from server (like PaymentBoardScreen pattern)
+     */
+    private void refreshPlatformDataFromServer() {
+        Minecraft minecraft = Minecraft.getInstance();
+        Level level = minecraft.level;
+        
+        if (level != null) {
+            BlockEntity be = level.getBlockEntity(townBlockPos);
+            
+            if (be instanceof TownBlockEntity townBlock) {
+                // Get fresh platform data from server
+                List<Platform> freshPlatforms = townBlock.getPlatforms();
+                
+                // Always update platforms and force grid refresh (simplified logic)
+                this.platforms = new ArrayList<>(freshPlatforms);
+                currentPlatforms.clear(); // Force refresh by clearing cache
+                
+                // Force grid update
+                if (platformListGrid != null) {
+                    updatePlatformListGridData();
+                } else {
+                    initializePlatformListGrid();
+                }
+            }
+        }
     }
     
     private void onBackButtonClick() {
