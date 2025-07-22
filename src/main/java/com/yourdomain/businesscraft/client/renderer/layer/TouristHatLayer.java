@@ -28,10 +28,8 @@ public class TouristHatLayer extends RenderLayer<TouristEntity, VillagerModel<To
     }
     
     private int getColorIndex(TouristEntity tourist) {
-        if (tourist.getVillagerData() != null && tourist.getVillagerData().getProfession() != null) {
-            return Math.abs(tourist.getVillagerData().getProfession().toString().hashCode()) % HAT_TEXTURES.length;
-        }
-        return 0; // Default to black hat
+        // Use UUID for consistent random hat colors since tourists are unemployed
+        return Math.abs(tourist.getUUID().hashCode()) % HAT_TEXTURES.length;
     }
     
     @Override

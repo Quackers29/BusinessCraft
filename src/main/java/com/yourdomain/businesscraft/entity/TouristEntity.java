@@ -236,25 +236,10 @@ public class TouristEntity extends Villager {
     }
     
     private void setRandomProfession() {
-        VillagerProfession[] professions = {
-            VillagerProfession.ARMORER,
-            VillagerProfession.BUTCHER,
-            VillagerProfession.CARTOGRAPHER,
-            VillagerProfession.CLERIC,
-            VillagerProfession.FARMER,
-            VillagerProfession.FISHERMAN,
-            VillagerProfession.FLETCHER,
-            VillagerProfession.LEATHERWORKER,
-            VillagerProfession.LIBRARIAN,
-            VillagerProfession.MASON,
-            VillagerProfession.SHEPHERD,
-            VillagerProfession.TOOLSMITH,
-            VillagerProfession.WEAPONSMITH
-        };
-        VillagerProfession randomProfession = professions[this.getRandom().nextInt(professions.length)];
+        // Set tourists to unemployed villagers for base clothing look
         this.setVillagerData(this.getVillagerData()
-            .setProfession(randomProfession)
-            .setLevel(6));
+            .setProfession(VillagerProfession.NONE)
+            .setLevel(1));
     }
     
     @Override
