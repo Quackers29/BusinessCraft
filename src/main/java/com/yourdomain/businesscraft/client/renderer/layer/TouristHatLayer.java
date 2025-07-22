@@ -12,8 +12,12 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 
 public class TouristHatLayer extends RenderLayer<TouristEntity, VillagerModel<TouristEntity>> {
-    private static final ResourceLocation HAT_TEXTURE = 
-        new ResourceLocation(BusinessCraft.MOD_ID, "textures/entity/tourist_hat.png");
+    private static final ResourceLocation[] HAT_TEXTURES = {
+        new ResourceLocation(BusinessCraft.MOD_ID, "textures/entity/tourist_hat.png"),     // Default - black
+        new ResourceLocation(BusinessCraft.MOD_ID, "textures/entity/tourist_hat_red.png"),   // Red
+        new ResourceLocation(BusinessCraft.MOD_ID, "textures/entity/tourist_hat_blue.png"),  // Blue  
+        new ResourceLocation(BusinessCraft.MOD_ID, "textures/entity/tourist_hat_green.png")  // Green
+    };
     
     private final VillagerModel<TouristEntity> model;
     
@@ -21,6 +25,13 @@ public class TouristHatLayer extends RenderLayer<TouristEntity, VillagerModel<To
                           VillagerModel<TouristEntity> model) {
         super(parent);
         this.model = model;
+    }
+    
+    private int getColorIndex(TouristEntity tourist) {
+        if (tourist.getVillagerData() != null && tourist.getVillagerData().getProfession() != null) {
+            return Math.abs(tourist.getVillagerData().getProfession().toString().hashCode()) % HAT_TEXTURES.length;
+        }
+        return 0; // Default to black hat
     }
     
     @Override
@@ -43,9 +54,12 @@ public class TouristHatLayer extends RenderLayer<TouristEntity, VillagerModel<To
             // Move the hat slightly up to sit on top of head
             poseStack.translate(0.0F, -0.05F, 0.0F);
             
+            // Get profession-based hat texture
+            ResourceLocation hatTexture = HAT_TEXTURES[getColorIndex(tourist)];
+            
             // Render just the hat using our custom texture
             this.model.getHead().render(poseStack, 
-                buffer.getBuffer(RenderType.entityCutoutNoCull(HAT_TEXTURE)),
+                buffer.getBuffer(RenderType.entityCutoutNoCull(hatTexture)),
                 packedLight, OverlayTexture.NO_OVERLAY);
             
             // Restore matrix state
