@@ -103,8 +103,8 @@ public class PlatformManagementScreenV2 extends Screen {
             .drawBackground(false)
             .drawBorder(false);
         
-        // Always enable scrolling to handle dynamic platform additions (show 5 visible rows)
-        platformListGrid.withVerticalScroll(true, 5);
+        // Enable auto-scrolling - let UIGrid calculate visible rows from available height
+        platformListGrid.withVerticalScrollAuto(true);
         platformListGrid.updateTotalRows(Math.max(platforms.size(), 6));
         
         // Populate with initial data

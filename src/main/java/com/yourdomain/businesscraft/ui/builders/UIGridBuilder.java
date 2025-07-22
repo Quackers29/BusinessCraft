@@ -53,6 +53,7 @@ public class UIGridBuilder {
     private boolean verticalScrolling = false;
     private int visibleRows = 0;
     private int totalRows = 0;
+    private boolean autoVisibleRows = false; // Track if we're using auto-calculated visible rows
     
     // Custom row height (default 14px - drastically smaller than before)
     private Integer customRowHeight = 14;
@@ -228,6 +229,7 @@ public class UIGridBuilder {
     public UIGridBuilder withVerticalScroll(boolean enable, int visibleRows) {
         this.verticalScrollEnabled = enable;
         this.visibleRows = visibleRows;
+        this.autoVisibleRows = false; // Using static visible rows
         this.totalRows = rows;
         if (enable) {
             this.maxVerticalScrollOffset = Math.max(0, totalRows - visibleRows);
@@ -238,6 +240,46 @@ public class UIGridBuilder {
             x, y, enable, visibleRows, totalRows));
         
         return this;
+    }
+    
+    /**
+     * Enables vertical scrolling with automatic visible row calculation based on available height.
+     * This replaces static visible row counts with dynamic calculations.
+     * 
+     * @param enable Whether to enable vertical scrolling
+     * @return This builder for chaining
+     */
+    public UIGridBuilder withVerticalScrollAuto(boolean enable) {
+        this.verticalScrollEnabled = enable;
+        this.autoVisibleRows = enable; // Track that we're using auto calculation
+        
+        if (enable) {
+            // Calculate visible rows based on available height and row specifications
+            int effectiveRowHeight = getEffectiveRowHeight();
+            int availableHeight = this.height - (verticalMargin * 2);
+            
+            // Calculate how many rows can fit in the available space
+            int calculatedVisibleRows = Math.max(1, availableHeight / effectiveRowHeight);
+            
+            this.visibleRows = calculatedVisibleRows;
+            this.totalRows = rows;
+            this.maxVerticalScrollOffset = Math.max(0, totalRows - visibleRows);
+            
+            DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, 
+                String.format("[GRID AUTO-SCROLL] Grid at (%d,%d) auto-calculated: availableHeight=%d, rowHeight=%d, visibleRows=%d, totalRows=%d", 
+                x, y, availableHeight, effectiveRowHeight, visibleRows, totalRows));
+        }
+        
+        return this;
+    }
+    
+    /**
+     * Gets the effective row height including spacing
+     * @return The calculated row height
+     */
+    private int getEffectiveRowHeight() {
+        int baseRowHeight = customRowHeight != null ? customRowHeight : 16;
+        return baseRowHeight + verticalSpacing;
     }
     
     /**
@@ -272,6 +314,18 @@ public class UIGridBuilder {
         this.totalRows = newTotalRows;
         
         if (verticalScrollEnabled) {
+            // Recalculate visible rows if we're using auto mode
+            if (autoVisibleRows) {
+                int effectiveRowHeight = getEffectiveRowHeight();
+                int availableHeight = this.height - (verticalMargin * 2);
+                int calculatedVisibleRows = Math.max(1, availableHeight / effectiveRowHeight);
+                this.visibleRows = calculatedVisibleRows;
+                
+                DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, 
+                    "Auto-recalculated visible rows: availableHeight={}, rowHeight={}, visibleRows={}", 
+                    availableHeight, effectiveRowHeight, visibleRows);
+            }
+            
             this.maxVerticalScrollOffset = Math.max(0, totalRows - visibleRows);
             // Clamp current offset to new valid range
             setVerticalScrollOffset(verticalScrollOffset);
