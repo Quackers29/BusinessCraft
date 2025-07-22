@@ -4,23 +4,32 @@
 
 ### 🎯 **IMMEDIATE TASKS**
 
-- [x] Investigate UI surround Town platform interfaces as this UI has been built with an old method of UI generation and is not the same style or using teh same UI components as more recent UI screens like the Resources or Settings tabs. Investigate, create a plan here and then implement a Platform UI redesign
+#### Platform UI Redesign
+- [x] Read CLAUDE.md and tasks/todo.md
+- [x] Investigate current Platform UI implementation and compare to Resources tab and popups (Trade/Payment Board)
 
-#### Platform UI Redesign Plan
-After investigation, the platform UIs use vanilla GUI components with manual rendering, while recent tabs use BC framework with StandardTabContent and suppliers. Redesign to use BC components for consistency.
+  **Investigation Summary:**
+  - **Platform UI (PlatformManagementScreen & DestinationsScreen):** Older implementation extending vanilla Screen with manual rendering (GuiGraphics.fill/drawString), vanilla Buttons, hardcoded colors/positions, custom scrolling via scrollOffset. Does not use BC UI framework (components, layouts, builders, themes).
+  - **Resources Tab:** Uses BC UI framework - extends BaseTownTab, employs BCFlowLayout, BCLabel, StandardTabContent (likely with UIGridBuilder for item grid), auto-refresh with change detection.
+  - **Payment Board Popup:** Extends AbstractContainerScreen, integrates UIGridBuilder for rewards, custom section rendering but more aligned with BC styles.
+  - **Trade Popup:** Similar to Payment Board, AbstractContainerScreen with custom rendering.
+  - **Key Differences:** Platform UI lacks component-based design, layouts, theming, built-in scrolling; inconsistent style with main UI which uses BCScreenBuilder, BCComponents, StateBinding, etc.
 
-##### Todo Items:
-- [x] Read relevant BC UI framework files to understand integration.
-- [ ] Refactor PlatformManagementScreen to use BCScreenBuilder and StandardTabContent for platform list.
-- [ ] Implement platform entries using UIGridBuilder with dynamic data suppliers.
-- [ ] Redesign buttons and toggles using BCButton and BCToggleButton.
-- [ ] Add scrolling using BCScrollableListComponent.
-- [ ] Similarly refactor DestinationsScreen to use BC components.
-- [ ] Integrate redesigned screens with TownInterfaceScreen navigation.
-- [ ] Test all functionalities: adding, deleting, toggling platforms, setting destinations, etc.
-- [ ] Update any related packets or handlers if needed.
-- [ ] Clean up old manual rendering code.
+- [ ] Proposed Refactor Plan (Awaiting User Approval):
+  - [ ] Step 1: Create new PlatformManagementScreenV2 using BCScreenBuilder for structure, BCPanel with BCGridLayout/BCFlowLayout for layout.
+  - [ ] Step 2: Replace platform list with BCScrollableListComponent, each entry as custom BCComponent with BCButtons for actions (toggle, destinations, set path, delete).
+  - [ ] Step 3: Apply BCTheme for consistent colors/styling, remove hardcoded values.
+  - [ ] Step 4: Implement scrolling and hovering using BC component features.
+  - [ ] Step 5: Refactor DestinationsScreen similarly - use BCScrollableListComponent for town list, BCButtons for toggles.
+  - [ ] Step 6: Update navigation (back buttons) with BCButton and ScreenNavigationHelper.
+  - [ ] Step 7: Preserve packet integrations and data handling.
+  - [ ] Step 8: Update openings (e.g., from Settings tab) to use new screens; deprecate old ones.
+  - [ ] Step 9: Test for consistency with Resources tab style (e.g., auto-refresh if applicable).
+  - [ ] Step 10: Clean up and remove old code if approved.
 
+- [ ] Implement approved plan
+- [ ] Test redesigned UI for functionality and style consistency
+- [ ] Update documentation if needed
 
 ### 🎯 **FUTURE TASKS**
 
