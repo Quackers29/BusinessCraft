@@ -85,6 +85,20 @@
 
 **Status:** Both issues resolved and ready for testing in-game.
 
+### Issue: Toggle Button Not Updating Visually
+**Problem:** Clicking ON/OFF toggle buttons works server-side but doesn't update the UI immediately - requires reload to see change
+**Solution:** Added immediate grid refresh after toggle actions
+- ✅ togglePlatform() - Added platformListGrid.clearElements() + populateGridWithPlatforms() for immediate visual update
+- ✅ resetPlatformPath() - Added same immediate refresh pattern for consistent behavior
+- ✅ Build tested successfully
+
+### Issue: Platform Names Positioning (Attempted Fix)
+**Problem:** Platform names still appear too far right despite spacing adjustments  
+**Attempted Solution:** Reduced left margin from 8 to 4 pixels in withMargins(4, 4)
+**Status:** Needs further investigation - UIGridBuilder column layout may need different approach
+
+**Updated Status:** Toggle button issue fixed, positioning issue requires further analysis.
+
 ### 🎯 **PREVIOUS TASKS** (Platform UI Redesign - Completed)
 
 #### Platform UI Redesign  
