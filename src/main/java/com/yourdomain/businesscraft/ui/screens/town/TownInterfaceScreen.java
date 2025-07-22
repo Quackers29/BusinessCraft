@@ -14,7 +14,7 @@ import net.minecraft.core.BlockPos;
 import java.util.List;
 import java.util.Map;
 import net.minecraft.world.item.Item;
-import com.yourdomain.businesscraft.ui.screens.platform.PlatformManagementScreen;
+import com.yourdomain.businesscraft.ui.screens.platform.PlatformManagementScreenV2;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
@@ -208,8 +208,8 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
         // Get real platform data from the menu rather than using sample data
         List<Platform> platforms = menu.getPlatforms();
         
-        // Create the platform management screen
-        PlatformManagementScreen platformScreen = new PlatformManagementScreen(
+        // Create the platform management screen V2 (using BC UI framework)
+        PlatformManagementScreenV2 platformScreen = new PlatformManagementScreenV2(
             menu.getBlockPos(), platforms);
         
         // Close this screen and open the platform screen
