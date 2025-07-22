@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 3. The plan should have a list of todo items that you can check off as you complete them.
 4. Before you begin working, check in with me and I will verify the plan. Use the 'Notify User' command to notify me prior to any input to get my attention (including when you complete).
 5. Then, begin working on the todo items, keep on marking them off as you go in the file so I can track progress.
-6. Finally, add a review section to the todo.md file with a summary of the changes you made and any other relevant information.
+6. Finally, if you have noticed you have move onto your next task, move the previously completed task to the bottom of the done.md file, using similar style to whats already in the end of that file.
 
 ## Project Overview
 

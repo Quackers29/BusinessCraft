@@ -142,10 +142,9 @@ public class PlatformManagementScreenV2 extends Screen {
             Platform platform = platforms.get(i);
             boolean isLastPlatform = (i == platforms.size() - 1);
             
-            // Column 0: Status indicator
-            String statusText = platform.isEnabled() ? "●" : "○";
-            int statusColor = platform.isEnabled() ? SUCCESS_COLOR : DISABLED_COLOR;
-            platformListGrid.addLabel(i, 0, statusText, statusColor);
+            // Column 0: Status indicator - green only if enabled AND has valid path
+            boolean canSpawn = platform.isEnabled() && platform.isComplete();
+            platformListGrid.addStatusIndicator(i, 0, canSpawn, SUCCESS_COLOR, DISABLED_COLOR, 13);
             
             // Column 1: Platform name and number (shortened for better fit)
             String nameText = "Plat #" + (i + 1);

@@ -359,6 +359,56 @@ public class UIGridBuilder {
     }
     
     /**
+     * Adds a centered label to the grid
+     */
+    public UIGridBuilder addCenteredLabel(int row, int column, String text, int textColor) {
+        UIGridElement element = new UIGridElement(UIElementType.LABEL, row, column, 1, 1);
+        element.text = text;
+        element.textColor = textColor;
+        element.textAlignment = TextAlignment.CENTER;
+        elements.add(element);
+        return this;
+    }
+    
+    /**
+     * Adds a label with specific alignment to the grid
+     */
+    public UIGridBuilder addLabelWithAlignment(int row, int column, String text, int textColor, TextAlignment alignment) {
+        UIGridElement element = new UIGridElement(UIElementType.LABEL, row, column, 1, 1);
+        element.text = text;
+        element.textColor = textColor;
+        element.textAlignment = alignment;
+        elements.add(element);
+        return this;
+    }
+    
+    /**
+     * Adds a large centered status indicator to the grid
+     * @param row Grid row
+     * @param column Grid column  
+     * @param isActive Whether the status is active (filled circle) or inactive (empty circle)
+     * @param activeColor Color for active state
+     * @param inactiveColor Color for inactive state
+     * @param size Size of the indicator in pixels (default 12)
+     * @return This builder for chaining
+     */
+    public UIGridBuilder addStatusIndicator(int row, int column, boolean isActive, int activeColor, int inactiveColor, int size) {
+        UIGridElement element = new UIGridElement(UIElementType.STATUS_INDICATOR, row, column, 1, 1);
+        element.text = isActive ? "●" : "○";
+        element.textColor = isActive ? activeColor : inactiveColor;
+        element.indicatorSize = size;
+        elements.add(element);
+        return this;
+    }
+    
+    /**
+     * Adds a large centered status indicator to the grid with default size (14px)
+     */
+    public UIGridBuilder addStatusIndicator(int row, int column, boolean isActive, int activeColor, int inactiveColor) {
+        return addStatusIndicator(row, column, isActive, activeColor, inactiveColor, 14);
+    }
+    
+    /**
      * Adds a toggle button to the grid
      */
     public UIGridBuilder addToggle(int row, int column, String text, boolean initialState,
@@ -741,6 +791,9 @@ public class UIGridBuilder {
                 case MULTI_ITEM:
                     renderMultiItem(graphics, element, elementX, elementY, elementWidth, elementHeight);
                     break;
+                case STATUS_INDICATOR:
+                    renderStatusIndicator(graphics, element, elementX, elementY, elementWidth, elementHeight);
+                    break;
             }
         }
         
@@ -804,10 +857,76 @@ public class UIGridBuilder {
         // Use the text as provided (truncation should be done before adding to grid)
         String displayText = element.text;
         
-        // Draw text (left-aligned with padding)
-        int textX = x + 2; // Left-aligned with 2px padding
+        // Calculate text position based on alignment
+        int textX;
+        int textWidth = font.width(displayText);
+        
+        switch (element.textAlignment) {
+            case CENTER:
+                textX = x + (width - textWidth) / 2; // Centered
+                break;
+            case RIGHT:
+                textX = x + width - textWidth - 2; // Right-aligned with 2px padding
+                break;
+            case LEFT:
+            default:
+                textX = x + 2; // Left-aligned with 2px padding
+                break;
+        }
+        
         int textY = y + (height - font.lineHeight) / 2; // Vertically centered
         graphics.drawString(font, displayText, textX, textY, element.textColor);
+    }
+    
+    /**
+     * Renders a large centered status indicator
+     */
+    private void renderStatusIndicator(GuiGraphics graphics, UIGridElement element,
+                                     int x, int y, int width, int height) {
+        
+        // Calculate center position for the indicator
+        int centerX = x + width / 2;
+        int centerY = y + height / 2;
+        int radius = element.indicatorSize / 2;
+        
+        // Draw flat 2D circle indicator 
+        if (element.text.equals("●")) {
+            // Draw filled circle (ON state)
+            drawFilledCircle(graphics, centerX, centerY, radius, element.textColor);
+        } else {
+            // Draw empty circle (OFF state) 
+            drawCircleOutline(graphics, centerX, centerY, radius, element.textColor, 1);
+        }
+    }
+    
+    /**
+     * Draws a filled circle
+     */
+    private void drawFilledCircle(GuiGraphics graphics, int centerX, int centerY, int radius, int color) {
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dy = -radius; dy <= radius; dy++) {
+                if (dx * dx + dy * dy <= radius * radius) {
+                    graphics.fill(centerX + dx, centerY + dy, centerX + dx + 1, centerY + dy + 1, color);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Draws a circle outline
+     */
+    private void drawCircleOutline(GuiGraphics graphics, int centerX, int centerY, int radius, int color, int thickness) {
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dy = -radius; dy <= radius; dy++) {
+                int distSq = dx * dx + dy * dy;
+                int outerRadiusSq = radius * radius;
+                int innerRadiusSq = (radius - thickness) * (radius - thickness);
+                
+                if (distSq <= outerRadiusSq && distSq >= innerRadiusSq) {
+                    graphics.fill(centerX + dx, centerY + dy, centerX + dx + 1, centerY + dy + 1, color);
+                }
+            }
+        }
     }
     
     /**
@@ -995,7 +1114,17 @@ public class UIGridBuilder {
         LABEL,
         TOGGLE,
         ITEM,       // Single Minecraft item with quantity indicator
-        MULTI_ITEM  // Multiple overlapping Minecraft items
+        MULTI_ITEM, // Multiple overlapping Minecraft items
+        STATUS_INDICATOR // Large centered status indicator
+    }
+    
+    /**
+     * Text alignment options for grid elements
+     */
+    public enum TextAlignment {
+        LEFT,
+        CENTER,
+        RIGHT
     }
     
     /**
@@ -1014,6 +1143,7 @@ public class UIGridBuilder {
         Consumer<Boolean> onToggle;
         String tooltip; // Tooltip text to display on hover
         boolean isHovered = false; // Track hover state for tooltip rendering
+        TextAlignment textAlignment = TextAlignment.LEFT; // Text alignment for labels
         
         // New fields for item display
         net.minecraft.world.item.Item item; // The Minecraft item to display
@@ -1021,6 +1151,9 @@ public class UIGridBuilder {
         boolean showQuantity = true; // Whether to show quantity indicator
         net.minecraft.world.item.ItemStack itemStack; // Full itemstack for rendering
         List<net.minecraft.world.item.ItemStack> multiItems; // Multiple items for overlapping display
+        
+        // Status indicator specific fields
+        int indicatorSize = 12; // Size of status indicator in pixels
         
         public UIGridElement(UIElementType type, int row, int column, int rowSpan, int colSpan) {
             this.type = type;
