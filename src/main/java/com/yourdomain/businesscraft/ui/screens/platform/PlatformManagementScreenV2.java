@@ -103,11 +103,9 @@ public class PlatformManagementScreenV2 extends Screen {
             .drawBackground(false)
             .drawBorder(false);
         
-        // Set up scrolling if we have more than 5 platforms
-        if (platforms.size() > 5) {
-            platformListGrid.withVerticalScroll(true, 5);
-            platformListGrid.updateTotalRows(platforms.size());
-        }
+        // Always enable scrolling to handle dynamic platform additions (show 5 visible rows)
+        platformListGrid.withVerticalScroll(true, 5);
+        platformListGrid.updateTotalRows(Math.max(platforms.size(), 6));
         
         // Populate with initial data
         populateGridWithPlatforms();
@@ -130,9 +128,8 @@ public class PlatformManagementScreenV2 extends Screen {
         // Clear and repopulate while preserving scroll state
         platformListGrid.clearElements();
         
-        if (platforms.size() > 5) {
-            platformListGrid.updateTotalRows(platforms.size());
-        }
+        // Always update total rows to handle dynamic changes
+        platformListGrid.updateTotalRows(Math.max(platforms.size(), 6));
         
         populateGridWithPlatforms();
     }

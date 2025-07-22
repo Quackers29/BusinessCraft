@@ -19,7 +19,7 @@ import java.util.*;
  */
 public class PlatformManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlatformManager.class);
-    private static final int MAX_PLATFORMS = 5;
+    private static final int MAX_PLATFORMS = 10;
     
     // Platform storage
     private final List<Platform> platforms = new ArrayList<>();
