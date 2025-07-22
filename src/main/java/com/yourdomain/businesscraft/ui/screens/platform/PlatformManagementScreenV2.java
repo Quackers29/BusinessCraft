@@ -147,8 +147,8 @@ public class PlatformManagementScreenV2 extends Screen {
             int statusColor = platform.isEnabled() ? SUCCESS_COLOR : DISABLED_COLOR;
             platformListGrid.addLabel(i, 0, statusText, statusColor);
             
-            // Column 1: Platform name and number
-            String nameText = "Platform #" + (i + 1);
+            // Column 1: Platform name and number (shortened for better fit)
+            String nameText = "Plat #" + (i + 1);
             if (platform.isComplete()) {
                 nameText += " ✓";
             }
