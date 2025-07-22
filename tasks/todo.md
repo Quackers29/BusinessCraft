@@ -3,7 +3,15 @@
 ## CURRENT PRIORITY: Platform UI Grid Status Indicator Fix
 
 ### 🎯 **IMMEDIATE TASKS**
-
+- [ ] **Part One: Town Interface Block Renderer**
+- [ ] Create TownInterfaceBER.java in client/renderer/ with drawFace() for simple colored quads and drawBorder() for lines
+- [ ] Implement render() method to draw basic shapes/colors dynamically
+- [ ] Register in ClientModEvents: event.registerBlockEntityRenderer(ModBlockEntities.TOWN_INTERFACE.get(), TownInterfaceBER::new)
+- [ ] **Part Two: Update Tourist Models (User will handle this)**
+- [ ] Create hat texture variations (tourist_hat_red.png, tourist_hat_blue.png, tourist_hat_green.png) in src/main/resources/assets/businesscraft/textures/entity/
+- [ ] Update TouristHatLayer to select texture based on profession with HAT_TEXTURES array and getColorIndex method
+- [ ] Create NoHatProfessionLayer extending VillagerProfessionLayer to skip hat model parts
+- [ ] Replace VillagerProfessionLayer with NoHatProfessionLayer in TouristRenderer constructor
 
 ### 🎯 **FUTURE TASKS**
 
