@@ -220,3 +220,11 @@
 ✅ **COMPLETED** - Platform Path Instructions Fix: Added missing translation for 'businesscraft.platform_path_instructions' with clearer messaging.
 
 ✅ **COMPLETED** - Platform Indicator updated, centered and clear
+
+✅ **COMPLETED** - UIGrid Auto-Scroll System: Replaced static visible row counts with dynamic calculation based on available height for responsive UI design.
+
+✅ **COMPLETED** - Platform/Payment Board Scrollbar Fix: Fixed scrollbar visibility logic to only show when needed, preventing layout overlap issues.
+
+✅ **COMPLETED** - UIGrid Width Reservation: Modified grid to always reserve scrollbar width when scrolling enabled, preventing content shifts.
+
+✅ **COMPLETED** - Scrollbar Positioning: Increased right margin from 2px to 4px for better visual separation and updated width calculations.

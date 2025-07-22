@@ -46,7 +46,7 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     private static final int PAYMENT_BOARD_X = SECTION_PADDING + 12; // Move right for better centering
     private static final int PAYMENT_BOARD_Y = HEADER_HEIGHT + ELEMENT_SPACING;
     private static final int PAYMENT_BOARD_WIDTH = 300; // Restore full width for screen centering
-    private static final int PAYMENT_BOARD_HEIGHT = 60; // Height for scrolling
+    private static final int PAYMENT_BOARD_HEIGHT = 60; // Original height - fit 3 rows with reduced margins
     
     // Buffer storage section - centered in wider screen
     private static final int BUFFER_START_X = 90; // Centered for 340px screen width
@@ -324,11 +324,11 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     private void createPaymentBoardGrid() {
         paymentBoardGrid = UIGridBuilder.create(
             PAYMENT_BOARD_X, PAYMENT_BOARD_Y + 5, // Move grid down 5px from section top
-            PAYMENT_BOARD_WIDTH - 8, PAYMENT_BOARD_HEIGHT - 10, // More width since scrollbar is outside grid
+            PAYMENT_BOARD_WIDTH - 8, PAYMENT_BOARD_HEIGHT - 6, // Maximum height for 3 rows with 2px spacing
             4) // 4 columns: Source, Rewards, Time, Claim
             .withRowHeight(16) // Slightly smaller rows to fit better
-            .withSpacing(8, 2) // Restore spacing, reduce vertical spacing
-            .withMargins(8, 4) // Reduce vertical margins
+            .withSpacing(8, 2) // Added 2px vertical spacing between rows
+            .withMargins(8, 0) // No vertical margins to maximize space for 3 rows
             .drawBackground(false) // Don't draw background, we handle it ourselves
             .drawBorder(false);
             
