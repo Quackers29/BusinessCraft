@@ -4,7 +4,12 @@
 
 ### 🎯 **IMMEDIATE TASKS**
 
-PR002 - On the Platform UI, ht e add platform button correctly adds another platform to the list however it closes the UI (old method of updating the list), dont close teh UI, update instead
+✅ **COMPLETED** - PR002 - Platform UI Add Button Fix: Fixed add platform button so it doesn't close the UI, updates list in-place instead.
+
+✅ **COMPLETED** - Platform UI Delete Button Fix: Added missing delete functionality to PlatformManagementScreenV2. Delete button appears for the last platform only (matching V1 behavior).
+
+✅ **COMPLETED** - Platform UI Redesign: Moved delete button to header as "Delete Last", restored Set/Reset Path functionality, and fixed UI refresh issues.
+
 
 ### 🎯 **FUTURE TASKS**
 
@@ -113,3 +118,4 @@ PR002 - On the Platform UI, ht e add platform button correctly adds another plat
 ## Tasks Handled by User
 - Adjust tourist clothing skin
 - Design custom graphic for Town Interface Block
+- Review of outputs
