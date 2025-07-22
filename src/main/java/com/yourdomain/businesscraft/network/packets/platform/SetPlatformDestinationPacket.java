@@ -96,6 +96,11 @@ public class SetPlatformDestinationPacket {
                         
                         // Add all towns from the server to the refresh packet
                         townBlock.getAllTownsForDestination(serverLevel).forEach((id, townName) -> {
+                            // Skip the current town (platforms shouldn't route to themselves)
+                            if (originTown != null && id.equals(originTown.getId())) {
+                                return; // Skip this iteration
+                            }
+                            
                             boolean isEnabled = destinations.getOrDefault(id, false);
                             
                             // Calculate distance between towns
@@ -112,6 +117,11 @@ public class SetPlatformDestinationPacket {
                                     double dy = destPos.getY() - originPos.getY();
                                     double dz = destPos.getZ() - originPos.getZ();
                                     distance = (int)Math.sqrt(dx*dx + dy*dy + dz*dz);
+                                    
+                                    // Additional safety check: Skip towns with 0 distance (same location = same town)
+                                    if (distance <= 1) {
+                                        return; // Skip this iteration - likely the same town
+                                    }
                                     
                                     // Calculate direction (ignore Y-axis)
                                     direction = calculateDirection(dx, dz);

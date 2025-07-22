@@ -96,6 +96,12 @@ public class OpenDestinationsUIPacket {
                         BlockPos townPos = town.getPosition();
                         if (townPos != null) {
                             int distance = (int) Math.sqrt(townPos.distSqr(originPos));
+                            
+                            // Additional safety check: Skip towns with 0 distance (same location = same town)
+                            if (distance <= 1) {
+                                continue; // Skip this town - likely the same town
+                            }
+                            
                             String direction = calculateDirection(
                                 townPos.getX() - originPos.getX(),
                                 townPos.getZ() - originPos.getZ()
