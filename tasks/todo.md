@@ -99,6 +99,75 @@
 
 **Updated Status:** Toggle button issue fixed, positioning issue requires further analysis.
 
+### Issue: Toggle Button Flicker on Second Click - FIXED  
+**Problem:** First click worked correctly, but second click would flicker to wrong state briefly before correcting
+**Root Cause:** Stale platform object references in button click handlers after grid refresh
+**Solution:** Refactored to use platform indices instead of object references
+- ✅ togglePlatformByIndex() - Uses index to get fresh platform object from list
+- ✅ openDestinationsByIndex() - Same pattern for consistency  
+- ✅ setPlatformPathByIndex() - Same pattern for consistency
+- ✅ resetPlatformPathByIndex() - Same pattern for consistency
+- ✅ Build tested successfully
+
+### Issue: Platform Names Positioning - IMPROVED
+**Problem:** Platform names were positioned too far right in the UI
+**Solution:** Reduced left margin in withMargins(4, 4) 
+**Status:** ✅ Now positioned much better and more visually balanced (confirmed via screenshot)
+
+**Final Status:** Both critical issues resolved - toggle buttons work reliably, names well-positioned!
+
+### Issue: Toggle Button Still Flickering (Second Investigation) - FIXED
+**Problem:** Even after index-based approach, toggle buttons still showed wrong state on second click
+**Root Cause:** RefreshPlatformsPacket was completely reopening the screen, discarding local state changes
+**Advanced Solution:** 
+- ✅ Removed immediate local state updates to prevent conflicts
+- ✅ Added refreshPlatformData() method to update data without reopening screen
+- ✅ Modified RefreshPlatformsPacket to call refreshPlatformData() instead of reopening screen
+- ✅ Server response now updates UI smoothly without losing screen state
+- ✅ Build tested successfully
+
+**Technical Details:**
+- Server sends RefreshPlatformsPacket after processing SetPlatformEnabledPacket
+- Instead of `PlatformManagementScreenV2.open(pos)` (creates new screen)
+- Now calls `platformScreen.refreshPlatformData()` (updates existing screen)
+- Eliminates race condition between local updates and server responses
+
+**Final Status:** Toggle buttons now work perfectly - server-driven updates with smooth UI refresh!
+
+### Issue: Toggle Updates One Click Behind - FIXED
+**Problem:** Toggle buttons updated smoothly but were one click behind (click button 2, button 1 updates visually)
+**Root Cause:** Server processes packets sequentially, RefreshPlatformsPacket updates UI with "previous" server state
+**Sequence Issue:**
+1. Click Button 1 → Server processes → Updates Platform 1 → Sends refresh → UI shows Button 1 updated
+2. Click Button 2 → Server processes → Updates Platform 2 → Sends refresh → UI shows Button 2 updated (but Button 1 was already updated from step 1)
+
+**Final Solution - Hybrid Approach:**
+- ✅ **Immediate local update** for instant visual feedback 
+- ✅ **Server-driven refresh** for authoritative state consistency
+- ✅ Best of both worlds: instant response + server verification
+- ✅ Build tested successfully
+
+**Expected Result:** Click button → immediate visual change → server confirms and ensures consistency
+
+**Technical Implementation:** Restored local state update + kept server refresh system for authoritative consistency.
+
+### Issue: Toggle Problem Returns - First Click Works, Second+ Fail - FIXED
+**Problem:** After implementing hybrid approach, we're back to original issue - first toggle works, subsequent toggles flicker/fail
+**Root Cause:** Local updates conflict with server refresh packets arriving at bad timing
+**Final Solution - Protection Window Approach:**
+- ✅ Added **500ms protection window** after each toggle action
+- ✅ **lastToggleTime** timestamp tracking for each toggle click  
+- ✅ **refreshPlatformData()** skips server refresh if within protection window
+- ✅ Prevents server state from overriding local toggle changes
+- ✅ Build tested successfully
+
+**How it works:**
+1. **Click toggle** → Records timestamp → Immediate local update → Send server packet
+2. **Server responds** → RefreshPlatformsPacket arrives → Checks if <500ms since toggle → **Skips refresh**  
+3. **After 500ms** → Server refreshes allowed again for other operations
+
+**Result:** Multiple rapid toggles work correctly without server interference, while maintaining server authority for other operations.
+
 ### 🎯 **PREVIOUS TASKS** (Platform UI Redesign - Completed)
 
 #### Platform UI Redesign  

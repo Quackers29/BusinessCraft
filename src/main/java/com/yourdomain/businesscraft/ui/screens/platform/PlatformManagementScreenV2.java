@@ -159,28 +159,29 @@ public class PlatformManagementScreenV2 extends Screen {
             // Column 2: Toggle button
             String toggleText = platform.isEnabled() ? "ON" : "OFF";
             int toggleColor = platform.isEnabled() ? SUCCESS_COLOR : DISABLED_COLOR;
+            final int platformIndex = i; // Capture index for closure
             platformListGrid.addButtonWithTooltip(i, 2, toggleText,
                 platform.isEnabled() ? "Click to disable platform" : "Click to enable platform",
-                (v) -> togglePlatform(platform), toggleColor);
+                (v) -> togglePlatformByIndex(platformIndex), toggleColor);
             
             // Column 3: Destinations button
             String destTooltip = platform.hasNoEnabledDestinations() ? 
                 "No destinations selected - allows any destination" : "Specific destinations selected";
             platformListGrid.addButtonWithTooltip(i, 3, "Dest",
                 destTooltip,
-                (v) -> openDestinations(platform), INFO_COLOR);
+                (v) -> openDestinationsByIndex(platformIndex), INFO_COLOR);
             
             // Column 4: Actions (Set Path / Reset Path / Delete)
             if (platform.isComplete()) {
                 // Show Reset button
                 platformListGrid.addButtonWithTooltip(i, 4, "Reset",
                     "Reset platform path",
-                    (v) -> resetPlatformPath(platform), DANGER_COLOR);
+                    (v) -> resetPlatformPathByIndex(platformIndex), DANGER_COLOR);
             } else {
                 // Show Set Path button
                 platformListGrid.addButtonWithTooltip(i, 4, "Set Path",
                     "Set platform path by clicking two blocks",
-                    (v) -> setPlatformPath(platform), INFO_COLOR);
+                    (v) -> setPlatformPathByIndex(platformIndex), INFO_COLOR);
             }
         }
         
@@ -343,28 +344,41 @@ public class PlatformManagementScreenV2 extends Screen {
             imageWidth - 80, BACK_BUTTON_Y, 70, BACK_BUTTON_HEIGHT);
     }
     
-    // Platform action methods
-    private void togglePlatform(Platform platform) {
+    // Platform action methods - using indices to avoid stale object references
+    private void togglePlatformByIndex(int index) {
+        if (index < 0 || index >= platforms.size()) return;
+        
+        Platform platform = platforms.get(index);
         boolean newState = !platform.isEnabled();
+        
+        // Record toggle time to prevent server refresh conflicts
+        lastToggleTime = System.currentTimeMillis();
+        
         ModMessages.sendToServer(new SetPlatformEnabledPacket(
             townBlockPos, platform.getId(), newState));
         
-        // Update local state for immediate feedback
+        // Update local state immediately for instant feedback
         platform.setEnabled(newState);
         
-        // Force the grid to refresh immediately by clearing and repopulating
+        // Update the UI immediately (server refresh will be blocked for 500ms)
         if (platformListGrid != null) {
             platformListGrid.clearElements();
             populateGridWithPlatforms();
         }
     }
     
-    private void openDestinations(Platform platform) {
+    private void openDestinationsByIndex(int index) {
+        if (index < 0 || index >= platforms.size()) return;
+        
+        Platform platform = platforms.get(index);
         ModMessages.sendToServer(new OpenDestinationsUIPacket(
             townBlockPos, platform.getId()));
     }
     
-    private void setPlatformPath(Platform platform) {
+    private void setPlatformPathByIndex(int index) {
+        if (index < 0 || index >= platforms.size()) return;
+        
+        Platform platform = platforms.get(index);
         // Send packet to enter platform path creation mode
         ModMessages.sendToServer(new SetPlatformPathCreationModePacket(
             townBlockPos, platform.getId(), true));
@@ -383,7 +397,10 @@ public class PlatformManagementScreenV2 extends Screen {
         minecraft.setScreen(null);
     }
     
-    private void resetPlatformPath(Platform platform) {
+    private void resetPlatformPathByIndex(int index) {
+        if (index < 0 || index >= platforms.size()) return;
+        
+        Platform platform = platforms.get(index);
         ModMessages.sendToServer(new ResetPlatformPathPacket(
             townBlockPos, platform.getId()));
         
@@ -443,6 +460,36 @@ public class PlatformManagementScreenV2 extends Screen {
                 List<Platform> platforms = townBlock.getPlatforms();
                 PlatformManagementScreenV2 screen = new PlatformManagementScreenV2(blockPos, platforms);
                 minecraft.setScreen(screen);
+            }
+        }
+    }
+    
+    // Track recent toggle actions to prevent server refresh conflicts
+    private long lastToggleTime = 0;
+    private static final long TOGGLE_PROTECTION_MS = 500; // 500ms protection window
+    
+    /**
+     * Refresh platform data without reopening the screen (for packet updates)
+     */
+    public void refreshPlatformData() {
+        // Don't refresh if we just did a toggle action (prevents conflicts)
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastToggleTime < TOGGLE_PROTECTION_MS) {
+            return; // Skip refresh to avoid overriding local toggle state
+        }
+        
+        Minecraft minecraft = Minecraft.getInstance();
+        Level level = minecraft.level;
+        
+        if (level != null) {
+            BlockEntity be = level.getBlockEntity(townBlockPos);
+            
+            if (be instanceof TownBlockEntity townBlock) {
+                // Update our platform list with fresh data from the server
+                this.platforms = new ArrayList<>(townBlock.getPlatforms());
+                
+                // Force UI update
+                updatePlatformListData();
             }
         }
     }

@@ -55,11 +55,11 @@ public class RefreshPlatformsPacket {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "Received platform refresh packet for block at {}", pos);
                 
-                // If the PlatformManagementScreenV2 is open, refresh it by reopening
-                if (minecraft.screen instanceof PlatformManagementScreenV2) {
+                // If the PlatformManagementScreenV2 is open, refresh data without reopening
+                if (minecraft.screen instanceof PlatformManagementScreenV2 platformScreen) {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                        "Reopening platform management screen with fresh data");
-                    PlatformManagementScreenV2.open(pos);
+                        "Refreshing platform management screen data");
+                    platformScreen.refreshPlatformData();
                 }
                 // Additional handling for other screens can be added here if needed
             }
