@@ -49,7 +49,7 @@ public class UIGridBuilder {
     private boolean verticalScrollEnabled = false;
     private int verticalScrollOffset = 0;
     private int maxVerticalScrollOffset = 0;
-    private int scrollBarWidth = 8;
+    private int scrollBarWidth = 6; // Reduced by 30% (8 * 0.7 = 5.6, rounded to 6)
     private boolean verticalScrolling = false;
     private int visibleRows = 0;
     private int totalRows = 0;
@@ -98,6 +98,10 @@ public class UIGridBuilder {
         this.verticalSpacing = 2;
         this.horizontalMargin = 15;
         this.verticalMargin = 6;
+        
+        DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, 
+            String.format("[GRID CREATE] New grid at (%d,%d) size (%dx%d), %d columns, verticalScrollEnabled=%b", 
+            x, y, width, height, columns, verticalScrollEnabled));
     }
     
     /**
@@ -228,6 +232,11 @@ public class UIGridBuilder {
         if (enable) {
             this.maxVerticalScrollOffset = Math.max(0, totalRows - visibleRows);
         }
+        
+        DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, 
+            String.format("[GRID SCROLL] Grid at (%d,%d) enableVerticalScroll=%b, visibleRows=%d, totalRows=%d", 
+            x, y, enable, visibleRows, totalRows));
+        
         return this;
     }
     
@@ -731,11 +740,28 @@ public class UIGridBuilder {
         int cellsWidth = width - (horizontalMargin * 2);
         int cellsHeight = height - (verticalMargin * 2);
         
+        // Only reserve space for vertical scrollbar when it's actually needed/visible
+        if (verticalScrollEnabled && totalRows > visibleRows) {
+            int scrollbarReservation = scrollBarWidth + 4; // scrollbar width + 4px margin (2px each side)
+            cellsWidth -= scrollbarReservation;
+            DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, 
+                String.format("[RENDER] Grid at (%d,%d): Scrollbar needed (totalRows=%d > visibleRows=%d), reserved %dpx, cellsWidth=%d", 
+                x, y, totalRows, visibleRows, scrollbarReservation, cellsWidth));
+        } else if (verticalScrollEnabled) {
+            DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, 
+                String.format("[RENDER] Grid at (%d,%d): Scrollbar not needed (totalRows=%d <= visibleRows=%d), no space reserved", 
+                x, y, totalRows, visibleRows));
+        }
+        
         // Calculate individual cell dimensions
         int effectiveColumns = horizontalScrollEnabled ? Math.min(columns, visibleColumns) : columns;
         int effectiveRows = verticalScrollEnabled ? Math.min(visibleRows, rows) : rows;
         
         int cellWidth = (cellsWidth - (horizontalSpacing * (effectiveColumns - 1))) / effectiveColumns;
+        
+        DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, 
+            String.format("[RENDER] Grid at (%d,%d): effectiveColumns=%d, cellsWidth=%d, cellWidth=%d, verticalScrollEnabled=%b", 
+            x, y, effectiveColumns, cellsWidth, cellWidth, verticalScrollEnabled));
         int rowHeight = customRowHeight != null ? customRowHeight : 
                        (cellsHeight - (verticalSpacing * (effectiveRows - 1))) / effectiveRows;
         
@@ -1209,7 +1235,7 @@ public class UIGridBuilder {
         // Check for vertical scrollbar drag - must use the same position as in rendering
         if (verticalScrollEnabled && totalRows > visibleRows) {
             // Use the same scrollbar position as in renderVerticalScrollbar method
-            int scrollBarX = x + width + 20; // Match rendering position - outside grid
+            int scrollBarX = x + width - scrollBarWidth - 2; // Match rendering position - inside grid
             int scrollTrackY = y + verticalMargin + 2; // Match rendering position
             int scrollTrackHeight = height - (verticalMargin * 2) - 4; // Match rendering calculation
             
@@ -1224,11 +1250,23 @@ public class UIGridBuilder {
         }
         
         // Calculate cell dimensions for element click detection
-        int availableWidth = width - (2 * horizontalMargin);
+        int initialWidth = width - (2 * horizontalMargin);
+        int availableWidth = initialWidth;
+        
+        DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, 
+            String.format("[GRID CALC] Grid at (%d,%d) size (%dx%d): width=%d, horizontalMargin=%d, initialWidth=%d", 
+            x, y, width, height, width, horizontalMargin, initialWidth));
+        
         if (visibleColumns > 0 && horizontalScrollEnabled) {
             availableWidth -= ((visibleColumns - 1) * horizontalSpacing);
+            DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, 
+                String.format("[GRID CALC] Horizontal scroll spacing: visibleColumns=%d, horizontalSpacing=%d, deducted=%d", 
+                visibleColumns, horizontalSpacing, (visibleColumns - 1) * horizontalSpacing));
         } else {
             availableWidth -= ((columns - 1) * horizontalSpacing);
+            DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, 
+                String.format("[GRID CALC] Normal spacing: columns=%d, horizontalSpacing=%d, deducted=%d", 
+                columns, horizontalSpacing, (columns - 1) * horizontalSpacing));
         }
         
         int availableHeight = height - (2 * verticalMargin);
@@ -1238,14 +1276,22 @@ public class UIGridBuilder {
             availableHeight -= scrollBarHeight;
         }
         
-        // Adjust width for vertical scrollbar if needed
-        if (verticalScrollEnabled) {
-            availableWidth -= scrollBarWidth;
+        // Only reserve space for vertical scrollbar when it's actually needed/visible
+        if (verticalScrollEnabled && totalRows > visibleRows) {
+            int scrollbarReservation = scrollBarWidth + 4; // scrollbar width + 4px margin (2px each side)
+            availableWidth -= scrollbarReservation;
+            DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, 
+                String.format("[GRID CALC] Scrollbar needed, reservation: scrollBarWidth=%d, margins=4px, total=%d", 
+                scrollBarWidth, scrollbarReservation));
         }
         
         // Calculate column width
         int columnCount = horizontalScrollEnabled ? visibleColumns : columns;
         int cellWidth = availableWidth / columnCount;
+        
+        DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER, 
+            String.format("[GRID CALC] FINAL: availableWidth=%d, columnCount=%d, cellWidth=%d, verticalScrollEnabled=%b", 
+            availableWidth, columnCount, cellWidth, verticalScrollEnabled));
         
         // Calculate row height - use custom height if set, otherwise calculate based on available space
         int rowCount = verticalScrollEnabled ? visibleRows : rows;
@@ -1844,7 +1890,7 @@ public class UIGridBuilder {
         if (!verticalScrollEnabled || totalRows <= visibleRows) return false;
         
         // Calculate scroll thumb dimensions and position - must match the rendering position exactly
-        int scrollTrackX = this.x + this.width + 20; // Match the render position - outside grid
+        int scrollTrackX = this.x + this.width - scrollBarWidth - 2; // Match the render position - inside grid
         int scrollTrackY = this.y + verticalMargin + 2; // Match the render position
         int scrollTrackHeight = this.height - (verticalMargin * 2) - 4; // Match the render calculation
         
@@ -1901,15 +1947,10 @@ public class UIGridBuilder {
     private void renderVerticalScrollbar(GuiGraphics graphics, int mouseX, int mouseY) {
         if (!verticalScrollEnabled || totalRows <= visibleRows) return;
         
-        // Calculate scroll area dimensions - position much further right to avoid button overlap
-        int scrollTrackX = this.x + this.width + 20; // 20px outside the grid boundary
-        int scrollTrackY = this.y + verticalMargin + 2; // 2px from top margin
+        // Position scrollbar at the very right edge INSIDE the grid bounds
+        int scrollTrackX = this.x + this.width - scrollBarWidth - 2; // 2px from right edge
+        int scrollTrackY = this.y + verticalMargin + 2; // 2px from top margin  
         int scrollTrackHeight = this.height - (verticalMargin * 2) - 4; // 2px top and bottom padding
-        
-        // Ensure scrollbar doesn't exceed component boundaries
-        if (scrollTrackX + scrollBarWidth > this.x + this.width) {
-            scrollTrackX = this.x + this.width - scrollBarWidth;
-        }
         if (scrollTrackY + scrollTrackHeight > this.y + this.height - verticalMargin) {
             scrollTrackHeight = this.y + this.height - verticalMargin - scrollTrackY;
         }
@@ -2036,7 +2077,7 @@ public class UIGridBuilder {
         if (!isDraggingVertical && !isDraggingHorizontal) {
             // Check vertical scrollbar area
             if (verticalScrollEnabled && totalRows > visibleRows) {
-                int scrollBarX = x + width + 20; // Match rendering position - outside grid
+                int scrollBarX = x + width - scrollBarWidth - 2; // Match rendering position - inside grid
                 int scrollTrackY = y + verticalMargin + 2; // Match rendering position
                 int scrollTrackHeight = height - (verticalMargin * 2) - 4; // Match rendering calculation
                 
