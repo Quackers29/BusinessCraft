@@ -334,7 +334,7 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
             
         // Set up scrolling if we have more than 3 rewards
         if (currentRewards.size() > 3) {
-            paymentBoardGrid.withVerticalScroll(true, 3); // Show 3 rows, scroll for more
+            paymentBoardGrid.withVerticalScrollAuto(true); // Auto-calculate visible rows based on available height
             paymentBoardGrid.updateTotalRows(currentRewards.size());
         }
         

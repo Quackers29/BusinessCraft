@@ -143,7 +143,7 @@ public class DestinationsScreenV2 extends Screen {
         
         // Set up scrolling if we have more than 5 destinations
         if (currentDestinations.size() > 5) {
-            destinationsGrid.withVerticalScroll(true, 5);
+            destinationsGrid.withVerticalScrollAuto(true);
             destinationsGrid.updateTotalRows(currentDestinations.size());
         }
         
