@@ -13,6 +13,7 @@ import com.yourdomain.businesscraft.debug.DebugConfig;
  * Singleton class that stores town information for map display.
  */
 public class ClientTownMapCache {
+    private static final int CACHE_EXPIRY_MS = 30000;
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientTownMapCache.class);
     private static ClientTownMapCache instance;
     
@@ -71,7 +72,7 @@ public class ClientTownMapCache {
      * Check if the cache data is stale (older than 30 seconds)
      */
     public boolean isStale() {
-        return System.currentTimeMillis() - lastUpdateTime > 30000;
+        return System.currentTimeMillis() - lastUpdateTime > CACHE_EXPIRY_MS;
     }
     
     /**
