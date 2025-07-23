@@ -510,8 +510,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
             tag.putUUID("TownId", townId);
         }
         
-        // Add name for client display
-        tag.putString("name", name != null ? name : "");
+        // Add name for client display - use fresh name from Town object instead of cached field
+        String freshTownName = getTownName();
+        tag.putString("name", freshTownName != null ? freshTownName : "");
         
         // Add search radius for client sync
         tag.putInt("searchRadius", getSearchRadius());

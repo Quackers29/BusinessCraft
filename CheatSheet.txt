@@ -153,3 +153,4 @@ Prior to starting, check if there is the file 'CheatSheet.txt' in the root direc
 139. Technical debt prioritization: prioritize massive monolithic classes (500+ lines) and global state coupling as highest impact issues that compound over time and prevent testing
 140. UI, TownInterfaceMenu.java, call broadcastChanges after initial updateDataSlots in constructor for immediate client sync
 141. UI, menu sync, add periodic updateDataSlots() in broadcastChanges() with tick check for real-time ContainerData updates while menu is open
+142. BlockEntity synchronization, use fresh data from source objects in getUpdateTag() instead of cached fields to ensure client receives latest changes immediately after server updates
