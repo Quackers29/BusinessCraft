@@ -30,6 +30,7 @@ import com.yourdomain.businesscraft.network.packets.ui.SetPathCreationModePacket
 import com.yourdomain.businesscraft.network.packets.ui.OpenDestinationsUIPacket;
 import com.yourdomain.businesscraft.network.packets.ui.RefreshDestinationsPacket;
 import com.yourdomain.businesscraft.network.packets.ui.PlayerExitUIPacket;
+import com.yourdomain.businesscraft.network.packets.ui.PlatformVisualizationPacket;
 import com.yourdomain.businesscraft.network.packets.ui.OpenTownInterfacePacket;
 import com.yourdomain.businesscraft.network.packets.ui.OpenPaymentBoardPacket;
 import com.yourdomain.businesscraft.network.packets.storage.TradeResourcePacket;
@@ -162,6 +163,13 @@ public class ModMessages {
                 .decoder(PlayerExitUIPacket::decode)
                 .encoder(PlayerExitUIPacket::encode)
                 .consumerMainThread(PlayerExitUIPacket::handle)
+                .add();
+
+        // Register platform visualization packet (server to client)
+        net.messageBuilder(PlatformVisualizationPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(PlatformVisualizationPacket::decode)
+                .encoder(PlatformVisualizationPacket::encode)
+                .consumerMainThread(PlatformVisualizationPacket::handle)
                 .add();
 
         // Register resource trading packet
