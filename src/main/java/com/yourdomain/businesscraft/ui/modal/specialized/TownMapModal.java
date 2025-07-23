@@ -320,27 +320,80 @@ public class TownMapModal extends Screen {
     }
     
     /**
-     * Draw grid lines for reference
+     * Draw adaptive grid lines for reference
      */
     private void drawGridLines(GuiGraphics guiGraphics) {
         int mapLeft = mapCenterX - mapWidth / 2;
         int mapTop = mapCenterY - mapHeight / 2;
         int gridColor = 0x40AAAAAA;
         
-        // Draw vertical lines every 50 world coordinates
-        for (int worldX = (int)(mapOffsetX - 500); worldX < mapOffsetX + 500; worldX += 100) {
+        // Calculate adaptive grid spacing based on zoom level
+        int baseGridSpacing = getAdaptiveGridSpacing();
+        
+        // Calculate the world coordinates visible on screen
+        double viewWidthInWorld = mapWidth / (zoomLevel * 0.1);
+        double viewHeightInWorld = mapHeight / (zoomLevel * 0.1);
+        
+        // Calculate starting positions for grid lines
+        int startX = ((int)(mapOffsetX - viewWidthInWorld / 2) / baseGridSpacing) * baseGridSpacing;
+        int startZ = ((int)(mapOffsetZ - viewHeightInWorld / 2) / baseGridSpacing) * baseGridSpacing;
+        
+        // Draw vertical lines
+        for (int worldX = startX; worldX <= mapOffsetX + viewWidthInWorld / 2; worldX += baseGridSpacing) {
             int screenX = worldToScreenX(worldX);
             if (screenX >= mapLeft && screenX <= mapLeft + mapWidth) {
                 guiGraphics.vLine(screenX, mapTop, mapTop + mapHeight, gridColor);
             }
         }
         
-        // Draw horizontal lines every 50 world coordinates
-        for (int worldZ = (int)(mapOffsetZ - 500); worldZ < mapOffsetZ + 500; worldZ += 100) {
+        // Draw horizontal lines
+        for (int worldZ = startZ; worldZ <= mapOffsetZ + viewHeightInWorld / 2; worldZ += baseGridSpacing) {
             int screenY = worldToScreenZ(worldZ);
             if (screenY >= mapTop && screenY <= mapTop + mapHeight) {
                 guiGraphics.hLine(mapLeft, mapLeft + mapWidth, screenY, gridColor);
             }
+        }
+    }
+    
+    /**
+     * Calculate adaptive grid spacing based on zoom level
+     */
+    private int getAdaptiveGridSpacing() {
+        // Grid spacing adapts to zoom level for optimal visibility
+        if (zoomLevel >= 20.0) {
+            return 5; // Very fine grid for extreme zoom
+        } else if (zoomLevel >= 10.0) {
+            return 10; // Fine grid for high zoom
+        } else if (zoomLevel >= 5.0) {
+            return 25; // Medium grid for medium zoom
+        } else if (zoomLevel >= 2.0) {
+            return 50; // Standard grid for normal zoom
+        } else if (zoomLevel >= 1.0) {
+            return 100; // Coarse grid for low zoom
+        } else if (zoomLevel >= 0.5) {
+            return 200; // Very coarse grid for very low zoom
+        } else {
+            return 500; // Extremely coarse grid for extreme zoom out
+        }
+    }
+    
+    /**
+     * Calculate adaptive marker size based on zoom level
+     */
+    private int getAdaptiveMarkerSize() {
+        // Marker size adapts to zoom level for better visibility
+        if (zoomLevel >= 15.0) {
+            return 12; // Large markers for extreme zoom
+        } else if (zoomLevel >= 8.0) {
+            return 10; // Medium-large markers for high zoom
+        } else if (zoomLevel >= 3.0) {
+            return 8; // Standard markers for medium zoom
+        } else if (zoomLevel >= 1.0) {
+            return 6; // Default markers for normal zoom
+        } else if (zoomLevel >= 0.3) {
+            return 4; // Small markers for low zoom
+        } else {
+            return 3; // Very small markers for extreme zoom out
         }
     }
     
@@ -373,8 +426,8 @@ public class TownMapModal extends Screen {
             markerColor = CURRENT_TOWN_COLOR;
         }
         
-        // Draw marker (small filled rectangle)
-        int markerSize = 6;
+        // Draw marker with size that scales with zoom level
+        int markerSize = getAdaptiveMarkerSize();
         guiGraphics.fill(screenX - markerSize/2, screenY - markerSize/2, 
                         screenX + markerSize/2, screenY + markerSize/2, markerColor);
         
@@ -544,9 +597,10 @@ public class TownMapModal extends Screen {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (isInMapArea((int)mouseX, (int)mouseY)) {
-            // Zoom in/out
-            double zoomFactor = delta > 0 ? 1.2 : 0.8;
-            zoomLevel = Math.max(0.1, Math.min(5.0, zoomLevel * zoomFactor));
+            // Zoom in/out with better scaling
+            // At max zoom (30x), the map should show roughly 10 blocks wide
+            double zoomFactor = delta > 0 ? 1.3 : (1.0 / 1.3);
+            zoomLevel = Math.max(0.05, Math.min(30.0, zoomLevel * zoomFactor));
             
             DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Map zoom level: {}", zoomLevel);
             return true;
@@ -576,7 +630,7 @@ public class TownMapModal extends Screen {
                 int townScreenX = worldToScreenX(pos.getX());
                 int townScreenY = worldToScreenZ(pos.getZ());
                 
-                int markerSize = 6;
+                int markerSize = getAdaptiveMarkerSize();
                 if (screenX >= townScreenX - markerSize && screenX <= townScreenX + markerSize &&
                     screenY >= townScreenY - markerSize && screenY <= townScreenY + markerSize) {
                     return town;
