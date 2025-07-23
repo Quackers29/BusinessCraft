@@ -18,6 +18,7 @@ import com.yourdomain.businesscraft.debug.DebugConfig;
  */
 public class TownMapDataResponsePacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownMapDataResponsePacket.class);
+    private static final int MAX_STRING_LENGTH = 32767;
     
     // Town data for the map
     private final Map<UUID, TownMapInfo> townData = new HashMap<>();
@@ -47,7 +48,7 @@ public class TownMapDataResponsePacket {
         
         for (TownMapInfo town : townData.values()) {
             buf.writeUUID(town.id);
-            buf.writeUtf(town.name, 32767); // Max string length
+            buf.writeUtf(town.name, MAX_STRING_LENGTH);
             buf.writeBlockPos(town.position);
             buf.writeInt(town.population);
             buf.writeInt(town.touristCount);
@@ -63,7 +64,7 @@ public class TownMapDataResponsePacket {
         int townCount = buf.readInt();
         for (int i = 0; i < townCount; i++) {
             UUID id = buf.readUUID();
-            String name = buf.readUtf(32767);
+            String name = buf.readUtf(MAX_STRING_LENGTH);
             BlockPos position = buf.readBlockPos();
             int population = buf.readInt();
             int touristCount = buf.readInt();
@@ -91,10 +92,9 @@ public class TownMapDataResponsePacket {
                     "Updated client town map cache with {} towns", townData.size());
                 
                 // Try to refresh any open town map modals
-                if (net.minecraft.client.Minecraft.getInstance().screen instanceof 
-                    com.yourdomain.businesscraft.ui.modal.specialized.TownMapModal) {
-                    ((com.yourdomain.businesscraft.ui.modal.specialized.TownMapModal) 
-                     net.minecraft.client.Minecraft.getInstance().screen).refreshFromCache();
+                var currentScreen = net.minecraft.client.Minecraft.getInstance().screen;
+                if (currentScreen instanceof com.yourdomain.businesscraft.ui.modal.specialized.TownMapModal mapModal) {
+                    mapModal.refreshFromCache();
                     DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
                         "Refreshed open town map modal with new data");
                 }
