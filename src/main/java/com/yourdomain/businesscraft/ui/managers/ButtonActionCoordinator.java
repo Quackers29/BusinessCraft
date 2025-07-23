@@ -1,14 +1,11 @@
 package com.yourdomain.businesscraft.ui.managers;
 
 import com.yourdomain.businesscraft.debug.DebugConfig;
-import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.ui.screens.BaseTownScreen;
-import com.yourdomain.businesscraft.ui.screens.platform.PlatformManagementScreenV2;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 /**
  * Coordinates button actions for town interface screens.
@@ -157,21 +154,20 @@ public class ButtonActionCoordinator {
     }
     
     /**
-     * Handles the manage platforms action by opening the platform management modal.
+     * Handles the map view action by opening the town map modal.
      */
     public void handleManagePlatforms() {
         try {
-            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling manage platforms action");
-            // Save current tab before opening platform management screen
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling map view action");
+            // Save current tab before opening map modal
             if (screen instanceof com.yourdomain.businesscraft.ui.screens.BaseTownScreen) {
                 ((com.yourdomain.businesscraft.ui.screens.BaseTownScreen<?>) screen).saveActiveTab();
             }
             
-            String currentTab = getCurrentActiveTab();
-            openPlatformManagementModal(currentTab);
+            openTownMapModal();
         } catch (Exception e) {
-            LOGGER.error("Failed to handle manage platforms action", e);
-            screen.sendChatMessage("Unable to open platform management");
+            LOGGER.error("Failed to handle map view action", e);
+            screen.sendChatMessage("Unable to open town map");
         }
     }
     
@@ -186,42 +182,40 @@ public class ButtonActionCoordinator {
     }
     
     /**
-     * Opens the platform management modal with proper error handling.
-     * 
-     * @param originalTab The tab to return to when modal closes
+     * Opens the town map modal with proper error handling.
      */
-    private void openPlatformManagementModal(String originalTab) {
-        // TODO: Implement platform management as a modal instead of separate screen
-        // For now, keep the existing behavior but ensure proper tab return
-        
+    private void openTownMapModal() {
         // Validate menu state
         if (screen.getMenu() == null) {
             throw new IllegalStateException("Menu is not available");
         }
         
-        // Get platform data with validation
-        List<Platform> platforms = screen.getMenu().getPlatforms();
-        if (platforms == null) {
-            throw new IllegalStateException("Platform data not available");
-        }
-        
-        // Get block position with validation
-        if (screen.getMenu().getBlockPos() == null) {
+        // Get current town position
+        BlockPos currentTownPos = screen.getMenu().getBlockPos();
+        if (currentTownPos == null) {
             throw new IllegalStateException("Block position not available");
         }
         
-        // For now, we'll keep the separate screen approach but add a callback
-        // In the future, this should be converted to use BCModalGridScreen
-        PlatformManagementScreenV2 platformScreen = new PlatformManagementScreenV2(
-            screen.getMenu().getBlockPos(), 
-            platforms
-        );
+        // Create and show the town map modal
+        com.yourdomain.businesscraft.ui.modal.specialized.TownMapModal mapModal = 
+            new com.yourdomain.businesscraft.ui.modal.specialized.TownMapModal(
+                Minecraft.getInstance().screen,
+                currentTownPos,
+                closedModal -> {
+                    // Callback when modal closes - refresh data if needed
+                    refreshScreenData();
+                    DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town map modal closed");
+                }
+            );
         
-        // Store reference to return to correct tab (this needs platform screen modification)
-        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Platform management screen opened from tab: {}", originalTab);
-        LOGGER.warn("Platform management should be converted to modal to stay within main UI");
+        // Load town data from client cache if available
+        com.yourdomain.businesscraft.network.packets.ui.ClientTownMapCache cache = 
+            com.yourdomain.businesscraft.network.packets.ui.ClientTownMapCache.getInstance();
+        mapModal.withTownData(cache.getAllTowns());
         
-        Minecraft.getInstance().setScreen(platformScreen);
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town map modal opened from current position: {}", currentTownPos);
+        
+        Minecraft.getInstance().setScreen(mapModal);
     }
     
     /**
