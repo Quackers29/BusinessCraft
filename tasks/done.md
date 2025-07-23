@@ -230,3 +230,11 @@
 ✅ **COMPLETED** - Town Interface Block Renderer: Replaced multicolored block texture with professional lectern-style design using iron block textures for appropriate town hall appearance.
 
 ✅ **COMPLETED** - Scrollbar Positioning: Increased right margin from 2px to 4px for better visual separation and updated width calculations.
+
+**Update Tourist Models - COMPLETED**
+- [x] Create hat texture variations (tourist_hat_red.png, tourist_hat_blue.png, tourist_hat_green.png) in src/main/resources/assets/businesscraft/textures/entity/
+- [x] Update TouristHatLayer to select texture based on profession with HAT_TEXTURES array and getColorIndex method
+- [x] Create NoHatProfessionLayer extending VillagerProfessionLayer to skip hat model parts
+
+✅ **COMPLETED** - Platform Border Display Fix: Replaced asymmetric particle-based boundary system with precise block-by-block programmatic visualization ensuring symmetric 1-wide radius display and accurate spawn path rendering.
+- [x] Replace VillagerProfessionLayer with NoHatProfessionLayer in TouristRenderer constructor
