@@ -1,18 +1,12 @@
-# BusinessCraft - Current Tasks and Implementation Plan
+# BusinessCraft - Current Tasks and Future Tasks
 
-## CURRENT PRIORITY: [Ready for Next Task]
+## 🎯 **IMMEDIATE TASKS** (Do not remove header)
 
-### 🎯 **COMPLETED TASKS** ✅
+Map view to replace the 'Manage Platforms' button on the Overview Page. Map will be oriented North, show each town on the map and allows the user to manipulate to move around the map. the towns name is displayed onto of the town, there is a button to recenter to the town you are at, clicking any town gives you distance to town and direction
 
-**Modular Platform 3D Line Rendering System** - Successfully completed all 4 phases:
-- ✅ Phase 1: Core 3D line rendering components extracted
-- ✅ Phase 2: Modular visualization framework created  
-- ✅ Phase 3: Platform system refactored to use new framework
-- ✅ Phase 4: Comprehensive documentation and future planning
+## 🎯 **COMPLETED TASKS** ✅
 
-**Achievement**: Transformed specialized platform visualization into a comprehensive, reusable 3D world overlay framework that maintains exact compatibility while enabling future expansion.
-
-### 🎯 **FUTURE TASKS**
+## 🎯 **FUTURE TASKS**
 
 #### **Phase 3: UI Navigation and Controls**
 - [ ] **3.2 Add Filtering and Sorting**
