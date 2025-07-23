@@ -92,14 +92,15 @@ public class SetTownNamePacket extends BaseBlockEntityPacket {
                         town.getName(), trimmedName);
                     
                     // Invalidate client-side caches to ensure UI shows updated name immediately
+                    // With the main sync fix, this is less critical but kept as a safety measure
                     ClientTownMapCache.getInstance().clear();
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Cleared ClientTownMapCache after town rename");
                     
-                    // Invalidate TownDataCache in the current screen if it's a TownInterfaceScreen
+                    // Invalidate TownDataCache in the current screen to refresh the overview tab
                     try {
                         if (Minecraft.getInstance().screen instanceof TownInterfaceScreen townScreen) {
                             townScreen.invalidateCache();
-                            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Invalidated TownDataCache in current screen");
+                            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Invalidated TownDataCache for immediate UI refresh");
                         }
                     } catch (Exception e) {
                         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Could not invalidate screen cache: {}", e.getMessage());

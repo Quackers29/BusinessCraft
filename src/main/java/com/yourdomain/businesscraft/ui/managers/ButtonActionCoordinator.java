@@ -306,11 +306,11 @@ public class ButtonActionCoordinator {
         try {
             // Refresh cache data
             if (screen.getCacheManager() != null) {
-                screen.getCacheManager().refreshCachedValues();
-                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Screen data refreshed after modal close");
+                // screen.getCacheManager().refreshCachedValues();  // Removed - less aggressive refresh
+                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Modal closed - relying on normal data sync mechanisms");
             }
             
-            // Force refresh specific tabs that might have changed
+            // Force refresh specific tabs that might have changed (keep this for resources)
             if (screen instanceof com.yourdomain.businesscraft.ui.screens.town.TownInterfaceScreen) {
                 ((com.yourdomain.businesscraft.ui.screens.town.TownInterfaceScreen) screen).forceRefreshResourcesTab();
             }
