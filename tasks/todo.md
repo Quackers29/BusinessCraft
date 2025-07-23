@@ -2,7 +2,43 @@
 
 ## 🎯 **IMMEDIATE TASKS** (Do not remove header)
 
-Map view to replace the 'Manage Platforms' button on the Overview Page. Map will be oriented North, show each town on the map and allows the user to manipulate to move around the map. the towns name is displayed onto of the town, there is a button to recenter to the town you are at, clicking any town gives you distance to town and direction
+### Map View Implementation to Replace 'Manage Platforms' Button
+
+**Requirements:**
+- Replace the 'Manage Platforms' button on the Overview Page with a map view
+- Map oriented North showing all towns
+- User can navigate around the map (pan/zoom)
+- Town names displayed on top of each town
+- Recenter button to return to current town
+- Clicking any town shows distance and direction
+
+**Implementation Plan:**
+- [ ] **Phase 1: Modal Infrastructure**
+  - [ ] Create TownMapModal class extending BCModalScreen or custom Screen
+  - [ ] Implement basic modal structure with close button
+  - [ ] Set up proper lifecycle management
+  
+- [ ] **Phase 2: Data Integration**
+  - [ ] Access town data via TownManager.getAllTowns()
+  - [ ] Implement coordinate system for world-to-screen conversion
+  - [ ] Add current player/town position detection
+  
+- [ ] **Phase 3: Map Rendering**
+  - [ ] Implement 2D map viewport with pan/zoom
+  - [ ] Add town markers with name labels
+  - [ ] Apply consistent theming with existing UI
+  
+- [ ] **Phase 4: Interaction System**
+  - [ ] Add click detection for towns
+  - [ ] Implement distance/direction calculations
+  - [ ] Add recenter functionality
+  - [ ] Create town info popup on click
+  
+- [ ] **Phase 5: Integration**
+  - [ ] Modify ButtonActionCoordinator.handleManagePlatforms() to open map modal
+  - [ ] Update button tooltip text if needed
+  - [ ] Test with multiple towns and edge cases
+  - [ ] Polish and final integration
 
 ## 🎯 **COMPLETED TASKS** ✅
 
