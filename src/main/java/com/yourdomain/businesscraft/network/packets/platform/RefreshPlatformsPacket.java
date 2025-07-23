@@ -12,6 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.ui.screens.platform.PlatformManagementScreenV2;
+import com.yourdomain.businesscraft.network.packets.ui.ClientTownMapCache;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
@@ -51,9 +52,16 @@ public class RefreshPlatformsPacket {
         if (minecraft.level != null) {
             BlockEntity be = minecraft.level.getBlockEntity(pos);
             
-            if (be instanceof TownBlockEntity) {
+            if (be instanceof TownBlockEntity townBlockEntity) {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "Received platform refresh packet for block at {}", pos);
+                
+                // Clear platform cache for this town to force fresh data on next map view
+                if (townBlockEntity.getTownId() != null) {
+                    ClientTownMapCache.getInstance().clearTownPlatformData(townBlockEntity.getTownId());
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        "Cleared platform cache for town {}", townBlockEntity.getTownId());
+                }
                 
                 // If the PlatformManagementScreenV2 is open, refresh data without reopening
                 if (minecraft.screen instanceof PlatformManagementScreenV2 platformScreen) {
