@@ -217,7 +217,7 @@ public class TouristSpawningHelper {
             tourist.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
             
             // Set expiry time based on config (convert minutes to ticks)
-            int expiryTicks = ConfigLoader.touristExpiryMinutes * 60 * 20;
+            int expiryTicks = (int)(ConfigLoader.touristExpiryMinutes * 60 * 20);
             tourist.setExpiryTicks(expiryTicks);
             
             // Spawn the entity into the world

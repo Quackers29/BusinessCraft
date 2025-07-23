@@ -40,7 +40,7 @@ public class TouristEntity extends Villager {
     public static final String ANY_TOWN_NAME = "Any Town";
     
     // Tourist expiry settings - calculate from ConfigLoader
-    private static final int DEFAULT_EXPIRY_TICKS = ConfigLoader.touristExpiryMinutes * 60 * 20; // Convert minutes to ticks
+    private static final int DEFAULT_EXPIRY_TICKS = (int)(ConfigLoader.touristExpiryMinutes * 60 * 20); // Convert minutes to ticks
     private int expiryTicks = DEFAULT_EXPIRY_TICKS;
     private boolean hasNotifiedOriginTown = false;
     
@@ -60,6 +60,15 @@ public class TouristEntity extends Villager {
     private double spawnPosZ;
     private boolean hasMoved = false;
     private static final double MOVEMENT_THRESHOLD = 2.0; // Consider moved if more than 2 blocks away from spawn
+    
+    // Track recent position to determine if tourist is currently moving (for expiry logic)
+    private double recentPosX;
+    private double recentPosY;
+    private double recentPosZ;
+    private int positionUpdateTicks = 0;
+    private boolean isCurrentlyStationary = true; // Track current movement state between checks
+    private static final int POSITION_UPDATE_INTERVAL = 20; // Check movement every 20 ticks (1 second)
+    private static final double STATIONARY_THRESHOLD = 0.5; // Consider stationary if moved less than 0.5 blocks in 1 second
 
     public TouristEntity(EntityType<? extends Villager> entityType, Level level) {
         super(entityType, level);
@@ -139,20 +148,54 @@ public class TouristEntity extends Villager {
             }
         }
         
-        // Handle expiry
+        // Handle expiry - only expire when stationary
         if (!this.level().isClientSide && ConfigLoader.enableTouristExpiry) {
-            expiryTicks--;
+            positionUpdateTicks++;
             
-            // Expiry reached, prepare to "quit"
-            if (expiryTicks <= 0) {
-                // Notify origin town if not already done
-                if (!hasNotifiedOriginTown) {
-                    notifyOriginTownOfQuitting();
-                    hasNotifiedOriginTown = true;
-                }
+            // Check if tourist is currently moving every POSITION_UPDATE_INTERVAL ticks
+            if (positionUpdateTicks >= POSITION_UPDATE_INTERVAL) {
+                double dx = this.getX() - this.recentPosX;
+                double dy = this.getY() - this.recentPosY;
+                double dz = this.getZ() - this.recentPosZ;
+                double recentMovementSquared = dx * dx + dy * dy + dz * dz;
+                double distanceMoved = Math.sqrt(recentMovementSquared);
                 
-                // Remove the entity
-                this.discard();
+                // Update stationary state based on movement
+                isCurrentlyStationary = recentMovementSquared < (STATIONARY_THRESHOLD * STATIONARY_THRESHOLD);
+                
+                // Update recent position for next check
+                this.recentPosX = this.getX();
+                this.recentPosY = this.getY();
+                this.recentPosZ = this.getZ();
+                positionUpdateTicks = 0;
+                
+                DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Tourist {} movement check: distance={:.3f}, stationary={}, riding={}, expiry={}s", 
+                    this.getId(), distanceMoved, isCurrentlyStationary, this.isPassenger(), expiryTicks/20);
+            }
+            
+            // Only decrement expiry timer when tourist is stationary
+            if (isCurrentlyStationary) {
+                expiryTicks--;
+                
+                // Expiry reached, prepare to "quit"
+                if (expiryTicks <= 0) {
+                    DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Tourist {} expired after being stationary", this.getId());
+                    
+                    // Notify origin town if not already done
+                    if (!hasNotifiedOriginTown) {
+                        notifyOriginTownOfQuitting();
+                        hasNotifiedOriginTown = true;
+                    }
+                    
+                    // Remove the entity
+                    this.discard();
+                }
+            } else {
+                // Debug every few seconds when moving to avoid spam
+                if (level().getGameTime() % 100 == 0) { // Every 5 seconds
+                    DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Tourist {} is moving, expiry timer paused at {}s", 
+                        this.getId(), expiryTicks/20);
+                }
             }
         }
     }
@@ -253,6 +296,11 @@ public class TouristEntity extends Villager {
         tag.putDouble("SpawnPosY", spawnPosY);
         tag.putDouble("SpawnPosZ", spawnPosZ);
         tag.putBoolean("HasMoved", hasMoved);
+        tag.putDouble("RecentPosX", recentPosX);
+        tag.putDouble("RecentPosY", recentPosY);
+        tag.putDouble("RecentPosZ", recentPosZ);
+        tag.putInt("PositionUpdateTicks", positionUpdateTicks);
+        tag.putBoolean("IsCurrentlyStationary", isCurrentlyStationary);
         
         if (originTownId != null) {
             tag.putUUID("OriginTownId", originTownId);
@@ -295,6 +343,21 @@ public class TouristEntity extends Villager {
         }
         if (tag.contains("HasMoved")) {
             hasMoved = tag.getBoolean("HasMoved");
+        }
+        if (tag.contains("RecentPosX")) {
+            recentPosX = tag.getDouble("RecentPosX");
+        }
+        if (tag.contains("RecentPosY")) {
+            recentPosY = tag.getDouble("RecentPosY");
+        }
+        if (tag.contains("RecentPosZ")) {
+            recentPosZ = tag.getDouble("RecentPosZ");
+        }
+        if (tag.contains("PositionUpdateTicks")) {
+            positionUpdateTicks = tag.getInt("PositionUpdateTicks");
+        }
+        if (tag.contains("IsCurrentlyStationary")) {
+            isCurrentlyStationary = tag.getBoolean("IsCurrentlyStationary");
         }
         
         if (tag.contains("OriginTownId")) {
@@ -343,7 +406,7 @@ public class TouristEntity extends Villager {
             // Check if the vehicle is a minecart or Create train carriage
             if (entity instanceof AbstractMinecart || entity.getClass().getName().contains("create.content.trains")) {
                 // Recalculate expiry ticks from current config value instead of using static constant
-                this.expiryTicks = ConfigLoader.touristExpiryMinutes * 60 * 20;
+                this.expiryTicks = (int)(ConfigLoader.touristExpiryMinutes * 60 * 20);
                 hasReceivedRideExtension = true;
                 DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Resetting expiry timer for tourist to {} minutes ({})", 
                     ConfigLoader.touristExpiryMinutes, this.expiryTicks);
@@ -371,6 +434,11 @@ public class TouristEntity extends Villager {
             this.spawnPosX = x;
             this.spawnPosY = y;
             this.spawnPosZ = z;
+            
+            // Also initialize recent position for movement tracking
+            this.recentPosX = x;
+            this.recentPosY = y;
+            this.recentPosZ = z;
         }
         
         // Call the parent implementation to actually set the position
