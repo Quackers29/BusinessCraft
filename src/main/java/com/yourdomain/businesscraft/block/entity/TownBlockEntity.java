@@ -93,7 +93,6 @@ import com.yourdomain.businesscraft.entity.TouristEntity;
 import com.yourdomain.businesscraft.init.ModEntityTypes;
 import com.yourdomain.businesscraft.town.utils.TownNotificationUtils;
 import com.yourdomain.businesscraft.town.data.VisitBuffer;
-import com.yourdomain.businesscraft.town.data.PlatformVisualizationHelper;
 import com.yourdomain.businesscraft.town.data.TouristSpawningHelper;
 import com.yourdomain.businesscraft.town.data.PlatformManager;
 import com.yourdomain.businesscraft.town.data.VisitorProcessingHelper;
@@ -178,8 +177,8 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private Map<UUID, Long> extendedIndicatorPlayers = new HashMap<>();
     private static final long EXTENDED_INDICATOR_DURATION = 600; // 30 seconds in ticks
 
-    // Platform visualization helper (handles complex particle effects)
-    private final PlatformVisualizationHelper platformVisualizationHelper = new PlatformVisualizationHelper();
+    // Platform visualization is now handled by the modular client-side rendering system
+    // See: client.render.world.PlatformVisualizationRenderer
 
     // Tourist spawning helper (handles complex spawning logic)
     private final TouristSpawningHelper touristSpawningHelper = new TouristSpawningHelper();
@@ -424,12 +423,11 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 }
             }
             
-            // Clean up platform indicators if needed
-            platformVisualizationHelper.cleanupPlatformIndicators(platformManager.getPlatforms(false));
+            // Platform visualization cleanup is now handled automatically by the modular system
         }
         
-        // Spawn platform indicators using helper
-        platformVisualizationHelper.spawnPlatformIndicators(level, platformManager.getPlatforms(false), searchRadius);
+        // Platform visualization is now handled entirely client-side through the modular rendering system
+        // No server-side platform indicator spawning needed
     }
 
 
@@ -1019,7 +1017,9 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
      */
     public void registerPlayerExitUI(UUID playerId) {
         if (level != null) {
-            platformVisualizationHelper.registerPlayerExitUI(playerId, level.getGameTime());
+            // Platform visualization is now handled by the modular client-side system
+            // The visualization packet will trigger the new PlatformVisualizationRenderer
+            extendedIndicatorPlayers.put(playerId, level.getGameTime());
         }
     }
     

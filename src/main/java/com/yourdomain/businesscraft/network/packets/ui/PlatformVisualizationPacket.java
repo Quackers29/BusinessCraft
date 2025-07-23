@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.network.packets.ui;
 
-import com.yourdomain.businesscraft.client.PlatformVisualizationManager;
+import com.yourdomain.businesscraft.client.render.world.PlatformVisualizationRenderer;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -53,8 +53,8 @@ public class PlatformVisualizationPacket extends BaseBlockEntityPacket {
             Level level = Minecraft.getInstance().level;
             if (level == null) return;
             
-            // Register the town block for platform visualization
-            PlatformVisualizationManager.getInstance().registerPlayerExitUI(pos, level.getGameTime());
+            // Register the town block for platform visualization using the new modular system
+            PlatformVisualizationRenderer.showPlatformVisualization(pos, level.getGameTime());
             
             LOGGER.debug("Client received platform visualization enable for town at {}", pos);
         });
