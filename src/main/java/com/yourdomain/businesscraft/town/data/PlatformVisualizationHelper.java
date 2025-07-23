@@ -111,40 +111,49 @@ public class PlatformVisualizationHelper {
     
     /**
      * Spawns particles along the path between start and end positions
+     * Creates a precise line showing the platform spawn path
      */
     private void spawnPathParticles(ServerLevel level, BlockPos startPos, BlockPos endPos) {
-        // Calculate the direction vector
-        double dx = endPos.getX() - startPos.getX();
-        double dy = endPos.getY() - startPos.getY();
-        double dz = endPos.getZ() - startPos.getZ();
+        // Create a precise line using Bresenham-like algorithm for block positions
+        int x0 = startPos.getX();
+        int y0 = startPos.getY();
+        int z0 = startPos.getZ();
+        int x1 = endPos.getX();
+        int y1 = endPos.getY();
+        int z1 = endPos.getZ();
         
-        // Calculate the distance
-        double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        // Calculate differences
+        int dx = Math.abs(x1 - x0);
+        int dy = Math.abs(y1 - y0);
+        int dz = Math.abs(z1 - z0);
         
-        // Normalize the direction vector
-        if (distance > 0) {
-            dx /= distance;
-            dy /= distance;
-            dz /= distance;
+        // Determine step directions
+        int stepX = x0 < x1 ? 1 : -1;
+        int stepY = y0 < y1 ? 1 : -1;
+        int stepZ = z0 < z1 ? 1 : -1;
+        
+        // Find the maximum difference to determine number of steps
+        int maxSteps = Math.max(Math.max(dx, dy), dz);
+        
+        // Generate particles along the line
+        for (int i = 0; i <= maxSteps; i++) {
+            double t = maxSteps > 0 ? (double) i / maxSteps : 0;
             
-            // Spawn particles every 2 blocks along the path
-            int particleCount = Math.max(1, (int) (distance / 2));
-            for (int i = 1; i < particleCount; i++) {
-                double t = (double) i / particleCount;
-                double x = startPos.getX() + dx * distance * t;
-                double y = startPos.getY() + dy * distance * t + 1.0; // Slightly above ground
-                double z = startPos.getZ() + dz * distance * t;
-                
-                level.sendParticles(ParticleTypes.END_ROD, 
-                    x + 0.5, y, z + 0.5, 
-                    1, 0.1, 0.1, 0.1, 0.01);
-            }
+            int x = x0 + (int) Math.round(t * (x1 - x0));
+            int y = y0 + (int) Math.round(t * (y1 - y0));
+            int z = z0 + (int) Math.round(t * (z1 - z0));
+            
+            // Spawn green particle at each block position along the path
+            level.sendParticles(ParticleTypes.HAPPY_VILLAGER, 
+                x + 0.5, y + 1.0, z + 0.5, 
+                1, 0.0, 0.0, 0.0, 0.0);
         }
     }
     
     /**
      * Spawns particles to show the search radius around platform area
-     * Creates a rectangular perimeter showing the visitor capture area
+     * Creates a precise rectangular perimeter showing the visitor capture area
+     * Uses block-by-block placement for accurate boundary visualization
      */
     private void spawnSearchRadiusParticles(ServerLevel level, BlockPos startPos, BlockPos endPos, int radius) {
         // Calculate the bounding box the same way it's used for entity search
@@ -156,48 +165,34 @@ public class PlatformVisualizationHelper {
         // Use a fixed Y for visualization
         double particleY = Math.min(startPos.getY(), endPos.getY()) + 1.0;
         
-        // Calculate perimeter length to determine number of particles
-        int perimeterLength = 2 * (maxX - minX + maxZ - minZ);
-        int totalPoints = Math.min(200, Math.max(32, perimeterLength / 2));
+        // Create precise boundary by placing particles at exact block positions
+        // This ensures symmetric 1-wide radius display on all sides
         
-        // Distribute points evenly across the 4 sides of the perimeter
-        int pointsPerSide = totalPoints / 4;
-        
-        // Generate particles along the perimeter
-        
-        // Bottom edge (minX to maxX at minZ)
-        for (int i = 0; i < pointsPerSide; i++) {
-            double t = (double) i / (pointsPerSide - 1);
-            double x = minX + t * (maxX - minX);
+        // Bottom edge (minX to maxX at minZ) - inclusive of corners
+        for (int x = minX; x <= maxX; x++) {
             level.sendParticles(ParticleTypes.FLAME,
-                x, particleY, minZ,
+                x + 0.5, particleY, minZ + 0.5,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        // Right edge (maxX, minZ to maxZ)
-        for (int i = 0; i < pointsPerSide; i++) {
-            double t = (double) i / (pointsPerSide - 1);
-            double z = minZ + t * (maxZ - minZ);
+        // Top edge (minX to maxX at maxZ) - inclusive of corners
+        for (int x = minX; x <= maxX; x++) {
             level.sendParticles(ParticleTypes.FLAME,
-                maxX, particleY, z,
+                x + 0.5, particleY, maxZ + 0.5,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        // Top edge (maxX to minX at maxZ)
-        for (int i = 0; i < pointsPerSide; i++) {
-            double t = (double) i / (pointsPerSide - 1);
-            double x = maxX - t * (maxX - minX);
+        // Left edge (minZ+1 to maxZ-1 at minX) - exclude corners to avoid duplicates
+        for (int z = minZ + 1; z < maxZ; z++) {
             level.sendParticles(ParticleTypes.FLAME,
-                x, particleY, maxZ,
+                minX + 0.5, particleY, z + 0.5,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
         
-        // Left edge (minX, maxZ to minZ)
-        for (int i = 0; i < pointsPerSide; i++) {
-            double t = (double) i / (pointsPerSide - 1);
-            double z = maxZ - t * (maxZ - minZ);
+        // Right edge (minZ+1 to maxZ-1 at maxX) - exclude corners to avoid duplicates
+        for (int z = minZ + 1; z < maxZ; z++) {
             level.sendParticles(ParticleTypes.FLAME,
-                minX, particleY, z,
+                maxX + 0.5, particleY, z + 0.5,
                 1, 0.0, 0.0, 0.0, 0.0);
         }
     }
