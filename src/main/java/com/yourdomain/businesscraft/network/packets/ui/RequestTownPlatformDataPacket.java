@@ -37,8 +37,6 @@ public class RequestTownPlatformDataPacket {
         buf.writeUUID(townId);
     }
     
-
-    
     /**
      * Decode the packet data from the buffer
      */
@@ -77,24 +75,24 @@ public class RequestTownPlatformDataPacket {
                 if (level.getBlockEntity(town.getPosition()) instanceof TownBlockEntity townEntity) {
                     List<Platform> platforms = townEntity.getPlatforms();
                     
-                                    // Create response packet with platform data and town info
-                TownPlatformDataResponsePacket response = new TownPlatformDataResponsePacket(townId);
+                    // Create response packet with platform data and town info
+                    TownPlatformDataResponsePacket response = new TownPlatformDataResponsePacket(townId);
+                    
+                    // Add current town information
+                    response.setTownInfo(town.getName(), town.getPopulation(), town.getTouristCount());
                 
-                // Add current town information
-                response.setTownInfo(town.getName(), town.getPopulation(), town.getTouristCount());
-                
-                for (Platform platform : platforms) {
-                    if (platform.isComplete()) { // Only send platforms with both start and end positions
-                        response.addPlatform(
-                            platform.getId(),
-                            platform.getName(),
-                            platform.isEnabled(),
-                            platform.getStartPos(),
-                            platform.getEndPos(),
-                            platform.getEnabledDestinations()
-                        );
+                    for (Platform platform : platforms) {
+                        if (platform.isComplete()) { // Only send platforms with both start and end positions
+                            response.addPlatform(
+                                platform.getId(),
+                                platform.getName(),
+                                platform.isEnabled(),
+                                platform.getStartPos(),
+                                platform.getEndPos(),
+                                platform.getEnabledDestinations()
+                            );
+                        }
                     }
-                }
                     
                     // Send response back to client
                     ModMessages.sendToPlayer(response, player);

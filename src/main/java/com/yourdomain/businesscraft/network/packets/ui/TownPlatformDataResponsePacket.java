@@ -19,6 +19,7 @@ import java.util.function.Supplier;
  */
 public class TownPlatformDataResponsePacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownPlatformDataResponsePacket.class);
+    private static final int MAX_STRING_LENGTH = 32767;
     
     private final UUID townId;
     private final Map<UUID, PlatformInfo> platforms = new HashMap<>();
@@ -73,7 +74,7 @@ public class TownPlatformDataResponsePacket {
         // Write town info
         buf.writeBoolean(townInfo != null);
         if (townInfo != null) {
-            buf.writeUtf(townInfo.name, 32767);
+            buf.writeUtf(townInfo.name, MAX_STRING_LENGTH);
             buf.writeInt(townInfo.population);
             buf.writeInt(townInfo.touristCount);
         }
@@ -82,7 +83,7 @@ public class TownPlatformDataResponsePacket {
         
         for (PlatformInfo platform : platforms.values()) {
             buf.writeUUID(platform.id);
-            buf.writeUtf(platform.name, 32767);
+            buf.writeUtf(platform.name, MAX_STRING_LENGTH);
             buf.writeBoolean(platform.enabled);
             buf.writeBlockPos(platform.startPos);
             buf.writeBlockPos(platform.endPos);
@@ -95,8 +96,6 @@ public class TownPlatformDataResponsePacket {
         }
     }
     
-
-    
     /**
      * Decode the packet data from the buffer
      */
@@ -107,7 +106,7 @@ public class TownPlatformDataResponsePacket {
         // Read town info
         boolean hasTownInfo = buf.readBoolean();
         if (hasTownInfo) {
-            String townName = buf.readUtf(32767);
+            String townName = buf.readUtf(MAX_STRING_LENGTH);
             int population = buf.readInt();
             int touristCount = buf.readInt();
             packet.setTownInfo(townName, population, touristCount);
@@ -116,7 +115,7 @@ public class TownPlatformDataResponsePacket {
         int platformCount = buf.readInt();
         for (int i = 0; i < platformCount; i++) {
             UUID platformId = buf.readUUID();
-            String name = buf.readUtf(32767);
+            String name = buf.readUtf(MAX_STRING_LENGTH);
             boolean enabled = buf.readBoolean();
             BlockPos startPos = buf.readBlockPos();
             BlockPos endPos = buf.readBlockPos();
@@ -154,12 +153,8 @@ public class TownPlatformDataResponsePacket {
                 }
                 
                 // Try to refresh any open town map modals
-                if (net.minecraft.client.Minecraft.getInstance().screen instanceof 
-                    com.yourdomain.businesscraft.ui.modal.specialized.TownMapModal) {
-                    com.yourdomain.businesscraft.ui.modal.specialized.TownMapModal mapModal = 
-                        (com.yourdomain.businesscraft.ui.modal.specialized.TownMapModal) 
-                         net.minecraft.client.Minecraft.getInstance().screen;
-                    
+                var currentScreen = net.minecraft.client.Minecraft.getInstance().screen;
+                if (currentScreen instanceof com.yourdomain.businesscraft.ui.modal.specialized.TownMapModal mapModal) {
                     mapModal.refreshPlatformData(townId, platforms);
                     
                     // Also update town info if available
