@@ -50,46 +50,36 @@ public class PlatformLineRenderer {
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
         RenderSystem.enableDepthTest();
-        
+
         // Create buffer and tessellator
         Tesselator tesselator = Tesselator.getInstance();
         BufferBuilder buffer = tesselator.getBuilder();
-        
+
         poseStack.pushPose();
         Matrix4f matrix = poseStack.last().pose();
-        
-        // Render thick line by drawing multiple parallel lines
-        buffer.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-        
-        // Calculate perpendicular offsets to create thickness
-        double thickness = 0.1; // Thickness in blocks
+
+        // Calculate direction and perpendicular for quad thickness
+        double thickness = lineWidth / 10.0; // Convert to world units, adjust scale as needed
         Vec3 direction = new Vec3(endX - startX, endY - startY, endZ - startZ).normalize();
-        Vec3 perpendicular1 = new Vec3(-direction.z, 0, direction.x).normalize().scale(thickness);
-        Vec3 perpendicular2 = new Vec3(0, 1, 0).normalize().scale(thickness);
-        
-        // Draw multiple lines to create thickness - 10x thicker with larger grid
-        for (int i = -5; i <= 5; i++) {
-            for (int j = -5; j <= 5; j++) {
-                double offsetScale1 = i * 0.005; // 10x thicker: 0.0005 -> 0.005
-                double offsetScale2 = j * 0.005; // 10x thicker: 0.0005 -> 0.005
-                
-                Vec3 offset = perpendicular1.scale(offsetScale1).add(perpendicular2.scale(offsetScale2));
-                
-                float sx = (float) (startX + offset.x);
-                float sy = (float) (startY + offset.y);
-                float sz = (float) (startZ + offset.z);
-                float ex = (float) (endX + offset.x);
-                float ey = (float) (endY + offset.y);
-                float ez = (float) (endZ + offset.z);
-                
-                buffer.vertex(matrix, sx, sy, sz).color(red, green, blue, alpha).endVertex();
-                buffer.vertex(matrix, ex, ey, ez).color(red, green, blue, alpha).endVertex();
-            }
-        }
-        
+        Vec3 perp = new Vec3(-direction.z, 0, direction.x).normalize().scale(thickness / 2.0);
+
+        // Calculate quad vertices
+        Vec3 v1 = new Vec3(startX, startY, startZ).add(perp);
+        Vec3 v2 = new Vec3(startX, startY, startZ).subtract(perp);
+        Vec3 v3 = new Vec3(endX, endY, endZ).subtract(perp);
+        Vec3 v4 = new Vec3(endX, endY, endZ).add(perp);
+
+        // Render as quad
+        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+
+        buffer.vertex(matrix, (float)v1.x, (float)v1.y, (float)v1.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v2.x, (float)v2.y, (float)v2.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v3.x, (float)v3.y, (float)v3.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v4.x, (float)v4.y, (float)v4.z).color(red, green, blue, alpha).endVertex();
+
         tesselator.end();
         poseStack.popPose();
-        
+
         // Restore rendering state
         RenderSystem.disableBlend();
         RenderSystem.enableCull();
