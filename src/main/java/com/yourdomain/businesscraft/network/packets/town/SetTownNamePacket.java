@@ -13,6 +13,9 @@ import org.slf4j.LoggerFactory;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import com.yourdomain.businesscraft.debug.DebugConfig;
+import com.yourdomain.businesscraft.network.packets.ui.ClientTownMapCache;
+import com.yourdomain.businesscraft.ui.screens.town.TownInterfaceScreen;
+import net.minecraft.client.Minecraft;
 
 import java.util.function.Supplier;
 
@@ -88,6 +91,20 @@ public class SetTownNamePacket extends BaseBlockEntityPacket {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Town renamed successfully from {} to {}", 
                         town.getName(), trimmedName);
                     
+                    // Invalidate client-side caches to ensure UI shows updated name immediately
+                    ClientTownMapCache.getInstance().clear();
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Cleared ClientTownMapCache after town rename");
+                    
+                    // Invalidate TownDataCache in the current screen if it's a TownInterfaceScreen
+                    try {
+                        if (Minecraft.getInstance().screen instanceof TownInterfaceScreen townScreen) {
+                            townScreen.invalidateCache();
+                            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Invalidated TownDataCache in current screen");
+                        }
+                    } catch (Exception e) {
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Could not invalidate screen cache: {}", e.getMessage());
+                    }
+                    
                     // Send confirmation message to player
                     player.sendSystemMessage(Component.literal("Town renamed to: ").withStyle(ChatFormatting.GREEN)
                         .append(Component.literal(trimmedName).withStyle(ChatFormatting.GOLD)));
@@ -96,4 +113,4 @@ public class SetTownNamePacket extends BaseBlockEntityPacket {
         });
         context.setPacketHandled(true);
     }
-} 
+}

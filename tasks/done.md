@@ -314,3 +314,13 @@
 - ✅ **COMPLETED** - Modular Platform 3D Line Rendering System: Extracted platform visualization into reusable framework with LineRenderer3D, BoundaryRenderer3D, PathRenderer3D, WorldVisualizationRenderer, and VisualizationManager. Zero breaking changes, ready for territory/route/debug/quest visualizations.
 
 - ✅ **COMPLETED** - Platform Visualization Cleanup: Removed deprecated PlatformLineRenderer, PlatformVisualizationManager, and PlatformVisualizationHelper. Updated TownBlockEntity to use new modular system. All functionality preserved with cleaner architecture.
+
+- ✅ **COMPLETED** - Town Map Modal Implementation: Replaced 'Manage Platforms' button with interactive map view. Features north-oriented map, pan/zoom controls, town markers with names, recenter button, distance/coordinate display on click, edge indicators for off-map towns, and proper network synchronization.
+
+- ✅ **COMPLETED** - Map Coordinate Overlap Fix: Added overlap detection to prevent Z-axis coordinate labels from rendering when they would interfere with town info panel visibility.
+
+- ✅ **COMPLETED** - Current Town Bounds Enforcement: Modified current town marker positioning to always stay within map boundaries by clamping screen coordinates 4 pixels from edges.
+
+- ✅ **COMPLETED** - Grid Marker Density Increase: Updated coordinate spacing algorithm from targeting 5 markers per axis to 7 markers per axis for improved reference density.
+
+- ✅ **COMPLETED** - Town Name Sync Fix: Resolved desync between map modal, overview tab, and edit popup after town renaming by adding comprehensive cache invalidation to SetTownNamePacket. Now invalidates both ClientTownMapCache (30s TTL) and TownDataCache (5s TTL) plus force-refreshes all UI tabs for immediate synchronization.

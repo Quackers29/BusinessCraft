@@ -308,4 +308,20 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     public TownDataCacheManager getCacheManager() {
         return cacheManager;
     }
+    
+    /**
+     * Invalidates the cached data and forces a refresh of all tabs.
+     * Called when town data changes (e.g., after renaming) to ensure UI shows updated information.
+     */
+    public void invalidateCache() {
+        if (cacheManager != null) {
+            cacheManager.invalidateCache();
+            cacheManager.refreshCachedValues();
+            
+            // Force refresh all tabs to show updated data
+            if (tabController != null) {
+                tabController.forceRefreshAllTabs();
+            }
+        }
+    }
 } 

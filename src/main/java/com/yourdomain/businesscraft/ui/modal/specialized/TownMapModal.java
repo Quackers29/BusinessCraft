@@ -69,7 +69,7 @@ public class TownMapModal extends Screen {
     private static final int CURRENT_TOWN_COLOR = 0xFFFF9800;
     private static final int SELECTED_TOWN_COLOR = 0xFF2196F3;
     private static final int TEXT_COLOR = 0xFFFFFFFF;
-    private static final int INFO_BACKGROUND = 0xE0333333;
+    private static final int INFO_BACKGROUND = 0xFF333333; // Fully opaque now
     
     /**
      * Constructor for the town map modal
@@ -124,6 +124,10 @@ public class TownMapModal extends Screen {
         try {
             ClientTownMapCache cache = ClientTownMapCache.getInstance();
             
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
+                "Loading town data - Cache has data: {}, Cache is stale: {}", 
+                cache.hasData(), cache.isStale());
+            
             // Check if we have cached data and it's not stale
             if (cache.hasData() && !cache.isStale()) {
                 this.allTowns = cache.getAllTowns();
@@ -135,7 +139,9 @@ public class TownMapModal extends Screen {
                 ModMessages.sendToServer(new RequestTownMapDataPacket());
                 
                 DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
-                    "Requested fresh town data from server");
+                    "Requested fresh town data from server - cache had {} towns", cache.size());
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                    "Sending RequestTownMapDataPacket to server");
             }
         } catch (Exception e) {
             LOGGER.error("Failed to load town data for map", e);
@@ -202,14 +208,44 @@ public class TownMapModal extends Screen {
     }
     
     /**
-     * Check if a town is within the current view
+     * Check if a town is within the current view (always true now for edge indicators)
      */
     private boolean isTownVisible(TownMapDataResponsePacket.TownMapInfo town) {
+        // Always return true so we can handle edge indicators for all towns
+        return true;
+    }
+    
+    /**
+     * Check if a town marker is within the map bounds
+     */
+    private boolean isTownWithinMapBounds(TownMapDataResponsePacket.TownMapInfo town) {
         int screenX = worldToScreenX(town.position.getX());
         int screenY = worldToScreenZ(town.position.getZ());
         
-        return screenX >= panelLeft + 20 && screenX <= panelLeft + panelWidth - 20 &&
-               screenY >= panelTop + 70 && screenY <= panelTop + panelHeight - 50;
+        int mapLeft = mapCenterX - mapWidth / 2;
+        int mapTop = mapCenterY - mapHeight / 2;
+        
+        return screenX >= mapLeft && screenX <= mapLeft + mapWidth &&
+               screenY >= mapTop && screenY <= mapTop + mapHeight;
+    }
+    
+    /**
+     * Get the edge position for a town that's outside the map bounds
+     */
+    private int[] getTownEdgePosition(TownMapDataResponsePacket.TownMapInfo town) {
+        int screenX = worldToScreenX(town.position.getX());
+        int screenY = worldToScreenZ(town.position.getZ());
+        
+        int mapLeft = mapCenterX - mapWidth / 2;
+        int mapTop = mapCenterY - mapHeight / 2;
+        int mapRight = mapLeft + mapWidth;
+        int mapBottom = mapTop + mapHeight;
+        
+        // Clamp to map edges
+        int clampedX = Math.max(mapLeft, Math.min(mapRight, screenX));
+        int clampedY = Math.max(mapTop, Math.min(mapBottom, screenY));
+        
+        return new int[]{clampedX, clampedY};
     }
     
     /**
@@ -301,6 +337,9 @@ public class TownMapModal extends Screen {
         
         // Draw current position marker
         drawCurrentPosition(guiGraphics);
+        
+        // Draw coordinate markers
+        drawCoordinateMarkers(guiGraphics);
     }
     
     /**
@@ -398,6 +437,122 @@ public class TownMapModal extends Screen {
     }
     
     /**
+     * Draw coordinate markers around the map edges
+     */
+    private void drawCoordinateMarkers(GuiGraphics guiGraphics) {
+        int mapLeft = mapCenterX - mapWidth / 2;
+        int mapTop = mapCenterY - mapHeight / 2;
+        int mapRight = mapLeft + mapWidth;
+        int mapBottom = mapTop + mapHeight;
+        
+        // Calculate the world coordinates visible on screen
+        double viewWidthInWorld = mapWidth / (zoomLevel * 0.1);
+        double viewHeightInWorld = mapHeight / (zoomLevel * 0.1);
+        
+        // Calculate coordinate spacing based on zoom level
+        int coordSpacing = getCoordinateSpacing();
+        
+        // Draw X-axis markers (bottom of map)
+        int startX = ((int)(mapOffsetX - viewWidthInWorld / 2) / coordSpacing) * coordSpacing;
+        for (int worldX = startX; worldX <= mapOffsetX + viewWidthInWorld / 2; worldX += coordSpacing) {
+            int screenX = worldToScreenX(worldX);
+            if (screenX >= mapLeft && screenX <= mapRight) {
+                // Draw tick mark
+                guiGraphics.vLine(screenX, mapBottom, mapBottom + 5, BORDER_COLOR);
+                
+                // Draw coordinate label
+                String xLabel = String.valueOf(worldX);
+                int labelWidth = this.font.width(xLabel);
+                guiGraphics.drawString(this.font, xLabel, 
+                                      screenX - labelWidth/2, mapBottom + 7, TEXT_COLOR);
+            }
+        }
+        
+        // Draw Z-axis markers (left side of map)
+        int startZ = ((int)(mapOffsetZ - viewHeightInWorld / 2) / coordSpacing) * coordSpacing;
+        for (int worldZ = startZ; worldZ <= mapOffsetZ + viewHeightInWorld / 2; worldZ += coordSpacing) {
+            int screenY = worldToScreenZ(worldZ);
+            if (screenY >= mapTop && screenY <= mapBottom) {
+                // Check if this coordinate would overlap with the town info panel
+                boolean wouldOverlapInfo = selectedTown != null && 
+                    screenY >= panelTop + 50 && screenY <= panelTop + 110 && 
+                    mapLeft - 50 <= panelLeft + 200; // Info panel extends to 200px
+                
+                if (!wouldOverlapInfo) {
+                    // Draw tick mark
+                    guiGraphics.hLine(mapLeft - 5, mapLeft, screenY, BORDER_COLOR);
+                    
+                    // Draw coordinate label
+                    String zLabel = String.valueOf(worldZ);
+                    int labelWidth = this.font.width(zLabel);
+                    guiGraphics.drawString(this.font, zLabel, 
+                                          mapLeft - labelWidth - 7, screenY - 4, TEXT_COLOR);
+                }
+            }
+        }
+        
+        // Draw axis labels
+        guiGraphics.drawString(this.font, "X", mapRight + 5, mapBottom + 7, 0xFFCCCCCC);
+        
+        // Only draw Z axis label if it won't overlap with town info panel
+        boolean zAxisOverlapsInfo = selectedTown != null && 
+            mapTop - 10 >= panelTop + 50 && mapTop - 10 <= panelTop + 110 && 
+            mapLeft - 15 <= panelLeft + 200; // Info panel extends to 200px
+        
+        if (!zAxisOverlapsInfo) {
+            guiGraphics.drawString(this.font, "Z", mapLeft - 15, mapTop - 10, 0xFFCCCCCC);
+        }
+    }
+    
+    /**
+     * Calculate coordinate marker spacing based on zoom level
+     * Ensures maximum ~7 markers per axis (increased from 5 by 2)
+     */
+    private int getCoordinateSpacing() {
+        // Calculate the world coordinates visible on screen
+        double viewWidthInWorld = mapWidth / (zoomLevel * 0.1);
+        double viewHeightInWorld = mapHeight / (zoomLevel * 0.1);
+        
+        // Find the maximum view dimension
+        double maxViewDimension = Math.max(viewWidthInWorld, viewHeightInWorld);
+        
+        // Calculate spacing to have approximately 7 markers maximum (increased from 5)
+        double targetSpacing = maxViewDimension / 7.0;
+        
+        // Round to nice numbers (powers of 10, 25, 50)
+        int spacing;
+        if (targetSpacing <= 5) {
+            spacing = 5;
+        } else if (targetSpacing <= 10) {
+            spacing = 10;
+        } else if (targetSpacing <= 25) {
+            spacing = 25;
+        } else if (targetSpacing <= 50) {
+            spacing = 50;
+        } else if (targetSpacing <= 100) {
+            spacing = 100;
+        } else if (targetSpacing <= 250) {
+            spacing = 250;
+        } else if (targetSpacing <= 500) {
+            spacing = 500;
+        } else if (targetSpacing <= 1000) {
+            spacing = 1000;
+        } else if (targetSpacing <= 2500) {
+            spacing = 2500;
+        } else if (targetSpacing <= 5000) {
+            spacing = 5000;
+        } else if (targetSpacing <= 10000) {
+            spacing = 10000;
+        } else {
+            // For very large ranges, use powers of 10
+            int powerOf10 = (int) Math.pow(10, Math.ceil(Math.log10(targetSpacing)));
+            spacing = powerOf10;
+        }
+        
+        return spacing;
+    }
+    
+    /**
      * Draw all towns on the map
      */
     private void drawTowns(GuiGraphics guiGraphics, int mouseX, int mouseY) {
@@ -415,36 +570,157 @@ public class TownMapModal extends Screen {
      */
     private void drawTown(GuiGraphics guiGraphics, TownMapDataResponsePacket.TownMapInfo town, int mouseX, int mouseY) {
         BlockPos pos = town.position;
-        int screenX = worldToScreenX(pos.getX());
-        int screenY = worldToScreenZ(pos.getZ());
+        boolean isCurrentTown = currentTownPos != null && pos.equals(currentTownPos);
+        boolean withinBounds = isTownWithinMapBounds(town);
+        
+        int screenX, screenY;
+        // Current town should NEVER be clamped to edges - always show at actual position
+        if (withinBounds || isCurrentTown) {
+            // Town is within map bounds OR is current town - use normal position
+            screenX = worldToScreenX(pos.getX());
+            screenY = worldToScreenZ(pos.getZ());
+        } else {
+            // Town is outside bounds and NOT current town - clamp to edge
+            int[] edgePos = getTownEdgePosition(town);
+            screenX = edgePos[0];
+            screenY = edgePos[1];
+        }
         
         // Determine marker color
         int markerColor = TOWN_MARKER_COLOR;
         if (town == selectedTown) {
             markerColor = SELECTED_TOWN_COLOR;
-        } else if (currentTownPos != null && pos.equals(currentTownPos)) {
+        } else if (isCurrentTown) {
             markerColor = CURRENT_TOWN_COLOR;
         }
         
         // Draw marker with size that scales with zoom level
         int markerSize = getAdaptiveMarkerSize();
-        guiGraphics.fill(screenX - markerSize/2, screenY - markerSize/2, 
-                        screenX + markerSize/2, screenY + markerSize/2, markerColor);
         
-        // Draw town name above marker
-        String townName = town.name;
-        int textWidth = this.font.width(townName);
-        guiGraphics.drawString(this.font, townName, 
-                              screenX - textWidth/2, screenY - markerSize/2 - 12, TEXT_COLOR);
+        // Initialize marker position (will be clamped for current town if needed)
+        int markerX = screenX;
+        int markerY = screenY;
         
-        // Highlight if mouse is over
-        if (mouseX >= screenX - markerSize && mouseX <= screenX + markerSize &&
-            mouseY >= screenY - markerSize && mouseY <= screenY + markerSize) {
+        // For edge indicators (non-current towns outside bounds), make them dimmer and triangular
+        if (!withinBounds && !isCurrentTown) {
+            markerColor = (markerColor & 0x00FFFFFF) | 0x80000000; // Make semi-transparent
+            // Draw triangular edge indicator pointing towards the town
+            drawEdgeIndicator(guiGraphics, screenX, screenY, town, markerColor, markerSize);
+        } else {
+            // For current town, clamp marker position to stay within map bounds
+            
+            if (isCurrentTown) {
+                int mapLeft = mapCenterX - mapWidth / 2;
+                int mapTop = mapCenterY - mapHeight / 2;
+                int mapRight = mapLeft + mapWidth;
+                int mapBottom = mapTop + mapHeight;
+                
+                // Clamp marker position to stay within map bounds
+                markerX = Math.max(mapLeft + markerSize/2, Math.min(mapRight - markerSize/2, screenX));
+                markerY = Math.max(mapTop + markerSize/2, Math.min(mapBottom - markerSize/2, screenY));
+            }
+            
+            // Normal town marker (with clamped position for current town)
+            guiGraphics.fill(markerX - markerSize/2, markerY - markerSize/2, 
+                            markerX + markerSize/2, markerY + markerSize/2, markerColor);
+            
+            // Draw town name above marker (for towns within bounds OR current town)
+            if (withinBounds || isCurrentTown) {
+                String townName = town.name;
+                int textWidth = this.font.width(townName);
+                
+                // Calculate name position (use clamped marker position for current town)
+                int nameX = (isCurrentTown ? markerX : screenX) - textWidth/2;
+                int nameY = (isCurrentTown ? markerY : screenY) - markerSize/2 - 12;
+                
+                // Check if town name would overlap with info panel
+                boolean nameOverlapsInfo = selectedTown != null && 
+                    nameY >= panelTop + 50 && nameY <= panelTop + 110 && 
+                    nameX + textWidth >= panelLeft && nameX <= panelLeft + 200;
+                
+                if (!nameOverlapsInfo) {
+                    // For current town, also clamp the name position to stay within map bounds
+                    if (isCurrentTown) {
+                        int mapLeft = mapCenterX - mapWidth / 2;
+                        int mapTop = mapCenterY - mapHeight / 2;
+                        int mapRight = mapLeft + mapWidth;
+                        int mapBottom = mapTop + mapHeight;
+                        
+                        // Clamp name position to stay within map bounds
+                        nameX = Math.max(mapLeft, Math.min(mapRight - textWidth, nameX));
+                        nameY = Math.max(mapTop, Math.min(mapBottom - 12, nameY));
+                    }
+                    
+                    guiGraphics.drawString(this.font, townName, nameX, nameY, TEXT_COLOR);
+                }
+            }
+        }
+        
+        // Highlight if mouse is over (use clamped marker position for current town)
+        int checkX = isCurrentTown ? markerX : screenX;
+        int checkY = isCurrentTown ? markerY : screenY;
+        
+        if (mouseX >= checkX - markerSize && mouseX <= checkX + markerSize &&
+            mouseY >= checkY - markerSize && mouseY <= checkY + markerSize) {
+            // Calculate highlight ring bounds
+            int ringLeft = checkX - markerSize - 1;
+            int ringRight = checkX + markerSize + 1;
+            int ringTop = checkY - markerSize - 1;
+            int ringBottom = checkY + markerSize + 1;
+            
+            // For current town, clamp highlight ring to stay within map bounds
+            if (isCurrentTown) {
+                int mapLeft = mapCenterX - mapWidth / 2;
+                int mapTop = mapCenterY - mapHeight / 2;
+                int mapRight = mapLeft + mapWidth;
+                int mapBottom = mapTop + mapHeight;
+                
+                ringLeft = Math.max(mapLeft, ringLeft);
+                ringRight = Math.min(mapRight, ringRight);
+                ringTop = Math.max(mapTop, ringTop);
+                ringBottom = Math.min(mapBottom, ringBottom);
+            }
+            
             // Draw highlight ring
-            guiGraphics.hLine(screenX - markerSize - 1, screenX + markerSize + 1, screenY - markerSize - 1, 0xFFFFFFFF);
-            guiGraphics.hLine(screenX - markerSize - 1, screenX + markerSize + 1, screenY + markerSize + 1, 0xFFFFFFFF);
-            guiGraphics.vLine(screenX - markerSize - 1, screenY - markerSize - 1, screenY + markerSize + 1, 0xFFFFFFFF);
-            guiGraphics.vLine(screenX + markerSize + 1, screenY - markerSize - 1, screenY + markerSize + 1, 0xFFFFFFFF);
+            guiGraphics.hLine(ringLeft, ringRight, ringTop, 0xFFFFFFFF);
+            guiGraphics.hLine(ringLeft, ringRight, ringBottom, 0xFFFFFFFF);
+            guiGraphics.vLine(ringLeft, ringTop, ringBottom, 0xFFFFFFFF);
+            guiGraphics.vLine(ringRight, ringTop, ringBottom, 0xFFFFFFFF);
+        }
+    }
+    
+    /**
+     * Draw edge indicator for towns outside the map bounds
+     */
+    private void drawEdgeIndicator(GuiGraphics guiGraphics, int edgeX, int edgeY, 
+                                  TownMapDataResponsePacket.TownMapInfo town, int color, int size) {
+        // Get the actual town position
+        int actualX = worldToScreenX(town.position.getX());
+        int actualY = worldToScreenZ(town.position.getZ());
+        
+        // Calculate direction vector from edge to actual position
+        int dx = actualX - edgeX;
+        int dy = actualY - edgeY;
+        
+        // Normalize and draw a small triangle pointing in that direction
+        double length = Math.sqrt(dx * dx + dy * dy);
+        if (length > 0) {
+            // Draw a small diamond/arrow shape
+            guiGraphics.fill(edgeX - size/3, edgeY - size/3, edgeX + size/3, edgeY + size/3, color);
+            
+            // Add a small directional indicator
+            int arrowSize = size / 4;
+            if (Math.abs(dx) > Math.abs(dy)) {
+                // Horizontal arrow
+                int arrowDir = dx > 0 ? 1 : -1;
+                guiGraphics.fill(edgeX + arrowDir * arrowSize, edgeY - arrowSize/2, 
+                               edgeX + arrowDir * arrowSize + arrowDir * arrowSize/2, edgeY + arrowSize/2, color);
+            } else {
+                // Vertical arrow
+                int arrowDir = dy > 0 ? 1 : -1;
+                guiGraphics.fill(edgeX - arrowSize/2, edgeY + arrowDir * arrowSize, 
+                               edgeX + arrowSize/2, edgeY + arrowDir * arrowSize + arrowDir * arrowSize/2, color);
+            }
         }
     }
     
@@ -455,6 +731,16 @@ public class TownMapModal extends Screen {
         if (currentTownPos != null) {
             int screenX = worldToScreenX(currentTownPos.getX());
             int screenY = worldToScreenZ(currentTownPos.getZ());
+            
+            // Get map bounds
+            int mapLeft = mapCenterX - mapWidth / 2;
+            int mapTop = mapCenterY - mapHeight / 2;
+            int mapRight = mapLeft + mapWidth;
+            int mapBottom = mapTop + mapHeight;
+            
+            // ALWAYS ensure current town marker stays within map bounds
+            screenX = Math.max(mapLeft + 4, Math.min(mapRight - 4, screenX));
+            screenY = Math.max(mapTop + 4, Math.min(mapBottom - 4, screenY));
             
             // Draw a distinct marker for current position
             int size = 4;
@@ -474,10 +760,9 @@ public class TownMapModal extends Screen {
     private void drawTownInfo(GuiGraphics guiGraphics) {
         if (selectedTown == null || currentTownPos == null) return;
         
-        // Calculate distance and direction
+        // Calculate distance and get coordinates
         BlockPos selectedPos = selectedTown.position;
         double distance = Math.sqrt(currentTownPos.distSqr(selectedPos));
-        String direction = getDirection(currentTownPos, selectedPos);
         
         // Draw info background
         int infoX = panelLeft + 10;
@@ -491,10 +776,10 @@ public class TownMapModal extends Screen {
         guiGraphics.vLine(infoX, infoY, infoY + infoHeight - 1, BORDER_COLOR);
         guiGraphics.vLine(infoX + infoWidth - 1, infoY, infoY + infoHeight - 1, BORDER_COLOR);
         
-        // Draw text
+        // Draw text with coordinates instead of direction
         guiGraphics.drawString(this.font, "Selected: " + selectedTown.name, infoX + 5, infoY + 8, TEXT_COLOR);
         guiGraphics.drawString(this.font, String.format("Distance: %.1f blocks", distance), infoX + 5, infoY + 20, TEXT_COLOR);
-        guiGraphics.drawString(this.font, "Direction: " + direction, infoX + 5, infoY + 32, TEXT_COLOR);
+        guiGraphics.drawString(this.font, String.format("Position: X %d, Z %d", selectedPos.getX(), selectedPos.getZ()), infoX + 5, infoY + 32, TEXT_COLOR);
         guiGraphics.drawString(this.font, "Population: " + selectedTown.population, infoX + 5, infoY + 44, TEXT_COLOR);
     }
     
@@ -627,8 +912,30 @@ public class TownMapModal extends Screen {
         for (TownMapDataResponsePacket.TownMapInfo town : allTowns.values()) {
             if (isTownVisible(town)) {
                 BlockPos pos = town.position;
-                int townScreenX = worldToScreenX(pos.getX());
-                int townScreenY = worldToScreenZ(pos.getZ());
+                boolean isCurrentTown = currentTownPos != null && pos.equals(currentTownPos);
+                boolean withinBounds = isTownWithinMapBounds(town);
+                
+                int townScreenX, townScreenY;
+                if (withinBounds || isCurrentTown) {
+                    townScreenX = worldToScreenX(pos.getX());
+                    townScreenY = worldToScreenZ(pos.getZ());
+                    
+                    // For current town, use clamped position for click detection
+                    if (isCurrentTown) {
+                        int mapLeft = mapCenterX - mapWidth / 2;
+                        int mapTop = mapCenterY - mapHeight / 2;
+                        int mapRight = mapLeft + mapWidth;
+                        int mapBottom = mapTop + mapHeight;
+                        int markerSize = getAdaptiveMarkerSize();
+                        
+                        townScreenX = Math.max(mapLeft + markerSize/2, Math.min(mapRight - markerSize/2, townScreenX));
+                        townScreenY = Math.max(mapTop + markerSize/2, Math.min(mapBottom - markerSize/2, townScreenY));
+                    }
+                } else {
+                    int[] edgePos = getTownEdgePosition(town);
+                    townScreenX = edgePos[0];
+                    townScreenY = edgePos[1];
+                }
                 
                 int markerSize = getAdaptiveMarkerSize();
                 if (screenX >= townScreenX - markerSize && screenX <= townScreenX + markerSize &&

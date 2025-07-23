@@ -62,6 +62,8 @@ public class RequestTownMapDataPacket {
                 
                 // Get all towns data
                 Map<UUID, Town> allTowns = townManager.getAllTowns();
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                    "Server has {} towns to send", allTowns.size());
                 
                 // Create and send response packet
                 TownMapDataResponsePacket responsePacket = new TownMapDataResponsePacket();

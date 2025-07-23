@@ -36,12 +36,13 @@ public class ClientTownMapCache {
      * Update the cached town data
      */
     public void updateTownData(Map<UUID, TownMapDataResponsePacket.TownMapInfo> newData) {
+        int oldSize = townData.size();
         townData.clear();
         townData.putAll(newData);
         lastUpdateTime = System.currentTimeMillis();
         
         DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
-            "Town map cache updated with {} towns", townData.size());
+            "Town map cache updated: {} -> {} towns", oldSize, townData.size());
     }
     
     /**
