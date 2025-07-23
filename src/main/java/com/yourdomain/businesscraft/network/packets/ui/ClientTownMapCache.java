@@ -17,6 +17,7 @@ public class ClientTownMapCache {
     private static ClientTownMapCache instance;
     
     private final Map<UUID, TownMapDataResponsePacket.TownMapInfo> townData = new ConcurrentHashMap<>();
+    private final Map<UUID, Map<UUID, TownPlatformDataResponsePacket.PlatformInfo>> platformData = new ConcurrentHashMap<>();
     private long lastUpdateTime = 0;
     
     private ClientTownMapCache() {
@@ -74,10 +75,63 @@ public class ClientTownMapCache {
     }
     
     /**
+     * Update platform data for a specific town
+     */
+    public void updateTownPlatformData(UUID townId, Map<UUID, TownPlatformDataResponsePacket.PlatformInfo> platforms) {
+        platformData.put(townId, new HashMap<>(platforms));
+        
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
+            "Platform data updated for town {}: {} platforms", townId, platforms.size());
+    }
+    
+    /**
+     * Get platform data for a specific town
+     */
+    public Map<UUID, TownPlatformDataResponsePacket.PlatformInfo> getTownPlatformData(UUID townId) {
+        Map<UUID, TownPlatformDataResponsePacket.PlatformInfo> platforms = platformData.get(townId);
+        return platforms != null ? new HashMap<>(platforms) : new HashMap<>();
+    }
+    
+    /**
+     * Check if platform data exists for a town
+     */
+    public boolean hasTownPlatformData(UUID townId) {
+        return platformData.containsKey(townId);
+    }
+    
+    /**
+     * Clear platform data for a specific town
+     */
+    public void clearTownPlatformData(UUID townId) {
+        platformData.remove(townId);
+        
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
+            "Platform data cleared for town {}", townId);
+    }
+    
+    /**
+     * Update town information for a specific town
+     */
+    public void updateTownInfo(UUID townId, String name, int population, int touristCount) {
+        TownMapDataResponsePacket.TownMapInfo existingTown = townData.get(townId);
+        if (existingTown != null) {
+            // Create updated town info with fresh data
+            TownMapDataResponsePacket.TownMapInfo updatedTown = new TownMapDataResponsePacket.TownMapInfo(
+                townId, name, existingTown.position, population, touristCount
+            );
+            townData.put(townId, updatedTown);
+            
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
+                "Town data updated for town {}: pop={}, tourists={}", townId, population, touristCount);
+        }
+    }
+    
+    /**
      * Clear the cache
      */
     public void clear() {
         townData.clear();
+        platformData.clear();
         lastUpdateTime = 0;
         
         DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town map cache cleared");

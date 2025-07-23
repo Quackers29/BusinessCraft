@@ -14,6 +14,7 @@ import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.network.ModMessages;
 import net.minecraft.world.level.Level;
 import com.yourdomain.businesscraft.platform.Platform;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Packet for setting a platform's path
@@ -75,7 +76,7 @@ public class SetPlatformPathPacket {
                     // Update start and end positions
                     platform.setStartPos(startPos);
                     platform.setEndPos(endPos);
-                    LOGGER.info("Updated platform {} path from {} to {}", platformId, startPos, endPos);
+                    DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Updated platform {} path from {} to {}", platformId, startPos, endPos);
                     
                     // Sync the town block
                     townBlock.setChanged();

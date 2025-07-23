@@ -35,6 +35,8 @@ import com.yourdomain.businesscraft.network.packets.ui.OpenTownInterfacePacket;
 import com.yourdomain.businesscraft.network.packets.ui.OpenPaymentBoardPacket;
 import com.yourdomain.businesscraft.network.packets.ui.RequestTownMapDataPacket;
 import com.yourdomain.businesscraft.network.packets.ui.TownMapDataResponsePacket;
+import com.yourdomain.businesscraft.network.packets.ui.RequestTownPlatformDataPacket;
+import com.yourdomain.businesscraft.network.packets.ui.TownPlatformDataResponsePacket;
 import com.yourdomain.businesscraft.network.packets.storage.TradeResourcePacket;
 import com.yourdomain.businesscraft.network.packets.storage.CommunalStoragePacket;
 import com.yourdomain.businesscraft.network.packets.storage.CommunalStorageResponsePacket;
@@ -282,6 +284,19 @@ public class ModMessages {
                 .decoder(TownMapDataResponsePacket::decode)
                 .encoder(TownMapDataResponsePacket::encode)
                 .consumerMainThread(TownMapDataResponsePacket::handle)
+                .add();
+                
+        // Register town platform data packets
+        net.messageBuilder(RequestTownPlatformDataPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(RequestTownPlatformDataPacket::decode)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread(RequestTownPlatformDataPacket::handle)
+                .add();
+                
+        net.messageBuilder(TownPlatformDataResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(TownPlatformDataResponsePacket::decode)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread(TownPlatformDataResponsePacket::handle)
                 .add();
     }
 

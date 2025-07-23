@@ -1,6 +1,7 @@
 package com.yourdomain.businesscraft.network.packets.town;
 
 import com.yourdomain.businesscraft.api.ITownDataProvider;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -33,7 +34,7 @@ public class ToggleTouristSpawningPacket extends BaseBlockEntityPacket {
                 ITownDataProvider provider = townBlock.getTownDataProvider();
                 if (provider != null) {
                     boolean newState = !provider.isTouristSpawningEnabled();
-                    LOGGER.info("Toggling tourist spawning to {} for town {}", newState, provider.getTownId());
+                    DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "Toggling tourist spawning to {} for town {}", newState, provider.getTownId());
                     
                     // Update the provider (single source of truth)
                     provider.setTouristSpawningEnabled(newState);

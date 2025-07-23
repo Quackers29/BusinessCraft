@@ -13,9 +13,11 @@ import org.apache.logging.log4j.Logger;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.platform.RefreshPlatformsPacket;
+import com.yourdomain.businesscraft.network.packets.ui.ClientTownMapCache;
 import net.minecraft.world.level.Level;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.debug.DebugConfig;
+import com.yourdomain.businesscraft.town.Town;
 
 /**
  * Packet for toggling platform enabled state

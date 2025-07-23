@@ -50,7 +50,7 @@ public class RequestTownMapDataPacket {
             try {
                 ServerPlayer player = context.getSender();
                 if (player == null) {
-                    LOGGER.warn("Received RequestTownMapDataPacket from null player");
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Received RequestTownMapDataPacket from null player");
                     return;
                 }
                 
