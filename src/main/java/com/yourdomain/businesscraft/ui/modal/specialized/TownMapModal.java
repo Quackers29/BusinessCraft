@@ -74,7 +74,15 @@ public class TownMapModal extends Screen {
     private static final int CURRENT_TOWN_COLOR = 0xFFFF9800;
     private static final int SELECTED_TOWN_COLOR = 0xFF2196F3;
     private static final int TEXT_COLOR = 0xFFFFFFFF;
-    private static final int INFO_BACKGROUND = 0xFF333333; // Fully opaque now
+    private static final int INFO_BACKGROUND = 0xFF333333;
+    
+    // Map Constants
+    private static final double MIN_ZOOM = 0.05;
+    private static final double MAX_ZOOM = 600.0;
+    private static final double ZOOM_FACTOR = 1.3;
+    private static final double COORDINATE_CONVERSION = 0.1;
+    private static final int MAX_COORDINATE_MARKERS = 7;
+    private static final int CLICK_TOLERANCE = 3;
     
     /**
      * Constructor for the town map modal
@@ -208,17 +216,26 @@ public class TownMapModal extends Screen {
     }
     
     /**
+     * Clamp coordinates to map bounds
+     */
+    private int[] clampToMapBounds(int x, int y, int margin) {
+        int[] bounds = getMapBounds();
+        return new int[]{
+            Math.max(bounds[0] + margin, Math.min(bounds[2] - margin, x)),
+            Math.max(bounds[1] + margin, Math.min(bounds[3] - margin, y))
+        };
+    }
+    
+    /**
      * Check if a town marker is within the map bounds
      */
     private boolean isTownWithinMapBounds(TownMapDataResponsePacket.TownMapInfo town) {
         int screenX = worldToScreenX(town.position.getX());
         int screenY = worldToScreenZ(town.position.getZ());
+        int[] bounds = getMapBounds();
         
-        int mapLeft = mapCenterX - mapWidth / 2;
-        int mapTop = mapCenterY - mapHeight / 2;
-        
-        return screenX >= mapLeft && screenX <= mapLeft + mapWidth &&
-               screenY >= mapTop && screenY <= mapTop + mapHeight;
+        return screenX >= bounds[0] && screenX <= bounds[2] &&
+               screenY >= bounds[1] && screenY <= bounds[3];
     }
     
     /**
@@ -227,15 +244,11 @@ public class TownMapModal extends Screen {
     private int[] getTownEdgePosition(TownMapDataResponsePacket.TownMapInfo town) {
         int screenX = worldToScreenX(town.position.getX());
         int screenY = worldToScreenZ(town.position.getZ());
-        
-        int mapLeft = mapCenterX - mapWidth / 2;
-        int mapTop = mapCenterY - mapHeight / 2;
-        int mapRight = mapLeft + mapWidth;
-        int mapBottom = mapTop + mapHeight;
+        int[] bounds = getMapBounds();
         
         // Clamp to map edges
-        int clampedX = Math.max(mapLeft, Math.min(mapRight, screenX));
-        int clampedY = Math.max(mapTop, Math.min(mapBottom, screenY));
+        int clampedX = Math.max(bounds[0], Math.min(bounds[2], screenX));
+        int clampedY = Math.max(bounds[1], Math.min(bounds[3], screenY));
         
         return new int[]{clampedX, clampedY};
     }
@@ -307,16 +320,15 @@ public class TownMapModal extends Screen {
      * Draw the map area and towns
      */
     private void drawMap(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        // Draw map background
-        int mapLeft = mapCenterX - mapWidth / 2;
-        int mapTop = mapCenterY - mapHeight / 2;
-        guiGraphics.fill(mapLeft, mapTop, mapLeft + mapWidth, mapTop + mapHeight, MAP_BACKGROUND_COLOR);
+        int[] bounds = getMapBounds();
+        int mapLeft = bounds[0], mapTop = bounds[1], mapRight = bounds[2], mapBottom = bounds[3];
         
-        // Draw map border
-        guiGraphics.hLine(mapLeft, mapLeft + mapWidth - 1, mapTop, BORDER_COLOR);
-        guiGraphics.hLine(mapLeft, mapLeft + mapWidth - 1, mapTop + mapHeight - 1, BORDER_COLOR);
-        guiGraphics.vLine(mapLeft, mapTop, mapTop + mapHeight - 1, BORDER_COLOR);
-        guiGraphics.vLine(mapLeft + mapWidth - 1, mapTop, mapTop + mapHeight - 1, BORDER_COLOR);
+        // Draw map background and border
+        guiGraphics.fill(mapLeft, mapTop, mapRight, mapBottom, MAP_BACKGROUND_COLOR);
+        guiGraphics.hLine(mapLeft, mapRight - 1, mapTop, BORDER_COLOR);
+        guiGraphics.hLine(mapLeft, mapRight - 1, mapBottom - 1, BORDER_COLOR);
+        guiGraphics.vLine(mapLeft, mapTop, mapBottom - 1, BORDER_COLOR);
+        guiGraphics.vLine(mapRight - 1, mapTop, mapBottom - 1, BORDER_COLOR);
         
         // Draw compass indicator (North arrow)
         drawCompassIndicator(guiGraphics);
@@ -357,16 +369,15 @@ public class TownMapModal extends Screen {
      * Draw adaptive grid lines for reference
      */
     private void drawGridLines(GuiGraphics guiGraphics) {
-        int mapLeft = mapCenterX - mapWidth / 2;
-        int mapTop = mapCenterY - mapHeight / 2;
+        int[] bounds = getMapBounds();
+        int mapLeft = bounds[0], mapTop = bounds[1];
         int gridColor = 0x40AAAAAA;
         
         // Calculate adaptive grid spacing based on zoom level
         int baseGridSpacing = getAdaptiveGridSpacing();
         
-        // Calculate the world coordinates visible on screen
-        double viewWidthInWorld = mapWidth / (zoomLevel * 0.1);
-        double viewHeightInWorld = mapHeight / (zoomLevel * 0.1);
+        double viewWidthInWorld = mapWidth / (zoomLevel * COORDINATE_CONVERSION);
+        double viewHeightInWorld = mapHeight / (zoomLevel * COORDINATE_CONVERSION);
         
         // Calculate starting positions for grid lines
         int startX = ((int)(mapOffsetX - viewWidthInWorld / 2) / baseGridSpacing) * baseGridSpacing;
@@ -375,16 +386,16 @@ public class TownMapModal extends Screen {
         // Draw vertical lines
         for (int worldX = startX; worldX <= mapOffsetX + viewWidthInWorld / 2; worldX += baseGridSpacing) {
             int screenX = worldToScreenX(worldX);
-            if (screenX >= mapLeft && screenX <= mapLeft + mapWidth) {
-                guiGraphics.vLine(screenX, mapTop, mapTop + mapHeight, gridColor);
+            if (screenX >= mapLeft && screenX <= bounds[2]) {
+                guiGraphics.vLine(screenX, mapTop, bounds[3], gridColor);
             }
         }
         
         // Draw horizontal lines
         for (int worldZ = startZ; worldZ <= mapOffsetZ + viewHeightInWorld / 2; worldZ += baseGridSpacing) {
             int screenY = worldToScreenZ(worldZ);
-            if (screenY >= mapTop && screenY <= mapTop + mapHeight) {
-                guiGraphics.hLine(mapLeft, mapLeft + mapWidth, screenY, gridColor);
+            if (screenY >= mapTop && screenY <= bounds[3]) {
+                guiGraphics.hLine(mapLeft, bounds[2], screenY, gridColor);
             }
         }
     }
@@ -451,14 +462,11 @@ public class TownMapModal extends Screen {
      * Draw coordinate markers around the map edges
      */
     private void drawCoordinateMarkers(GuiGraphics guiGraphics) {
-        int mapLeft = mapCenterX - mapWidth / 2;
-        int mapTop = mapCenterY - mapHeight / 2;
-        int mapRight = mapLeft + mapWidth;
-        int mapBottom = mapTop + mapHeight;
+        int[] bounds = getMapBounds();
+        int mapLeft = bounds[0], mapTop = bounds[1], mapRight = bounds[2], mapBottom = bounds[3];
         
-        // Calculate the world coordinates visible on screen
-        double viewWidthInWorld = mapWidth / (zoomLevel * 0.1);
-        double viewHeightInWorld = mapHeight / (zoomLevel * 0.1);
+        double viewWidthInWorld = mapWidth / (zoomLevel * COORDINATE_CONVERSION);
+        double viewHeightInWorld = mapHeight / (zoomLevel * COORDINATE_CONVERSION);
         
         // Calculate coordinate spacing based on zoom level
         int coordSpacing = getCoordinateSpacing();
@@ -520,9 +528,8 @@ public class TownMapModal extends Screen {
      * Ensures maximum ~7 markers per axis (increased from 5 by 2)
      */
     private int getCoordinateSpacing() {
-        // Calculate the world coordinates visible on screen
-        double viewWidthInWorld = mapWidth / (zoomLevel * 0.1);
-        double viewHeightInWorld = mapHeight / (zoomLevel * 0.1);
+        double viewWidthInWorld = mapWidth / (zoomLevel * COORDINATE_CONVERSION);
+        double viewHeightInWorld = mapHeight / (zoomLevel * COORDINATE_CONVERSION);
         
         // Find the maximum view dimension
         double maxViewDimension = Math.max(viewWidthInWorld, viewHeightInWorld);
@@ -621,14 +628,9 @@ public class TownMapModal extends Screen {
             // For current town, clamp marker position to stay within map bounds
             
             if (isCurrentTown) {
-                int mapLeft = mapCenterX - mapWidth / 2;
-                int mapTop = mapCenterY - mapHeight / 2;
-                int mapRight = mapLeft + mapWidth;
-                int mapBottom = mapTop + mapHeight;
-                
-                // Clamp marker position to stay within map bounds
-                markerX = Math.max(mapLeft + markerSize/2, Math.min(mapRight - markerSize/2, screenX));
-                markerY = Math.max(mapTop + markerSize/2, Math.min(mapBottom - markerSize/2, screenY));
+                int[] clamped = clampToMapBounds(screenX, screenY, markerSize/2);
+                markerX = clamped[0];
+                markerY = clamped[1];
             }
             
             // Normal town marker (with clamped position for current town)
@@ -669,15 +671,12 @@ public class TownMapModal extends Screen {
             
             // For current town, clamp highlight ring to stay within map bounds
             if (isCurrentTown) {
-                int mapLeft = mapCenterX - mapWidth / 2;
-                int mapTop = mapCenterY - mapHeight / 2;
-                int mapRight = mapLeft + mapWidth;
-                int mapBottom = mapTop + mapHeight;
-                
-                ringLeft = Math.max(mapLeft, ringLeft);
-                ringRight = Math.min(mapRight, ringRight);
-                ringTop = Math.max(mapTop, ringTop);
-                ringBottom = Math.min(mapBottom, ringBottom);
+                int[] clampedTopLeft = clampToMapBounds(ringLeft, ringTop, 0);
+                int[] clampedBottomRight = clampToMapBounds(ringRight, ringBottom, 0);
+                ringLeft = clampedTopLeft[0];
+                ringTop = clampedTopLeft[1];
+                ringRight = clampedBottomRight[0];
+                ringBottom = clampedBottomRight[1];
             }
             
             // Draw highlight ring
@@ -731,10 +730,8 @@ public class TownMapModal extends Screen {
             return;
         }
         
-        int mapLeft = mapCenterX - mapWidth / 2;
-        int mapTop = mapCenterY - mapHeight / 2;
-        int mapRight = mapLeft + mapWidth;
-        int mapBottom = mapTop + mapHeight;
+        int[] bounds = getMapBounds();
+        int mapLeft = bounds[0], mapTop = bounds[1], mapRight = bounds[2], mapBottom = bounds[3];
         
         // Draw platforms and their paths
         for (TownPlatformDataResponsePacket.PlatformInfo platform : selectedTownPlatforms.values()) {
@@ -939,16 +936,10 @@ public class TownMapModal extends Screen {
         if (currentTownPos != null) {
             int screenX = worldToScreenX(currentTownPos.getX());
             int screenY = worldToScreenZ(currentTownPos.getZ());
-            
-            // Get map bounds
-            int mapLeft = mapCenterX - mapWidth / 2;
-            int mapTop = mapCenterY - mapHeight / 2;
-            int mapRight = mapLeft + mapWidth;
-            int mapBottom = mapTop + mapHeight;
-            
             // ALWAYS ensure current town marker stays within map bounds
-            screenX = Math.max(mapLeft + 4, Math.min(mapRight - 4, screenX));
-            screenY = Math.max(mapTop + 4, Math.min(mapBottom - 4, screenY));
+            int[] clamped = clampToMapBounds(screenX, screenY, 4);
+            screenX = clamped[0];
+            screenY = clamped[1];
             
             // Draw a distinct marker for current position
             int size = 4;
@@ -1152,12 +1143,20 @@ public class TownMapModal extends Screen {
     }
     
     /**
+     * Get map bounds as [left, top, right, bottom]
+     */
+    private int[] getMapBounds() {
+        int mapLeft = mapCenterX - mapWidth / 2;
+        int mapTop = mapCenterY - mapHeight / 2;
+        return new int[]{mapLeft, mapTop, mapLeft + mapWidth, mapTop + mapHeight};
+    }
+    
+    /**
      * Check if coordinates are within the map area
      */
     private boolean isInMapArea(int x, int y) {
-        int mapLeft = mapCenterX - mapWidth / 2;
-        int mapTop = mapCenterY - mapHeight / 2;
-        return x >= mapLeft && x <= mapLeft + mapWidth && y >= mapTop && y <= mapTop + mapHeight;
+        int[] bounds = getMapBounds();
+        return x >= bounds[0] && x <= bounds[2] && y >= bounds[1] && y <= bounds[3];
     }
     
     /**
@@ -1179,14 +1178,10 @@ public class TownMapModal extends Screen {
                     
                     // For current town, use clamped position for click detection
                     if (isCurrentTown) {
-                        int mapLeft = mapCenterX - mapWidth / 2;
-                        int mapTop = mapCenterY - mapHeight / 2;
-                        int mapRight = mapLeft + mapWidth;
-                        int mapBottom = mapTop + mapHeight;
                         int markerSize = getAdaptiveMarkerSize();
-                        
-                        townScreenX = Math.max(mapLeft + markerSize/2, Math.min(mapRight - markerSize/2, townScreenX));
-                        townScreenY = Math.max(mapTop + markerSize/2, Math.min(mapBottom - markerSize/2, townScreenY));
+                        int[] clamped = clampToMapBounds(townScreenX, townScreenY, markerSize/2);
+                        townScreenX = clamped[0];
+                        townScreenY = clamped[1];
                     }
                 } else {
                     int[] edgePos = getTownEdgePosition(town);
@@ -1211,10 +1206,8 @@ public class TownMapModal extends Screen {
     private TownPlatformDataResponsePacket.PlatformInfo getPlatformAtPosition(int screenX, int screenY) {
         if (selectedTownPlatforms == null || selectedTownPlatforms.isEmpty()) return null;
         
-        int mapLeft = mapCenterX - mapWidth / 2;
-        int mapTop = mapCenterY - mapHeight / 2;
-        int mapRight = mapLeft + mapWidth;
-        int mapBottom = mapTop + mapHeight;
+        int[] bounds = getMapBounds();
+        int mapLeft = bounds[0], mapTop = bounds[1], mapRight = bounds[2], mapBottom = bounds[3];
         
         for (TownPlatformDataResponsePacket.PlatformInfo platform : selectedTownPlatforms.values()) {
             // Convert world coordinates to screen coordinates
@@ -1299,12 +1292,10 @@ public class TownMapModal extends Screen {
     
     /**
      * Set town data (for external initialization)
-     * This would be called after the modal is created but before it's shown
      */
-    public TownMapModal withTownData(Map<UUID, TownMapDataResponsePacket.TownMapInfo> townData) {
+    public void setTownData(Map<UUID, TownMapDataResponsePacket.TownMapInfo> townData) {
         this.allTowns = townData != null ? new java.util.HashMap<>(townData) : new java.util.HashMap<>();
         DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town data set: {} towns", this.allTowns.size());
-        return this;
     }
     
     /**

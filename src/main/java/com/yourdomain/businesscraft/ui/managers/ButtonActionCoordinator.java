@@ -211,7 +211,7 @@ public class ButtonActionCoordinator {
         // Load town data from client cache if available
         com.yourdomain.businesscraft.network.packets.ui.ClientTownMapCache cache = 
             com.yourdomain.businesscraft.network.packets.ui.ClientTownMapCache.getInstance();
-        mapModal.withTownData(cache.getAllTowns());
+        mapModal.setTownData(cache.getAllTowns());
         
         DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town map modal opened from current position: {}", currentTownPos);
         
