@@ -55,7 +55,7 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
     
     // Cache management
     protected int updateCounter = 0;
-    protected static final int REFRESH_INTERVAL = 100; // Ticks between forced cache refreshes (5 seconds)
+    protected static final int REFRESH_INTERVAL = 600; // Ticks between forced cache refreshes (30 seconds - reduced from 5s after fixing sync issues)
     protected TownDataCacheManager cacheManager;
     
     // Resource cleanup management

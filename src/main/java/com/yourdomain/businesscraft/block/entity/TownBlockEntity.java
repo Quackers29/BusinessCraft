@@ -912,16 +912,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         return clientSyncHelper.getTownNameFromId(townId, level);
     }
 
-    /**
-     * Client-side only: Updates the cached town name for immediate UI feedback
-     * This is only meant to be used on the client side for visual updates
-     * @param newName The new town name to display
-     */
-    public void setClientTownName(String newName) {
-        if (level != null && level.isClientSide) {
-            this.name = newName;
-        }
-    }
+
 
 
     

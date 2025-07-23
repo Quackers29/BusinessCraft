@@ -142,7 +142,7 @@ public class BottomButtonManager {
         bottomButtonsGrid
             .addButtonWithTooltip(0, 0, "Edit Details", "Edit town details and properties", 
                 v -> actionHandler.onEditDetails(), TownInterfaceTheme.PRIMARY_COLOR)
-            .addButtonWithTooltip(0, 1, "Manage Platforms", "Manage town platforms and connections", 
+            .addButtonWithTooltip(0, 1, "Map View", "View town map with surrounding areas", 
                 v -> actionHandler.onManagePlatforms(), TownInterfaceTheme.SECONDARY_COLOR);
     }
     

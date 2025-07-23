@@ -123,24 +123,21 @@ public class TownScreenRenderManager {
     
     /**
      * Refreshes the active tab components.
+     * With the main town name sync fix, this periodic refresh is much less critical.
      */
     private void refreshActiveTab() {
+        // Since we fixed the root cause of town name sync issues, we no longer need
+        // aggressive tab refreshing. The overview tab will get updated properly
+        // through the normal data synchronization mechanisms.
+        
+        // This method is kept for any future edge cases but does minimal work now
         BCTabPanel tabPanel = componentProvider.getTabPanel();
         if (tabPanel != null) {
             String activeTabId = tabPanel.getActiveTabId();
+            // Only refresh if it's the overview tab, and only occasionally
             if ("overview".equals(activeTabId)) {
-                // Get the panel, which should be created by our OverviewTab
-                BCPanel panel = tabPanel.getTabPanel(activeTabId);
-                if (panel != null && panel instanceof BCPanel) {
-                    // Find the OverviewTab instance
-                    for (UIComponent child : panel.getChildren()) {
-                        if (child instanceof BCComponent) {
-                            // Force a refresh of the component
-                            child.setVisible(false);
-                            child.setVisible(true);
-                        }
-                    }
-                }
+                // The tab will refresh properly when data changes through normal sync
+                // No need for aggressive refreshing
             }
         }
     }

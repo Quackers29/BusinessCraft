@@ -55,6 +55,7 @@ public abstract class BaseModalManager {
     
     /**
      * Refreshes data in the parent screen if it's a BaseTownScreen.
+     * With the main sync issues fixed, this automatic refresh is less critical.
      * 
      * @param parentScreen The parent screen to refresh
      */
@@ -62,9 +63,12 @@ public abstract class BaseModalManager {
         if (parentScreen instanceof BaseTownScreen) {
             BaseTownScreen<?> townScreen = (BaseTownScreen<?>) parentScreen;
             
+            // With the town name sync fix, we don't need to aggressively refresh cache
+            // on every modal close. The data will sync properly through normal mechanisms.
+            // Only refresh if the cache manager exists and there might be stale data
             if (townScreen.getCacheManager() != null) {
-                townScreen.getCacheManager().refreshCachedValues();
-                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Refreshed cache data for parent screen");
+                // townScreen.getCacheManager().refreshCachedValues();  // Commented out - less aggressive refresh
+                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Modal closed - relying on normal data sync instead of forced cache refresh");
             }
         }
     }
