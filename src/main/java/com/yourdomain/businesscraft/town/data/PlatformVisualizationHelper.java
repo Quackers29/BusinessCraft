@@ -2,7 +2,6 @@ package com.yourdomain.businesscraft.town.data;
 
 import com.yourdomain.businesscraft.platform.Platform;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
@@ -72,20 +71,11 @@ public class PlatformVisualizationHelper {
                 BlockPos startPos = platform.getStartPos();
                 BlockPos endPos = platform.getEndPos();
                 
-                // Spawn particles at start and end positions
-                serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER, 
-                    startPos.getX() + 0.5, startPos.getY() + 1.0, startPos.getZ() + 0.5, 
-                    3, 0.3, 0.3, 0.3, 0.1);
+                // Platform visualization is now handled client-side through solid line rendering
+                // The ClientRenderEvents system automatically renders platforms based on 
+                // synchronized platform data in TownBlockEntity
                 
-                serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER, 
-                    endPos.getX() + 0.5, endPos.getY() + 1.0, endPos.getZ() + 0.5, 
-                    3, 0.3, 0.3, 0.3, 0.1);
-                
-                // Spawn particles along the path
-                spawnPathParticles(serverLevel, startPos, endPos);
-                
-                // Spawn search radius particles
-                spawnSearchRadiusParticles(serverLevel, startPos, endPos, searchRadius);
+                // No server-side particle spawning needed - all visualization is client-side
             }
         }
     }
@@ -110,91 +100,27 @@ public class PlatformVisualizationHelper {
     }
     
     /**
-     * Spawns particles along the path between start and end positions
-     * Creates a precise line showing the platform spawn path
+     * This method has been replaced by client-side solid line rendering.
+     * Platform paths are now rendered as solid lines through ClientRenderEvents.
+     * 
+     * @deprecated Use client-side PlatformLineRenderer.renderPath() instead
      */
+    @Deprecated
     private void spawnPathParticles(ServerLevel level, BlockPos startPos, BlockPos endPos) {
-        // Create a precise line using Bresenham-like algorithm for block positions
-        int x0 = startPos.getX();
-        int y0 = startPos.getY();
-        int z0 = startPos.getZ();
-        int x1 = endPos.getX();
-        int y1 = endPos.getY();
-        int z1 = endPos.getZ();
-        
-        // Calculate differences
-        int dx = Math.abs(x1 - x0);
-        int dy = Math.abs(y1 - y0);
-        int dz = Math.abs(z1 - z0);
-        
-        // Determine step directions
-        int stepX = x0 < x1 ? 1 : -1;
-        int stepY = y0 < y1 ? 1 : -1;
-        int stepZ = z0 < z1 ? 1 : -1;
-        
-        // Find the maximum difference to determine number of steps
-        int maxSteps = Math.max(Math.max(dx, dy), dz);
-        
-        // Generate particles along the line
-        for (int i = 0; i <= maxSteps; i++) {
-            double t = maxSteps > 0 ? (double) i / maxSteps : 0;
-            
-            int x = x0 + (int) Math.round(t * (x1 - x0));
-            int y = y0 + (int) Math.round(t * (y1 - y0));
-            int z = z0 + (int) Math.round(t * (z1 - z0));
-            
-            // Spawn green particle at each block position along the path
-            level.sendParticles(ParticleTypes.HAPPY_VILLAGER, 
-                x + 0.5, y + 1.0, z + 0.5, 
-                1, 0.0, 0.0, 0.0, 0.0);
-        }
+        // Method body removed - platform paths are now rendered client-side as solid lines
+        // See: ClientRenderEvents.renderPlatformsForTown() and PlatformLineRenderer.renderPath()
     }
     
     /**
-     * Spawns particles to show the search radius around platform area
-     * Creates a precise rectangular perimeter showing the visitor capture area
-     * Uses block-by-block placement for accurate boundary visualization
+     * This method has been replaced by client-side solid line rendering.
+     * Platform boundaries are now rendered as solid lines through ClientRenderEvents.
+     * 
+     * @deprecated Use client-side PlatformLineRenderer.renderBoundary() instead
      */
+    @Deprecated
     private void spawnSearchRadiusParticles(ServerLevel level, BlockPos startPos, BlockPos endPos, int radius) {
-        // Calculate the bounding box the same way it's used for entity search
-        int minX = Math.min(startPos.getX(), endPos.getX()) - radius;
-        int minZ = Math.min(startPos.getZ(), endPos.getZ()) - radius;
-        int maxX = Math.max(startPos.getX(), endPos.getX()) + radius;
-        int maxZ = Math.max(startPos.getZ(), endPos.getZ()) + radius;
-        
-        // Use a fixed Y for visualization
-        double particleY = Math.min(startPos.getY(), endPos.getY()) + 1.0;
-        
-        // Create precise boundary by placing particles at exact block positions
-        // This ensures symmetric 1-wide radius display on all sides
-        
-        // Bottom edge (minX to maxX at minZ) - inclusive of corners
-        for (int x = minX; x <= maxX; x++) {
-            level.sendParticles(ParticleTypes.FLAME,
-                x + 0.5, particleY, minZ + 0.5,
-                1, 0.0, 0.0, 0.0, 0.0);
-        }
-        
-        // Top edge (minX to maxX at maxZ) - inclusive of corners
-        for (int x = minX; x <= maxX; x++) {
-            level.sendParticles(ParticleTypes.FLAME,
-                x + 0.5, particleY, maxZ + 0.5,
-                1, 0.0, 0.0, 0.0, 0.0);
-        }
-        
-        // Left edge (minZ+1 to maxZ-1 at minX) - exclude corners to avoid duplicates
-        for (int z = minZ + 1; z < maxZ; z++) {
-            level.sendParticles(ParticleTypes.FLAME,
-                minX + 0.5, particleY, z + 0.5,
-                1, 0.0, 0.0, 0.0, 0.0);
-        }
-        
-        // Right edge (minZ+1 to maxZ-1 at maxX) - exclude corners to avoid duplicates
-        for (int z = minZ + 1; z < maxZ; z++) {
-            level.sendParticles(ParticleTypes.FLAME,
-                maxX + 0.5, particleY, z + 0.5,
-                1, 0.0, 0.0, 0.0, 0.0);
-        }
+        // Method body removed - platform boundaries are now rendered client-side as solid lines
+        // See: ClientRenderEvents.renderPlatformsForTown() and PlatformLineRenderer.renderBoundary()
     }
     
     /**
