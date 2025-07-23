@@ -23,7 +23,7 @@ import java.util.List;
 @Mod.EventBusSubscriber(modid = BusinessCraft.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientRenderEvents {
     
-    private static final float LINE_WIDTH = 2.0f; // Not used anymore, thickness handled by multiple parallel lines
+    private static final float LINE_WIDTH = 0.5f; // Quartered for thinner lines
     
     // Colors for visualization
     private static final float[] PATH_COLOR = {0.0f, 1.0f, 0.0f, 0.8f}; // Green with transparency
