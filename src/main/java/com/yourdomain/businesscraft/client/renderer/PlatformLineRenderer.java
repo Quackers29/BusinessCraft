@@ -58,24 +58,92 @@ public class PlatformLineRenderer {
         poseStack.pushPose();
         Matrix4f matrix = poseStack.last().pose();
 
-        // Calculate direction and perpendicular for quad thickness
-        double thickness = lineWidth / 10.0; // Convert to world units, adjust scale as needed
-        Vec3 direction = new Vec3(endX - startX, endY - startY, endZ - startZ).normalize();
-        Vec3 perp = new Vec3(-direction.z, 0, direction.x).normalize().scale(thickness / 2.0);
+        // Calculate direction and perpendiculars for 3D quad thickness
+        double thickness = 0.05; // Reduced thickness by 2 (0.1 -> 0.05)
+        Vec3 direction = new Vec3(endX - startX, endY - startY, endZ - startZ);
+        
+        // Prevent zero-length direction vector
+        if (direction.length() < 0.001) {
+            direction = new Vec3(1, 0, 0); // Default direction
+        } else {
+            direction = direction.normalize();
+        }
+        
+        // Create two perpendicular vectors for true 3D thickness
+        Vec3 perp1, perp2;
+        
+        // First perpendicular: horizontal (X-Z plane)
+        if (Math.abs(direction.y) < 0.9) {
+            // For non-vertical lines, use horizontal perpendicular
+            perp1 = new Vec3(-direction.z, 0, direction.x).normalize().scale(thickness / 2.0);
+        } else {
+            // For near-vertical lines, use X-axis perpendicular
+            perp1 = new Vec3(1, 0, 0).normalize().scale(thickness / 2.0);
+        }
+        
+        // Second perpendicular: ensure it's truly perpendicular to both direction and perp1
+        perp2 = direction.cross(perp1).normalize().scale(thickness / 2.0);
+        
+        // Debug: ensure we have proper perpendiculars
+        if (perp1.length() < 0.001 || perp2.length() < 0.001) {
+            // Fallback to axis-aligned perpendiculars
+            perp1 = new Vec3(thickness / 2.0, 0, 0);
+            perp2 = new Vec3(0, thickness / 2.0, 0);
+        }
 
-        // Calculate quad vertices
-        Vec3 v1 = new Vec3(startX, startY, startZ).add(perp);
-        Vec3 v2 = new Vec3(startX, startY, startZ).subtract(perp);
-        Vec3 v3 = new Vec3(endX, endY, endZ).subtract(perp);
-        Vec3 v4 = new Vec3(endX, endY, endZ).add(perp);
-
-        // Render as quad
+        // Render as 3D quad (rectangular prism) by drawing multiple faces
         buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
+        // Calculate all 8 vertices of the rectangular prism
+        Vec3 start = new Vec3(startX, startY, startZ);
+        Vec3 end = new Vec3(endX, endY, endZ);
+        
+        Vec3 v1 = start.add(perp1).add(perp2);
+        Vec3 v2 = start.add(perp1).subtract(perp2);
+        Vec3 v3 = start.subtract(perp1).subtract(perp2);
+        Vec3 v4 = start.subtract(perp1).add(perp2);
+        
+        Vec3 v5 = end.add(perp1).add(perp2);
+        Vec3 v6 = end.add(perp1).subtract(perp2);
+        Vec3 v7 = end.subtract(perp1).subtract(perp2);
+        Vec3 v8 = end.subtract(perp1).add(perp2);
+
+        // Render 6 faces of the rectangular prism with consistent counter-clockwise winding
+        // Face 1: Top (perp2 positive)
+        buffer.vertex(matrix, (float)v1.x, (float)v1.y, (float)v1.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v5.x, (float)v5.y, (float)v5.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v8.x, (float)v8.y, (float)v8.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v4.x, (float)v4.y, (float)v4.z).color(red, green, blue, alpha).endVertex();
+
+        // Face 2: Bottom (perp2 negative)  
+        buffer.vertex(matrix, (float)v3.x, (float)v3.y, (float)v3.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v7.x, (float)v7.y, (float)v7.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v6.x, (float)v6.y, (float)v6.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v2.x, (float)v2.y, (float)v2.z).color(red, green, blue, alpha).endVertex();
+
+        // Face 3: Right (perp1 positive)
         buffer.vertex(matrix, (float)v1.x, (float)v1.y, (float)v1.z).color(red, green, blue, alpha).endVertex();
         buffer.vertex(matrix, (float)v2.x, (float)v2.y, (float)v2.z).color(red, green, blue, alpha).endVertex();
-        buffer.vertex(matrix, (float)v3.x, (float)v3.y, (float)v3.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v6.x, (float)v6.y, (float)v6.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v5.x, (float)v5.y, (float)v5.z).color(red, green, blue, alpha).endVertex();
+
+        // Face 4: Left (perp1 negative)
         buffer.vertex(matrix, (float)v4.x, (float)v4.y, (float)v4.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v8.x, (float)v8.y, (float)v8.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v7.x, (float)v7.y, (float)v7.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v3.x, (float)v3.y, (float)v3.z).color(red, green, blue, alpha).endVertex();
+
+        // Face 5: Start cap
+        buffer.vertex(matrix, (float)v4.x, (float)v4.y, (float)v4.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v3.x, (float)v3.y, (float)v3.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v2.x, (float)v2.y, (float)v2.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v1.x, (float)v1.y, (float)v1.z).color(red, green, blue, alpha).endVertex();
+
+        // Face 6: End cap
+        buffer.vertex(matrix, (float)v5.x, (float)v5.y, (float)v5.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v6.x, (float)v6.y, (float)v6.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v7.x, (float)v7.y, (float)v7.z).color(red, green, blue, alpha).endVertex();
+        buffer.vertex(matrix, (float)v8.x, (float)v8.y, (float)v8.z).color(red, green, blue, alpha).endVertex();
 
         tesselator.end();
         poseStack.popPose();
