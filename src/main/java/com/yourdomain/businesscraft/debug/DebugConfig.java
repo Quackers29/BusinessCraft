@@ -47,8 +47,8 @@ public class DebugConfig {
     
     // Entity System
     public static final boolean ENTITY_SYSTEM = false;
-    public static final boolean TOURIST_ENTITY = false;
-    public static final boolean TOURIST_SPAWNING = false;
+    public static final boolean TOURIST_ENTITY = true;
+    public static final boolean TOURIST_SPAWNING = true;
     
     // Client Systems
     public static final boolean CLIENT_HANDLERS = false;

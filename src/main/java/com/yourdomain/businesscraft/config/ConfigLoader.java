@@ -35,7 +35,7 @@ public class ConfigLoader {
     public static int maxPopBasedTourists = 20; // Maximum population-based tourists (200 pop = 20 tourists)
     
     // Tourist-related config
-    public static int touristExpiryMinutes = 120; // Tourist expiry time in minutes (default: 120 = 2 hours)
+    public static double touristExpiryMinutes = 120.0; // Tourist expiry time in minutes (default: 120 = 2 hours)
     public static boolean enableTouristExpiry = true; // Whether tourist expiry is enabled
     public static boolean notifyOnTouristDeparture = true; // Whether to notify origin town when tourist quits or dies
     public static int touristsPerPopulationIncrease = 2; // Number of tourists required to increase population by 1
@@ -109,7 +109,7 @@ public class ConfigLoader {
             maxPopBasedTourists = Integer.parseInt(props.getProperty("maxPopBasedTourists", "20"));
             
             // Load tourist-related config
-            touristExpiryMinutes = Integer.parseInt(props.getProperty("touristExpiryMinutes", "120"));
+            touristExpiryMinutes = Double.parseDouble(props.getProperty("touristExpiryMinutes", "120.0"));
             enableTouristExpiry = Boolean.parseBoolean(props.getProperty("enableTouristExpiry", "true"));
             notifyOnTouristDeparture = Boolean.parseBoolean(props.getProperty("notifyOnTouristDeparture", "true"));
             touristsPerPopulationIncrease = Integer.parseInt(props.getProperty("touristsPerPopulationIncrease", "2"));
