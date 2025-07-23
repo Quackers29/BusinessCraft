@@ -123,31 +123,18 @@ public class TownMapModal extends Screen {
     }
     
     /**
-     * Load town data from client cache or request from server
+     * Load town data - always request fresh data from server
      */
     private void loadTownData() {
         try {
-            ClientTownMapCache cache = ClientTownMapCache.getInstance();
+            // Always request fresh data from server to ensure map shows current state
+            this.allTowns = new java.util.HashMap<>();
+            ModMessages.sendToServer(new RequestTownMapDataPacket());
             
             DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
-                "Loading town data - Cache has data: {}, Cache is stale: {}", 
-                cache.hasData(), cache.isStale());
-            
-            // Check if we have cached data and it's not stale
-            if (cache.hasData() && !cache.isStale()) {
-                this.allTowns = cache.getAllTowns();
-                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
-                    "Town data loaded from cache: {} towns", this.allTowns.size());
-            } else {
-                // Request fresh data from server
-                this.allTowns = new java.util.HashMap<>();
-                ModMessages.sendToServer(new RequestTownMapDataPacket());
-                
-                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
-                    "Requested fresh town data from server - cache had {} towns", cache.size());
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                    "Sending RequestTownMapDataPacket to server");
-            }
+                "Requested fresh town data from server (always fresh on map open)");
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                "Sending RequestTownMapDataPacket to server");
         } catch (Exception e) {
             LOGGER.error("Failed to load town data for map", e);
             this.allTowns = new java.util.HashMap<>();
@@ -1288,6 +1275,9 @@ public class TownMapModal extends Screen {
      */
     @Override
     public void onClose() {
+        // Clear map cache to ensure fresh data on next open
+        ClientTownMapCache.getInstance().clear();
+        
         // Execute close callback BEFORE switching screens
         if (onCloseCallback != null) {
             onCloseCallback.accept(this);
@@ -1296,7 +1286,7 @@ public class TownMapModal extends Screen {
         // Return to parent screen
         this.minecraft.setScreen(parentScreen);
         
-        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "TownMapModal closed");
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "TownMapModal closed and cache cleared");
     }
     
     /**
