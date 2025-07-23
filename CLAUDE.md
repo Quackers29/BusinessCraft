@@ -106,6 +106,12 @@ BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete
   - Individual platform enable/disable
   - Real-time visualization with particle effects
 
+**World Visualization System** (`com.yourdomain.businesscraft.client.render.world`)
+- Modular 3D line rendering framework for world overlays: `LineRenderer3D`, `BoundaryRenderer3D`, `PathRenderer3D`
+- `WorldVisualizationRenderer` base class with distance culling and chunk management
+- `VisualizationManager` handles multiple visualization types (platform, route, debug, territory, quest)
+- Ready for territory boundaries, transportation routes, quest paths, and debug overlays
+
 **UI Framework** (`com.yourdomain.businesscraft.ui`) - **Production-Grade**
 - Complete component-based architecture with 11-directory structure
 - `BCScreenBuilder`: Fluent API for screen creation with tabbed interfaces
