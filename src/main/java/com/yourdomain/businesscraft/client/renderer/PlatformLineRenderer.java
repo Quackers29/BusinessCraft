@@ -19,7 +19,7 @@ import java.util.List;
 public class PlatformLineRenderer {
     
     /**
-     * Renders a solid line between two positions in world space
+     * Renders a thick solid line between two positions in world space using multiple parallel lines
      * @param poseStack The pose stack for transformations
      * @param startPos Starting position
      * @param endPos Ending position
@@ -27,7 +27,7 @@ public class PlatformLineRenderer {
      * @param green Green component (0.0 - 1.0)
      * @param blue Blue component (0.0 - 1.0)
      * @param alpha Alpha component (0.0 - 1.0)
-     * @param lineWidth Width of the line
+     * @param lineWidth Width of the line (ignored, using fixed thick rendering)
      */
     public static void renderLine(PoseStack poseStack, BlockPos startPos, BlockPos endPos,
                                 float red, float green, float blue, float alpha, float lineWidth) {
@@ -36,11 +36,12 @@ public class PlatformLineRenderer {
         Vec3 cameraPos = camera.getPosition();
         
         // Convert block positions to world coordinates, offset by camera position
+        // Adding 1.1 to Y to ensure lines appear 0.1 blocks above the actual block surface
         double startX = startPos.getX() + 0.5 - cameraPos.x;
-        double startY = startPos.getY() + 1.0 - cameraPos.y;
+        double startY = startPos.getY() + 1.1 - cameraPos.y; // Fixed positioning: +1.1 for 0.1 above block
         double startZ = startPos.getZ() + 0.5 - cameraPos.z;
         double endX = endPos.getX() + 0.5 - cameraPos.x;
-        double endY = endPos.getY() + 1.0 - cameraPos.y;
+        double endY = endPos.getY() + 1.1 - cameraPos.y; // Fixed positioning: +1.1 for 0.1 above block
         double endZ = endPos.getZ() + 0.5 - cameraPos.z;
         
         // Setup rendering state
@@ -49,7 +50,6 @@ public class PlatformLineRenderer {
         RenderSystem.defaultBlendFunc();
         RenderSystem.disableCull();
         RenderSystem.enableDepthTest();
-        RenderSystem.lineWidth(lineWidth);
         
         // Create buffer and tessellator
         Tesselator tesselator = Tesselator.getInstance();
@@ -58,18 +58,41 @@ public class PlatformLineRenderer {
         poseStack.pushPose();
         Matrix4f matrix = poseStack.last().pose();
         
-        // Render the line
+        // Render thick line by drawing multiple parallel lines
         buffer.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-        buffer.vertex(matrix, (float) startX, (float) startY, (float) startZ).color(red, green, blue, alpha).endVertex();
-        buffer.vertex(matrix, (float) endX, (float) endY, (float) endZ).color(red, green, blue, alpha).endVertex();
-        tesselator.end();
         
+        // Calculate perpendicular offsets to create thickness
+        double thickness = 0.1; // Thickness in blocks
+        Vec3 direction = new Vec3(endX - startX, endY - startY, endZ - startZ).normalize();
+        Vec3 perpendicular1 = new Vec3(-direction.z, 0, direction.x).normalize().scale(thickness);
+        Vec3 perpendicular2 = new Vec3(0, 1, 0).normalize().scale(thickness);
+        
+        // Draw multiple lines to create thickness - 10x thicker with larger grid
+        for (int i = -5; i <= 5; i++) {
+            for (int j = -5; j <= 5; j++) {
+                double offsetScale1 = i * 0.005; // 10x thicker: 0.0005 -> 0.005
+                double offsetScale2 = j * 0.005; // 10x thicker: 0.0005 -> 0.005
+                
+                Vec3 offset = perpendicular1.scale(offsetScale1).add(perpendicular2.scale(offsetScale2));
+                
+                float sx = (float) (startX + offset.x);
+                float sy = (float) (startY + offset.y);
+                float sz = (float) (startZ + offset.z);
+                float ex = (float) (endX + offset.x);
+                float ey = (float) (endY + offset.y);
+                float ez = (float) (endZ + offset.z);
+                
+                buffer.vertex(matrix, sx, sy, sz).color(red, green, blue, alpha).endVertex();
+                buffer.vertex(matrix, ex, ey, ez).color(red, green, blue, alpha).endVertex();
+            }
+        }
+        
+        tesselator.end();
         poseStack.popPose();
         
         // Restore rendering state
         RenderSystem.disableBlend();
         RenderSystem.enableCull();
-        RenderSystem.lineWidth(1.0f);
     }
     
     /**
@@ -93,83 +116,38 @@ public class PlatformLineRenderer {
         int maxX = Math.max(startPos.getX(), endPos.getX()) + radius;
         int maxZ = Math.max(startPos.getZ(), endPos.getZ()) + radius;
         
-        // Use a fixed Y for the boundary visualization
-        double boundaryY = Math.min(startPos.getY(), endPos.getY()) + 1.0;
+        // Use the same Y level as the platform positions for consistency
+        // This ensures boundary lines appear at the same height as path lines
+        int platformY = Math.min(startPos.getY(), endPos.getY());
         
-        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-        Vec3 cameraPos = camera.getPosition();
-        
-        // Setup rendering state
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.enableDepthTest();
-        RenderSystem.lineWidth(lineWidth);
-        
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.getBuilder();
-        
-        poseStack.pushPose();
-        Matrix4f matrix = poseStack.last().pose();
-        
-        buffer.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-        
+        // Use thick line rendering for each boundary segment
         // Bottom edge (minX to maxX at minZ)
         for (int x = minX; x < maxX; x++) {
-            float startX = (float) (x + 0.5 - cameraPos.x);
-            float startZ = (float) (minZ + 0.5 - cameraPos.z);
-            float endX = (float) (x + 1.5 - cameraPos.x);
-            float endZ = (float) (minZ + 0.5 - cameraPos.z);
-            float y = (float) (boundaryY - cameraPos.y);
-            
-            buffer.vertex(matrix, startX, y, startZ).color(red, green, blue, alpha).endVertex();
-            buffer.vertex(matrix, endX, y, endZ).color(red, green, blue, alpha).endVertex();
+            BlockPos segmentStart = new BlockPos(x, platformY, minZ);
+            BlockPos segmentEnd = new BlockPos(x + 1, platformY, minZ);
+            renderLine(poseStack, segmentStart, segmentEnd, red, green, blue, alpha, lineWidth);
         }
         
         // Top edge (minX to maxX at maxZ)
         for (int x = minX; x < maxX; x++) {
-            float startX = (float) (x + 0.5 - cameraPos.x);
-            float startZ = (float) (maxZ + 0.5 - cameraPos.z);
-            float endX = (float) (x + 1.5 - cameraPos.x);
-            float endZ = (float) (maxZ + 0.5 - cameraPos.z);
-            float y = (float) (boundaryY - cameraPos.y);
-            
-            buffer.vertex(matrix, startX, y, startZ).color(red, green, blue, alpha).endVertex();
-            buffer.vertex(matrix, endX, y, endZ).color(red, green, blue, alpha).endVertex();
+            BlockPos segmentStart = new BlockPos(x, platformY, maxZ);
+            BlockPos segmentEnd = new BlockPos(x + 1, platformY, maxZ);
+            renderLine(poseStack, segmentStart, segmentEnd, red, green, blue, alpha, lineWidth);
         }
         
         // Left edge (minZ to maxZ at minX)
         for (int z = minZ; z < maxZ; z++) {
-            float startX = (float) (minX + 0.5 - cameraPos.x);
-            float startZ = (float) (z + 0.5 - cameraPos.z);
-            float endX = (float) (minX + 0.5 - cameraPos.x);
-            float endZ = (float) (z + 1.5 - cameraPos.z);
-            float y = (float) (boundaryY - cameraPos.y);
-            
-            buffer.vertex(matrix, startX, y, startZ).color(red, green, blue, alpha).endVertex();
-            buffer.vertex(matrix, endX, y, endZ).color(red, green, blue, alpha).endVertex();
+            BlockPos segmentStart = new BlockPos(minX, platformY, z);
+            BlockPos segmentEnd = new BlockPos(minX, platformY, z + 1);
+            renderLine(poseStack, segmentStart, segmentEnd, red, green, blue, alpha, lineWidth);
         }
         
         // Right edge (minZ to maxZ at maxX)
         for (int z = minZ; z < maxZ; z++) {
-            float startX = (float) (maxX + 0.5 - cameraPos.x);
-            float startZ = (float) (z + 0.5 - cameraPos.z);
-            float endX = (float) (maxX + 0.5 - cameraPos.x);
-            float endZ = (float) (z + 1.5 - cameraPos.z);
-            float y = (float) (boundaryY - cameraPos.y);
-            
-            buffer.vertex(matrix, startX, y, startZ).color(red, green, blue, alpha).endVertex();
-            buffer.vertex(matrix, endX, y, endZ).color(red, green, blue, alpha).endVertex();
+            BlockPos segmentStart = new BlockPos(maxX, platformY, z);
+            BlockPos segmentEnd = new BlockPos(maxX, platformY, z + 1);
+            renderLine(poseStack, segmentStart, segmentEnd, red, green, blue, alpha, lineWidth);
         }
-        
-        tesselator.end();
-        poseStack.popPose();
-        
-        // Restore rendering state
-        RenderSystem.disableBlend();
-        RenderSystem.enableCull();
-        RenderSystem.lineWidth(1.0f);
     }
     
     /**
@@ -208,26 +186,7 @@ public class PlatformLineRenderer {
             return;
         }
         
-        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-        Vec3 cameraPos = camera.getPosition();
-        
-        // Setup rendering state
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableCull();
-        RenderSystem.enableDepthTest();
-        RenderSystem.lineWidth(lineWidth);
-        
-        Tesselator tesselator = Tesselator.getInstance();
-        BufferBuilder buffer = tesselator.getBuilder();
-        
-        poseStack.pushPose();
-        Matrix4f matrix = poseStack.last().pose();
-        
-        buffer.begin(VertexFormat.Mode.DEBUG_LINES, DefaultVertexFormat.POSITION_COLOR);
-        
-        // Generate connected line segments along the path
+        // Generate connected thick line segments along the path using renderLine
         for (int i = 0; i < maxSteps; i++) {
             double t1 = (double) i / maxSteps;
             double t2 = (double) (i + 1) / maxSteps;
@@ -240,24 +199,10 @@ public class PlatformLineRenderer {
             int y2_pos = y0 + (int) Math.round(t2 * (y1 - y0));
             int z2_pos = z0 + (int) Math.round(t2 * (z1 - z0));
             
-            // Convert to world coordinates relative to camera
-            float startX = (float) (x1_pos + 0.5 - cameraPos.x);
-            float startY = (float) (y1_pos + 1.0 - cameraPos.y);
-            float startZ = (float) (z1_pos + 0.5 - cameraPos.z);
-            float endX = (float) (x2_pos + 0.5 - cameraPos.x);
-            float endY = (float) (y2_pos + 1.0 - cameraPos.y);
-            float endZ = (float) (z2_pos + 0.5 - cameraPos.z);
-            
-            buffer.vertex(matrix, startX, startY, startZ).color(red, green, blue, alpha).endVertex();
-            buffer.vertex(matrix, endX, endY, endZ).color(red, green, blue, alpha).endVertex();
+            // Use thick line rendering for each segment
+            BlockPos segmentStart = new BlockPos(x1_pos, y1_pos, z1_pos);
+            BlockPos segmentEnd = new BlockPos(x2_pos, y2_pos, z2_pos);
+            renderLine(poseStack, segmentStart, segmentEnd, red, green, blue, alpha, lineWidth);
         }
-        
-        tesselator.end();
-        poseStack.popPose();
-        
-        // Restore rendering state
-        RenderSystem.disableBlend();
-        RenderSystem.enableCull();
-        RenderSystem.lineWidth(1.0f);
     }
 }
