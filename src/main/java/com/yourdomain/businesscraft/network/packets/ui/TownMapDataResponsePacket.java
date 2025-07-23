@@ -90,6 +90,15 @@ public class TownMapDataResponsePacket {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "Updated client town map cache with {} towns", townData.size());
                 
+                // Try to refresh any open town map modals
+                if (net.minecraft.client.Minecraft.getInstance().screen instanceof 
+                    com.yourdomain.businesscraft.ui.modal.specialized.TownMapModal) {
+                    ((com.yourdomain.businesscraft.ui.modal.specialized.TownMapModal) 
+                     net.minecraft.client.Minecraft.getInstance().screen).refreshFromCache();
+                    DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
+                        "Refreshed open town map modal with new data");
+                }
+                
             } catch (Exception e) {
                 LOGGER.error("Error handling TownMapDataResponsePacket", e);
             }

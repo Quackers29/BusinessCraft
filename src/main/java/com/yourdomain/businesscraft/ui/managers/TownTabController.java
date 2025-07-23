@@ -236,6 +236,32 @@ public class TownTabController {
     }
     
     /**
+     * Forces a refresh of all tabs.
+     * Useful when data has changed and all tabs need to update their display.
+     */
+    public void forceRefreshAllTabs() {
+        // Refresh overview tab
+        if (overviewTab != null) {
+            overviewTab.update();
+        }
+        
+        // Refresh resources tab
+        if (resourcesTab != null && resourcesTab instanceof ResourcesTab) {
+            ((ResourcesTab) resourcesTab).forceRefresh();
+        }
+        
+        // Refresh population tab
+        if (populationTab != null && populationTab instanceof PopulationTab) {
+            ((PopulationTab) populationTab).update();
+        }
+        
+        // Refresh settings tab  
+        if (settingsTab != null && settingsTab instanceof SettingsTab) {
+            ((SettingsTab) settingsTab).update();
+        }
+    }
+    
+    /**
      * Cleans up tab resources when the screen is closed.
      */
     public void cleanup() {
