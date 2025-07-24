@@ -2,6 +2,99 @@
 
 ## 🎯 **IMMEDIATE TASKS** (Do not remove header)
 
+### Population-Based Town Boundaries Implementation
+
+#### **Phase 1: Data Model and Boundary System**
+- [ ] **1.1 Add Town Boundary Methods to Town.java**
+  - Add `getBoundaryRadius()` method that returns current population (1:1 ratio)
+  - Add `getPosition()` accessor for town center coordinates
+  - Add validation method `wouldOverlapWith(Town other)` for boundary overlap checks
+  
+- [ ] **1.2 Create TownBoundaryService.java**
+  - Create new service class in `town/service/` package
+  - Implement `calculateBoundaryRadius(Town town)` - returns town population as radius
+  - Implement `checkTownPlacement(BlockPos newPos, Collection<Town> existingTowns)` - validates placement
+  - Implement `getMinimumDistanceRequired(Town town1, Town town2)` - calculates required distance
+  - Include logic: minDistance = town1.boundary + town2.boundary
+
+#### **Phase 2: Update Town Placement Logic**
+- [ ] **2.1 Modify TownManager.canPlaceTownAt()**
+  - Replace static `minDistanceBetweenTowns` config usage with dynamic boundary calculation
+  - For new towns: use `defaultStartingPopulation` (5) as initial boundary radius
+  - For existing towns: use current population as boundary radius
+  - Calculate required distance as: existingTown.boundary + newTown.boundary
+  
+- [ ] **2.2 Update Block Placement Error Messages**
+  - Modify error messages in `TownBlock.java` and `TownInterfaceBlock.java`
+  - Show dynamic distance requirements instead of static config value
+  - Format: "Town requires X blocks distance (your boundary: Y + nearby town boundary: Z)"
+
+#### **Phase 3: Boundary Growth Handling**
+- [ ] **3.1 Add Population Change Event System**
+  - Create `TownPopulationChangeEvent` class in events package
+  - Trigger event when town population increases/decreases
+  - Include old population, new population, and boundary radius changes
+  
+- [ ] **3.2 Implement Boundary Overlap Detection**
+  - Add method to detect when growing boundaries would overlap existing towns
+  - Create validation system to prevent population increases that would cause overlaps
+  - Log warnings when towns approach boundary conflicts
+  
+- [ ] **3.3 Add Boundary Visualization**
+  - **World Visualization**: Create `TownBoundaryVisualizationRenderer` extending `WorldVisualizationRenderer`
+  - **Circle Rendering**: Implement circular boundary rendering in `BoundaryRenderer3D.java` (currently has placeholder)
+  - **Integration**: Add `TYPE_TOWN_BOUNDARY = "town_boundary"` to `VisualizationManager`
+  - **Trigger**: Show boundary circles when platform visualization is active (same trigger as platforms)
+  - **Colors**: Green=safe spacing, yellow=close to overlap, red=would overlap
+  - **Map Display**: Add boundary radius display to `TownMapModal.java` map view
+
+#### **Phase 4: Configuration and Backward Compatibility**
+- [ ] **4.1 Update Configuration System**
+  - Keep `minDistanceBetweenTowns` config as fallback/minimum distance override
+  - Add new config: `enablePopulationBasedBoundaries=true`
+  - Add config: `minTownBoundaryRadius=5` (minimum boundary regardless of population)
+  - Add config: `maxTownBoundaryRadius=50` (maximum boundary cap)
+  
+- [ ] **4.2 Migration Support**
+  - Ensure existing towns work correctly with new boundary system
+  - Validate existing town positions don't violate new boundary rules
+  - Add debug logging for boundary calculations during world load
+
+#### **Phase 5: Implementation Details**
+
+**World Visualization Architecture:**
+- Extend existing `VisualizationManager` system (supports TYPE_PLATFORM, TYPE_ROUTE, etc.)
+- `BoundaryRenderer3D.java` already has circular boundary placeholder methods ready to implement
+- Use same trigger system as platforms: when town interface is accessed, show both platform lines AND boundary circles
+- Integration point: `PlatformVisualizationRenderer.showPlatformVisualization()` → also trigger boundary visualization
+
+**Map Display Integration:**
+- `TownMapModal.java` already displays town positions and data
+- Add boundary radius as visual circles around town markers
+- Show radius value in town info panel
+- Color-code based on proximity to other towns
+
+**Circle Rendering Implementation:**
+```java
+// In BoundaryRenderer3D.java - implement the placeholder method
+public static void renderCircularBoundary(PoseStack poseStack, BlockPos center, int radius, Color color) {
+    List<Vec3> points = createCircularBoundaryPoints(center, radius, 32); // 32 segments for smooth circle
+    renderPolygonBoundary(poseStack, points, color, config);
+}
+```
+
+#### **Phase 6: Testing and Validation**
+- [ ] **6.1 Unit Testing**
+  - Test boundary calculation with various population levels
+  - Test town placement validation with multiple existing towns
+  - Test edge cases: towns at world border, very high populations
+  
+- [ ] **6.2 Integration Testing**
+  - Test population growth triggering boundary expansion
+  - Test preventing town placement when boundaries would overlap
+  - Verify backward compatibility with existing worlds
+  - Test visualization triggers with existing platform system
+
 ## 🎯 **COMPLETED TASKS** ✅
 
 ## 🎯 **FUTURE TASKS**
