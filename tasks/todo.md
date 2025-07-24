@@ -5,12 +5,12 @@
 ### Population-Based Town Boundaries Implementation
 
 #### **Phase 1: Data Model and Boundary System**
-- [ ] **1.1 Add Town Boundary Methods to Town.java**
+- [x] **1.1 Add Town Boundary Methods to Town.java**
   - Add `getBoundaryRadius()` method that returns current population (1:1 ratio)
   - Add `getPosition()` accessor for town center coordinates
   - Add validation method `wouldOverlapWith(Town other)` for boundary overlap checks
   
-- [ ] **1.2 Create TownBoundaryService.java**
+- [x] **1.2 Create TownBoundaryService.java**
   - Create new service class in `town/service/` package
   - Implement `calculateBoundaryRadius(Town town)` - returns town population as radius
   - Implement `checkTownPlacement(BlockPos newPos, Collection<Town> existingTowns)` - validates placement
@@ -18,13 +18,13 @@
   - Include logic: minDistance = town1.boundary + town2.boundary
 
 #### **Phase 2: Update Town Placement Logic**
-- [ ] **2.1 Modify TownManager.canPlaceTownAt()**
+- [x] **2.1 Modify TownManager.canPlaceTownAt()**
   - Replace static `minDistanceBetweenTowns` config usage with dynamic boundary calculation
   - For new towns: use `defaultStartingPopulation` (5) as initial boundary radius
   - For existing towns: use current population as boundary radius
   - Calculate required distance as: existingTown.boundary + newTown.boundary
   
-- [ ] **2.2 Update Block Placement Error Messages**
+- [x] **2.2 Update Block Placement Error Messages**
   - Modify error messages in `TownBlock.java` and `TownInterfaceBlock.java`
   - Show dynamic distance requirements instead of static config value
   - Format: "Town requires X blocks distance (your boundary: Y + nearby town boundary: Z)"
@@ -40,7 +40,7 @@
   - Create validation system to prevent population increases that would cause overlaps
   - Log warnings when towns approach boundary conflicts
   
-- [ ] **3.3 Add Boundary Visualization**
+- [x] **3.3 Add Boundary Visualization**
   - **World Visualization**: Create `TownBoundaryVisualizationRenderer` extending `WorldVisualizationRenderer`
   - **Circle Rendering**: Implement circular boundary rendering in `BoundaryRenderer3D.java` (currently has placeholder)
   - **Integration**: Add `TYPE_TOWN_BOUNDARY = "town_boundary"` to `VisualizationManager`

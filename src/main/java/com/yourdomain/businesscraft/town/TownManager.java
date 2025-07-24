@@ -14,10 +14,12 @@ import com.yourdomain.businesscraft.debug.DebugConfig;
 import java.util.HashMap;
 import net.minecraft.world.item.Item;
 import com.yourdomain.businesscraft.config.ConfigLoader;
+import com.yourdomain.businesscraft.town.service.TownBoundaryService;
 
 public class TownManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/TownManager");
     private final TownSavedData savedData;
+    private final TownBoundaryService boundaryService;
     
     // Static reference to the current level for context
     private static final Map<ServerLevel, TownManager> INSTANCES = new HashMap<>();
@@ -32,6 +34,7 @@ public class TownManager {
             TownSavedData::create,
             TownSavedData.NAME
         );
+        this.boundaryService = new TownBoundaryService();
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "TownManager initialized for level: {}", level.dimension().location());
     }
 
@@ -63,26 +66,35 @@ public class TownManager {
     }
     
     /**
-     * Checks if a town can be placed at the specified position based on minimum distance
+     * Checks if a town can be placed at the specified position based on dynamic boundary calculations
      * 
      * @param pos The position to check
      * @return true if the town can be placed, false otherwise
      */
     public boolean canPlaceTownAt(BlockPos pos) {
-        int minDistanceSquared = ConfigLoader.minDistanceBetweenTowns * ConfigLoader.minDistanceBetweenTowns;
+        com.yourdomain.businesscraft.util.Result<Void, com.yourdomain.businesscraft.util.BCError.TownError> result = 
+            boundaryService.checkTownPlacement(pos, savedData.getTowns().values());
         
-        for (Town town : savedData.getTowns().values()) {
-            BlockPos townPos = town.getPosition();
-            double distanceSquared = pos.distSqr(townPos);
-            
-            if (distanceSquared < minDistanceSquared) {
-                DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Town placement check failed: distance {} < min required {}", 
-                    Math.sqrt(distanceSquared), ConfigLoader.minDistanceBetweenTowns);
-                return false;
-            }
+        if (result.isFailure()) {
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Town placement failed: {}", result.getError().getMessage());
+            return false;
         }
         
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Town placement validated at position: {}", pos);
         return true;
+    }
+    
+    /**
+     * Gets the detailed error message for why a town cannot be placed at a position
+     * 
+     * @param pos The position to check
+     * @return Error message or null if placement is valid
+     */
+    public String getTownPlacementError(BlockPos pos) {
+        com.yourdomain.businesscraft.util.Result<Void, com.yourdomain.businesscraft.util.BCError.TownError> result = 
+            boundaryService.checkTownPlacement(pos, savedData.getTowns().values());
+        
+        return result.isFailure() ? result.getError().getMessage() : null;
     }
 
     public Town getTown(UUID id) {

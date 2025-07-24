@@ -95,14 +95,18 @@ public class TownBlock extends BaseEntityBlock {
                 if (level instanceof ServerLevel serverLevel) {
                     TownManager townManager = TownManager.get(serverLevel);
                     
-                    // Check if town can be placed here (minimum distance check)
+                    // Check if town can be placed here (dynamic boundary distance check)
                     if (!townManager.canPlaceTownAt(pos)) {
                         // Town can't be placed here, delete the block and notify player
                         level.removeBlock(pos, false);
                         if (placer instanceof ServerPlayer player) {
+                            String errorMessage = townManager.getTownPlacementError(pos);
+                            if (errorMessage == null) {
+                                errorMessage = "Town cannot be placed here due to boundary conflicts";
+                            }
+                            
                             player.displayClientMessage(net.minecraft.network.chat.Component.literal(
-                                "Town cannot be placed here - too close to another town (min distance: " + 
-                                ConfigLoader.minDistanceBetweenTowns + " blocks)"), false);
+                                "Town cannot be placed here - " + errorMessage), false);
                             // Return the block to the player's inventory
                             if (!player.isCreative()) {
                                 player.getInventory().add(stack.copy());

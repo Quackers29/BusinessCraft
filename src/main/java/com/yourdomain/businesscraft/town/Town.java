@@ -75,6 +75,56 @@ public class Town implements ITownDataProvider {
         return economy.getResources().getAllResources();
     }
     
+    // ================================
+    // Town Boundary System Methods
+    // ================================
+    
+    /**
+     * Gets the boundary radius for this town based on population (1:1 ratio)
+     * @return The boundary radius in blocks
+     */
+    public int getBoundaryRadius() {
+        int populationRadius = getPopulation();
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Town {} boundary radius: {} (population: {})", 
+            name, populationRadius, getPopulation());
+        return populationRadius;
+    }
+    
+    /**
+     * Checks if this town's boundary would overlap with another town's boundary
+     * @param otherTown The other town to check against
+     * @return true if boundaries would overlap, false otherwise
+     */
+    public boolean wouldOverlapWith(Town otherTown) {
+        if (otherTown == null) return false;
+        
+        double distance = Math.sqrt(this.position.distSqr(otherTown.position));
+        double requiredDistance = this.getBoundaryRadius() + otherTown.getBoundaryRadius();
+        
+        boolean wouldOverlap = distance < requiredDistance;
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
+            "Boundary overlap check: {} vs {} - distance: {}, required: {}, overlap: {}", 
+            this.name, otherTown.name, distance, requiredDistance, wouldOverlap);
+        
+        return wouldOverlap;
+    }
+    
+    /**
+     * Calculates the minimum distance required between this town and another
+     * @param otherTown The other town
+     * @return The minimum required distance in blocks
+     */
+    public double getMinimumDistanceRequired(Town otherTown) {
+        if (otherTown == null) return this.getBoundaryRadius();
+        
+        double minDistance = this.getBoundaryRadius() + otherTown.getBoundaryRadius();
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
+            "Minimum distance between {} and {}: {} ({}+{})", 
+            this.name, otherTown.name, minDistance, this.getBoundaryRadius(), otherTown.getBoundaryRadius());
+        
+        return minDistance;
+    }
+    
     /**
      * @deprecated Use TownService.canSpawnTourists() instead
      */
