@@ -1,7 +1,6 @@
 package com.yourdomain.businesscraft.network.packets.ui;
 
 import com.yourdomain.businesscraft.client.render.world.PlatformVisualizationRenderer;
-import com.yourdomain.businesscraft.client.render.world.TownBoundaryPopulationCache;
 import com.yourdomain.businesscraft.client.render.world.TownBoundaryVisualizationRenderer;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import net.minecraft.client.Minecraft;
@@ -16,27 +15,22 @@ import java.util.function.Supplier;
 
 /**
  * Packet sent from server to client to enable platform visualization
- * for a specific town block for 30 seconds. Also includes population data
- * for boundary visualization.
+ * for a specific town block for 30 seconds.
  */
 public class PlatformVisualizationPacket extends BaseBlockEntityPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlatformVisualizationPacket.class);
-    private final int townPopulation;
 
-    public PlatformVisualizationPacket(BlockPos pos, int townPopulation) {
+    public PlatformVisualizationPacket(BlockPos pos) {
         super(pos);
-        this.townPopulation = townPopulation;
     }
 
     public PlatformVisualizationPacket(FriendlyByteBuf buf) {
         super(buf);
-        this.townPopulation = buf.readInt();
     }
 
     @Override
     public void toBytes(FriendlyByteBuf buf) {
         super.toBytes(buf);
-        buf.writeInt(townPopulation);
     }
     
     /**
@@ -63,13 +57,10 @@ public class PlatformVisualizationPacket extends BaseBlockEntityPacket {
             // Register the town block for platform visualization using the new modular system
             PlatformVisualizationRenderer.showPlatformVisualization(pos, level.getGameTime());
             
-            // Store population data for boundary visualization
-            TownBoundaryPopulationCache.setPopulation(pos, townPopulation);
-            
             // Also trigger boundary visualization at the same time as platforms
             TownBoundaryVisualizationRenderer.showTownBoundaryVisualization(pos, level.getGameTime());
             
-            LOGGER.debug("Client received platform visualization enable for town at {} with population {}", pos, townPopulation);
+            LOGGER.debug("Client received platform visualization enable for town at {}", pos);
         });
         context.setPacketHandled(true);
         return true;

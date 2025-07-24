@@ -31,6 +31,8 @@ import com.yourdomain.businesscraft.network.packets.ui.OpenDestinationsUIPacket;
 import com.yourdomain.businesscraft.network.packets.ui.RefreshDestinationsPacket;
 import com.yourdomain.businesscraft.network.packets.ui.PlayerExitUIPacket;
 import com.yourdomain.businesscraft.network.packets.ui.PlatformVisualizationPacket;
+import com.yourdomain.businesscraft.network.packets.ui.BoundarySyncRequestPacket;
+import com.yourdomain.businesscraft.network.packets.ui.BoundarySyncResponsePacket;
 import com.yourdomain.businesscraft.network.packets.ui.OpenTownInterfacePacket;
 import com.yourdomain.businesscraft.network.packets.ui.OpenPaymentBoardPacket;
 import com.yourdomain.businesscraft.network.packets.ui.RequestTownMapDataPacket;
@@ -297,6 +299,19 @@ public class ModMessages {
                 .decoder(TownPlatformDataResponsePacket::decode)
                 .encoder((msg, buf) -> msg.encode(buf))
                 .consumerMainThread(TownPlatformDataResponsePacket::handle)
+                .add();
+                
+        // Register boundary sync packets for real-time boundary updates
+        net.messageBuilder(BoundarySyncRequestPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(BoundarySyncRequestPacket::decode)
+                .encoder(BoundarySyncRequestPacket::encode)
+                .consumerMainThread(BoundarySyncRequestPacket::handle)
+                .add();
+                
+        net.messageBuilder(BoundarySyncResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(BoundarySyncResponsePacket::decode)
+                .encoder(BoundarySyncResponsePacket::encode)
+                .consumerMainThread(BoundarySyncResponsePacket::handle)
                 .add();
     }
 
