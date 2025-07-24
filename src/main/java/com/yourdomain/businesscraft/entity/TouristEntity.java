@@ -148,7 +148,7 @@ public class TouristEntity extends Villager {
             }
         }
         
-        // Handle expiry - only expire when stationary
+        // Handle expiry - only expire when stationary (regardless of riding state)
         if (!this.level().isClientSide && ConfigLoader.enableTouristExpiry) {
             positionUpdateTicks++;
             
@@ -397,6 +397,7 @@ public class TouristEntity extends Villager {
     public static AttributeSupplier.Builder createAttributes() {
         return Villager.createAttributes();
     }
+    
     
     @Override
     public boolean startRiding(Entity entity, boolean force) {

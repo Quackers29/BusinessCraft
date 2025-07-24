@@ -30,10 +30,4 @@ public class TouristRenderer extends MobRenderer<TouristEntity, VillagerModel<To
     public ResourceLocation getTextureLocation(TouristEntity entity) {
         return VILLAGER_BASE_SKIN;
     }
-    
-    @Override
-    protected boolean isShaking(TouristEntity entity) {
-        // Make tourists shake when they're about to expire (last 30 seconds)
-        return entity.getExpiryTicks() < 600;
-    }
 } 
