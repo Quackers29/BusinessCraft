@@ -26,16 +26,48 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
     private static final LineRenderer3D.Color BOUNDARY_COLOR = LineRenderer3D.Color.GREEN;
     
     /**
-     * Simple data structure for town boundary visualization data
+     * Data structure for town boundary visualization with dynamic updates
      */
     public static class TownBoundaryVisualizationData {
-        private final int boundaryRadius;
+        private final BlockPos townPosition;
+        private int cachedBoundaryRadius;
+        private long lastUpdateTime;
+        private static final long UPDATE_INTERVAL_MS = 1000; // Update every 1 second
         
-        public TownBoundaryVisualizationData(int boundaryRadius) {
-            this.boundaryRadius = boundaryRadius;
+        public TownBoundaryVisualizationData(BlockPos townPosition) {
+            this.townPosition = townPosition;
+            this.cachedBoundaryRadius = calculateRadius();
+            this.lastUpdateTime = System.currentTimeMillis();
         }
         
-        public int getBoundaryRadius() { return boundaryRadius; }
+        public int getBoundaryRadius() {
+            long currentTime = System.currentTimeMillis();
+            if (currentTime - lastUpdateTime >= UPDATE_INTERVAL_MS) {
+                cachedBoundaryRadius = calculateRadius();
+                lastUpdateTime = currentTime;
+            }
+            return cachedBoundaryRadius;
+        }
+        
+        private int calculateRadius() {
+            // Get population from the cache that was set when visualization packet was received
+            int population = TownBoundaryPopulationCache.getPopulation(townPosition, 5);
+            int newRadius = Math.max(population, 5); // Minimum 5 blocks radius
+            
+            // Debug log to see what population we're getting
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
+                "Calculating boundary radius: population={}, radius={}, pos={}", 
+                population, newRadius, townPosition);
+            
+            // Debug log when radius changes
+            if (newRadius != cachedBoundaryRadius) {
+                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
+                    "Boundary radius updated: {} -> {} (population: {})", 
+                    cachedBoundaryRadius, newRadius, population);
+            }
+            
+            return newRadius;
+        }
     }
     
     public TownBoundaryVisualizationRenderer() {
@@ -65,20 +97,14 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
                     if (manager.shouldShowVisualization(VisualizationManager.TYPE_TOWN_BOUNDARY, pos)) {
                         UUID townId = townBlockEntity.getTownId();
                         if (townId != null) {
-                            // Get the town's current population from the block entity (synced to client)
-                            // The boundary radius equals the town's population (1:1 ratio)
-                            int population = townBlockEntity.getPopulation();
-                            int boundaryRadius = Math.max(population, 5); // Minimum 5 blocks radius
-                            
-                            TownBoundaryVisualizationData boundaryData = new TownBoundaryVisualizationData(
-                                boundaryRadius
-                            );
+                            // Use cached population data from the visualization packet
+                            TownBoundaryVisualizationData boundaryData = new TownBoundaryVisualizationData(pos);
                             
                             visualizations.add(new VisualizationData(
                                 VisualizationManager.TYPE_TOWN_BOUNDARY, pos, boundaryData));
                             
                             DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
-                                "Added boundary visualization at {} with radius {} (population: {})", pos, boundaryRadius, population);
+                                "Added boundary visualization at {} using cached population", pos);
                         }
                     }
                 }

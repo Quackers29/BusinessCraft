@@ -12,6 +12,8 @@ import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.block.TownInterfaceBlock;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.town.Town;
+import com.yourdomain.businesscraft.town.TownManager;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -69,8 +71,19 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
                     "Player {} exited TownBlockEntity UI at {}", player.getUUID(), pos);
                 townBlock.registerPlayerExitUI(player.getUUID());
                 
-                // Send visualization enable packet to client
-                ModMessages.sendToPlayer(new PlatformVisualizationPacket(pos), player);
+                // Get town population for boundary visualization
+                int townPopulation = 5; // Default fallback
+                UUID townId = townBlock.getTownId();
+                if (townId != null && level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                    TownManager townManager = TownManager.get(serverLevel);
+                    Town town = townManager.getTown(townId);
+                    if (town != null) {
+                        townPopulation = town.getPopulation();
+                    }
+                }
+                
+                // Send visualization enable packet to client with population data
+                ModMessages.sendToPlayer(new PlatformVisualizationPacket(pos, townPopulation), player);
             } 
             // Then check if it's a TownInterfaceBlock
             else {
@@ -80,8 +93,23 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
                         "Player {} exited TownInterfaceBlock UI at {}", player.getUUID(), pos);
                     townInterfaceBlock.registerPlayerExitUI(player.getUUID(), level, pos);
                     
-                    // Send visualization enable packet to client
-                    ModMessages.sendToPlayer(new PlatformVisualizationPacket(pos), player);
+                    // Get town population for boundary visualization
+                    int townPopulation = 5; // Default fallback
+                    // TownInterfaceBlock should have a TownBlockEntity at the same position
+                    BlockEntity interfaceBE = level.getBlockEntity(pos);
+                    if (interfaceBE instanceof TownBlockEntity townBlockEntity) {
+                        UUID townId = townBlockEntity.getTownId();
+                        if (townId != null && level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                            TownManager townManager = TownManager.get(serverLevel);
+                            Town town = townManager.getTown(townId);
+                            if (town != null) {
+                                townPopulation = town.getPopulation();
+                            }
+                        }
+                    }
+                    
+                    // Send visualization enable packet to client with population data
+                    ModMessages.sendToPlayer(new PlatformVisualizationPacket(pos, townPopulation), player);
                 }
             }
         });
