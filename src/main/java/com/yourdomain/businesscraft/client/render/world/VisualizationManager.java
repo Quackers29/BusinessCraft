@@ -131,6 +131,7 @@ public class VisualizationManager {
     public static final String TYPE_DEBUG = "debug";
     public static final String TYPE_TERRITORY = "territory";
     public static final String TYPE_QUEST = "quest";
+    public static final String TYPE_TOWN_BOUNDARY = "town_boundary";
     
     private VisualizationManager() {
         // Initialize default visualization types
@@ -158,6 +159,11 @@ public class VisualizationManager {
             .defaultDuration(1800) // 90 seconds
             .maxActive(10)
             .allowMultiple(false));
+        
+        registerVisualizationType(new VisualizationTypeConfig(TYPE_TOWN_BOUNDARY)
+            .defaultDuration(600) // 30 seconds - same as platforms
+            .maxActive(50)
+            .allowMultiple(false)); // One boundary per town
     }
     
     public static VisualizationManager getInstance() {

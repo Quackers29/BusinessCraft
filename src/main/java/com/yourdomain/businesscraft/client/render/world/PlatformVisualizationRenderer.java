@@ -144,27 +144,49 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
     
     /**
      * Convenience method to show platform visualization (replaces old API)
+     * Also triggers town boundary visualization at the same time
      * 
      * @param townBlockPos Position of the town block
      * @param gameTime Current game time
      */
     public static void showPlatformVisualization(BlockPos townBlockPos, long gameTime) {
-        VisualizationManager.getInstance().showVisualization(
+        VisualizationManager manager = VisualizationManager.getInstance();
+        
+        // Show platform visualization
+        manager.showVisualization(
             VisualizationManager.TYPE_PLATFORM, 
             townBlockPos, 
             null,  // Data will be fetched from TownBlockEntity during rendering
             600    // 30 seconds duration
         );
+        
+        // Also show town boundary visualization
+        manager.showVisualization(
+            VisualizationManager.TYPE_TOWN_BOUNDARY, 
+            townBlockPos, 
+            null,  // Data will be fetched from TownBlockEntity during rendering
+            600    // 30 seconds duration - same as platforms
+        );
     }
     
     /**
      * Convenience method to hide platform visualization
+     * Also hides town boundary visualization at the same time
      * 
      * @param townBlockPos Position of the town block
      */
     public static void hidePlatformVisualization(BlockPos townBlockPos) {
-        VisualizationManager.getInstance().hideVisualizationAt(
+        VisualizationManager manager = VisualizationManager.getInstance();
+        
+        // Hide platform visualization
+        manager.hideVisualizationAt(
             VisualizationManager.TYPE_PLATFORM, 
+            townBlockPos
+        );
+        
+        // Also hide town boundary visualization
+        manager.hideVisualizationAt(
+            VisualizationManager.TYPE_TOWN_BOUNDARY, 
             townBlockPos
         );
     }

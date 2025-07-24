@@ -102,8 +102,7 @@ public class BoundaryRenderer3D {
                 renderRectangleSegments(poseStack, minX, minZ, maxX, maxZ, boundaryY, color, config);
                 break;
             case CIRCLE:
-                // Future implementation: circular boundary
-                renderRectangleSegments(poseStack, minX, minZ, maxX, maxZ, boundaryY, color, config);
+                renderCircularBoundary(poseStack, startPos, endPos, radius, color, config);
                 break;
             case POLYGON:
                 // Future implementation: custom polygon boundary
@@ -194,7 +193,61 @@ public class BoundaryRenderer3D {
     }
     
     /**
-     * Helper method to create boundary points for a circular boundary (future implementation)
+     * Renders a circular boundary around a center point with given radius
+     * 
+     * @param poseStack The pose stack for transformations
+     * @param startPos First reference position (used for center calculation)
+     * @param endPos Second reference position (used for center calculation)
+     * @param radius Boundary radius
+     * @param color Boundary color
+     * @param config Boundary configuration
+     */
+    public static void renderCircularBoundary(PoseStack poseStack, BlockPos startPos, BlockPos endPos, 
+                                            int radius, LineRenderer3D.Color color, BoundaryConfig config) {
+        // Calculate center point from the two positions
+        Vec3 center = new Vec3(
+            (startPos.getX() + endPos.getX()) / 2.0,
+            Math.min(startPos.getY(), endPos.getY()),
+            (startPos.getZ() + endPos.getZ()) / 2.0
+        );
+        
+        renderCircularBoundaryFromCenter(poseStack, center, radius, color, config);
+    }
+    
+    /**
+     * Renders a circular boundary around a center point with given radius
+     * 
+     * @param poseStack The pose stack for transformations
+     * @param center The center position of the circle
+     * @param radius Boundary radius
+     * @param color Boundary color
+     * @param config Boundary configuration
+     */
+    public static void renderCircularBoundaryFromCenter(PoseStack poseStack, Vec3 center, double radius, 
+                                                      LineRenderer3D.Color color, BoundaryConfig config) {
+        // Use 64 segments for smooth circles - higher quality for town boundaries
+        int segments = 64;
+        List<Vec3> points = createCircularBoundaryPoints(center, radius, segments);
+        renderPolygonBoundary(poseStack, points, color, config);
+    }
+    
+    /**
+     * Renders a circular boundary around a BlockPos center with given radius
+     * 
+     * @param poseStack The pose stack for transformations
+     * @param center The center position of the circle
+     * @param radius Boundary radius
+     * @param color Boundary color
+     * @param config Boundary configuration
+     */
+    public static void renderCircularBoundaryFromCenter(PoseStack poseStack, BlockPos center, double radius, 
+                                                      LineRenderer3D.Color color, BoundaryConfig config) {
+        Vec3 centerVec = new Vec3(center.getX() + 0.5, center.getY(), center.getZ() + 0.5);
+        renderCircularBoundaryFromCenter(poseStack, centerVec, radius, color, config);
+    }
+    
+    /**
+     * Helper method to create boundary points for a circular boundary
      */
     private static List<Vec3> createCircularBoundaryPoints(Vec3 center, double radius, int segments) {
         List<Vec3> points = new ArrayList<>();

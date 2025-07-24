@@ -2,6 +2,7 @@ package com.yourdomain.businesscraft.event;
 
 import com.yourdomain.businesscraft.BusinessCraft;
 import com.yourdomain.businesscraft.client.render.world.PlatformVisualizationRenderer;
+import com.yourdomain.businesscraft.client.render.world.TownBoundaryVisualizationRenderer;
 import com.yourdomain.businesscraft.client.render.world.VisualizationManager;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
@@ -19,11 +20,20 @@ public class ClientRenderEvents {
     // Platform visualization renderer using the new modular system
     private static final PlatformVisualizationRenderer platformRenderer = new PlatformVisualizationRenderer();
     
+    // Town boundary visualization renderer
+    private static final TownBoundaryVisualizationRenderer boundaryRenderer = new TownBoundaryVisualizationRenderer();
+    
     static {
         // Register the platform renderer with the visualization manager
         VisualizationManager.getInstance().registerRenderer(
             VisualizationManager.TYPE_PLATFORM, 
             platformRenderer
+        );
+        
+        // Register the town boundary renderer with the visualization manager
+        VisualizationManager.getInstance().registerRenderer(
+            VisualizationManager.TYPE_TOWN_BOUNDARY, 
+            boundaryRenderer
         );
     }
     
@@ -31,6 +41,7 @@ public class ClientRenderEvents {
     public static void onRenderLevelStage(RenderLevelStageEvent event) {
         // Use the new modular rendering system
         platformRenderer.render(event);
+        boundaryRenderer.render(event);
         
         // Future: Additional renderer types can be added here
         // routeRenderer.render(event);
