@@ -324,3 +324,7 @@
 - ✅ **COMPLETED** - Grid Marker Density Increase: Updated coordinate spacing algorithm from targeting 5 markers per axis to 7 markers per axis for improved reference density.
 
 - ✅ **COMPLETED** - Town Name Sync Fix: Resolved desync between map modal, overview tab, and edit popup after town renaming by adding comprehensive cache invalidation to SetTownNamePacket. Now invalidates both ClientTownMapCache (30s TTL) and TownDataCache (5s TTL) plus force-refreshes all UI tabs for immediate synchronization.
+
+- ✅ **COMPLETED** - Tourist Minecart Vibration Fix: Identified and fixed visual vibration issue in minecarts caused by expiry shaking effect in TouristRenderer. Removed isShaking() override to eliminate all tourist shaking behavior.
+
+- ✅ **COMPLETED** - Tourist Expiry System Optimization: Restored proper expiry tracking for tourists in stationary vehicles while maintaining non-vibrating behavior. Tourists now expire correctly when stationary regardless of riding state, with cleaned up movement detection logic.
