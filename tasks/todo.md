@@ -77,8 +77,48 @@ Complete visual consistency between 3D world and 2D map interfaces - when a town
 - **Visual Consistency**: Same green color as 3D world boundaries
 - **Performance**: Uses existing line clipping infrastructure for efficient rendering
 
+**✅ UPDATED TO USE SERVER-CALCULATED BOUNDARY RADIUS**
+
+**Server-Side Changes**:
+- ✅ Extended `TownPlatformDataResponsePacket.TownInfo` to include `boundaryRadius` field
+- ✅ Updated packet serialization to include boundary radius in network transmission  
+- ✅ Modified `RequestTownPlatformDataPacket` handler to calculate boundary using `TownBoundaryService`
+- ✅ Server now calculates boundary radius: `boundaryService.calculateBoundaryRadius(town)`
+
+**Client-Side Changes**:
+- ✅ Added `selectedTownInfo` field to store server-provided town data
+- ✅ Modified `drawSelectedTownBoundary()` to use `selectedTownInfo.boundaryRadius` instead of client calculation
+- ✅ Updated town selection logic to clear server data when switching towns
+- ✅ Updated `refreshTownData()` to store server-provided boundary radius
+- ✅ Added proper cleanup of server town info on deselection
+
+**✅ ARCHITECTURE CLEANED UP - PROPER SEPARATION OF CONCERNS**
+
+**Clean Architecture**:
+- ✅ **Town Map Data**: Contains all town-level data including boundary radius (loaded once)
+- ✅ **Platform Data**: Contains only platform-specific data (loaded per-town on demand)
+- ✅ **Boundary visualization**: Uses boundary data from town map, not platform data
+
+**✅ FINAL ARCHITECTURE - LIVE BOUNDARY CALCULATION**
+
+**Perfect Architecture**:
+- ✅ **Town Map Data**: Basic town info only (name, position, population, tourists)
+- ✅ **Platform Data**: Platform info + LIVE boundary calculation when town clicked  
+- ✅ **Boundary visualization**: Uses LIVE server-calculated boundary when town is selected
+
+**Technical Flow**:
+1. **Map Opens** → `RequestTownMapDataPacket` → Basic town data loaded (no boundaries cached)
+2. **User clicks town** → `RequestTownPlatformDataPacket` → Server calculates LIVE boundary + platform data
+3. **Client renders** → Boundary circle appears with live server data + platforms rendered
+4. **Always fresh**: Boundary radius reflects current population, calculated on-demand
+
+**Server-Side Live Calculation**:
+- **TownMapDataHandler**: Basic town data only (fast, lightweight)
+- **PlatformDataHandler**: Live boundary calculation using `TownBoundaryService.calculateBoundaryRadius(town)`
+- **Perfect separation**: Map data = cache, Platform data = live + interactive
+
 **Ready for Testing**: 
-The implementation is complete and compiled successfully. Run `./gradlew runClient` to test the boundary circles in map view.
+The implementation is complete and compiled successfully. Boundary circles now use server-calculated radius for consistency and accuracy. Run `./gradlew runClient` to test the boundary circles in map view.
 
 ### Town Boundary Messages & Map Visualization Implementation ✅ **COMPLETED**
 

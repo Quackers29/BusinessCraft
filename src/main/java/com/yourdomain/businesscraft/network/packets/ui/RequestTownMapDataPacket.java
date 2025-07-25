@@ -65,7 +65,7 @@ public class RequestTownMapDataPacket {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "Server has {} towns to send", allTowns.size());
                 
-                // Create and send response packet
+                // Create and send response packet (no boundary calculation - that's done per-town on click)
                 TownMapDataResponsePacket responsePacket = new TownMapDataResponsePacket();
                 for (Map.Entry<UUID, Town> entry : allTowns.entrySet()) {
                     Town town = entry.getValue();

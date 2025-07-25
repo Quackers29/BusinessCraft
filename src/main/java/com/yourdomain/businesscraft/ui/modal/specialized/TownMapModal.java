@@ -64,6 +64,7 @@ public class TownMapModal extends Screen {
     private TownMapDataResponsePacket.TownMapInfo selectedTown = null;
     private Map<UUID, TownPlatformDataResponsePacket.PlatformInfo> selectedTownPlatforms = null;
     private TownPlatformDataResponsePacket.PlatformInfo selectedPlatform = null;
+    private TownPlatformDataResponsePacket.TownInfo selectedTownInfo = null; // Live town info including boundary
     
     // Colors (themed to match existing UI)
     private static final int BACKGROUND_COLOR = 0xFF222222;
@@ -180,6 +181,7 @@ public class TownMapModal extends Screen {
             mapOffsetX = currentTownPos.getX();
             mapOffsetZ = currentTownPos.getZ();
             selectedTown = null; // Clear selection when recentering
+            selectedTownInfo = null; // Clear live town info
             
             DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Map recentered on current town at: {}", currentTownPos);
         }
@@ -827,15 +829,15 @@ public class TownMapModal extends Screen {
      * Draw boundary circle for the selected town
      */
     private void drawSelectedTownBoundary(GuiGraphics guiGraphics) {
-        if (selectedTown == null) {
-            return;
+        if (selectedTown == null || selectedTownInfo == null) {
+            return; // Need selected town and live town info (boundary only shows after clicking)
         }
         
         int[] bounds = getMapBounds();
         int mapLeft = bounds[0], mapTop = bounds[1], mapRight = bounds[2], mapBottom = bounds[3];
         
-        // Calculate boundary radius based on town population (1:1 ratio)
-        int boundaryRadius = selectedTown.population;
+        // Use live server-calculated boundary radius from platform packet
+        int boundaryRadius = selectedTownInfo.boundaryRadius;
         if (boundaryRadius <= 0) {
             return; // No boundary to draw
         }
@@ -1100,6 +1102,7 @@ public class TownMapModal extends Screen {
                 if (selectedTown == null || !selectedTown.id.equals(clickedTown.id)) {
                     selectedTownPlatforms = null;
                     selectedPlatform = null;
+                    selectedTownInfo = null; // Clear live town info
                 }
                 
                 selectedTown = clickedTown;
@@ -1116,6 +1119,7 @@ public class TownMapModal extends Screen {
                     selectedPlatform = null;
                     selectedTown = null;
                     selectedTownPlatforms = null;
+                    selectedTownInfo = null; // Clear live town info
                     DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Deselected town and platform");
                     return true;
                 }
@@ -1408,11 +1412,14 @@ public class TownMapModal extends Screen {
     }
     
     /**
-     * Handle town data response from server
+     * Handle town data response from server (platform packet context - includes live boundary)
      */
     public void refreshTownData(UUID townId, TownPlatformDataResponsePacket.TownInfo townInfo) {
         if (selectedTown != null && selectedTown.id.equals(townId)) {
-            // Update the selected town with fresh data
+            // Store the live town info including boundary radius
+            selectedTownInfo = townInfo;
+            
+            // Update the selected town with fresh data (no boundary in map data anymore)
             selectedTown = new TownMapDataResponsePacket.TownMapInfo(
                 selectedTown.id,
                 townInfo.name,
@@ -1427,8 +1434,8 @@ public class TownMapModal extends Screen {
             }
             
             DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
-                "Refreshed town data for selected town {}: pop={}, tourists={}", 
-                townId, townInfo.population, townInfo.touristCount);
+                "Refreshed town data for selected town {}: pop={}, tourists={}, boundary={}", 
+                townId, townInfo.population, townInfo.touristCount, townInfo.boundaryRadius);
         } else {
             // If this town data is for a different town than selected, clear platform selection
             if (selectedPlatform != null) {
