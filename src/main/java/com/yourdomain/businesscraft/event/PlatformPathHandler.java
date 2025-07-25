@@ -4,11 +4,14 @@ import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.platform.RefreshPlatformsPacket;
+import com.yourdomain.businesscraft.town.Town;
+import com.yourdomain.businesscraft.town.TownManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -23,7 +26,6 @@ public class PlatformPathHandler {
     private static UUID activePlatformId = null;
     private static long lastClickTime = 0;
     private static boolean awaitingSecondClick = false;
-    private static final int MAX_PATH_DISTANCE = 50;
 
     public static void setActivePlatform(BlockPos pos, UUID platformId) {
         LOGGER.debug("Setting active platform {} for town block at {}", platformId, pos);
@@ -71,9 +73,10 @@ public class PlatformPathHandler {
                 return;
             }
             
-            // Check if the clicked position is within range
-            if (!isValidPathDistance(clickedPos, townBlock.getBlockPos())) {
-                event.getEntity().sendSystemMessage(Component.literal("Point too far from town!"));
+            // Check if the clicked position is within town boundary
+            String validationError = validatePositionWithinBoundary(clickedPos, townBlock, level);
+            if (validationError != null) {
+                event.getEntity().sendSystemMessage(Component.literal(validationError));
                 event.setCanceled(true);
                 return;
             }
@@ -115,7 +118,38 @@ public class PlatformPathHandler {
         }
     }
     
-    private static boolean isValidPathDistance(BlockPos pos, BlockPos townPos) {
-        return pos.distManhattan(townPos) <= MAX_PATH_DISTANCE;
+    /**
+     * Validates if a position is within the town's boundary radius
+     * @param pos The position to validate
+     * @param townBlock The town block entity
+     * @param level The server level
+     * @return null if valid, error message if invalid
+     */
+    private static String validatePositionWithinBoundary(BlockPos pos, TownBlockEntity townBlock, Level level) {
+        if (!(level instanceof ServerLevel serverLevel)) {
+            return "Server error: cannot validate position";
+        }
+        
+        UUID townId = townBlock.getTownId();
+        if (townId == null) {
+            return "No town associated with this block";
+        }
+        
+        Town town = TownManager.get(serverLevel).getTown(townId);
+        if (town == null) {
+            return "Town not found";
+        }
+        
+        int boundaryRadius = town.getBoundaryRadius();
+        double distance = Math.sqrt(pos.distSqr(townBlock.getBlockPos()));
+        
+        if (distance > boundaryRadius) {
+            return String.format("Point too far from town! Distance: %.1f blocks, Town boundary: %d blocks (Population: %d)", 
+                distance, boundaryRadius, town.getPopulation());
+        }
+        
+        LOGGER.debug("Platform point validated: distance={}, boundary={}, population={}", 
+            distance, boundaryRadius, town.getPopulation());
+        return null;
     }
 } 

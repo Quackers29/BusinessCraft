@@ -136,7 +136,6 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     private BlockPos pathStart;
     private BlockPos pathEnd;
     private boolean isInPathCreationMode = false;
-    private static final int MAX_PATH_DISTANCE = 50;
     private final Random random = new Random();
     private boolean touristSpawningEnabled = true;
     private UUID townId;
@@ -642,8 +641,25 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         this.isInPathCreationMode = mode;
     }
 
+    /**
+     * Validates if a position is within the town's boundary radius
+     * @param pos The position to validate
+     * @return true if valid, false if outside boundary
+     */
     public boolean isValidPathDistance(BlockPos pos) {
-        return pos.distManhattan(this.getBlockPos()) <= MAX_PATH_DISTANCE;
+        if (townId == null || !(level instanceof ServerLevel serverLevel)) {
+            return false; // Cannot validate without town or on client
+        }
+        
+        Town town = TownManager.get(serverLevel).getTown(townId);
+        if (town == null) {
+            return false; // No town found
+        }
+        
+        int boundaryRadius = town.getBoundaryRadius();
+        double distance = Math.sqrt(pos.distSqr(this.getBlockPos()));
+        
+        return distance <= boundaryRadius;
     }
 
     public UUID getTownId() {
