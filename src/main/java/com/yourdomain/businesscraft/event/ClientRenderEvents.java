@@ -3,7 +3,6 @@ package com.yourdomain.businesscraft.event;
 import com.yourdomain.businesscraft.BusinessCraft;
 import com.yourdomain.businesscraft.client.render.world.PlatformVisualizationRenderer;
 import com.yourdomain.businesscraft.client.render.world.TownBoundaryVisualizationRenderer;
-import com.yourdomain.businesscraft.client.render.world.TownBoundaryPopulationCache;
 import com.yourdomain.businesscraft.client.render.world.VisualizationManager;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
@@ -57,8 +56,7 @@ public class ClientRenderEvents {
     public static void onLevelUnload(LevelEvent.Unload event) {
         if (event.getLevel().isClientSide()) {
             VisualizationManager.getInstance().onLevelUnload();
-            // Clear the population cache to prevent memory leaks
-            TownBoundaryPopulationCache.clear();
+            // Boundary data is cleaned up automatically by the renderer's cleanup method
         }
     }
 }

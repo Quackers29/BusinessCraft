@@ -4,6 +4,9 @@ import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.ui.BoundarySyncRequestPacket;
 import com.yourdomain.businesscraft.debug.DebugConfig;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -29,54 +32,31 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
     private static long lastGlobalSyncTime = 0;
     private static final long GLOBAL_SYNC_INTERVAL_MS = 2000; // Request sync every 2 seconds
     
+    // Registry to track active boundary data by position
+    private static final Map<BlockPos, TownBoundaryVisualizationData> activeBoundaryData = new ConcurrentHashMap<>();
+    
     /**
-     * Data structure for town boundary visualization with dynamic updates
+     * Data structure for town boundary visualization with server-authoritative updates
      */
     public static class TownBoundaryVisualizationData {
         private final BlockPos townPosition;
-        private int cachedBoundaryRadius;
-        private long lastUpdateTime;
-        private static final long UPDATE_INTERVAL_MS = 1000; // Update every 1 second
+        private volatile int serverBoundaryRadius; // Directly from server
         
         public TownBoundaryVisualizationData(BlockPos townPosition) {
             this.townPosition = townPosition;
-            this.cachedBoundaryRadius = calculateRadius();
-            this.lastUpdateTime = System.currentTimeMillis();
+            this.serverBoundaryRadius = 5; // Default until first sync
         }
         
         public int getBoundaryRadius() {
-            long currentTime = System.currentTimeMillis();
-            
-            // Update cached radius from cache
-            if (currentTime - lastUpdateTime >= UPDATE_INTERVAL_MS) {
-                cachedBoundaryRadius = calculateRadius();
-                lastUpdateTime = currentTime;
-            }
-            return cachedBoundaryRadius;
+            return Math.max(serverBoundaryRadius, 5); // Minimum 5 blocks radius
+        }
+        
+        public void updateBoundaryRadius(int radius) {
+            this.serverBoundaryRadius = radius;
         }
         
         public BlockPos getTownPosition() {
             return townPosition;
-        }
-        
-        private int calculateRadius() {
-            // Get boundary radius from the cache that was set when visualization packet was received
-            int boundaryRadius = TownBoundaryPopulationCache.getBoundaryRadius(townPosition, 5);
-            int newRadius = Math.max(boundaryRadius, 5); // Minimum 5 blocks radius
-            
-            // Debug log to see what boundary radius we're getting
-            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
-                "Calculating boundary radius: cached={}, final={}, pos={}", 
-                boundaryRadius, newRadius, townPosition);
-            
-            // Debug log when radius changes
-            if (newRadius != cachedBoundaryRadius) {
-                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
-                    "Boundary radius updated: {} -> {} (server boundary: {})", 
-                    cachedBoundaryRadius, newRadius, boundaryRadius);
-            }
-            
-            return newRadius;
         }
     }
     
@@ -107,14 +87,12 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
                     if (manager.shouldShowVisualization(VisualizationManager.TYPE_TOWN_BOUNDARY, pos)) {
                         UUID townId = townBlockEntity.getTownId();
                         if (townId != null) {
-                            // Use cached population data from the visualization packet
-                            TownBoundaryVisualizationData boundaryData = new TownBoundaryVisualizationData(pos);
+                            // Get or create boundary data for this position
+                            TownBoundaryVisualizationData boundaryData = activeBoundaryData.computeIfAbsent(
+                                pos, TownBoundaryVisualizationData::new);
                             
                             visualizations.add(new VisualizationData(
                                 VisualizationManager.TYPE_TOWN_BOUNDARY, pos, boundaryData));
-                            
-                            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
-                                "Added boundary visualization at {} using cached population", pos);
                         }
                     }
                 }
@@ -158,8 +136,15 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
     
     @Override
     protected void onPreRender(RenderLevelStageEvent event, Level level) {
+        // Clean up boundary data for positions that no longer have active visualizations
+        VisualizationManager manager = VisualizationManager.getInstance();
+        List<BlockPos> activePositions = manager.getActiveVisualizations(VisualizationManager.TYPE_TOWN_BOUNDARY)
+            .stream().map(entry -> entry.getPosition()).toList();
+        
+        activeBoundaryData.entrySet().removeIf(entry -> !activePositions.contains(entry.getKey()));
+        
         // Clean up expired boundary visualizations
-        VisualizationManager.getInstance().cleanupExpired(VisualizationManager.TYPE_TOWN_BOUNDARY);
+        manager.cleanupExpired(VisualizationManager.TYPE_TOWN_BOUNDARY);
         
         // Periodically request boundary sync for all active visualizations
         long currentTime = System.currentTimeMillis();
@@ -196,6 +181,19 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
     public void cleanup() {
         // Clear all boundary visualizations on cleanup
         VisualizationManager.getInstance().clearType(VisualizationManager.TYPE_TOWN_BOUNDARY);
+        // Clear the boundary data registry
+        activeBoundaryData.clear();
+    }
+    
+    /**
+     * Updates boundary radius for a specific town position.
+     * Called from BoundarySyncResponsePacket.
+     */
+    public static void updateBoundaryRadius(BlockPos pos, int radius) {
+        TownBoundaryVisualizationData data = activeBoundaryData.get(pos);
+        if (data != null) {
+            data.updateBoundaryRadius(radius);
+        }
     }
     
     /**

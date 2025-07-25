@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.network.packets.ui;
 
-import com.yourdomain.businesscraft.client.render.world.TownBoundaryPopulationCache;
+import com.yourdomain.businesscraft.client.render.world.TownBoundaryVisualizationRenderer;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -51,8 +51,8 @@ public class BoundarySyncResponsePacket extends BaseBlockEntityPacket {
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> {
-            // Client-side handling - update the boundary cache
-            TownBoundaryPopulationCache.setBoundaryRadius(pos, boundaryRadius);
+            // Client-side handling - update the boundary visualization directly
+            TownBoundaryVisualizationRenderer.updateBoundaryRadius(pos, boundaryRadius);
             
             LOGGER.debug("Boundary sync response for town at {}: updated to boundary radius={}", pos, boundaryRadius);
         });
