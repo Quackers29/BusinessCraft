@@ -47,6 +47,10 @@ public class ConfigLoader {
     public static boolean enableMilestones = true; // Whether distance milestone rewards are enabled
     public static Map<Integer, List<String>> milestoneRewards = new HashMap<>(); // Distance -> List of "item:count" rewards
     
+    // Player tracking config
+    public static boolean playerTracking = true; // Master toggle for all player tracking functionality
+    public static boolean townBoundaryMessages = true; // Whether to show town entry/exit messages
+    
     private ConfigLoader() {
         loadConfig();
         registerWithHotReload();
@@ -121,6 +125,10 @@ public class ConfigLoader {
             enableMilestones = Boolean.parseBoolean(props.getProperty("enableMilestones", "true"));
             loadMilestoneRewards(props);
             
+            // Load player tracking config
+            playerTracking = Boolean.parseBoolean(props.getProperty("playerTracking", "true"));
+            townBoundaryMessages = Boolean.parseBoolean(props.getProperty("townBoundaryMessages", "true"));
+            
             // Load town names
             String namesStr = props.getProperty("townNames", "");
             townNames = new ArrayList<>(Arrays.asList(namesStr.split(",")));
@@ -153,6 +161,10 @@ public class ConfigLoader {
         LOGGER.info("Meters Per Emerald: {}", metersPerEmerald);
         LOGGER.info("Enable Milestones: {}", enableMilestones);
         LOGGER.info("Milestone Rewards: {}", milestoneRewards.size() + " configured");
+        
+        // Log player tracking settings
+        LOGGER.info("Player Tracking: {}", playerTracking);
+        LOGGER.info("Town Boundary Messages: {}", townBoundaryMessages);
     }
     
     public static void saveConfig() {
@@ -186,6 +198,10 @@ public class ConfigLoader {
         // Save milestone config
         props.setProperty("enableMilestones", String.valueOf(enableMilestones));
         saveMilestoneRewards(props);
+        
+        // Save player tracking config
+        props.setProperty("playerTracking", String.valueOf(playerTracking));
+        props.setProperty("townBoundaryMessages", String.valueOf(townBoundaryMessages));
         
         try {
             File configFile = new File("config/businesscraft.properties");

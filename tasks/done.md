@@ -332,3 +332,5 @@
 ✅ **COMPLETED** - Population-Based Town Boundaries System: Replaced static `minDistanceBetweenTowns=10` config with dynamic population-based boundaries (1:1 ratio). Towns now calculate placement distance as sum of both boundaries, with real-time circular boundary visualization triggered alongside platform visuals for 30 seconds.
 
 ✅ **COMPLETED** - Town Boundary Visualization Implementation: Created comprehensive boundary rendering system with immediate server sync on UI close, client-side boundary data registry, and hidden visualization until first server response. Integrated with existing platform visualization timing and modular 3D rendering framework.
+
+✅ **COMPLETED** - Player Boundary Messages System: Implemented configurable town entry/exit messages with `PlayerBoundaryTracker.java` using server-side TickEvent handlers. Features performance-optimized tracking (10-tick intervals, 4-block threshold), 2-second rate limiting, action bar display (`🏘️ Welcome to [townname]` / `👋 Leaving [townname]`), and dual config toggles (`playerTracking` master + `townBoundaryMessages` specific).
