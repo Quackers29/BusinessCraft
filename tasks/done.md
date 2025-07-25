@@ -328,3 +328,7 @@
 - ✅ **COMPLETED** - Tourist Minecart Vibration Fix: Identified and fixed visual vibration issue in minecarts caused by expiry shaking effect in TouristRenderer. Removed isShaking() override to eliminate all tourist shaking behavior.
 
 - ✅ **COMPLETED** - Tourist Expiry System Optimization: Restored proper expiry tracking for tourists in stationary vehicles while maintaining non-vibrating behavior. Tourists now expire correctly when stationary regardless of riding state, with cleaned up movement detection logic.
+
+✅ **COMPLETED** - Population-Based Town Boundaries System: Replaced static `minDistanceBetweenTowns=10` config with dynamic population-based boundaries (1:1 ratio). Towns now calculate placement distance as sum of both boundaries, with real-time circular boundary visualization triggered alongside platform visuals for 30 seconds.
+
+✅ **COMPLETED** - Town Boundary Visualization Implementation: Created comprehensive boundary rendering system with immediate server sync on UI close, client-side boundary data registry, and hidden visualization until first server response. Integrated with existing platform visualization timing and modular 3D rendering framework.

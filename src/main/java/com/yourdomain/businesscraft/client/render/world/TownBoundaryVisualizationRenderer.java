@@ -41,18 +41,26 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
     public static class TownBoundaryVisualizationData {
         private final BlockPos townPosition;
         private volatile int serverBoundaryRadius; // Directly from server
+        private volatile boolean hasReceivedServerData; // Track if we have real server data
         
         public TownBoundaryVisualizationData(BlockPos townPosition) {
             this.townPosition = townPosition;
-            this.serverBoundaryRadius = 5; // Default until first sync
+            this.serverBoundaryRadius = 0; // No boundary until server responds
+            this.hasReceivedServerData = false; // No server data yet
         }
         
         public int getBoundaryRadius() {
-            return Math.max(serverBoundaryRadius, 5); // Minimum 5 blocks radius
+            // Only return radius if we have server data, otherwise 0 (hidden)
+            return hasReceivedServerData ? Math.max(serverBoundaryRadius, 5) : 0;
+        }
+        
+        public boolean shouldRender() {
+            return hasReceivedServerData && serverBoundaryRadius > 0;
         }
         
         public void updateBoundaryRadius(int radius) {
             this.serverBoundaryRadius = radius;
+            this.hasReceivedServerData = true; // Mark that we have server data
         }
         
         public BlockPos getTownPosition() {
@@ -108,6 +116,11 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
             return;
         }
         
+        // Only render if we have received server data and boundary > 0
+        if (!boundaryData.shouldRender()) {
+            return; // Don't render anything until server responds with real data
+        }
+        
         // Simple green circle - no color coding
         LineRenderer3D.Color boundaryColor = BOUNDARY_COLOR; // Always green
         
@@ -127,10 +140,6 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
             boundaryColor,
             config
         );
-        
-        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
-            "Rendered simple boundary circle with radius {} at position {}", 
-            boundaryData.getBoundaryRadius(), visualization.getPosition());
     }
     
     
