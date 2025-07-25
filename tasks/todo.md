@@ -2,6 +2,94 @@
 
 ## 🎯 **IMMEDIATE TASKS** (Do not remove header)
 
+### Town Boundary Messages & Map Visualization Implementation
+
+**Status**: Map boundary visualization is ✅ **ALREADY WORKING**! Only player boundary messages need implementation.
+
+**Background**: The user wants:
+1. Town boundary circles displayed on map when a town is clicked (✅ already working)
+2. Entry/exit messages when players cross town boundaries with config toggle (❌ needs implementation)
+
+#### **Phase 1: Configuration System** 
+- [ ] **1.1 Add townBoundaryMessages config property**
+  - Add `public static boolean townBoundaryMessages = true;` to ConfigLoader.java
+  - Add property loading in `loadConfig()` method: `townBoundaryMessages = Boolean.parseBoolean(props.getProperty("townBoundaryMessages", "true"));`
+  - Add property saving in `saveConfig()` method: `props.setProperty("townBoundaryMessages", String.valueOf(townBoundaryMessages));`
+  - Add logging: `LOGGER.info("Town Boundary Messages: {}", townBoundaryMessages);`
+  - Test hot-reload functionality works with new property
+
+#### **Phase 2: Player Movement Tracking System**
+- [ ] **2.1 Create PlayerBoundaryTracker.java**
+  - Create new file in `src/main/java/com/yourdomain/businesscraft/event/PlayerBoundaryTracker.java`
+  - Implement `@Mod.EventBusSubscriber` with `TickEvent.PlayerTickEvent` handler
+  - Add player position tracking with previous position storage
+  - Use `Map<UUID, PlayerBoundaryState>` to track each player's boundary state
+  - Store previous town (if any) and current position for comparison
+
+- [ ] **2.2 Implement PlayerBoundaryState tracking**
+  - Create internal class to store: `currentTown`, `previousPosition`, `lastNotificationTime`
+  - Add rate limiting to prevent message spam (minimum 2-second delay between messages)
+  - Handle player join/leave events to clean up tracking data
+
+#### **Phase 3: Boundary Detection Logic**
+- [ ] **3.1 Implement boundary checking logic**
+  - Use existing `TownManager.get(ServerLevel).getTowns()` to get all towns for checking
+  - Leverage existing `TownBoundaryService.calculateBoundaryRadius(Town)` for radius calculation
+  - Use existing distance calculation pattern: `double distance = Math.sqrt(playerPos.distSqr(townPos));`
+  - Determine if player is inside boundary: `distance <= town.getBoundaryRadius()`
+
+- [ ] **3.2 Add entry/exit detection**
+  - Compare current town vs previous town to detect transitions
+  - Handle cases: no town → town (entry), town → no town (exit), town A → town B (exit A, enter B)
+  - Add boundary overlap handling for multiple towns with overlapping boundaries
+  - Prevent duplicate messages during rapid boundary crossings
+
+#### **Phase 4: Message Display System**
+- [ ] **4.1 Implement boundary messages**
+  - Use action bar messages (above hotbar): `player.displayClientMessage(Component.literal(message), true);`
+  - Follow existing styling patterns from `TownNotificationUtils.java`
+  - Entry message: `🏘️ Welcome to [townname]` with `ChatFormatting.AQUA, ChatFormatting.BOLD`
+  - Exit message: `👋 Leaving [townname]` with `ChatFormatting.YELLOW`
+  - Add config check: only send messages if `ConfigLoader.townBoundaryMessages` is true
+
+- [ ] **4.2 Add message customization**
+  - Ensure consistent emoji and color usage with existing notification system
+  - Add proper message timing (display for 3 seconds above hotbar)
+  - Handle edge cases: player moving too fast, server lag, overlapping boundaries
+
+#### **Phase 5: Integration & Testing**
+- [ ] **5.1 Test basic functionality**
+  - Test config toggle properly enables/disables messages
+  - Verify messages appear above hotbar (not in chat)
+  - Test with single player crossing various town boundaries
+  - Ensure no performance impact during normal gameplay
+
+- [ ] **5.2 Test edge cases and performance**
+  - Test with multiple players crossing boundaries simultaneously  
+  - Test rapid movement through multiple town boundaries
+  - Test with boundary changes due to population growth
+  - Verify cleanup of player tracking data on disconnect
+  - Test server restart/reload handling
+
+#### **Implementation Notes**
+
+**Existing Infrastructure to Leverage:**
+- ✅ **Boundary Visualization**: Map boundaries already work perfectly when clicking towns
+- ✅ **Boundary Calculation**: `TownBoundaryService.java` handles population-based radius calculation
+- ✅ **Configuration System**: `ConfigLoader.java` with hot-reload support ready for new property
+- ✅ **Message System**: `TownNotificationUtils.java` patterns for action bar messages
+- ✅ **Town Management**: `TownManager.get(level).getTowns()` provides all town data
+
+**Key Files to Modify:**
+1. `ConfigLoader.java` - Add `townBoundaryMessages` property (5 lines)
+2. **New:** `PlayerBoundaryTracker.java` - Main implementation (~100 lines)
+3. Optional: `TownBoundaryService.java` - Minor utility additions if needed
+
+**Architecture Quality:**
+The existing codebase has excellent infrastructure for this feature. The boundary visualization system is already complete and working. This implementation leverages existing systems perfectly.
+
+**Estimated Time:** 45-60 minutes total implementation time.
+
 ### Population-Based Town Boundaries Implementation
 
 #### **Phase 1: Data Model and Boundary System**
