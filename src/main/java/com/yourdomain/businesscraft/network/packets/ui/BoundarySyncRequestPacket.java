@@ -71,6 +71,7 @@ public class BoundarySyncRequestPacket extends BaseBlockEntityPacket {
                     TownManager townManager = TownManager.get(serverLevel);
                     Town town = townManager.getTown(townId);
                     if (town != null) {
+                        // Use town's boundary calculation method (single source of truth)
                         int currentBoundaryRadius = town.getBoundaryRadius();
                         
                         // Send boundary update back to client
