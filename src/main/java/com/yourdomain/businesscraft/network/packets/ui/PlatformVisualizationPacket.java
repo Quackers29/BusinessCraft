@@ -2,7 +2,10 @@ package com.yourdomain.businesscraft.network.packets.ui;
 
 import com.yourdomain.businesscraft.client.render.world.PlatformVisualizationRenderer;
 import com.yourdomain.businesscraft.client.render.world.TownBoundaryVisualizationRenderer;
+import com.yourdomain.businesscraft.debug.DebugConfig;
+import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
+import com.yourdomain.businesscraft.network.packets.ui.BoundarySyncRequestPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -60,7 +63,11 @@ public class PlatformVisualizationPacket extends BaseBlockEntityPacket {
             // Also trigger boundary visualization at the same time as platforms
             TownBoundaryVisualizationRenderer.showTownBoundaryVisualization(pos, level.getGameTime());
             
-            LOGGER.debug("Client received platform visualization enable for town at {}", pos);
+            // Immediately request boundary data from server (don't wait for periodic sync)
+            ModMessages.sendToServer(new BoundarySyncRequestPacket(pos));
+            
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                "Client received platform visualization enable for town at {}, requested immediate boundary sync", pos);
         });
         context.setPacketHandled(true);
         return true;

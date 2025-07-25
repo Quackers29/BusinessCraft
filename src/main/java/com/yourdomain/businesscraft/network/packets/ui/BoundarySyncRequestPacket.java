@@ -1,6 +1,7 @@
 package com.yourdomain.businesscraft.network.packets.ui;
 
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.yourdomain.businesscraft.town.Town;
@@ -75,7 +76,8 @@ public class BoundarySyncRequestPacket extends BaseBlockEntityPacket {
                         // Send boundary update back to client
                         ModMessages.sendToPlayer(new BoundarySyncResponsePacket(pos, currentBoundaryRadius), player);
                         
-                        LOGGER.debug("Boundary sync request for town at {}: boundary radius={}", pos, currentBoundaryRadius);
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                            "Boundary sync request for town at {}: boundary radius={}", pos, currentBoundaryRadius);
                     }
                 }
             }

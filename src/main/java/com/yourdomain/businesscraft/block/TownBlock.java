@@ -3,6 +3,7 @@ package com.yourdomain.businesscraft.block;
 import com.yourdomain.businesscraft.init.ModBlockEntities;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.config.ConfigLoader;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.town.TownManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -89,7 +90,7 @@ public class TownBlock extends BaseEntityBlock {
         super.setPlacedBy(level, pos, state, placer, stack);
         
         if (!level.isClientSide()) {
-            LOGGER.info("Setting up town block at position: {}", pos);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Setting up town block at position: {}", pos);
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof TownBlockEntity townBlock) {
                 if (level instanceof ServerLevel serverLevel) {
@@ -116,9 +117,9 @@ public class TownBlock extends BaseEntityBlock {
                     }
                     
                     String newTownName = getRandomTownName();
-                    LOGGER.info("Generated town name: {}", newTownName);
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Generated town name: {}", newTownName);
                     UUID townId = townManager.registerTown(pos, newTownName);
-                    LOGGER.info("Registered new town with ID: {}", townId);
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Registered new town with ID: {}", townId);
                     townBlock.setTownId(townId);
                     
                     // Create default platform layout
@@ -213,7 +214,7 @@ public class TownBlock extends BaseEntityBlock {
         platform.setName("Platform 1");
         platform.setEnabled(true);
         
-        LOGGER.info("Created default platform for town at {} with start {} and end {}", 
+        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Created default platform for town at {} with start {} and end {}", 
             townPos, platformStart, platformEnd);
     }
 
