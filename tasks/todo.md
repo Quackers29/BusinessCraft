@@ -2,43 +2,6 @@
 
 ## 🎯 **IMMEDIATE TASKS** (Do not remove header)
 
-### **Replace Platform Distance Validation with Town Boundary System**
-
-**Goal**: Modify platform path placement system to use town boundaries instead of hardcoded 50-block distance limit.
-
-**Current Implementation**:
-- Platform placement uses hardcoded `MAX_PATH_DISTANCE = 50` (Manhattan distance)
-- Validation in `PlatformPathHandler.java:118-120` and `TownBlockEntity.java:645-647`
-- Uses `pos.distManhattan(townPos) <= MAX_PATH_DISTANCE`
-
-**New Implementation Plan**:
-- [x] **1. Update PlatformPathHandler.java**
-  - Replace `isValidPathDistance()` method to use town boundary validation
-  - Add town lookup via `TownManager.get(ServerLevel).getTown(townId)`
-  - Use `town.getBoundaryRadius()` instead of hardcoded distance
-  - Switch from Manhattan distance to Euclidean distance (consistent with boundary system)
-
-- [x] **2. Update TownBlockEntity.java**
-  - Modify `isValidPathDistance()` method to use boundary-based validation
-  - Remove `MAX_PATH_DISTANCE` constant (lines around 139)
-  - Add method to get associated town and use its boundary radius
-
-- [x] **3. Update Error Messages**
-  - Change "Point too far from town!" to boundary-specific message
-  - Include actual boundary radius in error message for clarity
-
-- [x] **4. Test Implementation**
-  - Test with different town populations (different boundary sizes)
-  - Verify platform placement works within boundaries
-  - Verify platform placement fails outside boundaries
-  - Test edge cases near boundary limits
-
-**Technical Details**:
-- Town boundary radius = town population (1:1 ratio)
-- Boundary system uses Euclidean distance: `Math.sqrt(pos1.distSqr(pos2))`
-- TownBlockEntity can access town via: `TownManager.get(sLevel).getTown(townId)`
-- Town provides `getBoundaryRadius()` method for validation
-
 ## 🎯 **COMPLETED TASKS** ✅
 
 ## 🎯 **FUTURE TASKS**

@@ -1,6 +1,7 @@
 package com.yourdomain.businesscraft.service;
 
 import com.yourdomain.businesscraft.config.ConfigLoader;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.town.utils.TouristUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -125,7 +126,7 @@ public class TouristVehicleManager {
                     }
                 }
             } catch (Exception e) {
-                LOGGER.debug("Failed to mount tourists to Create train: {}", e.getMessage());
+                DebugConfig.debug(LOGGER, DebugConfig.ENTITY_SYSTEM, "Failed to mount tourists to Create train: {}", e.getMessage());
             }
         }
         
@@ -193,13 +194,13 @@ public class TouristVehicleManager {
                 );
                 level.getServer().getCommands().getDispatcher()
                     .execute(command, level.getServer().createCommandSourceStack());
-                LOGGER.debug("Mounted tourist {} to create carriage {}, seat {}",
+                DebugConfig.debug(LOGGER, DebugConfig.ENTITY_SYSTEM, "Mounted tourist {} to create carriage {}, seat {}",
                     tourist.getStringUUID().toString().substring(0, 8),
                     carriage.getStringUUID().toString().substring(0, 8),
                     seatIndex);
                 return true;
             } catch (Exception e) {
-                LOGGER.debug("Failed to mount tourist to create seat: {}", e.getMessage());
+                DebugConfig.debug(LOGGER, DebugConfig.ENTITY_SYSTEM, "Failed to mount tourist to create seat: {}", e.getMessage());
                 return false;
             }
         }
@@ -227,14 +228,14 @@ public class TouristVehicleManager {
             
             // Skip if this is the first time we've seen this minecart
             if (lastPos == null) {
-                LOGGER.debug("First time seeing minecart {}", 
+                DebugConfig.debug(LOGGER, DebugConfig.ENTITY_SYSTEM, "First time seeing minecart {}", 
                     minecart.getUUID().toString().substring(0, 8));
                 continue;
             }
             
             // Calculate position change
             double positionChange = currentPos.distanceTo(lastPos);
-            LOGGER.debug("Minecart {} position change: {} (Threshold: {})", 
+            DebugConfig.debug(LOGGER, DebugConfig.ENTITY_SYSTEM, "Minecart {} position change: {} (Threshold: {})", 
                 minecart.getUUID().toString().substring(0, 8), 
                 String.format("%.6f", positionChange), 
                 String.format("%.6f", VISITOR_POSITION_CHANGE_THRESHOLD));
@@ -247,7 +248,7 @@ public class TouristVehicleManager {
                     
                 if (touristOpt.isPresent()) {
                     Villager tourist = touristOpt.get();
-                    LOGGER.debug("Mounting tourist {} to minecart {}", 
+                    DebugConfig.debug(LOGGER, DebugConfig.ENTITY_SYSTEM, "Mounting tourist {} to minecart {}", 
                         tourist.getStringUUID().toString().substring(0, 8),
                         minecart.getUUID().toString().substring(0, 8));
                     tourist.startRiding(minecart);
