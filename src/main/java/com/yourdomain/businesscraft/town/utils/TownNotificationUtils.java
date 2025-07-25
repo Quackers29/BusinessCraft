@@ -74,7 +74,7 @@ public class TownNotificationUtils {
                                                           String destinationName, boolean died, BlockPos lastPosition) {
         // Format message based on whether the tourist died or timed out
         String actionText = died ? "died" : "quit";
-        Component message = Component.literal("A tourist heading to " + destinationName + " has " + actionText + "!")
+        Component message = Component.literal("A tourist from " + originTownName + " has " + actionText + "!")
             .withStyle(ChatFormatting.GOLD);
         
         // Get town block position
