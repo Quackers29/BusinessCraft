@@ -818,6 +818,57 @@ public class TownMapModal extends Screen {
                 }
             }
         }
+        
+        // Draw boundary circle for selected town (after platform rendering)
+        drawSelectedTownBoundary(guiGraphics);
+    }
+    
+    /**
+     * Draw boundary circle for the selected town
+     */
+    private void drawSelectedTownBoundary(GuiGraphics guiGraphics) {
+        if (selectedTown == null) {
+            return;
+        }
+        
+        int[] bounds = getMapBounds();
+        int mapLeft = bounds[0], mapTop = bounds[1], mapRight = bounds[2], mapBottom = bounds[3];
+        
+        // Calculate boundary radius based on town population (1:1 ratio)
+        int boundaryRadius = selectedTown.population;
+        if (boundaryRadius <= 0) {
+            return; // No boundary to draw
+        }
+        
+        // Convert town center to screen coordinates
+        BlockPos townPos = selectedTown.position;
+        int centerScreenX = worldToScreenX(townPos.getX());
+        int centerScreenY = worldToScreenZ(townPos.getZ());
+        
+        // Convert boundary radius from world blocks to screen pixels
+        int radiusInPixels = (int)(boundaryRadius * zoomLevel * 0.1);
+        
+        // Use green color matching 3D boundary visualization
+        int boundaryColor = 0xFF00FF00; // Bright green like 3D boundaries
+        
+        // Draw the circular boundary using line segments (64 segments for smooth circle)
+        int segments = 64;
+        double angleStep = 2 * Math.PI / segments;
+        
+        for (int i = 0; i < segments; i++) {
+            double angle1 = i * angleStep;
+            double angle2 = (i + 1) * angleStep;
+            
+            // Calculate start and end points of this segment
+            int x1 = centerScreenX + (int)(Math.cos(angle1) * radiusInPixels);
+            int y1 = centerScreenY + (int)(Math.sin(angle1) * radiusInPixels);
+            int x2 = centerScreenX + (int)(Math.cos(angle2) * radiusInPixels);
+            int y2 = centerScreenY + (int)(Math.sin(angle2) * radiusInPixels);
+            
+            // Draw the line segment with clipping to map bounds
+            drawClippedLine(guiGraphics, x1, y1, x2, y2, boundaryColor, 
+                          mapLeft, mapTop, mapRight, mapBottom);
+        }
     }
     
     /**
