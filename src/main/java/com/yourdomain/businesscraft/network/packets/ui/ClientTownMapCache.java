@@ -111,12 +111,12 @@ public class ClientTownMapCache {
     }
     
     /**
-     * Update town information for a specific town
+     * Update town information for a specific town (from platform packet - no boundary data)
      */
     public void updateTownInfo(UUID townId, String name, int population, int touristCount) {
         TownMapDataResponsePacket.TownMapInfo existingTown = townData.get(townId);
         if (existingTown != null) {
-            // Create updated town info with fresh data
+            // Create updated town info with fresh data (no boundary - that's live in platform packets)
             TownMapDataResponsePacket.TownMapInfo updatedTown = new TownMapDataResponsePacket.TownMapInfo(
                 townId, name, existingTown.position, population, touristCount
             );

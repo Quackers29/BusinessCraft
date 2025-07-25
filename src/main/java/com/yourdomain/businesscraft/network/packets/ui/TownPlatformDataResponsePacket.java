@@ -40,8 +40,8 @@ public class TownPlatformDataResponsePacket {
     /**
      * Set town information
      */
-    public void setTownInfo(String name, int population, int touristCount) {
-        this.townInfo = new TownInfo(name, population, touristCount);
+    public void setTownInfo(String name, int population, int touristCount, int boundaryRadius) {
+        this.townInfo = new TownInfo(name, population, touristCount, boundaryRadius);
     }
     
     /**
@@ -77,6 +77,7 @@ public class TownPlatformDataResponsePacket {
             buf.writeUtf(townInfo.name, MAX_STRING_LENGTH);
             buf.writeInt(townInfo.population);
             buf.writeInt(townInfo.touristCount);
+            buf.writeInt(townInfo.boundaryRadius);
         }
         
         buf.writeInt(platforms.size());
@@ -109,7 +110,8 @@ public class TownPlatformDataResponsePacket {
             String townName = buf.readUtf(MAX_STRING_LENGTH);
             int population = buf.readInt();
             int touristCount = buf.readInt();
-            packet.setTownInfo(townName, population, touristCount);
+            int boundaryRadius = buf.readInt();
+            packet.setTownInfo(townName, population, touristCount, boundaryRadius);
         }
         
         int platformCount = buf.readInt();
@@ -201,11 +203,13 @@ public class TownPlatformDataResponsePacket {
         public final String name;
         public final int population;
         public final int touristCount;
+        public final int boundaryRadius;
         
-        public TownInfo(String name, int population, int touristCount) {
+        public TownInfo(String name, int population, int touristCount, int boundaryRadius) {
             this.name = name;
             this.population = population;
             this.touristCount = touristCount;
+            this.boundaryRadius = boundaryRadius;
         }
     }
 } 
