@@ -117,8 +117,30 @@ Complete visual consistency between 3D world and 2D map interfaces - when a town
 - **PlatformDataHandler**: Live boundary calculation using `TownBoundaryService.calculateBoundaryRadius(town)`
 - **Perfect separation**: Map data = cache, Platform data = live + interactive
 
+**✅ FINAL CLEANUP: UNIFIED BOUNDARY CALCULATION**
+
+**Cleanup Completed**:
+- ✅ **Single Source of Truth**: Both 3D and map view systems now use `town.getBoundaryRadius()`
+- ✅ **Eliminated Redundancy**: Removed duplicate boundary calculation logic
+- ✅ **Consistency**: Both systems use the same calculation method for guaranteed consistency
+
+**Before Cleanup**:
+- **3D Boundaries**: Used `town.getBoundaryRadius()` directly
+- **Map Boundaries**: Used `TownBoundaryService.calculateBoundaryRadius(town)` (redundant)
+- **Result**: Same calculation, different code paths
+
+**After Cleanup**:
+- **Both Systems**: Use `town.getBoundaryRadius()` as single source of truth
+- **Unified Logic**: One calculation method, consistent results
+- **Cleaner Code**: No duplicate boundary calculation logic
+
+**Technical Changes**:
+- **BoundarySyncRequestPacket**: Already used `town.getBoundaryRadius()` ✅
+- **RequestTownPlatformDataPacket**: Changed from service to `town.getBoundaryRadius()` ✅
+- **Result**: Both systems now unified on same calculation method
+
 **Ready for Testing**: 
-The implementation is complete and compiled successfully. Boundary circles now use server-calculated radius for consistency and accuracy. Run `./gradlew runClient` to test the boundary circles in map view.
+The implementation is complete with unified boundary calculation. Both 3D and map view boundaries use the same server-side calculation method. Run `./gradlew runClient` to test the boundary circles in map view.
 
 ### Town Boundary Messages & Map Visualization Implementation ✅ **COMPLETED**
 

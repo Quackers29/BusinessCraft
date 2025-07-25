@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.town.TownManager;
 import com.yourdomain.businesscraft.town.Town;
-import com.yourdomain.businesscraft.town.service.TownBoundaryService;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
 import com.yourdomain.businesscraft.platform.Platform;
@@ -79,9 +78,8 @@ public class RequestTownPlatformDataPacket {
                     // Create response packet with platform data and town info
                     TownPlatformDataResponsePacket response = new TownPlatformDataResponsePacket(townId);
                     
-                    // Calculate live boundary radius using server-side service
-                    TownBoundaryService boundaryService = new TownBoundaryService();
-                    int boundaryRadius = boundaryService.calculateBoundaryRadius(town);
+                    // Get live boundary radius from town (single source of truth)
+                    int boundaryRadius = town.getBoundaryRadius();
                     
                     // Add current town information including live boundary calculation
                     response.setTownInfo(town.getName(), town.getPopulation(), town.getTouristCount(), boundaryRadius);
