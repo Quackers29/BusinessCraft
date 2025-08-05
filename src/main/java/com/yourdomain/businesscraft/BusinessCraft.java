@@ -34,6 +34,8 @@ import com.yourdomain.businesscraft.service.TouristVehicleManager;
 import net.minecraftforge.event.level.LevelEvent;
 import com.yourdomain.businesscraft.init.ModEntityTypes;
 import com.yourdomain.businesscraft.debug.DebugConfig;
+import com.yourdomain.businesscraft.platform.PlatformServices;
+import com.yourdomain.businesscraft.platform.forge.ForgeRegistryHelper;
 
 @Mod(BusinessCraft.MOD_ID)
 public class BusinessCraft {
@@ -46,7 +48,21 @@ public class BusinessCraft {
     public BusinessCraft() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         
-        // Register blocks and items
+        // Initialize platform abstraction layer
+        ModBlocks.initializePlatformRegistration();
+        ModBlockEntities.initializePlatformRegistration();
+        ModEntityTypes.initializePlatformRegistration();
+        ModMenuTypes.initializePlatformRegistration();
+        
+        // Register platform abstraction DeferredRegisters for Forge
+        ForgeRegistryHelper forgeHelper = (ForgeRegistryHelper) PlatformServices.getRegistryHelper();
+        forgeHelper.getBlocks().register(modEventBus);
+        forgeHelper.getItems().register(modEventBus);
+        forgeHelper.getBlockEntities().register(modEventBus);
+        forgeHelper.getEntities().register(modEventBus);
+        forgeHelper.getMenus().register(modEventBus);
+        
+        // Register blocks and items (legacy Forge system)
         ModBlocks.BLOCKS.register(modEventBus);
         ModBlocks.ITEMS.register(modEventBus);
         

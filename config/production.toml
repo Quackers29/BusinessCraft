@@ -1,0 +1,110 @@
+# BusinessCraft Production System Configuration (SIMPLIFIED)
+# This file configures the core manufacturing and resource generation mechanics of towns
+# Initial implementation focuses on basic production without complex features
+
+# =============================================================================
+# BASIC PRODUCTION LINES (Simple, no prerequisites)
+# =============================================================================
+
+[production.basic_wood_harvest]
+produced_by = "logging"
+base_rate = 10
+output_item = "minecraft:oak_log"
+inputs = { "minecraft:iron_axe" = 0.1 }
+time_to_setup = 0
+description = "Basic wood harvesting from oak trees"
+
+[production.basic_wheat_farming]
+produced_by = "farming"
+base_rate = 15
+output_item = "minecraft:wheat"
+inputs = { "minecraft:iron_hoe" = 0.05 }
+time_to_setup = 0
+description = "Basic wheat farming"
+
+[production.basic_stone_mining]
+produced_by = "mining"
+base_rate = 8
+output_item = "minecraft:stone"
+inputs = { "minecraft:iron_pickaxe" = 0.15 }
+time_to_setup = 0
+description = "Basic stone mining"
+
+# =============================================================================
+# SIMPLE PROCESSING LINES (Basic tools and materials)
+# =============================================================================
+
+[production.wood_planks]
+produced_by = "logging"
+base_rate = 20
+output_item = "minecraft:oak_planks"
+inputs = { "minecraft:oak_log" = 1 }
+time_to_setup = 30
+description = "Convert logs to planks"
+
+[production.bread_baking]
+produced_by = "farming"
+base_rate = 12
+output_item = "minecraft:bread"
+inputs = { "minecraft:wheat" = 3 }
+time_to_setup = 60
+description = "Bake wheat into bread"
+
+[production.iron_ingot_smelting]
+produced_by = "mining"
+base_rate = 6
+output_item = "minecraft:iron_ingot"
+inputs = { "minecraft:iron_ore" = 1, "minecraft:coal" = 0.5 }
+time_to_setup = 45
+description = "Smelt iron ore into ingots"
+
+# =============================================================================
+# ADVANCED PROCESSING LINES (Requires multiple inputs)
+# =============================================================================
+
+[production.advanced_tool_crafting]
+produced_by = "any"
+base_rate = 2
+output_item = "minecraft:iron_axe"
+inputs = { 
+    "minecraft:iron_ingot" = 3,
+    "minecraft:oak_planks" = 2
+}
+time_to_setup = 120
+description = "Craft iron tools"
+
+[production.leather_processing]
+produced_by = "farming"
+base_rate = 4
+output_item = "minecraft:leather"
+inputs = { "minecraft:raw_beef" = 1 }
+time_to_setup = 90
+description = "Process raw meat into leather"
+
+# =============================================================================
+# SPECIALIZED TOWN PRODUCTION LINES
+# =============================================================================
+
+[production.tourist_services]
+produced_by = "tourism"
+base_rate = 5
+output_item = "minecraft:emerald"
+inputs = { 
+    "minecraft:bread" = 2,
+    "minecraft:leather" = 1
+}
+time_to_setup = 60
+description = "Provide tourist services for emerald income"
+
+# =============================================================================
+# FUTURE FEATURES (Not implemented in initial version)
+# =============================================================================
+# The following features will be added in future phases:
+# - Tier system (tier field)
+# - Prerequisites system (prerequisites field)
+# - Path categorization (path field)
+# - Waste management (waste_output field)
+# - Population scaling (population_bonus field)
+# - Vanilla integration (vanilla_link field)
+# - Complex production chains
+# - Advanced materials processing 

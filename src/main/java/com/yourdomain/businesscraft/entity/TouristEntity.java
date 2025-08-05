@@ -68,7 +68,7 @@ public class TouristEntity extends Villager {
     private int positionUpdateTicks = 0;
     private boolean isCurrentlyStationary = true; // Track current movement state between checks
     private static final int POSITION_UPDATE_INTERVAL = 20; // Check movement every 20 ticks (1 second)
-    private static final double STATIONARY_THRESHOLD = 0.5; // Consider stationary if moved less than 0.5 blocks in 1 second
+    private static final double STATIONARY_THRESHOLD = 0.01; // Consider stationary if moved less than 0.01 blocks in 1 second
 
     public TouristEntity(EntityType<? extends Villager> entityType, Level level) {
         super(entityType, level);
@@ -161,7 +161,15 @@ public class TouristEntity extends Villager {
                 double distanceMoved = Math.sqrt(recentMovementSquared);
                 
                 // Update stationary state based on movement
+                boolean wasStationary = isCurrentlyStationary;
                 isCurrentlyStationary = recentMovementSquared < (STATIONARY_THRESHOLD * STATIONARY_THRESHOLD);
+                
+                // Reset timer if tourist starts moving again (was stationary, now moving)
+                if (wasStationary && !isCurrentlyStationary) {
+                    this.expiryTicks = (int)(ConfigLoader.touristExpiryMinutes * 60 * 20);
+                    DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Tourist {} started moving, resetting expiry timer to {} minutes", 
+                        this.getId(), ConfigLoader.touristExpiryMinutes);
+                }
                 
                 // Update recent position for next check
                 this.recentPosX = this.getX();
