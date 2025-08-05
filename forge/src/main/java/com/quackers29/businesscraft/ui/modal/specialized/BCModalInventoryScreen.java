@@ -30,6 +30,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
+import com.quackers29.businesscraft.util.ItemConverter;
 
 /**
  * A modal inventory screen that allows for inventory-based interactions
@@ -787,7 +788,7 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                         // Get the personal storage items through the town data provider
                         var townDataProvider = townMenu.getTownDataProvider();
                         Map<Item, Integer> personalItems = townDataProvider != null ? 
-                            townDataProvider.getPersonalStorageItems(playerId) : java.util.Collections.emptyMap();
+                            ItemConverter.toItemMap(townDataProvider.getPersonalStorageItems(playerId)) : java.util.Collections.emptyMap();
                         
                         // Update with personal storage items
                         storageMenu.updatePersonalStorageItems(personalItems);

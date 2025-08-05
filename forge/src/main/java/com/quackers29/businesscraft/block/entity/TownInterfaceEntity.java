@@ -613,7 +613,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         // Update the town through the provider
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
-            provider.setPathStart(pos);
+            provider.setPathStart(convertToPosition(pos));
             markDirtyWithRateLimit(provider);
         }
         
@@ -626,7 +626,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         // Update the town through the provider
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
-            provider.setPathEnd(pos);
+            provider.setPathEnd(convertToPosition(pos));
             markDirtyWithRateLimit(provider);
         }
         
@@ -817,8 +817,8 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         if (provider != null) {
             // Sync data from the provider (the single source of truth)
             this.touristSpawningEnabled = provider.isTouristSpawningEnabled();
-            this.pathStart = provider.getPathStart();
-            this.pathEnd = provider.getPathEnd();
+            this.pathStart = convertToBlockPos(provider.getPathStart());
+            this.pathEnd = convertToBlockPos(provider.getPathEnd());
             this.searchRadius = provider.getSearchRadius();
             
             // If we made any local changes, we need to sync them back
@@ -1069,6 +1069,22 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
                 return new com.quackers29.businesscraft.menu.PaymentBoardMenu(containerId, playerInventory, friendlyBuf);
             }
         };
+    }
+    
+    // Position conversion helper methods
+    private ITownDataProvider.Position convertToPosition(BlockPos pos) {
+        return pos != null ? new ITownDataProvider.Position() {
+            @Override
+            public int getX() { return pos.getX(); }
+            @Override
+            public int getY() { return pos.getY(); }
+            @Override
+            public int getZ() { return pos.getZ(); }
+        } : null;
+    }
+    
+    private BlockPos convertToBlockPos(ITownDataProvider.Position pos) {
+        return pos != null ? new BlockPos(pos.getX(), pos.getY(), pos.getZ()) : null;
     }
 
 }

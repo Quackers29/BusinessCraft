@@ -19,6 +19,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.quackers29.businesscraft.util.ItemConverter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -434,7 +435,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      */
     public Map<Item, Integer> getAllResources() {
         if (town != null) {
-            return town.getAllResources();
+            return ItemConverter.toItemMap(town.getAllResources());
         }
         
         // Try to get resources from town entity
@@ -450,7 +451,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                     if (entityTownId != null && level instanceof ServerLevel serverLevel) {
                         Town townFromEntity = TownManager.get(serverLevel).getTown(entityTownId);
                         if (townFromEntity != null) {
-                            return townFromEntity.getAllResources();
+                            return ItemConverter.toItemMap(townFromEntity.getAllResources());
                         }
                     }
                 }
@@ -468,7 +469,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      */
     public Map<Item, Integer> getAllCommunalStorageItems() {
         if (town != null) {
-            return town.getAllCommunalStorageItems();
+            return ItemConverter.toItemMap(town.getAllCommunalStorageItems());
         }
         
         // Try to get communal storage from town entity
@@ -484,7 +485,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                     if (entityTownId != null && level instanceof ServerLevel serverLevel) {
                         Town townFromEntity = TownManager.get(serverLevel).getTown(entityTownId);
                         if (townFromEntity != null) {
-                            return townFromEntity.getAllCommunalStorageItems();
+                            return ItemConverter.toItemMap(townFromEntity.getAllCommunalStorageItems());
                         }
                     }
                 }

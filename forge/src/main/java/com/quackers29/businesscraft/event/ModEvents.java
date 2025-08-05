@@ -12,6 +12,7 @@ import net.minecraftforge.fml.common.Mod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.ChatFormatting;
+import com.quackers29.businesscraft.util.PositionConverter;
 
 @Mod.EventBusSubscriber
 public class ModEvents {
@@ -73,8 +74,8 @@ public class ModEvents {
                 // Update provider
                 ITownDataProvider provider = townInterface.getTownDataProvider();
                 if (provider != null) {
-                    provider.setPathStart(townInterface.getPathStart());
-                    provider.setPathEnd(clickedPos);
+                    provider.setPathStart(PositionConverter.toPosition(townInterface.getPathStart()));
+                    provider.setPathEnd(PositionConverter.toPosition(clickedPos));
                     provider.markDirty();
                 }
                 

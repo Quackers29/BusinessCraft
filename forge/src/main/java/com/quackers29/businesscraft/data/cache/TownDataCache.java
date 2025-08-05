@@ -11,6 +11,7 @@ import net.minecraft.core.BlockPos;
 import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.quackers29.businesscraft.util.ItemConverter;
 
 /**
  * Client-side cache for town data to reduce network requests
@@ -74,14 +75,14 @@ public class TownDataCache {
      * Get all resources, either from cache or from the provider
      */
     public Map<Item, Integer> getAllResources() {
-        return getOrFetchValue("allResources", dataProvider::getAllResources, DEFAULT_TTL);
+        return getOrFetchValue("allResources", () -> ItemConverter.toItemMap(dataProvider.getAllResources()), DEFAULT_TTL);
     }
     
     /**
      * Get all communal storage items, either from cache or from the provider
      */
     public Map<Item, Integer> getAllCommunalStorageItems() {
-        return getOrFetchValue("communalStorage", dataProvider::getAllCommunalStorageItems, DEFAULT_TTL);
+        return getOrFetchValue("communalStorage", () -> ItemConverter.toItemMap(dataProvider.getAllCommunalStorageItems()), DEFAULT_TTL);
     }
     
     /**
@@ -96,7 +97,7 @@ public class TownDataCache {
      */
     public Map<Item, Integer> getPersonalStorageItems(UUID playerId) {
         return getOrFetchValue("personalStorage:" + playerId, 
-            () -> dataProvider.getPersonalStorageItems(playerId), DEFAULT_TTL);
+            () -> ItemConverter.toItemMap(dataProvider.getPersonalStorageItems(playerId)), DEFAULT_TTL);
     }
     
     /**

@@ -17,6 +17,7 @@ import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
 import com.quackers29.businesscraft.network.ModMessages;
+import com.quackers29.businesscraft.util.PositionConverter;
 import com.quackers29.businesscraft.debug.DebugConfig;
 
 /**
@@ -93,7 +94,7 @@ public class OpenDestinationsUIPacket {
                         }
                         
                         // Calculate distance and direction to the town
-                        BlockPos townPos = town.getPosition();
+                        BlockPos townPos = PositionConverter.toBlockPos(town.getPosition());
                         if (townPos != null) {
                             int distance = (int) Math.sqrt(townPos.distSqr(originPos));
                             

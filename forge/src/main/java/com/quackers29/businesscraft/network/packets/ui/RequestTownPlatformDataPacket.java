@@ -12,6 +12,7 @@ import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.network.ModMessages;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.platform.Platform;
+import com.quackers29.businesscraft.util.PositionConverter;
 
 import java.util.UUID;
 import java.util.List;
@@ -72,7 +73,7 @@ public class RequestTownPlatformDataPacket {
                     "Processing platform data request for town: {} ({})", town.getName(), townId);
                 
                 // Find the town block entity to get platform data
-                if (level.getBlockEntity(town.getPosition()) instanceof TownInterfaceEntity townEntity) {
+                if (level.getBlockEntity(PositionConverter.toBlockPos(town.getPosition())) instanceof TownInterfaceEntity townEntity) {
                     List<Platform> platforms = townEntity.getPlatforms();
                     
                     // Create response packet with platform data and town info

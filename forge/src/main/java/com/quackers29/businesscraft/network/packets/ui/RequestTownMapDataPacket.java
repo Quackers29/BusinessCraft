@@ -15,6 +15,7 @@ import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
 import com.quackers29.businesscraft.network.ModMessages;
 import com.quackers29.businesscraft.debug.DebugConfig;
+import com.quackers29.businesscraft.util.PositionConverter;
 
 /**
  * Packet for requesting town map data from the server.
@@ -72,7 +73,7 @@ public class RequestTownMapDataPacket {
                     responsePacket.addTown(
                         town.getId(),
                         town.getName(),
-                        town.getPosition(),
+                        PositionConverter.toBlockPos(town.getPosition()),
                         town.getPopulation(),
                         town.getTouristCount()
                     );

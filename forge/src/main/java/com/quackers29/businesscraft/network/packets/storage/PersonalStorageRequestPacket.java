@@ -111,7 +111,7 @@ public class PersonalStorageRequestPacket extends BaseBlockEntityPacket {
             // Send a response with the player's personal storage data
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                 "Sending personal storage data to player {} for town {}", player.getName().getString(), townId);
-            ModMessages.sendToPlayer(new PersonalStorageResponsePacket(town.getPersonalStorageItems(playerId)), player);
+            ModMessages.sendToPlayer(new PersonalStorageResponsePacket(town.getPersonalStorageItemsForge(playerId)), player);
         });
         
         ctx.get().setPacketHandled(true);

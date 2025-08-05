@@ -10,6 +10,7 @@ import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.event.ModEvents;
 import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
+import com.quackers29.businesscraft.util.PositionConverter;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 
@@ -77,8 +78,8 @@ public class SetPathCreationModePacket extends BaseBlockEntityPacket {
                     ITownDataProvider provider = townInterface.getTownDataProvider();
                     if (provider != null && townInterface.getPathStart() != null && townInterface.getPathEnd() != null) {
                         // Update provider with path data
-                        provider.setPathStart(townInterface.getPathStart());
-                        provider.setPathEnd(townInterface.getPathEnd());
+                        provider.setPathStart(PositionConverter.toPosition(townInterface.getPathStart()));
+                        provider.setPathEnd(PositionConverter.toPosition(townInterface.getPathEnd()));
                         provider.markDirty();
                     }
                     

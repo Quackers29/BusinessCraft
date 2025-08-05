@@ -13,6 +13,7 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import com.quackers29.businesscraft.util.PositionConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,7 +117,7 @@ public class PlayerBoundaryTracker {
      */
     private static Town findTownAtPosition(TownManager townManager, BlockPos playerPos) {
         for (Town town : townManager.getAllTowns().values()) {
-            double distance = Math.sqrt(playerPos.distSqr(town.getPosition()));
+            double distance = Math.sqrt(playerPos.distSqr(PositionConverter.toBlockPos(town.getPosition())));
             if (distance <= town.getBoundaryRadius()) {
                 return town;
             }

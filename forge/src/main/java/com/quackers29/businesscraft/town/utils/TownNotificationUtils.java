@@ -13,6 +13,7 @@ import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.quackers29.businesscraft.util.PositionConverter;
 import com.quackers29.businesscraft.debug.DebugConfig;
 
 import java.util.List;
@@ -78,7 +79,7 @@ public class TownNotificationUtils {
             .withStyle(ChatFormatting.GOLD);
         
         // Get town block position
-        BlockPos townPos = town.getPosition();
+        BlockPos townPos = PositionConverter.toBlockPos(town.getPosition());
         if (townPos == null) {
             LOGGER.warn("Cannot display tourist departure notification: town position is null for {}", originTownName);
             return;

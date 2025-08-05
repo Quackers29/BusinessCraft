@@ -8,6 +8,7 @@ import com.quackers29.businesscraft.debug.DebugConfig;
 import net.minecraft.core.BlockPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.quackers29.businesscraft.util.PositionConverter;
 
 import java.util.Collection;
 
@@ -60,7 +61,7 @@ public class TownBoundaryService {
         int newTownBoundary = ConfigLoader.defaultStartingPopulation;
         
         for (Town existingTown : existingTowns) {
-            double distance = Math.sqrt(newTownPos.distSqr(existingTown.getPosition()));
+            double distance = Math.sqrt(newTownPos.distSqr(PositionConverter.toBlockPos(existingTown.getPosition())));
             double requiredDistance = newTownBoundary + existingTown.getBoundaryRadius();
             
             if (distance < requiredDistance) {

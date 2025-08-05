@@ -12,6 +12,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.items.ItemStackHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.quackers29.businesscraft.util.PositionConverter;
 
 import java.util.List;
 import java.util.UUID;
@@ -131,11 +132,11 @@ public class NBTDataHelper {
                     
                     // Only use town paths if we don't have any
                     if (result.pathStart == null && result.town.getPathStart() != null) {
-                        result.pathStart = result.town.getPathStart();
+                        result.pathStart = PositionConverter.toBlockPos(result.town.getPathStart());
                     }
                     
                     if (result.pathEnd == null && result.town.getPathEnd() != null) {
-                        result.pathEnd = result.town.getPathEnd();
+                        result.pathEnd = PositionConverter.toBlockPos(result.town.getPathEnd());
                     }
                     
                     // Use town search radius if already set
@@ -207,7 +208,7 @@ public class NBTDataHelper {
                 @SuppressWarnings("unchecked")
                 List<ITownDataProvider.VisitHistoryRecord> visitHistory = 
                     (List<ITownDataProvider.VisitHistoryRecord>) historyField.get(town);
-                visitHistory.add(new ITownDataProvider.VisitHistoryRecord(timestamp, originTownId, count, originPos));
+                visitHistory.add(new ITownDataProvider.VisitHistoryRecord(timestamp, originTownId, count, PositionConverter.toPosition(originPos)));
                 
                 // Ensure list is sorted by timestamp (newest first)
                 visitHistory.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
@@ -222,7 +223,7 @@ public class NBTDataHelper {
             } catch (Exception e) {
                 // Fallback to the standard method if reflection fails
                 LOGGER.error("Error migrating visit history: {}", e.getMessage());
-                provider.recordVisit(originTownId, count, originPos);
+                provider.recordVisit(originTownId, count, PositionConverter.toPosition(originPos));
             }
         }
     }

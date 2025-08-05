@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.BlockPos;
 import com.quackers29.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
+import com.quackers29.businesscraft.util.PositionConverter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -233,7 +234,7 @@ public class BCModalGridFactory {
         
         // Add direction if position available
         if (record.getOriginPos() != null) {
-            BlockPos originPos = record.getOriginPos();
+            BlockPos originPos = PositionConverter.toBlockPos(record.getOriginPos());
             
             if (originPos != null && !originPos.equals(BlockPos.ZERO)) {
                 // Calculate direction based on the origin position

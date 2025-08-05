@@ -155,35 +155,35 @@ public class ForgeTownAdapter implements ITownDataProvider {
     
     @Override
     public Position getPathStart() {
-        BlockPos pos = forgeTown.getPathStart();
+        BlockPos pos = forgeTown.getPathStartForge();
         return pos != null ? new ForgePosition(pos) : null;
     }
     
     @Override
     public void setPathStart(Position pos) {
         if (pos instanceof ForgePosition) {
-            forgeTown.setPathStart(((ForgePosition) pos).getBlockPos());
+            forgeTown.setPathStartForge(((ForgePosition) pos).getBlockPos());
         } else if (pos != null) {
-            forgeTown.setPathStart(new BlockPos(pos.getX(), pos.getY(), pos.getZ()));
+            forgeTown.setPathStartForge(new BlockPos(pos.getX(), pos.getY(), pos.getZ()));
         } else {
-            forgeTown.setPathStart(null);
+            forgeTown.setPathStartForge(null);
         }
     }
     
     @Override
     public Position getPathEnd() {
-        BlockPos pos = forgeTown.getPathEnd();
+        BlockPos pos = forgeTown.getPathEndForge();
         return pos != null ? new ForgePosition(pos) : null;
     }
     
     @Override
     public void setPathEnd(Position pos) {
         if (pos instanceof ForgePosition) {
-            forgeTown.setPathEnd(((ForgePosition) pos).getBlockPos());
+            forgeTown.setPathEndForge(((ForgePosition) pos).getBlockPos());
         } else if (pos != null) {
-            forgeTown.setPathEnd(new BlockPos(pos.getX(), pos.getY(), pos.getZ()));
+            forgeTown.setPathEndForge(new BlockPos(pos.getX(), pos.getY(), pos.getZ()));
         } else {
-            forgeTown.setPathEnd(null);
+            forgeTown.setPathEndForge(null);
         }
     }
     
@@ -209,7 +209,7 @@ public class ForgeTownAdapter implements ITownDataProvider {
     
     @Override
     public Position getPosition() {
-        return new ForgePosition(forgeTown.getPosition());
+        return new ForgePosition(forgeTown.getPositionForge());
     }
     
     @Override
@@ -235,7 +235,7 @@ public class ForgeTownAdapter implements ITownDataProvider {
     
     @Override
     public List<VisitHistoryRecord> getVisitHistory() {
-        return forgeTown.getVisitHistory().stream()
+        return forgeTown.getVisitHistoryForge().stream()
             .map(forgeRecord -> new VisitHistoryRecord(
                 forgeRecord.getTimestamp(),
                 forgeRecord.getOriginTownId(),

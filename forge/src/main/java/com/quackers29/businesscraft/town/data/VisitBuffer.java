@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.town.data;
 
 import com.quackers29.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
+import com.quackers29.businesscraft.util.PositionConverter;
 import net.minecraft.core.BlockPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,7 +144,7 @@ public class VisitBuffer {
                 now, 
                 entry.getKey(), 
                 entry.getValue().count,
-                entry.getValue().originPos
+                PositionConverter.toPosition(entry.getValue().originPos)
             ))
             .collect(Collectors.toList());
             

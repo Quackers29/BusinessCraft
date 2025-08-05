@@ -115,7 +115,7 @@ public class CommunalStoragePacket extends BaseBlockEntityPacket {
                     "Received request for all communal storage data from player {}", player.getName().getString());
                 
                 // Get the current communal storage contents
-                var storageItems = town.getAllCommunalStorageItems();
+                var storageItems = town.getAllCommunalStorageItemsForge();
                 
                 // Send a response with all communal storage items
                 ModMessages.sendToPlayer(new CommunalStorageResponsePacket(storageItems), player);
@@ -177,7 +177,7 @@ public class CommunalStoragePacket extends BaseBlockEntityPacket {
                 townManager.markDirty();
                 
                 // Send a response to update the UI
-                ModMessages.sendToPlayer(new CommunalStorageResponsePacket(town.getAllCommunalStorageItems()), player);
+                ModMessages.sendToPlayer(new CommunalStorageResponsePacket(town.getAllCommunalStorageItemsForge()), player);
             }
         });
         

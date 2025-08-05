@@ -16,6 +16,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
+import com.quackers29.businesscraft.util.PositionConverter;
 
 import java.util.*;
 
@@ -48,8 +49,10 @@ public class ClientSyncHelper {
         
         // Add all resources to the tag
         provider.getAllResources().forEach((item, count) -> {
-            String itemKey = ForgeRegistries.ITEMS.getKey(item).toString();
-            resourcesTag.putInt(itemKey, count);
+            if (item instanceof Item itemObj) {
+                String itemKey = ForgeRegistries.ITEMS.getKey(itemObj).toString();
+                resourcesTag.putInt(itemKey, count);
+            }
         });
         
         // Add resources tag to the update tag
@@ -58,8 +61,10 @@ public class ClientSyncHelper {
         // Add communal storage data
         CompoundTag communalTag = new CompoundTag();
         provider.getAllCommunalStorageItems().forEach((item, count) -> {
-            String itemKey = ForgeRegistries.ITEMS.getKey(item).toString();
-            communalTag.putInt(itemKey, count);
+            if (item instanceof Item itemObj) {
+                String itemKey = ForgeRegistries.ITEMS.getKey(itemObj).toString();
+                communalTag.putInt(itemKey, count);
+            }
         });
         tag.put("clientCommunalStorage", communalTag);
     }
@@ -205,8 +210,9 @@ public class ClientSyncHelper {
                     );
                 }
                 
-                // Create the visit record
-                clientVisitHistory.add(new ITownDataProvider.VisitHistoryRecord(timestamp, townId, count, originPos));
+                // Create the visit record - convert BlockPos to Position using converter
+                ITownDataProvider.Position position = PositionConverter.toPosition(originPos);
+                clientVisitHistory.add(new ITownDataProvider.VisitHistoryRecord(timestamp, townId, count, position));
             }
         }
     }
@@ -289,14 +295,14 @@ public class ClientSyncHelper {
         
         // Update client resources from the town (make sure emeralds are properly reflected)
         clientResources.clear();
-        town.getAllResources().forEach((item, count) -> {
+        town.getAllResourcesForge().forEach((item, count) -> {
             clientResources.put(item, count);
         });
         DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Updated client resources from town during sync, resources count: {}", clientResources.size());
         
         // Update client communal storage from the town
         clientCommunalStorage.clear();
-        town.getAllCommunalStorageItems().forEach((item, count) -> {
+        town.getAllCommunalStorageItemsForge().forEach((item, count) -> {
             clientCommunalStorage.put(item, count);
         });
         DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Updated client communal storage from town during sync, storage count: {}", clientCommunalStorage.size());

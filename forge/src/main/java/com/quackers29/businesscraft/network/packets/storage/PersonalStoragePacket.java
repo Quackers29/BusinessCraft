@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.Block;
 
 import java.util.UUID;
 import java.util.function.Supplier;
+import com.quackers29.businesscraft.util.ItemConverter;
 
 /**
  * Packet for interacting with a player's personal storage in a town.
@@ -174,7 +175,7 @@ public class PersonalStoragePacket extends BaseBlockEntityPacket {
                 townManager.markDirty();
                 
                 // Send a response to update the UI
-                ModMessages.sendToPlayer(new PersonalStorageResponsePacket(town.getPersonalStorageItems(playerId)), player);
+                ModMessages.sendToPlayer(new PersonalStorageResponsePacket(ItemConverter.toItemMap(town.getPersonalStorageItems(playerId))), player);
             }
         });
         

@@ -82,6 +82,30 @@ public interface ITownDataProvider {
         int getX();
         int getY();
         int getZ();
+        
+        /**
+         * Format position as a short string for debugging/display
+         */
+        default String toShortString() {
+            return String.format("[%d, %d, %d]", getX(), getY(), getZ());
+        }
+        
+        /**
+         * Calculate squared distance to another position
+         */
+        default double distSqr(Position other) {
+            double dx = getX() - other.getX();
+            double dy = getY() - other.getY();
+            double dz = getZ() - other.getZ();
+            return dx * dx + dy * dy + dz * dz;
+        }
+        
+        /**
+         * Calculate distance to another position
+         */
+        default double distanceTo(Position other) {
+            return Math.sqrt(distSqr(other));
+        }
     }
     
     /**

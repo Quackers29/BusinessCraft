@@ -19,9 +19,9 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import java.util.stream.Collectors;
 import com.quackers29.businesscraft.api.ITownDataProvider;
-import com.quackers29.businesscraft.town.VisitHistoryRecord;
+import com.quackers29.businesscraft.town.ForgeVisitHistoryRecord;
 
-public class Town /* temporarily commenting out: implements ITownDataProvider */ {
+public class Town implements ITownDataProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(Town.class);
     private final UUID id;
     private final BlockPos position;
@@ -38,7 +38,7 @@ public class Town /* temporarily commenting out: implements ITownDataProvider */
     private int touristsReceivedCounter = 0;
     
     // Visit history storage - moved from TownBlockEntity
-    private final List<VisitHistoryRecord> visitHistory = new ArrayList<>();
+    private final List<ForgeVisitHistoryRecord> visitHistory = new ArrayList<>();
     private static final int MAX_HISTORY_SIZE = 50; // Maximum history entries to keep
     
     // Payment board system - replaces communal storage
@@ -279,7 +279,7 @@ public class Town /* temporarily commenting out: implements ITownDataProvider */
         // Save visit history
         if (!visitHistory.isEmpty()) {
             ListTag historyTag = new ListTag();
-            for (VisitHistoryRecord record : visitHistory) {
+            for (ForgeVisitHistoryRecord record : visitHistory) {
                 CompoundTag visitTag = new CompoundTag();
                 visitTag.putLong("timestamp", record.getTimestamp());
                 
@@ -419,7 +419,7 @@ public class Town /* temporarily commenting out: implements ITownDataProvider */
                 }
                 
                 if (townId != null) {
-                    town.visitHistory.add(new VisitHistoryRecord(timestamp, townId, count, originPos));
+                    town.visitHistory.add(new ForgeVisitHistoryRecord(timestamp, townId, count, originPos));
                 }
             }
         }
@@ -658,7 +658,7 @@ public class Town /* temporarily commenting out: implements ITownDataProvider */
         long timestamp = System.currentTimeMillis();
         
         // Create the visit record
-        VisitHistoryRecord record = new VisitHistoryRecord(timestamp, originTownId, count, originPos);
+        ForgeVisitHistoryRecord record = new ForgeVisitHistoryRecord(timestamp, originTownId, count, originPos);
         
         // Add to the beginning of the list (newest first)
         visitHistory.add(0, record);
@@ -673,7 +673,7 @@ public class Town /* temporarily commenting out: implements ITownDataProvider */
     }
     
     // Forge-specific method
-    public List<VisitHistoryRecord> getVisitHistoryForge() {
+    public List<ForgeVisitHistoryRecord> getVisitHistoryForge() {
         return Collections.unmodifiableList(visitHistory);
     }
     

@@ -13,6 +13,7 @@ import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.util.PositionConverter;
 import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
@@ -91,7 +92,7 @@ public class SetPlatformDestinationPacket {
                         
                         // Use the block's position if town or town position is null
                         final BlockPos originPos = (originTown != null && originTown.getPosition() != null) 
-                            ? originTown.getPosition() 
+                            ? PositionConverter.toBlockPos(originTown.getPosition()) 
                             : pos; // Use the block entity's position as fallback
                         
                         // Add all towns from the server to the refresh packet
@@ -110,7 +111,7 @@ public class SetPlatformDestinationPacket {
                             Town destTown = TownManager.get(serverLevel).getTown(id);
                             
                             if (destTown != null) {
-                                BlockPos destPos = destTown.getPosition();
+                                BlockPos destPos = PositionConverter.toBlockPos(destTown.getPosition());
                                 if (destPos != null) {
                                     // Calculate Euclidean distance in blocks
                                     double dx = destPos.getX() - originPos.getX();

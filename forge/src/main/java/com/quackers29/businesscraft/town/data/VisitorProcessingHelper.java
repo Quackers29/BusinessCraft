@@ -20,6 +20,7 @@ import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
+import com.quackers29.businesscraft.util.PositionConverter;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -164,7 +165,7 @@ public class VisitorProcessingHelper {
                 
                 if (lookupOriginTown != null) {
                     // Use the actual town's position
-                    originPos = lookupOriginTown.getPosition();
+                    originPos = PositionConverter.toBlockPos(lookupOriginTown.getPosition());
                 } else {
                     // Fallback to stored coordinates if town is not found
                     originPos = new BlockPos(touristInfo.originX, touristInfo.originY, touristInfo.originZ);
