@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.network.packets.ui;
 
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -46,7 +46,7 @@ public class OpenTownInterfacePacket {
             if (player != null) {
                 // Get the block entity to ensure all town data is accessible
                 BlockEntity entity = player.level().getBlockEntity(blockPos);
-                if (entity instanceof TownBlockEntity townBlock) {
+                if (entity instanceof TownInterfaceEntity townInterface) {
                     // Open the TownInterfaceScreen using NetworkHooks for proper sync
                     NetworkHooks.openScreen(player, new MenuProvider() {
                         @Override
@@ -61,7 +61,7 @@ public class OpenTownInterfacePacket {
                         }
                     }, blockPos);
                 } else {
-                    LOGGER.error("Failed to get TownBlockEntity at position: {}", blockPos);
+                    LOGGER.error("Failed to get TownInterfaceEntity at position: {}", blockPos);
                 }
             }
         });

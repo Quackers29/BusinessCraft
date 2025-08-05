@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 import com.yourdomain.businesscraft.network.packets.ui.ClientTownMapCache;
@@ -64,9 +64,9 @@ public class SetPlatformEnabledPacket {
             
             // Check if the block entity is valid
             BlockEntity be = level.getBlockEntity(blockPos);
-            if (be instanceof TownBlockEntity townBlock) {
+            if (be instanceof TownInterfaceEntity townInterface) {
                 // Find the platform
-                Platform platform = townBlock.getPlatform(platformId);
+                Platform platform = townInterface.getPlatform(platformId);
                 if (platform != null) {
                     // Update enabled state
                     platform.setEnabled(enabled);
@@ -74,8 +74,8 @@ public class SetPlatformEnabledPacket {
                         "Player {} is setting platform {} enabled state to {} at {}", 
                         player.getName().getString(), platformId, enabled, blockPos);
                     
-                    // Sync the town block
-                    townBlock.setChanged();
+                    // Sync the town interface
+                    townInterface.setChanged();
                     level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), 
                         level.getBlockState(blockPos), 3);
                     

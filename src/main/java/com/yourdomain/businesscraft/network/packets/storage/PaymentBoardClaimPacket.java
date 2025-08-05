@@ -86,9 +86,9 @@ public class PaymentBoardClaimPacket {
         try {
             // Get the town block entity
             var blockEntity = serverLevel.getBlockEntity(townBlockPos);
-            if (blockEntity instanceof com.yourdomain.businesscraft.block.entity.TownBlockEntity townBlockEntity) {
+            if (blockEntity instanceof com.yourdomain.businesscraft.block.entity.TownInterfaceEntity townInterfaceEntity) {
                 // Get the town
-                var townId = townBlockEntity.getTownId();
+                var townId = townInterfaceEntity.getTownId();
                 if (townId != null) {
                     Town town = TownManager.get(serverLevel).getTown(townId);
                     if (town != null) {
@@ -114,7 +114,7 @@ public class PaymentBoardClaimPacket {
                                 
                                 if (inventoryFull) {
                                     // Notify town block entity that buffer has changed due to overflow
-                                    townBlockEntity.onTownBufferChanged();
+                                    townInterfaceEntity.onTownBufferChanged();
                                     player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
                                         "Some items were sent to buffer storage due to full inventory"));
                                 }
@@ -124,7 +124,7 @@ public class PaymentBoardClaimPacket {
                             town.markDirty();
                             
                             // Notify town block entity that buffer has changed
-                            townBlockEntity.onTownBufferChanged();
+                            townInterfaceEntity.onTownBufferChanged();
                             
                             // Send updated payment board data to client
                             var rewards = town.getPaymentBoard().getUnclaimedRewards();
@@ -161,7 +161,7 @@ public class PaymentBoardClaimPacket {
                 }
             } else {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                    "Block at {} is not a TownBlockEntity", townBlockPos);
+                    "Block at {} is not a TownInterfaceEntity", townBlockPos);
                 player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
                     "§cError: Invalid town block"));
             }

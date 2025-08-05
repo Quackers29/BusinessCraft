@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.yourdomain.businesscraft.menu.StorageMenu;
 import com.yourdomain.businesscraft.menu.TradeMenu;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
-import com.yourdomain.businesscraft.menu.TownBlockMenu;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
 import com.yourdomain.businesscraft.network.packets.storage.CommunalStoragePacket;
@@ -783,16 +782,18 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                     ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
                     
                     // Then try to fetch from local cache as a fallback
-                    TownBlockMenu townMenu = storageMenu.getTownBlockMenu();
+                    var townMenu = storageMenu.getTownInterfaceMenu();
                     if (townMenu != null) {
-                        // Get the personal storage items
-                        Map<Item, Integer> personalItems = townMenu.getPersonalStorageItems(playerId);
+                        // Get the personal storage items through the town data provider
+                        var townDataProvider = townMenu.getTownDataProvider();
+                        Map<Item, Integer> personalItems = townDataProvider != null ? 
+                            townDataProvider.getPersonalStorageItems(playerId) : java.util.Collections.emptyMap();
                         
                         // Update with personal storage items
                         storageMenu.updatePersonalStorageItems(personalItems);
                         DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Updated personal storage display with {} items from local cache", personalItems.size());
                     } else {
-                        LOGGER.warn("Could not access TownBlockMenu for personal storage");
+                        LOGGER.warn("Could not access TownInterfaceMenu for personal storage");
                     }
                 } else {
                     LOGGER.warn("No town position available for personal storage request");
@@ -810,14 +811,13 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
         if (this.minecraft != null && this.minecraft.player != null) {
             try {
                 // Get the town menu to access storage data
-                TownBlockMenu townMenu = storageMenu.getTownBlockMenu();
+                var townMenu = storageMenu.getTownInterfaceMenu();
                 if (townMenu != null) {
-                    // Update with communal storage items
-                    storageMenu.updateStorageItems(
-                        townMenu.getAllCommunalStorageItems()
-                    );
+                    // Update with communal storage items through the town data provider or menu method
+                    Map<Item, Integer> communalItems = townMenu.getAllCommunalStorageItems();
+                    storageMenu.updateStorageItems(communalItems);
                 } else {
-                    LOGGER.warn("Could not access TownBlockMenu for communal storage");
+                    LOGGER.warn("Could not access TownInterfaceMenu for communal storage");
                 }
             } catch (Exception e) {
                 LOGGER.error("Error loading communal storage items", e);

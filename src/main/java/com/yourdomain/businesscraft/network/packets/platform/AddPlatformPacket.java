@@ -10,7 +10,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 import com.yourdomain.businesscraft.debug.DebugConfig;
@@ -54,16 +54,16 @@ public class AddPlatformPacket {
             
             // Check if the block entity is valid
             BlockEntity be = level.getBlockEntity(blockPos);
-            if (be instanceof TownBlockEntity townBlock) {
+            if (be instanceof TownInterfaceEntity townInterface) {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "Player {} is adding a new platform to town block at {}", player.getName().getString(), blockPos);
                 
-                if (townBlock.canAddMorePlatforms()) {
-                    boolean added = townBlock.addPlatform();
+                if (townInterface.canAddMorePlatforms()) {
+                    boolean added = townInterface.addPlatform();
                     if (added) {
                         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                             "Successfully added new platform to town block at {}", blockPos);
-                        townBlock.setChanged();
+                        townInterface.setChanged();
                         
                         // Force a block update to ensure clients get the updated data
                         level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), level.getBlockState(blockPos), 3);

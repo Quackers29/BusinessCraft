@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.event;
 
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -45,11 +45,11 @@ public class ModEvents {
         BlockEntity be = level.getBlockEntity(activeTownBlockPos);
         LOGGER.debug("Right click event with active town block at {}", activeTownBlockPos);
         
-        if (be instanceof TownBlockEntity townBlock && townBlock.isInPathCreationMode()) {
+        if (be instanceof TownInterfaceEntity townInterface && townInterface.isInPathCreationMode()) {
             BlockPos clickedPos = event.getPos();
             LOGGER.debug("Path creation mode active, clicked: {}, awaitingSecondClick: {}", clickedPos, awaitingSecondClick);
             
-            if (!townBlock.isValidPathDistance(clickedPos)) {
+            if (!townInterface.isValidPathDistance(clickedPos)) {
                 event.getEntity().sendSystemMessage(Component.literal("Point too far from town!"));
                 event.setCanceled(true);
                 return;
@@ -57,7 +57,7 @@ public class ModEvents {
             
             // First click - set start point
             if (!awaitingSecondClick) {
-                townBlock.setPathStart(clickedPos);
+                townInterface.setPathStart(clickedPos);
                 event.getEntity().sendSystemMessage(
                     Component.literal("First point set! Now click to set the end point.")
                         .withStyle(ChatFormatting.YELLOW)
@@ -67,13 +67,13 @@ public class ModEvents {
             } 
             // Second click - set end point
             else {
-                townBlock.setPathEnd(clickedPos);
-                townBlock.setPathCreationMode(false);
+                townInterface.setPathEnd(clickedPos);
+                townInterface.setPathCreationMode(false);
                 
                 // Update provider
-                ITownDataProvider provider = townBlock.getTownDataProvider();
+                ITownDataProvider provider = townInterface.getTownDataProvider();
                 if (provider != null) {
-                    provider.setPathStart(townBlock.getPathStart());
+                    provider.setPathStart(townInterface.getPathStart());
                     provider.setPathEnd(clickedPos);
                     provider.markDirty();
                 }

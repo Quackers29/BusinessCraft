@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.client.render.world;
 
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.platform.Platform;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -61,13 +61,13 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
                     return;
                 }
                 
-                // Check if this is a TownBlockEntity with active visualization
-                if (blockEntity instanceof TownBlockEntity townBlockEntity) {
+                // Check if this is a TownInterfaceEntity with active visualization
+                if (blockEntity instanceof TownInterfaceEntity townInterfaceEntity) {
                     // Check if this town has active platform visualization
                     if (manager.shouldShowVisualization(VisualizationManager.TYPE_PLATFORM, pos)) {
-                        // Get platform data from the town block entity
-                        List<Platform> platforms = townBlockEntity.getPlatforms();
-                        int searchRadius = townBlockEntity.getSearchRadius();
+                        // Get platform data from the town interface entity
+                        List<Platform> platforms = townInterfaceEntity.getPlatforms();
+                        int searchRadius = townInterfaceEntity.getSearchRadius();
                         
                         if (!platforms.isEmpty()) {
                             PlatformVisualizationData data = new PlatformVisualizationData(platforms, searchRadius);

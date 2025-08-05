@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.event;
 
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.platform.RefreshPlatformsPacket;
@@ -60,12 +60,12 @@ public class PlatformPathHandler {
         BlockEntity be = level.getBlockEntity(activeTownBlockPos);
         LOGGER.debug("Right click event with active platform {} at {}", activePlatformId, activeTownBlockPos);
         
-        if (be instanceof TownBlockEntity townBlock && townBlock.isInPlatformCreationMode()) {
+        if (be instanceof TownInterfaceEntity townInterface && townInterface.isInPlatformCreationMode()) {
             BlockPos clickedPos = event.getPos();
             LOGGER.debug("Platform path creation mode active, clicked: {}, awaitingSecondClick: {}", clickedPos, awaitingSecondClick);
             
             // Check if the platform exists
-            Platform platform = townBlock.getPlatform(activePlatformId);
+            Platform platform = townInterface.getPlatform(activePlatformId);
             if (platform == null) {
                 LOGGER.error("Platform {} not found in town block at {}", activePlatformId, activeTownBlockPos);
                 clearActivePlatform();
@@ -74,7 +74,7 @@ public class PlatformPathHandler {
             }
             
             // Check if the clicked position is within town boundary
-            String validationError = validatePositionWithinBoundary(clickedPos, townBlock, level);
+            String validationError = validatePositionWithinBoundary(clickedPos, townInterface, level);
             if (validationError != null) {
                 event.getEntity().sendSystemMessage(Component.literal(validationError));
                 event.setCanceled(true);
@@ -83,7 +83,7 @@ public class PlatformPathHandler {
             
             // First click - set start point
             if (!awaitingSecondClick) {
-                townBlock.setPlatformPathStart(activePlatformId, clickedPos);
+                townInterface.setPlatformPathStart(activePlatformId, clickedPos);
                 event.getEntity().sendSystemMessage(
                     Component.literal("Platform start point set! Now click to set the end point.")
                         .withStyle(ChatFormatting.YELLOW)
@@ -93,8 +93,8 @@ public class PlatformPathHandler {
             } 
             // Second click - set end point
             else {
-                townBlock.setPlatformPathEnd(activePlatformId, clickedPos);
-                townBlock.setPlatformCreationMode(false, null);
+                townInterface.setPlatformPathEnd(activePlatformId, clickedPos);
+                townInterface.setPlatformCreationMode(false, null);
                 
                 event.getEntity().sendSystemMessage(
                     Component.literal("Platform path created!")
@@ -125,12 +125,12 @@ public class PlatformPathHandler {
      * @param level The server level
      * @return null if valid, error message if invalid
      */
-    private static String validatePositionWithinBoundary(BlockPos pos, TownBlockEntity townBlock, Level level) {
+    private static String validatePositionWithinBoundary(BlockPos pos, TownInterfaceEntity townInterface, Level level) {
         if (!(level instanceof ServerLevel serverLevel)) {
             return "Server error: cannot validate position";
         }
         
-        UUID townId = townBlock.getTownId();
+        UUID townId = townInterface.getTownId();
         if (townId == null) {
             return "No town associated with this block";
         }
@@ -141,7 +141,7 @@ public class PlatformPathHandler {
         }
         
         int boundaryRadius = town.getBoundaryRadius();
-        double distance = Math.sqrt(pos.distSqr(townBlock.getBlockPos()));
+        double distance = Math.sqrt(pos.distSqr(townInterface.getBlockPos()));
         
         if (distance > boundaryRadius) {
             return String.format("Point too far from town! Distance: %.1f blocks, Town boundary: %d blocks (Population: %d)", 

@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.network.packets.ui;
 
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
@@ -65,8 +65,8 @@ public class BoundarySyncRequestPacket extends BaseBlockEntityPacket {
             
             // Get town population and send response
             BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof TownBlockEntity townBlock) {
-                UUID townId = townBlock.getTownId();
+            if (be instanceof TownInterfaceEntity townInterface) {
+                UUID townId = townInterface.getTownId();
                 if (townId != null) {
                     TownManager townManager = TownManager.get(serverLevel);
                     Town town = townManager.getTown(townId);

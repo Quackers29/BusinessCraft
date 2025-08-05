@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.town.data;
 
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
 import net.minecraft.server.level.ServerLevel;
@@ -18,7 +18,7 @@ import java.util.UUID;
 
 /**
  * Manages the synchronization between town buffer storage and ItemStackHandler for hopper automation.
- * Extracted from TownBlockEntity to improve code organization and maintainability.
+ * Extracted from TownInterfaceEntity to improve code organization and maintainability.
  */
 public class TownBufferManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownBufferManager.class);
@@ -27,7 +27,7 @@ public class TownBufferManager {
     private static final int BUFFER_SLOTS = 18; // 2x9 grid
     
     // References
-    private final TownBlockEntity blockEntity;
+    private final TownInterfaceEntity blockEntity;
     private final Level level;
     private UUID townId;
     
@@ -75,7 +75,7 @@ public class TownBufferManager {
         }
     };
     
-    public TownBufferManager(TownBlockEntity blockEntity, Level level) {
+    public TownBufferManager(TownInterfaceEntity blockEntity, Level level) {
         this.blockEntity = blockEntity;
         this.level = level;
     }

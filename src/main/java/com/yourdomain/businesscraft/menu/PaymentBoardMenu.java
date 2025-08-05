@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
-import com.yourdomain.businesscraft.menu.TownBlockMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.client.Minecraft;
@@ -225,9 +224,9 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
             BlockEntity blockEntity = level.getBlockEntity(townBlockPos);
             DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "BlockEntity at {}: {}", townBlockPos, blockEntity);
             
-            if (blockEntity instanceof com.yourdomain.businesscraft.block.entity.TownBlockEntity townBlockEntity) {
-                // Get the real buffer handler from the TownBlockEntity
-                var bufferHandler = townBlockEntity.getBufferHandler();
+            if (blockEntity instanceof com.yourdomain.businesscraft.block.entity.TownInterfaceEntity townInterfaceEntity) {
+                // Get the real buffer handler from the TownInterfaceEntity
+                var bufferHandler = townInterfaceEntity.getBufferHandler();
                 DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Got buffer handler: {}", bufferHandler != null);
                 
                 if (bufferHandler != null) {
@@ -236,10 +235,10 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
                     connectedToRealBufferHandler = true;
                     DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Successfully reconnected buffer slots to real handler");
                 } else {
-                    LOGGER.warn("Buffer handler is null from TownBlockEntity");
+                    LOGGER.warn("Buffer handler is null from TownInterfaceEntity");
                 }
             } else {
-                LOGGER.warn("BlockEntity is not a TownBlockEntity: {}", blockEntity);
+                LOGGER.warn("BlockEntity is not a TownInterfaceEntity: {}", blockEntity);
             }
         } else {
             LOGGER.warn("Cannot connect - townBlockPos: {}, level: {}", townBlockPos, level != null);
@@ -262,11 +261,11 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
     }
 
     /**
-     * Gets a TownBlockMenu instance for accessing town data
+     * Gets a TownInterfaceMenu instance for accessing town data
      * 
-     * @return A TownBlockMenu instance or null if unable to create one
+     * @return A TownInterfaceMenu instance or null if unable to create one
      */
-    public TownBlockMenu getTownBlockMenu() {
+    public com.yourdomain.businesscraft.menu.TownInterfaceMenu getTownInterfaceMenu() {
         if (townBlockPos != null) {
             // Get the current player's inventory and minecraft instance
             Player player = Minecraft.getInstance().player;
@@ -276,7 +275,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
                     BlockEntity blockEntity = level.getBlockEntity(townBlockPos);
                     if (blockEntity != null) {
                         // Create a menu with containerId 0 (temporary menu just for data access)
-                        return new TownBlockMenu(0, player.getInventory(), blockEntity);
+                        return new com.yourdomain.businesscraft.menu.TownInterfaceMenu(0, player.getInventory(), townBlockPos);
                     }
                 }
             }
@@ -299,18 +298,18 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
         }
         
         // Server side: access real town data
-        TownBlockMenu townMenu = getTownBlockMenu();
+        com.yourdomain.businesscraft.menu.TownInterfaceMenu townMenu = getTownInterfaceMenu();
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
             "PaymentBoardMenu.getUnclaimedRewards() - SERVER SIDE: townMenu: {}", townMenu != null);
             
         if (townMenu != null) {
-            // Access the town's payment board through the town menu
-            com.yourdomain.businesscraft.town.Town town = townMenu.getTown();
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
-                "PaymentBoardMenu.getUnclaimedRewards() - SERVER SIDE: town: {}, townName: {}", 
-                town != null, town != null ? town.getName() : "null");
-                
-            if (town != null) {
+            // Access the town through the town data provider
+            var townDataProvider = townMenu.getTownDataProvider();
+            if (townDataProvider instanceof com.yourdomain.businesscraft.town.Town town) {
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
+                    "PaymentBoardMenu.getUnclaimedRewards() - SERVER SIDE: town: {}, townName: {}", 
+                    town != null, town != null ? town.getName() : "null");
+                    
                 List<RewardEntry> rewards = town.getPaymentBoard().getUnclaimedRewards();
                 DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
                     "PaymentBoardMenu.getUnclaimedRewards() - SERVER SIDE: found {} rewards in town {}", 
@@ -393,9 +392,9 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
             // Get the town directly from the TownBlockEntity
             if (townBlockPos != null) {
                 net.minecraft.world.level.block.entity.BlockEntity blockEntity = player.level().getBlockEntity(townBlockPos);
-                if (blockEntity instanceof com.yourdomain.businesscraft.block.entity.TownBlockEntity townBlockEntity) {
-                    // Get town using the same pattern as TownBlockMenu
-                    java.util.UUID townId = townBlockEntity.getTownId();
+                if (blockEntity instanceof com.yourdomain.businesscraft.block.entity.TownInterfaceEntity townInterfaceEntity) {
+                    // Get town using the same pattern as TownInterfaceMenu
+                    java.util.UUID townId = townInterfaceEntity.getTownId();
                     if (townId != null && player.level() instanceof net.minecraft.server.level.ServerLevel sLevel) {
                         com.yourdomain.businesscraft.town.Town town = com.yourdomain.businesscraft.town.TownManager.get(sLevel).getTown(townId);
                         if (town != null) {
@@ -407,7 +406,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
                                 itemStack.getCount(), itemStack.getItem(), success);
                             
                             // Trigger buffer change notification to sync UI
-                            townBlockEntity.onTownBufferChanged();
+                            townInterfaceEntity.onTownBufferChanged();
                             
                             return success;
                         }

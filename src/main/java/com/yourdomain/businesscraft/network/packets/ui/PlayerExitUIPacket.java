@@ -7,7 +7,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.block.TownInterfaceBlock;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.yourdomain.businesscraft.network.ModMessages;
@@ -61,12 +61,12 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
             Level level = player.level();
             if (level == null) return;
             
-            // First try to handle as a TownBlockEntity (original behavior)
+            // First try to handle as a TownInterfaceEntity (original behavior)
             BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof TownBlockEntity townBlock) {
+            if (be instanceof TownInterfaceEntity townInterface) {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                    "Player {} exited TownBlockEntity UI at {}", player.getUUID(), pos);
-                townBlock.registerPlayerExitUI(player.getUUID());
+                    "Player {} exited TownInterfaceEntity UI at {}", player.getUUID(), pos);
+                townInterface.registerPlayerExitUI(player.getUUID());
                 
                 // Send visualization enable packet to client
                 ModMessages.sendToPlayer(new PlatformVisualizationPacket(pos), player);

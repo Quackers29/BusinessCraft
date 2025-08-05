@@ -10,7 +10,7 @@ import com.yourdomain.businesscraft.network.packets.platform.SetPlatformPathCrea
 import com.yourdomain.businesscraft.network.packets.platform.ResetPlatformPathPacket;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.client.PlatformPathKeyHandler;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.ui.util.ScreenNavigationHelper;
 import com.yourdomain.businesscraft.ui.builders.UIGridBuilder;
 import com.yourdomain.businesscraft.ui.util.InventoryRenderer;
@@ -474,9 +474,9 @@ public class PlatformManagementScreenV2 extends Screen {
         if (level != null) {
             BlockEntity be = level.getBlockEntity(townBlockPos);
             
-            if (be instanceof TownBlockEntity townBlock) {
+            if (be instanceof TownInterfaceEntity townInterface) {
                 // Get fresh platform data from server
-                List<Platform> freshPlatforms = townBlock.getPlatforms();
+                List<Platform> freshPlatforms = townInterface.getPlatforms();
                 
                 // Always update platforms and force grid refresh (simplified logic)
                 this.platforms = new ArrayList<>(freshPlatforms);
@@ -519,8 +519,8 @@ public class PlatformManagementScreenV2 extends Screen {
         if (level != null) {
             BlockEntity be = level.getBlockEntity(blockPos);
             
-            if (be instanceof TownBlockEntity townBlock) {
-                List<Platform> platforms = townBlock.getPlatforms();
+            if (be instanceof TownInterfaceEntity townInterface) {
+                List<Platform> platforms = townInterface.getPlatforms();
                 PlatformManagementScreenV2 screen = new PlatformManagementScreenV2(blockPos, platforms);
                 minecraft.setScreen(screen);
             }
@@ -556,9 +556,9 @@ public class PlatformManagementScreenV2 extends Screen {
         if (level != null) {
             BlockEntity be = level.getBlockEntity(townBlockPos);
             
-            if (be instanceof TownBlockEntity townBlock) {
+            if (be instanceof TownInterfaceEntity townInterface) {
                 // Update our platform list with fresh data from the server
-                this.platforms = new ArrayList<>(townBlock.getPlatforms());
+                this.platforms = new ArrayList<>(townInterface.getPlatforms());
                 
                 // Force UI update by clearing currentPlatforms to ensure refresh
                 currentPlatforms.clear();

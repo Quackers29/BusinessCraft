@@ -1,7 +1,7 @@
 package com.yourdomain.businesscraft.ui.managers;
 
 import com.yourdomain.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.ui.PlayerExitUIPacket;
 import com.yourdomain.businesscraft.ui.modal.factories.BCModalGridFactory;
@@ -82,12 +82,12 @@ public class VisitorHistoryManager extends BaseModalManager {
         
         if (Minecraft.getInstance() != null && Minecraft.getInstance().level != null) {
             BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(blockPos);
-            if (blockEntity instanceof TownBlockEntity townBlock) {
+            if (blockEntity instanceof TownInterfaceEntity townInterface) {
                 // Request the town block entity to sync its town data with the server
                 ModMessages.sendToServer(new PlayerExitUIPacket(blockPos));
                 
                 // Get the visit history
-                visitHistory.addAll(townBlock.getVisitHistory());
+                visitHistory.addAll(townInterface.getVisitHistory());
             }
         }
         
@@ -105,12 +105,12 @@ public class VisitorHistoryManager extends BaseModalManager {
             if (townId == null) return "Unknown";
             
             try {
-                // On the client side, we need to rely on the TownBlockEntity to get the town name
+                // On the client side, we need to rely on the TownInterfaceEntity to get the town name
                 if (Minecraft.getInstance() != null && Minecraft.getInstance().level != null) {
                     BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(blockPos);
-                    if (blockEntity instanceof TownBlockEntity townBlock) {
+                    if (blockEntity instanceof TownInterfaceEntity townInterface) {
                         // Use the getTownNameFromId method to look up the town name
-                        String townName = townBlock.getTownNameFromId(townId);
+                        String townName = townInterface.getTownNameFromId(townId);
                         
                         // If we got a name, return it
                         if (townName != null) {

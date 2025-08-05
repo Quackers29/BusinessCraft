@@ -1,7 +1,6 @@
 package com.yourdomain.businesscraft.init;
 
 import com.yourdomain.businesscraft.BusinessCraft;
-import com.yourdomain.businesscraft.menu.TownBlockMenu;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
 import com.yourdomain.businesscraft.menu.TradeMenu;
 import com.yourdomain.businesscraft.menu.StorageMenu;
@@ -20,13 +19,7 @@ import net.minecraftforge.items.ItemStackHandler;
 public class ModMenuTypes {
     public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(ForgeRegistries.MENU_TYPES, BusinessCraft.MOD_ID);
 
-    // Town Block Menu
-    public static final RegistryObject<MenuType<TownBlockMenu>> TOWN_BLOCK = registerMenu(
-            "town_block",
-            (windowId, inv, data) -> new TownBlockMenu(windowId, inv, data)
-    );
-    
-    // Town Interface Menu - our new menu type for the UI showcase
+    // Town Interface Menu - our primary menu type for town management
     public static final RegistryObject<MenuType<TownInterfaceMenu>> TOWN_INTERFACE = registerMenu(
             "town_interface",
             (windowId, inv, data) -> {

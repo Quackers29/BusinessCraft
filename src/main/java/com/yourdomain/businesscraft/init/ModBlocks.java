@@ -1,7 +1,6 @@
 package com.yourdomain.businesscraft.init;
 
 import com.yourdomain.businesscraft.BusinessCraft;
-import com.yourdomain.businesscraft.block.TownBlock;
 import com.yourdomain.businesscraft.block.TownInterfaceBlock;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -18,12 +17,7 @@ public class ModBlocks {
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, BusinessCraft.MOD_ID);
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, BusinessCraft.MOD_ID);
     
-    // Town Block
-    public static final RegistryObject<Block> TOWN_BLOCK = registerBlock("town_block",
-            TownBlock::new
-    );
-    
-    // Town Interface Block - our new UI showcase block
+    // Town Interface Block - our primary town management block
     public static final RegistryObject<Block> TOWN_INTERFACE = registerBlock("town_interface",
             () -> new TownInterfaceBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.STONE)

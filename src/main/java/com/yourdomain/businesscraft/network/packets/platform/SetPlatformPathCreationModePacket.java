@@ -10,7 +10,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.event.PlatformPathHandler;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 
@@ -50,12 +50,12 @@ public class SetPlatformPathCreationModePacket {
             Level level = player.level();
             BlockEntity be = level.getBlockEntity(pos);
             
-            if (be instanceof TownBlockEntity townBlock) {
+            if (be instanceof TownInterfaceEntity townInterface) {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "Player {} is setting platform {} path creation mode to {} at {}", 
                     player.getName().getString(), platformId, mode, pos);
                 
-                townBlock.setPlatformCreationMode(mode, platformId);
+                townInterface.setPlatformCreationMode(mode, platformId);
                 
                 // Update the platform path handler state
                 if (mode) {
