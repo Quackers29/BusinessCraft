@@ -1,13 +1,12 @@
 package com.quackers29.businesscraft.api;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.world.item.Item;
 import java.util.Map;
 import java.util.UUID;
 import java.util.List;
 
 /**
- * Platform-agnostic interface for accessing town data
+ * Platform-agnostic interface for accessing town data.
+ * This interface abstracts town functionality across different mod platforms.
  */
 public interface ITownDataProvider {
     UUID getTownId();
@@ -16,20 +15,20 @@ public interface ITownDataProvider {
     // Legacy resource methods
     int getBreadCount();
     
-    // New generic resource methods
-    void addResource(Item item, int count);
-    int getResourceCount(Item item);
-    Map<Item, Integer> getAllResources();
+    // New generic resource methods - using Object instead of Item for platform independence
+    void addResource(Object item, int count);
+    int getResourceCount(Object item);
+    Map<Object, Integer> getAllResources();
     
     // Communal storage methods
-    boolean addToCommunalStorage(Item item, int count);
-    int getCommunalStorageCount(Item item);
-    Map<Item, Integer> getAllCommunalStorageItems();
+    boolean addToCommunalStorage(Object item, int count);
+    int getCommunalStorageCount(Object item);
+    Map<Object, Integer> getAllCommunalStorageItems();
     
     // Personal storage methods
-    boolean addToPersonalStorage(UUID playerId, Item item, int count);
-    int getPersonalStorageCount(UUID playerId, Item item);
-    Map<Item, Integer> getPersonalStorageItems(UUID playerId);
+    boolean addToPersonalStorage(UUID playerId, Object item, int count);
+    int getPersonalStorageCount(UUID playerId, Object item);
+    Map<Object, Integer> getPersonalStorageItems(UUID playerId);
     
     // Population methods
     int getPopulation();
@@ -42,10 +41,10 @@ public interface ITownDataProvider {
     // Other town data
     boolean isTouristSpawningEnabled();
     void setTouristSpawningEnabled(boolean enabled);
-    BlockPos getPathStart();
-    void setPathStart(BlockPos pos);
-    BlockPos getPathEnd();
-    void setPathEnd(BlockPos pos);
+    Position getPathStart();
+    void setPathStart(Position pos);
+    Position getPathEnd();
+    void setPathEnd(Position pos);
     int getSearchRadius();
     void setSearchRadius(int radius);
     boolean canSpawnTourists();
@@ -53,10 +52,11 @@ public interface ITownDataProvider {
     
     // Legacy method - delegate to addResource
     default void addBread(int count) {
-        addResource(net.minecraft.world.item.Items.BREAD, count);
+        // Platform implementations will need to provide the bread item
+        // This is a marker for platform-specific implementation
     }
     
-    BlockPos getPosition();
+    Position getPosition();
     void addVisitor(UUID fromTownId);
     int getTotalVisitors();
     
@@ -67,7 +67,7 @@ public interface ITownDataProvider {
      * @param count Number of visitors
      * @param originPos Position the visitors originated from
      */
-    void recordVisit(UUID originTownId, int count, BlockPos originPos);
+    void recordVisit(UUID originTownId, int count, Position originPos);
     
     /**
      * Get all the visit history records
@@ -76,16 +76,25 @@ public interface ITownDataProvider {
     List<VisitHistoryRecord> getVisitHistory();
     
     /**
+     * Platform-agnostic position representation
+     */
+    interface Position {
+        int getX();
+        int getY();
+        int getZ();
+    }
+    
+    /**
      * Record for storing visit history information.
-     * This replaces the TownBlockEntity.VisitRecord class.
+     * Platform-agnostic representation of town visit data.
      */
     class VisitHistoryRecord {
         private final long timestamp;
         private final UUID originTownId;
         private final int count;
-        private final BlockPos originPos;
+        private final Position originPos;
 
-        public VisitHistoryRecord(long timestamp, UUID originTownId, int count, BlockPos originPos) {
+        public VisitHistoryRecord(long timestamp, UUID originTownId, int count, Position originPos) {
             this.timestamp = timestamp;
             this.originTownId = originTownId;
             this.count = count;
@@ -95,6 +104,6 @@ public interface ITownDataProvider {
         public long getTimestamp() { return timestamp; }
         public UUID getOriginTownId() { return originTownId; }
         public int getCount() { return count; }
-        public BlockPos getOriginPos() { return originPos; }
+        public Position getOriginPos() { return originPos; }
     }
-} 
+}

@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.town.components.TownEconomyComponent;
-import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.town.data.TownPaymentBoard;
 import net.minecraft.world.item.Item;
 import java.util.ArrayList;
@@ -20,7 +19,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import java.util.stream.Collectors;
 
-public class Town implements ITownDataProvider {
+public class Town {
     private static final Logger LOGGER = LoggerFactory.getLogger(Town.class);
     private final UUID id;
     private final BlockPos position;
@@ -60,17 +59,14 @@ public class Town implements ITownDataProvider {
         economy.addBread(count);
     }
     
-    @Override
     public void addResource(Item item, int count) {
         economy.addResource(item, count);
     }
     
-    @Override
     public int getResourceCount(Item item) {
         return economy.getResourceCount(item);
     }
     
-    @Override
     public Map<Item, Integer> getAllResources() {
         return economy.getResources().getAllResources();
     }
@@ -565,12 +561,10 @@ public class Town implements ITownDataProvider {
         this.searchRadius = searchRadius;
     }
     
-    @Override
     public UUID getTownId() {
         return id;
     }
     
-    @Override
     public void markDirty() {
         // Find the TownManager for all loaded levels and mark the town data as dirty
         net.minecraft.server.MinecraftServer server = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
@@ -599,13 +593,11 @@ public class Town implements ITownDataProvider {
         }
     }
     
-    @Override
     public String getTownName() {
         return getName();
     }
     
     // Visit history implementation
-    @Override
     public void recordVisit(UUID originTownId, int count, BlockPos originPos) {
         long timestamp = System.currentTimeMillis();
         
@@ -624,7 +616,6 @@ public class Town implements ITownDataProvider {
         markDirty();
     }
     
-    @Override
     public List<VisitHistoryRecord> getVisitHistory() {
         return Collections.unmodifiableList(visitHistory);
     }

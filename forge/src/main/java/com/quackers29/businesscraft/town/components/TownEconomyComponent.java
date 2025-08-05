@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
 
-public class TownEconomyComponent implements TownComponent {
+public class TownEconomyComponent implements ForgeTownComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownEconomyComponent.class);
     private final TownResources resources = new TownResources();
     private int population;
