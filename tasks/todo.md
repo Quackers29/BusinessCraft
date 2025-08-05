@@ -2,49 +2,88 @@
 
 ## 🎯 **IMMEDIATE TASKS** (Do not remove header)
 
-### **TownBlock Cleanup (Pre-Forge/Fabric Migration)**
-Priority: HIGH - Clean up legacy artifacts before platform migration
+### **Forge + Fabric Compatibility Migration**
+Priority: CRITICAL - Transform mod from Forge-only to multi-platform architecture
 
-- [x] **Phase 1: Rename Block Entity System**
-  - [x] Rename `TownBlockEntity.java` → `TownInterfaceEntity.java` 
-  - [x] Update all imports across codebase
-  - [x] Update registration in `ModBlockEntities.java`
-  - [x] Update all method names: `getTownBlockEntity()` → `getTownInterfaceEntity()`
-  - [x] Update all variable names: `townBlock` → `townInterface`
+#### **Phase 1: Project Structure & Build System** 
+- [ ] **1.1 Create Architectury Multi-Module Structure**
+  - [ ] Create `common/` module for shared code
+  - [ ] Create `forge/` module for Forge-specific code
+  - [ ] Create `fabric/` module for Fabric-specific code
+  - [ ] Update root `build.gradle` for multi-module setup
+  - [ ] Configure Architectury build system
 
-- [x] **Phase 2: Remove TownBlock Registration**  
-  - [x] Remove `TOWN_BLOCK` from `ModBlocks.java`
-  - [x] Remove TownBlock from block entity registration
-  - [x] Remove `TownBlock.java` class entirely
-  - [x] Update debug logging references
+- [ ] **1.2 Migrate Build Configuration**
+  - [ ] Replace `net.minecraftforge.gradle` with Architectury plugin
+  - [ ] Update dependencies to use Architectury API
+  - [ ] Configure platform-specific dependencies (Forge/Fabric)
+  - [ ] Setup shared resource directories
+  - [ ] Test build system compilation
 
-- [x] **Phase 3: Clean Menu System**
-  - [x] Remove `TownBlockMenu.java` class
-  - [x] Remove `TOWN_BLOCK` menu registration from `ModMenuTypes.java`
-  - [x] Update all menu references to use `TownInterfaceMenu`
-  - [x] Clean up any menu-related imports
+#### **Phase 2: Core Mod Architecture**
+- [ ] **2.1 Create Platform Abstraction Layer**
+  - [ ] Move `BusinessCraft.java` to common module
+  - [ ] Create platform-specific mod entry points
+  - [ ] Abstract mod initialization logic
+  - [ ] Create platform service interfaces
 
-- [x] **Phase 4: Asset Cleanup**
-  - [x] Remove all `town_block.*` asset files (blockstates, models, textures)
-  - [x] Remove `town_block.json` recipe and loot table
-  - [x] Update language file to remove town_block entries
-  - [x] Verify no broken texture/model references
+- [ ] **2.2 Registration System Overhaul**
+  - [ ] Convert `ModBlocks.java` to Architectury Registry API
+  - [ ] Convert `ModBlockEntities.java` to platform-agnostic registration
+  - [ ] Convert `ModEntityTypes.java` to cross-platform registration
+  - [ ] Convert `ModMenuTypes.java` to platform-agnostic registration
+  - [ ] Test registration works on both platforms
 
-- [x] **Phase 5: Code Reference Cleanup**
-  - [x] Search and replace remaining "TownBlock" references in comments/strings
-  - [x] Update debug logging class names and messages
-  - [x] Clean up any remaining imports
-  - [x] Update documentation and comments
+#### **Phase 3: Event System Migration**
+- [ ] **3.1 Abstract Event Handling**
+  - [ ] Convert `ModEvents.java` to platform-agnostic events
+  - [ ] Migrate client events (`ClientSetup.java`, `ClientModEvents.java`)
+  - [ ] Abstract platform-specific event handlers
+  - [ ] Create event registration interfaces
+  - [ ] Test event functionality on both platforms
 
-- [x] **Phase 6: Testing & Verification**
-  - [x] Test town interface block placement and functionality
-  - [x] Verify UI opens correctly with new menu system  
-  - [x] Test platform management functionality
-  - [x] Check for any compilation errors or broken references
-  - [x] Test in-game to ensure no crashes or missing textures
+#### **Phase 4: Network System Migration**
+- [ ] **4.1 Convert Network Architecture**
+  - [ ] Replace `ModMessages.java` with Architectury Networking
+  - [ ] Convert 25 packet types to platform-agnostic format
+  - [ ] Update packet serialization/deserialization
+  - [ ] Abstract client/server packet handling
+  - [ ] Test networking on both platforms
 
-### ✅ **TOWNBLOCK CLEANUP COMPLETED**
-All legacy TownBlock artifacts have been successfully removed. The mod now uses only TownInterface as the primary block system. This cleanup eliminates confusion and prepares the codebase for the upcoming Forge + Fabric migration.
+#### **Phase 5: Client-Side Rendering**
+- [ ] **5.1 Migrate Rendering Systems**
+  - [ ] Convert entity renderers to platform-agnostic
+  - [ ] Migrate client-side initialization
+  - [ ] Abstract rendering registration
+  - [ ] Update visualization system for cross-platform
+  - [ ] Test rendering on both platforms
+
+#### **Phase 6: Configuration & Final Integration**
+- [ ] **6.1 Platform-Specific Metadata**
+  - [ ] Create `fabric.mod.json` for Fabric
+  - [ ] Keep `mods.toml` for Forge
+  - [ ] Update configuration loading for both platforms
+  - [ ] Create platform-specific resource packs if needed
+
+- [ ] **6.2 Testing & Verification**
+  - [ ] Test full functionality on Forge
+  - [ ] Test full functionality on Fabric  
+  - [ ] Verify feature parity between platforms
+  - [ ] Test mod loading and initialization
+  - [ ] Performance testing on both platforms
+
+#### **Phase 7: Documentation & Cleanup**
+- [ ] **7.1 Update Documentation**
+  - [ ] Update CLAUDE.md with new architecture
+  - [ ] Create platform-specific build instructions
+  - [ ] Document platform differences
+  - [ ] Update development guidelines
+
+### 🎯 **MIGRATION STRATEGY**
+- **Approach**: Incremental migration maintaining working Forge build until Fabric is ready
+- **Testing**: Each phase must compile and run on Forge before proceeding
+- **Architecture**: Common module contains business logic, platform modules handle loader-specific code
+- **Compatibility**: Maintain full feature parity between Forge and Fabric versions
 
 ## 🎯 **COMPLETED TASKS** ✅
 
