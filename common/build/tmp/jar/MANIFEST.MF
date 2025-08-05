@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Specification-Title: businesscraft-common
+Specification-Vendor: Quackers29
+Specification-Version: 1
+Implementation-Title: BusinessCraft Common
+Implementation-Version: 1.0
+Implementation-Vendor: Quackers29
+Implementation-Timestamp: 2025-08-05T17:24:54+0100
+

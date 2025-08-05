@@ -1,63 +1,61 @@
+// Multi-module build configuration for BusinessCraft
+// Root project coordinates all submodules (common, forge, fabric)
+
 plugins {
     id 'eclipse'
     id 'idea'
-    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
-    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
 
+// Project configuration
 version = '1.0'
 group = 'com.quackers29.businesscraft'
-archivesBaseName = 'businesscraft'
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-
-jar {
-    manifest {
-        attributes([
-            "Specification-Title": "businesscraft",
-            "Specification-Vendor": "Quackers29",
-            "Specification-Version": "1",
-            "Implementation-Title": project.name,
-            "Implementation-Version": project.jar.archiveVersion,
-            "Implementation-Vendor" :"Quackers29",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-        ])
-    }
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from sourceSets.main.resources
-}
-
-minecraft {
-    mappings channel: 'parchment', version: '2023.06.26-1.20.1'
+// Apply Java configuration to all subprojects
+subprojects {
+    apply plugin: 'java'
     
-    runs {
-        client {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-
-            mods {
-                businesscraft {
-                    source sourceSets.main
-                }
-            }
+    java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+    
+    version = rootProject.version
+    group = rootProject.group
+    
+    repositories {
+        mavenCentral()
+        maven {
+            name = 'MinecraftForge'
+            url = 'https://maven.minecraftforge.net/'
         }
-
-        server {
-            workingDirectory project.file('run')
-            property 'forge.logging.markers', 'REGISTRIES'
-            property 'forge.logging.console.level', 'debug'
-            
-            mods {
-                businesscraft {
-                    source sourceSets.main
-                }
-            }
+        maven {
+            name = 'ParchmentMC'
+            url = 'https://maven.parchmentmc.org'
+        }
+        maven {
+            name = 'FabricMC'
+            url = 'https://maven.fabricmc.net/'
         }
     }
 }
 
-dependencies {
-    minecraft 'net.minecraftforge:forge:1.20.1-47.1.0'
-    implementation 'com.moandjiezana.toml:toml4j:0.7.2'
+// Task to build all modules
+task buildAll {
+    dependsOn ':common:build', ':forge:build'
+    description = 'Builds all modules (common, forge, fabric)'
+}
+
+// Task to run Forge client (delegate to forge module)
+task runClient {
+    dependsOn ':forge:runClient'
+    description = 'Runs the Forge development client'
+}
+
+// Task to run Forge server (delegate to forge module)  
+task runServer {
+    dependsOn ':forge:runServer'
+    description = 'Runs the Forge development server'
+}
+
+// Clean all modules
+task cleanAll {
+    dependsOn ':common:clean', ':forge:clean'
+    description = 'Cleans all modules'
 }

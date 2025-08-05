@@ -1,0 +1,31 @@
+// Common module - platform-agnostic code for BusinessCraft
+// Contains business logic, data structures, and platform abstractions
+
+plugins {
+    id 'java-library'
+}
+
+archivesBaseName = 'businesscraft-common'
+
+// Common dependencies - only Minecraft common APIs
+dependencies {
+    // Common TOML library for configuration
+    api 'com.moandjiezana.toml:toml4j:0.7.2'
+    
+    // We'll add Minecraft common APIs when we set up the architecture properly
+    // For now, this is a pure Java module with platform abstractions
+}
+
+jar {
+    manifest {
+        attributes([
+            "Specification-Title": "businesscraft-common",
+            "Specification-Vendor": "Quackers29", 
+            "Specification-Version": "1",
+            "Implementation-Title": "BusinessCraft Common",
+            "Implementation-Version": project.version,
+            "Implementation-Vendor": "Quackers29",
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
