@@ -13,7 +13,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
@@ -96,10 +96,10 @@ public class RefreshDestinationsPacket {
             if (level != null) {
                 BlockEntity be = level.getBlockEntity(pos);
                 
-                if (be instanceof TownBlockEntity townBlock) {
+                if (be instanceof TownInterfaceEntity townInterface) {
                     // Find the platform with this ID
                     Platform platform = null;
-                    for (Platform p : townBlock.getPlatforms()) {
+                    for (Platform p : townInterface.getPlatforms()) {
                         if (p.getId().equals(platformId)) {
                             platform = p;
                             break;

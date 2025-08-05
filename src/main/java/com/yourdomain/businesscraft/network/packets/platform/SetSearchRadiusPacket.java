@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.network.packets.platform;
 
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import net.minecraft.core.BlockPos;
@@ -33,15 +33,15 @@ public class SetSearchRadiusPacket extends BaseBlockEntityPacket {
     public void handle(Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> {
-            handlePacket(context, (player, townBlock) -> {
-                ITownDataProvider provider = townBlock.getTownDataProvider();
+            handlePacket(context, (player, townInterface) -> {
+                ITownDataProvider provider = townInterface.getTownDataProvider();
                 if (provider != null) {
                     // Update the provider (single source of truth)
                     provider.setSearchRadius(radius);
                     provider.markDirty();
                     
                     // Also directly update the block entity
-                    townBlock.setSearchRadius(radius);
+                    townInterface.setSearchRadius(radius);
                     
                     // If the player has the TownInterface menu open, refresh it
                     if (player.containerMenu instanceof com.yourdomain.businesscraft.menu.TownInterfaceMenu townMenu) {
@@ -49,7 +49,7 @@ public class SetSearchRadiusPacket extends BaseBlockEntityPacket {
                     }
                     
                     // Sync with block entity
-                    townBlock.syncTownData();
+                    townInterface.syncTownData();
                 }
             });
         });

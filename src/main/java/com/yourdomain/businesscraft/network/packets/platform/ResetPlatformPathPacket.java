@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.network.packets.platform;
 
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.platform.Platform;
 
 import net.minecraft.core.BlockPos;
@@ -18,16 +18,16 @@ import java.util.function.Supplier;
  * Packet to reset the path of a platform
  */
 public class ResetPlatformPathPacket {
-    private final BlockPos townBlockPos;
+    private final BlockPos townInterfacePos;
     private final UUID platformId;
     
-    public ResetPlatformPathPacket(BlockPos townBlockPos, UUID platformId) {
-        this.townBlockPos = townBlockPos;
+    public ResetPlatformPathPacket(BlockPos townInterfacePos, UUID platformId) {
+        this.townInterfacePos = townInterfacePos;
         this.platformId = platformId;
     }
     
     public static void encode(ResetPlatformPathPacket msg, FriendlyByteBuf buf) {
-        buf.writeBlockPos(msg.townBlockPos);
+        buf.writeBlockPos(msg.townInterfacePos);
         buf.writeUUID(msg.platformId);
     }
     
@@ -44,19 +44,19 @@ public class ResetPlatformPathPacket {
             if (player == null) return;
             
             ServerLevel level = player.serverLevel();
-            BlockEntity be = level.getBlockEntity(msg.townBlockPos);
+            BlockEntity be = level.getBlockEntity(msg.townInterfacePos);
             
-            if (be instanceof TownBlockEntity townBlockEntity) {
-                Platform platform = townBlockEntity.getPlatform(msg.platformId);
+            if (be instanceof TownInterfaceEntity townInterfaceEntity) {
+                Platform platform = townInterfaceEntity.getPlatform(msg.platformId);
                 if (platform != null) {
                     platform.setStartPos(null);
                     platform.setEndPos(null);
-                    townBlockEntity.setChanged();
+                    townInterfaceEntity.setChanged();
                     
                     // Notify nearby players of the change
-                    level.sendBlockUpdated(msg.townBlockPos, 
-                                         level.getBlockState(msg.townBlockPos),
-                                         level.getBlockState(msg.townBlockPos), 
+                    level.sendBlockUpdated(msg.townInterfacePos, 
+                                         level.getBlockState(msg.townInterfacePos),
+                                         level.getBlockState(msg.townInterfacePos), 
                                          3);
                 }
             }

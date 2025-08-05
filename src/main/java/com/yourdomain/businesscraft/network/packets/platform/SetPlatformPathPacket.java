@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.network.ModMessages;
 import net.minecraft.world.level.Level;
 import com.yourdomain.businesscraft.platform.Platform;
@@ -69,17 +69,17 @@ public class SetPlatformPathPacket {
             
             // Check if the block entity is valid
             BlockEntity be = level.getBlockEntity(blockPos);
-            if (be instanceof TownBlockEntity townBlock) {
+            if (be instanceof TownInterfaceEntity townInterface) {
                 // Find the platform
-                Platform platform = townBlock.getPlatform(platformId);
+                Platform platform = townInterface.getPlatform(platformId);
                 if (platform != null) {
                     // Update start and end positions
                     platform.setStartPos(startPos);
                     platform.setEndPos(endPos);
                     DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Updated platform {} path from {} to {}", platformId, startPos, endPos);
                     
-                    // Sync the town block
-                    townBlock.setChanged();
+                    // Sync the town interface
+                    townInterface.setChanged();
                     level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), 
                         level.getBlockState(blockPos), 3);
                 }

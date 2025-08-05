@@ -10,7 +10,7 @@ import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.town.TownManager;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.network.ModMessages;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.platform.Platform;
 
 import java.util.UUID;
@@ -72,7 +72,7 @@ public class RequestTownPlatformDataPacket {
                     "Processing platform data request for town: {} ({})", town.getName(), townId);
                 
                 // Find the town block entity to get platform data
-                if (level.getBlockEntity(town.getPosition()) instanceof TownBlockEntity townEntity) {
+                if (level.getBlockEntity(town.getPosition()) instanceof TownInterfaceEntity townEntity) {
                     List<Platform> platforms = townEntity.getPlatforms();
                     
                     // Create response packet with platform data and town info

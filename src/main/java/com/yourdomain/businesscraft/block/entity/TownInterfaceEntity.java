@@ -4,7 +4,7 @@ package com.yourdomain.businesscraft.block.entity;
 // import com.yourdomain.businesscraft.capability.ItemHandlerCapability;
 import com.yourdomain.businesscraft.config.ConfigLoader;
 import com.yourdomain.businesscraft.init.ModBlockEntities;
-import com.yourdomain.businesscraft.menu.TownBlockMenu;
+import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.service.TouristVehicleManager;
 import com.yourdomain.businesscraft.town.Town;
@@ -102,7 +102,7 @@ import com.yourdomain.businesscraft.town.data.ContainerDataHelper;
 import com.yourdomain.businesscraft.town.data.TownBufferManager;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 
-public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownBlockEntity> {
+public class TownInterfaceEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownInterfaceEntity> {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
         @Override
         protected void onContentsChanged(int slot) {
@@ -131,7 +131,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         .addReadOnlyField("tourist_count", this::getTouristCountFromTown, "Current number of tourists in town")
         .addReadOnlyField("max_tourists", this::getMaxTouristsFromTown, "Maximum tourists allowed in town")
         .build();
-    private static final Logger LOGGER = LoggerFactory.getLogger(TownBlockEntity.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TownInterfaceEntity.class);
     private Map<String, Integer> visitingPopulation = new HashMap<>();
     private BlockPos pathStart;
     private BlockPos pathEnd;
@@ -241,13 +241,13 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         return 0;
     }
 
-    public TownBlockEntity(BlockPos pos, BlockState state) {
-        super(ModBlockEntities.TOWN_BLOCK_ENTITY.get(), pos, state);
+    public TownInterfaceEntity(BlockPos pos, BlockState state) {
+        super(ModBlockEntities.TOWN_INTERFACE_ENTITY.get(), pos, state);
         
         // Set up platform manager callback
         platformManager.setChangeCallback(this::setChanged);
         
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "TownBlockEntity created at position: {}", pos);
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "TownInterfaceEntity created at position: {}", pos);
     }
 
     @Override
@@ -260,7 +260,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     public AbstractContainerMenu createMenu(int id, Inventory inventory, Player player) {
         FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
         buffer.writeBlockPos(this.getBlockPos());
-        return new TownBlockMenu(id, inventory, buffer);
+        return new TownInterfaceMenu(id, inventory, this.getBlockPos());
     }
 
     @Override
@@ -312,7 +312,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
         if (!level.isClientSide()) {
             updateFromTownProvider();
         }
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Saving TownBlockEntity with searchRadius: {}", searchRadius);
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Saving TownInterfaceEntity with searchRadius: {}", searchRadius);
         nbtDataHelper.saveToNBT(tag, itemHandler, townId, name, pathStart, pathEnd, platformManager, searchRadius);
     }
 
@@ -349,7 +349,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
     }
 
     @Override
-    public void tick(Level level, BlockPos pos, BlockState state, TownBlockEntity blockEntity) {
+    public void tick(Level level, BlockPos pos, BlockState state, TownInterfaceEntity blockEntity) {
         // Process resources every tick (not just once per second)
         processResourcesInSlot();
         
@@ -1064,7 +1064,7 @@ public class TownBlockEntity extends BlockEntity implements MenuProvider, BlockE
                 // Create a FriendlyByteBuf to pass the BlockPos
                 io.netty.buffer.ByteBuf buf = io.netty.buffer.Unpooled.buffer();
                 net.minecraft.network.FriendlyByteBuf friendlyBuf = new net.minecraft.network.FriendlyByteBuf(buf);
-                friendlyBuf.writeBlockPos(TownBlockEntity.this.getBlockPos());
+                friendlyBuf.writeBlockPos(TownInterfaceEntity.this.getBlockPos());
                 
                 return new com.yourdomain.businesscraft.menu.PaymentBoardMenu(containerId, playerInventory, friendlyBuf);
             }

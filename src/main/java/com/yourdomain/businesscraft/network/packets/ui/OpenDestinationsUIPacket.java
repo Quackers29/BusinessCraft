@@ -12,7 +12,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
@@ -61,9 +61,9 @@ public class OpenDestinationsUIPacket {
             
             // Check if the block entity is valid
             BlockEntity be = level.getBlockEntity(blockPos);
-            if (be instanceof TownBlockEntity townBlock) {
+            if (be instanceof TownInterfaceEntity townInterface) {
                 // Find the platform
-                Platform platform = townBlock.getPlatform(platformId);
+                Platform platform = townInterface.getPlatform(platformId);
                 if (platform != null) {
                     // Get town manager to find all towns
                     TownManager townManager = TownManager.get((ServerLevel) level);
@@ -75,7 +75,7 @@ public class OpenDestinationsUIPacket {
                     
                     // Get the current town's position for distance calculations
                     BlockPos originPos = blockPos;
-                    Town originTown = townBlock.getTown();
+                    Town originTown = townInterface.getTown();
                     if (originTown != null) {
                         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                             "Found origin town: {}", originTown.getName());

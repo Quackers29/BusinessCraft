@@ -89,8 +89,8 @@ BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete
 ### ✅ Fully Implemented Core Systems
 
 **Block System** (`com.yourdomain.businesscraft.block`)
-- `TownBlock` & `TownInterfaceBlock`: Complete block implementations with custom GUIs
-- `TownBlockEntity`: Sophisticated 977-line block entity with:
+- `TownInterfaceBlock`: Complete block implementation with custom GUI
+- `TownInterfaceEntity`: Sophisticated 977-line block entity with:
   - Automatic town registration with distance validation
   - Multi-platform system (up to 10 platforms per town)
   - Real-time particle effects for platform visualization

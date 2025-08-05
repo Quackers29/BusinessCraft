@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
-import com.yourdomain.businesscraft.menu.TownBlockMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.client.Minecraft;
@@ -172,11 +171,11 @@ public class StorageMenu extends AbstractContainerMenu {
     }
     
     /**
-     * Gets a TownBlockMenu instance for accessing town data
+     * Gets a TownInterfaceMenu instance for accessing town data
      * 
-     * @return A TownBlockMenu instance or null if unable to create one
+     * @return A TownInterfaceMenu instance or null if unable to create one
      */
-    public TownBlockMenu getTownBlockMenu() {
+    public com.yourdomain.businesscraft.menu.TownInterfaceMenu getTownInterfaceMenu() {
         if (townBlockPos != null) {
             // Get the current player's inventory and minecraft instance
             Player player = Minecraft.getInstance().player;
@@ -186,7 +185,7 @@ public class StorageMenu extends AbstractContainerMenu {
                     BlockEntity blockEntity = level.getBlockEntity(townBlockPos);
                     if (blockEntity != null) {
                         // Create a menu with containerId 0 (temporary menu just for data access)
-                        return new TownBlockMenu(0, player.getInventory(), blockEntity);
+                        return new com.yourdomain.businesscraft.menu.TownInterfaceMenu(0, player.getInventory(), townBlockPos);
                     }
                 }
             }

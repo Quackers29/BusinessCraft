@@ -13,7 +13,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageResponsePacket;
 import com.yourdomain.businesscraft.network.ModMessages;
@@ -107,7 +107,7 @@ public class PersonalStoragePacket extends BaseBlockEntityPacket {
             
             // Get the town block entity at the position
             BlockEntity blockEntity = level.getBlockEntity(pos);
-            if (!(blockEntity instanceof TownBlockEntity townBlockEntity)) {
+            if (!(blockEntity instanceof TownInterfaceEntity townInterfaceEntity)) {
                 LOGGER.warn("No town block entity found at position {} for player {}", pos, player.getName().getString());
                 return;
             }
@@ -120,7 +120,7 @@ public class PersonalStoragePacket extends BaseBlockEntityPacket {
             }
             
             // Get the town from the town manager
-            Town town = townManager.getTown(townBlockEntity.getTownId());
+            Town town = townManager.getTown(townInterfaceEntity.getTownId());
             if (town == null) {
                 LOGGER.warn("No town found for town block at position {} for player {}", pos, player.getName().getString());
                 return;
@@ -160,14 +160,14 @@ public class PersonalStoragePacket extends BaseBlockEntityPacket {
                 // Mark dirty after storage update
                 townManager.markDirty();
                 
-                // Force the townBlockEntity to update and sync
-                townBlockEntity.setChanged();
+                // Force the townInterfaceEntity to update and sync
+                townInterfaceEntity.setChanged();
                 
                 // Ensure town data is properly synchronized
-                townBlockEntity.syncTownData();
+                townInterfaceEntity.syncTownData();
                 
                 // Sync the block entity to update client-side resource cache
-                level.sendBlockUpdated(pos, townBlockEntity.getBlockState(), townBlockEntity.getBlockState(), 
+                level.sendBlockUpdated(pos, townInterfaceEntity.getBlockState(), townInterfaceEntity.getBlockState(), 
                     Block.UPDATE_ALL);
                 
                 // Force the TownManager to save changes

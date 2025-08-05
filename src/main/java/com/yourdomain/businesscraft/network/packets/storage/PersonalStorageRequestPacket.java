@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageResponsePacket;
 import com.yourdomain.businesscraft.network.ModMessages;
@@ -86,7 +86,7 @@ public class PersonalStorageRequestPacket extends BaseBlockEntityPacket {
             
             // Get the town block entity at the position
             BlockEntity blockEntity = level.getBlockEntity(pos);
-            if (!(blockEntity instanceof TownBlockEntity townBlockEntity)) {
+            if (!(blockEntity instanceof TownInterfaceEntity townInterfaceEntity)) {
                 LOGGER.warn("No town block entity found at position {} for player {}", pos, player.getName().getString());
                 return;
             }
@@ -95,7 +95,7 @@ public class PersonalStorageRequestPacket extends BaseBlockEntityPacket {
             TownManager townManager = TownManager.get(serverLevel);
             
             // Get the town from the town block entity
-            UUID townId = townBlockEntity.getTownId();
+            UUID townId = townInterfaceEntity.getTownId();
             if (townId == null) {
                 LOGGER.warn("Town block at {} has no town ID", pos);
                 return;

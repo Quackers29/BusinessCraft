@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.client.render.world;
 
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.ui.BoundarySyncRequestPacket;
 import com.yourdomain.businesscraft.debug.DebugConfig;
@@ -89,11 +89,11 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
                     return;
                 }
                 
-                // Check if this is a TownBlockEntity with active boundary visualization
-                if (blockEntity instanceof TownBlockEntity townBlockEntity) {
+                // Check if this is a TownInterfaceEntity with active boundary visualization
+                if (blockEntity instanceof TownInterfaceEntity townInterfaceEntity) {
                     // Show boundary when town boundary visualization is active (triggered same time as platforms)
                     if (manager.shouldShowVisualization(VisualizationManager.TYPE_TOWN_BOUNDARY, pos)) {
-                        UUID townId = townBlockEntity.getTownId();
+                        UUID townId = townInterfaceEntity.getTownId();
                         if (townId != null) {
                             // Get or create boundary data for this position
                             TownBoundaryVisualizationData boundaryData = activeBoundaryData.computeIfAbsent(

@@ -1,7 +1,7 @@
 package com.yourdomain.businesscraft.menu;
 
 import com.yourdomain.businesscraft.api.ITownDataProvider;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.init.ModMenuTypes;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.town.Town;
@@ -106,7 +106,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
             // If no town found, try to get from block entity
             if (this.town == null) {
                 DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "No town found exactly at position {}, checking block entity", pos);
-                if (level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+                if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
                     UUID entityTownId = townEntity.getTownId();
                     if (entityTownId != null) {
                         this.town = townManager.getTown(entityTownId);
@@ -169,7 +169,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         }
         
         // Try to get name from town entity
-        if (level != null && level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+        if (level != null && level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
             return townEntity.getTownName();
         }
         
@@ -190,7 +190,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         
         // Try to get population from town entity
         if (level != null) {
-            if (level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+            if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
                 // Get population directly from the entity
                 UUID entityTownId = townEntity.getTownId();
                 if (entityTownId != null && level instanceof ServerLevel serverLevel) {
@@ -224,7 +224,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         
         // Try to get tourist count from town entity
         if (level != null) {
-            if (level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+            if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
                 // In TownBlockEntity, we need to get the Town and then get the tourist count
                 UUID entityTownId = townEntity.getTownId();
                 if (entityTownId != null && level instanceof ServerLevel serverLevel) {
@@ -256,7 +256,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         
         // Try to get max tourists from town entity
         if (level != null) {
-            if (level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+            if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
                 // In TownBlockEntity, we need to get the Town and then get the max tourists
                 UUID entityTownId = townEntity.getTownId();
                 if (entityTownId != null && level instanceof ServerLevel serverLevel) {
@@ -316,7 +316,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     public int getSearchRadius() {
         // Try to get search radius from town entity first (most up-to-date)
         if (level != null) {
-            if (level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+            if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
                 int entityRadius = townEntity.getSearchRadius();
                 // Update cache for consistency
                 this.clientSearchRadius = entityRadius;
@@ -376,7 +376,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      * @return List of platforms or an empty list if none found
      */
     public List<Platform> getPlatforms() {
-        if (level != null && level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+        if (level != null && level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
             return townEntity.getPlatforms();
         }
         return new ArrayList<>();
@@ -387,7 +387,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      * @return true if the platform was added successfully
      */
     public boolean addPlatform() {
-        if (level != null && level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+        if (level != null && level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
             return townEntity.addPlatform();
         }
         return false;
@@ -399,7 +399,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      * @return true if the platform was removed successfully
      */
     public boolean removePlatform(UUID platformId) {
-        if (level != null && level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+        if (level != null && level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
             return townEntity.removePlatform(platformId);
         }
         return false;
@@ -411,7 +411,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      * @return The platform or null if not found
      */
     public Platform getPlatform(UUID platformId) {
-        if (level != null && level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+        if (level != null && level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
             return townEntity.getPlatform(platformId);
         }
         return null;
@@ -422,7 +422,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      * @return true if more platforms can be added
      */
     public boolean canAddMorePlatforms() {
-        if (level != null && level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+        if (level != null && level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
             return townEntity.canAddMorePlatforms();
         }
         return false;
@@ -439,7 +439,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         
         // Try to get resources from town entity
         if (level != null) {
-            if (level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+            if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
                 // On client-side, we need to get cached resources from the entity directly
                 if (level.isClientSide()) {
                     return townEntity.getClientResources();
@@ -473,7 +473,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         
         // Try to get communal storage from town entity
         if (level != null) {
-            if (level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+            if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
                 // On client-side, we need to get cached communal storage from the entity directly
                 if (level.isClientSide()) {
                     return townEntity.getClientCommunalStorage();
@@ -503,7 +503,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
             data.set(DATA_TOURIST_COUNT, town.getTouristCount());
             data.set(DATA_MAX_TOURISTS, town.getMaxTourists());
             data.set(DATA_SEARCH_RADIUS, townSearchRadius);
-        } else if (level != null && level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+        } else if (level != null && level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
             // Try to get values from TownBlockEntity if town is not available
             // First try to get town data through the entity's town provider
             ITownDataProvider provider = townEntity.getTownDataProvider();
@@ -550,7 +550,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     public void refreshSearchRadius() {
         if (town != null) {
             data.set(DATA_SEARCH_RADIUS, town.getSearchRadius());
-        } else if (level != null && level.getBlockEntity(pos) instanceof TownBlockEntity townEntity) {
+        } else if (level != null && level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
             data.set(DATA_SEARCH_RADIUS, townEntity.getSearchRadius());
         }
     }
@@ -570,7 +570,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         // Otherwise try to get from block entity
         if (level != null) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
-            if (blockEntity instanceof TownBlockEntity townEntity) {
+            if (blockEntity instanceof TownInterfaceEntity townEntity) {
                 return townEntity.getTownDataProvider();
             }
         }
@@ -579,14 +579,14 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     }
     
     /**
-     * Get the TownBlockEntity associated with this menu
+     * Get the TownInterfaceEntity associated with this menu
      * 
-     * @return The TownBlockEntity, or null if not available
+     * @return The TownInterfaceEntity, or null if not available
      */
-    public TownBlockEntity getTownBlockEntity() {
+    public TownInterfaceEntity getTownInterfaceEntity() {
         if (level != null) {
             BlockEntity blockEntity = level.getBlockEntity(pos);
-            if (blockEntity instanceof TownBlockEntity townEntity) {
+            if (blockEntity instanceof TownInterfaceEntity townEntity) {
                 return townEntity;
             }
         }

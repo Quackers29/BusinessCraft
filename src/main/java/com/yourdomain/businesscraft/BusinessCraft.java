@@ -1,6 +1,5 @@
 package com.yourdomain.businesscraft;
 
-import com.yourdomain.businesscraft.block.TownBlock;
 import com.yourdomain.businesscraft.block.TownInterfaceBlock;
 import com.yourdomain.businesscraft.init.ModBlockEntities;
 import com.yourdomain.businesscraft.command.ClearTownsCommand;

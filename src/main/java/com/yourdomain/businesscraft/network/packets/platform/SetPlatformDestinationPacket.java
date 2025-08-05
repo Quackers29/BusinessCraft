@@ -12,7 +12,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
@@ -60,14 +60,14 @@ public class SetPlatformDestinationPacket {
             Level level = player.level();
             BlockEntity be = level.getBlockEntity(pos);
             
-            if (be instanceof TownBlockEntity townBlock) {
+            if (be instanceof TownInterfaceEntity townInterface) {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "Player {} is setting destination {} to {} for platform {} at {}", 
                     player.getName().getString(), townId, enabled, platformId, pos);
                 
                 // Find the platform with this ID
                 Platform platform = null;
-                for (Platform p : townBlock.getPlatforms()) {
+                for (Platform p : townInterface.getPlatforms()) {
                     if (p.getId().equals(platformId)) {
                         platform = p;
                         break;
@@ -77,7 +77,7 @@ public class SetPlatformDestinationPacket {
                 if (platform != null) {
                     // Set the destination enabled state
                     platform.setDestinationEnabled(townId, enabled);
-                    townBlock.setChanged();
+                    townInterface.setChanged();
                     
                     // Create a refresh packet with updated data
                     RefreshDestinationsPacket refreshPacket = new RefreshDestinationsPacket(pos, platformId);
@@ -87,7 +87,7 @@ public class SetPlatformDestinationPacket {
                         Map<UUID, Boolean> destinations = platform.getDestinations();
                         
                         // Get the origin town
-                        Town originTown = townBlock.getTown();
+                        Town originTown = townInterface.getTown();
                         
                         // Use the block's position if town or town position is null
                         final BlockPos originPos = (originTown != null && originTown.getPosition() != null) 
@@ -95,7 +95,7 @@ public class SetPlatformDestinationPacket {
                             : pos; // Use the block entity's position as fallback
                         
                         // Add all towns from the server to the refresh packet
-                        townBlock.getAllTownsForDestination(serverLevel).forEach((id, townName) -> {
+                        townInterface.getAllTownsForDestination(serverLevel).forEach((id, townName) -> {
                             // Skip the current town (platforms shouldn't route to themselves)
                             if (originTown != null && id.equals(originTown.getId())) {
                                 return; // Skip this iteration

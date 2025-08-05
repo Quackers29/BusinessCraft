@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.network.ModMessages;
 import com.yourdomain.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 import net.minecraft.world.level.Level;
@@ -58,15 +58,15 @@ public class DeletePlatformPacket {
             
             // Check if the block entity is valid
             BlockEntity be = level.getBlockEntity(blockPos);
-            if (be instanceof TownBlockEntity townBlock) {
+            if (be instanceof TownInterfaceEntity townInterface) {
                 // Delete the platform
-                boolean deleted = townBlock.removePlatform(platformId);
+                boolean deleted = townInterface.removePlatform(platformId);
                 if (deleted) {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                         "Deleted platform {} from town at {}", platformId, blockPos);
                     
                     // Sync the town block
-                    townBlock.setChanged();
+                    townInterface.setChanged();
                     level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), 
                         level.getBlockState(blockPos), 3);
                     

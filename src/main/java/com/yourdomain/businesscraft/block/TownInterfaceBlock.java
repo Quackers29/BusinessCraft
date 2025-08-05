@@ -1,7 +1,7 @@
 package com.yourdomain.businesscraft.block;
 
 import com.yourdomain.businesscraft.init.ModBlockEntities;
-import com.yourdomain.businesscraft.block.entity.TownBlockEntity;
+import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.config.ConfigLoader;
 import com.yourdomain.businesscraft.town.TownManager;
 import com.yourdomain.businesscraft.platform.Platform;
@@ -100,7 +100,7 @@ public class TownInterfaceBlock extends BaseEntityBlock {
         if (!level.isClientSide) {
             // Get the block entity to ensure all town data is accessible
             BlockEntity entity = level.getBlockEntity(pos);
-            if (entity instanceof TownBlockEntity townBlock) {
+            if (entity instanceof TownInterfaceEntity townInterface) {
                 // Open the TownInterfaceScreen instead of TownBlockScreen
                 NetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
                     @Override
@@ -115,7 +115,7 @@ public class TownInterfaceBlock extends BaseEntityBlock {
                     }
                 }, pos);
             } else {
-                LOGGER.error("Failed to get TownBlockEntity at position: {}", pos);
+                LOGGER.error("Failed to get TownInterfaceEntity at position: {}", pos);
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
@@ -124,16 +124,16 @@ public class TownInterfaceBlock extends BaseEntityBlock {
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new TownBlockEntity(pos, state);
+        return new TownInterfaceEntity(pos, state);
     }
 
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
             BlockEntityType<T> type) {
-        // First use the default ticker for the TownBlockEntity
-        BlockEntityTicker<T> baseTicker = createTickerHelper(type, ModBlockEntities.TOWN_BLOCK_ENTITY.get(),
-                (lvl, pos, blockState, blockEntity) -> ((TownBlockEntity) blockEntity).tick(lvl, pos, blockState,
-                        (TownBlockEntity) blockEntity));
+        // First use the default ticker for the TownInterfaceEntity
+        BlockEntityTicker<T> baseTicker = createTickerHelper(type, ModBlockEntities.TOWN_INTERFACE_ENTITY.get(),
+                (lvl, pos, blockState, blockEntity) -> ((TownInterfaceEntity) blockEntity).tick(lvl, pos, blockState,
+                        (TownInterfaceEntity) blockEntity));
         
         // Then add our own ticker that also handles platform visualization
         return (lvl, pos, blockState, blockEntity) -> {
@@ -168,7 +168,7 @@ public class TownInterfaceBlock extends BaseEntityBlock {
         if (!level.isClientSide()) {
             DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Setting up town interface block at position: {}", pos);
             BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof TownBlockEntity townBlock) {
+            if (be instanceof TownInterfaceEntity townInterface) {
                 if (level instanceof ServerLevel serverLevel) {
                     TownManager townManager = TownManager.get(serverLevel);
                     
@@ -196,16 +196,16 @@ public class TownInterfaceBlock extends BaseEntityBlock {
                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Generated town name: {}", newTownName);
                     UUID townId = townManager.registerTown(pos, newTownName);
                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Registered new town with ID: {}", townId);
-                    townBlock.setTownId(townId);
+                    townInterface.setTownId(townId);
                     
                     // Create default platform layout
-                    createDefaultPlatform(townBlock, pos, state.getBlock().defaultBlockState(), placer);
+                    createDefaultPlatform(townInterface, pos, state.getBlock().defaultBlockState(), placer);
                     
-                    townBlock.setChanged();
+                    townInterface.setChanged();
                     serverLevel.sendBlockUpdated(pos, state, state, 3);
                 }
             } else {
-                LOGGER.error("Failed to get TownBlockEntity at position: {}", pos);
+                LOGGER.error("Failed to get TownInterfaceEntity at position: {}", pos);
             }
         }
     }
@@ -213,14 +213,14 @@ public class TownInterfaceBlock extends BaseEntityBlock {
     /**
      * Creates a default platform layout for a new town
      * 
-     * @param townBlock The town block entity
+     * @param townInterface The town interface entity
      * @param townPos The position of the town block
      * @param state The block state of the town block
      * @param placer The entity that placed the town block
      */
-    private void createDefaultPlatform(TownBlockEntity townBlock, BlockPos townPos, BlockState state, @Nullable LivingEntity placer) {
+    private void createDefaultPlatform(TownInterfaceEntity townInterface, BlockPos townPos, BlockState state, @Nullable LivingEntity placer) {
         // Add the default platform
-        boolean platformAdded = townBlock.addPlatform();
+        boolean platformAdded = townInterface.addPlatform();
         
         if (!platformAdded) {
             LOGGER.error("Failed to add default platform for town at {}", townPos);
@@ -228,7 +228,7 @@ public class TownInterfaceBlock extends BaseEntityBlock {
         }
         
         // Get the newly added platform (it should be the only one)
-        List<Platform> platforms = townBlock.getPlatforms();
+        List<Platform> platforms = townInterface.getPlatforms();
         if (platforms.isEmpty()) {
             LOGGER.error("No platforms found after adding default platform for town at {}", townPos);
             return;
@@ -297,8 +297,8 @@ public class TownInterfaceBlock extends BaseEntityBlock {
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock())) {
-            if (level.getBlockEntity(pos) instanceof TownBlockEntity townBlock) {
-                UUID townId = townBlock.getTownId();
+            if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townInterface) {
+                UUID townId = townInterface.getTownId();
                 if (townId != null && !level.isClientSide()) {
                     // Remove town from manager
                     TownManager.get((ServerLevel) level).removeTown(townId);
@@ -317,9 +317,9 @@ public class TownInterfaceBlock extends BaseEntityBlock {
         
         // Get the block entity
         BlockEntity be = level.getBlockEntity(pos);
-        if (!(be instanceof TownBlockEntity townBlock)) return;
+        if (!(be instanceof TownInterfaceEntity townInterface)) return;
         
-        List<Platform> platforms = townBlock.getPlatforms();
+        List<Platform> platforms = townInterface.getPlatforms();
         if (platforms.isEmpty()) return;
         
         long gameTime = level.getGameTime();
@@ -399,7 +399,7 @@ public class TownInterfaceBlock extends BaseEntityBlock {
                     (ServerLevel)level,
                     startPos,
                     endPos,
-                    townBlock.getSearchRadius()
+                    townInterface.getSearchRadius()
                 );
             }
         }
@@ -425,9 +425,9 @@ public class TownInterfaceBlock extends BaseEntityBlock {
      */
     private void cleanupPlatformIndicators(BlockPos blockPos, Level level) {
         BlockEntity be = level.getBlockEntity(blockPos);
-        if (!(be instanceof TownBlockEntity townBlock)) return;
+        if (!(be instanceof TownInterfaceEntity townInterface)) return;
         
-        List<Platform> platforms = townBlock.getPlatforms();
+        List<Platform> platforms = townInterface.getPlatforms();
         
         // Remove spawn times for platforms that no longer exist
         platformIndicatorSpawnTimes.keySet().removeIf(platformId -> 
