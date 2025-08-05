@@ -45,6 +45,9 @@ dependencies {
     
     // Include common module
     implementation project(':common')
+    
+    // Architectury API - Forge implementation
+    implementation 'dev.architectury:architectury-forge:8.1.79'
 }
 
 jar {

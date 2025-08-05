@@ -48,11 +48,11 @@ public class BusinessCraft {
     public BusinessCraft() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         
-        // Initialize platform abstraction layer
-        ModBlocks.initializePlatformRegistration();
-        ModBlockEntities.initializePlatformRegistration();
-        ModEntityTypes.initializePlatformRegistration();
-        ModMenuTypes.initializePlatformRegistration();
+        // Initialize platform-agnostic registration
+        ModBlocks.initialize();
+        ModBlockEntities.initialize();
+        ModEntityTypes.initialize();
+        ModMenuTypes.initialize();
         
         // Register platform abstraction DeferredRegisters for Forge
         ForgeRegistryHelper forgeHelper = (ForgeRegistryHelper) PlatformServices.getRegistryHelper();
@@ -62,25 +62,12 @@ public class BusinessCraft {
         forgeHelper.getEntities().register(modEventBus);
         forgeHelper.getMenus().register(modEventBus);
         
-        // Register blocks and items (legacy Forge system)
-        ModBlocks.BLOCKS.register(modEventBus);
-        ModBlocks.ITEMS.register(modEventBus);
-        
-        // Register entity types
-        ModEntityTypes.ENTITY_TYPES.register(modEventBus);
-        
         // Register our mod's event handlers
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::clientSetup);
         
         // Initialize networking
         ModMessages.register();
-        
-        // Register block entities
-        ModBlockEntities.BLOCK_ENTITIES.register(modEventBus);
-        
-        // Register our menus
-        ModMenuTypes.MENU_TYPES.register(modEventBus);
         
         // Register ourselves for server and other game events
         MinecraftForge.EVENT_BUS.register(this);

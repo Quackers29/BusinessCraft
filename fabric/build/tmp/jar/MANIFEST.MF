@@ -1,8 +1,8 @@
 Manifest-Version: 1.0
-Specification-Title: businesscraft-common
+Specification-Title: businesscraft-fabric
 Specification-Vendor: Quackers29
 Specification-Version: 1
-Implementation-Title: BusinessCraft Common
+Implementation-Title: BusinessCraft Fabric
 Implementation-Version: 1.0
 Implementation-Vendor: Quackers29
 Implementation-Timestamp: 2025-08-05T22:58:03+0100

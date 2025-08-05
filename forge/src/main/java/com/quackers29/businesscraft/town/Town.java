@@ -18,8 +18,10 @@ import java.util.Collections;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import java.util.stream.Collectors;
+import com.quackers29.businesscraft.api.ITownDataProvider;
+import com.quackers29.businesscraft.town.VisitHistoryRecord;
 
-public class Town {
+public class Town /* temporarily commenting out: implements ITownDataProvider */ {
     private static final Logger LOGGER = LoggerFactory.getLogger(Town.class);
     private final UUID id;
     private final BlockPos position;
@@ -67,8 +69,17 @@ public class Town {
         return economy.getResourceCount(item);
     }
     
-    public Map<Item, Integer> getAllResources() {
+    // Existing Forge-specific method
+    public Map<Item, Integer> getAllResourcesForge() {
         return economy.getResources().getAllResources();
+    }
+    
+    // ITownDataProvider interface method
+    @Override
+    public Map<Object, Integer> getAllResources() {
+        Map<Object, Integer> result = new HashMap<>();
+        economy.getResources().getAllResources().forEach((item, count) -> result.put(item, count));
+        return result;
     }
     
     // ================================
@@ -125,6 +136,7 @@ public class Town {
      * @deprecated Use TownService.canSpawnTourists() instead
      */
     @Deprecated
+    @Override
     public boolean canSpawnTourists() {
         // Delegate to service layer for business logic
         com.quackers29.businesscraft.town.service.TownService service = 
@@ -139,6 +151,7 @@ public class Town {
      * 
      * @return true if more tourists can be spawned, false otherwise
      */
+    @Override
     public boolean canAddMoreTourists() {
         // First check if tourist spawning is enabled at all
         if (!canSpawnTourists()) {
@@ -172,6 +185,7 @@ public class Town {
      * @deprecated Use TownService.calculateMaxTourists() instead
      */
     @Deprecated
+    @Override
     public int getMaxTourists() {
         return calculateMaxTouristsFromPopulation();
     }
@@ -212,6 +226,7 @@ public class Town {
         }
     }
     
+    @Override
     public int getTouristCount() {
         return touristCount;
     }
@@ -487,10 +502,12 @@ public class Town {
         this.name = newName;
     }
     
+    @Override
     public int getBreadCount() {
         return economy.getBreadCount();
     }
     
+    @Override
     public int getPopulation() {
         return economy.getPopulation();
     }
@@ -499,16 +516,35 @@ public class Town {
         return id;
     }
     
-    public BlockPos getPosition() {
+    @Override
+    public UUID getTownId() {
+        return id;
+    }
+    
+    @Override
+    public String getTownName() {
+        return name;
+    }
+    
+    // Forge-specific method
+    public BlockPos getPositionForge() {
         return position;
     }
     
+    // ITownDataProvider interface method
+    @Override
+    public ITownDataProvider.Position getPosition() {
+        return new BlockPosAdapter(position);
+    }
+    
+    @Override
     public void setTouristSpawningEnabled(boolean enabled) {
         LOGGER.info("TOGGLE [{}] - Changing from {} to {}", 
             id, touristSpawningEnabled, enabled);
         this.touristSpawningEnabled = enabled;
     }
     
+    @Override
     public void addVisitor(UUID fromTownId) {
         visitors.merge(fromTownId, 1, Integer::sum);
         
@@ -533,38 +569,62 @@ public class Town {
         return visitors.values().stream().mapToInt(Integer::intValue).sum();
     }
     
+    @Override
     public boolean isTouristSpawningEnabled() {
         return touristSpawningEnabled;
     }
     
-    public void setPathStart(BlockPos pathStart) {
+    // Forge-specific methods
+    public void setPathStartForge(BlockPos pathStart) {
         this.pathStart = pathStart;
     }
     
-    public void setPathEnd(BlockPos pathEnd) {
+    public void setPathEndForge(BlockPos pathEnd) {
         this.pathEnd = pathEnd;
     }
     
-    public BlockPos getPathStart() {
+    public BlockPos getPathStartForge() {
         return pathStart;
     }
     
-    public BlockPos getPathEnd() {
+    public BlockPos getPathEndForge() {
         return pathEnd;
     }
     
+    // ITownDataProvider interface methods
+    @Override
+    public ITownDataProvider.Position getPathStart() {
+        return pathStart != null ? new BlockPosAdapter(pathStart) : null;
+    }
+    
+    @Override
+    public void setPathStart(ITownDataProvider.Position pos) {
+        this.pathStart = pos != null ? new BlockPos(pos.getX(), pos.getY(), pos.getZ()) : null;
+        markDirty();
+    }
+    
+    @Override
+    public ITownDataProvider.Position getPathEnd() {
+        return pathEnd != null ? new BlockPosAdapter(pathEnd) : null;
+    }
+    
+    @Override
+    public void setPathEnd(ITownDataProvider.Position pos) {
+        this.pathEnd = pos != null ? new BlockPos(pos.getX(), pos.getY(), pos.getZ()) : null;
+        markDirty();
+    }
+    
+    @Override
     public int getSearchRadius() {
         return searchRadius;
     }
     
+    @Override
     public void setSearchRadius(int searchRadius) {
         this.searchRadius = searchRadius;
     }
     
-    public UUID getTownId() {
-        return id;
-    }
-    
+    @Override
     public void markDirty() {
         // Find the TownManager for all loaded levels and mark the town data as dirty
         net.minecraft.server.MinecraftServer server = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
@@ -593,10 +653,6 @@ public class Town {
         }
     }
     
-    public String getTownName() {
-        return getName();
-    }
-    
     // Visit history implementation
     public void recordVisit(UUID originTownId, int count, BlockPos originPos) {
         long timestamp = System.currentTimeMillis();
@@ -616,8 +672,22 @@ public class Town {
         markDirty();
     }
     
-    public List<VisitHistoryRecord> getVisitHistory() {
+    // Forge-specific method
+    public List<VisitHistoryRecord> getVisitHistoryForge() {
         return Collections.unmodifiableList(visitHistory);
+    }
+    
+    // ITownDataProvider interface method
+    @Override
+    public List<ITownDataProvider.VisitHistoryRecord> getVisitHistory() {
+        return visitHistory.stream()
+            .map(record -> new ITownDataProvider.VisitHistoryRecord(
+                record.getTimestamp(),
+                record.getOriginTownId(), 
+                record.getCount(),
+                new BlockPosAdapter(record.getOriginPos())
+            ))
+            .collect(Collectors.toList());
     }
     
     /**
@@ -665,12 +735,24 @@ public class Town {
     }
     
     /**
-     * Get all items in the payment buffer
+     * Get all items in the payment buffer (Forge-specific)
      * 
      * @return Map of all items and their counts
      */
-    public Map<Item, Integer> getAllCommunalStorageItems() {
+    public Map<Item, Integer> getAllCommunalStorageItemsForge() {
         return paymentBoard.getBufferStorage();
+    }
+    
+    /**
+     * Get all items in the payment buffer (ITownDataProvider interface)
+     * 
+     * @return Map of all items and their counts
+     */
+    @Override
+    public Map<Object, Integer> getAllCommunalStorageItems() {
+        Map<Object, Integer> result = new HashMap<>();
+        paymentBoard.getBufferStorage().forEach((item, count) -> result.put(item, count));
+        return result;
     }
     
     /**
@@ -743,17 +825,118 @@ public class Town {
     }
     
     /**
-     * Get all items in a player's personal storage
+     * Get all items in a player's personal storage (Forge-specific)
      * 
      * @param playerId The UUID of the player
      * @return Map of all items and their counts
      */
-    public Map<Item, Integer> getPersonalStorageItems(UUID playerId) {
+    public Map<Item, Integer> getPersonalStorageItemsForge(UUID playerId) {
         if (playerId == null) return Collections.emptyMap();
         
         Map<Item, Integer> playerStorage = personalStorage.get(playerId);
         if (playerStorage == null) return Collections.emptyMap();
         
         return Collections.unmodifiableMap(playerStorage);
+    }
+    
+    /**
+     * Get all items in a player's personal storage (ITownDataProvider interface)
+     * 
+     * @param playerId The UUID of the player
+     * @return Map of all items and their counts
+     */
+    @Override
+    public Map<Object, Integer> getPersonalStorageItems(UUID playerId) {
+        if (playerId == null) return Collections.emptyMap();
+        
+        Map<Item, Integer> playerStorage = personalStorage.get(playerId);
+        if (playerStorage == null) return Collections.emptyMap();
+        
+        Map<Object, Integer> result = new HashMap<>();
+        playerStorage.forEach((item, count) -> result.put(item, count));
+        return result;
+    }
+    
+    // Additional ITownDataProvider interface methods
+    
+    @Override
+    public void addResource(Object item, int count) {
+        if (item instanceof Item itemObj) {
+            addResource(itemObj, count);
+        }
+    }
+    
+    @Override
+    public int getResourceCount(Object item) {
+        if (item instanceof Item itemObj) {
+            return getResourceCount(itemObj);
+        }
+        return 0;
+    }
+    
+    @Override
+    public boolean addToCommunalStorage(Object item, int count) {
+        if (item instanceof Item itemObj) {
+            return addToCommunalStorage(itemObj, count);
+        }
+        return false;
+    }
+    
+    @Override
+    public int getCommunalStorageCount(Object item) {
+        if (item instanceof Item itemObj) {
+            return getCommunalStorageCount(itemObj);
+        }
+        return 0;
+    }
+    
+    @Override
+    public boolean addToPersonalStorage(UUID playerId, Object item, int count) {
+        if (item instanceof Item itemObj) {
+            return addToPersonalStorage(playerId, itemObj, count);
+        }
+        return false;
+    }
+    
+    @Override
+    public int getPersonalStorageCount(UUID playerId, Object item) {
+        if (item instanceof Item itemObj) {
+            return getPersonalStorageCount(playerId, itemObj);
+        }
+        return 0;
+    }
+    
+    @Override
+    public void recordVisit(UUID originTownId, int count, ITownDataProvider.Position originPos) {
+        BlockPos blockPos = new BlockPos(originPos.getX(), originPos.getY(), originPos.getZ());
+        recordVisit(originTownId, count, blockPos);
+    }
+    
+    // Adapter class to convert BlockPos to ITownDataProvider.Position
+    private static class BlockPosAdapter implements ITownDataProvider.Position {
+        private final BlockPos pos;
+        
+        public BlockPosAdapter(BlockPos pos) {
+            this.pos = pos;
+        }
+        
+        @Override
+        public int getX() { return pos.getX(); }
+        
+        @Override
+        public int getY() { return pos.getY(); }
+        
+        @Override
+        public int getZ() { return pos.getZ(); }
+        
+        // Convenience method for debugging/display
+        public String toShortString() {
+            return pos.toShortString();
+        }
+        
+        // Method to get the underlying BlockPos
+        public BlockPos getBlockPos() {
+            return pos;
+        }
     }
 } 

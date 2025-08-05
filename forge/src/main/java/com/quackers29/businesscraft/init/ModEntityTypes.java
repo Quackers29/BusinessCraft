@@ -9,55 +9,45 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import java.util.function.Supplier;
 
-// Legacy Forge imports - kept for backwards compatibility during transition
+// Forge imports for event handling - will be abstracted later
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
 
+/**
+ * Platform-agnostic entity registration using the RegistryHelper abstraction.
+ * This system works across different mod loaders (Forge, Fabric, etc.).
+ */
 @Mod.EventBusSubscriber(modid = BusinessCraft.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ModEntityTypes {
-    // Legacy Forge registration system - kept for backwards compatibility
-    public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = 
-        DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, BusinessCraft.MOD_ID);
-    
     // Platform abstraction helper
     private static final RegistryHelper REGISTRY = PlatformServices.getRegistryHelper();
     
     // Platform-agnostic entity registrations
-    public static Supplier<EntityType<TouristEntity>> TOURIST_PLATFORM;
-    
-    // Legacy Forge registered entities - kept for backwards compatibility
-    public static final RegistryObject<EntityType<TouristEntity>> TOURIST = ENTITY_TYPES.register("tourist",
-        () -> EntityType.Builder.<TouristEntity>of(TouristEntity::new, MobCategory.CREATURE)
-            .sized(0.6F, 1.95F) // Same size as regular villager
-            .clientTrackingRange(10)
-            .build(new ResourceLocation(BusinessCraft.MOD_ID, "tourist").toString())
-    );
+    public static Supplier<EntityType<TouristEntity>> TOURIST;
     
     /**
-     * Initialize platform-agnostic entity registration.
-     * This will eventually replace the legacy Forge system.
+     * Initialize all entity registrations.
+     * This should be called during mod initialization.
      */
-    public static void initializePlatformRegistration() {
+    public static void initialize() {
         // Register entities using platform abstraction
-        TOURIST_PLATFORM = REGISTRY.registerEntity("tourist_platform",
+        TOURIST = REGISTRY.registerEntity("tourist",
             () -> EntityType.Builder.<TouristEntity>of(TouristEntity::new, MobCategory.CREATURE)
                 .sized(0.6F, 1.95F) // Same size as regular villager
                 .clientTrackingRange(10)
-                .build(new ResourceLocation(BusinessCraft.MOD_ID, "tourist_platform").toString())
+                .build(new ResourceLocation(BusinessCraft.MOD_ID, "tourist").toString())
         );
     }
     
-    // Event handler to register entity attributes
+    /**
+     * Event handler to register entity attributes.
+     * TODO: This will be abstracted to platform services in a future phase.
+     */
     @SubscribeEvent
     public static void registerAttributes(EntityAttributeCreationEvent event) {
-        event.put(TOURIST.get(), TouristEntity.createAttributes().build());
-        // Also register attributes for platform version if it exists
-        if (TOURIST_PLATFORM != null) {
-            event.put(TOURIST_PLATFORM.get(), TouristEntity.createAttributes().build());
+        if (TOURIST != null) {
+            event.put(TOURIST.get(), TouristEntity.createAttributes().build());
         }
     }
 } 
