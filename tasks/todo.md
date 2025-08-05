@@ -2,6 +2,47 @@
 
 ## 🎯 **IMMEDIATE TASKS** (Do not remove header)
 
+### **TownBlock Cleanup (Pre-Forge/Fabric Migration)**
+Priority: HIGH - Clean up legacy artifacts before platform migration
+
+- [ ] **Phase 1: Rename Block Entity System**
+  - [ ] Rename `TownBlockEntity.java` → `TownInterfaceEntity.java` 
+  - [ ] Update all imports across codebase
+  - [ ] Update registration in `ModBlockEntities.java`
+  - [ ] Update all method names: `getTownBlockEntity()` → `getTownInterfaceEntity()`
+  - [ ] Update all variable names: `townBlock` → `townInterface`
+
+- [ ] **Phase 2: Remove TownBlock Registration**  
+  - [ ] Remove `TOWN_BLOCK` from `ModBlocks.java`
+  - [ ] Remove TownBlock from block entity registration
+  - [ ] Remove `TownBlock.java` class entirely
+  - [ ] Update debug logging references
+
+- [ ] **Phase 3: Clean Menu System**
+  - [ ] Remove `TownBlockMenu.java` class
+  - [ ] Remove `TOWN_BLOCK` menu registration from `ModMenuTypes.java`
+  - [ ] Update all menu references to use `TownInterfaceMenu`
+  - [ ] Clean up any menu-related imports
+
+- [ ] **Phase 4: Asset Cleanup**
+  - [ ] Remove all `town_block.*` asset files (blockstates, models, textures)
+  - [ ] Remove `town_block.json` recipe and loot table
+  - [ ] Update language file to remove town_block entries
+  - [ ] Verify no broken texture/model references
+
+- [ ] **Phase 5: Code Reference Cleanup**
+  - [ ] Search and replace remaining "TownBlock" references in comments/strings
+  - [ ] Update debug logging class names and messages
+  - [ ] Clean up any remaining imports
+  - [ ] Update documentation and comments
+
+- [ ] **Phase 6: Testing & Verification**
+  - [ ] Test town interface block placement and functionality
+  - [ ] Verify UI opens correctly with new menu system  
+  - [ ] Test platform management functionality
+  - [ ] Check for any compilation errors or broken references
+  - [ ] Test in-game to ensure no crashes or missing textures
+
 ## 🎯 **COMPLETED TASKS** ✅
 
 ## 🎯 **FUTURE TASKS**
