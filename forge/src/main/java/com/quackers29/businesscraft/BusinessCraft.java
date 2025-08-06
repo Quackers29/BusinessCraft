@@ -106,7 +106,19 @@ public class BusinessCraft {
         ClientModEvents.initialize();
         ClientSetup.initialize();
         
-        // Screen registrations are now handled in ClientModEvents for better organization
+        // Register screens directly during client setup
+        event.enqueueWork(() -> {
+            net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.TOWN_INTERFACE.get(), 
+                com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen::new);
+            net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.TRADE_MENU.get(), 
+                com.quackers29.businesscraft.ui.screens.town.TradeScreen::new);
+            net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.STORAGE_MENU.get(), 
+                com.quackers29.businesscraft.ui.screens.town.StorageScreen::new);
+            net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.PAYMENT_BOARD_MENU.get(), 
+                com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen::new);
+            
+            LOGGER.info("Registered all menu screen types");
+        });
         
         LOGGER.info("BusinessCraft client setup complete");
     }
