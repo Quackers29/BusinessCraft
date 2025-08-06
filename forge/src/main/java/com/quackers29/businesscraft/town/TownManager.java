@@ -15,17 +15,27 @@ import java.util.HashMap;
 import net.minecraft.world.item.Item;
 import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.town.service.TownBoundaryService;
+import com.quackers29.businesscraft.town.service.TownBusinessLogic;
+import com.quackers29.businesscraft.platform.PlatformServices;
 
 public class TownManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/TownManager");
     private final TownSavedData savedData;
     private final TownBoundaryService boundaryService;
+    private final TownBusinessLogic businessLogic;
     
     // Static reference to the current level for context
     private static final Map<ServerLevel, TownManager> INSTANCES = new HashMap<>();
     
     public TownSavedData getSavedData() {
         return this.savedData;
+    }
+    
+    /**
+     * Get the business logic service for town operations
+     */
+    public TownBusinessLogic getBusinessLogic() {
+        return this.businessLogic;
     }
 
     private TownManager(ServerLevel level) {
@@ -35,6 +45,7 @@ public class TownManager {
             TownSavedData.NAME
         );
         this.boundaryService = new TownBoundaryService();
+        this.businessLogic = new TownBusinessLogic(new com.quackers29.businesscraft.platform.ForgePlatformService());
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "TownManager initialized for level: {}", level.dimension().location());
     }
 
@@ -52,6 +63,17 @@ public class TownManager {
     }
 
     public UUID registerTown(BlockPos pos, String name) {
+        // Validate town name using common business logic
+        com.quackers29.businesscraft.util.Result<String, com.quackers29.businesscraft.error.BCError> nameValidation = 
+            businessLogic.validateTownName(name);
+        
+        if (nameValidation.isFailure()) {
+            LOGGER.warn("Invalid town name '{}': {}", name, nameValidation.getError().getMessage());
+            return null; // Return null to indicate failure
+        }
+        
+        String validatedName = nameValidation.getValue();
+        
         // Check minimum distance between towns
         if (!canPlaceTownAt(pos)) {
             LOGGER.warn("Attempted to place town too close to an existing town at position: {}", pos);
@@ -59,8 +81,8 @@ public class TownManager {
         }
         
         UUID townId = UUID.randomUUID();
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Registering new town. ID: {}, Name: {}, Position: {}", townId, name, pos);
-        savedData.getTowns().put(townId, new Town(townId, pos, name));
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Registering new town. ID: {}, Name: {}, Position: {}", townId, validatedName, pos);
+        savedData.getTowns().put(townId, new Town(townId, pos, validatedName));
         savedData.setDirty();
         return townId;
     }

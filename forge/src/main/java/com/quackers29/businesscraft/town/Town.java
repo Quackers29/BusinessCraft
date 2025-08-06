@@ -133,17 +133,35 @@ public class Town implements ITownDataProvider {
     }
     
     /**
+     * Helper method to get TownManager for accessing business logic
+     */
+    private TownManager getTownManager() {
+        net.minecraft.server.MinecraftServer server = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
+        if (server != null) {
+            for (net.minecraft.world.level.Level level : server.getAllLevels()) {
+                if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                    TownManager manager = TownManager.get(serverLevel);
+                    if (manager.getTown(id) == this) {
+                        return manager;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    
+    /**
      * @deprecated Use TownService.canSpawnTourists() instead
      */
     @Deprecated
     @Override
     public boolean canSpawnTourists() {
-        // Delegate to service layer for business logic
-        com.quackers29.businesscraft.town.service.TownService service = 
-            new com.quackers29.businesscraft.town.service.TownService(
-                new com.quackers29.businesscraft.town.service.TownValidationService());
-        
-        return service.canSpawnTourists(this).getOrElse(false);
+        // Delegate to TownBusinessLogic through TownManager
+        TownManager manager = getTownManager();
+        if (manager != null) {
+            return manager.getBusinessLogic().canTownSpawnMoreTourists(this);
+        }
+        return false;
     }
     
     /**
@@ -173,12 +191,12 @@ public class Town implements ITownDataProvider {
      */
     @Deprecated
     public int calculateMaxTouristsFromPopulation() {
-        // Delegate to service layer
-        com.quackers29.businesscraft.town.service.TownService service = 
-            new com.quackers29.businesscraft.town.service.TownService(
-                new com.quackers29.businesscraft.town.service.TownValidationService());
-        
-        return service.calculateMaxTourists(this).getOrElse(0);
+        // Delegate to TownBusinessLogic through TownManager
+        TownManager manager = getTownManager();
+        if (manager != null) {
+            return manager.getBusinessLogic().calculateMaxTourists(getPopulation());
+        }
+        return 0;
     }
     
     /**
