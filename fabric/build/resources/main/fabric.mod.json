@@ -3,33 +3,61 @@
   "id": "businesscraft",
   "version": "1.0.0",
   "name": "BusinessCraft",
-  "description": "A Minecraft mod adding business and economy features to the game.",
+  "description": "A sophisticated town management and tourism economy system for Minecraft featuring complete town management, multi-platform systems, advanced UI framework, and tourism economy mechanics.",
   "authors": [
     "Quackers29"
   ],
+  "contributors": [],
   "contact": {
     "homepage": "https://github.com/quackers29/businesscraft",
-    "sources": "https://github.com/quackers29/businesscraft"
+    "sources": "https://github.com/quackers29/businesscraft",
+    "issues": "https://github.com/quackers29/businesscraft/issues"
   },
   "license": "MIT",
   "icon": "assets/businesscraft/icon.png",
   "environment": "*",
+  
   "entrypoints": {
     "main": [
-      "com.quackers29.businesscraft.BusinessCraft"
+      "com.quackers29.businesscraft.fabric.BusinessCraftFabric"
     ],
     "client": [
-      "com.quackers29.businesscraft.client.ClientSetup"
+      "com.quackers29.businesscraft.fabric.client.BusinessCraftFabricClient"
     ]
   },
+  
+  "mixins": [
+    "businesscraft.mixins.json",
+    {
+      "config": "businesscraft.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  
   "depends": {
-    "fabricloader": ">=0.15.11",
+    "fabricloader": ">=0.14.17",
+    "fabric-api": ">=0.83.0",
     "minecraft": "~1.20.1",
-    "java": ">=17",
-    "fabric-api": "*",
-    "architectury": ">=8.1.79"
+    "java": ">=17"
   },
+  
+  "recommends": {
+    "modmenu": "*",
+    "cloth-config": "*"
+  },
+  
   "suggests": {
-    "another-mod": "*"
+    "create": "*",
+    "jei": "*",
+    "rei": "*"
+  },
+  
+  "custom": {
+    "modmenu": {
+      "badges": ["economy", "management"],
+      "links": {
+        "modmenu.discord": "https://discord.gg/businesscraft"
+      }
+    }
   }
 } 
