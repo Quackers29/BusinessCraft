@@ -32,7 +32,27 @@ Record everything in a .claude/tasks/[TASK_ID]/onboarding.md file. This file wil
 
 ## Project Overview
 
-BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete town management and tourism economy system. The codebase is production-ready with advanced architectural patterns and enterprise-grade implementation quality.
+BusinessCraft is a sophisticated Minecraft mod featuring a complete town management and tourism economy system. The codebase is production-ready with advanced architectural patterns and enterprise-grade implementation quality.
+
+### Multi-Platform Architecture
+
+**Target Platforms**: Minecraft Forge 1.20.1 + Fabric 1.20.1 (full feature parity)
+**Architecture Pattern**: Enhanced MultiLoader Template with zero external dependencies
+
+**CRITICAL**: BusinessCraft uses the **Enhanced MultiLoader Approach** for cross-platform compatibility. This architectural decision was made after comprehensive analysis and must be maintained.
+
+#### Why MultiLoader Template (Not Architectury or Other APIs)
+- **Zero External Dependencies**: No third-party API risks (Architectury, FFAPI, etc.)
+- **Maximum Performance**: Direct platform API access with no abstraction overhead
+- **Industry Proven**: Used by JEI, Jade, Create and other major successful mods
+- **100% Feature Parity**: All BusinessCraft features have direct Fabric equivalents
+- **Long-term Stability**: No risk of abandoned dependencies or API changes
+
+#### Current Multi-Platform Status
+- **Platform Abstraction**: 65% complete - excellent enterprise-grade foundation
+- **Common Module**: 19 files (8%) - all business logic platform-agnostic
+- **Forge Module**: 208 files (92%) - platform-specific implementations
+- **Fabric Module**: Planned - will match Forge functionality exactly
 
 ## Development Commands
 
@@ -170,25 +190,44 @@ BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete
 
 ### Key Architectural Patterns
 
+**MultiLoader Template Pattern**: Cross-platform compatibility through service abstraction
 **Provider Pattern**: Consistent data access through `ITownDataProvider`
+**Service-Oriented Architecture**: Platform services (`PlatformServices`, `RegistryHelper`, `NetworkHelper`, `EventHelper`)
 **Component-Based UI**: Reusable components with composition over inheritance
 **Separation of Concerns**: Clear layer separation between UI, data, and logic
 **Event-Driven Design**: Clean event handling throughout UI system
+**Maximum Common Code**: Business logic abstracted to common module
 **Rate Limiting**: Smart performance optimizations in rendering and updates
 
 ## File Organization
 
-### Main Package Structure
-- `block/`: Block implementations and block entities
-- `entity/`: Tourist entity and rendering
+### Multi-Module Structure
+- **`common/`**: Platform-agnostic business logic and shared code
+  - All core game logic, data models, UI framework
+  - Service interfaces: `PlatformServices`, helper interfaces
+  - Zero platform dependencies - pure business logic
+- **`forge/`**: Forge-specific platform implementations
+  - Platform services: `ForgePlatformHelper`, `ForgeRegistryHelper`, etc.
+  - Forge-specific initialization and registration
+- **`fabric/`**: Fabric-specific platform implementations (planned)
+  - Platform services: `FabricPlatformHelper`, `FabricRegistryHelper`, etc.
+  - Fabric-specific initialization and registration
+
+### Common Module Package Structure (Platform-Agnostic)
+- `business/`: Core business logic and game rules
+- `service/`: Service interfaces for platform abstraction
 - `town/`: Core town logic, components, and data management
-- `platform/`: Platform system implementation
-- `ui/`: Complete UI framework (11 subdirectories)
-- `network/packets/`: Organized packet system (5 subdirectories)
-- `init/`: Forge registration classes
-- `config/`: Configuration loading
-- `command/`: Admin commands
+- `ui/`: Complete UI framework (11 subdirectories) - zero platform deps
+- `network/packets/`: Packet definitions (5 subdirectories)
+- `config/`: Configuration data structures
+- `util/`: Utility classes with no platform dependencies
+
+### Platform Module Structure (Forge/Fabric-Specific)
+- `platform/`: Platform service implementations
+- `init/`: Platform-specific registration classes
 - `client/`: Client-side setup and key handlers
+- `event/`: Platform-specific event handling
+- Main class: `BusinessCraft.java` / `BusinessCraftFabric.java`
 
 ### UI Framework Organization
 - `components/basic/`: Foundation UI components
@@ -202,6 +241,28 @@ BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete
 - `managers/`: UI event and data managers
 - `templates/`: Screen templates and themes
 
+## Multi-Platform Development Guidelines
+
+### MANDATORY: Enhanced MultiLoader Approach
+**All development must follow the MultiLoader Template pattern. Do not use:**
+- Architectury API (dependency risk, performance overhead)
+- Forgified Fabric API (experimental, unnecessary complexity)
+- Platform-specific development (abandons abstraction work)
+
+### Platform Abstraction Rules
+1. **Maximize Common Code**: All business logic goes in common module
+2. **Service-Oriented Design**: Use `PlatformServices` for all platform operations
+3. **Zero Platform Dependencies in Common**: Common module must compile without Forge or Fabric
+4. **Complete Feature Parity**: Fabric implementation must match Forge functionality exactly
+5. **Performance Priority**: Direct platform APIs, no unnecessary abstraction layers
+
+### Code Organization Rules
+- **Business Logic**: Always in common module (town management, economy, calculations)
+- **UI Components**: Always in common module (already 100% platform-agnostic)
+- **Network Packets**: Definitions in common, serialization through platform services
+- **Platform Services**: Only in platform-specific modules
+- **Registration**: Platform-specific implementations of common interfaces
+
 ## Development Guidelines
 
 ### Working with the UI Framework
@@ -211,16 +272,25 @@ BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete
 - Use `BCModalGridScreen` for data display tables
 - Implement state binding through `StateBindingManager`
 
+### Multi-Platform Development Best Practices
+- **Platform Services**: Always use `PlatformServices.getXXXHelper()` for platform operations
+- **Common Module First**: Implement business logic in common, then create platform implementations
+- **Service Interfaces**: Define interfaces in common, implement in platform modules
+- **Testing Strategy**: Test both platforms for feature parity
+
 ### Data Management Best Practices
 - Access town data via `TownManager.get(ServerLevel)`
 - Use helper classes in `town.data` package for complex operations
 - Implement proper cleanup in server lifecycle events
 - Cache frequently accessed data through `TownDataCacheManager`
+- **Platform Abstraction**: Use service interfaces for inventory, networking, events
 
 ### Network Development
+- **Platform Abstraction**: Use `NetworkHelper` interface for all networking
 - Extend `BaseBlockEntityPacket` for block entity-related packets
 - Organize new packets in appropriate subdirectories
-- Register all packets in `ModMessages`
+- Register all packets through `PlatformServices.getNetworkHelper()`
+- **Common Definitions**: Packet classes in common, serialization through platform services
 - Follow existing serialization patterns
 
 ### Performance Considerations

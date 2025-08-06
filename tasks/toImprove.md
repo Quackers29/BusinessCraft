@@ -1,12 +1,40 @@
 # BusinessCraft - Optional Improvements for Future-Proofing
 
-This document outlines potential improvements to make the codebase even more modular, efficient, and future-proof. The current codebase is already production-grade, so these are enhancement opportunities.
+This document outlines potential improvements to make the codebase even more modular, efficient, and future-proof. The current codebase is already production-grade with excellent **Enhanced MultiLoader architecture**, so these are enhancement opportunities.
 
-## 🔥 High Priority - Architecture Enhancements
+## 🏗️ ARCHITECTURAL FOUNDATION - Enhanced MultiLoader Template
+
+**CRITICAL**: BusinessCraft uses the **Enhanced MultiLoader Approach** for multi-platform compatibility after comprehensive analysis. This decision is documented in CLAUDE.md and todo.md.
+
+### Why Enhanced MultiLoader (Not Alternative Approaches)
+- **Zero External Dependencies**: No Architectury API, FFAPI, or third-party dependencies
+- **Maximum Performance**: Direct platform API access with no abstraction overhead
+- **Industry Proven**: Pattern used by JEI, Jade, Create and other successful multi-platform mods
+- **65% Complete**: Excellent platform abstraction foundation already exists
+- **100% Feature Parity**: All BusinessCraft features have direct Fabric equivalents
+- **Long-term Stability**: No risk of abandoned dependencies
+
+### Current Multi-Platform Status
+- **Common Module**: 19 files (8%) - all business logic platform-agnostic
+- **Platform Services**: Excellent service interface abstraction layer
+- **Forge Implementation**: 208 files (92%) - platform-specific implementations
+- **Fabric Target**: Planned implementation using native Fabric APIs
+
+### Multi-Platform Development Rules
+1. **Maximize Common Code**: All business logic in common module
+2. **Service Interfaces**: Use PlatformServices for all platform operations  
+3. **Zero Platform Dependencies in Common**: Common must compile without Forge/Fabric
+4. **Direct Platform APIs**: No unnecessary abstraction layers
+5. **Complete Feature Parity**: Fabric must match Forge functionality exactly
+
+## 🔥 High Priority - Architecture Enhancements (Post Multi-Platform)
+
+**Note**: These improvements should be considered AFTER Enhanced MultiLoader Fabric implementation is complete.
 
 ### 1. Event Bus System
 **Problem**: Direct method calls between systems create tight coupling
 **Solution**: Implement a centralized event bus for system communication
+**Multi-Platform Consideration**: Must work with both Forge EventBus and Fabric Callback systems
 ```java
 // Example: BCEventBus with typed events
 @EventHandler
