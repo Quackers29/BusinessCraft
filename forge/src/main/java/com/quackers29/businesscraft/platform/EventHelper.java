@@ -7,6 +7,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.client.renderer.entity.EntityRenderer;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.MultiBufferSource;
 
 /**
  * Platform abstraction interface for event system operations.
@@ -43,6 +50,42 @@ public interface EventHelper {
      * @param handler The player logout handler
      */
     void registerPlayerLogoutEvent(PlayerLogoutHandler handler);
+    
+    /**
+     * Registers a client setup event handler.
+     * @param handler The client setup handler
+     */
+    void registerClientSetupEvent(ClientSetupHandler handler);
+    
+    /**
+     * Registers an entity renderer registration event handler.
+     * @param handler The entity renderer registration handler
+     */
+    void registerEntityRendererRegistrationEvent(EntityRendererRegistrationHandler handler);
+    
+    /**
+     * Registers a GUI overlay registration event handler.
+     * @param handler The GUI overlay registration handler
+     */
+    void registerGuiOverlayRegistrationEvent(GuiOverlayRegistrationHandler handler);
+    
+    /**
+     * Registers a render level event handler.
+     * @param handler The render level handler
+     */
+    void registerRenderLevelEvent(RenderLevelHandler handler);
+    
+    /**
+     * Registers a player tick event handler.
+     * @param handler The player tick handler
+     */
+    void registerPlayerTickEvent(PlayerTickHandler handler);
+    
+    /**
+     * Registers an entity attribute registration event handler.
+     * @param handler The entity attribute registration handler
+     */
+    void registerEntityAttributeRegistrationEvent(EntityAttributeRegistrationHandler handler);
     
     /**
      * Functional interface for block interaction events.
@@ -83,5 +126,55 @@ public interface EventHelper {
     @FunctionalInterface
     interface PlayerLogoutHandler {
         void onPlayerLogout(Player player);
+    }
+    
+    /**
+     * Functional interface for client setup events.
+     */
+    @FunctionalInterface
+    interface ClientSetupHandler {
+        void onClientSetup();
+    }
+    
+    /**
+     * Functional interface for entity renderer registration events.
+     */
+    @FunctionalInterface
+    interface EntityRendererRegistrationHandler {
+        <T extends LivingEntity> void registerEntityRenderer(EntityType<T> entityType, 
+                                                           EntityRendererProvider<T> rendererProvider);
+    }
+    
+    /**
+     * Functional interface for GUI overlay registration events.
+     */
+    @FunctionalInterface
+    interface GuiOverlayRegistrationHandler {
+        void registerOverlay(String id, Object overlay);
+    }
+    
+    /**
+     * Functional interface for render level events.
+     */
+    @FunctionalInterface
+    interface RenderLevelHandler {
+        void onRenderLevel(PoseStack poseStack, MultiBufferSource bufferSource, Level level);
+    }
+    
+    /**
+     * Functional interface for player tick events.
+     */
+    @FunctionalInterface
+    interface PlayerTickHandler {
+        void onPlayerTick(Player player);
+    }
+    
+    /**
+     * Functional interface for entity attribute registration events.
+     */
+    @FunctionalInterface
+    interface EntityAttributeRegistrationHandler {
+        <T extends LivingEntity> void registerEntityAttributes(EntityType<T> entityType, 
+                                                              AttributeSupplier.Builder attributeBuilder);
     }
 }

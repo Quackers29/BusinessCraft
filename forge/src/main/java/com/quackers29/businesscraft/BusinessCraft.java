@@ -36,6 +36,10 @@ import com.quackers29.businesscraft.init.ModEntityTypes;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import com.quackers29.businesscraft.platform.forge.ForgeRegistryHelper;
+import com.quackers29.businesscraft.event.ModEvents;
+import com.quackers29.businesscraft.event.ClientModEvents;
+import com.quackers29.businesscraft.event.PlayerBoundaryTracker;
+import com.quackers29.businesscraft.client.ClientSetup;
 
 @Mod(BusinessCraft.MOD_ID)
 public class BusinessCraft {
@@ -85,6 +89,10 @@ public class BusinessCraft {
     private void commonSetup(final FMLCommonSetupEvent event) {
         ConfigLoader.loadConfig();
         
+        // Initialize platform-agnostic event handlers
+        ModEvents.initialize();
+        PlayerBoundaryTracker.initialize();
+        
         // Report active debug logging configuration
         DebugConfig.logActiveDebuggers();
         
@@ -93,6 +101,10 @@ public class BusinessCraft {
 
     private void clientSetup(final FMLClientSetupEvent event) {
         LOGGER.info("BusinessCraft client setup starting");
+        
+        // Initialize platform-agnostic client event handlers
+        ClientModEvents.initialize();
+        ClientSetup.initialize();
         
         // Screen registrations are now handled in ClientModEvents for better organization
         

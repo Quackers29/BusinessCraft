@@ -4,15 +4,13 @@ import com.quackers29.businesscraft.BusinessCraft;
 import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
+import com.quackers29.businesscraft.platform.PlatformServices;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraft.world.entity.player.Player;
 import com.quackers29.businesscraft.util.PositionConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +19,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Mod.EventBusSubscriber(modid = BusinessCraft.MOD_ID)
+/**
+ * Platform-agnostic player boundary tracking system.
+ * Uses EventHelper abstraction for cross-platform compatibility.
+ */
 public class PlayerBoundaryTracker {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlayerBoundaryTracker.class);
     
@@ -32,6 +33,16 @@ public class PlayerBoundaryTracker {
     // Player tracking data
     private static final Map<UUID, PlayerBoundaryState> playerStates = new ConcurrentHashMap<>();
     private static int tickCounter = 0;
+    
+    /**
+     * Initialize platform-agnostic event handlers.
+     * Should be called during server startup.
+     */
+    public static void initialize() {
+        PlatformServices.getEventHelper().registerPlayerTickEvent(PlayerBoundaryTracker::onPlayerTick);
+        PlatformServices.getEventHelper().registerPlayerLoginEvent(PlayerBoundaryTracker::onPlayerLoggedIn);
+        PlatformServices.getEventHelper().registerPlayerLogoutEvent(PlayerBoundaryTracker::onPlayerLoggedOut);
+    }
     
     /**
      * Internal class to track player boundary state
@@ -54,15 +65,17 @@ public class PlayerBoundaryTracker {
         }
     }
     
-    @SubscribeEvent
-    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+    /**
+     * Platform-agnostic player tick handler.
+     */
+    public static void onPlayerTick(Player player) {
         // Early return if player tracking is disabled
         if (!ConfigLoader.playerTracking || !ConfigLoader.townBoundaryMessages) {
             return;
         }
         
-        // Only process on server side and end phase
-        if (event.side.isClient() || event.phase != TickEvent.Phase.END) {
+        // Only process on server side
+        if (player.level().isClientSide() || !(player instanceof ServerPlayer)) {
             return;
         }
         
@@ -71,8 +84,8 @@ public class PlayerBoundaryTracker {
             return;
         }
         
-        ServerPlayer player = (ServerPlayer) event.player;
-        ServerLevel level = player.serverLevel();
+        ServerPlayer serverPlayer = (ServerPlayer) player;
+        ServerLevel level = serverPlayer.serverLevel();
         UUID playerId = player.getUUID();
         BlockPos currentPos = player.blockPosition();
         
@@ -89,7 +102,7 @@ public class PlayerBoundaryTracker {
         state.lastPosition = currentPos;
         
         // Check for town boundary changes
-        checkBoundaryTransition(player, level, state, currentPos);
+        checkBoundaryTransition(serverPlayer, level, state, currentPos);
     }
     
     /**
@@ -184,21 +197,19 @@ public class PlayerBoundaryTracker {
     }
     
     /**
-     * Clean up player data when they leave the server
+     * Clean up player data when they leave the server - platform-agnostic handler.
      */
-    @SubscribeEvent
-    public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        UUID playerId = event.getEntity().getUUID();
+    public static void onPlayerLoggedOut(Player player) {
+        UUID playerId = player.getUUID();
         playerStates.remove(playerId);
-        LOGGER.debug("Cleaned up boundary tracking data for player: {}", event.getEntity().getName().getString());
+        LOGGER.debug("Cleaned up boundary tracking data for player: {}", player.getName().getString());
     }
     
     /**
-     * Initialize player data when they join the server
+     * Initialize player data when they join the server - platform-agnostic handler.
      */
-    @SubscribeEvent
-    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) {
+    public static void onPlayerLoggedIn(Player player) {
+        if (player instanceof ServerPlayer serverPlayer) {
             UUID playerId = player.getUUID();
             BlockPos initialPos = player.blockPosition();
             playerStates.put(playerId, new PlayerBoundaryState(initialPos));

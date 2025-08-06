@@ -3,23 +3,31 @@ package com.quackers29.businesscraft.client;
 import com.quackers29.businesscraft.BusinessCraft;
 import com.quackers29.businesscraft.client.renderer.TouristRenderer;
 import com.quackers29.businesscraft.init.ModEntityTypes;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.EntityRenderersEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import com.quackers29.businesscraft.platform.PlatformServices;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
 
-@Mod.EventBusSubscriber(modid = BusinessCraft.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+/**
+ * Platform-agnostic client setup.
+ * Uses EventHelper abstraction for cross-platform compatibility.
+ */
 public class ClientSetup {
 
-    @SubscribeEvent
-    public static void onClientSetup(FMLClientSetupEvent event) {
-        // Client-side setup code
+    /**
+     * Initialize client-side platform-agnostic event handlers.
+     * Should be called during client setup.
+     */
+    public static void initialize() {
+        PlatformServices.getEventHelper().registerEntityRendererRegistrationEvent(ClientSetup::onEntityRendererRegistration);
     }
     
-    @SubscribeEvent
-    public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        // Register the tourist renderer
-        event.registerEntityRenderer(ModEntityTypes.TOURIST.get(), TouristRenderer::new);
+    /**
+     * Platform-agnostic entity renderer registration handler.
+     */
+    private static <T extends LivingEntity> void onEntityRendererRegistration(EntityType<T> entityType, 
+                                                                            EntityRendererProvider<T> rendererProvider) {
+        // This will be called by the platform-specific implementation
+        // The actual registration is handled in ForgeEventHelper for Forge
     }
 } 

@@ -2,24 +2,38 @@ package com.quackers29.businesscraft.event;
 
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.api.ITownDataProvider;
+import com.quackers29.businesscraft.platform.PlatformServices;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.ChatFormatting;
 import com.quackers29.businesscraft.util.PositionConverter;
 
-@Mod.EventBusSubscriber
+/**
+ * Platform-agnostic event handling for town path creation system.
+ * Uses EventHelper abstraction for cross-platform compatibility.
+ */
 public class ModEvents {
     private static final Logger LOGGER = LoggerFactory.getLogger(ModEvents.class);
     private static BlockPos activeTownBlockPos = null;
     private static long lastClickTime = 0;
     private static boolean awaitingSecondClick = false;
+
+    /**
+     * Initialize the platform-agnostic event system by registering handlers.
+     * Should be called during mod initialization.
+     */
+    public static void initialize() {
+        PlatformServices.getEventHelper().registerBlockInteractionEvent(ModEvents::onBlockInteraction);
+    }
 
     public static void setActiveTownBlock(BlockPos pos) {
         LOGGER.debug("Setting active town block to: {}", pos);
@@ -27,39 +41,39 @@ public class ModEvents {
         awaitingSecondClick = false;
     }
 
-    @SubscribeEvent
-    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
-        if (activeTownBlockPos == null) return;
+    /**
+     * Platform-agnostic block interaction handler for path creation system.
+     */
+    private static InteractionResult onBlockInteraction(Player player, Level level, InteractionHand hand,
+                                                      BlockPos clickedPos, BlockState state, BlockHitResult hitResult) {
+        if (activeTownBlockPos == null) return InteractionResult.PASS;
         
         // Skip if on client side - only process on server
-        if (event.getLevel().isClientSide()) return;
+        if (level.isClientSide()) return InteractionResult.PASS;
         
         // Debounce clicks - prevent multiple rapid clicks
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastClickTime < 500) {
             LOGGER.debug("Ignoring click due to debounce (time since last: {}ms)", currentTime - lastClickTime);
-            return;
+            return InteractionResult.PASS;
         }
         lastClickTime = currentTime;
         
-        Level level = event.getLevel();
         BlockEntity be = level.getBlockEntity(activeTownBlockPos);
         LOGGER.debug("Right click event with active town block at {}", activeTownBlockPos);
         
         if (be instanceof TownInterfaceEntity townInterface && townInterface.isInPathCreationMode()) {
-            BlockPos clickedPos = event.getPos();
             LOGGER.debug("Path creation mode active, clicked: {}, awaitingSecondClick: {}", clickedPos, awaitingSecondClick);
             
             if (!townInterface.isValidPathDistance(clickedPos)) {
-                event.getEntity().sendSystemMessage(Component.literal("Point too far from town!"));
-                event.setCanceled(true);
-                return;
+                player.sendSystemMessage(Component.literal("Point too far from town!"));
+                return InteractionResult.FAIL;
             }
             
             // First click - set start point
             if (!awaitingSecondClick) {
                 townInterface.setPathStart(clickedPos);
-                event.getEntity().sendSystemMessage(
+                player.sendSystemMessage(
                     Component.literal("First point set! Now click to set the end point.")
                         .withStyle(ChatFormatting.YELLOW)
                 );
@@ -79,7 +93,7 @@ public class ModEvents {
                     provider.markDirty();
                 }
                 
-                event.getEntity().sendSystemMessage(
+                player.sendSystemMessage(
                     Component.literal("Path created!")
                         .withStyle(ChatFormatting.GREEN)
                 );
@@ -90,7 +104,9 @@ public class ModEvents {
                 LOGGER.debug("Set path end to {} and completed path creation", clickedPos);
             }
             
-            event.setCanceled(true);
+            return InteractionResult.SUCCESS;
         }
+        
+        return InteractionResult.PASS;
     }
 }

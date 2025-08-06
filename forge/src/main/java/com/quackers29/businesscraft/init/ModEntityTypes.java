@@ -9,16 +9,10 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import java.util.function.Supplier;
 
-// Forge imports for event handling - will be abstracted later
-import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-
 /**
  * Platform-agnostic entity registration using the RegistryHelper abstraction.
  * This system works across different mod loaders (Forge, Fabric, etc.).
  */
-@Mod.EventBusSubscriber(modid = BusinessCraft.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ModEntityTypes {
     // Platform abstraction helper
     private static final RegistryHelper REGISTRY = PlatformServices.getRegistryHelper();
@@ -38,16 +32,8 @@ public class ModEntityTypes {
                 .clientTrackingRange(10)
                 .build(new ResourceLocation(BusinessCraft.MOD_ID, "tourist").toString())
         );
-    }
-    
-    /**
-     * Event handler to register entity attributes.
-     * TODO: This will be abstracted to platform services in a future phase.
-     */
-    @SubscribeEvent
-    public static void registerAttributes(EntityAttributeCreationEvent event) {
-        if (TOURIST != null) {
-            event.put(TOURIST.get(), TouristEntity.createAttributes().build());
-        }
+        
+        // Entity attribute registration is handled directly in ForgeEventHelper
+        // No additional registration needed here since it's platform-specific
     }
 } 
