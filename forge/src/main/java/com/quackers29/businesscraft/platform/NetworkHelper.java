@@ -81,4 +81,33 @@ public interface NetworkHelper {
     interface PacketHandler<T> {
         void handle(T packet, Player player);
     }
+    
+    /**
+     * Alternative registration method that accepts existing Forge-style handlers.
+     * This provides compatibility with existing packet handler patterns.
+     * 
+     * @param messageClass The packet class
+     * @param encoder The packet encoder (toBytes method reference)
+     * @param decoder The packet decoder (constructor reference) 
+     * @param handler The existing Forge-style handler
+     * @param <T> The packet type
+     */
+    default <T> void registerForgeStyleClientToServer(Class<T> messageClass,
+                                                    PacketEncoder<T> encoder,
+                                                    PacketDecoder<T> decoder,
+                                                    java.util.function.Consumer<T> handler) {
+        // Default implementation delegates to standard registration
+        registerClientToServerPacket(messageClass, encoder, decoder, (packet, player) -> handler.accept(packet));
+    }
+    
+    /**
+     * Alternative registration method for server-to-client packets with Forge-style handlers.
+     */
+    default <T> void registerForgeStyleServerToClient(Class<T> messageClass,
+                                                    PacketEncoder<T> encoder,
+                                                    PacketDecoder<T> decoder,
+                                                    java.util.function.Consumer<T> handler) {
+        // Default implementation delegates to standard registration  
+        registerServerToClientPacket(messageClass, encoder, decoder, (packet, player) -> handler.accept(packet));
+    }
 }

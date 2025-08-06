@@ -1,6 +1,8 @@
 package com.quackers29.businesscraft.network;
 
 import com.quackers29.businesscraft.BusinessCraft;
+import com.quackers29.businesscraft.platform.PlatformServices;
+import com.quackers29.businesscraft.platform.forge.ForgeNetworkHelper;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkRegistry;
@@ -54,10 +56,20 @@ import com.quackers29.businesscraft.network.packets.storage.PersonalStorageReque
 import com.quackers29.businesscraft.network.packets.misc.PaymentResultPacket;
 
 /**
- * Handles registration and sending of network packets
+ * Platform-agnostic network packet manager.
+ * 
+ * MIGRATION STATUS: ✅ PARTIALLY MIGRATED
+ * - Now uses ForgeNetworkHelper internally via PlatformServices
+ * - Maintains full backward compatibility with existing packet registrations
+ * - 37 packets still registered using Forge SimpleChannel (preservation of existing functionality)
+ * - Send methods remain unchanged for existing code compatibility
+ * - Foundation ready for future platform abstraction enhancements
+ * 
+ * ARCHITECTURE: ModMessages → ForgeNetworkHelper → SimpleChannel
  */
 public class ModMessages {
     private static SimpleChannel INSTANCE;
+    private static ForgeNetworkHelper networkHelper;
 
     private static int packetId = 0;
     private static int id() {
@@ -65,13 +77,11 @@ public class ModMessages {
     }
 
     public static void register() {
-        SimpleChannel net = NetworkRegistry.ChannelBuilder
-                .named(new ResourceLocation(BusinessCraft.MOD_ID, "messages"))
-                .networkProtocolVersion(() -> "1.0")
-                .clientAcceptedVersions(s -> true)
-                .serverAcceptedVersions(s -> true)
-                .simpleChannel();
-
+        // Get the ForgeNetworkHelper instance from platform services
+        networkHelper = (ForgeNetworkHelper) PlatformServices.getNetworkHelper();
+        
+        // Get the underlying SimpleChannel for backward compatibility
+        SimpleChannel net = networkHelper.getChannel();
         INSTANCE = net;
 
         // Register all packets using a consistent pattern
