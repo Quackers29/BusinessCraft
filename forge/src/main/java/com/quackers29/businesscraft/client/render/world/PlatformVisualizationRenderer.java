@@ -2,9 +2,10 @@ package com.quackers29.businesscraft.client.render.world;
 
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.platform.Platform;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,7 +41,7 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
         super(new RenderConfig()
             .maxRenderDistance(128)
             .chunkRadius(8)
-            .renderStage(RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS));
+            .renderStage("after_translucent_blocks"));
     }
     
     @Override
@@ -83,7 +84,7 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
     }
     
     @Override
-    protected void renderVisualization(RenderLevelStageEvent event, VisualizationData visualization) {
+    protected void renderVisualization(PoseStack poseStack, MultiBufferSource bufferSource, Level level, VisualizationData visualization) {
         PlatformVisualizationData platformData = visualization.getData(PlatformVisualizationData.class);
         if (platformData == null) {
             return;
@@ -113,7 +114,7 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
             
             // Render the platform path using the new modular path renderer
             PathRenderer3D.renderPath(
-                event.getPoseStack(),
+                poseStack,
                 startPos, endPos,
                 PATH_COLOR,
                 pathConfig
@@ -121,7 +122,7 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
             
             // Render the search boundary using the new modular boundary renderer
             BoundaryRenderer3D.renderRectangularBoundary(
-                event.getPoseStack(),
+                poseStack,
                 startPos, endPos, 
                 platformData.getSearchRadius(),
                 BOUNDARY_COLOR,
@@ -131,7 +132,7 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
     }
     
     @Override
-    protected void onPreRender(RenderLevelStageEvent event, Level level) {
+    protected void onPreRender(PoseStack poseStack, MultiBufferSource bufferSource, Level level) {
         // Clean up expired platform visualizations
         VisualizationManager.getInstance().cleanupExpired(VisualizationManager.TYPE_PLATFORM);
     }

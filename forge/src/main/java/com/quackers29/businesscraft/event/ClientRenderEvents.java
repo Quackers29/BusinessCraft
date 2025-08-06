@@ -39,14 +39,19 @@ public class ClientRenderEvents {
     
     @SubscribeEvent
     public static void onRenderLevelStage(RenderLevelStageEvent event) {
-        // Use the new modular rendering system
-        platformRenderer.render(event);
-        boundaryRenderer.render(event);
-        
-        // Future: Additional renderer types can be added here
-        // routeRenderer.render(event);
-        // debugRenderer.render(event);
-        // territoryRenderer.render(event);
+        // Check if we should render at this stage
+        if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
+            // Use the new modular rendering system with EventHelper abstraction
+            platformRenderer.render(event.getPoseStack(), null, 
+                                  event.getCamera().getEntity().level());
+            boundaryRenderer.render(event.getPoseStack(), null, 
+                                  event.getCamera().getEntity().level());
+            
+            // Future: Additional renderer types can be added here
+            // routeRenderer.render(event.getPoseStack(), null, event.getCamera().getEntity().level());
+            // debugRenderer.render(event.getPoseStack(), null, event.getCamera().getEntity().level());
+            // territoryRenderer.render(event.getPoseStack(), null, event.getCamera().getEntity().level());
+        }
     }
     
     /**

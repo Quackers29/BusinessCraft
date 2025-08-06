@@ -2,9 +2,10 @@ package com.quackers29.businesscraft.client.render.world;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
+import com.quackers29.businesscraft.platform.EventHelper;
 
 import java.util.List;
 
@@ -29,7 +30,7 @@ public abstract class WorldVisualizationRenderer {
         private int chunkRadius = 8;
         private boolean enableDistanceCulling = true;
         private boolean enableChunkCulling = true;
-        private RenderLevelStageEvent.Stage renderStage = RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS;
+        private String renderStage = "after_translucent_blocks";
         
         public RenderConfig maxRenderDistance(int distance) {
             this.maxRenderDistance = distance;
@@ -51,7 +52,7 @@ public abstract class WorldVisualizationRenderer {
             return this;
         }
         
-        public RenderConfig renderStage(RenderLevelStageEvent.Stage stage) {
+        public RenderConfig renderStage(String stage) {
             this.renderStage = stage;
             return this;
         }
@@ -61,7 +62,7 @@ public abstract class WorldVisualizationRenderer {
         public int getChunkRadius() { return chunkRadius; }
         public boolean isDistanceCullingEnabled() { return enableDistanceCulling; }
         public boolean isChunkCullingEnabled() { return enableChunkCulling; }
-        public RenderLevelStageEvent.Stage getRenderStage() { return renderStage; }
+        public String getRenderStage() { return renderStage; }
     }
     
     /**
@@ -102,17 +103,24 @@ public abstract class WorldVisualizationRenderer {
     }
     
     /**
+     * Registers this renderer with the EventHelper system
+     * 
+     * @param eventHelper The event helper instance to register with
+     */
+    public void register(EventHelper eventHelper) {
+        eventHelper.registerRenderLevelEvent(this::render);
+    }
+    
+    /**
      * Main render method called by the event system
      * 
-     * @param event The render level stage event
+     * @param poseStack The pose stack for rendering
+     * @param bufferSource The buffer source for rendering
+     * @param level The level being rendered
      */
-    public final void render(RenderLevelStageEvent event) {
-        // Check if we should render at this stage
-        if (event.getStage() != config.getRenderStage()) {
-            return;
-        }
+    public final void render(PoseStack poseStack, MultiBufferSource bufferSource, Level level) {
+        // The stage checking is now handled by the EventHelper registration
         
-        Level level = Minecraft.getInstance().level;
         if (level == null || !level.isClientSide) {
             return;
         }
@@ -127,13 +135,13 @@ public abstract class WorldVisualizationRenderer {
             return;
         }
         
-        onPreRender(event, level);
+        onPreRender(poseStack, bufferSource, level);
         
         // Get visualizations to render
         List<VisualizationData> visualizations = getVisualizations(level, mc.player.blockPosition());
         
         if (visualizations.isEmpty()) {
-            onPostRender(event, level);
+            onPostRender(poseStack, bufferSource, level);
             return;
         }
         
@@ -157,11 +165,11 @@ public abstract class WorldVisualizationRenderer {
             }
             
             // Render this visualization
-            renderVisualization(event, visualization);
+            renderVisualization(poseStack, bufferSource, level, visualization);
         }
         
         // Post-render cleanup
-        onPostRender(event, level);
+        onPostRender(poseStack, bufferSource, level);
     }
     
     /**
@@ -179,10 +187,11 @@ public abstract class WorldVisualizationRenderer {
      * Called before any visualizations are rendered
      * Use this for global render state setup
      * 
-     * @param event The render event
+     * @param poseStack The pose stack for rendering
+     * @param bufferSource The buffer source for rendering
      * @param level The current level
      */
-    protected void onPreRender(RenderLevelStageEvent event, Level level) {
+    protected void onPreRender(PoseStack poseStack, MultiBufferSource bufferSource, Level level) {
         // Default: no pre-render setup
     }
     
@@ -190,10 +199,11 @@ public abstract class WorldVisualizationRenderer {
      * Called after all visualizations are rendered
      * Use this for global render state cleanup
      * 
-     * @param event The render event
+     * @param poseStack The pose stack for rendering
+     * @param bufferSource The buffer source for rendering
      * @param level The current level
      */
-    protected void onPostRender(RenderLevelStageEvent event, Level level) {
+    protected void onPostRender(PoseStack poseStack, MultiBufferSource bufferSource, Level level) {
         // Default: no post-render cleanup
     }
     
@@ -209,10 +219,12 @@ public abstract class WorldVisualizationRenderer {
     /**
      * Renders a single visualization
      * 
-     * @param event The render event
+     * @param poseStack The pose stack for rendering
+     * @param bufferSource The buffer source for rendering
+     * @param level The current level
      * @param visualization The visualization to render
      */
-    protected abstract void renderVisualization(RenderLevelStageEvent event, VisualizationData visualization);
+    protected abstract void renderVisualization(PoseStack poseStack, MultiBufferSource bufferSource, Level level, VisualizationData visualization);
     
     /**
      * Called when the level is unloaded to clean up any resources

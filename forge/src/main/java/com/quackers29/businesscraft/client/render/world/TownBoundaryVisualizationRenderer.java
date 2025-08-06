@@ -4,13 +4,14 @@ import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.network.ModMessages;
 import com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket;
 import com.quackers29.businesscraft.debug.DebugConfig;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.MultiBufferSource;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +73,7 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
         super(new RenderConfig()
             .maxRenderDistance(256) // Larger than platforms to show boundaries at distance
             .chunkRadius(16)        // Wider search for town boundaries
-            .renderStage(RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS));
+            .renderStage("after_translucent_blocks"));
     }
     
     @Override
@@ -111,7 +112,7 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
     }
     
     @Override
-    protected void renderVisualization(RenderLevelStageEvent event, VisualizationData visualization) {
+    protected void renderVisualization(PoseStack poseStack, MultiBufferSource bufferSource, Level level, VisualizationData visualization) {
         if (!(visualization.getData() instanceof TownBoundaryVisualizationData boundaryData)) {
             return;
         }
@@ -134,7 +135,7 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
         
         // Render circular boundary around the town center
         BoundaryRenderer3D.renderCircularBoundaryFromCenter(
-            event.getPoseStack(),
+            poseStack,
             visualization.getPosition(),
             boundaryData.getBoundaryRadius(),
             boundaryColor,
@@ -144,7 +145,7 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
     
     
     @Override
-    protected void onPreRender(RenderLevelStageEvent event, Level level) {
+    protected void onPreRender(PoseStack poseStack, MultiBufferSource bufferSource, Level level) {
         // Clean up boundary data for positions that no longer have active visualizations
         VisualizationManager manager = VisualizationManager.getInstance();
         List<BlockPos> activePositions = manager.getActiveVisualizations(VisualizationManager.TYPE_TOWN_BOUNDARY)
