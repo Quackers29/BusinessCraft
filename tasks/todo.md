@@ -75,6 +75,14 @@ Priority: CRITICAL - Transform mod from Forge-only to multi-platform architectur
   - [x] Abstract entity attribute registration from ModEntityTypes.java
   - [x] Test all event functionality maintains compatibility
 
+### **🔧 DEVELOPMENT ENVIRONMENT FIXES**
+- [ ] **Fix Architectury Mixin Mapping Conflicts**
+  - [ ] Remove problematic Architectury dependencies causing mapping conflicts
+  - [ ] Use API-only portion of Architectury (without mixins)
+  - [ ] Implement platform-specific code using native Forge APIs
+  - [ ] Resolve m_91374_() and f_31946_ mapping incompatibilities
+  - [ ] Test client launch functionality
+
 #### **Phase 4: Network System Migration**
 - [ ] **4.1 Convert Network Architecture**
   - [ ] Replace `ModMessages.java` with Architectury Networking
