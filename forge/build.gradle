@@ -16,6 +16,8 @@ minecraft {
             workingDirectory project.file('../run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+            
+            // Clean launch configuration without mixin-related arguments
 
             mods {
                 businesscraft {
@@ -29,6 +31,8 @@ minecraft {
             workingDirectory project.file('../run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+            
+            // Clean launch configuration without mixin-related arguments
             
             mods {
                 businesscraft {
@@ -46,8 +50,8 @@ dependencies {
     // Include common module
     implementation project(':common')
     
-    // Architectury API - Forge implementation
-    implementation 'dev.architectury:architectury-forge:8.1.79'
+    // Temporarily removing Architectury to isolate mixin conflicts - using native Forge APIs
+    // implementation 'dev.architectury:architectury-forge:9.2.14'
 }
 
 jar {

@@ -37,10 +37,10 @@ public class ForgeEventHelper implements EventHelper {
     private final List<EntityAttributeRegistrationHandler> entityAttributeRegistrationHandlers = new ArrayList<>();
     
     public ForgeEventHelper() {
-        // Register this instance as an event listener for Forge events
+        // Register this instance as an event listener for Forge events (game events)
         MinecraftForge.EVENT_BUS.register(this);
-        // Register for mod events (client setup, entity registration, etc.)
-        FMLJavaModLoadingContext.get().getModEventBus().register(this);
+        // Register a separate instance for mod events to avoid event bus conflicts
+        FMLJavaModLoadingContext.get().getModEventBus().register(new ModEventHandler());
     }
     
     @Override
@@ -149,36 +149,6 @@ public class ForgeEventHelper implements EventHelper {
     }
     
     @SubscribeEvent
-    public void onClientSetup(FMLClientSetupEvent event) {
-        for (ClientSetupHandler handler : clientSetupHandlers) {
-            handler.onClientSetup();
-        }
-    }
-    
-    @SubscribeEvent
-    public void onEntityRendererRegistration(EntityRenderersEvent.RegisterRenderers event) {
-        // Register the tourist renderer directly here since it's Forge-specific  
-        event.registerEntityRenderer(com.quackers29.businesscraft.init.ModEntityTypes.TOURIST.get(), 
-                                   com.quackers29.businesscraft.client.renderer.TouristRenderer::new);
-        
-        // Call any registered handlers (future extension point)
-        for (EntityRendererRegistrationHandler handler : entityRendererRegistrationHandlers) {
-            // This provides a hook for platform-agnostic code to register additional renderers
-        }
-    }
-    
-    @SubscribeEvent
-    public void onGuiOverlayRegistration(RegisterGuiOverlaysEvent event) {
-        // Register the town debug overlay directly here since it's Forge-specific
-        event.registerAboveAll("town_debug_overlay", new com.quackers29.businesscraft.client.TownDebugOverlay());
-        
-        // Call any registered handlers (future extension point)
-        for (GuiOverlayRegistrationHandler handler : guiOverlayRegistrationHandlers) {
-            handler.registerOverlay("", null);
-        }
-    }
-    
-    @SubscribeEvent
     public void onRenderLevel(RenderLevelStageEvent event) {
         if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
             for (RenderLevelHandler handler : renderLevelHandlers) {
@@ -197,18 +167,54 @@ public class ForgeEventHelper implements EventHelper {
         }
     }
     
-    @SubscribeEvent
-    public void onEntityAttributeRegistration(EntityAttributeCreationEvent event) {
-        // Register the tourist entity attributes directly since it's Forge-specific
-        if (com.quackers29.businesscraft.init.ModEntityTypes.TOURIST != null) {
-            event.put(com.quackers29.businesscraft.init.ModEntityTypes.TOURIST.get(), 
-                     com.quackers29.businesscraft.entity.TouristEntity.createAttributes().build());
+    /**
+     * Inner class to handle mod bus events separately from game events
+     */
+    private class ModEventHandler {
+        
+        @SubscribeEvent
+        public void onClientSetup(FMLClientSetupEvent event) {
+            for (ClientSetupHandler handler : clientSetupHandlers) {
+                handler.onClientSetup();
+            }
         }
         
-        // Call any registered handlers (future extension point)
-        for (EntityAttributeRegistrationHandler handler : entityAttributeRegistrationHandlers) {
-            // This would be called if additional entity attribute registrations were needed
-            // For now, we handle all entity attributes directly above
+        @SubscribeEvent
+        public void onEntityRendererRegistration(EntityRenderersEvent.RegisterRenderers event) {
+            // Register the tourist renderer directly here since it's Forge-specific  
+            event.registerEntityRenderer(com.quackers29.businesscraft.init.ModEntityTypes.TOURIST.get(), 
+                                       com.quackers29.businesscraft.client.renderer.TouristRenderer::new);
+            
+            // Call any registered handlers (future extension point)
+            for (EntityRendererRegistrationHandler handler : entityRendererRegistrationHandlers) {
+                // This provides a hook for platform-agnostic code to register additional renderers
+            }
+        }
+        
+        @SubscribeEvent
+        public void onGuiOverlayRegistration(RegisterGuiOverlaysEvent event) {
+            // Register the town debug overlay directly here since it's Forge-specific
+            event.registerAboveAll("town_debug_overlay", new com.quackers29.businesscraft.client.TownDebugOverlay());
+            
+            // Call any registered handlers (future extension point)
+            for (GuiOverlayRegistrationHandler handler : guiOverlayRegistrationHandlers) {
+                handler.registerOverlay("", null);
+            }
+        }
+        
+        @SubscribeEvent
+        public void onEntityAttributeRegistration(EntityAttributeCreationEvent event) {
+            // Register the tourist entity attributes directly since it's Forge-specific
+            if (com.quackers29.businesscraft.init.ModEntityTypes.TOURIST != null) {
+                event.put(com.quackers29.businesscraft.init.ModEntityTypes.TOURIST.get(), 
+                         com.quackers29.businesscraft.entity.TouristEntity.createAttributes().build());
+            }
+            
+            // Call any registered handlers (future extension point)
+            for (EntityAttributeRegistrationHandler handler : entityAttributeRegistrationHandlers) {
+                // This would be called if additional entity attribute registrations were needed
+                // For now, we handle all entity attributes directly above
+            }
         }
     }
 }
