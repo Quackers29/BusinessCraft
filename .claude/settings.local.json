@@ -17,7 +17,8 @@
       "Bash(printf:*)",
       "Bash(cp:*)",
       "Bash(./gradlew:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(true)"
     ],
     "deny": []
   }

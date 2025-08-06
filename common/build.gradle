@@ -1,5 +1,6 @@
 // Common module - platform-agnostic code for BusinessCraft
 // Contains business logic, data structures, and platform abstractions
+// Enhanced MultiLoader approach: No Minecraft dependencies in common module
 
 plugins {
     id 'java-library'
@@ -7,7 +8,7 @@ plugins {
 
 archivesBaseName = 'businesscraft-common'
 
-// Common dependencies - only pure Java APIs and common libraries
+// Enhanced MultiLoader approach: Common module is pure Java with no Minecraft dependencies
 dependencies {
     // Common TOML library for configuration
     api 'com.moandjiezana.toml:toml4j:0.7.2'
@@ -18,8 +19,8 @@ dependencies {
     // Log4j for DebugConfig (commonly available in Minecraft environments)
     compileOnly 'org.apache.logging.log4j:log4j-api:2.17.1'
     
-    // Temporarily removing Architectury to isolate mixin conflicts
-    // api 'dev.architectury:architectury:9.2.14'
+    // JetBrains annotations for @NotNull/@Nullable
+    api 'org.jetbrains:annotations:23.0.0'
 }
 
 jar {

@@ -45,7 +45,7 @@ public class TownManager {
             TownSavedData.NAME
         );
         this.boundaryService = new TownBoundaryService();
-        this.businessLogic = new TownBusinessLogic(new com.quackers29.businesscraft.platform.ForgePlatformService());
+        this.businessLogic = new TownBusinessLogic();
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "TownManager initialized for level: {}", level.dimension().location());
     }
 

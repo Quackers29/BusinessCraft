@@ -369,7 +369,7 @@ public class VisitorProcessingHelper {
                 if (destinationTown != null) {
                     // Use business logic to process the tourist visit
                     com.quackers29.businesscraft.util.Result<?, ?> result = 
-                        townManager.getBusinessLogic().processTouristVisit(destinationTown, originTownId, originPosition, touristCount);
+                        townManager.getBusinessLogic().processTouristVisit(destinationTown, originTownId, originPosition, touristCount, distance);
                     
                     if (result.isSuccess()) {
                         DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, 

@@ -3,6 +3,12 @@
 
 plugins {
     id 'fabric-loom' version '1.5-SNAPSHOT'
+    id 'java'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 archivesBaseName = 'businesscraft-fabric'
@@ -16,8 +22,8 @@ dependencies {
     // Include common module
     implementation project(':common')
     
-    // Architectury API - Fabric implementation (Updated for MC 1.20.1)
-    modImplementation 'dev.architectury:architectury-fabric:9.2.14'
+    // Enhanced MultiLoader approach: Zero external dependencies
+    // No Architectury or third-party APIs - direct platform API usage only
 }
 
 processResources {

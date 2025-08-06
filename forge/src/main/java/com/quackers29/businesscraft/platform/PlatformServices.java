@@ -1,16 +1,11 @@
 package com.quackers29.businesscraft.platform;
 
-import com.quackers29.businesscraft.platform.forge.ForgePlatformHelper;
-import com.quackers29.businesscraft.platform.forge.ForgeRegistryHelper;
-import com.quackers29.businesscraft.platform.forge.ForgeNetworkHelper;
-import com.quackers29.businesscraft.platform.forge.ForgeEventHelper;
-import com.quackers29.businesscraft.platform.forge.ForgeInventoryHelper;
-import com.quackers29.businesscraft.platform.forge.ForgeMenuHelper;
-import com.quackers29.businesscraft.platform.forge.ForgeBlockEntityHelper;
-
 /**
  * Platform services provider that gives access to platform-specific implementations.
  * This class serves as the main entry point for accessing platform abstraction services.
+ * 
+ * Enhanced MultiLoader approach: Platform implementations are provided by each mod loader
+ * during initialization. This common module contains no platform-specific code.
  */
 public class PlatformServices {
     
@@ -22,23 +17,8 @@ public class PlatformServices {
     private static MenuHelper menuHelper;
     private static BlockEntityHelper blockEntityHelper;
     
-    // Initialize with Forge implementations
-    static {
-        initializeForge();
-    }
-    
-    /**
-     * Initialize platform services for Forge.
-     */
-    private static void initializeForge() {
-        platformHelper = new ForgePlatformHelper();
-        registryHelper = new ForgeRegistryHelper("businesscraft");
-        networkHelper = new ForgeNetworkHelper("businesscraft", "1.0");
-        eventHelper = new ForgeEventHelper();
-        inventoryHelper = new ForgeInventoryHelper();
-        menuHelper = new ForgeMenuHelper();
-        blockEntityHelper = new ForgeBlockEntityHelper();
-    }
+    // Static initialization is handled by platform-specific modules
+    // Each platform (Forge/Fabric) calls setPlatform or initialize during mod loading
     
     /**
      * Get the platform helper instance.
@@ -134,6 +114,34 @@ public class PlatformServices {
                                 InventoryHelper inventoryHelper,
                                 MenuHelper menuHelper,
                                 BlockEntityHelper blockEntityHelper) {
+        PlatformServices.platformHelper = platformHelper;
+        PlatformServices.registryHelper = registryHelper;
+        PlatformServices.networkHelper = networkHelper;
+        PlatformServices.eventHelper = eventHelper;
+        PlatformServices.inventoryHelper = inventoryHelper;
+        PlatformServices.menuHelper = menuHelper;
+        PlatformServices.blockEntityHelper = blockEntityHelper;
+    }
+    
+    /**
+     * Set platform services from individual service implementations.
+     * This provides maximum flexibility for platform initialization.
+     * 
+     * @param platformHelper Platform helper implementation
+     * @param registryHelper Registry helper implementation
+     * @param networkHelper Network helper implementation
+     * @param eventHelper Event helper implementation
+     * @param inventoryHelper Inventory helper implementation
+     * @param menuHelper Menu helper implementation
+     * @param blockEntityHelper Block entity helper implementation
+     */
+    public static void setPlatform(PlatformHelper platformHelper,
+                                 RegistryHelper registryHelper,
+                                 NetworkHelper networkHelper,
+                                 EventHelper eventHelper,
+                                 InventoryHelper inventoryHelper,
+                                 MenuHelper menuHelper,
+                                 BlockEntityHelper blockEntityHelper) {
         PlatformServices.platformHelper = platformHelper;
         PlatformServices.registryHelper = registryHelper;
         PlatformServices.networkHelper = networkHelper;

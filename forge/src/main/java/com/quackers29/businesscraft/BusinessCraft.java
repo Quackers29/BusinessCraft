@@ -35,7 +35,9 @@ import net.minecraftforge.event.level.LevelEvent;
 import com.quackers29.businesscraft.init.ModEntityTypes;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.platform.PlatformServices;
+import com.quackers29.businesscraft.platform.PlatformServiceProvider;
 import com.quackers29.businesscraft.platform.forge.ForgeRegistryHelper;
+import com.quackers29.businesscraft.platform.forge.ForgePlatformServices;
 import com.quackers29.businesscraft.event.ModEvents;
 import com.quackers29.businesscraft.event.ClientModEvents;
 import com.quackers29.businesscraft.event.PlayerBoundaryTracker;
@@ -51,6 +53,29 @@ public class BusinessCraft {
 
     public BusinessCraft() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        
+        // Initialize Forge platform services using Enhanced MultiLoader approach
+        ForgePlatformServices forgeServices = new ForgePlatformServices();
+        PlatformServices.setPlatform(
+            forgeServices.getPlatformHelper(),
+            forgeServices.getRegistryHelper(),
+            forgeServices.getNetworkHelper(),
+            forgeServices.getEventHelper(),
+            forgeServices.getInventoryHelper(),
+            forgeServices.getMenuHelper(),
+            forgeServices.getBlockEntityHelper()
+        );
+        
+        // Register with common module service provider
+        PlatformServiceProvider.setPlatform(
+            forgeServices.getPlatformHelper(),
+            forgeServices.getRegistryHelper(),
+            forgeServices.getNetworkHelper(),
+            forgeServices.getEventHelper(),
+            forgeServices.getInventoryHelper(),
+            forgeServices.getMenuHelper(),
+            forgeServices.getBlockEntityHelper()
+        );
         
         // Initialize platform-agnostic registration
         ModBlocks.initialize();

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "businesscraft",
-  "version": "1.0.0",
+  "version": "${version}",
   "name": "BusinessCraft",
   "description": "A sophisticated town management and tourism economy system for Minecraft featuring complete town management, multi-platform systems, advanced UI framework, and tourism economy mechanics.",
   "authors": [

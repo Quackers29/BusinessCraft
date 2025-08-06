@@ -1,9 +1,0 @@
-Manifest-Version: 1.0
-Specification-Title: businesscraft-fabric
-Specification-Vendor: Quackers29
-Specification-Version: 1
-Implementation-Title: BusinessCraft Fabric
-Implementation-Version: 1.0
-Implementation-Vendor: Quackers29
-Implementation-Timestamp: 2025-08-06T09:47:42+0100
-

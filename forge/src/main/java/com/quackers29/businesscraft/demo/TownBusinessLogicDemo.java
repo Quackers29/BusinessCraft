@@ -24,9 +24,8 @@ public class TownBusinessLogicDemo {
     private final TownBusinessLogic businessLogic;
     
     public TownBusinessLogicDemo() {
-        // Create the platform service and business logic
-        ForgePlatformService platformService = new ForgePlatformService();
-        this.businessLogic = new TownBusinessLogic(platformService);
+        // Create the business logic (no platform dependencies in common module)
+        this.businessLogic = new TownBusinessLogic();
     }
     
     /**
@@ -86,8 +85,11 @@ public class TownBusinessLogicDemo {
         UUID originTownId = UUID.randomUUID();
         ITownDataProvider.Position originPos = new com.quackers29.businesscraft.platform.ForgePosition(100, 64, 200);
         
+        // Calculate distance for demo (destination town is at 0,0,0)
+        double distance = Math.sqrt(100*100 + 200*200); // Simple distance calculation
+        
         Result<TownBusinessLogic.TouristVisitResult, BCError> result = 
-            businessLogic.processTouristVisit(townAdapter, originTownId, originPos, 3);
+            businessLogic.processTouristVisit(townAdapter, originTownId, originPos, 3, distance);
         
         if (result.isSuccess()) {
             TownBusinessLogic.TouristVisitResult visitResult = result.getValue();

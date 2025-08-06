@@ -1,7 +1,6 @@
 package com.quackers29.businesscraft.town.service;
 
 import com.quackers29.businesscraft.api.ITownDataProvider;
-import com.quackers29.businesscraft.platform.PlatformService;
 import com.quackers29.businesscraft.util.Result;
 import com.quackers29.businesscraft.error.BCError;
 import org.slf4j.Logger;
@@ -13,14 +12,14 @@ import java.util.UUID;
  * Platform-agnostic business logic for town operations.
  * This class contains the core business rules and calculations that should work
  * consistently across different mod platforms.
+ * 
+ * Enhanced MultiLoader approach: Pure business logic with no platform dependencies.
  */
 public class TownBusinessLogic {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownBusinessLogic.class);
     
-    private final PlatformService platformService;
-    
-    public TownBusinessLogic(PlatformService platformService) {
-        this.platformService = platformService;
+    public TownBusinessLogic() {
+        // No platform dependencies in common module
     }
     
     /**
@@ -52,15 +51,12 @@ public class TownBusinessLogic {
             ITownDataProvider destinationTown, 
             UUID originTownId, 
             ITownDataProvider.Position originPosition,
-            int touristCount) {
+            int touristCount,
+            double distance) {
         
         try {
             // Record the visit in town history
             destinationTown.recordVisit(originTownId, touristCount, originPosition);
-            
-            // Calculate distance for milestone rewards
-            double distance = platformService.getWorldService()
-                .calculateDistance(destinationTown.getPosition(), originPosition);
             
             // Calculate rewards based on distance and tourist count
             TouristVisitResult result = calculateVisitRewards(distance, touristCount);
