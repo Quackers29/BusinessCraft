@@ -11,6 +11,22 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
+loom {
+    // Ensure proper source remapping
+    runs {
+        client {
+            client()
+            setConfigName("Fabric Client")
+            source sourceSets.main
+        }
+        server {
+            server()
+            setConfigName("Fabric Server")  
+            source sourceSets.main
+        }
+    }
+}
+
 archivesBaseName = 'businesscraft-fabric'
 
 dependencies {

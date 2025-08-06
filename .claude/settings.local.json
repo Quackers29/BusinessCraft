@@ -18,7 +18,8 @@
       "Bash(cp:*)",
       "Bash(./gradlew:*)",
       "Bash(timeout:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(jar:*)"
     ],
     "deny": []
   }
