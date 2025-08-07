@@ -47,8 +47,8 @@ public class BusinessCraftFabric implements ModInitializer {
         // ModEntityTypes.initialize();
         // ModMenuTypes.initialize();
         
-        // TODO: Load configuration (once moved to common module)
-        // ConfigLoader.loadConfig();
+        // Load configuration from common module
+        com.quackers29.businesscraft.config.ConfigLoader.loadConfig();
         
         // TODO: Initialize networking (once moved to common module)
         // ModMessages.register();
