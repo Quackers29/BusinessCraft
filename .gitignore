@@ -11,4 +11,6 @@
 /fabric/build/loom-cache
 /forge/build
 /common/build
-/common/build
+/fabric/run
+
+/fabric/build

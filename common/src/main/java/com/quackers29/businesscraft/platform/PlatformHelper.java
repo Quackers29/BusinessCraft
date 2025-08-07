@@ -120,4 +120,21 @@ public interface PlatformHelper {
      * @param task Runnable task to execute
      */
     void executeClientTask(Runnable task);
+    
+    /**
+     * Set the active platform for path creation mode.
+     * Platform implementations update the path handler state.
+     * 
+     * @param x Block X coordinate  
+     * @param y Block Y coordinate
+     * @param z Block Z coordinate
+     * @param platformId Platform UUID string
+     */
+    void setActivePlatformForPathCreation(int x, int y, int z, String platformId);
+    
+    /**
+     * Clear the active platform for path creation mode.
+     * Platform implementations clear the path handler state.
+     */
+    void clearActivePlatformForPathCreation();
 }

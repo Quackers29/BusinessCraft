@@ -210,4 +210,169 @@ public interface BlockEntityHelper {
      */
     @Nullable
     Object getClientBlockEntity(int x, int y, int z);
+    
+    /**
+     * Set destination enabled state for a platform.
+     * Platform implementations update the platform's destination routing.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param platformId Platform UUID as string
+     * @param townId Target town UUID as string
+     * @param enabled New enabled state for this destination
+     * @return True if destination state was successfully updated
+     */
+    boolean setPlatformDestinationEnabled(Object blockEntity, String platformId, String townId, boolean enabled);
+    
+    /**
+     * Get all destination towns for platform management.
+     * Platform implementations access the town interface's destination data.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @return Map of town UUID strings to town names, or empty map if none found
+     */
+    java.util.Map<String, String> getAllTownsForDestination(Object blockEntity);
+    
+    /**
+     * Get destination enabled states for a platform.
+     * Platform implementations access the platform's destination routing data.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param platformId Platform UUID as string
+     * @return Map of town UUID strings to enabled states, or empty map if platform not found
+     */
+    java.util.Map<String, Boolean> getPlatformDestinations(Object blockEntity, String platformId);
+    
+    /**
+     * Get the origin town for the town interface.
+     * Platform implementations access the block entity's associated town.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @return Platform-specific town object, or null if not found
+     */
+    @Nullable
+    Object getOriginTown(Object blockEntity);
+    
+    /**
+     * Get town position as coordinate array.
+     * Platform implementations convert town position to coordinate array.
+     * 
+     * @param town Platform-specific town object
+     * @return Array [x, y, z] of town position, or null if not set
+     */
+    @Nullable
+    int[] getTownPosition(Object town);
+    
+    /**
+     * Get town by UUID from the server level.
+     * Platform implementations access the town manager for the level.
+     * 
+     * @param player Platform-specific player object (for level access)
+     * @param townId Town UUID as string
+     * @return Platform-specific town object, or null if not found
+     */
+    @Nullable
+    Object getTownById(Object player, String townId);
+    
+    /**
+     * Set platform path coordinates (start and end positions).
+     * Platform implementations update the platform's path configuration.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param platformId Platform UUID as string
+     * @param startX Start position X coordinate
+     * @param startY Start position Y coordinate
+     * @param startZ Start position Z coordinate
+     * @param endX End position X coordinate
+     * @param endY End position Y coordinate
+     * @param endZ End position Z coordinate
+     * @return True if platform path was successfully updated
+     */
+    boolean setPlatformPath(Object blockEntity, String platformId, 
+                          int startX, int startY, int startZ,
+                          int endX, int endY, int endZ);
+    
+    /**
+     * Reset platform path coordinates (clear start and end positions).
+     * Platform implementations clear the platform's path configuration.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param platformId Platform UUID as string
+     * @return True if platform path was successfully reset
+     */
+    boolean resetPlatformPath(Object blockEntity, String platformId);
+    
+    /**
+     * Set platform enabled state by UUID.
+     * Platform implementations update the platform's enabled state.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param platformId Platform UUID as string
+     * @param enabled New enabled state
+     * @return True if platform enabled state was successfully updated
+     */
+    boolean setPlatformEnabledById(Object blockEntity, String platformId, boolean enabled);
+    
+    /**
+     * Set platform path creation mode.
+     * Platform implementations update the interface's path creation mode.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param mode Path creation mode enabled state
+     * @param platformId Platform UUID as string for the active platform
+     * @return True if path creation mode was successfully set
+     */
+    boolean setPlatformCreationMode(Object blockEntity, boolean mode, String platformId);
+    
+    /**
+     * Process a resource trade with the town.
+     * Platform implementations handle town resource trading and payment calculation.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param player Platform-specific player object
+     * @param itemStack Platform-specific ItemStack to trade
+     * @param slotId Slot ID for the trade
+     * @return Platform-specific ItemStack payment result, or null if trade failed
+     */
+    Object processResourceTrade(Object blockEntity, Object player, Object itemStack, int slotId);
+    
+    /**
+     * Get unclaimed rewards from the town's payment board.
+     * Platform implementations access the payment board data from the town.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @return List of unclaimed rewards, or empty list if none found
+     */
+    java.util.List<Object> getUnclaimedRewards(Object blockEntity);
+    
+    /**
+     * Claim a reward from the town's payment board.
+     * Platform implementations handle the reward claiming process.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param player Platform-specific player object
+     * @param rewardId Reward UUID as string
+     * @param toBuffer Whether to claim to buffer storage
+     * @return Claim result object, or null if claim failed
+     */
+    Object claimPaymentBoardReward(Object blockEntity, Object player, String rewardId, boolean toBuffer);
+    
+    /**
+     * Open the Payment Board UI for a player.
+     * Platform implementations handle opening the payment board container screen.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param player Platform-specific player object
+     * @return True if the Payment Board UI was successfully opened
+     */
+    boolean openPaymentBoardUI(Object blockEntity, Object player);
+    
+    /**
+     * Open the Town Interface UI for a player.
+     * Platform implementations handle opening the town interface container screen.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param player Platform-specific player object
+     * @return True if the Town Interface UI was successfully opened
+     */
+    boolean openTownInterfaceUI(Object blockEntity, Object player);
 }

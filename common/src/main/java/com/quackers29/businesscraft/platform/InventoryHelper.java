@@ -8,6 +8,13 @@ package com.quackers29.businesscraft.platform;
  * platform modules implement using their specific APIs.
  */
 public interface InventoryHelper {
-    // Minimal interface definition for now
-    // Platform implementations will provide the actual inventory functionality
+    
+    /**
+     * Check if an ItemStack is valid (not empty).
+     * Platform implementations handle ItemStack validation.
+     * 
+     * @param itemStack Platform-specific ItemStack object
+     * @return True if the ItemStack is valid (not empty)
+     */
+    boolean isItemStackValid(Object itemStack);
 }

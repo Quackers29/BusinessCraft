@@ -198,4 +198,62 @@ public interface NetworkHelper {
      * Platform implementations handle ItemStack deserialization for their format.
      */
     Object readItemStack(Object buffer);
+    
+    /**
+     * Send a refresh destinations packet to a player.
+     * Platform implementations handle packet construction and sending for platform management.
+     * 
+     * @param player Platform-specific player object
+     * @param x Block X coordinate
+     * @param y Block Y coordinate  
+     * @param z Block Z coordinate
+     * @param platformId Platform UUID string
+     * @param townDestinations Map of town UUID strings to enabled states
+     * @param townNames Map of town UUID strings to town names
+     * @param distances Map of town UUID strings to distances
+     * @param directions Map of town UUID strings to direction strings
+     */
+    void sendRefreshDestinationsPacket(Object player, int x, int y, int z, String platformId,
+                                     java.util.Map<String, Boolean> townDestinations,
+                                     java.util.Map<String, String> townNames,
+                                     java.util.Map<String, Integer> distances,
+                                     java.util.Map<String, String> directions);
+    
+    /**
+     * Send a refresh platforms packet to all players tracking a chunk.
+     * Platform implementations handle packet construction and sending to tracking players.
+     * 
+     * @param player Platform-specific player object (for level access)
+     * @param x Block X coordinate
+     * @param y Block Y coordinate
+     * @param z Block Z coordinate
+     */
+    void sendRefreshPlatformsPacketToChunk(Object player, int x, int y, int z);
+    
+    /**
+     * Send a payment result packet to a player.
+     * Platform implementations handle packet construction and sending for trade results.
+     * 
+     * @param player Platform-specific player object
+     * @param paymentItemStack Platform-specific ItemStack payment result
+     */
+    void sendPaymentResultPacket(Object player, Object paymentItemStack);
+    
+    /**
+     * Send a payment board response packet to a player.
+     * Platform implementations handle packet construction and sending for payment board data.
+     * 
+     * @param player Platform-specific player object
+     * @param unclaimedRewards List of unclaimed reward objects
+     */
+    void sendPaymentBoardResponsePacket(Object player, java.util.List<Object> unclaimedRewards);
+    
+    /**
+     * Send a buffer slot storage response packet to a player.
+     * Platform implementations handle packet construction and sending for buffer storage data.
+     * 
+     * @param player Platform-specific player object
+     * @param bufferSlots Buffer storage slot data
+     */
+    void sendBufferSlotStorageResponsePacket(Object player, Object bufferSlots);
 }
