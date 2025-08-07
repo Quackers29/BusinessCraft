@@ -49,6 +49,6 @@ public class StorageModalManager extends BaseModalManager {
         
         // Send packet to server to open Payment Board using proper container system
         // This ensures proper server-client synchronization via NetworkHooks
-        ModMessages.sendToServer(new OpenPaymentBoardPacket(blockPos));
+        ModMessages.sendToServer(new OpenPaymentBoardPacket(blockPos.getX(), blockPos.getY(), blockPos.getZ()));
     }
 } 

@@ -22,6 +22,6 @@ public class ScreenNavigationHelper {
     public static void returnToTownInterface(Minecraft minecraft, Player player, BlockPos townBlockPos) {
         // Send a packet to the server to open the TownInterface menu properly
         // This ensures proper ContainerData synchronization unlike direct client-side creation
-        ModMessages.sendToServer(new OpenTownInterfacePacket(townBlockPos));
+        ModMessages.sendToServer(new OpenTownInterfacePacket(townBlockPos.getX(), townBlockPos.getY(), townBlockPos.getZ()));
     }
 } 

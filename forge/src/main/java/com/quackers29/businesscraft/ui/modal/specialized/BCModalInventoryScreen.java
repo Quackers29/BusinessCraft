@@ -5,8 +5,10 @@ import com.quackers29.businesscraft.menu.StorageMenu;
 import com.quackers29.businesscraft.menu.TradeMenu;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import com.quackers29.businesscraft.network.ModMessages;
-import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
-import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
+// TODO: Migrate PersonalStorageRequestPacket to common module
+// import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
+// TODO: Migrate CommunalStoragePacket to common module
+// import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
 import com.quackers29.businesscraft.ui.util.InventoryRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -780,7 +782,8 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                 if (townPos != null) {
                     // First, request personal storage data from the server
                     DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Requesting personal storage data for player {} at position {}", playerId, townPos);
-                    ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
+                    // TODO: Migrate PersonalStorageRequestPacket to common module
+                    // ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
                     
                     // Then try to fetch from local cache as a fallback
                     var townMenu = storageMenu.getTownInterfaceMenu();
@@ -863,10 +866,12 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                     UUID playerId = this.minecraft.player.getUUID();
                     if (isPersonalMode) {
                         // Request personal storage data refresh
-                        ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
+                        // TODO: Migrate PersonalStorageRequestPacket to common module
+                    // ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
                     } else {
                         // Request communal storage data refresh
-                        ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                        // TODO: Migrate CommunalStoragePacket to common module
+                        // ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
                     }
                 }
             }
@@ -931,10 +936,12 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                     if (!anySlotUpdated && !affectedDragSlots.isEmpty()) {
                         if (isPersonalMode) {
                             // Request personal storage data refresh
-                            ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
+                            // TODO: Migrate PersonalStorageRequestPacket to common module
+                            // ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
                         } else {
                             // Request communal storage data refresh
-                            ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                            // TODO: Migrate CommunalStoragePacket to common module
+                        // ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
                         }
                     }
                     
@@ -1253,9 +1260,11 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                     BlockPos townPos = storageMenu.getTownBlockPos();
                     if (townPos != null && this.minecraft != null && this.minecraft.player != null) {
                         if (isPersonalMode) {
-                            ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
+                            // TODO: Migrate PersonalStorageRequestPacket to common module
+                            // ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
                         } else {
-                            ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                            // TODO: Migrate CommunalStoragePacket to common module
+                        // ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
                         }
                     }
                 }

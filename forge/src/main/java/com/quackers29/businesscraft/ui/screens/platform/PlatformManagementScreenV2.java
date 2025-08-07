@@ -5,7 +5,8 @@ import com.quackers29.businesscraft.network.packets.platform.AddPlatformPacket;
 import com.quackers29.businesscraft.network.packets.platform.DeletePlatformPacket;
 import com.quackers29.businesscraft.network.ModMessages;
 import com.quackers29.businesscraft.network.packets.platform.SetPlatformEnabledPacket;
-import com.quackers29.businesscraft.network.packets.ui.OpenDestinationsUIPacket;
+// TODO: Migrate OpenDestinationsUIPacket to common module
+// import com.quackers29.businesscraft.network.packets.ui.OpenDestinationsUIPacket;
 import com.quackers29.businesscraft.network.packets.platform.SetPlatformPathCreationModePacket;
 import com.quackers29.businesscraft.network.packets.platform.ResetPlatformPathPacket;
 import com.quackers29.businesscraft.platform.Platform;
@@ -373,7 +374,7 @@ public class PlatformManagementScreenV2 extends Screen {
         lastToggleTime = System.currentTimeMillis();
         
         ModMessages.sendToServer(new SetPlatformEnabledPacket(
-            townBlockPos, platform.getId(), newState));
+            townBlockPos.getX(), townBlockPos.getY(), townBlockPos.getZ(), platform.getId().toString(), newState));
         
         // Update local state immediately for instant feedback
         platform.setEnabled(newState);
@@ -389,8 +390,9 @@ public class PlatformManagementScreenV2 extends Screen {
         if (index < 0 || index >= platforms.size()) return;
         
         Platform platform = platforms.get(index);
-        ModMessages.sendToServer(new OpenDestinationsUIPacket(
-            townBlockPos, platform.getId()));
+        // TODO: Migrate OpenDestinationsUIPacket to common module
+        // ModMessages.sendToServer(new OpenDestinationsUIPacket(
+        //     townBlockPos, platform.getId()));
     }
     
     private void setPlatformPathByIndex(int index) {
@@ -399,7 +401,7 @@ public class PlatformManagementScreenV2 extends Screen {
         Platform platform = platforms.get(index);
         // Send packet to enter platform path creation mode
         ModMessages.sendToServer(new SetPlatformPathCreationModePacket(
-            townBlockPos, platform.getId(), true));
+            townBlockPos.getX(), townBlockPos.getY(), townBlockPos.getZ(), platform.getId().toString(), true));
         
         // Register with key handler
         PlatformPathKeyHandler.setActivePlatform(townBlockPos, platform.getId());
@@ -420,7 +422,7 @@ public class PlatformManagementScreenV2 extends Screen {
         
         Platform platform = platforms.get(index);
         ModMessages.sendToServer(new ResetPlatformPathPacket(
-            townBlockPos, platform.getId()));
+            townBlockPos.getX(), townBlockPos.getY(), townBlockPos.getZ(), platform.getId().toString()));
         
         // Update local state
         platform.setStartPos(null);
@@ -456,8 +458,10 @@ public class PlatformManagementScreenV2 extends Screen {
         
         // Send delete platform packet
         ModMessages.sendToServer(new DeletePlatformPacket(
-            townBlockPos,
-            lastPlatform.getId()
+            townBlockPos.getX(),
+            townBlockPos.getY(),
+            townBlockPos.getZ(),
+            lastPlatform.getId().toString()
         ));
         
         // Immediately refresh the UI (like PaymentBoardScreen does)  

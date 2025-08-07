@@ -28,31 +28,35 @@ import com.quackers29.businesscraft.network.packets.platform.ResetPlatformPathPa
 import com.quackers29.businesscraft.network.packets.platform.SetPlatformPathCreationModePacket;
 import com.quackers29.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 import com.quackers29.businesscraft.network.packets.platform.SetPlatformDestinationPacket;
-import com.quackers29.businesscraft.network.packets.ui.SetPathCreationModePacket;
-import com.quackers29.businesscraft.network.packets.ui.OpenDestinationsUIPacket;
-import com.quackers29.businesscraft.network.packets.ui.RefreshDestinationsPacket;
-import com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket;
-import com.quackers29.businesscraft.network.packets.ui.PlatformVisualizationPacket;
-import com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket;
-import com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket;
+// TODO: Migrate remaining UI packets to common module
+// import com.quackers29.businesscraft.network.packets.ui.SetPathCreationModePacket;
+import com.quackers29.businesscraft.network.packets.ui.OpenDestinationsUIPacket; // ✅ MIGRATED
+import com.quackers29.businesscraft.network.packets.ui.RefreshDestinationsPacket; // ✅ MIGRATED
+import com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket; // ✅ MIGRATED
+// import com.quackers29.businesscraft.network.packets.ui.PlatformVisualizationPacket;
+import com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket; // ✅ MIGRATED
+// import com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket;
 import com.quackers29.businesscraft.network.packets.ui.OpenTownInterfacePacket;
 import com.quackers29.businesscraft.network.packets.ui.OpenPaymentBoardPacket;
-import com.quackers29.businesscraft.network.packets.ui.RequestTownMapDataPacket;
-import com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket;
-import com.quackers29.businesscraft.network.packets.ui.RequestTownPlatformDataPacket;
-import com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket;
+// TODO: Migrate remaining UI response packets to common module
+import com.quackers29.businesscraft.network.packets.ui.RequestTownMapDataPacket; // ✅ MIGRATED
+import com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket; // ✅ MIGRATED
+// import com.quackers29.businesscraft.network.packets.ui.RequestTownPlatformDataPacket;
+// import com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket;
 import com.quackers29.businesscraft.network.packets.storage.TradeResourcePacket;
-import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
-import com.quackers29.businesscraft.network.packets.storage.CommunalStorageResponsePacket;
-import com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket;
+// TODO: Migrate remaining storage packets to common module
+import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket; // ✅ MIGRATED
+import com.quackers29.businesscraft.network.packets.storage.CommunalStorageResponsePacket; // ✅ MIGRATED
+// import com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket;
 import com.quackers29.businesscraft.network.packets.storage.PaymentBoardRequestPacket;
 import com.quackers29.businesscraft.network.packets.storage.PaymentBoardClaimPacket;
-import com.quackers29.businesscraft.network.packets.storage.BufferStoragePacket;
-import com.quackers29.businesscraft.network.packets.storage.BufferStorageResponsePacket;
-import com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket;
-import com.quackers29.businesscraft.network.packets.storage.PersonalStoragePacket;
-import com.quackers29.businesscraft.network.packets.storage.PersonalStorageResponsePacket;
-import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
+// TODO: Migrate remaining buffer and personal storage packets to common module  
+// import com.quackers29.businesscraft.network.packets.storage.BufferStoragePacket;
+// import com.quackers29.businesscraft.network.packets.storage.BufferStorageResponsePacket;
+// import com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket;
+// import com.quackers29.businesscraft.network.packets.storage.PersonalStoragePacket;
+// import com.quackers29.businesscraft.network.packets.storage.PersonalStorageResponsePacket;
+// import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
 import com.quackers29.businesscraft.network.packets.misc.PaymentResultPacket;
 
 /**
@@ -87,242 +91,379 @@ public class ModMessages {
         // Register all packets using a consistent pattern
         net.messageBuilder(ToggleTouristSpawningPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(ToggleTouristSpawningPacket::new)
-                .encoder(ToggleTouristSpawningPacket::toBytes)
-                .consumerMainThread(ToggleTouristSpawningPacket::handle)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         net.messageBuilder(SetSearchRadiusPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SetSearchRadiusPacket::new)
-                .encoder(SetSearchRadiusPacket::toBytes)
-                .consumerMainThread(SetSearchRadiusPacket::handle)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
         
+        // TODO: Migrate SetPathCreationModePacket to common module
         // Register the path creation packet
         // This packet has static encode/decode methods that delegate to instance methods
-        net.messageBuilder(SetPathCreationModePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(SetPathCreationModePacket::decode)
-                .encoder(SetPathCreationModePacket::encode)
-                .consumerMainThread(SetPathCreationModePacket::handle)
-                .add();
+        // net.messageBuilder(SetPathCreationModePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+        //         .decoder(SetPathCreationModePacket::decode)
+        //         .encoder(SetPathCreationModePacket::encode)
+        //         .consumerMainThread(SetPathCreationModePacket::handle)
+        //         .add();
                 
         // Register the town name change packet
         net.messageBuilder(SetTownNamePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(SetTownNamePacket::decode)
-                .encoder(SetTownNamePacket::encode)
-                .consumerMainThread(SetTownNamePacket::handle)
+                .decoder(SetTownNamePacket::new)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         // Register platform-related packets
         net.messageBuilder(AddPlatformPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(AddPlatformPacket::decode)
-                .encoder(AddPlatformPacket::encode)
-                .consumerMainThread(AddPlatformPacket::handle)
+                .decoder(AddPlatformPacket::new)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         net.messageBuilder(DeletePlatformPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(DeletePlatformPacket::decode)
-                .encoder(DeletePlatformPacket::encode)
-                .consumerMainThread(DeletePlatformPacket::handle)
+                .decoder(DeletePlatformPacket::new)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         net.messageBuilder(SetPlatformEnabledPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SetPlatformEnabledPacket::decode)
-                .encoder(SetPlatformEnabledPacket::encode)
-                .consumerMainThread(SetPlatformEnabledPacket::handle)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         net.messageBuilder(SetPlatformPathPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SetPlatformPathPacket::decode)
-                .encoder(SetPlatformPathPacket::encode)
-                .consumerMainThread(SetPlatformPathPacket::handle)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         net.messageBuilder(ResetPlatformPathPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(ResetPlatformPathPacket::decode)
-                .encoder(ResetPlatformPathPacket::encode)
-                .consumerMainThread(ResetPlatformPathPacket::handle)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         net.messageBuilder(SetPlatformPathCreationModePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(buf -> new SetPlatformPathCreationModePacket(buf))
-                .encoder(SetPlatformPathCreationModePacket::encode)
-                .consumerMainThread(SetPlatformPathCreationModePacket::handle)
+                .decoder(SetPlatformPathCreationModePacket::decode)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         net.messageBuilder(RefreshPlatformsPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(buf -> new RefreshPlatformsPacket(buf))
-                .encoder(RefreshPlatformsPacket::encode)
-                .consumerMainThread(RefreshPlatformsPacket::handle)
+                .decoder(RefreshPlatformsPacket::new)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         // Register platform destination packets
         net.messageBuilder(OpenDestinationsUIPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(OpenDestinationsUIPacket::decode)
-                .encoder(OpenDestinationsUIPacket::encode)
-                .consumerMainThread(OpenDestinationsUIPacket::handle)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         net.messageBuilder(SetPlatformDestinationPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(SetPlatformDestinationPacket::new)
-                .encoder(SetPlatformDestinationPacket::encode)
-                .consumerMainThread(SetPlatformDestinationPacket::handle)
+                .decoder(SetPlatformDestinationPacket::decode)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         net.messageBuilder(RefreshDestinationsPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(RefreshDestinationsPacket::new)
-                .encoder(RefreshDestinationsPacket::encode)
-                .consumerMainThread(RefreshDestinationsPacket::handle)
+                .decoder(RefreshDestinationsPacket::decode)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
 
         // Register player exit UI packet
         net.messageBuilder(PlayerExitUIPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PlayerExitUIPacket::decode)
-                .encoder(PlayerExitUIPacket::encode)
-                .consumerMainThread(PlayerExitUIPacket::handle)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
 
         // Register platform visualization packet (server to client)
-        net.messageBuilder(PlatformVisualizationPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(PlatformVisualizationPacket::decode)
-                .encoder(PlatformVisualizationPacket::encode)
-                .consumerMainThread(PlatformVisualizationPacket::handle)
-                .add();
+        // TODO: Migrate PlatformVisualizationPacket to common module
+        // net.messageBuilder(PlatformVisualizationPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+        //         .decoder(PlatformVisualizationPacket::decode)
+        //         .encoder(PlatformVisualizationPacket::encode)
+        //         .consumerMainThread(PlatformVisualizationPacket::handle)
+        //         .add();
 
         // Register resource trading packet
         net.messageBuilder(TradeResourcePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(TradeResourcePacket::decode)
-                .encoder(TradeResourcePacket::encode)
-                .consumerMainThread(TradeResourcePacket::handle)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         // Register payment result packet (server to client)
         net.messageBuilder(PaymentResultPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(PaymentResultPacket::decode)
-                .encoder(PaymentResultPacket::encode)
-                .consumerMainThread(PaymentResultPacket::handle)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         // Register communal storage packets
         net.messageBuilder(CommunalStoragePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(CommunalStoragePacket::decode)
-                .encoder(CommunalStoragePacket::encode)
-                .consumerMainThread(CommunalStoragePacket::handle)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         net.messageBuilder(CommunalStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(CommunalStorageResponsePacket::decode)
-                .encoder(CommunalStorageResponsePacket::encode)
-                .consumerMainThread(CommunalStorageResponsePacket::handle)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
-        net.messageBuilder(PaymentBoardResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(PaymentBoardResponsePacket::decode)
-                .encoder(PaymentBoardResponsePacket::encode)
-                .consumerMainThread(PaymentBoardResponsePacket::handle)
-                .add();
+        // TODO: Migrate PaymentBoardResponsePacket to common module
+        // net.messageBuilder(PaymentBoardResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+        //         .decoder(PaymentBoardResponsePacket::decode)
+        //         .encoder(PaymentBoardResponsePacket::encode)
+        //         .consumerMainThread(PaymentBoardResponsePacket::handle)
+        //         .add();
                 
         net.messageBuilder(PaymentBoardRequestPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PaymentBoardRequestPacket::decode)
-                .encoder(PaymentBoardRequestPacket::encode)
-                .consumerMainThread(PaymentBoardRequestPacket::handle)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         net.messageBuilder(PaymentBoardClaimPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PaymentBoardClaimPacket::decode)
-                .encoder(PaymentBoardClaimPacket::encode)
-                .consumerMainThread(PaymentBoardClaimPacket::handle)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
-        net.messageBuilder(BufferStoragePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(BufferStoragePacket::decode)
-                .encoder(BufferStoragePacket::encode)
-                .consumerMainThread(BufferStoragePacket::handle)
-                .add();
+        // TODO: Migrate BufferStoragePacket to common module
+        // net.messageBuilder(BufferStoragePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+        //         .decoder(BufferStoragePacket::decode)
+        //         .encoder(BufferStoragePacket::encode)
+        //         .consumerMainThread(BufferStoragePacket::handle)
+        //         .add();
                 
-        net.messageBuilder(BufferStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(BufferStorageResponsePacket::decode)
-                .encoder(BufferStorageResponsePacket::encode)
-                .consumerMainThread(BufferStorageResponsePacket::handle)
-                .add();
+        // TODO: Migrate BufferStorageResponsePacket to common module
+        // net.messageBuilder(BufferStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+        //         .decoder(BufferStorageResponsePacket::decode)
+        //         .encoder(BufferStorageResponsePacket::encode)
+        //         .consumerMainThread(BufferStorageResponsePacket::handle)
+        //         .add();
                 
         // Register new slot-based buffer storage response packet
-        net.messageBuilder(BufferSlotStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(BufferSlotStorageResponsePacket::decode)
-                .encoder(BufferSlotStorageResponsePacket::encode)
-                .consumerMainThread(BufferSlotStorageResponsePacket::handle)
-                .add();
+        // TODO: Migrate BufferSlotStorageResponsePacket to common module
+        // net.messageBuilder(BufferSlotStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+        //         .decoder(BufferSlotStorageResponsePacket::decode)
+        //         .encoder(BufferSlotStorageResponsePacket::encode)
+        //         .consumerMainThread(BufferSlotStorageResponsePacket::handle)
+        //         .add();
                 
         // Register personal storage packets
-        net.messageBuilder(PersonalStoragePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(PersonalStoragePacket::decode)
-                .encoder(PersonalStoragePacket::encode)
-                .consumerMainThread(PersonalStoragePacket::handle)
-                .add();
+        // TODO: Migrate PersonalStoragePacket to common module
+        // net.messageBuilder(PersonalStoragePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+        //         .decoder(PersonalStoragePacket::decode)
+        //         .encoder(PersonalStoragePacket::encode)
+        //         .consumerMainThread(PersonalStoragePacket::handle)
+        //         .add();
                 
-        net.messageBuilder(PersonalStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(PersonalStorageResponsePacket::decode)
-                .encoder(PersonalStorageResponsePacket::encode)
-                .consumerMainThread(PersonalStorageResponsePacket::handle)
-                .add();
+        // TODO: Migrate PersonalStorageResponsePacket to common module
+        // net.messageBuilder(PersonalStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+        //         .decoder(PersonalStorageResponsePacket::decode)
+        //         .encoder(PersonalStorageResponsePacket::encode)
+        //         .consumerMainThread(PersonalStorageResponsePacket::handle)
+        //         .add();
 
-        net.messageBuilder(PersonalStorageRequestPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(PersonalStorageRequestPacket::decode)
-                .encoder(PersonalStorageRequestPacket::encode)
-                .consumerMainThread(PersonalStorageRequestPacket::handle)
-                .add();
+        // TODO: Migrate PersonalStorageRequestPacket to common module
+        // net.messageBuilder(PersonalStorageRequestPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+        //         .decoder(PersonalStorageRequestPacket::decode)
+        //         .encoder(PersonalStorageRequestPacket::encode)
+        //         .consumerMainThread(PersonalStorageRequestPacket::handle)
+        //         .add();
                 
         // Register the open town interface packet for proper menu synchronization
         net.messageBuilder(OpenTownInterfacePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(OpenTownInterfacePacket::new)
-                .encoder(OpenTownInterfacePacket::toBytes)
-                .consumerMainThread(OpenTownInterfacePacket::handle)
+                .decoder(OpenTownInterfacePacket::decode)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         // Register the open payment board packet for proper menu synchronization
         net.messageBuilder(OpenPaymentBoardPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(OpenPaymentBoardPacket::new)
-                .encoder(OpenPaymentBoardPacket::toBytes)
-                .consumerMainThread(OpenPaymentBoardPacket::handle)
+                .decoder(OpenPaymentBoardPacket::decode)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         // Register town map data packets
         net.messageBuilder(RequestTownMapDataPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(RequestTownMapDataPacket::decode)
-                .encoder(RequestTownMapDataPacket::encode)
-                .consumerMainThread(RequestTownMapDataPacket::handle)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         net.messageBuilder(TownMapDataResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(TownMapDataResponsePacket::decode)
-                .encoder(TownMapDataResponsePacket::encode)
-                .consumerMainThread(TownMapDataResponsePacket::handle)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
         // Register town platform data packets
-        net.messageBuilder(RequestTownPlatformDataPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(RequestTownPlatformDataPacket::decode)
-                .encoder((msg, buf) -> msg.encode(buf))
-                .consumerMainThread(RequestTownPlatformDataPacket::handle)
-                .add();
+        // TODO: Migrate RequestTownPlatformDataPacket to common module
+        // net.messageBuilder(RequestTownPlatformDataPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+        //         .decoder(RequestTownPlatformDataPacket::decode)
+        //         .encoder((msg, buf) -> msg.encode(buf))
+        //         .consumerMainThread(RequestTownPlatformDataPacket::handle)
+        //         .add();
                 
-        net.messageBuilder(TownPlatformDataResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(TownPlatformDataResponsePacket::decode)
-                .encoder((msg, buf) -> msg.encode(buf))
-                .consumerMainThread(TownPlatformDataResponsePacket::handle)
-                .add();
+        // TODO: Migrate TownPlatformDataResponsePacket to common module
+        // net.messageBuilder(TownPlatformDataResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+        //         .decoder(TownPlatformDataResponsePacket::decode)
+        //         .encoder((msg, buf) -> msg.encode(buf))
+        //         .consumerMainThread(TownPlatformDataResponsePacket::handle)
+        //         .add();
                 
         // Register boundary sync packets for real-time boundary updates
         net.messageBuilder(BoundarySyncRequestPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(BoundarySyncRequestPacket::decode)
-                .encoder(BoundarySyncRequestPacket::encode)
-                .consumerMainThread(BoundarySyncRequestPacket::handle)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
                 .add();
                 
-        net.messageBuilder(BoundarySyncResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(BoundarySyncResponsePacket::decode)
-                .encoder(BoundarySyncResponsePacket::encode)
-                .consumerMainThread(BoundarySyncResponsePacket::handle)
-                .add();
+        // TODO: Migrate BoundarySyncResponsePacket to common module
+        // net.messageBuilder(BoundarySyncResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+        //         .decoder(BoundarySyncResponsePacket::decode)
+        //         .encoder(BoundarySyncResponsePacket::encode)
+        //         .consumerMainThread(BoundarySyncResponsePacket::handle)
+        //         .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {

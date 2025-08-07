@@ -135,7 +135,7 @@ public class TradeMenu extends AbstractContainerMenu {
         
         // Don't move the item directly - instead send it to the server for processing
         // The server will decide if the town accepts the trade and sends back emeralds
-        ModMessages.sendToServer(new TradeResourcePacket(townBlockPos, stack.copy(), SLOT_INPUT));
+        ModMessages.sendToServer(new TradeResourcePacket(townBlockPos.getX(), townBlockPos.getY(), townBlockPos.getZ(), stack.copy(), SLOT_INPUT));
         
         // Remove the input item now, payment will be handled by server response
         this.tradeInventory.extractItem(SLOT_INPUT, stack.getCount(), false);

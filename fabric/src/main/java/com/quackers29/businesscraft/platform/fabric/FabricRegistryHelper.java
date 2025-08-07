@@ -23,32 +23,43 @@ public class FabricRegistryHelper implements RegistryHelper {
     private static final String MOD_ID = "businesscraft";
     
     @Override
-    public <T extends Block> Supplier<T> registerBlock(String name, Supplier<T> blockSupplier) {
-        T block = Registry.register(Registries.BLOCK, new Identifier(MOD_ID, name), blockSupplier.get());
-        return () -> block;
+    @SuppressWarnings("unchecked")
+    public <T> Supplier<T> registerBlock(String name, Supplier<T> blockSupplier) {
+        Block block = Registry.register(Registries.BLOCK, new Identifier(MOD_ID, name), (Block) blockSupplier.get());
+        return () -> (T) block;
     }
     
     @Override
-    public <T extends Item> Supplier<T> registerItem(String name, Supplier<T> itemSupplier) {
-        T item = Registry.register(Registries.ITEM, new Identifier(MOD_ID, name), itemSupplier.get());
-        return () -> item;
+    @SuppressWarnings("unchecked")
+    public <T> Supplier<T> registerItem(String name, Supplier<T> itemSupplier) {
+        Item item = Registry.register(Registries.ITEM, new Identifier(MOD_ID, name), (Item) itemSupplier.get());
+        return () -> (T) item;
     }
     
     @Override
-    public <T extends BlockEntity> Supplier<BlockEntityType<T>> registerBlockEntity(String name, Supplier<BlockEntityType<T>> blockEntitySupplier) {
-        BlockEntityType<T> type = Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier(MOD_ID, name), blockEntitySupplier.get());
-        return () -> type;
+    @SuppressWarnings("unchecked")
+    public <T> Supplier<T> registerBlockEntity(String name, Supplier<T> blockEntitySupplier) {
+        BlockEntityType<?> type = Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier(MOD_ID, name), (BlockEntityType<?>) blockEntitySupplier.get());
+        return () -> (T) type;
     }
     
     @Override
-    public <T extends EntityType<?>> Supplier<T> registerEntity(String name, Supplier<T> entitySupplier) {
-        T entityType = Registry.register(Registries.ENTITY_TYPE, new Identifier(MOD_ID, name), entitySupplier.get());
-        return () -> entityType;
+    @SuppressWarnings("unchecked")
+    public <T> Supplier<T> registerEntity(String name, Supplier<T> entitySupplier) {
+        EntityType<?> entityType = Registry.register(Registries.ENTITY_TYPE, new Identifier(MOD_ID, name), (EntityType<?>) entitySupplier.get());
+        return () -> (T) entityType;
     }
     
     @Override
-    public <T extends ScreenHandlerType<?>> Supplier<T> registerMenu(String name, Supplier<T> menuSupplier) {
-        T menuType = Registry.register(Registries.SCREEN_HANDLER, new Identifier(MOD_ID, name), menuSupplier.get());
-        return () -> menuType;
+    @SuppressWarnings("unchecked")
+    public <T> Supplier<T> registerMenu(String name, Supplier<T> menuSupplier) {
+        ScreenHandlerType<?> menuType = Registry.register(Registries.SCREEN_HANDLER, new Identifier(MOD_ID, name), (ScreenHandlerType<?>) menuSupplier.get());
+        return () -> (T) menuType;
+    }
+    
+    @Override
+    public void finalizeRegistrations() {
+        // Fabric handles registration immediately, so no finalization needed
+        // This method exists for compatibility with other platforms
     }
 }

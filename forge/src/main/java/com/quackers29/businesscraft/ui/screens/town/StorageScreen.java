@@ -15,10 +15,13 @@ import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.core.BlockPos;
-import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
+// TODO: Migrate PersonalStorageRequestPacket to common module
+// import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
 import com.quackers29.businesscraft.network.ModMessages;
-import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
-import com.quackers29.businesscraft.network.packets.storage.PersonalStoragePacket;
+// TODO: Migrate CommunalStoragePacket to common module
+// import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
+// TODO: Migrate PersonalStoragePacket to common module
+// import com.quackers29.businesscraft.network.packets.storage.PersonalStoragePacket;
 
 import java.util.Map;
 import java.util.Set;
@@ -377,9 +380,11 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                     BlockPos townPos = this.menu.getTownBlockPos();
                     if (townPos != null && this.minecraft != null && this.minecraft.player != null) {
                         if (isPersonalMode) {
-                            ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
+                            // TODO: Migrate PersonalStorageRequestPacket to common module
+                            // ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
                         } else {
-                            ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                            // TODO: Migrate CommunalStoragePacket to common module
+                            // ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
                         }
                     }
                 }
@@ -413,8 +418,9 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                 BlockPos townPos = this.menu.getTownBlockPos();
                 if (townPos != null && this.minecraft != null && this.minecraft.player != null) {
                     if (isPersonalMode) {
+                        // TODO: Migrate PersonalStorageRequestPacket to common module
                         // Request personal storage data refresh
-                        ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
+                        // ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
                     } else {
                         // Request communal storage data refresh
                         requestCommunalStorageData();
@@ -726,8 +732,9 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
         if (townPos != null && this.minecraft != null && this.minecraft.player != null) {
             LOGGER.debug("Requesting communal storage refresh from server");
             try {
+                // TODO: Migrate CommunalStoragePacket to common module
                 // Send the request packet with the special marker (-1)
-                ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                // ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
             } catch (Exception e) {
                 LOGGER.error("Error sending communal storage request", e);
             }
@@ -743,9 +750,10 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
         if (townPos != null && this.minecraft != null && this.minecraft.player != null) {
             LOGGER.debug("Requesting personal storage refresh from server");
             try {
+                // TODO: Migrate PersonalStorageRequestPacket to common module
                 // Send the request packet with the player UUID
                 UUID playerId = this.minecraft.player.getUUID();
-                ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
+                // ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
             } catch (Exception e) {
                 LOGGER.error("Error sending personal storage request", e);
             }
@@ -784,14 +792,16 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                     ItemStack stack = slot.getItem();
                     
                     if (isPersonalMode) {
+                        // TODO: Migrate PersonalStoragePacket to common module
                         // Use the proper constructor: BlockPos, ItemStack, slotId, isAddOperation, playerId
                         BlockPos townPosition = this.menu.getTownBlockPos();
                         if (townPosition != null) {
-                            ModMessages.sendToServer(new PersonalStoragePacket(
-                                townPosition, stack, slotIndex, true, this.minecraft.player.getUUID()));
+                            // ModMessages.sendToServer(new PersonalStoragePacket(
+                            //     townPosition, stack, slotIndex, true, this.minecraft.player.getUUID()));
                         }
                     } else if (townPos != null) {
-                        ModMessages.sendToServer(new CommunalStoragePacket(townPos, stack, slotIndex, true));
+                        // TODO: Migrate CommunalStoragePacket to common module
+                        // ModMessages.sendToServer(new CommunalStoragePacket(townPos, stack, slotIndex, true));
                     }
                     
                     updateNeeded = true;

@@ -2,8 +2,10 @@ package com.quackers29.businesscraft.ui.modal.components;
 
 import com.quackers29.businesscraft.menu.StorageMenu;
 import com.quackers29.businesscraft.network.ModMessages;
-import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
-import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
+// TODO: Migrate PersonalStorageRequestPacket to common module
+// import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
+// TODO: Migrate CommunalStoragePacket to common module
+// import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.Font;
 import net.minecraft.world.item.ItemStack;

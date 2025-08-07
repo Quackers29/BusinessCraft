@@ -323,7 +323,8 @@ public class DestinationsScreenV2 extends Screen {
         
         // Send packet to server
         ModMessages.sendToServer(new SetPlatformDestinationPacket(
-            blockPos, platformId, destination.townId, destination.enabled));
+            blockPos.getX(), blockPos.getY(), blockPos.getZ(), 
+            platformId.toString(), destination.townId.toString(), destination.enabled));
         
         // Update the grid to reflect changes
         destinationsGrid.clearElements();

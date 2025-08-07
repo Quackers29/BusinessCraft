@@ -375,4 +375,114 @@ public interface BlockEntityHelper {
      * @return True if the Town Interface UI was successfully opened
      */
     boolean openTownInterfaceUI(Object blockEntity, Object player);
+    
+    /**
+     * Register player UI exit for proper cleanup.
+     * Platform implementations handle UI exit registration for visualization cleanup.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param player Platform-specific player object
+     * @return True if player exit was successfully registered
+     */
+    boolean registerPlayerExitUI(Object blockEntity, Object player);
+    
+    /**
+     * Open the destinations UI for platform management.
+     * Platform implementations handle opening the platform destinations screen.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param player Platform-specific player object
+     * @param platformId Platform UUID as string
+     * @return True if the destinations UI was successfully opened
+     */
+    boolean openDestinationsUI(Object blockEntity, Object player, String platformId);
+    
+    /**
+     * Refresh destination data on client side.
+     * Platform implementations handle client-side destination data updates.
+     * 
+     * @param player Platform-specific player object
+     * @param x Block X coordinate
+     * @param y Block Y coordinate
+     * @param z Block Z coordinate
+     * @param platformId Platform UUID as string
+     * @param destinationData JSON or serialized destination data
+     * @return True if destination data was successfully refreshed
+     */
+    boolean refreshDestinationData(Object player, int x, int y, int z, String platformId, String destinationData);
+    
+    /**
+     * Add an item to communal storage.
+     * Platform implementations handle adding items to town communal storage.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param player Platform-specific player object
+     * @param itemStack Platform-specific ItemStack to add
+     * @param slotId Target slot ID
+     * @return True if item was successfully added to communal storage
+     */
+    boolean addToCommunalStorage(Object blockEntity, Object player, Object itemStack, int slotId);
+    
+    /**
+     * Remove an item from communal storage.
+     * Platform implementations handle removing items from town communal storage.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param player Platform-specific player object
+     * @param itemStack Platform-specific ItemStack to remove
+     * @param slotId Source slot ID
+     * @return True if item was successfully removed from communal storage
+     */
+    boolean removeFromCommunalStorage(Object blockEntity, Object player, Object itemStack, int slotId);
+    
+    /**
+     * Update communal storage UI on client side.
+     * Platform implementations handle client-side communal storage UI updates.
+     * 
+     * @param player Platform-specific player object
+     * @param x Block X coordinate
+     * @param y Block Y coordinate
+     * @param z Block Z coordinate
+     * @param storageItems Map of slot IDs to ItemStacks
+     * @return True if communal storage UI was successfully updated
+     */
+    boolean updateCommunalStorageUI(Object player, int x, int y, int z, java.util.Map<Integer, Object> storageItems);
+    
+    /**
+     * Process town map data request.
+     * Platform implementations handle server-side town map data generation and response.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param player Platform-specific player object
+     * @param zoomLevel Map zoom level
+     * @param includeStructures Whether to include structure data
+     * @return True if town map data request was successfully processed
+     */
+    boolean processTownMapDataRequest(Object blockEntity, Object player, int zoomLevel, boolean includeStructures);
+    
+    /**
+     * Update town map UI on client side.
+     * Platform implementations handle client-side town map UI updates.
+     * 
+     * @param player Platform-specific player object
+     * @param x Block X coordinate
+     * @param y Block Y coordinate
+     * @param z Block Z coordinate
+     * @param mapData JSON or serialized map data
+     * @param zoomLevel Map zoom level
+     * @return True if town map UI was successfully updated
+     */
+    boolean updateTownMapUI(Object player, int x, int y, int z, String mapData, int zoomLevel);
+    
+    /**
+     * Process boundary sync request.
+     * Platform implementations handle server-side boundary data synchronization.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param player Platform-specific player object
+     * @param enableVisualization Whether to enable boundary visualization
+     * @param renderDistance Boundary render distance
+     * @return True if boundary sync request was successfully processed
+     */
+    boolean processBoundarySyncRequest(Object blockEntity, Object player, boolean enableVisualization, int renderDistance);
 }

@@ -125,7 +125,7 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
                         "PaymentBoardScreen.requestPaymentBoardData() - Requesting data from server for town block at {}", 
                         townBlockPos);
                     com.quackers29.businesscraft.network.ModMessages.sendToServer(
-                        new com.quackers29.businesscraft.network.packets.storage.PaymentBoardRequestPacket(townBlockPos));
+                        new com.quackers29.businesscraft.network.packets.storage.PaymentBoardRequestPacket(townBlockPos.getX(), townBlockPos.getY(), townBlockPos.getZ()));
                 } catch (Exception e) {
                     LOGGER.error("Error sending payment board data request", e);
                 }

@@ -36,28 +36,30 @@ public class ForgeRegistryHelper implements RegistryHelper {
     }
     
     @Override
-    public <T extends Block> Supplier<T> registerBlock(String name, Supplier<T> blockSupplier) {
-        RegistryObject<T> registryObject = blocks.register(name, blockSupplier);
-        return registryObject; // RegistryObject implements Supplier<T>
-    }
-    
-    @Override
-    public <T extends Item> Supplier<T> registerItem(String name, Supplier<T> itemSupplier) {
-        RegistryObject<T> registryObject = items.register(name, itemSupplier);
-        return registryObject; // RegistryObject implements Supplier<T>
+    @SuppressWarnings("unchecked")
+    public <T> Supplier<T> registerBlock(String name, Supplier<T> blockSupplier) {
+        RegistryObject<Block> registryObject = blocks.register(name, () -> (Block) blockSupplier.get());
+        return () -> (T) registryObject.get();
     }
     
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends BlockEntity> Supplier<BlockEntityType<T>> registerBlockEntity(String name, Supplier<BlockEntityType<T>> blockEntitySupplier) {
+    public <T> Supplier<T> registerItem(String name, Supplier<T> itemSupplier) {
+        RegistryObject<Item> registryObject = items.register(name, () -> (Item) itemSupplier.get());
+        return () -> (T) registryObject.get();
+    }
+    
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> Supplier<T> registerBlockEntity(String name, Supplier<T> blockEntitySupplier) {
         RegistryObject<BlockEntityType<?>> registryObject = blockEntities.register(name, 
             () -> (BlockEntityType<?>) blockEntitySupplier.get());
-        return () -> (BlockEntityType<T>) registryObject.get();
+        return () -> (T) registryObject.get();
     }
     
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends EntityType<?>> Supplier<T> registerEntity(String name, Supplier<T> entitySupplier) {
+    public <T> Supplier<T> registerEntity(String name, Supplier<T> entitySupplier) {
         RegistryObject<EntityType<?>> registryObject = entities.register(name, 
             () -> (EntityType<?>) entitySupplier.get());
         return () -> (T) registryObject.get();
@@ -65,7 +67,7 @@ public class ForgeRegistryHelper implements RegistryHelper {
     
     @Override
     @SuppressWarnings("unchecked")
-    public <T extends MenuType<?>> Supplier<T> registerMenu(String name, Supplier<T> menuSupplier) {
+    public <T> Supplier<T> registerMenu(String name, Supplier<T> menuSupplier) {
         RegistryObject<MenuType<?>> registryObject = menus.register(name, 
             () -> (MenuType<?>) menuSupplier.get());
         return () -> (T) registryObject.get();

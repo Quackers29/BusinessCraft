@@ -119,7 +119,7 @@ public class SearchRadiusManager {
      */
     private void sendRadiusUpdatePacket(int newRadius) {
         try {
-            ModMessages.sendToServer(new SetSearchRadiusPacket(blockPos, newRadius));
+            ModMessages.sendToServer(new SetSearchRadiusPacket(blockPos.getX(), blockPos.getY(), blockPos.getZ(), newRadius));
         } catch (Exception e) {
             LOGGER.error("Failed to send radius update packet", e);
         }

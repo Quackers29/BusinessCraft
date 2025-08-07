@@ -63,7 +63,7 @@ public class TownNamePopupManager {
                         
                         // Send packet to update town name on the server
                         ModMessages.sendToServer(
-                            new SetTownNamePacket(blockPos, newName)
+                            new SetTownNamePacket(blockPos.getX(), blockPos.getY(), blockPos.getZ(), newName)
                         );
                         
                         // Provide immediate client-side feedback
@@ -163,7 +163,7 @@ public class TownNamePopupManager {
                     
                     // Send packet to update town name on the server
                     ModMessages.sendToServer(
-                        new SetTownNamePacket(blockPos, newName)
+                        new SetTownNamePacket(blockPos.getX(), blockPos.getY(), blockPos.getZ(), newName)
                     );
                     
                     // Provide immediate client-side feedback

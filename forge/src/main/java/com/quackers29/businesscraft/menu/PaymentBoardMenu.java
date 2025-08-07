@@ -345,7 +345,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
             
             try {
                 ModMessages.sendToServer(new com.quackers29.businesscraft.network.packets.storage.PaymentBoardClaimPacket(
-                    townBlockPos, rewardId, toBuffer));
+                    townBlockPos.getX(), townBlockPos.getY(), townBlockPos.getZ(), rewardId.toString(), toBuffer));
             } catch (Exception e) {
                 LOGGER.error("Error sending claim request for reward {}", rewardId, e);
             }
@@ -368,8 +368,9 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
             "Adding {} items to buffer storage at slot {}", itemStack.getCount(), slotId);
         
         try {
-            ModMessages.sendToServer(new com.quackers29.businesscraft.network.packets.storage.BufferStoragePacket(
-                townBlockPos, itemStack, slotId, true)); // true = add operation
+            // TODO: Migrate BufferStoragePacket to common module
+            // ModMessages.sendToServer(new com.quackers29.businesscraft.network.packets.storage.BufferStoragePacket(
+            //     townBlockPos, itemStack, slotId, true)); // true = add operation
         } catch (Exception e) {
             LOGGER.error("Error sending buffer storage add request", e);
             return false;
@@ -425,8 +426,9 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
         if (townBlockPos != null) {
             try {
                 // Send a request packet with slotId -1 to get all buffer storage data
-                ModMessages.sendToServer(new com.quackers29.businesscraft.network.packets.storage.BufferStoragePacket(
-                    townBlockPos, ItemStack.EMPTY, -1, true)); // slotId -1 = data request
+                // TODO: Migrate BufferStoragePacket to common module
+            // ModMessages.sendToServer(new com.quackers29.businesscraft.network.packets.storage.BufferStoragePacket(
+            //         townBlockPos, ItemStack.EMPTY, -1, true)); // slotId -1 = data request
             } catch (Exception e) {
                 LOGGER.error("Error sending buffer storage data request", e);
             }

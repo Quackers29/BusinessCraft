@@ -1,0 +1,92 @@
+package com.quackers29.businesscraft.network.packets.storage;
+
+import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
+import com.quackers29.businesscraft.platform.PlatformServices;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Platform-agnostic client-to-server packet for communal storage operations.
+ * This handles adding and removing items from town communal storage.
+ * 
+ * Enhanced MultiLoader approach: Common module defines packet structure and logic,
+ * platform modules handle platform-specific operations through PlatformServices.
+ */
+public class CommunalStoragePacket extends BaseBlockEntityPacket {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommunalStoragePacket.class);
+    
+    private final Object itemStack; // Platform-agnostic item representation
+    private final int slotId;
+    private final boolean isAdd; // true for add, false for remove
+    
+    /**
+     * Create packet for sending.
+     */
+    public CommunalStoragePacket(int x, int y, int z, Object itemStack, int slotId, boolean isAdd) {
+        super(x, y, z);
+        this.itemStack = itemStack;
+        this.slotId = slotId;
+        this.isAdd = isAdd;
+    }
+    
+    /**
+     * Create packet from network buffer (decode constructor).
+     */
+    public static CommunalStoragePacket decode(Object buffer) {
+        int[] pos = PlatformServices.getNetworkHelper().readBlockPos(buffer);
+        Object itemStack = PlatformServices.getNetworkHelper().readItemStack(buffer);
+        int slotId = PlatformServices.getNetworkHelper().readInt(buffer);
+        boolean isAdd = PlatformServices.getNetworkHelper().readBoolean(buffer);
+        return new CommunalStoragePacket(pos[0], pos[1], pos[2], itemStack, slotId, isAdd);
+    }
+    
+    /**
+     * Encode packet data for network transmission.
+     */
+    @Override
+    public void encode(Object buffer) {
+        super.encode(buffer); // Write block position
+        PlatformServices.getNetworkHelper().writeItemStack(buffer, itemStack);
+        PlatformServices.getNetworkHelper().writeInt(buffer, slotId);
+        PlatformServices.getNetworkHelper().writeBoolean(buffer, isAdd);
+    }
+    
+    /**
+     * Handle the packet on the server side.
+     * This method processes communal storage add/remove operations.
+     */
+    @Override
+    public void handle(Object player) {
+        String operation = isAdd ? "add" : "remove";
+        LOGGER.debug("Processing communal storage {} operation for slot {} at position [{}, {}, {}]", 
+                    operation, slotId, x, y, z);
+        
+        // Get the town interface block entity through platform services
+        Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
+        if (blockEntity == null) {
+            LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
+            return;
+        }
+        
+        // Process communal storage operation through platform services
+        boolean success;
+        if (isAdd) {
+            success = PlatformServices.getBlockEntityHelper().addToCommunalStorage(blockEntity, player, itemStack, slotId);
+        } else {
+            success = PlatformServices.getBlockEntityHelper().removeFromCommunalStorage(blockEntity, player, itemStack, slotId);
+        }
+        
+        if (success) {
+            LOGGER.debug("Successfully processed communal storage {} operation for slot {} at [{}, {}, {}]", 
+                        operation, slotId, x, y, z);
+        } else {
+            LOGGER.warn("Failed to process communal storage {} operation for slot {} at [{}, {}, {}]", 
+                       operation, slotId, x, y, z);
+        }
+    }
+    
+    // Getters for testing
+    public Object getItemStack() { return itemStack; }
+    public int getSlotId() { return slotId; }
+    public boolean isAdd() { return isAdd; }
+}

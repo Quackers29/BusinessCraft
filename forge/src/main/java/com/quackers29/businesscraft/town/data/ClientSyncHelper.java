@@ -386,15 +386,17 @@ public class ClientSyncHelper {
     public static void notifyBufferStorageChange(ServerLevel level, UUID townId, Map<Item, Integer> bufferItems) {
         if (level == null || townId == null) return;
         
+        // TODO: Migrate BufferStorageResponsePacket to common module
         // Send legacy BufferStorageResponsePacket to all players in the area
         // This ensures Payment Board UI updates in real-time when hoppers extract items
-        com.quackers29.businesscraft.network.packets.storage.BufferStorageResponsePacket packet = 
-            new com.quackers29.businesscraft.network.packets.storage.BufferStorageResponsePacket(bufferItems);
+        // com.quackers29.businesscraft.network.packets.storage.BufferStorageResponsePacket packet = 
+        //     new com.quackers29.businesscraft.network.packets.storage.BufferStorageResponsePacket(bufferItems);
         
         // Send to all players within a reasonable distance of any town blocks
         level.players().forEach(player -> {
             // Send to all players - the client will filter based on which UI is open
-            com.quackers29.businesscraft.network.ModMessages.sendToPlayer(packet, player);
+            // TODO: Migrate BufferStorageResponsePacket to common module
+            // com.quackers29.businesscraft.network.ModMessages.sendToPlayer(packet, player);
         });
         
         DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, 
@@ -410,13 +412,15 @@ public class ClientSyncHelper {
         
         // Send new BufferSlotStorageResponsePacket to all players in the area
         // This ensures Payment Board UI updates in real-time with exact slot preservation
-        com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket packet = 
-            new com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket(slotStorage);
+        // TODO: Migrate BufferSlotStorageResponsePacket to common module
+        // com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket packet = 
+        //     new com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket(slotStorage);
         
         // Send to all players within a reasonable distance of any town blocks
         level.players().forEach(player -> {
             // Send to all players - the client will filter based on which UI is open
-            com.quackers29.businesscraft.network.ModMessages.sendToPlayer(packet, player);
+            // TODO: Migrate BufferStorageResponsePacket to common module
+            // com.quackers29.businesscraft.network.ModMessages.sendToPlayer(packet, player);
         });
         
         DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, 

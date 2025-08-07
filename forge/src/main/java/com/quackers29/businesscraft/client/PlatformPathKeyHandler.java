@@ -60,8 +60,10 @@ public class PlatformPathKeyHandler {
             
             // Send packet to exit path creation mode
             ModMessages.sendToServer(new SetPlatformPathCreationModePacket(
-                townPos,
-                platformId,
+                townPos.getX(),
+                townPos.getY(), 
+                townPos.getZ(),
+                platformId.toString(),
                 false
             ));
             

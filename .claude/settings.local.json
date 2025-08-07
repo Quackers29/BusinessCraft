@@ -20,7 +20,9 @@
       "Bash(timeout:*)",
       "Bash(true)",
       "Bash(jar:*)",
-      "Bash(../gradlew compileJava:*)"
+      "Bash(../gradlew compileJava:*)",
+      "Bash(git checkout:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }
