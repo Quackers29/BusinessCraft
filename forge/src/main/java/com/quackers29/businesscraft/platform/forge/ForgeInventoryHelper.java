@@ -15,17 +15,21 @@ import org.jetbrains.annotations.NotNull;
  */
 public class ForgeInventoryHelper implements InventoryHelper {
     
-    @Override
+    public boolean isItemStackValid(Object itemStack) {
+        if (itemStack instanceof ItemStack stack) {
+            return !stack.isEmpty();
+        }
+        return false;
+    }
+    
     public PlatformInventory createInventory(int slots, Runnable changeCallback) {
         return new ForgeInventoryWrapper(slots, changeCallback, null);
     }
     
-    @Override
     public PlatformInventory createInventory(int slots, Runnable changeCallback, ItemValidator itemValidator) {
         return new ForgeInventoryWrapper(slots, changeCallback, itemValidator);
     }
     
-    @Override
     public Object createInventoryCapability(PlatformInventory inventory) {
         if (inventory instanceof ForgeInventoryWrapper wrapper) {
             return LazyOptional.of(() -> wrapper.getItemStackHandler());
@@ -33,14 +37,12 @@ public class ForgeInventoryHelper implements InventoryHelper {
         throw new IllegalArgumentException("PlatformInventory must be a ForgeInventoryWrapper for Forge platform");
     }
     
-    @Override
     public void invalidateCapability(Object capability) {
         if (capability instanceof LazyOptional<?> lazyOptional) {
             lazyOptional.invalidate();
         }
     }
     
-    @Override
     public PlatformInventory createCombinedInventory(PlatformInventory... inventories) {
         return new CombinedForgeInventory(inventories);
     }
@@ -395,4 +397,7 @@ public class ForgeInventoryHelper implements InventoryHelper {
             return new CombinedForgeInventory(extractionOnlyInventories);
         }
     }
+    
+    // Note: Enhanced methods for town management will be added in Phase 10.2
+    // after resolving integration with existing sophisticated inventory abstractions
 }

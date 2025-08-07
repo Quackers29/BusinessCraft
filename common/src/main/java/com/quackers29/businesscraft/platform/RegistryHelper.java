@@ -43,4 +43,61 @@ public interface RegistryHelper {
      * Finalize all registrations for the platform.
      */
     void finalizeRegistrations();
+    
+    // ========================================
+    // ENHANCED METHODS FOR TOWN MANAGEMENT
+    // ========================================
+    
+    /**
+     * Get an item by its resource location string.
+     * This is used for town resource storage and serialization.
+     * 
+     * @param resourceLocation Resource location string (e.g., "minecraft:bread")
+     * @return Item object, or null if not found
+     */
+    Object getItem(String resourceLocation);
+    
+    /**
+     * Get the resource location string from an item.
+     * This is the inverse of getItem() for serialization.
+     * 
+     * @param item Item object (platform-specific)
+     * @return Resource location string (e.g., "minecraft:bread")
+     */
+    String getItemId(Object item);
+    
+    /**
+     * Serialize an item to a platform-agnostic format for NBT storage.
+     * Used for town resource persistence and network packets.
+     * 
+     * @param item Item object to serialize
+     * @return Serialized data (typically String resource location)
+     */
+    Object serializeItem(Object item);
+    
+    /**
+     * Deserialize an item from platform-agnostic format.
+     * This is the inverse of serializeItem() for loading.
+     * 
+     * @param data Serialized item data (from NBT or network)
+     * @return Item object, or null if deserialization fails
+     */
+    Object deserializeItem(Object data);
+    
+    /**
+     * Check if an item exists in the registry.
+     * Used for validation during town resource operations.
+     * 
+     * @param resourceLocation Resource location string to check
+     * @return true if item exists in registry
+     */
+    boolean itemExists(String resourceLocation);
+    
+    /**
+     * Get all registered item resource locations.
+     * Useful for debugging and admin tools.
+     * 
+     * @return Array of all item resource location strings
+     */
+    String[] getAllItemIds();
 }

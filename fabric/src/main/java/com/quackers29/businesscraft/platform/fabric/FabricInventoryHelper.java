@@ -13,6 +13,13 @@ import org.jetbrains.annotations.NotNull;
  */
 public class FabricInventoryHelper implements InventoryHelper {
     
+    public boolean isItemStackValid(Object itemStack) {
+        if (itemStack instanceof ItemStack stack) {
+            return !stack.isEmpty();
+        }
+        return false;
+    }
+    
     @Override
     public PlatformInventory createInventory(int size) {
         return new FabricPlatformInventory(size);
@@ -353,4 +360,8 @@ public class FabricInventoryHelper implements InventoryHelper {
             return delegate.getFirstEmptySlot();
         }
     }
+    
+    // Note: Enhanced methods for town management will be added in Phase 10.2
+    // Some method signatures conflict with existing sophisticated inventory interface
+    // This will be resolved during the town management migration phase
 }
