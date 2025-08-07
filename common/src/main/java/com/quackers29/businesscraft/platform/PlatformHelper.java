@@ -90,4 +90,34 @@ public interface PlatformHelper {
      * @return Logical side identifier
      */
     String getLogicalSide();
+    
+    /**
+     * Clear town platform cache data for a specific town.
+     * Platform implementations clear client-side platform cache data.
+     * 
+     * @param townId Town UUID string
+     */
+    void clearTownPlatformCache(String townId);
+    
+    /**
+     * Refresh any open platform management screens.
+     * Platform implementations update platform management UI if open.
+     */
+    void refreshPlatformManagementScreen();
+    
+    /**
+     * Update trade screen output item on the client side.
+     * Platform implementations update trade UI with payment result.
+     * 
+     * @param itemStack Platform-specific ItemStack object
+     */
+    void updateTradeScreenOutput(Object itemStack);
+    
+    /**
+     * Execute a task on the client main thread.
+     * Platform implementations schedule client-side tasks.
+     * 
+     * @param task Runnable task to execute
+     */
+    void executeClientTask(Runnable task);
 }

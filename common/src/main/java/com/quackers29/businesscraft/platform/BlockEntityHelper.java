@@ -123,4 +123,91 @@ public interface BlockEntityHelper {
      * @param radius New search radius in blocks
      */
     void setSearchRadius(Object townDataProvider, int radius);
+    
+    /**
+     * Check if more platforms can be added to the town interface.
+     * Platform implementations check the platform capacity limits.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @return True if more platforms can be added
+     */
+    boolean canAddMorePlatforms(Object blockEntity);
+    
+    /**
+     * Add a new platform to the town interface.
+     * Platform implementations handle platform creation and setup.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @return True if platform was successfully added
+     */
+    boolean addPlatform(Object blockEntity);
+    
+    /**
+     * Mark a block entity as changed for persistence and client sync.
+     * Platform implementations trigger the block entity's change notification.
+     * 
+     * @param blockEntity Platform-specific block entity
+     */
+    void markBlockEntityChanged(Object blockEntity);
+    
+    /**
+     * Delete a platform from the town interface.
+     * Platform implementations handle platform removal.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param platformIndex Index of the platform to delete
+     * @return True if platform was successfully deleted
+     */
+    boolean deletePlatform(Object blockEntity, int platformIndex);
+    
+    /**
+     * Remove a platform from the town interface by UUID.
+     * Platform implementations handle platform removal by UUID.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param platformId Platform UUID as string
+     * @return True if platform was successfully removed
+     */
+    boolean removePlatform(Object blockEntity, String platformId);
+    
+    /**
+     * Get the number of platforms in the town interface.
+     * Platform implementations return the current platform count.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @return Number of platforms
+     */
+    int getPlatformCount(Object blockEntity);
+    
+    /**
+     * Enable or disable a platform in the town interface.
+     * Platform implementations update the platform's enabled state.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param platformIndex Index of the platform
+     * @param enabled New enabled state
+     */
+    void setPlatformEnabled(Object blockEntity, int platformIndex, boolean enabled);
+    
+    /**
+     * Check if a platform is enabled.
+     * Platform implementations return the platform's enabled state.
+     * 
+     * @param blockEntity Platform-specific town interface block entity
+     * @param platformIndex Index of the platform
+     * @return True if the platform is enabled
+     */
+    boolean isPlatformEnabled(Object blockEntity, int platformIndex);
+    
+    /**
+     * Get a block entity on the client side at the specified coordinates.
+     * Platform implementations access client world block entities.
+     * 
+     * @param x Block X coordinate
+     * @param y Block Y coordinate
+     * @param z Block Z coordinate
+     * @return Platform-specific block entity object, or null if not found
+     */
+    @Nullable
+    Object getClientBlockEntity(int x, int y, int z);
 }

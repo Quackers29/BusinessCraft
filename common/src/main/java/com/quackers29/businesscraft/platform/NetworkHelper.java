@@ -176,4 +176,26 @@ public interface NetworkHelper {
      * Read an integer from the buffer using platform-specific methods.
      */
     int readInt(Object buffer);
+    
+    /**
+     * Write a UUID to the buffer using platform-specific methods.
+     */
+    void writeUUID(Object buffer, String uuid);
+    
+    /**
+     * Read a UUID from the buffer using platform-specific methods.
+     */
+    String readUUID(Object buffer);
+    
+    /**
+     * Write an ItemStack to the buffer using platform-specific methods.
+     * Platform implementations handle ItemStack serialization for their format.
+     */
+    void writeItemStack(Object buffer, Object itemStack);
+    
+    /**
+     * Read an ItemStack from the buffer using platform-specific methods.
+     * Platform implementations handle ItemStack deserialization for their format.
+     */
+    Object readItemStack(Object buffer);
 }
