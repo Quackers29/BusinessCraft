@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.platform.forge;
 import com.quackers29.businesscraft.platform.DataStorageHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.saveddata.SavedData;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -19,14 +20,26 @@ public class ForgeDataStorageHelper implements DataStorageHelper {
         ServerLevel serverLevel = (ServerLevel) level;
         
         // We need to bridge between the Object-based common interface and Forge's SavedData system
-        // Create wrapper functions that handle the type conversion
-        Function<CompoundTag, T> forgeLoader = (tag) -> loader.apply(tag);
+        // The challenge is that Forge requires T to extend SavedData, but our interface allows any T
+        // We'll use a cast-heavy approach to bridge this gap safely
         
-        return (T) serverLevel.getDataStorage().computeIfAbsent(
+        Function<CompoundTag, SavedData> forgeLoader = (tag) -> {
+            T result = loader.apply(tag);
+            return (SavedData) result;
+        };
+        
+        Supplier<SavedData> forgeCreator = () -> {
+            T result = creator.get();
+            return (SavedData) result;
+        };
+        
+        SavedData savedData = serverLevel.getDataStorage().computeIfAbsent(
             forgeLoader,
-            creator,
+            forgeCreator,
             name
         );
+        
+        return (T) savedData;
     }
 
     @Override

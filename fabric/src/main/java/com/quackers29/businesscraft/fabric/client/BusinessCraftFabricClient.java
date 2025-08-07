@@ -17,14 +17,29 @@ public class BusinessCraftFabricClient implements ClientModInitializer {
     public void onInitializeClient() {
         LOGGER.info("BusinessCraft Fabric client initializing...");
         
-        // TODO: Initialize client-side systems (once moved to common module)
-        // - Screen registrations
-        // - Entity renderers  
-        // - Particle effects
-        // - Key bindings
-        // - Visualization system
+        try {
+            // Initialize platform-agnostic client event handlers using reflection
+            // This uses the same pattern as Forge but through reflection to avoid direct imports
+            
+            Class<?> clientModEventsClass = Class.forName("com.quackers29.businesscraft.event.ClientModEvents");
+            java.lang.reflect.Method initializeMethod = clientModEventsClass.getMethod("initialize");
+            initializeMethod.invoke(null);
+            LOGGER.info("ClientModEvents initialized");
+            
+            Class<?> clientSetupClass = Class.forName("com.quackers29.businesscraft.client.ClientSetup");
+            java.lang.reflect.Method clientInitializeMethod = clientSetupClass.getMethod("initialize");
+            clientInitializeMethod.invoke(null);
+            LOGGER.info("ClientSetup initialized");
+            
+            // The actual screen registrations, entity renderers, etc. will be handled
+            // by the platform-specific event handlers through PlatformServices.getEventHelper()
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to initialize client systems: " + e.getMessage());
+            e.printStackTrace();
+        }
         
         DebugConfig.debug(LOGGER, DebugConfig.CLIENT_HANDLERS, "Client initialization complete");
-        LOGGER.info("BusinessCraft Fabric client initialized (basic client initialization - full client features pending common module migration).");
+        LOGGER.info("BusinessCraft Fabric client initialized with platform-agnostic client systems.");
     }
 }

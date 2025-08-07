@@ -36,6 +36,8 @@ import com.quackers29.businesscraft.init.ModEntityTypes;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import com.quackers29.businesscraft.platform.PlatformServiceProvider;
+import com.quackers29.businesscraft.platform.ITownManagerService;
+import com.quackers29.businesscraft.platform.DataStorageHelper;
 import com.quackers29.businesscraft.platform.forge.ForgeRegistryHelper;
 import com.quackers29.businesscraft.platform.forge.ForgePlatformServices;
 import com.quackers29.businesscraft.event.ModEvents;
@@ -56,17 +58,21 @@ public class BusinessCraft {
         
         // Initialize Forge platform services using Enhanced MultiLoader approach
         ForgePlatformServices forgeServices = new ForgePlatformServices();
-        PlatformServices.setPlatformComplete(
+        
+        // Initialize the core platform services first
+        PlatformServices.setPlatform(
             forgeServices.getPlatformHelper(),
             forgeServices.getRegistryHelper(),
             forgeServices.getNetworkHelper(),
             forgeServices.getEventHelper(),
             forgeServices.getInventoryHelper(),
             forgeServices.getMenuHelper(),
-            forgeServices.getBlockEntityHelper(),
-            forgeServices.getTownManagerService(),
-            forgeServices.getDataStorageHelper()
+            forgeServices.getBlockEntityHelper()
         );
+        
+        // TODO: Initialize town management services manually until classpath issue is resolved
+        // This should be replaced with setPlatformComplete once compilation issue is fixed
+        initializeTownServices(forgeServices);
         
         // Register with common module service provider
         PlatformServiceProvider.setPlatform(
@@ -192,6 +198,28 @@ public class BusinessCraft {
         if (event.getLevel() instanceof ServerLevel) {
             DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "Clearing tracked vehicles on level unload");
             TOURIST_VEHICLE_MANAGER.clearTrackedVehicles();
+        }
+    }
+    
+    /**
+     * Initialize town management services manually.
+     * This is a workaround for the setPlatformComplete method compilation issue.
+     */
+    private void initializeTownServices(ForgePlatformServices forgeServices) {
+        try {
+            // Use reflection to access private fields and set the town services
+            java.lang.reflect.Field townManagerField = PlatformServices.class.getDeclaredField("townManagerService");
+            townManagerField.setAccessible(true);
+            townManagerField.set(null, forgeServices.getTownManagerService());
+            
+            java.lang.reflect.Field dataStorageField = PlatformServices.class.getDeclaredField("dataStorageHelper");
+            dataStorageField.setAccessible(true);
+            dataStorageField.set(null, forgeServices.getDataStorageHelper());
+            
+            LOGGER.info("Initialized town management services via reflection");
+        } catch (Exception e) {
+            LOGGER.error("Failed to initialize town management services: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
