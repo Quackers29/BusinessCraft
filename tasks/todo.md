@@ -271,13 +271,21 @@ Priority: HIGH - Complete 100% feature parity by migrating business logic to com
   - [x] ✅ **PRAGMATIC APPROACH**: Fixed interface compatibility with Object types for platform abstraction
   - [x] ✅ **ACHIEVEMENT**: Event system migration complete + client crash resolved
 
-- [ ] **9.8 Final Core Systems Integration**
+- [ ] **9.8 Final Core Systems Integration (IN PROGRESS 🔄)**
   **Scope**: Complete Fabric platform integration | **Effort**: 24 hours
-  - [ ] Update Fabric initialization to load configuration systems
-  - [ ] Integrate town management system (TownManager, data persistence)
-  - [ ] Test UI framework works correctly on Fabric platform
-  - [ ] Verify entity systems (TouristEntity, rendering) work on both platforms
-  - [ ] Test block entity systems (TownInterfaceEntity) work on both platforms
+  - [x] **9.8.1** EventHelper interface conflicts resolved - all modules compile successfully ✅
+  - [ ] **9.8.2** Abstract town management system with ITownManagerService interface (CURRENT TASK 🎯)
+    - [ ] Design ITownManagerService interface for platform abstraction
+    - [ ] Create DataStorageHelper service interface (SavedData vs PersistentState)
+    - [ ] Implement Forge platform service (ForgeTownManagerService)
+    - [ ] Implement Fabric platform service (FabricTownManagerService)
+    - [ ] Migrate TownManager logic to common module via service interface
+    - [ ] Update 46 usage locations: TownManager.get(ServerLevel) → PlatformServices.getTownManagerService()
+    - [ ] Test data persistence compatibility between platforms
+  - [ ] **9.8.3** Update Fabric initialization to load configuration systems
+  - [ ] **9.8.4** Test UI framework works correctly on Fabric platform
+  - [ ] **9.8.5** Verify entity systems (TouristEntity, rendering) work on both platforms
+  - [ ] **9.8.6** Test block entity systems (TownInterfaceEntity) work on both platforms
 
 - [ ] **9.9 Final Integration Testing**
   **Scope**: Comprehensive testing and verification | **Effort**: 16 hours

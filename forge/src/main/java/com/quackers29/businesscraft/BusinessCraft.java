@@ -56,14 +56,16 @@ public class BusinessCraft {
         
         // Initialize Forge platform services using Enhanced MultiLoader approach
         ForgePlatformServices forgeServices = new ForgePlatformServices();
-        PlatformServices.setPlatform(
+        PlatformServices.setPlatformComplete(
             forgeServices.getPlatformHelper(),
             forgeServices.getRegistryHelper(),
             forgeServices.getNetworkHelper(),
             forgeServices.getEventHelper(),
             forgeServices.getInventoryHelper(),
             forgeServices.getMenuHelper(),
-            forgeServices.getBlockEntityHelper()
+            forgeServices.getBlockEntityHelper(),
+            forgeServices.getTownManagerService(),
+            forgeServices.getDataStorageHelper()
         );
         
         // Register with common module service provider

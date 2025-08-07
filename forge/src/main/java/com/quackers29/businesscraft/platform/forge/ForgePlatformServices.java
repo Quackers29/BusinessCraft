@@ -13,6 +13,8 @@ public class ForgePlatformServices {
     private final ForgeInventoryHelper inventoryHelper;
     private final ForgeMenuHelper menuHelper;
     private final ForgeBlockEntityHelper blockEntityHelper;
+    private final ForgeTownManagerService townManagerService;
+    private final ForgeDataStorageHelper dataStorageHelper;
     
     public ForgePlatformServices() {
         this.platformHelper = new ForgePlatformHelper();
@@ -22,6 +24,8 @@ public class ForgePlatformServices {
         this.inventoryHelper = new ForgeInventoryHelper();
         this.menuHelper = new ForgeMenuHelper();
         this.blockEntityHelper = new ForgeBlockEntityHelper();
+        this.townManagerService = new ForgeTownManagerService();
+        this.dataStorageHelper = new ForgeDataStorageHelper();
     }
     
     public ForgePlatformHelper getPlatformHelper() {
@@ -50,5 +54,13 @@ public class ForgePlatformServices {
     
     public ForgeBlockEntityHelper getBlockEntityHelper() {
         return blockEntityHelper;
+    }
+    
+    public ForgeTownManagerService getTownManagerService() {
+        return townManagerService;
+    }
+    
+    public ForgeDataStorageHelper getDataStorageHelper() {
+        return dataStorageHelper;
     }
 }
