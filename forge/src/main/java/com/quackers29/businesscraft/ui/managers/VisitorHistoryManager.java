@@ -3,8 +3,7 @@ package com.quackers29.businesscraft.ui.managers;
 import com.quackers29.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.network.ModMessages;
-// TODO: Migrate PlayerExitUIPacket to common module
-// import com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket;
+import com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket;
 import com.quackers29.businesscraft.ui.modal.factories.BCModalGridFactory;
 import com.quackers29.businesscraft.ui.modal.specialized.BCModalGridScreen;
 import com.quackers29.businesscraft.ui.components.containers.BCTabPanel;
@@ -85,8 +84,7 @@ public class VisitorHistoryManager extends BaseModalManager {
             BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(blockPos);
             if (blockEntity instanceof TownInterfaceEntity townInterface) {
                 // Request the town block entity to sync its town data with the server
-                // TODO: Migrate PlayerExitUIPacket to common module
-                // ModMessages.sendToServer(new PlayerExitUIPacket(blockPos));
+                ModMessages.sendToServer(new PlayerExitUIPacket(blockPos.getX(), blockPos.getY(), blockPos.getZ()));
                 
                 // Get the visit history
                 visitHistory.addAll(townInterface.getVisitHistory());

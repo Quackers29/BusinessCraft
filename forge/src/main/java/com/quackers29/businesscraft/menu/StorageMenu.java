@@ -14,8 +14,7 @@ import net.minecraftforge.items.SlotItemHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.core.BlockPos;
 import com.quackers29.businesscraft.network.ModMessages;
-// TODO: Migrate CommunalStoragePacket to common module
-// import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
+import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
 // TODO: Migrate PersonalStoragePacket to common module
 // import com.quackers29.businesscraft.network.packets.storage.PersonalStoragePacket;
 import net.minecraft.world.item.Item;
@@ -230,10 +229,9 @@ public class StorageMenu extends AbstractContainerMenu {
             return false;
         }
         
-        // TODO: Migrate CommunalStoragePacket to common module
         // Send a packet to the server to add the item to communal storage
         // We're copying the stack to ensure we don't modify it before the server responds
-        // ModMessages.sendToServer(new CommunalStoragePacket(townBlockPos, itemStack.copy(), slotId, true));
+        ModMessages.sendToServer(new CommunalStoragePacket(townBlockPos.getX(), townBlockPos.getY(), townBlockPos.getZ(), itemStack.copy(), slotId, true));
         
         // Storage slot will be updated when server responds
         return true;
@@ -254,9 +252,8 @@ public class StorageMenu extends AbstractContainerMenu {
             return false;
         }
         
-        // TODO: Migrate CommunalStoragePacket to common module
         // Send a packet to the server to remove the item from communal storage
-        // ModMessages.sendToServer(new CommunalStoragePacket(townBlockPos, itemStack.copy(), slotId, false));
+        ModMessages.sendToServer(new CommunalStoragePacket(townBlockPos.getX(), townBlockPos.getY(), townBlockPos.getZ(), itemStack.copy(), slotId, false));
         
         return true;
     }

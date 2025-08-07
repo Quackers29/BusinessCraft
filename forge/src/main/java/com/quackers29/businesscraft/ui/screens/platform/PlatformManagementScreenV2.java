@@ -5,8 +5,7 @@ import com.quackers29.businesscraft.network.packets.platform.AddPlatformPacket;
 import com.quackers29.businesscraft.network.packets.platform.DeletePlatformPacket;
 import com.quackers29.businesscraft.network.ModMessages;
 import com.quackers29.businesscraft.network.packets.platform.SetPlatformEnabledPacket;
-// TODO: Migrate OpenDestinationsUIPacket to common module
-// import com.quackers29.businesscraft.network.packets.ui.OpenDestinationsUIPacket;
+import com.quackers29.businesscraft.network.packets.ui.OpenDestinationsUIPacket;
 import com.quackers29.businesscraft.network.packets.platform.SetPlatformPathCreationModePacket;
 import com.quackers29.businesscraft.network.packets.platform.ResetPlatformPathPacket;
 import com.quackers29.businesscraft.platform.Platform;
@@ -390,9 +389,8 @@ public class PlatformManagementScreenV2 extends Screen {
         if (index < 0 || index >= platforms.size()) return;
         
         Platform platform = platforms.get(index);
-        // TODO: Migrate OpenDestinationsUIPacket to common module
-        // ModMessages.sendToServer(new OpenDestinationsUIPacket(
-        //     townBlockPos, platform.getId()));
+        ModMessages.sendToServer(new OpenDestinationsUIPacket(
+            townBlockPos.getX(), townBlockPos.getY(), townBlockPos.getZ(), platform.getId().toString()));
     }
     
     private void setPlatformPathByIndex(int index) {

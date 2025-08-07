@@ -7,8 +7,7 @@ import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import com.quackers29.businesscraft.network.ModMessages;
 // TODO: Migrate PersonalStorageRequestPacket to common module
 // import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
-// TODO: Migrate CommunalStoragePacket to common module
-// import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
+import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
 import com.quackers29.businesscraft.ui.util.InventoryRenderer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -870,8 +869,7 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                     // ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
                     } else {
                         // Request communal storage data refresh
-                        // TODO: Migrate CommunalStoragePacket to common module
-                        // ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                        ModMessages.sendToServer(new CommunalStoragePacket(townPos.getX(), townPos.getY(), townPos.getZ(), ItemStack.EMPTY, -1, true));
                     }
                 }
             }
@@ -940,8 +938,7 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                             // ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
                         } else {
                             // Request communal storage data refresh
-                            // TODO: Migrate CommunalStoragePacket to common module
-                        // ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                            ModMessages.sendToServer(new CommunalStoragePacket(townPos.getX(), townPos.getY(), townPos.getZ(), ItemStack.EMPTY, -1, true));
                         }
                     }
                     
@@ -1263,8 +1260,7 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                             // TODO: Migrate PersonalStorageRequestPacket to common module
                             // ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
                         } else {
-                            // TODO: Migrate CommunalStoragePacket to common module
-                        // ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                            ModMessages.sendToServer(new CommunalStoragePacket(townPos.getX(), townPos.getY(), townPos.getZ(), ItemStack.EMPTY, -1, true));
                         }
                     }
                 }

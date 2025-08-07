@@ -2,14 +2,12 @@ package com.quackers29.businesscraft.ui.modal.specialized;
 
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.network.ModMessages;
-// TODO: Migrate RequestTownMapDataPacket to common module
-// import com.quackers29.businesscraft.network.packets.ui.RequestTownMapDataPacket;
+import com.quackers29.businesscraft.network.packets.ui.RequestTownMapDataPacket;
 // TODO: Migrate RequestTownPlatformDataPacket to common module
 // import com.quackers29.businesscraft.network.packets.ui.RequestTownPlatformDataPacket;
 // TODO: Migrate ClientTownMapCache to common module
 // import com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache;
-// TODO: Migrate TownMapDataResponsePacket to common module
-// import com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket;
+import com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket;
 // TODO: Migrate TownPlatformDataResponsePacket to common module
 // import com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket;
 import com.mojang.blaze3d.systems.RenderSystem;

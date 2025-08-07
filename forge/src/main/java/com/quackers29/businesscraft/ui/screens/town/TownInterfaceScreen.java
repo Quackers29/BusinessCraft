@@ -8,8 +8,7 @@ import com.quackers29.businesscraft.ui.tabs.ResourcesTab;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import com.quackers29.businesscraft.network.ModMessages;
-// TODO: Migrate PlayerExitUIPacket to common module
-// import com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket;
+import com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket;
 import com.quackers29.businesscraft.network.packets.platform.SetSearchRadiusPacket;
 import net.minecraft.core.BlockPos;
 import java.util.List;
@@ -83,8 +82,7 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
             BlockPos blockPos = this.menu.getBlockPos();
             if (blockPos != null) {
                 // Send a packet to the server to register player exit UI
-                // TODO: Migrate PlayerExitUIPacket to common module
-                // ModMessages.sendToServer(new PlayerExitUIPacket(blockPos));
+                ModMessages.sendToServer(new PlayerExitUIPacket(blockPos.getX(), blockPos.getY(), blockPos.getZ()));
                 DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "Player exit UI packet sent");
             }
         } catch (Exception e) {

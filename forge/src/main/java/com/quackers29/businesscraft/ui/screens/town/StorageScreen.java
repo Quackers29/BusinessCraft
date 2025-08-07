@@ -18,8 +18,7 @@ import net.minecraft.core.BlockPos;
 // TODO: Migrate PersonalStorageRequestPacket to common module
 // import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
 import com.quackers29.businesscraft.network.ModMessages;
-// TODO: Migrate CommunalStoragePacket to common module
-// import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
+import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
 // TODO: Migrate PersonalStoragePacket to common module
 // import com.quackers29.businesscraft.network.packets.storage.PersonalStoragePacket;
 
@@ -383,8 +382,7 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                             // TODO: Migrate PersonalStorageRequestPacket to common module
                             // ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
                         } else {
-                            // TODO: Migrate CommunalStoragePacket to common module
-                            // ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                            ModMessages.sendToServer(new CommunalStoragePacket(townPos.getX(), townPos.getY(), townPos.getZ(), ItemStack.EMPTY, -1, true));
                         }
                     }
                 }
@@ -732,9 +730,8 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
         if (townPos != null && this.minecraft != null && this.minecraft.player != null) {
             LOGGER.debug("Requesting communal storage refresh from server");
             try {
-                // TODO: Migrate CommunalStoragePacket to common module
                 // Send the request packet with the special marker (-1)
-                // ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                ModMessages.sendToServer(new CommunalStoragePacket(townPos.getX(), townPos.getY(), townPos.getZ(), ItemStack.EMPTY, -1, true));
             } catch (Exception e) {
                 LOGGER.error("Error sending communal storage request", e);
             }
@@ -800,8 +797,7 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                             //     townPosition, stack, slotIndex, true, this.minecraft.player.getUUID()));
                         }
                     } else if (townPos != null) {
-                        // TODO: Migrate CommunalStoragePacket to common module
-                        // ModMessages.sendToServer(new CommunalStoragePacket(townPos, stack, slotIndex, true));
+                        ModMessages.sendToServer(new CommunalStoragePacket(townPos.getX(), townPos.getY(), townPos.getZ(), stack, slotIndex, true));
                     }
                     
                     updateNeeded = true;

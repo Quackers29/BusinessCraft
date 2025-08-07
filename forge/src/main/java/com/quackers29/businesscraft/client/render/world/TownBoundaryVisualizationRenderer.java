@@ -2,8 +2,7 @@ package com.quackers29.businesscraft.client.render.world;
 
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.network.ModMessages;
-// TODO: Migrate BoundarySyncRequestPacket to common module
-// import com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket;
+import com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -177,8 +176,7 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
             
         for (VisualizationManager.VisualizationEntry entry : activeEntries) {
             BlockPos pos = entry.getPosition();
-            // TODO: Migrate BoundarySyncRequestPacket to common module
-            // ModMessages.sendToServer(new BoundarySyncRequestPacket(pos));
+            ModMessages.sendToServer(new BoundarySyncRequestPacket(pos.getX(), pos.getY(), pos.getZ(), true, 32));
             DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
                 "Requested boundary sync for active town at {}", pos);
         }

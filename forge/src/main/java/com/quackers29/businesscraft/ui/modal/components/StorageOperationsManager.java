@@ -4,8 +4,7 @@ import com.quackers29.businesscraft.menu.StorageMenu;
 import com.quackers29.businesscraft.network.ModMessages;
 // TODO: Migrate PersonalStorageRequestPacket to common module
 // import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
-// TODO: Migrate CommunalStoragePacket to common module
-// import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
+import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.Font;
 import net.minecraft.world.item.ItemStack;
