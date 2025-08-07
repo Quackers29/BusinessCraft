@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.client.Camera;
 import com.quackers29.businesscraft.platform.EventHelper;
 
 import java.util.List;
@@ -108,7 +109,9 @@ public abstract class WorldVisualizationRenderer {
      * @param eventHelper The event helper instance to register with
      */
     public void register(EventHelper eventHelper) {
-        eventHelper.registerRenderLevelEvent(this::render);
+        eventHelper.registerRenderLevelEvent((poseStack, bufferSource, level) -> 
+            this.render((PoseStack) poseStack, (MultiBufferSource) bufferSource, (Level) level)
+        );
     }
     
     /**

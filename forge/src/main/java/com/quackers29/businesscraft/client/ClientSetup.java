@@ -19,14 +19,13 @@ public class ClientSetup {
      * Should be called during client setup.
      */
     public static void initialize() {
-        PlatformServices.getEventHelper().registerEntityRendererRegistrationEvent(ClientSetup::onEntityRendererRegistration);
+        PlatformServices.getEventHelper().registerEntityRendererRegistrationEvent(() -> ClientSetup.onEntityRendererRegistration());
     }
     
     /**
      * Platform-agnostic entity renderer registration handler.
      */
-    private static <T extends LivingEntity> void onEntityRendererRegistration(EntityType<T> entityType, 
-                                                                            EntityRendererProvider<T> rendererProvider) {
+    private static void onEntityRendererRegistration() {
         // This will be called by the platform-specific implementation
         // The actual registration is handled in ForgeEventHelper for Forge
     }

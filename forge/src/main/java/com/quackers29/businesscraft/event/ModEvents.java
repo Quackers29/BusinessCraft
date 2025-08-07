@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.event;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.platform.PlatformServices;
+import com.quackers29.businesscraft.platform.EventHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
@@ -32,7 +33,15 @@ public class ModEvents {
      * Should be called during mod initialization.
      */
     public static void initialize() {
-        PlatformServices.getEventHelper().registerBlockInteractionEvent(ModEvents::onBlockInteraction);
+        PlatformServices.getEventHelper().registerBlockInteractionEvent(
+            new EventHelper.BlockInteractionHandler() {
+                @Override
+                public Object onBlockInteraction(Object player, Object level, Object hand, 
+                                               Object pos, Object state, Object hitResult) {
+                    return ModEvents.onBlockInteraction(player, level, hand, pos, state, hitResult);
+                }
+            }
+        );
     }
 
     public static void setActiveTownBlock(BlockPos pos) {
@@ -49,18 +58,18 @@ public class ModEvents {
         // Cast objects to Minecraft types
         if (!(playerObj instanceof Player player) || !(levelObj instanceof Level level) || 
             !(clickedPosObj instanceof BlockPos clickedPos)) {
-            return InteractionResult.PASS;
+            return (Object) InteractionResult.PASS;
         }
-        if (activeTownBlockPos == null) return InteractionResult.PASS;
+        if (activeTownBlockPos == null) return (Object) InteractionResult.PASS;
         
         // Skip if on client side - only process on server
-        if (level.isClientSide()) return InteractionResult.PASS;
+        if (level.isClientSide()) return (Object) InteractionResult.PASS;
         
         // Debounce clicks - prevent multiple rapid clicks
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastClickTime < 500) {
             LOGGER.debug("Ignoring click due to debounce (time since last: {}ms)", currentTime - lastClickTime);
-            return InteractionResult.PASS;
+            return (Object) InteractionResult.PASS;
         }
         lastClickTime = currentTime;
         
@@ -72,7 +81,7 @@ public class ModEvents {
             
             if (!townInterface.isValidPathDistance(clickedPos)) {
                 player.sendSystemMessage(Component.literal("Point too far from town!"));
-                return InteractionResult.FAIL;
+                return (Object) InteractionResult.FAIL;
             }
             
             // First click - set start point
@@ -109,9 +118,9 @@ public class ModEvents {
                 LOGGER.debug("Set path end to {} and completed path creation", clickedPos);
             }
             
-            return InteractionResult.SUCCESS;
+            return (Object) InteractionResult.SUCCESS;
         }
         
-        return InteractionResult.PASS;
+        return (Object) InteractionResult.PASS;
     }
 }
