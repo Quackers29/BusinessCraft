@@ -44,8 +44,13 @@ public class ModEvents {
     /**
      * Platform-agnostic block interaction handler for path creation system.
      */
-    private static InteractionResult onBlockInteraction(Player player, Level level, InteractionHand hand,
-                                                      BlockPos clickedPos, BlockState state, BlockHitResult hitResult) {
+    private static Object onBlockInteraction(Object playerObj, Object levelObj, Object handObj,
+                                           Object clickedPosObj, Object stateObj, Object hitResultObj) {
+        // Cast objects to Minecraft types
+        if (!(playerObj instanceof Player player) || !(levelObj instanceof Level level) || 
+            !(clickedPosObj instanceof BlockPos clickedPos)) {
+            return InteractionResult.PASS;
+        }
         if (activeTownBlockPos == null) return InteractionResult.PASS;
         
         // Skip if on client side - only process on server

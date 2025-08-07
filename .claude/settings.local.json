@@ -22,7 +22,9 @@
       "Bash(jar:*)",
       "Bash(../gradlew compileJava:*)",
       "Bash(git checkout:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(GRADLE_USER_HOME=/tmp/gradle_temp ./gradlew --no-daemon :forge:runClient)",
+      "Bash(GRADLE_USER_HOME=/tmp/gradle_temp ./gradlew --no-daemon :forge:runClient --args=\"--username TestUser\")"
     ],
     "deny": []
   }

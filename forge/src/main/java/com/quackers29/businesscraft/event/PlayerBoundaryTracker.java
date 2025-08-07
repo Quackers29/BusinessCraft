@@ -68,7 +68,10 @@ public class PlayerBoundaryTracker {
     /**
      * Platform-agnostic player tick handler.
      */
-    public static void onPlayerTick(Player player) {
+    public static void onPlayerTick(Object playerObj) {
+        if (!(playerObj instanceof Player player)) {
+            return;
+        }
         // Early return if player tracking is disabled
         if (!ConfigLoader.playerTracking || !ConfigLoader.townBoundaryMessages) {
             return;
@@ -199,7 +202,10 @@ public class PlayerBoundaryTracker {
     /**
      * Clean up player data when they leave the server - platform-agnostic handler.
      */
-    public static void onPlayerLoggedOut(Player player) {
+    public static void onPlayerLoggedOut(Object playerObj) {
+        if (!(playerObj instanceof Player player)) {
+            return;
+        }
         UUID playerId = player.getUUID();
         playerStates.remove(playerId);
         LOGGER.debug("Cleaned up boundary tracking data for player: {}", player.getName().getString());
@@ -208,7 +214,10 @@ public class PlayerBoundaryTracker {
     /**
      * Initialize player data when they join the server - platform-agnostic handler.
      */
-    public static void onPlayerLoggedIn(Player player) {
+    public static void onPlayerLoggedIn(Object playerObj) {
+        if (!(playerObj instanceof Player player)) {
+            return;
+        }
         if (player instanceof ServerPlayer serverPlayer) {
             UUID playerId = player.getUUID();
             BlockPos initialPos = player.blockPosition();

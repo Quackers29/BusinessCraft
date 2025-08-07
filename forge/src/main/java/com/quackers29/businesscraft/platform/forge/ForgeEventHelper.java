@@ -1,7 +1,15 @@
 package com.quackers29.businesscraft.platform.forge;
 
 import com.quackers29.businesscraft.platform.EventHelper;
+import com.quackers29.businesscraft.platform.EventHelper.*;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.core.BlockPos;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
@@ -103,7 +111,7 @@ public class ForgeEventHelper implements EventHelper {
     @SubscribeEvent
     public void onBlockInteraction(PlayerInteractEvent.RightClickBlock event) {
         for (BlockInteractionHandler handler : blockInteractionHandlers) {
-            InteractionResult result = handler.onBlockInteraction(
+            Object result = handler.onBlockInteraction(
                 event.getEntity(),
                 event.getLevel(),
                 event.getHand(),
@@ -112,8 +120,8 @@ public class ForgeEventHelper implements EventHelper {
                 event.getHitVec()
             );
             
-            if (result != InteractionResult.PASS) {
-                event.setCancellationResult(result);
+            if (result instanceof InteractionResult interactionResult && interactionResult != InteractionResult.PASS) {
+                event.setCancellationResult(interactionResult);
                 event.setCanceled(true);
                 break;
             }
