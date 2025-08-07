@@ -2,16 +2,25 @@ package com.quackers29.businesscraft.platform.forge;
 
 import com.quackers29.businesscraft.platform.BlockEntityHelper;
 import com.quackers29.businesscraft.platform.InventoryHelper;
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.api.ITownDataProvider;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -20,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * inventory attachment and custom data storage.
  */
 public class ForgeBlockEntityHelper implements BlockEntityHelper {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ForgeBlockEntityHelper.class);
     
     // Thread-safe storage for custom data attachments
     private final Map<BlockEntity, Map<String, Object>> customDataStorage = new ConcurrentHashMap<>();
@@ -116,6 +126,281 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
     @Override
     public String getInventoryCapabilityKey() {
         return "inventory";
+    }
+    
+    // ==== NEW METHODS FOR ENHANCED MULTILOADER PACKET SUPPORT ====
+    
+    // @Override
+    public @Nullable Object getBlockEntity(Object player, int x, int y, int z) {
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            LOGGER.warn("Player object is not a ServerPlayer: {}", player);
+            return null;
+        }
+        
+        Level level = serverPlayer.level();
+        BlockPos pos = new BlockPos(x, y, z);
+        return level.getBlockEntity(pos);
+    }
+    
+    // @Override
+    public @Nullable Object getTownDataProvider(Object blockEntity) {
+        if (blockEntity instanceof ITownDataProvider provider) {
+            return provider;
+        }
+        return null;
+    }
+    
+    // @Override
+    public boolean isTouristSpawningEnabled(Object townDataProvider) {
+        if (townDataProvider instanceof ITownDataProvider provider) {
+            return provider.isTouristSpawningEnabled();
+        }
+        return false;
+    }
+    
+    // @Override
+    public void setTouristSpawningEnabled(Object townDataProvider, boolean enabled) {
+        if (townDataProvider instanceof ITownDataProvider provider) {
+            provider.setTouristSpawningEnabled(enabled);
+        }
+    }
+    
+    // @Override
+    public void markTownDataDirty(Object townDataProvider) {
+        if (townDataProvider instanceof ITownDataProvider provider) {
+            provider.markDirty();
+        }
+    }
+    
+    // @Override
+    public void syncTownData(Object blockEntity) {
+        if (blockEntity instanceof TownInterfaceEntity townInterface) {
+            townInterface.syncTownData();
+        }
+    }
+    
+    // @Override
+    public @Nullable String getTownName(Object townDataProvider) {
+        if (townDataProvider instanceof ITownDataProvider provider) {
+            return provider.getTownName();
+        }
+        return null;
+    }
+    
+    // @Override
+    public void setTownName(Object townDataProvider, String townName) {
+        // TODO: Implement setTownName - method doesn't exist in current ITownDataProvider
+        LOGGER.warn("setTownName not yet implemented for Forge");
+    }
+    
+    // @Override
+    public @Nullable String getTownId(Object townDataProvider) {
+        if (townDataProvider instanceof ITownDataProvider provider) {
+            return provider.getTownId() != null ? provider.getTownId().toString() : null;
+        }
+        return null;
+    }
+    
+    // @Override
+    public boolean isTownDataInitialized(Object townDataProvider) {
+        // TODO: Implement isTownDataInitialized - method doesn't exist in current ITownDataProvider
+        LOGGER.warn("isTownDataInitialized not yet implemented for Forge");
+        return false;
+    }
+    
+    // @Override
+    public int getSearchRadius(Object townDataProvider) {
+        if (townDataProvider instanceof ITownDataProvider provider) {
+            return provider.getSearchRadius();
+        }
+        return 100; // Default fallback
+    }
+    
+    // @Override
+    public void setSearchRadius(Object townDataProvider, int radius) {
+        if (townDataProvider instanceof ITownDataProvider provider) {
+            provider.setSearchRadius(radius);
+        }
+    }
+    
+    // @Override
+    public boolean canAddMorePlatforms(Object blockEntity) {
+        if (blockEntity instanceof TownInterfaceEntity townInterface) {
+            return townInterface.canAddMorePlatforms();
+        }
+        return false;
+    }
+    
+    // @Override
+    public boolean addPlatform(Object blockEntity) {
+        if (blockEntity instanceof TownInterfaceEntity townInterface) {
+            return townInterface.addPlatform();
+        }
+        return false;
+    }
+    
+    // @Override
+    public void markBlockEntityChanged(Object blockEntity) {
+        if (blockEntity instanceof BlockEntity be) {
+            be.setChanged();
+        }
+    }
+    
+    // @Override
+    public boolean deletePlatform(Object blockEntity, int platformIndex) {
+        // TODO: Implement deletePlatform - method doesn't exist in current TownInterfaceEntity
+        LOGGER.warn("deletePlatform not yet implemented for Forge");
+        return false;
+    }
+    
+    // @Override
+    public boolean removePlatform(Object blockEntity, String platformId) {
+        if (blockEntity instanceof TownInterfaceEntity townInterface) {
+            try {
+                java.util.UUID uuid = java.util.UUID.fromString(platformId);
+                return townInterface.removePlatform(uuid);
+            } catch (IllegalArgumentException e) {
+                LOGGER.warn("Invalid platform ID format: {}", platformId);
+                return false;
+            }
+        }
+        return false;
+    }
+    
+    // @Override
+    public int getPlatformCount(Object blockEntity) {
+        // TODO: Implement getPlatformCount - method doesn't exist in current TownInterfaceEntity
+        LOGGER.warn("getPlatformCount not yet implemented for Forge");
+        return 0;
+    }
+    
+    // @Override
+    public void setPlatformEnabled(Object blockEntity, int platformIndex, boolean enabled) {
+        // TODO: Implement setPlatformEnabled - method doesn't exist in current TownInterfaceEntity
+        LOGGER.warn("setPlatformEnabled not yet implemented for Forge");
+    }
+    
+    // @Override
+    public boolean isPlatformEnabled(Object blockEntity, int platformIndex) {
+        // TODO: Implement isPlatformEnabled - method doesn't exist in current TownInterfaceEntity
+        LOGGER.warn("isPlatformEnabled not yet implemented for Forge");
+        return false;
+    }
+    
+    // @Override
+    public @Nullable Object getClientBlockEntity(int x, int y, int z) {
+        // TODO: Implement client-side block entity access
+        // This would require access to Minecraft.getInstance().level
+        LOGGER.warn("getClientBlockEntity not yet implemented for Forge");
+        return null;
+    }
+    
+    // ==== PLACEHOLDER IMPLEMENTATIONS FOR NEW PACKET-RELATED METHODS ====
+    // These need full implementation based on existing TownInterfaceEntity methods
+    
+    // @Override
+    public boolean setPlatformDestinationEnabled(Object blockEntity, String platformId, String townId, boolean enabled) {
+        // TODO: Implement platform destination management
+        LOGGER.warn("setPlatformDestinationEnabled not yet implemented for Forge");
+        return false;
+    }
+    
+    // @Override
+    public Map<String, String> getAllTownsForDestination(Object blockEntity) {
+        // TODO: Implement town destination retrieval
+        LOGGER.warn("getAllTownsForDestination not yet implemented for Forge");
+        return new HashMap<>();
+    }
+    
+    // @Override
+    public Map<String, Boolean> getPlatformDestinations(Object blockEntity, String platformId) {
+        // TODO: Implement platform destination state retrieval
+        LOGGER.warn("getPlatformDestinations not yet implemented for Forge");
+        return new HashMap<>();
+    }
+    
+    // @Override
+    public @Nullable Object getOriginTown(Object blockEntity) {
+        // TODO: Implement origin town retrieval
+        LOGGER.warn("getOriginTown not yet implemented for Forge");
+        return null;
+    }
+    
+    // @Override
+    public @Nullable int[] getTownPosition(Object town) {
+        // TODO: Implement town position retrieval
+        LOGGER.warn("getTownPosition not yet implemented for Forge");
+        return null;
+    }
+    
+    // @Override
+    public @Nullable Object getTownById(Object player, String townId) {
+        // TODO: Implement town lookup by ID
+        LOGGER.warn("getTownById not yet implemented for Forge");
+        return null;
+    }
+    
+    // @Override
+    public boolean setPlatformPath(Object blockEntity, String platformId, int startX, int startY, int startZ, int endX, int endY, int endZ) {
+        // TODO: Implement platform path setting
+        LOGGER.warn("setPlatformPath not yet implemented for Forge");
+        return false;
+    }
+    
+    // @Override
+    public boolean resetPlatformPath(Object blockEntity, String platformId) {
+        // TODO: Implement platform path reset
+        LOGGER.warn("resetPlatformPath not yet implemented for Forge");
+        return false;
+    }
+    
+    // @Override
+    public boolean setPlatformEnabledById(Object blockEntity, String platformId, boolean enabled) {
+        // TODO: Implement platform enabled state by ID
+        LOGGER.warn("setPlatformEnabledById not yet implemented for Forge");
+        return false;
+    }
+    
+    // @Override
+    public boolean setPlatformCreationMode(Object blockEntity, boolean mode, String platformId) {
+        // TODO: Implement platform creation mode setting
+        LOGGER.warn("setPlatformCreationMode not yet implemented for Forge");
+        return false;
+    }
+    
+    // @Override
+    public Object processResourceTrade(Object blockEntity, Object player, Object itemStack, int slotId) {
+        // TODO: Implement resource trading logic
+        LOGGER.warn("processResourceTrade not yet implemented for Forge");
+        return null;
+    }
+    
+    // @Override
+    public List<Object> getUnclaimedRewards(Object blockEntity) {
+        // TODO: Implement payment board reward retrieval
+        LOGGER.warn("getUnclaimedRewards not yet implemented for Forge");
+        return new ArrayList<>();
+    }
+    
+    // @Override
+    public Object claimPaymentBoardReward(Object blockEntity, Object player, String rewardId, boolean toBuffer) {
+        // TODO: Implement reward claiming logic
+        LOGGER.warn("claimPaymentBoardReward not yet implemented for Forge");
+        return null;
+    }
+    
+    // @Override
+    public boolean openPaymentBoardUI(Object blockEntity, Object player) {
+        // TODO: Implement Payment Board UI opening
+        LOGGER.warn("openPaymentBoardUI not yet implemented for Forge");
+        return false;
+    }
+    
+    // @Override
+    public boolean openTownInterfaceUI(Object blockEntity, Object player) {
+        // TODO: Implement Town Interface UI opening
+        LOGGER.warn("openTownInterfaceUI not yet implemented for Forge");
+        return false;
     }
     
     /**
