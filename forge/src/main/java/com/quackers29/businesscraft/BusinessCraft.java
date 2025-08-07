@@ -77,7 +77,10 @@ public class BusinessCraft {
             forgeServices.getBlockEntityHelper()
         );
         
-        // Initialize platform-agnostic registration
+        // Initialize platform-agnostic registration coordination from common module
+        com.quackers29.businesscraft.init.CommonRegistration.initialize();
+        
+        // Initialize Forge-specific registration
         ModBlocks.initialize();
         ModBlockEntities.initialize();
         ModEntityTypes.initialize();

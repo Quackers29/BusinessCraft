@@ -41,17 +41,15 @@ public class BusinessCraftFabric implements ModInitializer {
             fabricServices.getBlockEntityHelper()
         );
         
-        // TODO: Initialize platform-agnostic registration (once moved to common module)
-        // ModBlocks.initialize();
-        // ModBlockEntities.initialize();
-        // ModEntityTypes.initialize();
-        // ModMenuTypes.initialize();
+        // Initialize platform-agnostic registration coordination from common module
+        com.quackers29.businesscraft.init.CommonRegistration.initialize();
         
         // Load configuration from common module
         com.quackers29.businesscraft.config.ConfigLoader.loadConfig();
         
-        // TODO: Initialize networking (once moved to common module)
-        // ModMessages.register();
+        // Initialize networking using common definitions
+        // CommonNetworking definitions are loaded via CommonRegistration.initialize()
+        // Platform-specific packet registration will be implemented later
         
         // TODO: Initialize platform-agnostic event handlers (once moved to common module)
         // ModEvents.initialize();
