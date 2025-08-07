@@ -7,39 +7,48 @@ package com.quackers29.businesscraft.platform.fabric;
 public class FabricPlatformServices {
     
     private final FabricPlatformHelper platformHelper;
-    // TODO: Add other service implementations
+    private final FabricRegistryHelper registryHelper;
+    private final FabricNetworkHelper networkHelper;
+    private final FabricEventHelper eventHelper;
+    private final FabricInventoryHelper inventoryHelper;
+    private final FabricMenuHelper menuHelper;
+    private final FabricBlockEntityHelper blockEntityHelper;
     
     public FabricPlatformServices() {
         this.platformHelper = new FabricPlatformHelper();
-        // TODO: Initialize other services
+        this.registryHelper = new FabricRegistryHelper();
+        this.networkHelper = new FabricNetworkHelper();
+        this.eventHelper = new FabricEventHelper();
+        this.inventoryHelper = new FabricInventoryHelper();
+        this.menuHelper = new FabricMenuHelper();
+        this.blockEntityHelper = new FabricBlockEntityHelper();
     }
     
     public FabricPlatformHelper getPlatformHelper() {
         return platformHelper;
     }
     
-    // TODO: Add other getters - temporary null implementations for now
-    public Object getRegistryHelper() {
-        return null; // TODO: Implement FabricRegistryHelper
+    public FabricRegistryHelper getRegistryHelper() {
+        return registryHelper;
     }
     
-    public Object getNetworkHelper() {
-        return null; // TODO: Implement FabricNetworkHelper
+    public FabricNetworkHelper getNetworkHelper() {
+        return networkHelper;
     }
     
-    public Object getEventHelper() {
-        return null; // TODO: Implement FabricEventHelper
+    public FabricEventHelper getEventHelper() {
+        return eventHelper;
     }
     
-    public Object getInventoryHelper() {
-        return null; // TODO: Implement FabricInventoryHelper
+    public FabricInventoryHelper getInventoryHelper() {
+        return inventoryHelper;
     }
     
-    public Object getMenuHelper() {
-        return null; // TODO: Implement FabricMenuHelper
+    public FabricMenuHelper getMenuHelper() {
+        return menuHelper;
     }
     
-    public Object getBlockEntityHelper() {
-        return null; // TODO: Implement FabricBlockEntityHelper
+    public FabricBlockEntityHelper getBlockEntityHelper() {
+        return blockEntityHelper;
     }
 }

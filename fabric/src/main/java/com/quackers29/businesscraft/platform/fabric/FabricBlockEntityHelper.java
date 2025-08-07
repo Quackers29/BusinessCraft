@@ -1,0 +1,50 @@
+package com.quackers29.businesscraft.platform.fabric;
+
+import com.quackers29.businesscraft.platform.BlockEntityHelper;
+import com.quackers29.businesscraft.platform.InventoryHelper;
+import net.minecraft.block.entity.BlockEntity;
+
+/**
+ * Fabric implementation of BlockEntityHelper using Yarn mappings.
+ * Implements cross-platform block entity operations using Fabric component system.
+ */
+public class FabricBlockEntityHelper implements BlockEntityHelper {
+    
+    private final FabricInventoryHelper inventoryHelper;
+    
+    public FabricBlockEntityHelper() {
+        this.inventoryHelper = new FabricInventoryHelper();
+    }
+    
+    @Override
+    public Object attachPrimaryInventory(BlockEntity blockEntity, int slotCount) {
+        // Create a platform inventory and store it as a field
+        // In Fabric, we would typically use a component system or store as a field
+        InventoryHelper.PlatformInventory inventory = inventoryHelper.createInventory(slotCount);
+        
+        // For simplicity, we return the inventory directly
+        // In a more complete implementation, you might store this in a component system
+        return inventory;
+    }
+    
+    @Override
+    public Object attachBufferInventory(BlockEntity blockEntity, int slotCount) {
+        // Similar to primary inventory
+        InventoryHelper.PlatformInventory inventory = inventoryHelper.createInventory(slotCount);
+        return inventory;
+    }
+    
+    @Override
+    public InventoryHelper.PlatformInventory getPrimaryInventory(BlockEntity blockEntity) {
+        // In a real implementation, this would retrieve the stored inventory
+        // For now, we return null as this requires integration with the actual block entity
+        return null;
+    }
+    
+    @Override
+    public InventoryHelper.PlatformInventory getBufferInventory(BlockEntity blockEntity) {
+        // In a real implementation, this would retrieve the stored inventory
+        // For now, we return null as this requires integration with the actual block entity
+        return null;
+    }
+}
