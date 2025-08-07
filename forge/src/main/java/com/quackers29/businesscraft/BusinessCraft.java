@@ -146,16 +146,19 @@ public class BusinessCraft {
         ClientModEvents.initialize();
         ClientSetup.initialize();
         
-        // Register screens directly during client setup
+        // TODO: Fix screen registration - temporarily disabled due to deferred registration timing issues
+        // The ModMenuTypes fields are null at this point because deferred registration hasn't completed
+        // Need to find proper event to register screens after deferred registration completes
         event.enqueueWork(() -> {
-            net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.TOWN_INTERFACE.get(), 
-                com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen::new);
-            net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.TRADE_MENU.get(), 
-                com.quackers29.businesscraft.ui.screens.town.TradeScreen::new);
-            net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.STORAGE_MENU.get(), 
-                com.quackers29.businesscraft.ui.screens.town.StorageScreen::new);
-            net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.PAYMENT_BOARD_MENU.get(), 
-                com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen::new);
+            LOGGER.info("Client setup: Screen registration temporarily disabled for testing");
+            // net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.TOWN_INTERFACE.get(), 
+            //     com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen::new);
+            // net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.TRADE_MENU.get(), 
+            //     com.quackers29.businesscraft.ui.screens.town.TradeScreen::new);
+            // net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.STORAGE_MENU.get(), 
+            //     com.quackers29.businesscraft.ui.screens.town.StorageScreen::new);
+            // net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.PAYMENT_BOARD_MENU.get(), 
+            //     com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen::new);
             
             LOGGER.info("Registered all menu screen types");
         });

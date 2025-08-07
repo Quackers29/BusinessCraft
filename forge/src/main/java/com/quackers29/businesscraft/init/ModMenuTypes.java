@@ -63,5 +63,10 @@ public class ModMenuTypes {
                 new PaymentBoardMenu(windowId, inv, data)
             )
         );
+        
+        // Verify registrations were successful 
+        if (TOWN_INTERFACE == null || TRADE_MENU == null || STORAGE_MENU == null || PAYMENT_BOARD_MENU == null) {
+            throw new IllegalStateException("Menu registration failed - one or more menus not registered");
+        }
     }
 } 
