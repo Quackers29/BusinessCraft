@@ -74,6 +74,10 @@ public class BusinessCraft {
         // This should be replaced with setPlatformComplete once compilation issue is fixed
         initializeTownServices(forgeServices);
         
+        // Phase 9.9.1: Runtime service verification
+        LOGGER.info("=== BUSINESSCRAFT FORGE PLATFORM LOADING ===");
+        verifyPlatformServices();
+        
         // Register with common module service provider
         PlatformServiceProvider.setPlatform(
             forgeServices.getPlatformHelper(),
@@ -219,6 +223,80 @@ public class BusinessCraft {
             LOGGER.info("Initialized town management services via reflection");
         } catch (Exception e) {
             LOGGER.error("Failed to initialize town management services: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * Phase 9.9.1: Verify platform services are working correctly.
+     * This method tests that all platform services are properly initialized and accessible.
+     */
+    private void verifyPlatformServices() {
+        LOGGER.info("=== Phase 9.9.1: Platform Service Verification ===");
+        
+        try {
+            LOGGER.info("FORGE PLATFORM SERVICE VERIFICATION STARTING...");
+            
+            // Test core platform services
+            if (PlatformServices.getPlatformHelper() != null) {
+                LOGGER.info("✅ PlatformHelper: Available (" + PlatformServices.getPlatformHelper().getClass().getSimpleName() + ")");
+            } else {
+                LOGGER.error("❌ PlatformHelper: NOT AVAILABLE");
+            }
+            
+            if (PlatformServices.getRegistryHelper() != null) {
+                LOGGER.info("✅ RegistryHelper: Available (" + PlatformServices.getRegistryHelper().getClass().getSimpleName() + ")");
+            } else {
+                LOGGER.error("❌ RegistryHelper: NOT AVAILABLE");
+            }
+            
+            if (PlatformServices.getNetworkHelper() != null) {
+                LOGGER.info("✅ NetworkHelper: Available (" + PlatformServices.getNetworkHelper().getClass().getSimpleName() + ")");
+            } else {
+                LOGGER.error("❌ NetworkHelper: NOT AVAILABLE");
+            }
+            
+            if (PlatformServices.getEventHelper() != null) {
+                LOGGER.info("✅ EventHelper: Available (" + PlatformServices.getEventHelper().getClass().getSimpleName() + ")");
+            } else {
+                LOGGER.error("❌ EventHelper: NOT AVAILABLE");
+            }
+            
+            if (PlatformServices.getInventoryHelper() != null) {
+                LOGGER.info("✅ InventoryHelper: Available (" + PlatformServices.getInventoryHelper().getClass().getSimpleName() + ")");
+            } else {
+                LOGGER.error("❌ InventoryHelper: NOT AVAILABLE");
+            }
+            
+            if (PlatformServices.getMenuHelper() != null) {
+                LOGGER.info("✅ MenuHelper: Available (" + PlatformServices.getMenuHelper().getClass().getSimpleName() + ")");
+            } else {
+                LOGGER.error("❌ MenuHelper: NOT AVAILABLE");
+            }
+            
+            if (PlatformServices.getBlockEntityHelper() != null) {
+                LOGGER.info("✅ BlockEntityHelper: Available (" + PlatformServices.getBlockEntityHelper().getClass().getSimpleName() + ")");
+            } else {
+                LOGGER.error("❌ BlockEntityHelper: NOT AVAILABLE");
+            }
+            
+            // Test new town management services
+            if (PlatformServices.getTownManagerService() != null) {
+                LOGGER.info("✅ TownManagerService: Available (" + PlatformServices.getTownManagerService().getClass().getSimpleName() + ")");
+            } else {
+                LOGGER.error("❌ TownManagerService: NOT AVAILABLE");
+            }
+            
+            if (PlatformServices.getDataStorageHelper() != null) {
+                LOGGER.info("✅ DataStorageHelper: Available (" + PlatformServices.getDataStorageHelper().getClass().getSimpleName() + ")");
+            } else {
+                LOGGER.error("❌ DataStorageHelper: NOT AVAILABLE");
+            }
+            
+            LOGGER.info("=== Platform Service Verification Complete ===");
+            
+        } catch (Exception e) {
+            LOGGER.error("❌ Platform service verification failed: " + e.getMessage());
             e.printStackTrace();
         }
     }
