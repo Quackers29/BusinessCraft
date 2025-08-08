@@ -32,9 +32,6 @@ public class ModMenuTypes {
      * This is the Forge-specific implementation with actual menu registration.
      */
     public static void initialize() {
-        // First verify platform services (from common)
-        com.quackers29.businesscraft.init.ModMenuTypes.initialize();
-        
         // Get platform-agnostic menu helper
         var menuHelper = PlatformServices.getMenuHelper();
         
