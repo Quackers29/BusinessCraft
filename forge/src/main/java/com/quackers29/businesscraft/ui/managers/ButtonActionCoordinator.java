@@ -196,20 +196,21 @@ public class ButtonActionCoordinator {
             throw new IllegalStateException("Block position not available");
         }
         
-        // TODO: TownMapModal temporarily disabled due to missing packet dependencies
         // Create and show the town map modal
-        // com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal = 
-        //     new com.quackers29.businesscraft.ui.modal.specialized.TownMapModal(
-        //         Minecraft.getInstance().screen,
-        //         currentTownPos,
-        //         closedModal -> {
-        //             // Callback when modal closes - refresh data if needed
-        //             refreshScreenData();
-        //             DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town map modal closed");
-        //         }
-        //     );
+        com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal = 
+            new com.quackers29.businesscraft.ui.modal.specialized.TownMapModal(
+                Minecraft.getInstance().screen,
+                currentTownPos,
+                closedModal -> {
+                    // Callback when modal closes - refresh data if needed
+                    refreshScreenData();
+                    DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town map modal closed");
+                }
+            );
         
-        // TODO: Load town data from client cache if available
+        // Show the map modal
+        Minecraft.getInstance().setScreen(mapModal);
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Opened town map modal for position: {}", currentTownPos);
         // com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache cache = 
         //     com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache.getInstance();
         // mapModal.setTownData(cache.getAllTowns());

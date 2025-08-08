@@ -4,6 +4,9 @@ import com.quackers29.businesscraft.platform.BlockEntityHelper;
 import com.quackers29.businesscraft.platform.InventoryHelper;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.api.ITownDataProvider;
+import com.quackers29.businesscraft.network.ModMessages;
+import com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket;
+import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
@@ -401,6 +404,82 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
         // TODO: Implement Town Interface UI opening
         LOGGER.warn("openTownInterfaceUI not yet implemented for Forge");
         return false;
+    }
+    
+    // @Override
+    public boolean processTownMapDataRequest(Object blockEntity, Object player, int zoomLevel, boolean includeStructures) {
+        if (!(blockEntity instanceof TownInterfaceEntity) || !(player instanceof ServerPlayer)) {
+            return false;
+        }
+        
+        try {
+            TownInterfaceEntity townEntity = (TownInterfaceEntity) blockEntity;
+            ServerPlayer serverPlayer = (ServerPlayer) player;
+            
+            LOGGER.debug("Processing town map data request for zoom level: {} at position: {}", 
+                        zoomLevel, townEntity.getBlockPos());
+            
+            // Get map data - simplified implementation for now
+            String mapData = generateMapData(townEntity, zoomLevel, includeStructures);
+            
+            // Send response packet to client
+            TownMapDataResponsePacket responsePacket = new TownMapDataResponsePacket(
+                townEntity.getBlockPos().getX(),
+                townEntity.getBlockPos().getY(), 
+                townEntity.getBlockPos().getZ(),
+                mapData,
+                zoomLevel
+            );
+            
+            ModMessages.sendToPlayer(responsePacket, serverPlayer);
+            return true;
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to process town map data request", e);
+            return false;
+        }
+    }
+    
+    @Override
+    public boolean updateTownMapUI(Object player, int x, int y, int z, String mapData, int zoomLevel) {
+        try {
+            // Find the currently open map modal and update it
+            Minecraft minecraft = Minecraft.getInstance();
+            if (minecraft.screen instanceof com.quackers29.businesscraft.ui.modal.specialized.TownMapModal) {
+                com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal = 
+                    (com.quackers29.businesscraft.ui.modal.specialized.TownMapModal) minecraft.screen;
+                mapModal.updateMapData(mapData, zoomLevel);
+                return true;
+            }
+            
+            LOGGER.debug("No town map modal currently open to update");
+            return false;
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to update town map UI", e);
+            return false;
+        }
+    }
+    
+    /**
+     * Generate map data for the requested town area.
+     * This is a simplified implementation - in a full implementation this would
+     * collect actual world data, town boundaries, structures, etc.
+     */
+    private String generateMapData(TownInterfaceEntity townEntity, int zoomLevel, boolean includeStructures) {
+        // Simplified map data generation
+        StringBuilder mapData = new StringBuilder();
+        mapData.append("{");
+        mapData.append("\"townPos\":{\"x\":").append(townEntity.getBlockPos().getX())
+               .append(",\"y\":").append(townEntity.getBlockPos().getY())
+               .append(",\"z\":").append(townEntity.getBlockPos().getZ()).append("},");
+        mapData.append("\"zoomLevel\":").append(zoomLevel).append(",");
+        mapData.append("\"includeStructures\":").append(includeStructures).append(",");
+        mapData.append("\"mapSize\":").append(64 * zoomLevel).append(",");
+        mapData.append("\"generatedAt\":").append(System.currentTimeMillis());
+        mapData.append("}");
+        
+        return mapData.toString();
     }
     
     /**
