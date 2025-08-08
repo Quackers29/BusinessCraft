@@ -16,6 +16,7 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -79,11 +80,10 @@ public class TownDebugNetwork {
                     // Gather data from all loaded levels
                     for (ServerLevel level : player.getServer().getAllLevels()) {
                         TownManager townManager = TownManager.get(level);
-                        Map<UUID, Town> towns = townManager.getAllTowns();
+                        Collection<Town> towns = townManager.getAllTowns();
                         
                         // Convert Town objects to TownDebugData
-                        for (Map.Entry<UUID, Town> entry : towns.entrySet()) {
-                            Town town = entry.getValue();
+                        for (Town town : towns) {
                             townDataList.add(new TownDebugOverlay.TownDebugData(
                                 town.getId().toString(),
                                 town.getName(),

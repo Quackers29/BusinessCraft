@@ -16,7 +16,9 @@ public class ClearTownsCommand {
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) {
-        int count = TownManager.get(context.getSource().getLevel()).clearAllTowns();
+        TownManager townManager = TownManager.get(context.getSource().getLevel());
+        int count = townManager.getAllTowns().size();
+        townManager.clearAllTowns();
         context.getSource().sendSuccess(() -> Component.literal("Cleared " + count + " towns."), true);
         return 1;
     }

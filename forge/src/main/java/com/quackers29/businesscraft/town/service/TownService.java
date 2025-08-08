@@ -47,7 +47,8 @@ public class TownService {
         }
         
         try {
-            Town town = new Town(UUID.randomUUID(), request.getPosition(), request.getName());
+            BlockPos pos = request.getPosition();
+            Town town = new Town(UUID.randomUUID(), pos.getX(), pos.getY(), pos.getZ(), request.getName());
             
             // Apply initial configuration
             if (request.getInitialResources() != null) {

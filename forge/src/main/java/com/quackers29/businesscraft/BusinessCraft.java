@@ -172,13 +172,8 @@ public class BusinessCraft {
     }
 
     private void onServerStopping(ServerStoppingEvent event) {
-        LOGGER.info("Server stopping, saving town data...");
-        ServerLifecycleHooks.getCurrentServer().getAllLevels().forEach(level -> {
-            TownManager.get((ServerLevel) level).onServerStopping();
-        });
-        
-        // Clear all instances after saving to ensure a clean slate on next load
-        TownManager.clearInstances();
+        LOGGER.info("Server stopping, town data will be persisted automatically...");
+        // TODO: Add any necessary cleanup for common TownManager if needed
         
         // Don't forget to clean up the tourist vehicle manager
         LOGGER.info("Clearing tracked vehicles on server stopping");

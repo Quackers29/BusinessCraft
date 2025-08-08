@@ -20,10 +20,14 @@ public class TownSavedData extends SavedData {
     
     @Override
     public CompoundTag save(CompoundTag tag) {
+        // NOTE: This class is deprecated - new persistence uses ForgeTownPersistence
+        // This method is maintained for backward compatibility only
         CompoundTag townsTag = new CompoundTag();
         towns.forEach((id, town) -> {
             CompoundTag townTag = new CompoundTag();
-            town.save(townTag);
+            // Convert common Town's data format to NBT
+            Map<String, Object> townData = town.toDataMap();
+            saveMapToNbt(townData, townTag);
             townsTag.put(id.toString(), townTag);
         });
         tag.put("towns", townsTag);
@@ -31,14 +35,79 @@ public class TownSavedData extends SavedData {
     }
     
     public void loadFromNbt(CompoundTag tag) {
+        // NOTE: This class is deprecated - new persistence uses ForgeTownPersistence
         towns.clear();
         if (tag.contains("towns")) {
             CompoundTag townsTag = tag.getCompound("towns");
             townsTag.getAllKeys().forEach(key -> {
                 UUID id = UUID.fromString(key);
-                towns.put(id, Town.load(townsTag.getCompound(key)));
+                CompoundTag townTag = townsTag.getCompound(key);
+                // Convert NBT to common Town's data format
+                Map<String, Object> townData = nbtToMap(townTag);
+                Town town = Town.fromDataMap(townData);
+                towns.put(id, town);
             });
         }
+    }
+    
+    /**
+     * Helper method to convert Map to NBT.
+     */
+    private void saveMapToNbt(Map<String, Object> map, CompoundTag tag) {
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            
+            if (value instanceof String) {
+                tag.putString(key, (String) value);
+            } else if (value instanceof Integer) {
+                tag.putInt(key, (Integer) value);
+            } else if (value instanceof Long) {
+                tag.putLong(key, (Long) value);
+            } else if (value instanceof Double) {
+                tag.putDouble(key, (Double) value);
+            } else if (value instanceof Boolean) {
+                tag.putBoolean(key, (Boolean) value);
+            } else if (value instanceof int[]) {
+                tag.putIntArray(key, (int[]) value);
+            } else if (value instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> subMap = (Map<String, Object>) value;
+                CompoundTag subTag = new CompoundTag();
+                saveMapToNbt(subMap, subTag);
+                tag.put(key, subTag);
+            }
+            // Add more type conversions as needed
+        }
+    }
+    
+    /**
+     * Helper method to convert NBT to Map.
+     */
+    private Map<String, Object> nbtToMap(CompoundTag tag) {
+        Map<String, Object> result = new java.util.HashMap<>();
+        
+        for (String key : tag.getAllKeys()) {
+            if (tag.contains(key, 8)) { // String
+                result.put(key, tag.getString(key));
+            } else if (tag.contains(key, 3)) { // Int
+                result.put(key, tag.getInt(key));
+            } else if (tag.contains(key, 4)) { // Long
+                result.put(key, tag.getLong(key));
+            } else if (tag.contains(key, 6)) { // Double
+                result.put(key, tag.getDouble(key));
+            } else if (tag.contains(key, 1)) { // Boolean
+                result.put(key, tag.getBoolean(key));
+            } else if (tag.contains(key, 11)) { // Int Array
+                result.put(key, tag.getIntArray(key));
+            } else if (tag.contains(key, 10)) { // Compound
+                CompoundTag subTag = tag.getCompound(key);
+                result.put(key, nbtToMap(subTag));
+            }
+            // Add more type conversions as needed
+        }
+        
+        return result;
     }
     
     public static TownSavedData create() {

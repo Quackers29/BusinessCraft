@@ -1,7 +1,9 @@
 package com.quackers29.businesscraft.platform.fabric;
 
 import com.quackers29.businesscraft.platform.DataStorageHelper;
+import com.quackers29.businesscraft.town.data.ITownPersistence;
 import net.minecraft.nbt.NbtCompound;
+// Fabric uses ServerWorld, not ServerWorld
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.PersistentState;
 
@@ -49,5 +51,12 @@ public class FabricDataStorageHelper implements DataStorageHelper {
         
         // Note: In some Fabric versions, you might need to explicitly mark dirty
         // For now, we'll use the same approach as Forge where SavedData handles it
+    }
+    
+    @Override
+    public ITownPersistence createTownPersistence(Object level, String identifier) {
+        // Convert level to Fabric's ServerWorld (which should be compatible with ServerWorld)
+        ServerWorld serverLevel = (ServerWorld) level;
+        return new FabricTownPersistence(serverLevel, identifier);
     }
 }

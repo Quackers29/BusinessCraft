@@ -124,6 +124,54 @@ public class TownManager {
     }
     
     /**
+     * Check if a town can be placed at the specified coordinates.
+     * Used by platform services for validation.
+     * 
+     * @param x X coordinate in world space
+     * @param y Y coordinate in world space
+     * @param z Z coordinate in world space
+     * @return true if location is valid for town placement
+     */
+    public boolean canPlaceTownAt(int x, int y, int z) {
+        return isValidTownLocation(x, y, z, getAllTowns(), ConfigLoader.minDistanceBetweenTowns);
+    }
+    
+    /**
+     * Get error message for town placement at specified coordinates.
+     * Used by platform services for user feedback.
+     * 
+     * @param x X coordinate in world space
+     * @param y Y coordinate in world space
+     * @param z Z coordinate in world space
+     * @return Error message, or null if location is valid
+     */
+    public String getTownPlacementError(int x, int y, int z) {
+        if (isValidTownLocation(x, y, z, getAllTowns(), ConfigLoader.minDistanceBetweenTowns)) {
+            return null; // No error, location is valid
+        }
+        
+        // Find the closest town to provide specific error message
+        Town closestTown = null;
+        double closestDistance = Double.MAX_VALUE;
+        
+        for (Town existingTown : getAllTowns()) {
+            int[] existingPos = existingTown.getPositionArray();
+            double distance = calculateDistance(x, y, z, existingPos);
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestTown = existingTown;
+            }
+        }
+        
+        if (closestTown != null) {
+            return String.format("Too close to existing town '%s' (%.1f blocks away, minimum %d required)", 
+                closestTown.getName(), closestDistance, ConfigLoader.minDistanceBetweenTowns);
+        }
+        
+        return "Invalid location for town placement";
+    }
+    
+    /**
      * Get town by UUID.
      */
     public Town getTown(UUID townId) {
@@ -344,12 +392,7 @@ public class TownManager {
      */
     private ITownPersistence createPersistence(Object level) {
         // Use platform services to create appropriate persistence implementation
-        return PlatformServices.getDataStorageHelper().getOrCreateData(
-            level,
-            PERSISTENCE_NAME,
-            this::loadFromPersistence,
-            this::createEmptyPersistence
-        );
+        return PlatformServices.getDataStorageHelper().createTownPersistence(level, PERSISTENCE_NAME);
     }
     
     /**
@@ -417,25 +460,6 @@ public class TownManager {
     // Persistence Interface Implementation
     // ================================
     
-    /**
-     * Load persistence implementation from data.
-     * Used by DataStorageHelper for loading existing data.
-     */
-    private ITownPersistence loadFromPersistence(Object data) {
-        // Platform-specific persistence implementations will handle this
-        // This is a placeholder that will be overridden by platform services
-        return createEmptyPersistence();
-    }
-    
-    /**
-     * Create empty persistence implementation.
-     * Used by DataStorageHelper for new data creation.
-     */
-    private ITownPersistence createEmptyPersistence() {
-        // Platform-specific persistence implementations will handle this
-        // This is a placeholder that will be overridden by platform services
-        return new EmptyTownPersistence(level);
-    }
     
     // ================================
     // Debug and Admin Methods

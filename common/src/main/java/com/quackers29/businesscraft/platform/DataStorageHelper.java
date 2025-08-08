@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.platform;
 
+import com.quackers29.businesscraft.town.data.ITownPersistence;
+
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -29,4 +31,15 @@ public interface DataStorageHelper {
      * @param name The data identifier name
      */
     void markDirty(Object level, String name);
+    
+    /**
+     * Create a platform-specific ITownPersistence implementation.
+     * This method allows the common TownManager to obtain the appropriate
+     * persistence layer for the current platform.
+     * 
+     * @param level The server level (ServerLevel)
+     * @param identifier The persistence identifier (e.g., "businesscraft_towns")
+     * @return Platform-specific ITownPersistence implementation
+     */
+    ITownPersistence createTownPersistence(Object level, String identifier);
 }

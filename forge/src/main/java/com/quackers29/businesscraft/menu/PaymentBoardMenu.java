@@ -310,11 +310,13 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
                     "PaymentBoardMenu.getUnclaimedRewards() - SERVER SIDE: town: {}, townName: {}", 
                     town != null, town != null ? town.getName() : "null");
                     
-                List<RewardEntry> rewards = town.getPaymentBoard().getUnclaimedRewards();
-                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
-                    "PaymentBoardMenu.getUnclaimedRewards() - SERVER SIDE: found {} rewards in town {}", 
-                    rewards.size(), town.getName());
-                return rewards;
+                // TODO: Payment board system needs to be implemented in common Town class
+                // List<RewardEntry> rewards = town.getPaymentBoard().getUnclaimedRewards();
+                // DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
+                //     "PaymentBoardMenu.getUnclaimedRewards() - SERVER SIDE: found {} rewards in town {}", 
+                //     rewards.size(), town.getName());
+                // return rewards;
+                return new ArrayList<>(); // Placeholder - return empty list
             }
         }
         
@@ -399,12 +401,14 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
                     if (townId != null && player.level() instanceof net.minecraft.server.level.ServerLevel sLevel) {
                         com.quackers29.businesscraft.town.Town town = com.quackers29.businesscraft.town.TownManager.get(sLevel).getTown(townId);
                         if (town != null) {
+                            // TODO: Payment board system needs to be implemented in common Town class
                             // Remove item from Payment Board buffer storage
-                            boolean success = town.getPaymentBoard().removeFromBuffer(itemStack.getItem(), itemStack.getCount());
+                            // boolean success = town.getPaymentBoard().removeFromBuffer(itemStack.getItem(), itemStack.getCount());
+                            boolean success = false; // Placeholder
                             
                             DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
-                                "Directly removed {} {} from payment board buffer storage: {}", 
-                                itemStack.getCount(), itemStack.getItem(), success);
+                                "Payment board removal disabled - TODO: implement in common Town: {} {}", 
+                                itemStack.getCount(), itemStack.getItem());
                             
                             // Trigger buffer change notification to sync UI
                             townInterfaceEntity.onTownBufferChanged();

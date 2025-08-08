@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.block;
 import com.quackers29.businesscraft.init.ModBlockEntities;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.config.ConfigLoader;
+import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
 import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
@@ -173,11 +174,11 @@ public class TownInterfaceBlock extends BaseEntityBlock {
                     TownManager townManager = TownManager.get(serverLevel);
                     
                     // Check if town can be placed here (dynamic boundary distance check)
-                    if (!townManager.canPlaceTownAt(pos)) {
+                    if (!townManager.canPlaceTownAt(pos.getX(), pos.getY(), pos.getZ())) {
                         // Town can't be placed here, delete the block and notify player
                         level.removeBlock(pos, false);
                         if (placer instanceof ServerPlayer player) {
-                            String errorMessage = townManager.getTownPlacementError(pos);
+                            String errorMessage = townManager.getTownPlacementError(pos.getX(), pos.getY(), pos.getZ());
                             if (errorMessage == null) {
                                 errorMessage = "Town cannot be placed here due to boundary conflicts";
                             }
@@ -194,8 +195,9 @@ public class TownInterfaceBlock extends BaseEntityBlock {
                     
                     String newTownName = getRandomTownName();
                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Generated town name: {}", newTownName);
-                    UUID townId = townManager.registerTown(pos, newTownName);
-                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Registered new town with ID: {}", townId);
+                    Town createdTown = townManager.createTown(pos.getX(), pos.getY(), pos.getZ(), newTownName);
+                    UUID townId = createdTown != null ? createdTown.getId() : null;
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Created new town with ID: {}", townId);
                     townInterface.setTownId(townId);
                     
                     // Create default platform layout

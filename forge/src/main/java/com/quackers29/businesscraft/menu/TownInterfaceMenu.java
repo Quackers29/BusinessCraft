@@ -94,9 +94,8 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
             TownManager townManager = TownManager.get(serverLevel);
             
             // Find the town at this position by iterating through all towns
-            Map<UUID, Town> allTowns = townManager.getAllTowns();
-            for (Town t : allTowns.values()) {
-                if (t.getPosition().equals(pos)) {
+            for (Town t : townManager.getAllTowns()) {
+                if (t.getX() == pos.getX() && t.getY() == pos.getY() && t.getZ() == pos.getZ()) {
                     this.town = t;
                     this.townId = t.getId();
                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "Found town with ID {} at position {}", this.townId, pos);

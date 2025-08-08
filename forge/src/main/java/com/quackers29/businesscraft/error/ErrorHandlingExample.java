@@ -28,7 +28,8 @@ public class ErrorHandlingExample {
     public static boolean createTownOldWay(ServerLevel level, BlockPos pos, String townName) {
         try {
             TownManager townManager = TownManager.get(level);
-            UUID townId = townManager.registerTown(pos, townName);
+            Town createdTown = townManager.createTown(pos.getX(), pos.getY(), pos.getZ(), townName);
+            UUID townId = createdTown != null ? createdTown.getId() : null;
             
             if (townId != null) {
                 // Additional setup logic here
@@ -53,7 +54,8 @@ public class ErrorHandlingExample {
         return ErrorHandlerIntegration.wrapTownOperation(
             () -> {
                 TownManager townManager = TownManager.get(level);
-                UUID townId = townManager.registerTown(pos, townName);
+                Town createdTown = townManager.createTown(pos.getX(), pos.getY(), pos.getZ(), townName);
+            UUID townId = createdTown != null ? createdTown.getId() : null;
                 
                 if (townId == null) {
                     throw new RuntimeException("Failed to create town - unknown reason");
@@ -81,7 +83,8 @@ public class ErrorHandlingExample {
         return ErrorHandlerIntegration.wrapTownOperation(
             () -> {
                 TownManager townManager = TownManager.get(level);
-                UUID townId = townManager.registerTown(pos, townName);
+                Town createdTown = townManager.createTown(pos.getX(), pos.getY(), pos.getZ(), townName);
+            UUID townId = createdTown != null ? createdTown.getId() : null;
                 
                 if (townId == null) {
                     throw new RuntimeException("Failed to create town - unknown reason");
@@ -102,7 +105,8 @@ public class ErrorHandlingExample {
                 try {
                     TownManager townManager = TownManager.get(level);
                     // Attempt to create with default settings
-                    UUID recoveryId = townManager.registerTown(pos, townName + "_recovered");
+                    Town recoveryTown = townManager.createTown(pos.getX(), pos.getY(), pos.getZ(), townName + "_recovered");
+                    UUID recoveryId = recoveryTown != null ? recoveryTown.getId() : null;
                     if (recoveryId != null) {
                         return townManager.getTown(recoveryId);
                     }

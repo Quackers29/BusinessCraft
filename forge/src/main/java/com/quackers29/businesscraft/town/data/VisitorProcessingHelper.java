@@ -404,11 +404,13 @@ public class VisitorProcessingHelper {
             List<net.minecraft.world.item.ItemStack> rewardItems = new ArrayList<>();
             rewardItems.add(new net.minecraft.world.item.ItemStack(Items.EMERALD, payment));
             
-            UUID rewardId = town.getPaymentBoard().addReward(
-                RewardSource.TOURIST_PAYMENT,
-                rewardItems,
-                "ALL"
-            );
+            // TODO: Payment board system needs to be implemented in common Town class
+            // UUID rewardId = town.getPaymentBoard().addReward(
+            //     RewardSource.TOURIST_PAYMENT,
+            //     rewardItems,
+            //     "ALL"
+            // );
+            UUID rewardId = null; // Placeholder
             
             if (rewardId != null) {
                 DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, 
@@ -451,13 +453,17 @@ public class VisitorProcessingHelper {
                 rewardItems.addAll(milestoneResult.rewards);
             }
             
+            // TODO: Payment board system needs to be implemented in common Town class
             // Create the bundled reward entry
-            UUID rewardId = town.getPaymentBoard().addReward(
-                RewardSource.TOURIST_ARRIVAL,
-                rewardItems,
-                "ALL"
-            );
+            // UUID rewardId = town.getPaymentBoard().addReward(
+            //     RewardSource.TOURIST_ARRIVAL,
+            //     rewardItems,
+            //     "ALL"
+            // );
+            UUID rewardId = null; // Placeholder
             
+            // TODO: Payment board system needs to be implemented in common Town class
+            /*
             if (rewardId != null) {
                 // Add metadata about the origin town and reward breakdown
                 town.getPaymentBoard().getRewardById(rewardId).ifPresent(rewardEntry -> {
@@ -481,6 +487,7 @@ public class VisitorProcessingHelper {
             } else {
                 LOGGER.warn("Failed to create bundled tourist reward entry for town '{}'", town.getName());
             }
+            */
             
         } catch (Exception e) {
             LOGGER.error("Failed to create bundled tourist reward for town '{}': {}", town.getName(), e.getMessage());

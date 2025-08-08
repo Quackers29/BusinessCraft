@@ -49,8 +49,9 @@ public class ClientSyncHelper {
         
         // Add all resources to the tag
         provider.getAllResources().forEach((item, count) -> {
-            if (item instanceof Item itemObj) {
-                String itemKey = ForgeRegistries.ITEMS.getKey(itemObj).toString();
+            // provider.getAllResources() returns Map<Object, Integer> for platform independence
+            if (item instanceof Item) {
+                String itemKey = ForgeRegistries.ITEMS.getKey((Item) item).toString();
                 resourcesTag.putInt(itemKey, count);
             }
         });
@@ -61,8 +62,9 @@ public class ClientSyncHelper {
         // Add communal storage data
         CompoundTag communalTag = new CompoundTag();
         provider.getAllCommunalStorageItems().forEach((item, count) -> {
-            if (item instanceof Item itemObj) {
-                String itemKey = ForgeRegistries.ITEMS.getKey(itemObj).toString();
+            // provider.getAllCommunalStorageItems() returns Map<Object, Integer> for platform independence
+            if (item instanceof Item) {
+                String itemKey = ForgeRegistries.ITEMS.getKey((Item) item).toString();
                 communalTag.putInt(itemKey, count);
             }
         });
@@ -295,16 +297,21 @@ public class ClientSyncHelper {
         
         // Update client resources from the town (make sure emeralds are properly reflected)
         clientResources.clear();
-        town.getAllResourcesForge().forEach((item, count) -> {
-            clientResources.put(item, count);
+        town.getAllResources().forEach((item, count) -> {
+            // The common Town.getAllResources() returns Map<Object, Integer> for platform independence
+            if (item instanceof Item) {
+                clientResources.put((Item) item, count);
+            }
         });
         DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Updated client resources from town during sync, resources count: {}", clientResources.size());
         
         // Update client communal storage from the town
         clientCommunalStorage.clear();
-        town.getAllCommunalStorageItemsForge().forEach((item, count) -> {
-            clientCommunalStorage.put(item, count);
-        });
+        // TODO: Communal storage needs to be implemented in common Town class
+        // town.getAllCommunalStorageItemsForge().forEach((item, count) -> {
+        //     clientCommunalStorage.put(item, count);
+        // });
+        // Placeholder - communal storage functionality disabled
         DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Updated client communal storage from town during sync, storage count: {}", clientCommunalStorage.size());
     }
     

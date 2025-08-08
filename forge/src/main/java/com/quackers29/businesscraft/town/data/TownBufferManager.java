@@ -132,7 +132,9 @@ public class TownBufferManager {
         if (level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
             if (town != null) {
-                Map<Item, Integer> currentTownBuffer = town.getPaymentBoard().getBufferStorage();
+                // TODO: Payment board system needs to be implemented in common Town class
+                // Map<Item, Integer> currentTownBuffer = town.getPaymentBoard().getBufferStorage();
+                Map<Item, Integer> currentTownBuffer = new HashMap<>(); // Placeholder
                 
                 // Check if town buffer has changed significantly or if we need initial sync
                 if (bufferNeedsSync || !currentTownBuffer.equals(lastKnownTownBuffer)) {
@@ -173,9 +175,15 @@ public class TownBufferManager {
         if (level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
             if (town != null) {
+                // TODO: Payment board system needs to be implemented in common Town class
                 // Get the actual SlotBasedStorage from the town
-                SlotBasedStorage slotStorage = town.getPaymentBoard().getBufferStorageSlots();
+                // SlotBasedStorage slotStorage = town.getPaymentBoard().getBufferStorageSlots();
                 
+                // Using placeholder - payment board functionality disabled
+                // Skip slot-based storage until payment board is implemented
+                // 
+                // When payment board is implemented, the following logic should be restored:
+                /*
                 // Suppress callbacks while we're syncing to prevent infinite loops
                 suppressBufferCallbacks = true;
                 
@@ -194,6 +202,7 @@ public class TownBufferManager {
                     // Always re-enable callbacks
                     suppressBufferCallbacks = false;
                 }
+                */
             }
         }
     }
@@ -211,7 +220,12 @@ public class TownBufferManager {
             Town town = TownManager.get(sLevel).getTown(townId);
             if (town != null) {
                 // Get the SlotBasedStorage and update it directly from ItemStackHandler
-                SlotBasedStorage slotStorage = town.getPaymentBoard().getBufferStorageSlots();
+                // TODO: Payment board system needs to be implemented in common Town class
+                // SlotBasedStorage slotStorage = town.getPaymentBoard().getBufferStorageSlots();
+                // Using placeholder - payment board functionality disabled
+                return; // Skip slot-based storage until payment board is implemented
+                
+                /* TODO: Re-enable when payment board system is implemented
                 boolean bufferChanged = false;
                 
                 // Copy each slot from ItemStackHandler to SlotBasedStorage
@@ -230,7 +244,9 @@ public class TownBufferManager {
                 
                 // Update our tracking if buffer changed
                 if (bufferChanged) {
-                    lastKnownTownBuffer = new HashMap<>(town.getPaymentBoard().getBufferStorage());
+                    // TODO: Payment board system needs to be implemented in common Town class
+                    // lastKnownTownBuffer = new HashMap<>(town.getPaymentBoard().getBufferStorage());
+                    lastKnownTownBuffer = new HashMap<>(); // Placeholder
                     
                     // Notify clients of buffer storage changes for UI updates using new slot-based method
                     notifyClientsOfSlotBasedBufferChange(town);
@@ -238,6 +254,7 @@ public class TownBufferManager {
                     // Always notify clients, even if no changes detected, in case of sync issues
                     notifyClientsOfSlotBasedBufferChange(town);
                 }
+                */ // End of commented block
             }
         }
     }
@@ -249,7 +266,9 @@ public class TownBufferManager {
         if (level instanceof ServerLevel sLevel) {
             // Send legacy buffer update packet to all players with Payment Board UI open
             // This ensures real-time UI updates when hoppers extract items
-            ClientSyncHelper.notifyBufferStorageChange(sLevel, townId, town.getPaymentBoard().getBufferStorage());
+            // TODO: Payment board system needs to be implemented in common Town class
+            // ClientSyncHelper.notifyBufferStorageChange(sLevel, townId, town.getPaymentBoard().getBufferStorage());
+            // Placeholder - payment board functionality disabled
         }
     }
     
@@ -260,7 +279,9 @@ public class TownBufferManager {
         if (level instanceof ServerLevel sLevel) {
             // Send slot-based buffer update packet to all players with Payment Board UI open
             // This ensures real-time UI updates with exact slot preservation when hoppers extract items
-            ClientSyncHelper.notifyBufferSlotStorageChange(sLevel, townId, town.getPaymentBoard().getBufferStorageSlots());
+            // TODO: Payment board system needs to be implemented in common Town class
+            // ClientSyncHelper.notifyBufferSlotStorageChange(sLevel, townId, town.getPaymentBoard().getBufferStorageSlots());
+            // Placeholder - payment board functionality disabled
         }
     }
 }

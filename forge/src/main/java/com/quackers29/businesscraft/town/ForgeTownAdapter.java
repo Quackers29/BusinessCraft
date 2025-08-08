@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.town;
 
 import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.platform.ForgePosition;
+import com.quackers29.businesscraft.util.PositionConverter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.Item;
 
@@ -155,35 +156,31 @@ public class ForgeTownAdapter implements ITownDataProvider {
     
     @Override
     public Position getPathStart() {
-        BlockPos pos = forgeTown.getPathStartForge();
-        return pos != null ? new ForgePosition(pos) : null;
+        ITownDataProvider.Position pos = forgeTown.getPathStart();
+        return pos != null ? new ForgePosition(pos.getX(), pos.getY(), pos.getZ()) : null;
     }
     
     @Override
     public void setPathStart(Position pos) {
-        if (pos instanceof ForgePosition) {
-            forgeTown.setPathStartForge(((ForgePosition) pos).getBlockPos());
-        } else if (pos != null) {
-            forgeTown.setPathStartForge(new BlockPos(pos.getX(), pos.getY(), pos.getZ()));
+        if (pos != null) {
+            forgeTown.setPathStart(pos.getX(), pos.getY(), pos.getZ());
         } else {
-            forgeTown.setPathStartForge(null);
+            forgeTown.setPathStart(0, 0, 0); // Use a default position when null
         }
     }
     
     @Override
     public Position getPathEnd() {
-        BlockPos pos = forgeTown.getPathEndForge();
-        return pos != null ? new ForgePosition(pos) : null;
+        ITownDataProvider.Position pos = forgeTown.getPathEnd();
+        return pos != null ? new ForgePosition(pos.getX(), pos.getY(), pos.getZ()) : null;
     }
     
     @Override
     public void setPathEnd(Position pos) {
-        if (pos instanceof ForgePosition) {
-            forgeTown.setPathEndForge(((ForgePosition) pos).getBlockPos());
-        } else if (pos != null) {
-            forgeTown.setPathEndForge(new BlockPos(pos.getX(), pos.getY(), pos.getZ()));
+        if (pos != null) {
+            forgeTown.setPathEnd(pos.getX(), pos.getY(), pos.getZ());
         } else {
-            forgeTown.setPathEndForge(null);
+            forgeTown.setPathEnd(0, 0, 0); // Use a default position when null
         }
     }
     
@@ -209,7 +206,8 @@ public class ForgeTownAdapter implements ITownDataProvider {
     
     @Override
     public Position getPosition() {
-        return new ForgePosition(forgeTown.getPositionForge());
+        ITownDataProvider.Position pos = forgeTown.getPosition();
+        return new ForgePosition(pos.getX(), pos.getY(), pos.getZ());
     }
     
     @Override
@@ -230,17 +228,19 @@ public class ForgeTownAdapter implements ITownDataProvider {
         } else {
             blockPos = new BlockPos(originPos.getX(), originPos.getY(), originPos.getZ());
         }
-        forgeTown.recordVisit(originTownId, count, blockPos);
+        // Convert BlockPos to Position using the utility converter
+        ITownDataProvider.Position position = PositionConverter.toPosition(blockPos);
+        forgeTown.recordVisit(originTownId, count, position);
     }
     
     @Override
     public List<VisitHistoryRecord> getVisitHistory() {
-        return forgeTown.getVisitHistoryForge().stream()
-            .map(forgeRecord -> new VisitHistoryRecord(
-                forgeRecord.getTimestamp(),
-                forgeRecord.getOriginTownId(),
-                forgeRecord.getCount(),
-                new ForgePosition(forgeRecord.getOriginPos())
+        return forgeTown.getVisitHistory().stream()
+            .map(record -> new VisitHistoryRecord(
+                record.getTimestamp(),
+                record.getOriginTownId(),
+                record.getCount(),
+                new ForgePosition(record.getOriginPos().getX(), record.getOriginPos().getY(), record.getOriginPos().getZ())
             ))
             .collect(Collectors.toList());
     }

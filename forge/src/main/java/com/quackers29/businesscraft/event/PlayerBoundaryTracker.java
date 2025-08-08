@@ -132,7 +132,7 @@ public class PlayerBoundaryTracker {
      * Finds the town that contains the given position, if any
      */
     private static Town findTownAtPosition(TownManager townManager, BlockPos playerPos) {
-        for (Town town : townManager.getAllTowns().values()) {
+        for (Town town : townManager.getAllTowns()) {
             double distance = Math.sqrt(playerPos.distSqr(PositionConverter.toBlockPos(town.getPosition())));
             if (distance <= town.getBoundaryRadius()) {
                 return town;

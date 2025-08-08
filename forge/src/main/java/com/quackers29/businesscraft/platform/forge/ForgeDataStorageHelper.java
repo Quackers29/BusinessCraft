@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.platform.forge;
 
 import com.quackers29.businesscraft.platform.DataStorageHelper;
+import com.quackers29.businesscraft.town.data.ITownPersistence;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -47,5 +48,11 @@ public class ForgeDataStorageHelper implements DataStorageHelper {
         // In Forge, the SavedData instances handle their own dirty tracking
         // This method is primarily for Fabric compatibility
         // The actual marking dirty is handled by the SavedData instance itself
+    }
+    
+    @Override
+    public ITownPersistence createTownPersistence(Object level, String identifier) {
+        ServerLevel serverLevel = (ServerLevel) level;
+        return new ForgeTownPersistence(serverLevel);
     }
 }

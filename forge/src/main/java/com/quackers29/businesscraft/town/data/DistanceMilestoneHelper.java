@@ -181,11 +181,13 @@ public class DistanceMilestoneHelper {
         try {
             // Create a reward entry for the milestone achievement
             List<ItemStack> rewardList = new ArrayList<>(milestoneResult.rewards);
-            java.util.UUID rewardId = town.getPaymentBoard().addReward(
-                RewardSource.MILESTONE, 
-                rewardList, 
-                "ALL"
-            );
+            // TODO: Payment board system needs to be implemented in common Town class
+            // java.util.UUID rewardId = town.getPaymentBoard().addReward(
+            //     RewardSource.MILESTONE, 
+            //     rewardList, 
+            //     "ALL"
+            // );
+            java.util.UUID rewardId = null; // Placeholder
             
             if (rewardId != null) {
                 // Add metadata about the milestone

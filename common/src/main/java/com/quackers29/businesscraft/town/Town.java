@@ -356,6 +356,30 @@ public class Town implements ITownDataProvider {
         markDirty();
     }
     
+    /**
+     * Adds a tourist to the town count
+     */
+    public void addTourist() {
+        this.touristCount++;
+        markDirty();
+        
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+            "Tourist added to town {}. New count: {}", name, touristCount);
+    }
+    
+    /**
+     * Removes a tourist from the town count
+     */
+    public void removeTourist() {
+        if (this.touristCount > 0) {
+            this.touristCount--;
+            markDirty();
+            
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                "Tourist removed from town {}. New count: {}", name, touristCount);
+        }
+    }
+    
     public boolean isTouristSpawningEnabled() { 
         return touristSpawningEnabled; 
     }

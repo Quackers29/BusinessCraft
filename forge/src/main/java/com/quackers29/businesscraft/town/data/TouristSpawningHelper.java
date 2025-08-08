@@ -7,6 +7,7 @@ import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
 import com.quackers29.businesscraft.town.utils.TouristAllocationTracker;
+import java.util.Collection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.npc.Villager;
@@ -165,10 +166,13 @@ public class TouristSpawningHelper {
      */
     public UUID selectFairTownByPopulation(ServerLevel serverLevel, List<UUID> allowedTowns, UUID originTownId) {
         TownManager townManager = TownManager.get(serverLevel);
-        Map<UUID, Town> allTowns = townManager.getAllTowns();
+        Collection<Town> allTowns = townManager.getAllTowns();
         
         // Remove current town from options
-        Map<UUID, Town> possibleTowns = new HashMap<>(allTowns);
+        Map<UUID, Town> possibleTowns = new HashMap<>();
+        for (Town town : allTowns) {
+            possibleTowns.put(town.getId(), town);
+        }
         possibleTowns.remove(originTownId);
         
         // Filter to only allowed towns if specified

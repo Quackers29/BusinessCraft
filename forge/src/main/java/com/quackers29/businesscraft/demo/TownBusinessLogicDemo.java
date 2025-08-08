@@ -76,7 +76,7 @@ public class TownBusinessLogicDemo {
         LOGGER.info("=== Tourist Visit Processing Demo ===");
         
         // Create a sample town using the Forge implementation
-        Town forgeTown = new Town(UUID.randomUUID(), new BlockPos(0, 64, 0), "DemoTown");
+        Town forgeTown = new Town(UUID.randomUUID(), 0, 64, 0, "DemoTown");
         
         // Wrap it in the adapter to make it compatible with common interfaces
         ForgeTownAdapter townAdapter = new ForgeTownAdapter(forgeTown);
@@ -110,7 +110,7 @@ public class TownBusinessLogicDemo {
     public void demonstrateTownSpawningCheck() {
         LOGGER.info("=== Town Spawning Capability Demo ===");
         
-        Town forgeTown = new Town(UUID.randomUUID(), new BlockPos(0, 64, 0), "TestTown");
+        Town forgeTown = new Town(UUID.randomUUID(), 0, 64, 0, "TestTown");
         ForgeTownAdapter townAdapter = new ForgeTownAdapter(forgeTown);
         
         boolean canSpawn = businessLogic.canTownSpawnMoreTourists(townAdapter);

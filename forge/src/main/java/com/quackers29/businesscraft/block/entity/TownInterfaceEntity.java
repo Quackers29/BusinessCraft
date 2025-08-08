@@ -11,6 +11,7 @@ import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
 // import com.quackers29.businesscraft.api.IEconomyDataProvider;
 import com.quackers29.businesscraft.api.ITownDataProvider;
+import java.util.Collection;
 // import com.quackers29.businesscraft.data.VisitHistoryRecord;
 import com.quackers29.businesscraft.scoreboard.TownScoreboardManager;
 import net.minecraft.core.particles.ParticleTypes;
@@ -784,12 +785,12 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         
         // Get all towns from the town manager
         TownManager townManager = TownManager.get(serverLevel);
-        Map<UUID, Town> allTowns = townManager.getAllTowns();
+        Collection<Town> allTowns = townManager.getAllTowns();
         
         // Filter out the current town
-        allTowns.forEach((id, town) -> {
-            if (!id.equals(townId)) {
-                result.put(id, town.getName());
+        allTowns.forEach(town -> {
+            if (!town.getId().equals(townId)) {
+                result.put(town.getId(), town.getName());
             }
         });
         
