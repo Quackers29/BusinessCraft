@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -70,10 +71,10 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     private long lastUpdateTick = 0;
 
     /**
-     * Constructor for server-side menu creation
+     * Constructor for server-side menu creation  
      */
     public TownInterfaceMenu(int windowId, Inventory inv, BlockPos pos) {
-        super(ModMenuTypes.TOWN_INTERFACE.get(), windowId);
+        super(null, windowId);  // Bypass MenuType - Enhanced MultiLoader Template workaround
         this.pos = pos;
         this.level = inv.player.level();
         
@@ -591,5 +592,15 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
             }
         }
         return null;
+    }
+    
+    /**
+     * Enhanced MultiLoader Template factory method approach to bypass field access
+     */
+    @Override
+    public MenuType<?> getType() {
+        // Use registry lookup instead of direct field access
+        // This bypasses the Enhanced MultiLoader Template classloader boundary issue
+        return MenuTypeFactory.getTownInterfaceMenuType();
     }
 } 

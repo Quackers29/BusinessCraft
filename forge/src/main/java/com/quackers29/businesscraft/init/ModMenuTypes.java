@@ -8,6 +8,7 @@ import com.quackers29.businesscraft.platform.PlatformServices;
 import com.quackers29.businesscraft.platform.RegistryHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraftforge.common.extensions.IForgeMenuType;
 import java.util.function.Supplier;
 
 // Forge-specific imports for inventory handling
@@ -36,8 +37,8 @@ public class ModMenuTypes {
         var menuHelper = PlatformServices.getMenuHelper();
         
         // Register menus using platform abstraction
-        TOWN_INTERFACE = REGISTRY.registerMenu("town_interface",
-            menuHelper.createDataDrivenMenuType((windowId, inv, data) -> {
+        TOWN_INTERFACE = REGISTRY.registerMenu("town_interface", 
+            () -> IForgeMenuType.create((windowId, inv, data) -> {
                 BlockPos pos = data.readBlockPos();
                 return new TownInterfaceMenu(windowId, inv, pos);
             })
