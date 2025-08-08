@@ -50,28 +50,19 @@ public class BusinessCraft {
     public static final String MOD_ID = "businesscraft";
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessCraft.class);
 
-    static {
-        System.out.println("DEBUG: BusinessCraft static initializer block executed");
-    }
-
-    // Add a static reference to the manager to use in event handlers
-    public static final TouristVehicleManager TOURIST_VEHICLE_MANAGER;
-    
-    static {
-        System.out.println("DEBUG: About to initialize TOURIST_VEHICLE_MANAGER");
-        try {
-            TOURIST_VEHICLE_MANAGER = new TouristVehicleManager();
-            System.out.println("DEBUG: TOURIST_VEHICLE_MANAGER initialized successfully");
-        } catch (Exception e) {
-            System.out.println("DEBUG: TOURIST_VEHICLE_MANAGER initialization FAILED: " + e.getClass().getSimpleName() + ": " + e.getMessage());
-            e.printStackTrace();
-            throw new ExceptionInInitializerError(e);
-        }
-    }
+    // Add a static reference to the manager to use in event handlers - initialize later to avoid static init issues
+    public static TouristVehicleManager TOURIST_VEHICLE_MANAGER;
 
     public BusinessCraft() {
-        System.out.println("DEBUG: BusinessCraft constructor started - Thread: " + Thread.currentThread().getName());
+        LOGGER.info("DEBUG: BusinessCraft constructor started - Thread: " + Thread.currentThread().getName());
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        
+        // Initialize static fields that couldn't be initialized during static initialization
+        if (TOURIST_VEHICLE_MANAGER == null) {
+            LOGGER.info("DEBUG: Initializing TOURIST_VEHICLE_MANAGER in constructor");
+            TOURIST_VEHICLE_MANAGER = new TouristVehicleManager();
+            LOGGER.info("DEBUG: TOURIST_VEHICLE_MANAGER initialized successfully");
+        }
         
         // Initialize Forge platform services using Enhanced MultiLoader approach
         ForgePlatformServices forgeServices = new ForgePlatformServices();
@@ -108,9 +99,9 @@ public class BusinessCraft {
         
         try {
             // Initialize platform-agnostic registration coordination from common module
-            System.out.println("DEBUG: About to call CommonRegistration.initialize()");
+            LOGGER.info("DEBUG: About to call CommonRegistration.initialize()");
             com.quackers29.businesscraft.init.CommonRegistration.initialize();
-            System.out.println("DEBUG: CommonRegistration.initialize() completed");
+            LOGGER.info("DEBUG: CommonRegistration.initialize() completed");
             
             // CRITICAL FIX: Register platform abstraction DeferredRegisters FIRST
             // This ensures the DeferredRegister instances are registered to ModEventBus 
@@ -123,18 +114,24 @@ public class BusinessCraft {
             forgeHelper.getMenus().register(modEventBus);
             
             // NOW initialize Forge-specific registration - DeferredRegisters are ready
-            System.out.println("DEBUG: About to initialize Forge registrations");
+            LOGGER.info("DEBUG: About to initialize Forge registrations");
             ModBlocks.initialize();
-            System.out.println("DEBUG: ModBlocks.initialize() completed");
+            LOGGER.info("DEBUG: ModBlocks.initialize() completed");
             ModBlockEntities.initialize();
-            System.out.println("DEBUG: ModBlockEntities.initialize() completed");
+            LOGGER.info("DEBUG: ModBlockEntities.initialize() completed");
             ModEntityTypes.initialize();
-            System.out.println("DEBUG: ModEntityTypes.initialize() completed");
-            System.out.println("DEBUG: About to call ModMenuTypes.initialize()");
-            ModMenuTypes.initialize();
-            System.out.println("DEBUG: ModMenuTypes.initialize() completed");
+            LOGGER.info("DEBUG: ModEntityTypes.initialize() completed");
+            LOGGER.info("DEBUG: About to call ModMenuTypes.initialize()");
+            try {
+                ModMenuTypes.initialize();
+                LOGGER.info("DEBUG: ModMenuTypes.initialize() completed");
+            } catch (Exception e) {
+                LOGGER.error("CRITICAL: ModMenuTypes.initialize() threw exception: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+                e.printStackTrace();
+                throw e;
+            }
         } catch (Exception e) {
-            System.out.println("CRITICAL EXCEPTION caught in BusinessCraft constructor: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            LOGGER.error("CRITICAL EXCEPTION caught in BusinessCraft constructor: " + e.getClass().getSimpleName() + ": " + e.getMessage());
             e.printStackTrace();
             // Re-throw to see if this is being caught elsewhere
             throw new RuntimeException("Registration failed", e);
@@ -184,19 +181,17 @@ public class BusinessCraft {
         ClientModEvents.initialize();
         ClientSetup.initialize();
         
-        // TODO: Fix screen registration - temporarily disabled due to deferred registration timing issues
-        // The ModMenuTypes fields are null at this point because deferred registration hasn't completed
-        // Need to find proper event to register screens after deferred registration completes
+        // Register menu screens - ModMenuTypes should now be properly initialized
         event.enqueueWork(() -> {
-            LOGGER.info("Client setup: Screen registration temporarily disabled for testing");
-            // net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.TOWN_INTERFACE.get(), 
-            //     com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen::new);
-            // net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.TRADE_MENU.get(), 
-            //     com.quackers29.businesscraft.ui.screens.town.TradeScreen::new);
-            // net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.STORAGE_MENU.get(), 
-            //     com.quackers29.businesscraft.ui.screens.town.StorageScreen::new);
-            // net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.PAYMENT_BOARD_MENU.get(), 
-            //     com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen::new);
+            LOGGER.info("Client setup: Registering menu screen types");
+            net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.TOWN_INTERFACE.get(), 
+                com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen::new);
+            net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.TRADE_MENU.get(), 
+                com.quackers29.businesscraft.ui.screens.town.TradeScreen::new);
+            net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.STORAGE_MENU.get(), 
+                com.quackers29.businesscraft.ui.screens.town.StorageScreen::new);
+            net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.PAYMENT_BOARD_MENU.get(), 
+                com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen::new);
             
             LOGGER.info("Registered all menu screen types");
         });

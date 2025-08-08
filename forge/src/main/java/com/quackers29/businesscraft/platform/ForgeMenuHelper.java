@@ -9,28 +9,14 @@ import net.minecraft.core.BlockPos;
 import java.util.function.Supplier;
 
 /**
- * Platform abstraction interface for menu registration and complex data transfer.
- * This interface provides a common API for menu handling across mod loaders.
- * 
- * Abstracts:
- * - Forge: IForgeMenuType.create() for complex data transfer
- * - Fabric: ExtendedScreenHandlerType for complex data transfer
- * 
- * Key Features Preserved:
- * - Complex menu data synchronization for 11-directory UI framework
- * - Client-server menu sync with custom data transfer
- * - BlockPos and custom object serialization/deserialization  
- * - Menu type registration through platform registry systems
- * - Support for both simple menus and complex data-driven menus
+ * Forge-specific menu helper with menu registration and complex data transfer capabilities.
+ * This class provides platform-specific functionality beyond the basic MenuHelper interface.
  */
-public interface MenuHelper {
+public interface ForgeMenuHelper extends MenuHelper {
     
     /**
      * Creates a menu type that supports complex data transfer between server and client.
      * This is essential for BusinessCraft's sophisticated UI framework.
-     * 
-     * Forge: Uses IForgeMenuType.create() with custom FriendlyByteBuf handling
-     * Fabric: Uses ExtendedScreenHandlerType with PacketByteBuf handling
      * 
      * @param factory Factory function that creates menu instances with data
      * @param <T> The menu type

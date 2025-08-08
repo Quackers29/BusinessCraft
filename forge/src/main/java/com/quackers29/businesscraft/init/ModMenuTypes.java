@@ -19,8 +19,8 @@ import net.minecraftforge.items.ItemStackHandler;
  * This system works across different mod loaders (Forge, Fabric, etc.).
  */
 public class ModMenuTypes {
-    // Platform abstraction helper
-    private static final RegistryHelper REGISTRY = PlatformServices.getRegistryHelper();
+    // Platform abstraction helper - initialize lazily to avoid static initialization issues
+    private static RegistryHelper REGISTRY = null;
     
     // Platform-agnostic menu registrations
     public static Supplier<MenuType<TownInterfaceMenu>> TOWN_INTERFACE;
@@ -33,10 +33,14 @@ public class ModMenuTypes {
      * This is the Forge-specific implementation with actual menu registration.
      */
     public static void initialize() {
-        System.out.println("DEBUG: ModMenuTypes.initialize() called");
-        
-        // Get platform-agnostic menu helper
-        var menuHelper = PlatformServices.getMenuHelper();
+        try {
+            // Initialize REGISTRY if null
+            if (REGISTRY == null) {
+                REGISTRY = PlatformServices.getRegistryHelper();
+            }
+            
+            // Get platform-specific menu helper
+            var menuHelper = (com.quackers29.businesscraft.platform.ForgeMenuHelper) PlatformServices.getMenuHelper();
         
         // Register menus using platform abstraction
         TOWN_INTERFACE = REGISTRY.registerMenu("town_interface", 
@@ -71,5 +75,13 @@ public class ModMenuTypes {
         if (TOWN_INTERFACE == null || TRADE_MENU == null || STORAGE_MENU == null || PAYMENT_BOARD_MENU == null) {
             throw new IllegalStateException("Menu registration failed - one or more menus not registered");
         }
+        
+            // Menu registration completed successfully
+        } catch (Exception e) {
+            System.out.println("CRITICAL EXCEPTION in ModMenuTypes.initialize(): " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Failed to initialize ModMenuTypes", e);
+        }
     }
+    
 } 

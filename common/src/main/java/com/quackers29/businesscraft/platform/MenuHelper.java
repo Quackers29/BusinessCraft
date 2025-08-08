@@ -1,11 +1,9 @@
 package com.quackers29.businesscraft.platform;
 
 /**
- * Platform-agnostic interface for menu operations.
- * This interface provides a common API for menu handling across mod loaders.
- * 
- * Enhanced MultiLoader approach: Common module defines the interface,
- * platform modules implement using their specific APIs.
+ * Platform-agnostic interface for basic menu operations.
+ * Only contains methods that can be called from common module.
+ * Platform-specific methods are defined in platform modules.
  */
 public interface MenuHelper {
     
