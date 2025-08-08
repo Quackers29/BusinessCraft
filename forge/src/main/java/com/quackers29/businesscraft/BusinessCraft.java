@@ -50,8 +50,24 @@ public class BusinessCraft {
     public static final String MOD_ID = "businesscraft";
     private static final Logger LOGGER = LoggerFactory.getLogger(BusinessCraft.class);
 
+    static {
+        System.out.println("DEBUG: BusinessCraft static initializer block executed");
+    }
+
     // Add a static reference to the manager to use in event handlers
-    public static final TouristVehicleManager TOURIST_VEHICLE_MANAGER = new TouristVehicleManager();
+    public static final TouristVehicleManager TOURIST_VEHICLE_MANAGER;
+    
+    static {
+        System.out.println("DEBUG: About to initialize TOURIST_VEHICLE_MANAGER");
+        try {
+            TOURIST_VEHICLE_MANAGER = new TouristVehicleManager();
+            System.out.println("DEBUG: TOURIST_VEHICLE_MANAGER initialized successfully");
+        } catch (Exception e) {
+            System.out.println("DEBUG: TOURIST_VEHICLE_MANAGER initialization FAILED: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            e.printStackTrace();
+            throw new ExceptionInInitializerError(e);
+        }
+    }
 
     public BusinessCraft() {
         System.out.println("DEBUG: BusinessCraft constructor started - Thread: " + Thread.currentThread().getName());
@@ -145,6 +161,10 @@ public class BusinessCraft {
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
+        System.out.println("DEBUG: commonSetup() called - Thread: " + Thread.currentThread().getName());
+        System.out.println("DEBUG: commonSetup() - this object: " + this.getClass().getSimpleName() + "@" + Integer.toHexString(System.identityHashCode(this)));
+        System.out.println("DEBUG: commonSetup() - TOURIST_VEHICLE_MANAGER: " + (TOURIST_VEHICLE_MANAGER != null ? "initialized" : "NULL"));
+        
         ConfigLoader.loadConfig();
         
         // Initialize platform-agnostic event handlers
