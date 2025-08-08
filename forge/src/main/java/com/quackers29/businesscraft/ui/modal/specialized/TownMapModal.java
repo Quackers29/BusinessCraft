@@ -138,7 +138,8 @@ public class TownMapModal extends Screen {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
     }
     
-    private void onClose() {
+    @Override
+    public void onClose() {
         this.minecraft.setScreen(parentScreen);
         if (onClose != null) {
             onClose.accept(this);

@@ -440,7 +440,6 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
         }
     }
     
-    @Override
     public boolean updateTownMapUI(Object player, int x, int y, int z, String mapData, int zoomLevel) {
         try {
             // Find the currently open map modal and update it

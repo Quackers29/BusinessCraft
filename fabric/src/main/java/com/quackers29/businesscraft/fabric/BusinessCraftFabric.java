@@ -53,8 +53,8 @@ public class BusinessCraftFabric implements ModInitializer {
         // Initialize platform-agnostic registration coordination from common module
         com.quackers29.businesscraft.init.CommonRegistration.initialize();
         
-        // Verify UI framework platform services are available
-        com.quackers29.businesscraft.init.ModMenuTypes.initialize();
+        // UI framework platform services are available through MenuHelper abstraction
+        // ModMenuTypes is handled by platform-specific implementations
         
         // Load configuration from common module
         com.quackers29.businesscraft.config.ConfigLoader.loadConfig();
