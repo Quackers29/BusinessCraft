@@ -54,6 +54,7 @@ public class BusinessCraft {
     public static final TouristVehicleManager TOURIST_VEHICLE_MANAGER = new TouristVehicleManager();
 
     public BusinessCraft() {
+        System.out.println("DEBUG: BusinessCraft constructor started - Thread: " + Thread.currentThread().getName());
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         
         // Initialize Forge platform services using Enhanced MultiLoader approach
@@ -89,22 +90,39 @@ public class BusinessCraft {
             forgeServices.getBlockEntityHelper()
         );
         
-        // Initialize platform-agnostic registration coordination from common module
-        com.quackers29.businesscraft.init.CommonRegistration.initialize();
-        
-        // Initialize Forge-specific registration
-        ModBlocks.initialize();
-        ModBlockEntities.initialize();
-        ModEntityTypes.initialize();
-        ModMenuTypes.initialize();
-        
-        // Register platform abstraction DeferredRegisters for Forge
-        ForgeRegistryHelper forgeHelper = (ForgeRegistryHelper) PlatformServices.getRegistryHelper();
-        forgeHelper.getBlocks().register(modEventBus);
-        forgeHelper.getItems().register(modEventBus);
-        forgeHelper.getBlockEntities().register(modEventBus);
-        forgeHelper.getEntities().register(modEventBus);
-        forgeHelper.getMenus().register(modEventBus);
+        try {
+            // Initialize platform-agnostic registration coordination from common module
+            System.out.println("DEBUG: About to call CommonRegistration.initialize()");
+            com.quackers29.businesscraft.init.CommonRegistration.initialize();
+            System.out.println("DEBUG: CommonRegistration.initialize() completed");
+            
+            // CRITICAL FIX: Register platform abstraction DeferredRegisters FIRST
+            // This ensures the DeferredRegister instances are registered to ModEventBus 
+            // BEFORE initialize() methods try to create RegistryObjects
+            ForgeRegistryHelper forgeHelper = (ForgeRegistryHelper) PlatformServices.getRegistryHelper();
+            forgeHelper.getBlocks().register(modEventBus);
+            forgeHelper.getItems().register(modEventBus);
+            forgeHelper.getBlockEntities().register(modEventBus);
+            forgeHelper.getEntities().register(modEventBus);
+            forgeHelper.getMenus().register(modEventBus);
+            
+            // NOW initialize Forge-specific registration - DeferredRegisters are ready
+            System.out.println("DEBUG: About to initialize Forge registrations");
+            ModBlocks.initialize();
+            System.out.println("DEBUG: ModBlocks.initialize() completed");
+            ModBlockEntities.initialize();
+            System.out.println("DEBUG: ModBlockEntities.initialize() completed");
+            ModEntityTypes.initialize();
+            System.out.println("DEBUG: ModEntityTypes.initialize() completed");
+            System.out.println("DEBUG: About to call ModMenuTypes.initialize()");
+            ModMenuTypes.initialize();
+            System.out.println("DEBUG: ModMenuTypes.initialize() completed");
+        } catch (Exception e) {
+            System.out.println("CRITICAL EXCEPTION caught in BusinessCraft constructor: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            e.printStackTrace();
+            // Re-throw to see if this is being caught elsewhere
+            throw new RuntimeException("Registration failed", e);
+        }
         
         // Register our mod's event handlers
         modEventBus.addListener(this::commonSetup);
@@ -209,6 +227,7 @@ public class BusinessCraft {
      */
     private void initializeTownServices(ForgePlatformServices forgeServices) {
         try {
+            System.out.println("DEBUG: initializeTownServices() starting");
             // Use reflection to access private fields and set the town services
             java.lang.reflect.Field townManagerField = PlatformServices.class.getDeclaredField("townManagerService");
             townManagerField.setAccessible(true);
@@ -219,9 +238,13 @@ public class BusinessCraft {
             dataStorageField.set(null, forgeServices.getDataStorageHelper());
             
             LOGGER.info("Initialized town management services via reflection");
+            System.out.println("DEBUG: initializeTownServices() completed successfully");
         } catch (Exception e) {
+            System.out.println("DEBUG: initializeTownServices() FAILED: " + e.getClass().getSimpleName() + ": " + e.getMessage());
             LOGGER.error("Failed to initialize town management services: " + e.getMessage());
             e.printStackTrace();
+            // Re-throw the exception to see if this is blocking registration
+            throw new RuntimeException("Town services initialization failed", e);
         }
     }
     

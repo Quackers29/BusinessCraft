@@ -33,15 +33,20 @@ public class ModMenuTypes {
      * This is the Forge-specific implementation with actual menu registration.
      */
     public static void initialize() {
+        System.out.println("DEBUG: ModMenuTypes.initialize() called");
+        
         // Get platform-agnostic menu helper
         var menuHelper = PlatformServices.getMenuHelper();
         
         // Register menus using platform abstraction
         TOWN_INTERFACE = REGISTRY.registerMenu("town_interface", 
-            () -> IForgeMenuType.create((windowId, inv, data) -> {
-                BlockPos pos = data.readBlockPos();
-                return new TownInterfaceMenu(windowId, inv, pos);
-            })
+            () -> {
+                System.out.println("DEBUG: TOWN_INTERFACE supplier called - creating MenuType");
+                return IForgeMenuType.create((windowId, inv, data) -> {
+                    BlockPos pos = data.readBlockPos();
+                    return new TownInterfaceMenu(windowId, inv, pos);
+                });
+            }
         );
         
         TRADE_MENU = REGISTRY.registerMenu("trade_menu",
