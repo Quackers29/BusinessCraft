@@ -41,8 +41,8 @@ import com.quackers29.businesscraft.network.packets.ui.OpenPaymentBoardPacket;
 // TODO: Migrate remaining UI response packets to common module
 import com.quackers29.businesscraft.network.packets.ui.RequestTownMapDataPacket; // ✅ MIGRATED
 import com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket; // ✅ MIGRATED
-// import com.quackers29.businesscraft.network.packets.ui.RequestTownPlatformDataPacket;
-// import com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket;
+import com.quackers29.businesscraft.network.packets.ui.RequestTownPlatformDataPacket; // ✅ MIGRATED
+import com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket; // ✅ MIGRATED
 import com.quackers29.businesscraft.network.packets.storage.TradeResourcePacket;
 // TODO: Migrate remaining storage packets to common module
 import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket; // ✅ MIGRATED
@@ -432,19 +432,27 @@ public class ModMessages {
                 .add();
                 
         // Register town platform data packets
-        // TODO: Migrate RequestTownPlatformDataPacket to common module
-        // net.messageBuilder(RequestTownPlatformDataPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-        //         .decoder(RequestTownPlatformDataPacket::decode)
-        //         .encoder((msg, buf) -> msg.encode(buf))
-        //         .consumerMainThread(RequestTownPlatformDataPacket::handle)
-        //         .add();
+        net.messageBuilder(RequestTownPlatformDataPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(RequestTownPlatformDataPacket::decode)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
+                .add();
                 
-        // TODO: Migrate TownPlatformDataResponsePacket to common module
-        // net.messageBuilder(TownPlatformDataResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-        //         .decoder(TownPlatformDataResponsePacket::decode)
-        //         .encoder((msg, buf) -> msg.encode(buf))
-        //         .consumerMainThread(TownPlatformDataResponsePacket::handle)
-        //         .add();
+        net.messageBuilder(TownPlatformDataResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(TownPlatformDataResponsePacket::decode)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
+                .add();
                 
         // Register boundary sync packets for real-time boundary updates
         net.messageBuilder(BoundarySyncRequestPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)

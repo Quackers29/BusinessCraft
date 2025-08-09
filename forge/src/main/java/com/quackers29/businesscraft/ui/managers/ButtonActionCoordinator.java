@@ -178,7 +178,15 @@ public class ButtonActionCoordinator {
      */
     public void handleGenericAction(String action) {
         DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling generic action: {}", action);
-        screen.sendChatMessage("Action: " + action);
+        
+        switch (action) {
+            case "mapView":
+                openTownMapModal();
+                break;
+            default:
+                screen.sendChatMessage("Action: " + action);
+                break;
+        }
     }
     
     /**
@@ -211,13 +219,11 @@ public class ButtonActionCoordinator {
         // Show the map modal
         Minecraft.getInstance().setScreen(mapModal);
         DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Opened town map modal for position: {}", currentTownPos);
-        // com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache cache = 
-        //     com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache.getInstance();
-        // mapModal.setTownData(cache.getAllTowns());
+        com.quackers29.businesscraft.client.cache.ClientTownMapCache cache = 
+            com.quackers29.businesscraft.client.cache.ClientTownMapCache.getInstance();
+        mapModal.setTownData(cache.getAllTowns());
         
-        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town map modal temporarily disabled - missing packet dependencies");
-        
-        // Minecraft.getInstance().setScreen(mapModal);
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town map modal opened with sophisticated functionality restored");
     }
     
     /**

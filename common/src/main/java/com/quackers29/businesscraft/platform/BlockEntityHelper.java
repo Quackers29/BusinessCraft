@@ -485,4 +485,36 @@ public interface BlockEntityHelper {
      * @return True if boundary sync request was successfully processed
      */
     boolean processBoundarySyncRequest(Object blockEntity, Object player, boolean enableVisualization, int renderDistance);
+    
+    /**
+     * Process platform data request for sophisticated map view.
+     * Platform implementations handle server-side platform data collection and response.
+     * 
+     * @param player Platform-specific player object
+     * @param x Block X coordinate
+     * @param y Block Y coordinate
+     * @param z Block Z coordinate
+     * @param includePlatformConnections Include platform layout and connections
+     * @param includeDestinationTowns Include destination town information
+     * @param maxRadius Maximum search radius for connected towns
+     * @return True if platform data request was successfully processed
+     */
+    boolean processPlatformDataRequest(Object player, int x, int y, int z, 
+                                     boolean includePlatformConnections, 
+                                     boolean includeDestinationTowns, 
+                                     int maxRadius);
+    
+    /**
+     * Update client-side town platform UI with received data.
+     * Platform implementations handle client-side sophisticated map modal updates.
+     * 
+     * @param player Platform-specific player object
+     * @param x Block X coordinate
+     * @param y Block Y coordinate
+     * @param z Block Z coordinate
+     * @param platformData JSON serialized platform data
+     * @param destinationData JSON serialized destination data
+     * @return True if platform UI was successfully updated
+     */
+    boolean updateTownPlatformUI(Object player, int x, int y, int z, String platformData, String destinationData);
 }

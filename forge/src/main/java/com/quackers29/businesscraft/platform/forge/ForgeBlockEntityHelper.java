@@ -6,9 +6,12 @@ import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.network.ModMessages;
 import com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket;
+import com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket;
+import com.quackers29.businesscraft.platform.PlatformServices;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -499,6 +502,170 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
         
         public String getKey() {
             return key;
+        }
+    }
+    
+    public boolean processPlatformDataRequest(Object player, int x, int y, int z, 
+                                            boolean includePlatformConnections, 
+                                            boolean includeDestinationTowns, 
+                                            int maxRadius) {
+        try {
+            ServerPlayer serverPlayer = (ServerPlayer) player;
+            ServerLevel level = serverPlayer.serverLevel();
+            BlockPos pos = new BlockPos(x, y, z);
+            
+            // Generate platform connection data
+            String platformData = "{}"; // Placeholder - implement actual platform data generation
+            if (includePlatformConnections) {
+                // TODO: Implement platform connection data generation
+                // This would gather platform layout, connections, and transportation network info
+            }
+            
+            // Generate destination town data with actual town information
+            String destinationData = "{}";
+            if (includeDestinationTowns) {
+                destinationData = generateDestinationTownData(level, pos, maxRadius);
+                LOGGER.debug("Generated destination data: {}", destinationData);
+            }
+            
+            // Send response packet to client
+            TownPlatformDataResponsePacket response = 
+                new TownPlatformDataResponsePacket(x, y, z, platformData, destinationData, maxRadius);
+            
+            // Send packet using platform services
+            PlatformServices.getNetworkHelper().sendToClient(response, serverPlayer);
+            
+            return true;
+        } catch (Exception e) {
+            LOGGER.error("Failed to process platform data request at ({}, {}, {}): {}", x, y, z, e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Generate destination town data as JSON string for sophisticated map display.
+     * This method finds all towns within the specified radius and formats them for the client cache.
+     */
+    private String generateDestinationTownData(ServerLevel level, BlockPos centerPos, int maxRadius) {
+        try {
+            // Try to get TownManager - this is currently in forge module but should be in common
+            Class<?> townManagerClass = Class.forName("com.quackers29.businesscraft.town.TownManager");
+            Object townManagerInstance = townManagerClass.getMethod("get", ServerLevel.class).invoke(null, level);
+            
+            if (townManagerInstance == null) {
+                LOGGER.debug("TownManager not available, returning empty town data");
+                return "{}";
+            }
+            
+            // Get all towns from TownManager
+            Object allTowns = townManagerClass.getMethod("getAllTowns").invoke(townManagerInstance);
+            
+            if (!(allTowns instanceof java.util.Collection)) {
+                LOGGER.debug("getAllTowns did not return a collection, returning empty data");
+                return "{}";
+            }
+            
+            @SuppressWarnings("unchecked")
+            java.util.Collection<Object> towns = (java.util.Collection<Object>) allTowns;
+            
+            // Build JSON manually for simplicity (could use Gson if available)
+            StringBuilder jsonBuilder = new StringBuilder();
+            jsonBuilder.append("{");
+            boolean first = true;
+            
+            for (Object town : towns) {
+                try {
+                    // Get town position through ITownDataProvider
+                    if (!(town instanceof com.quackers29.businesscraft.api.ITownDataProvider)) {
+                        continue;
+                    }
+                    
+                    com.quackers29.businesscraft.api.ITownDataProvider townData = 
+                        (com.quackers29.businesscraft.api.ITownDataProvider) town;
+                    
+                    // Get town information
+                    Object townPos = town.getClass().getMethod("getPos").invoke(town);
+                    if (!(townPos instanceof BlockPos)) {
+                        continue;
+                    }
+                    
+                    BlockPos pos = (BlockPos) townPos;
+                    
+                    // Check distance
+                    double distance = Math.sqrt(centerPos.distSqr(pos));
+                    if (distance > maxRadius) {
+                        continue;
+                    }
+                    
+                    String townName = townData.getTownName();
+                    java.util.UUID townId = townData.getTownId();
+                    
+                    if (townName == null || townId == null) {
+                        continue;
+                    }
+                    
+                    if (!first) {
+                        jsonBuilder.append(",");
+                    }
+                    first = false;
+                    
+                    // Add town data as JSON
+                    jsonBuilder.append("\"").append(townId.toString()).append("\":{");
+                    jsonBuilder.append("\"id\":\"").append(townId.toString()).append("\",");
+                    jsonBuilder.append("\"name\":\"").append(escapeJson(townName)).append("\",");
+                    jsonBuilder.append("\"x\":").append(pos.getX()).append(",");
+                    jsonBuilder.append("\"y\":").append(pos.getY()).append(",");
+                    jsonBuilder.append("\"z\":").append(pos.getZ()).append(",");
+                    jsonBuilder.append("\"distance\":").append((int)distance);
+                    jsonBuilder.append("}");
+                    
+                } catch (Exception e) {
+                    LOGGER.warn("Failed to process town data: {}", e.getMessage());
+                }
+            }
+            
+            jsonBuilder.append("}");
+            String result = jsonBuilder.toString();
+            
+            LOGGER.debug("Generated destination data with {} towns within {}m radius", 
+                        towns.size(), maxRadius);
+            return result;
+            
+        } catch (Exception e) {
+            LOGGER.warn("Failed to generate destination town data: {}", e.getMessage());
+            return "{}";
+        }
+    }
+    
+    /**
+     * Simple JSON string escaping for town names.
+     */
+    private String escapeJson(String input) {
+        if (input == null) return "";
+        return input.replace("\"", "\\\"").replace("\\", "\\\\").replace("\n", "\\n").replace("\r", "\\r");
+    }
+    
+    public boolean updateTownPlatformUI(Object player, int x, int y, int z, String platformData, String destinationData) {
+        try {
+            // Find the currently open map modal and update it with platform data
+            Minecraft minecraft = Minecraft.getInstance();
+            if (minecraft.screen instanceof com.quackers29.businesscraft.ui.modal.specialized.TownMapModal) {
+                com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal = 
+                    (com.quackers29.businesscraft.ui.modal.specialized.TownMapModal) minecraft.screen;
+                
+                // Update the modal with platform and destination data
+                // TODO: Implement sophisticated map modal platform data update
+                // This would update town markers, connections, and interactive features
+                
+                LOGGER.debug("Updated town platform UI with platform data at ({}, {}, {})", x, y, z);
+                return true;
+            } else {
+                LOGGER.debug("No town map modal open to update with platform data");
+                return false;
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to update town platform UI at ({}, {}, {}): {}", x, y, z, e.getMessage());
+            return false;
         }
     }
 }

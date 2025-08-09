@@ -27,7 +27,8 @@
       "Bash(GRADLE_USER_HOME=/tmp/gradle_temp ./gradlew --no-daemon :forge:runClient --args=\"--username TestUser\")",
       "WebFetch(domain:wiki.fabricmc.net)",
       "Bash(javap:*)",
-      "Bash(GRADLE_USER_HOME=/tmp/gradle_temp ./gradlew --no-daemon :forge:compileJava)"
+      "Bash(GRADLE_USER_HOME=/tmp/gradle_temp ./gradlew --no-daemon :forge:compileJava)",
+      "Bash(git ls-tree:*)"
     ],
     "deny": []
   }
