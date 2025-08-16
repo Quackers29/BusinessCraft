@@ -137,4 +137,15 @@ public interface PlatformHelper {
      * Platform implementations clear the path handler state.
      */
     void clearActivePlatformForPathCreation();
+    
+    /**
+     * Create a platform-specific BlockPos object from coordinates.
+     * Platform implementations create BlockPos using their specific constructors.
+     * 
+     * @param x Block X coordinate
+     * @param y Block Y coordinate 
+     * @param z Block Z coordinate
+     * @return Platform-specific BlockPos object
+     */
+    Object createBlockPos(int x, int y, int z);
 }

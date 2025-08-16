@@ -327,4 +327,54 @@ public class TownPlatformDataResponsePacket extends BaseBlockEntityPacket {
     public String getDestinationData() { return destinationData; }
     public boolean isSuccess() { return isSuccess; }
     public int getSearchRadius() { return searchRadius; }
+    
+    /**
+     * Structured data class for platform information in sophisticated map view.
+     * Used for transportation network visualization.
+     * Uses primitive coordinates for Enhanced MultiLoader compatibility.
+     */
+    public static class PlatformInfo {
+        public final UUID platformId;
+        public final int x, y, z;
+        public final String destinationName;
+        public final UUID destinationTownId;
+        public final boolean isEnabled;
+        public final int[] pathPoints; // Flattened array of x,z coordinates for path visualization
+        
+        public PlatformInfo(UUID platformId, int x, int y, int z, String destinationName, UUID destinationTownId, boolean isEnabled, int[] pathPoints) {
+            this.platformId = platformId;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.destinationName = destinationName;
+            this.destinationTownId = destinationTownId;
+            this.isEnabled = isEnabled;
+            this.pathPoints = pathPoints != null ? pathPoints : new int[0];
+        }
+    }
+    
+    /**
+     * Structured data class for live town information including boundaries.
+     * Used for advanced map features like territory visualization.
+     * Uses primitive coordinates for Enhanced MultiLoader compatibility.
+     */
+    public static class TownInfo {
+        public final UUID townId;
+        public final String name;
+        public final int centerX, centerY, centerZ;
+        public final int[] boundaryCorners; // Flattened array of x,z coordinates defining town boundary
+        public final int detectionRadius;
+        public final boolean hasBoundaryVisualization;
+        
+        public TownInfo(UUID townId, String name, int centerX, int centerY, int centerZ, int[] boundaryCorners, int detectionRadius, boolean hasBoundaryVisualization) {
+            this.townId = townId;
+            this.name = name;
+            this.centerX = centerX;
+            this.centerY = centerY;
+            this.centerZ = centerZ;
+            this.boundaryCorners = boundaryCorners != null ? boundaryCorners : new int[0];
+            this.detectionRadius = detectionRadius;
+            this.hasBoundaryVisualization = hasBoundaryVisualization;
+        }
+    }
 }

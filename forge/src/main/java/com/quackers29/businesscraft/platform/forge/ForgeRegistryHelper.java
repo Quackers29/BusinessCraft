@@ -95,37 +95,62 @@ public class ForgeRegistryHelper implements RegistryHelper {
     
     @Override
     public Object getItem(String resourceLocation) {
-        // TODO: Implement in Phase 10.2 - get item by resource location
-        throw new UnsupportedOperationException("Town management methods will be implemented in Phase 10.2");
+        try {
+            ResourceLocation rl = new ResourceLocation(resourceLocation);
+            return ForgeRegistries.ITEMS.getValue(rl);
+        } catch (Exception e) {
+            // Return air if invalid resource location
+            return ForgeRegistries.ITEMS.getValue(new ResourceLocation("minecraft:air"));
+        }
     }
     
     @Override
     public String getItemId(Object item) {
-        // TODO: Implement in Phase 10.2 - get resource location from item
-        throw new UnsupportedOperationException("Town management methods will be implemented in Phase 10.2");
+        if (item instanceof Item) {
+            ResourceLocation resourceLocation = ForgeRegistries.ITEMS.getKey((Item) item);
+            return resourceLocation != null ? resourceLocation.toString() : "minecraft:air";
+        }
+        return "minecraft:air";
     }
     
     @Override
     public Object serializeItem(Object item) {
-        // TODO: Implement in Phase 10.2 - serialize item to NBT-compatible format
-        throw new UnsupportedOperationException("Town management methods will be implemented in Phase 10.2");
+        if (item instanceof Item) {
+            ResourceLocation resourceLocation = ForgeRegistries.ITEMS.getKey((Item) item);
+            return resourceLocation != null ? resourceLocation.toString() : "minecraft:air";
+        }
+        return "minecraft:air";
     }
     
     @Override
     public Object deserializeItem(Object data) {
-        // TODO: Implement in Phase 10.2 - deserialize item from NBT-compatible format
-        throw new UnsupportedOperationException("Town management methods will be implemented in Phase 10.2");
+        if (data instanceof String) {
+            String resourceLocationStr = (String) data;
+            try {
+                ResourceLocation resourceLocation = new ResourceLocation(resourceLocationStr);
+                return ForgeRegistries.ITEMS.getValue(resourceLocation);
+            } catch (Exception e) {
+                // Return air if invalid resource location
+                return ForgeRegistries.ITEMS.getValue(new ResourceLocation("minecraft:air"));
+            }
+        }
+        return ForgeRegistries.ITEMS.getValue(new ResourceLocation("minecraft:air"));
     }
     
     @Override
     public boolean itemExists(String resourceLocation) {
-        // TODO: Implement in Phase 10.2 - check if item exists in registry
-        throw new UnsupportedOperationException("Town management methods will be implemented in Phase 10.2");
+        try {
+            ResourceLocation rl = new ResourceLocation(resourceLocation);
+            return ForgeRegistries.ITEMS.containsKey(rl);
+        } catch (Exception e) {
+            return false;
+        }
     }
     
     @Override
     public String[] getAllItemIds() {
-        // TODO: Implement in Phase 10.2 - get all item resource locations
-        throw new UnsupportedOperationException("Town management methods will be implemented in Phase 10.2");
+        return ForgeRegistries.ITEMS.getKeys().stream()
+            .map(ResourceLocation::toString)
+            .toArray(String[]::new);
     }
 }

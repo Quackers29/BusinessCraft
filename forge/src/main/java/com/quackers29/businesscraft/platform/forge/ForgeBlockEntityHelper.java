@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -422,19 +423,13 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             LOGGER.debug("Processing town map data request for zoom level: {} at position: {}", 
                         zoomLevel, townEntity.getBlockPos());
             
-            // Get map data - simplified implementation for now
-            String mapData = generateMapData(townEntity, zoomLevel, includeStructures);
+            // Generate structured map data for sophisticated map features
+            Map<java.util.UUID, TownMapDataResponsePacket.TownMapInfo> structuredMapData = 
+                generateStructuredMapData(townEntity, serverPlayer, zoomLevel, includeStructures);
             
-            // Send response packet to client
-            TownMapDataResponsePacket responsePacket = new TownMapDataResponsePacket(
-                townEntity.getBlockPos().getX(),
-                townEntity.getBlockPos().getY(), 
-                townEntity.getBlockPos().getZ(),
-                mapData,
-                zoomLevel
-            );
+            // Send structured town data to client using updated packet
+            sendStructuredMapDataToClient(serverPlayer, townEntity, structuredMapData, zoomLevel);
             
-            ModMessages.sendToPlayer(responsePacket, serverPlayer);
             return true;
             
         } catch (Exception e) {
@@ -450,7 +445,21 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             if (minecraft.screen instanceof com.quackers29.businesscraft.ui.modal.specialized.TownMapModal) {
                 com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal = 
                     (com.quackers29.businesscraft.ui.modal.specialized.TownMapModal) minecraft.screen;
-                mapModal.updateMapData(mapData, zoomLevel);
+                
+                // Parse the JSON map data to structured format for sophisticated features
+                Map<java.util.UUID, TownMapDataResponsePacket.TownMapInfo> structuredData = 
+                    parseJsonToStructuredMapData(mapData);
+                
+                if (!structuredData.isEmpty()) {
+                    // Update with structured data for sophisticated map features
+                    mapModal.updateMapData(structuredData);
+                    LOGGER.debug("Updated map modal with {} towns (structured data)", structuredData.size());
+                } else {
+                    // Fallback to legacy string-based update
+                    mapModal.updateMapData(mapData, zoomLevel);
+                    LOGGER.debug("Updated map modal with legacy string data");
+                }
+                
                 return true;
             }
             
@@ -464,24 +473,457 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
     }
     
     /**
-     * Generate map data for the requested town area.
-     * This is a simplified implementation - in a full implementation this would
-     * collect actual world data, town boundaries, structures, etc.
+     * Parse JSON map data back to structured format for client-side sophisticated features.
      */
-    private String generateMapData(TownInterfaceEntity townEntity, int zoomLevel, boolean includeStructures) {
-        // Simplified map data generation
-        StringBuilder mapData = new StringBuilder();
-        mapData.append("{");
-        mapData.append("\"townPos\":{\"x\":").append(townEntity.getBlockPos().getX())
-               .append(",\"y\":").append(townEntity.getBlockPos().getY())
-               .append(",\"z\":").append(townEntity.getBlockPos().getZ()).append("},");
-        mapData.append("\"zoomLevel\":").append(zoomLevel).append(",");
-        mapData.append("\"includeStructures\":").append(includeStructures).append(",");
-        mapData.append("\"mapSize\":").append(64 * zoomLevel).append(",");
-        mapData.append("\"generatedAt\":").append(System.currentTimeMillis());
-        mapData.append("}");
+    private Map<java.util.UUID, TownMapDataResponsePacket.TownMapInfo> parseJsonToStructuredMapData(String jsonData) {
+        Map<java.util.UUID, TownMapDataResponsePacket.TownMapInfo> result = new HashMap<>();
         
-        return mapData.toString();
+        try {
+            // Basic JSON parsing to extract town data
+            if (jsonData == null || !jsonData.contains("\"towns\":{")) {
+                return result;
+            }
+            
+            // Extract the towns section - need to find the matching closing brace
+            int townsStart = jsonData.indexOf("\"towns\":{") + 9;
+            int townsEnd = findMatchingClosingBrace(jsonData, townsStart - 1); // -1 to include the opening brace
+            
+            if (townsStart > 9 && townsEnd > townsStart) {
+                String townsSection = jsonData.substring(townsStart, townsEnd);
+                
+                LOGGER.debug("Extracted towns section: {}", townsSection);
+                
+                // Parse individual town entries
+                String[] townEntries = townsSection.split("},");
+                LOGGER.debug("Split into {} town entries", townEntries.length);
+                for (String townEntry : townEntries) {
+                    try {
+                        if (!townEntry.endsWith("}")) {
+                            townEntry += "}";
+                        }
+                        
+                        TownMapDataResponsePacket.TownMapInfo townInfo = parseTownEntry(townEntry);
+                        if (townInfo != null) {
+                            result.put(townInfo.townId, townInfo);
+                        }
+                        
+                    } catch (Exception e) {
+                        LOGGER.warn("Failed to parse town entry: {}", e.getMessage());
+                    }
+                }
+            }
+            
+            LOGGER.debug("Parsed {} towns from JSON map data", result.size());
+            
+        } catch (Exception e) {
+            LOGGER.warn("Failed to parse JSON to structured map data: {}", e.getMessage());
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Find the matching closing brace for a given opening brace position.
+     */
+    private int findMatchingClosingBrace(String json, int openBracePos) {
+        int braceCount = 0;
+        for (int i = openBracePos; i < json.length(); i++) {
+            char c = json.charAt(i);
+            if (c == '{') {
+                braceCount++;
+            } else if (c == '}') {
+                braceCount--;
+                if (braceCount == 0) {
+                    return i;
+                }
+            }
+        }
+        return -1; // No matching brace found
+    }
+    
+    /**
+     * Parse a single town entry from JSON format.
+     */
+    private TownMapDataResponsePacket.TownMapInfo parseTownEntry(String townEntry) {
+        try {
+            // Extract town UUID (the key)
+            int colonIndex = townEntry.indexOf(":");
+            if (colonIndex == -1) return null;
+            
+            String townIdStr = townEntry.substring(0, colonIndex).trim().replaceAll("\"", "");
+            java.util.UUID townId = java.util.UUID.fromString(townIdStr);
+            
+            // Extract town data
+            String townDataJson = townEntry.substring(colonIndex + 1).trim();
+            if (!townDataJson.startsWith("{") || !townDataJson.endsWith("}")) {
+                return null;
+            }
+            
+            // Parse individual fields
+            String name = extractJsonString(townDataJson, "name");
+            int x = extractJsonInt(townDataJson, "x");
+            int y = extractJsonInt(townDataJson, "y");
+            int z = extractJsonInt(townDataJson, "z");
+            int population = extractJsonInt(townDataJson, "population");
+            int visitCount = extractJsonInt(townDataJson, "visitCount");
+            long lastVisited = extractJsonLong(townDataJson, "lastVisited");
+            boolean isCurrentTown = extractJsonBoolean(townDataJson, "isCurrentTown");
+            
+            return new TownMapDataResponsePacket.TownMapInfo(
+                townId, name, x, y, z, population, visitCount, lastVisited, isCurrentTown
+            );
+            
+        } catch (Exception e) {
+            LOGGER.warn("Failed to parse town entry '{}': {}", townEntry, e.getMessage());
+            return null;
+        }
+    }
+    
+    /**
+     * Helper methods for JSON parsing.
+     */
+    private String extractJsonString(String json, String key) {
+        String pattern = "\"" + key + "\":\"";
+        int start = json.indexOf(pattern);
+        if (start == -1) return "";
+        start += pattern.length();
+        int end = json.indexOf("\"", start);
+        if (end == -1) return "";
+        return json.substring(start, end);
+    }
+    
+    private int extractJsonInt(String json, String key) {
+        String pattern = "\"" + key + "\":";
+        int start = json.indexOf(pattern);
+        if (start == -1) return 0;
+        start += pattern.length();
+        int end = start;
+        while (end < json.length() && (Character.isDigit(json.charAt(end)) || json.charAt(end) == '-')) {
+            end++;
+        }
+        try {
+            return Integer.parseInt(json.substring(start, end));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+    
+    private long extractJsonLong(String json, String key) {
+        String pattern = "\"" + key + "\":";
+        int start = json.indexOf(pattern);
+        if (start == -1) return 0L;
+        start += pattern.length();
+        int end = start;
+        while (end < json.length() && (Character.isDigit(json.charAt(end)) || json.charAt(end) == '-')) {
+            end++;
+        }
+        try {
+            return Long.parseLong(json.substring(start, end));
+        } catch (NumberFormatException e) {
+            return 0L;
+        }
+    }
+    
+    private boolean extractJsonBoolean(String json, String key) {
+        String pattern = "\"" + key + "\":";
+        int start = json.indexOf(pattern);
+        if (start == -1) return false;
+        start += pattern.length();
+        return json.substring(start).startsWith("true");
+    }
+    
+    /**
+     * Generate structured map data for sophisticated map features.
+     * This creates TownMapInfo objects for all towns in the area.
+     */
+    private Map<java.util.UUID, TownMapDataResponsePacket.TownMapInfo> generateStructuredMapData(
+            TownInterfaceEntity townEntity, ServerPlayer player, int zoomLevel, boolean includeStructures) {
+        
+        Map<java.util.UUID, TownMapDataResponsePacket.TownMapInfo> townMapData = new HashMap<>();
+        
+        try {
+            ServerLevel level = player.serverLevel();
+            BlockPos currentPos = townEntity.getBlockPos();
+            
+            // Get town manager and find all towns
+            Object townManager = getTownManager(level);
+            if (townManager == null) {
+                LOGGER.warn("No town manager found for map data generation");
+                return townMapData;
+            }
+            
+            // Debug: Check total towns available before radius filtering
+            try {
+                Map<UUID, Object> debugAllTowns = PlatformServices.getTownManagerService().getAllTowns((ServerLevel) townManager);
+                LOGGER.warn("DEBUG: TownManagerService.getAllTowns() returned {} total towns before radius filtering", debugAllTowns.size());
+                for (Map.Entry<UUID, Object> entry : debugAllTowns.entrySet()) {
+                    Object townObj = entry.getValue();
+                    if (townObj instanceof ITownDataProvider townData) {
+                        LOGGER.warn("DEBUG: Town found: '{}' at {}", townData.getTownName(), getTownPosition(townData));
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.error("DEBUG: Failed to check total towns: {}", e.getMessage());
+            }
+            
+            // Calculate search radius based on zoom level
+            int searchRadius = calculateMapSearchRadius(zoomLevel);
+            
+            // Find all towns within the search radius
+            List<Object> nearbyTowns = findTownsInRadius(townManager, currentPos, searchRadius);
+            
+            for (Object townObj : nearbyTowns) {
+                try {
+                    ITownDataProvider townData = (ITownDataProvider) townObj;
+                    
+                    if (townData.getTownName() == null || townData.getTownId() == null) {
+                        continue;
+                    }
+                    
+                    // Get town position
+                    BlockPos townPos = getTownPosition(townData);
+                    if (townPos == null) {
+                        continue;
+                    }
+                    
+                    // Check if this is the current town
+                    boolean isCurrentTown = townPos.equals(currentPos);
+                    
+                    // Create TownMapInfo object with structured data
+                    TownMapDataResponsePacket.TownMapInfo townInfo = new TownMapDataResponsePacket.TownMapInfo(
+                        townData.getTownId(),
+                        townData.getTownName(),
+                        townPos.getX(),
+                        townPos.getY(), 
+                        townPos.getZ(),
+                        getTownPopulation(townData),
+                        getTownVisitCount(townData),
+                        getTownLastVisited(townData),
+                        isCurrentTown
+                    );
+                    
+                    townMapData.put(townData.getTownId(), townInfo);
+                    
+                } catch (Exception e) {
+                    LOGGER.warn("Failed to process town for map data: {}", e.getMessage());
+                }
+            }
+            
+            LOGGER.debug("Generated structured map data for {} towns within radius {}", 
+                        townMapData.size(), searchRadius);
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to generate structured map data: {}", e.getMessage());
+        }
+        
+        return townMapData;
+    }
+    
+    /**
+     * Send structured map data to client using the sophisticated map modal system.
+     */
+    private void sendStructuredMapDataToClient(ServerPlayer player, TownInterfaceEntity townEntity, 
+                                             Map<java.util.UUID, TownMapDataResponsePacket.TownMapInfo> mapData, 
+                                             int zoomLevel) {
+        try {
+            // For now, we'll convert the structured data to JSON format for compatibility
+            // In the future, we could extend the packet system to send structured data directly
+            String jsonMapData = convertStructuredDataToJson(mapData, zoomLevel);
+            
+            TownMapDataResponsePacket responsePacket = new TownMapDataResponsePacket(
+                townEntity.getBlockPos().getX(),
+                townEntity.getBlockPos().getY(), 
+                townEntity.getBlockPos().getZ(),
+                jsonMapData,
+                zoomLevel
+            );
+            
+            ModMessages.sendToPlayer(responsePacket, player);
+            
+            LOGGER.debug("Sent structured map data for {} towns to client", mapData.size());
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to send structured map data to client: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * Convert structured map data to JSON format for packet transmission.
+     */
+    private String convertStructuredDataToJson(Map<java.util.UUID, TownMapDataResponsePacket.TownMapInfo> mapData, int zoomLevel) {
+        StringBuilder json = new StringBuilder();
+        json.append("{\"towns\":{");
+        
+        boolean first = true;
+        for (Map.Entry<java.util.UUID, TownMapDataResponsePacket.TownMapInfo> entry : mapData.entrySet()) {
+            if (!first) {
+                json.append(",");
+            }
+            first = false;
+            
+            TownMapDataResponsePacket.TownMapInfo town = entry.getValue();
+            json.append("\"").append(entry.getKey().toString()).append("\":{");
+            json.append("\"id\":\"").append(town.townId.toString()).append("\",");
+            json.append("\"name\":\"").append(escapeJson(town.name)).append("\",");
+            json.append("\"x\":").append(town.x).append(",");
+            json.append("\"y\":").append(town.y).append(",");
+            json.append("\"z\":").append(town.z).append(",");
+            json.append("\"population\":").append(town.population).append(",");
+            json.append("\"visitCount\":").append(town.visitCount).append(",");
+            json.append("\"lastVisited\":").append(town.lastVisited).append(",");
+            json.append("\"isCurrentTown\":").append(town.isCurrentTown);
+            json.append("}");
+        }
+        
+        json.append("},\"zoomLevel\":").append(zoomLevel);
+        json.append(",\"generatedAt\":").append(System.currentTimeMillis());
+        json.append("}");
+        
+        return json.toString();
+    }
+    
+    /**
+     * Calculate map search radius based on zoom level.
+     */
+    private int calculateMapSearchRadius(int zoomLevel) {
+        // Larger radius for lower zoom levels to show more towns
+        int baseRadius = 1000; // 1km base radius
+        return baseRadius * Math.max(1, 5 - zoomLevel); // Increase radius for lower zoom
+    }
+    
+    /**
+     * Helper methods for accessing town data.
+     */
+    private Object getTownManager(ServerLevel level) {
+        try {
+            // The town manager service handles level access internally
+            // Return the level so we can pass it to service methods
+            return level;
+        } catch (Exception e) {
+            LOGGER.warn("Failed to get town manager for level: {}", e.getMessage());
+            return null;
+        }
+    }
+    
+    private List<Object> findTownsInRadius(Object townManager, BlockPos center, int radius) {
+        List<Object> nearbyTowns = new ArrayList<>();
+        
+        try {
+            if (townManager == null) {
+                return nearbyTowns;
+            }
+            
+            // townManager is actually the ServerLevel
+            ServerLevel level = (ServerLevel) townManager;
+            
+            // Get all towns from the town manager service
+            Map<UUID, Object> allTowns = PlatformServices.getTownManagerService().getAllTowns(level);
+            
+            LOGGER.debug("findTownsInRadius: Retrieved {} total towns from TownManagerService", allTowns.size());
+            
+            for (Object townObj : allTowns.values()) {
+                try {
+                    ITownDataProvider townData = (ITownDataProvider) townObj;
+                    BlockPos townPos = getTownPosition(townData);
+                    
+                    LOGGER.debug("Processing town '{}' at position {}", townData.getTownName(), townPos);
+                    
+                    if (townPos != null) {
+                        // Calculate distance
+                        double distance = Math.sqrt(
+                            Math.pow(townPos.getX() - center.getX(), 2) + 
+                            Math.pow(townPos.getZ() - center.getZ(), 2)
+                        );
+                        
+                        LOGGER.debug("Town '{}' distance: {} (radius: {})", townData.getTownName(), distance, radius);
+                        
+                        // Include towns within radius
+                        if (distance <= radius) {
+                            nearbyTowns.add(townObj);
+                            LOGGER.debug("Town '{}' INCLUDED in radius", townData.getTownName());
+                        } else {
+                            LOGGER.debug("Town '{}' EXCLUDED from radius", townData.getTownName());
+                        }
+                    } else {
+                        LOGGER.warn("Town '{}' has null position", townData.getTownName());
+                    }
+                } catch (Exception e) {
+                    LOGGER.warn("Failed to process town for radius check: {}", e.getMessage());
+                }
+            }
+            
+            LOGGER.debug("Found {} towns within radius {} of position {}", nearbyTowns.size(), radius, center);
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to find towns in radius: {}", e.getMessage());
+        }
+        
+        return nearbyTowns;
+    }
+    
+    private BlockPos getTownPosition(ITownDataProvider townData) {
+        try {
+            // Get the town's position from the town data directly
+            // The Town class should have position data
+            if (townData instanceof com.quackers29.businesscraft.town.Town) {
+                com.quackers29.businesscraft.town.Town town = (com.quackers29.businesscraft.town.Town) townData;
+                // Get position from the town - this may need to be implemented in Town class
+                return new BlockPos(town.getX(), town.getY(), town.getZ());
+            }
+            return null;
+        } catch (Exception e) {
+            LOGGER.warn("Failed to get town position: {}", e.getMessage());
+            return null;
+        }
+    }
+    
+    private int getTownPopulation(ITownDataProvider townData) {
+        try {
+            // Get town population from town data
+            if (townData instanceof com.quackers29.businesscraft.town.Town) {
+                com.quackers29.businesscraft.town.Town town = (com.quackers29.businesscraft.town.Town) townData;
+                return town.getPopulation();
+            }
+            return 0;
+        } catch (Exception e) {
+            LOGGER.warn("Failed to get town population: {}", e.getMessage());
+            return 0;
+        }
+    }
+    
+    private int getTownVisitCount(ITownDataProvider townData) {
+        try {
+            // Get visit count from town data
+            if (townData instanceof com.quackers29.businesscraft.town.Town) {
+                com.quackers29.businesscraft.town.Town town = (com.quackers29.businesscraft.town.Town) townData;
+                return town.getVisitHistory().size(); // Assuming visit history is available
+            }
+            return 0;
+        } catch (Exception e) {
+            LOGGER.warn("Failed to get town visit count: {}", e.getMessage());
+            return 0;
+        }
+    }
+    
+    private long getTownLastVisited(ITownDataProvider townData) {
+        try {
+            // Get last visited timestamp from town data  
+            if (townData instanceof com.quackers29.businesscraft.town.Town) {
+                com.quackers29.businesscraft.town.Town town = (com.quackers29.businesscraft.town.Town) townData;
+                // Get the most recent visit from visit history
+                List<ITownDataProvider.VisitHistoryRecord> history = town.getVisitHistory();
+                if (!history.isEmpty()) {
+                    // Get the last visit record
+                    ITownDataProvider.VisitHistoryRecord lastVisit = history.get(history.size() - 1);
+                    return lastVisit.getTimestamp();
+                }
+                return 0; // No visits yet
+            }
+            return 0;
+        } catch (Exception e) {
+            LOGGER.warn("Failed to get town last visited: {}", e.getMessage());
+            return 0;
+        }
     }
     
     /**
@@ -654,11 +1096,34 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                     (com.quackers29.businesscraft.ui.modal.specialized.TownMapModal) minecraft.screen;
                 
                 // Update the modal with platform and destination data
-                // TODO: Implement sophisticated map modal platform data update
-                // This would update town markers, connections, and interactive features
-                
-                LOGGER.debug("Updated town platform UI with platform data at ({}, {}, {})", x, y, z);
-                return true;
+                // Parse the JSON data and update the sophisticated map modal
+                try {
+                    // Find the town ID that corresponds to this position
+                    UUID townIdAtPosition = findTownIdByPosition(x, y, z);
+                    if (townIdAtPosition != null) {
+                        // Parse platform data into structured format
+                        Map<UUID, TownPlatformDataResponsePacket.PlatformInfo> platforms = parsePlatformData(platformData);
+                        
+                        // Parse town info from destination data  
+                        TownPlatformDataResponsePacket.TownInfo townInfo = parseTownInfo(destinationData, townIdAtPosition);
+                        
+                        // Update the modal with the parsed data
+                        mapModal.refreshPlatformData(townIdAtPosition, platforms);
+                        if (townInfo != null) {
+                            mapModal.refreshTownData(townIdAtPosition, townInfo);
+                        }
+                        
+                        LOGGER.debug("Updated town platform UI with {} platforms for town {} at ({}, {}, {})", 
+                            platforms.size(), townIdAtPosition, x, y, z);
+                        return true;
+                    } else {
+                        LOGGER.warn("Could not find town ID for position ({}, {}, {})", x, y, z);
+                        return false;
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Failed to parse platform data: {}", e.getMessage());
+                    return false;
+                }
             } else {
                 LOGGER.debug("No town map modal open to update with platform data");
                 return false;
@@ -667,5 +1132,67 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             LOGGER.error("Failed to update town platform UI at ({}, {}, {}): {}", x, y, z, e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Find town ID by position coordinates using client-side town map cache.
+     */
+    private UUID findTownIdByPosition(int x, int y, int z) {
+        try {
+            // Use client-side cache to find town at this position
+            com.quackers29.businesscraft.client.cache.ClientTownMapCache cache = 
+                com.quackers29.businesscraft.client.cache.ClientTownMapCache.getInstance();
+            
+            // Get all cached towns and find one at this position
+            Map<UUID, com.quackers29.businesscraft.client.cache.ClientTownMapCache.CachedTownData> cachedTowns = 
+                cache.getAllTowns();
+            
+            for (Map.Entry<UUID, com.quackers29.businesscraft.client.cache.ClientTownMapCache.CachedTownData> entry : cachedTowns.entrySet()) {
+                com.quackers29.businesscraft.client.cache.ClientTownMapCache.CachedTownData town = entry.getValue();
+                if (town.getX() == x && town.getY() == y && town.getZ() == z) {
+                    LOGGER.debug("Found town {} at position ({}, {}, {})", town.getName(), x, y, z);
+                    return entry.getKey();
+                }
+            }
+            
+            LOGGER.debug("No cached town found at position ({}, {}, {})", x, y, z);
+        } catch (Exception e) {
+            LOGGER.debug("Failed to find town ID by position ({}, {}, {}): {}", x, y, z, e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Parse platform data JSON into structured PlatformInfo objects.
+     */
+    private Map<UUID, TownPlatformDataResponsePacket.PlatformInfo> parsePlatformData(String platformData) {
+        Map<UUID, TownPlatformDataResponsePacket.PlatformInfo> platforms = new HashMap<>();
+        
+        if (platformData == null || platformData.trim().equals("{}") || platformData.trim().isEmpty()) {
+            return platforms;
+        }
+        
+        // For now, return empty map as the sophisticated map expects structured data
+        // The current implementation uses JSON strings, but the sophisticated map 
+        // expects PlatformInfo objects with specific fields
+        LOGGER.debug("Platform data parsing not yet implemented for JSON: {}", platformData);
+        
+        return platforms;
+    }
+
+    /**
+     * Parse town info from destination data JSON.
+     */
+    private TownPlatformDataResponsePacket.TownInfo parseTownInfo(String destinationData, UUID townId) {
+        if (destinationData == null || destinationData.trim().equals("{}") || destinationData.trim().isEmpty()) {
+            return null;
+        }
+        
+        // For now, return null as the sophisticated map expects structured data
+        // The current implementation uses JSON strings, but the sophisticated map
+        // expects TownInfo objects with specific fields  
+        LOGGER.debug("Town info parsing not yet implemented for JSON: {}", destinationData);
+        
+        return null;
     }
 }
