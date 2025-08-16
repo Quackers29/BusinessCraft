@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.platform.forge;
 
 import com.quackers29.businesscraft.platform.BlockEntityHelper;
 import com.quackers29.businesscraft.platform.InventoryHelper;
+import com.quackers29.businesscraft.platform.ITownManagerService;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.network.ModMessages;
@@ -984,32 +985,28 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
      */
     private String generateDestinationTownData(ServerLevel level, BlockPos centerPos, int maxRadius) {
         try {
-            // Try to get TownManager - this is currently in forge module but should be in common
-            Class<?> townManagerClass = Class.forName("com.quackers29.businesscraft.town.TownManager");
-            Object townManagerInstance = townManagerClass.getMethod("get", ServerLevel.class).invoke(null, level);
+            // Use platform service to get TownManager
+            ITownManagerService townManagerService = PlatformServices.getTownManagerService();
             
-            if (townManagerInstance == null) {
-                LOGGER.debug("TownManager not available, returning empty town data");
+            if (townManagerService == null) {
+                LOGGER.debug("TownManagerService not available, returning empty town data");
                 return "{}";
             }
             
-            // Get all towns from TownManager
-            Object allTowns = townManagerClass.getMethod("getAllTowns").invoke(townManagerInstance);
+            // Get all towns from TownManagerService
+            Map<UUID, Object> allTowns = townManagerService.getAllTowns(level);
             
-            if (!(allTowns instanceof java.util.Collection)) {
-                LOGGER.debug("getAllTowns did not return a collection, returning empty data");
+            if (allTowns == null || allTowns.isEmpty()) {
+                LOGGER.debug("getAllTowns returned empty data");
                 return "{}";
             }
-            
-            @SuppressWarnings("unchecked")
-            java.util.Collection<Object> towns = (java.util.Collection<Object>) allTowns;
             
             // Build JSON manually for simplicity (could use Gson if available)
             StringBuilder jsonBuilder = new StringBuilder();
             jsonBuilder.append("{");
             boolean first = true;
             
-            for (Object town : towns) {
+            for (Object town : allTowns.values()) {
                 try {
                     // Get town position through ITownDataProvider
                     if (!(town instanceof com.quackers29.businesscraft.api.ITownDataProvider)) {
@@ -1019,13 +1016,15 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                     com.quackers29.businesscraft.api.ITownDataProvider townData = 
                         (com.quackers29.businesscraft.api.ITownDataProvider) town;
                     
-                    // Get town information
-                    Object townPos = town.getClass().getMethod("getPos").invoke(town);
-                    if (!(townPos instanceof BlockPos)) {
+                    // Get town position through ITownDataProvider interface
+                    com.quackers29.businesscraft.api.ITownDataProvider.Position townPos = townData.getPosition();
+                    if (townPos == null) {
+                        LOGGER.warn("Town position is null for town: {}", townData.getTownName());
                         continue;
                     }
                     
-                    BlockPos pos = (BlockPos) townPos;
+                    // Convert to BlockPos for distance calculation
+                    BlockPos pos = new BlockPos(townPos.getX(), townPos.getY(), townPos.getZ());
                     
                     // Check distance
                     double distance = Math.sqrt(centerPos.distSqr(pos));
@@ -1037,8 +1036,12 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                     java.util.UUID townId = townData.getTownId();
                     
                     if (townName == null || townId == null) {
+                        LOGGER.warn("Town data missing: name={}, id={}", townName, townId);
                         continue;
                     }
+                    
+                    LOGGER.debug("Successfully processed town '{}' at ({}, {}, {}) - distance: {}", 
+                        townName, pos.getX(), pos.getY(), pos.getZ(), (int)distance);
                     
                     if (!first) {
                         jsonBuilder.append(",");
@@ -1056,7 +1059,8 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                     jsonBuilder.append("}");
                     
                 } catch (Exception e) {
-                    LOGGER.warn("Failed to process town data: {}", e.getMessage());
+                    LOGGER.warn("Failed to process town data for town: {}", 
+                        town instanceof ITownDataProvider ? ((ITownDataProvider) town).getTownName() : "unknown", e);
                 }
             }
             
@@ -1064,7 +1068,7 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             String result = jsonBuilder.toString();
             
             LOGGER.debug("Generated destination data with {} towns within {}m radius", 
-                        towns.size(), maxRadius);
+                        allTowns.size(), maxRadius);
             return result;
             
         } catch (Exception e) {

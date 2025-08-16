@@ -752,9 +752,19 @@ public class TownMapModal extends Screen {
             // Convert world coordinates to screen coordinates
             int startScreenX = worldToScreenX(platform.x);
             int startScreenY = worldToScreenZ(platform.z);
-            // For platforms, we need destination coordinates - using same position for now
-            int endScreenX = startScreenX;
+            
+            // Find destination coordinates for path drawing
+            int endScreenX = startScreenX; // Default to same position if no destination found
             int endScreenY = startScreenY;
+            
+            // Look up destination town coordinates if destinationTownId is available
+            if (platform.destinationTownId != null && allTowns != null) {
+                TownMapDataResponsePacket.TownMapInfo destinationTown = allTowns.get(platform.destinationTownId);
+                if (destinationTown != null) {
+                    endScreenX = worldToScreenX(destinationTown.x);
+                    endScreenY = worldToScreenZ(destinationTown.z);
+                }
+            }
             
             // Only draw if at least part of the path is visible
             if (isLineVisible(startScreenX, startScreenY, endScreenX, endScreenY, mapLeft, mapTop, mapRight, mapBottom)) {
@@ -787,6 +797,29 @@ public class TownMapModal extends Screen {
                         guiGraphics.hLine(startScreenX - ringSize, startScreenX + ringSize, startScreenY + ringSize, 0xFFFFFFFF);
                         guiGraphics.vLine(startScreenX - ringSize, startScreenY - ringSize, startScreenY + ringSize, 0xFFFFFFFF);
                         guiGraphics.vLine(startScreenX + ringSize, startScreenY - ringSize, startScreenY + ringSize, 0xFFFFFFFF);
+                    }
+                }
+                
+                // Draw path line from platform to destination (if destination exists and is different)
+                if (endScreenX != startScreenX || endScreenY != startScreenY) {
+                    // Use pathPoints array for complex paths if available
+                    if (platform.pathPoints != null && platform.pathPoints.length >= 4) {
+                        // Draw complex path using pathPoints (x,z coordinate pairs)
+                        drawComplexPath(guiGraphics, platform.pathPoints, pathColor, mapLeft, mapTop, mapRight, mapBottom);
+                    } else {
+                        // Draw simple straight line from platform to destination
+                        drawClippedLine(guiGraphics, startScreenX, startScreenY, endScreenX, endScreenY, pathColor, 
+                                      mapLeft, mapTop, mapRight, mapBottom);
+                    }
+                    
+                    // Draw destination marker if destination is visible
+                    if (isPointInBounds(endScreenX, endScreenY, mapLeft, mapTop, mapRight, mapBottom)) {
+                        int destMarkerSize = Math.max(1, markerSize / 2); // Smaller marker for destination
+                        int destColor = isSelected ? 0xFFFFAA00 : (platform.isEnabled ? 0xFF88AA88 : 0xFFAA8888);
+                        
+                        // Draw destination marker as a circle (diamond shape)
+                        guiGraphics.fill(endScreenX - destMarkerSize, endScreenY, endScreenX + destMarkerSize, endScreenY + 1, destColor);
+                        guiGraphics.fill(endScreenX, endScreenY - destMarkerSize, endScreenX + 1, endScreenY + destMarkerSize, destColor);
                     }
                 }
                 
@@ -973,6 +1006,34 @@ public class TownMapModal extends Screen {
      */
     private boolean isPointInBounds(int x, int y, int left, int top, int right, int bottom) {
         return x >= left && x <= right && y >= top && y <= bottom;
+    }
+    
+    /**
+     * Draw a complex path using pathPoints array for platform visualization.
+     * PathPoints is a flattened array of x,z coordinate pairs: [x1,z1,x2,z2,x3,z3,...]
+     */
+    private void drawComplexPath(GuiGraphics guiGraphics, int[] pathPoints, int color, 
+                                int clipLeft, int clipTop, int clipRight, int clipBottom) {
+        if (pathPoints == null || pathPoints.length < 4) return; // Need at least 2 points (4 coordinates)
+        
+        // Draw lines between consecutive points in the path
+        for (int i = 0; i < pathPoints.length - 2; i += 2) {
+            // Get current point and next point
+            int x1 = pathPoints[i];
+            int z1 = pathPoints[i + 1];
+            int x2 = pathPoints[i + 2];
+            int z2 = pathPoints[i + 3];
+            
+            // Convert world coordinates to screen coordinates
+            int screenX1 = worldToScreenX(x1);
+            int screenY1 = worldToScreenZ(z1);
+            int screenX2 = worldToScreenX(x2);
+            int screenY2 = worldToScreenZ(z2);
+            
+            // Draw the line segment with clipping
+            drawClippedLine(guiGraphics, screenX1, screenY1, screenX2, screenY2, color, 
+                          clipLeft, clipTop, clipRight, clipBottom);
+        }
     }
     
     /**
