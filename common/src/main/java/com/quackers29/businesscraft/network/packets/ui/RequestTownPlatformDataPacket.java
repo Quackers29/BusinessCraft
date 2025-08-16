@@ -5,6 +5,8 @@ import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.UUID;
+
 /**
  * Platform-agnostic client-to-server packet to request town platform positioning data.
  * This is used by the sophisticated town map modal to display platform connections,
@@ -22,6 +24,7 @@ public class RequestTownPlatformDataPacket extends BaseBlockEntityPacket {
     private final boolean includePlatformConnections;
     private final boolean includeDestinationTowns;
     private final int maxRadius; // Maximum search radius for connected towns
+    private final String targetTownId; // Optional town ID for specific town requests
     
     /**
      * Create packet for requesting comprehensive platform data.
@@ -36,18 +39,26 @@ public class RequestTownPlatformDataPacket extends BaseBlockEntityPacket {
     public RequestTownPlatformDataPacket(int x, int y, int z, 
                                        boolean includePlatformConnections, 
                                        boolean includeDestinationTowns, 
-                                       int maxRadius) {
+                                       int maxRadius, String targetTownId) {
         super(x, y, z);
         this.includePlatformConnections = includePlatformConnections;
         this.includeDestinationTowns = includeDestinationTowns;
         this.maxRadius = maxRadius;
+        this.targetTownId = targetTownId;
     }
     
     /**
      * Create packet with default parameters for standard map view.
      */
     public RequestTownPlatformDataPacket(int x, int y, int z) {
-        this(x, y, z, true, true, 5000); // Default 5000 block radius
+        this(x, y, z, true, true, 5000, null); // Default 5000 block radius, no specific town
+    }
+    
+    /**
+     * Create packet for specific town ID (used by sophisticated map)
+     */
+    public RequestTownPlatformDataPacket(UUID townId) {
+        this(0, 64, 0, true, true, 5000, townId.toString()); // Use UUID-based lookup
     }
     
     /**
@@ -58,11 +69,12 @@ public class RequestTownPlatformDataPacket extends BaseBlockEntityPacket {
         boolean includePlatformConnections = PlatformServices.getNetworkHelper().readBoolean(buffer);
         boolean includeDestinationTowns = PlatformServices.getNetworkHelper().readBoolean(buffer);
         int maxRadius = PlatformServices.getNetworkHelper().readInt(buffer);
+        String targetTownId = PlatformServices.getNetworkHelper().readUUID(buffer);
         
         return new RequestTownPlatformDataPacket(pos[0], pos[1], pos[2], 
                                                includePlatformConnections, 
                                                includeDestinationTowns, 
-                                               maxRadius);
+                                               maxRadius, targetTownId);
     }
     
     /**
@@ -74,6 +86,7 @@ public class RequestTownPlatformDataPacket extends BaseBlockEntityPacket {
         PlatformServices.getNetworkHelper().writeBoolean(buffer, includePlatformConnections);
         PlatformServices.getNetworkHelper().writeBoolean(buffer, includeDestinationTowns);
         PlatformServices.getNetworkHelper().writeInt(buffer, maxRadius);
+        PlatformServices.getNetworkHelper().writeUUID(buffer, targetTownId);
     }
     
     /**
@@ -116,4 +129,5 @@ public class RequestTownPlatformDataPacket extends BaseBlockEntityPacket {
     public boolean includePlatformConnections() { return includePlatformConnections; }
     public boolean includeDestinationTowns() { return includeDestinationTowns; }
     public int getMaxRadius() { return maxRadius; }
+    public String getTargetTownId() { return targetTownId; }
 }

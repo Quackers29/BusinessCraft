@@ -28,7 +28,8 @@
       "WebFetch(domain:wiki.fabricmc.net)",
       "Bash(javap:*)",
       "Bash(GRADLE_USER_HOME=/tmp/gradle_temp ./gradlew --no-daemon :forge:compileJava)",
-      "Bash(git ls-tree:*)"
+      "Bash(git ls-tree:*)",
+      "Bash(git stash:*)"
     ],
     "deny": []
   }

@@ -219,9 +219,8 @@ public class ButtonActionCoordinator {
         // Show the map modal
         Minecraft.getInstance().setScreen(mapModal);
         DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Opened town map modal for position: {}", currentTownPos);
-        com.quackers29.businesscraft.client.cache.ClientTownMapCache cache = 
-            com.quackers29.businesscraft.client.cache.ClientTownMapCache.getInstance();
-        mapModal.setTownData(cache.getAllTowns());
+        // Sophisticated map handles data loading via refreshFromCache method
+        mapModal.refreshFromCache();
         
         DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town map modal opened with sophisticated functionality restored");
     }

@@ -450,15 +450,9 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                 Map<java.util.UUID, TownMapDataResponsePacket.TownMapInfo> structuredData = 
                     parseJsonToStructuredMapData(mapData);
                 
-                if (!structuredData.isEmpty()) {
-                    // Update with structured data for sophisticated map features
-                    mapModal.updateMapData(structuredData);
-                    LOGGER.debug("Updated map modal with {} towns (structured data)", structuredData.size());
-                } else {
-                    // Fallback to legacy string-based update
-                    mapModal.updateMapData(mapData, zoomLevel);
-                    LOGGER.debug("Updated map modal with legacy string data");
-                }
+                // Directly set the parsed town data on the sophisticated map
+                mapModal.setTownData(structuredData);
+                LOGGER.debug("Set parsed town data directly on sophisticated map: {} towns", structuredData.size());
                 
                 return true;
             }

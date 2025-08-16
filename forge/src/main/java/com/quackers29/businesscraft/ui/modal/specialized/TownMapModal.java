@@ -4,9 +4,9 @@ import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.network.ModMessages;
 import com.quackers29.businesscraft.network.packets.ui.RequestTownMapDataPacket;
 import com.quackers29.businesscraft.network.packets.ui.RequestTownPlatformDataPacket;
+import com.quackers29.businesscraft.client.cache.ClientTownMapCache;
 import com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket;
 import com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket;
-import com.quackers29.businesscraft.client.cache.ClientTownMapCache;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -14,7 +14,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.BlockPos;
 import net.minecraft.client.Minecraft;
-import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,12 +23,17 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
- * A modal screen that displays a sophisticated map view of all towns in the world.
- * Features: Pan/zoom controls, recenter button, mouse dragging, coordinate grid,
- * distance calculation, edge indicators for off-map towns.
+ * Sophisticated town map modal with advanced features:
+ * - Pan/zoom controls with smooth interaction
+ * - Recenter button for navigation
+ * - North-oriented display with compass
+ * - Coordinate grid and edge indicators
+ * - Distance calculation and direction display
+ * - Platform visualization when clicking towns
+ * - Town boundary visualization
+ * - Edge indicators for off-map towns
  * 
- * Enhanced MultiLoader Template: Uses migrated packets from common module.
- * Restored from main branch with sophisticated rendering capabilities.
+ * Enhanced MultiLoader Template compatible version.
  */
 public class TownMapModal extends Screen {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownMapModal.class);
@@ -63,16 +67,12 @@ public class TownMapModal extends Screen {
     private double lastMouseX;
     private double lastMouseY;
     
-    // Town data - using structured data for sophisticated features
+    // Town data
     private Map<UUID, TownMapDataResponsePacket.TownMapInfo> allTowns;
     private TownMapDataResponsePacket.TownMapInfo selectedTown = null;
     private Map<UUID, TownPlatformDataResponsePacket.PlatformInfo> selectedTownPlatforms = null;
     private TownPlatformDataResponsePacket.PlatformInfo selectedPlatform = null;
     private TownPlatformDataResponsePacket.TownInfo selectedTownInfo = null; // Live town info including boundary
-    
-    // Legacy compatibility for cache integration
-    private Map<UUID, ClientTownMapCache.CachedTownData> cachedTowns;
-    private boolean hasAdvancedMapData = false;
     
     // Colors (themed to match existing UI)
     private static final int BACKGROUND_COLOR = 0xFF222222;
@@ -94,7 +94,7 @@ public class TownMapModal extends Screen {
     private static final int CLICK_TOLERANCE = 3;
     
     /**
-     * Constructor for the sophisticated town map modal
+     * Constructor for the town map modal
      * 
      * @param parentScreen The parent screen to return to when closing
      * @param currentTownPos The position of the current town (for recentering)
@@ -105,7 +105,6 @@ public class TownMapModal extends Screen {
         this.parentScreen = parentScreen;
         this.currentTownPos = currentTownPos;
         this.onCloseCallback = onCloseCallback;
-        this.cachedTowns = new HashMap<>();
         
         DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "TownMapModal created with current town at: {}", currentTownPos);
     }
@@ -146,12 +145,12 @@ public class TownMapModal extends Screen {
     private void loadTownData() {
         try {
             // Always request fresh data from server to ensure map shows current state
-            this.allTowns = new java.util.HashMap<>();
-            // Request map data - use current town position and default parameters
-            if (currentTownPos != null) {
-                ModMessages.sendToServer(new RequestTownMapDataPacket(
-                    currentTownPos.getX(), currentTownPos.getY(), currentTownPos.getZ(), 1, true));
-            }
+            this.allTowns = new HashMap<>();
+            // Request map data with current town position
+            int x = currentTownPos != null ? currentTownPos.getX() : 0;
+            int y = currentTownPos != null ? currentTownPos.getY() : 64;
+            int z = currentTownPos != null ? currentTownPos.getZ() : 0;
+            ModMessages.sendToServer(new RequestTownMapDataPacket(x, y, z));
             
             DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
                 "Requested fresh town data from server (always fresh on map open)");
@@ -159,7 +158,7 @@ public class TownMapModal extends Screen {
                 "Sending RequestTownMapDataPacket to server");
         } catch (Exception e) {
             LOGGER.error("Failed to load town data for map", e);
-            this.allTowns = new java.util.HashMap<>();
+            this.allTowns = new HashMap<>();
         }
     }
     
@@ -204,105 +203,72 @@ public class TownMapModal extends Screen {
      * Convert world coordinates to screen coordinates
      */
     private int worldToScreenX(double worldX) {
-        return (int)(mapCenterX + (worldX - mapOffsetX) * zoomLevel * 0.1);
+        return (int)(mapCenterX + (worldX - mapOffsetX) * zoomLevel * COORDINATE_CONVERSION);
     }
     
     private int worldToScreenZ(double worldZ) {
-        return (int)(mapCenterY + (worldZ - mapOffsetZ) * zoomLevel * 0.1);
+        return (int)(mapCenterY + (worldZ - mapOffsetZ) * zoomLevel * COORDINATE_CONVERSION);
     }
     
     /**
      * Convert screen coordinates to world coordinates
      */
     private double screenToWorldX(int screenX) {
-        return mapOffsetX + (screenX - mapCenterX) / (zoomLevel * 0.1);
+        return mapOffsetX + (screenX - mapCenterX) / (zoomLevel * COORDINATE_CONVERSION);
     }
     
     private double screenToWorldZ(int screenY) {
-        return mapOffsetZ + (screenY - mapCenterY) / (zoomLevel * 0.1);
+        return mapOffsetZ + (screenY - mapCenterY) / (zoomLevel * COORDINATE_CONVERSION);
     }
     
     /**
-     * Get map bounds for rendering calculations
+     * Check if a town is within the current view (always true now for edge indicators)
      */
-    private int[] getMapBounds() {
-        int mapLeft = mapCenterX - mapWidth / 2;
-        int mapTop = mapCenterY - mapHeight / 2;
-        int mapRight = mapLeft + mapWidth;
-        int mapBottom = mapTop + mapHeight;
-        return new int[]{mapLeft, mapTop, mapRight, mapBottom};
+    private boolean isTownVisible(TownMapDataResponsePacket.TownMapInfo town) {
+        // Always return true so we can handle edge indicators for all towns
+        return true;
     }
     
     /**
-     * Update map data with structured town information from server response
+     * Clamp coordinates to map bounds
      */
-    public void updateMapData(Map<UUID, TownMapDataResponsePacket.TownMapInfo> townData) {
-        if (townData != null) {
-            this.allTowns = new HashMap<>(townData);
-            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Updated map with {} towns from server", townData.size());
-        }
+    private int[] clampToMapBounds(int x, int y, int margin) {
+        int[] bounds = getMapBounds();
+        return new int[]{
+            Math.max(bounds[0] + margin, Math.min(bounds[2] - margin, x)),
+            Math.max(bounds[1] + margin, Math.min(bounds[3] - margin, y))
+        };
     }
     
     /**
-     * Legacy compatibility method for string-based map data
+     * Check if a town marker is within the map bounds
      */
-    public void updateMapData(String mapData, int zoomLevel) {
-        LOGGER.debug("Received legacy string map data for zoom level: {} - converting to structured data", zoomLevel);
-        // For now, log that we received data but prefer structured updates
-        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Legacy map data received: {}", mapData);
-    }
-    
-    /**
-     * Set cached town data for sophisticated map rendering.
-     * This method restores the advanced map functionality that was temporarily disabled.
-     * 
-     * @param townData Map of town UUIDs to cached town data from ClientTownMapCache
-     */
-    public void setTownData(Map<UUID, ClientTownMapCache.CachedTownData> townData) {
-        this.cachedTowns = townData != null ? new HashMap<>(townData) : new HashMap<>();
-        this.hasAdvancedMapData = !this.cachedTowns.isEmpty();
+    private boolean isTownWithinMapBounds(TownMapDataResponsePacket.TownMapInfo town) {
+        int screenX = worldToScreenX(town.x);
+        int screenY = worldToScreenZ(town.z);
+        int[] bounds = getMapBounds();
         
-        LOGGER.debug("Set town data for map modal: {} towns loaded, advanced features: {}", 
-                    this.cachedTowns.size(), hasAdvancedMapData);
-        
-        // Request additional platform data for enhanced visualization
-        if (hasAdvancedMapData) {
-            requestPlatformData();
-        }
+        return screenX >= bounds[0] && screenX <= bounds[2] &&
+               screenY >= bounds[1] && screenY <= bounds[3];
     }
     
     /**
-     * Request platform data for enhanced map visualization.
-     * This enables sophisticated features like transportation network display.
+     * Get the edge position for a town that's outside the map bounds
      */
-    private void requestPlatformData() {
-        LOGGER.debug("Requesting platform data for enhanced map visualization at position: {}", currentTownPos);
+    private int[] getTownEdgePosition(TownMapDataResponsePacket.TownMapInfo town) {
+        int screenX = worldToScreenX(town.x);
+        int screenY = worldToScreenZ(town.z);
+        int[] bounds = getMapBounds();
         
-        // Send packet to request platform and connection data
-        if (currentTownPos != null) {
-            RequestTownPlatformDataPacket packet = new RequestTownPlatformDataPacket(
-                currentTownPos.getX(), currentTownPos.getY(), currentTownPos.getZ(), true, true, 5000);
-            ModMessages.sendToServer(packet);
-        }
+        // Clamp to map edges
+        int clampedX = Math.max(bounds[0], Math.min(bounds[2], screenX));
+        int clampedY = Math.max(bounds[1], Math.min(bounds[3], screenY));
+        
+        return new int[]{clampedX, clampedY};
     }
     
     /**
-     * Request platform data for a specific town by ID
-     */
-    private void requestTownPlatformData(UUID townId) {
-        LOGGER.debug("Requesting platform data for selected town: {}", townId);
-        
-        // Find the town's position from our town data
-        if (allTowns != null && allTowns.containsKey(townId)) {
-            TownMapDataResponsePacket.TownMapInfo town = allTowns.get(townId);
-            RequestTownPlatformDataPacket packet = new RequestTownPlatformDataPacket(
-                town.x, town.y, town.z, true, true, 5000);
-            ModMessages.sendToServer(packet);
-        }
-    }
-    
-    /**
-     * Render the sophisticated map screen
+     * Render the screen
      */
     @Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
@@ -324,9 +290,6 @@ public class TownMapModal extends Screen {
         
         // Draw controls help
         drawControlsHelp(guiGraphics);
-        
-        // Check for fresh cache data on each render (in case server responded with new data)
-        refreshCacheData();
         
         // Render buttons
         super.render(guiGraphics, mouseX, mouseY, partialTicks);
@@ -390,31 +353,14 @@ public class TownMapModal extends Screen {
         // Draw towns
         drawTowns(guiGraphics, mouseX, mouseY);
         
+        // Draw platforms and paths for selected town
+        drawSelectedTownPlatforms(guiGraphics);
+        
         // Draw current position marker
         drawCurrentPosition(guiGraphics);
         
         // Draw coordinate markers
         drawCoordinateMarkers(guiGraphics);
-    }
-    
-    /**
-     * Draw controls help text
-     */
-    private void drawControlsHelp(GuiGraphics guiGraphics) {
-        int helpY = panelTop + panelHeight - 55;
-        guiGraphics.drawString(this.font, "Mouse: Drag to pan, Scroll to zoom", panelLeft + panelWidth / 2 - 60, helpY, 0xFFCCCCCC);
-    }
-    
-    /**
-     * Draw town information panel (placeholder)
-     */
-    private void drawTownInfo(GuiGraphics guiGraphics) {
-        if (selectedTown != null) {
-            // Draw town info panel - sophisticated implementation would go here
-            int infoX = panelLeft + 20;
-            int infoY = panelTop + 50;
-            guiGraphics.drawString(this.font, "Selected: " + selectedTown.name, infoX, infoY, TEXT_COLOR);
-        }
     }
     
     /**
@@ -499,96 +445,12 @@ public class TownMapModal extends Screen {
     }
     
     /**
-     * Draw all towns on the map
-     */
-    private void drawTowns(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        if (allTowns == null) return;
-        
-        for (TownMapDataResponsePacket.TownMapInfo town : allTowns.values()) {
-            drawTown(guiGraphics, town, mouseX, mouseY);
-        }
-        
-        // Also draw legacy cached towns if available
-        if (cachedTowns != null && !cachedTowns.isEmpty()) {
-            for (ClientTownMapCache.CachedTownData cachedTown : cachedTowns.values()) {
-                drawCachedTown(guiGraphics, cachedTown, mouseX, mouseY);
-            }
-        }
-    }
-    
-    /**
-     * Draw a single town marker from structured data
-     */
-    private void drawTown(GuiGraphics guiGraphics, TownMapDataResponsePacket.TownMapInfo town, int mouseX, int mouseY) {
-        boolean isCurrentTown = currentTownPos != null && 
-            currentTownPos.getX() == town.x && 
-            currentTownPos.getY() == town.y && 
-            currentTownPos.getZ() == town.z;
-        
-        int screenX = worldToScreenX(town.x);
-        int screenY = worldToScreenZ(town.z);
-        
-        // Determine marker color
-        int markerColor = TOWN_MARKER_COLOR;
-        if (town == selectedTown) {
-            markerColor = SELECTED_TOWN_COLOR;
-        } else if (isCurrentTown) {
-            markerColor = CURRENT_TOWN_COLOR;
-        }
-        
-        // Draw marker with adaptive size
-        int markerSize = getAdaptiveMarkerSize();
-        guiGraphics.fill(screenX - markerSize/2, screenY - markerSize/2, 
-                        screenX + markerSize/2, screenY + markerSize/2, markerColor);
-        
-        // Draw town name above marker
-        String townName = town.name;
-        int textWidth = this.font.width(townName);
-        int nameX = screenX - textWidth/2;
-        int nameY = screenY - markerSize/2 - 12;
-        
-        guiGraphics.drawString(this.font, townName, nameX, nameY, TEXT_COLOR);
-        
-        // Highlight if mouse is over
-        if (mouseX >= screenX - markerSize && mouseX <= screenX + markerSize &&
-            mouseY >= screenY - markerSize && mouseY <= screenY + markerSize) {
-            // Draw highlight ring
-            int ringSize = markerSize + 2;
-            guiGraphics.hLine(screenX - ringSize, screenX + ringSize, screenY - ringSize, 0xFFFFFFFF);
-            guiGraphics.hLine(screenX - ringSize, screenX + ringSize, screenY + ringSize, 0xFFFFFFFF);
-            guiGraphics.vLine(screenX - ringSize, screenY - ringSize, screenY + ringSize, 0xFFFFFFFF);
-            guiGraphics.vLine(screenX + ringSize, screenY - ringSize, screenY + ringSize, 0xFFFFFFFF);
-        }
-    }
-    
-    /**
-     * Draw a cached town marker (legacy compatibility)
-     */
-    private void drawCachedTown(GuiGraphics guiGraphics, ClientTownMapCache.CachedTownData town, int mouseX, int mouseY) {
-        int screenX = worldToScreenX(town.getX());
-        int screenY = worldToScreenZ(town.getZ());
-        
-        // Draw cached town as smaller marker
-        int markerSize = Math.max(4, getAdaptiveMarkerSize() / 2);
-        guiGraphics.fill(screenX - markerSize/2, screenY - markerSize/2, 
-                        screenX + markerSize/2, screenY + markerSize/2, 0xFF88FF88);
-        
-        // Draw town name
-        String townName = town.getName();
-        int textWidth = this.font.width(townName);
-        int nameX = screenX - textWidth/2;
-        int nameY = screenY - markerSize/2 - 12;
-        
-        guiGraphics.drawString(this.font, townName, nameX, nameY, 0xFFCCCCCC);
-    }
-    
-    /**
      * Calculate adaptive marker size based on zoom level
      */
     private int getAdaptiveMarkerSize() {
         // Marker size adapts to zoom level for better visibility
         if (zoomLevel >= 400.0) {
-            return 24; // Very large markers for extreme zoom
+            return 24; // Very large markers for extreme zoom (5x5 block view)
         } else if (zoomLevel >= 200.0) {
             return 20; // Large markers for very high zoom
         } else if (zoomLevel >= 100.0) {
@@ -611,24 +473,6 @@ public class TownMapModal extends Screen {
     }
     
     /**
-     * Draw current position marker
-     */
-    private void drawCurrentPosition(GuiGraphics guiGraphics) {
-        if (currentTownPos != null) {
-            int screenX = worldToScreenX(currentTownPos.getX());
-            int screenY = worldToScreenZ(currentTownPos.getZ());
-            
-            // Draw special marker for current position
-            int markerSize = getAdaptiveMarkerSize();
-            guiGraphics.fill(screenX - markerSize/2, screenY - markerSize/2, 
-                           screenX + markerSize/2, screenY + markerSize/2, CURRENT_TOWN_COLOR);
-            
-            // Draw "You" label
-            guiGraphics.drawCenteredString(this.font, "You", screenX, screenY - markerSize/2 - 15, TEXT_COLOR);
-        }
-    }
-    
-    /**
      * Draw coordinate markers around the map edges
      */
     private void drawCoordinateMarkers(GuiGraphics guiGraphics) {
@@ -638,7 +482,7 @@ public class TownMapModal extends Screen {
         double viewWidthInWorld = mapWidth / (zoomLevel * COORDINATE_CONVERSION);
         double viewHeightInWorld = mapHeight / (zoomLevel * COORDINATE_CONVERSION);
         
-        // Calculate coordinate spacing to have approximately 7 markers maximum
+        // Calculate coordinate spacing based on zoom level
         int coordSpacing = getCoordinateSpacing();
         
         // Draw X-axis markers (bottom of map)
@@ -662,24 +506,40 @@ public class TownMapModal extends Screen {
         for (int worldZ = startZ; worldZ <= mapOffsetZ + viewHeightInWorld / 2; worldZ += coordSpacing) {
             int screenY = worldToScreenZ(worldZ);
             if (screenY >= mapTop && screenY <= mapBottom) {
-                // Draw tick mark
-                guiGraphics.hLine(mapLeft - 5, mapLeft, screenY, BORDER_COLOR);
+                // Check if this coordinate would overlap with the town info panel
+                boolean wouldOverlapInfo = selectedTown != null && 
+                    screenY >= panelTop + 50 && screenY <= panelTop + 110 && 
+                    mapLeft - 50 <= panelLeft + 200; // Info panel extends to 200px
                 
-                // Draw coordinate label
-                String zLabel = String.valueOf(worldZ);
-                int labelWidth = this.font.width(zLabel);
-                guiGraphics.drawString(this.font, zLabel, 
-                                      mapLeft - labelWidth - 7, screenY - 4, TEXT_COLOR);
+                if (!wouldOverlapInfo) {
+                    // Draw tick mark
+                    guiGraphics.hLine(mapLeft - 5, mapLeft, screenY, BORDER_COLOR);
+                    
+                    // Draw coordinate label
+                    String zLabel = String.valueOf(worldZ);
+                    int labelWidth = this.font.width(zLabel);
+                    guiGraphics.drawString(this.font, zLabel, 
+                                          mapLeft - labelWidth - 7, screenY - 4, TEXT_COLOR);
+                }
             }
         }
         
         // Draw axis labels
         guiGraphics.drawString(this.font, "X", mapRight + 5, mapBottom + 7, 0xFFCCCCCC);
-        guiGraphics.drawString(this.font, "Z", mapLeft - 15, mapTop - 10, 0xFFCCCCCC);
+        
+        // Only draw Z axis label if it won't overlap with town info panel
+        boolean zAxisOverlapsInfo = selectedTown != null && 
+            mapTop - 10 >= panelTop + 50 && mapTop - 10 <= panelTop + 110 && 
+            mapLeft - 15 <= panelLeft + 200; // Info panel extends to 200px
+        
+        if (!zAxisOverlapsInfo) {
+            guiGraphics.drawString(this.font, "Z", mapLeft - 15, mapTop - 10, 0xFFCCCCCC);
+        }
     }
     
     /**
-     * Calculate coordinate marker spacing to have maximum ~7 markers per axis
+     * Calculate coordinate marker spacing based on zoom level
+     * Ensures maximum ~7 markers per axis (increased from 5 by 2)
      */
     private int getCoordinateSpacing() {
         double viewWidthInWorld = mapWidth / (zoomLevel * COORDINATE_CONVERSION);
@@ -688,7 +548,7 @@ public class TownMapModal extends Screen {
         // Find the maximum view dimension
         double maxViewDimension = Math.max(viewWidthInWorld, viewHeightInWorld);
         
-        // Calculate spacing to have approximately 7 markers maximum
+        // Calculate spacing to have approximately 7 markers maximum (increased from 5)
         double targetSpacing = maxViewDimension / 7.0;
         
         // Round to nice numbers (powers of 10, 25, 50)
@@ -725,119 +585,763 @@ public class TownMapModal extends Screen {
     }
     
     /**
-     * Handle mouse interaction - pan and zoom
+     * Draw all towns on the map
      */
-    @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (isDragging && button == 0) {
-            // Pan the map based on mouse movement
-            double worldDeltaX = -deltaX / (zoomLevel * COORDINATE_CONVERSION);
-            double worldDeltaZ = -deltaY / (zoomLevel * COORDINATE_CONVERSION);
-            
-            mapOffsetX += worldDeltaX;
-            mapOffsetZ += worldDeltaZ;
-            
-            return true;
+    private void drawTowns(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        if (allTowns == null) return;
+        
+        for (TownMapDataResponsePacket.TownMapInfo town : allTowns.values()) {
+            if (isTownVisible(town)) {
+                drawTown(guiGraphics, town, mouseX, mouseY);
+            }
         }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
     }
     
-    @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if (button == 0) {
-            // Check if clicking within map bounds
-            int[] bounds = getMapBounds();
-            if (mouseX >= bounds[0] && mouseX <= bounds[2] && mouseY >= bounds[1] && mouseY <= bounds[3]) {
-                isDragging = true;
-                lastMouseX = mouseX;
-                lastMouseY = mouseY;
+    /**
+     * Draw a single town marker
+     */
+    private void drawTown(GuiGraphics guiGraphics, TownMapDataResponsePacket.TownMapInfo town, int mouseX, int mouseY) {
+        boolean isCurrentTown = currentTownPos != null && 
+            (town.x == currentTownPos.getX() && town.y == currentTownPos.getY() && town.z == currentTownPos.getZ());
+        boolean withinBounds = isTownWithinMapBounds(town);
+        
+        int screenX, screenY;
+        // Current town should NEVER be clamped to edges - always show at actual position
+        if (withinBounds || isCurrentTown) {
+            // Town is within map bounds OR is current town - use normal position
+            screenX = worldToScreenX(town.x);
+            screenY = worldToScreenZ(town.z);
+        } else {
+            // Town is outside bounds and NOT current town - clamp to edge
+            int[] edgePos = getTownEdgePosition(town);
+            screenX = edgePos[0];
+            screenY = edgePos[1];
+        }
+        
+        // Determine marker color
+        int markerColor = TOWN_MARKER_COLOR;
+        if (town == selectedTown) {
+            markerColor = SELECTED_TOWN_COLOR;
+        } else if (isCurrentTown) {
+            markerColor = CURRENT_TOWN_COLOR;
+        }
+        
+        // Draw marker with size that scales with zoom level
+        int markerSize = getAdaptiveMarkerSize();
+        
+        // Initialize marker position (will be clamped for current town if needed)
+        int markerX = screenX;
+        int markerY = screenY;
+        
+        // For edge indicators (non-current towns outside bounds), make them dimmer and triangular
+        if (!withinBounds && !isCurrentTown) {
+            markerColor = (markerColor & 0x00FFFFFF) | 0x80000000; // Make semi-transparent
+            // Draw triangular edge indicator pointing towards the town
+            drawEdgeIndicator(guiGraphics, screenX, screenY, town, markerColor, markerSize);
+        } else {
+            // For current town, clamp marker position to stay within map bounds
+            
+            if (isCurrentTown) {
+                int[] clamped = clampToMapBounds(screenX, screenY, markerSize/2);
+                markerX = clamped[0];
+                markerY = clamped[1];
+            }
+            
+            // Normal town marker (with clamped position for current town)
+            guiGraphics.fill(markerX - markerSize/2, markerY - markerSize/2, 
+                            markerX + markerSize/2, markerY + markerSize/2, markerColor);
+            
+            // Draw town name above marker (only for towns within bounds)
+            if (withinBounds) {
+                String townName = town.name;
+                int textWidth = this.font.width(townName);
                 
-                // Check if clicking on a town marker
-                if (allTowns != null) {
-                    for (TownMapDataResponsePacket.TownMapInfo town : allTowns.values()) {
-                        int screenX = worldToScreenX(town.x);
-                        int screenY = worldToScreenZ(town.z);
-                        int markerSize = getAdaptiveMarkerSize();
-                        
-                        if (Math.abs(mouseX - screenX) <= markerSize && Math.abs(mouseY - screenY) <= markerSize) {
-                            // If selecting a different town, clear previous platform data
-                            if (selectedTown == null || !selectedTown.townId.equals(town.townId)) {
-                                selectedTownPlatforms = null;
-                                selectedPlatform = null;
-                                selectedTownInfo = null;
-                            }
-                            
-                            selectedTown = town;
-                            
-                            // Request platform data for the selected town - this is the key missing piece!
-                            requestTownPlatformData(town.townId);
-                            
-                            LOGGER.debug("Selected town: {} - requesting platform data", town.name);
-                            return true;
-                        }
+                // Calculate name position
+                int nameX = screenX - textWidth/2;
+                int nameY = screenY - markerSize/2 - 12;
+                
+                // Check if town name would overlap with info panel
+                boolean nameOverlapsInfo = selectedTown != null && 
+                    nameY >= panelTop + 50 && nameY <= panelTop + 110 && 
+                    nameX + textWidth >= panelLeft && nameX <= panelLeft + 200;
+                
+                if (!nameOverlapsInfo) {
+                    guiGraphics.drawString(this.font, townName, nameX, nameY, TEXT_COLOR);
+                }
+            }
+        }
+        
+        // Highlight if mouse is over (use clamped marker position for current town)
+        int checkX = isCurrentTown ? markerX : screenX;
+        int checkY = isCurrentTown ? markerY : screenY;
+        
+        if (mouseX >= checkX - markerSize && mouseX <= checkX + markerSize &&
+            mouseY >= checkY - markerSize && mouseY <= checkY + markerSize) {
+            // Calculate highlight ring bounds
+            int ringLeft = checkX - markerSize - 1;
+            int ringRight = checkX + markerSize + 1;
+            int ringTop = checkY - markerSize - 1;
+            int ringBottom = checkY + markerSize + 1;
+            
+            // For current town, clamp highlight ring to stay within map bounds
+            if (isCurrentTown) {
+                int[] clampedTopLeft = clampToMapBounds(ringLeft, ringTop, 0);
+                int[] clampedBottomRight = clampToMapBounds(ringRight, ringBottom, 0);
+                ringLeft = clampedTopLeft[0];
+                ringTop = clampedTopLeft[1];
+                ringRight = clampedBottomRight[0];
+                ringBottom = clampedBottomRight[1];
+            }
+            
+            // Draw highlight ring
+            guiGraphics.hLine(ringLeft, ringRight, ringTop, 0xFFFFFFFF);
+            guiGraphics.hLine(ringLeft, ringRight, ringBottom, 0xFFFFFFFF);
+            guiGraphics.vLine(ringLeft, ringTop, ringBottom, 0xFFFFFFFF);
+            guiGraphics.vLine(ringRight, ringTop, ringBottom, 0xFFFFFFFF);
+        }
+    }
+    
+    /**
+     * Draw edge indicator for towns outside the map bounds
+     */
+    private void drawEdgeIndicator(GuiGraphics guiGraphics, int edgeX, int edgeY, 
+                                  TownMapDataResponsePacket.TownMapInfo town, int color, int size) {
+        // Get the actual town position
+        int actualX = worldToScreenX(town.x);
+        int actualY = worldToScreenZ(town.z);
+        
+        // Calculate direction vector from edge to actual position
+        int dx = actualX - edgeX;
+        int dy = actualY - edgeY;
+        
+        // Normalize and draw a small triangle pointing in that direction
+        double length = Math.sqrt(dx * dx + dy * dy);
+        if (length > 0) {
+            // Draw a small diamond/arrow shape
+            guiGraphics.fill(edgeX - size/3, edgeY - size/3, edgeX + size/3, edgeY + size/3, color);
+            
+            // Add a small directional indicator
+            int arrowSize = size / 4;
+            if (Math.abs(dx) > Math.abs(dy)) {
+                // Horizontal arrow
+                int arrowDir = dx > 0 ? 1 : -1;
+                guiGraphics.fill(edgeX + arrowDir * arrowSize, edgeY - arrowSize/2, 
+                               edgeX + arrowDir * arrowSize + arrowDir * arrowSize/2, edgeY + arrowSize/2, color);
+            } else {
+                // Vertical arrow
+                int arrowDir = dy > 0 ? 1 : -1;
+                guiGraphics.fill(edgeX - arrowSize/2, edgeY + arrowDir * arrowSize, 
+                               edgeX + arrowSize/2, edgeY + arrowDir * arrowSize + arrowDir * arrowSize/2, color);
+            }
+        }
+    }
+    
+    /**
+     * Draw platforms and paths for the selected town
+     */
+    private void drawSelectedTownPlatforms(GuiGraphics guiGraphics) {
+        if (selectedTown == null || selectedTownPlatforms == null || selectedTownPlatforms.isEmpty()) {
+            return;
+        }
+        
+        int[] bounds = getMapBounds();
+        int mapLeft = bounds[0], mapTop = bounds[1], mapRight = bounds[2], mapBottom = bounds[3];
+        
+        // Draw platforms and their paths
+        for (TownPlatformDataResponsePacket.PlatformInfo platform : selectedTownPlatforms.values()) {
+            // Convert world coordinates to screen coordinates
+            int startScreenX = worldToScreenX(platform.x);
+            int startScreenY = worldToScreenZ(platform.z);
+            // For platforms, we need destination coordinates - using same position for now
+            int endScreenX = startScreenX;
+            int endScreenY = startScreenY;
+            
+            // Only draw if at least part of the path is visible
+            if (isLineVisible(startScreenX, startScreenY, endScreenX, endScreenY, mapLeft, mapTop, mapRight, mapBottom)) {
+                // Choose color based on platform status and selection
+                boolean isSelected = selectedPlatform != null && selectedPlatform.platformId.equals(platform.platformId);
+                int pathColor, platformColor;
+                
+                if (isSelected) {
+                    // Bright colors for selected platform
+                    pathColor = 0xFFFFFF00; // Bright yellow for selected
+                    platformColor = 0xFFFFAA00; // Orange for selected markers
+                } else {
+                    // Normal colors based on enabled status
+                    pathColor = platform.isEnabled ? 0xFF00FF00 : 0xFFFF0000; // Green if enabled, red if disabled
+                    platformColor = platform.isEnabled ? 0xFF00AA00 : 0xFFAA0000; // Darker green/red for markers
+                }
+                
+                // Draw platform markers (small squares) - reduced by 50%
+                int markerSize = Math.max(1, (int)(2 * Math.min(zoomLevel / 10.0, 2.0))); // Size scales with zoom, 50% smaller
+                
+                // Platform marker
+                if (isPointInBounds(startScreenX, startScreenY, mapLeft, mapTop, mapRight, mapBottom)) {
+                    guiGraphics.fill(startScreenX - markerSize, startScreenY - markerSize, 
+                                   startScreenX + markerSize, startScreenY + markerSize, platformColor);
+                    
+                    // Add highlight ring for selected platform
+                    if (isSelected) {
+                        int ringSize = markerSize + 2;
+                        guiGraphics.hLine(startScreenX - ringSize, startScreenX + ringSize, startScreenY - ringSize, 0xFFFFFFFF);
+                        guiGraphics.hLine(startScreenX - ringSize, startScreenX + ringSize, startScreenY + ringSize, 0xFFFFFFFF);
+                        guiGraphics.vLine(startScreenX - ringSize, startScreenY - ringSize, startScreenY + ringSize, 0xFFFFFFFF);
+                        guiGraphics.vLine(startScreenX + ringSize, startScreenY - ringSize, startScreenY + ringSize, 0xFFFFFFFF);
                     }
                 }
                 
-                selectedTown = null; // Clear selection if not clicking on town
+                // Draw platform name if zoom is high enough
+                if (zoomLevel >= 5.0 && isPointInBounds(startScreenX, startScreenY, mapLeft, mapTop, mapRight, mapBottom)) {
+                    String platformName = platform.destinationName != null ? platform.destinationName : "Platform";
+                    int textWidth = this.font.width(platformName);
+                    int nameX = startScreenX - textWidth / 2;
+                    int nameY = startScreenY - markerSize - 12;
+                    
+                    // Ensure name doesn't go outside map bounds
+                    nameX = Math.max(mapLeft, Math.min(mapRight - textWidth, nameX));
+                    nameY = Math.max(mapTop, Math.min(mapBottom - 10, nameY));
+                    
+                    // Check if platform name would overlap with town info panel
+                    boolean nameOverlapsInfo = selectedTown != null && 
+                        nameY >= panelTop + 50 && nameY <= panelTop + 110 && 
+                        nameX + textWidth >= panelLeft + 10 && nameX <= panelLeft + 210;
+                    
+                    if (!nameOverlapsInfo) {
+                        // Draw platform name with background for visibility
+                        guiGraphics.fill(nameX - 2, nameY - 1, nameX + textWidth + 2, nameY + 9, 0x80000000);
+                        guiGraphics.drawString(this.font, platformName, nameX, nameY, 0xFFFFFFFF);
+                    }
+                }
+            }
+        }
+        
+        // Draw boundary circle for selected town (after platform rendering)
+        drawSelectedTownBoundary(guiGraphics);
+    }
+    
+    /**
+     * Draw boundary circle for the selected town
+     */
+    private void drawSelectedTownBoundary(GuiGraphics guiGraphics) {
+        if (selectedTown == null || selectedTownInfo == null) {
+            return; // Need selected town and live town info (boundary only shows after clicking)
+        }
+        
+        int[] bounds = getMapBounds();
+        int mapLeft = bounds[0], mapTop = bounds[1], mapRight = bounds[2], mapBottom = bounds[3];
+        
+        // Use live server-calculated boundary radius from platform packet
+        int boundaryRadius = selectedTownInfo.detectionRadius;
+        if (boundaryRadius <= 0) {
+            return; // No boundary to draw
+        }
+        
+        // Convert town center to screen coordinates
+        int centerScreenX = worldToScreenX(selectedTown.x);
+        int centerScreenY = worldToScreenZ(selectedTown.z);
+        
+        // Convert boundary radius from world blocks to screen pixels
+        int radiusInPixels = (int)(boundaryRadius * zoomLevel * COORDINATE_CONVERSION);
+        
+        // Use green color matching 3D boundary visualization
+        int boundaryColor = 0xFF00FF00; // Bright green like 3D boundaries
+        
+        // Draw the circular boundary using line segments (64 segments for smooth circle)
+        int segments = 64;
+        double angleStep = 2 * Math.PI / segments;
+        
+        for (int i = 0; i < segments; i++) {
+            double angle1 = i * angleStep;
+            double angle2 = (i + 1) * angleStep;
+            
+            // Calculate start and end points of this segment
+            int x1 = centerScreenX + (int)(Math.cos(angle1) * radiusInPixels);
+            int y1 = centerScreenY + (int)(Math.sin(angle1) * radiusInPixels);
+            int x2 = centerScreenX + (int)(Math.cos(angle2) * radiusInPixels);
+            int y2 = centerScreenY + (int)(Math.sin(angle2) * radiusInPixels);
+            
+            // Draw the line segment with clipping to map bounds
+            drawClippedLine(guiGraphics, x1, y1, x2, y2, boundaryColor, 
+                          mapLeft, mapTop, mapRight, mapBottom);
+        }
+    }
+    
+    /**
+     * Draw a line between two points with clipping to specified bounds
+     */
+    private void drawClippedLine(GuiGraphics guiGraphics, int x1, int y1, int x2, int y2, int color,
+                                int clipLeft, int clipTop, int clipRight, int clipBottom) {
+        // Use Cohen-Sutherland line clipping algorithm
+        int[] clipped = clipLine(x1, y1, x2, y2, clipLeft, clipTop, clipRight, clipBottom);
+        if (clipped == null) return; // Line is completely outside bounds
+        
+        // Draw the clipped line
+        drawLine(guiGraphics, clipped[0], clipped[1], clipped[2], clipped[3], color);
+    }
+    
+    /**
+     * Draw a line between two points (assuming points are within bounds)
+     */
+    private void drawLine(GuiGraphics guiGraphics, int x1, int y1, int x2, int y2, int color) {
+        // Simple line drawing using filled rectangles
+        int dx = Math.abs(x2 - x1);
+        int dy = Math.abs(y2 - y1);
+        int steps = Math.max(dx, dy);
+        
+        if (steps == 0) return;
+        
+        for (int i = 0; i <= steps; i++) {
+            int x = x1 + (x2 - x1) * i / steps;
+            int y = y1 + (y2 - y1) * i / steps;
+            guiGraphics.fill(x, y, x + 1, y + 1, color);
+        }
+    }
+    
+    /**
+     * Cohen-Sutherland line clipping algorithm
+     * Returns clipped line coordinates [x1, y1, x2, y2] or null if completely outside
+     */
+    private int[] clipLine(int x1, int y1, int x2, int y2, int clipLeft, int clipTop, int clipRight, int clipBottom) {
+        // Compute outcodes for both endpoints
+        int outcode1 = computeOutcode(x1, y1, clipLeft, clipTop, clipRight, clipBottom);
+        int outcode2 = computeOutcode(x2, y2, clipLeft, clipTop, clipRight, clipBottom);
+        
+        while (true) {
+            if ((outcode1 | outcode2) == 0) {
+                // Both points inside - line is completely visible
+                return new int[]{x1, y1, x2, y2};
+            } else if ((outcode1 & outcode2) != 0) {
+                // Both points outside same boundary - line is completely invisible
+                return null;
+            } else {
+                // Line crosses boundary - clip it
+                int outcodeOut = (outcode1 != 0) ? outcode1 : outcode2;
+                int x, y;
+                
+                if ((outcodeOut & 8) != 0) { // Top
+                    x = x1 + (x2 - x1) * (clipTop - y1) / (y2 - y1);
+                    y = clipTop;
+                } else if ((outcodeOut & 4) != 0) { // Bottom
+                    x = x1 + (x2 - x1) * (clipBottom - y1) / (y2 - y1);
+                    y = clipBottom;
+                } else if ((outcodeOut & 2) != 0) { // Right
+                    y = y1 + (y2 - y1) * (clipRight - x1) / (x2 - x1);
+                    x = clipRight;
+                } else { // Left
+                    y = y1 + (y2 - y1) * (clipLeft - x1) / (x2 - x1);
+                    x = clipLeft;
+                }
+                
+                if (outcodeOut == outcode1) {
+                    x1 = x;
+                    y1 = y;
+                    outcode1 = computeOutcode(x1, y1, clipLeft, clipTop, clipRight, clipBottom);
+                } else {
+                    x2 = x;
+                    y2 = y;
+                    outcode2 = computeOutcode(x2, y2, clipLeft, clipTop, clipRight, clipBottom);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Compute outcode for Cohen-Sutherland clipping
+     */
+    private int computeOutcode(int x, int y, int clipLeft, int clipTop, int clipRight, int clipBottom) {
+        int code = 0;
+        if (x < clipLeft) code |= 1; // Left
+        if (x > clipRight) code |= 2; // Right
+        if (y < clipTop) code |= 8; // Top
+        if (y > clipBottom) code |= 4; // Bottom
+        return code;
+    }
+    
+    /**
+     * Check if a line is visible within the given bounds
+     */
+    private boolean isLineVisible(int x1, int y1, int x2, int y2, int left, int top, int right, int bottom) {
+        // Simple bounds check - if either endpoint is visible or line crosses bounds
+        return isPointInBounds(x1, y1, left, top, right, bottom) || 
+               isPointInBounds(x2, y2, left, top, right, bottom) ||
+               (x1 < left && x2 > right) || (x1 > right && x2 < left) ||
+               (y1 < top && y2 > bottom) || (y1 > bottom && y2 < top);
+    }
+    
+    /**
+     * Check if a point is within the given bounds
+     */
+    private boolean isPointInBounds(int x, int y, int left, int top, int right, int bottom) {
+        return x >= left && x <= right && y >= top && y <= bottom;
+    }
+    
+    /**
+     * Draw current position marker
+     */
+    private void drawCurrentPosition(GuiGraphics guiGraphics) {
+        if (currentTownPos != null) {
+            int screenX = worldToScreenX(currentTownPos.getX());
+            int screenY = worldToScreenZ(currentTownPos.getZ());
+            // ALWAYS ensure current town marker stays within map bounds
+            int[] clamped = clampToMapBounds(screenX, screenY, 4);
+            screenX = clamped[0];
+            screenY = clamped[1];
+            
+            // Draw a distinct marker for current position
+            int size = 4;
+            guiGraphics.fill(screenX - size, screenY - size, screenX + size, screenY + size, CURRENT_TOWN_COLOR);
+            
+            // Draw border
+            guiGraphics.hLine(screenX - size - 1, screenX + size, screenY - size - 1, TEXT_COLOR);
+            guiGraphics.hLine(screenX - size - 1, screenX + size, screenY + size, TEXT_COLOR);
+            guiGraphics.vLine(screenX - size - 1, screenY - size - 1, screenY + size, TEXT_COLOR);
+            guiGraphics.vLine(screenX + size, screenY - size - 1, screenY + size, TEXT_COLOR);
+        }
+    }
+    
+    /**
+     * Draw information about selected town or platform
+     */
+    private void drawTownInfo(GuiGraphics guiGraphics) {
+        if (selectedTown == null || currentTownPos == null) return;
+        
+        // Draw info background
+        int infoX = panelLeft + 10;
+        int infoY = panelTop + 50;
+        int infoWidth = 200;
+        int infoHeight = 60; // Same height for both town and platform info
+        
+        guiGraphics.fill(infoX, infoY, infoX + infoWidth, infoY + infoHeight, INFO_BACKGROUND);
+        guiGraphics.hLine(infoX, infoX + infoWidth - 1, infoY, BORDER_COLOR);
+        guiGraphics.hLine(infoX, infoX + infoWidth - 1, infoY + infoHeight - 1, BORDER_COLOR);
+        guiGraphics.vLine(infoX, infoY, infoY + infoHeight - 1, BORDER_COLOR);
+        guiGraphics.vLine(infoX + infoWidth - 1, infoY, infoY + infoHeight - 1, BORDER_COLOR);
+        
+        if (selectedPlatform != null) {
+            // Draw platform information
+            String statusText = selectedPlatform.isEnabled ? "(Enabled)" : "(Disabled)";
+            String platformName = selectedPlatform.destinationName != null ? selectedPlatform.destinationName : "Platform";
+            guiGraphics.drawString(this.font, "Selected: " + platformName + " " + statusText, infoX + 5, infoY + 8, TEXT_COLOR);
+            guiGraphics.drawString(this.font, "Town: " + selectedTown.name, infoX + 5, infoY + 20, TEXT_COLOR);
+            guiGraphics.drawString(this.font, String.format("Position: %d, %d, %d", 
+                selectedPlatform.x, selectedPlatform.y, selectedPlatform.z), 
+                infoX + 5, infoY + 32, TEXT_COLOR);
+        } else {
+            // Draw town information  
+            double distance = Math.sqrt(
+                Math.pow(selectedTown.x - currentTownPos.getX(), 2) + 
+                Math.pow(selectedTown.z - currentTownPos.getZ(), 2)
+            );
+            
+            guiGraphics.drawString(this.font, "Selected: " + selectedTown.name, infoX + 5, infoY + 8, TEXT_COLOR);
+            guiGraphics.drawString(this.font, String.format("Distance: %.1f blocks", distance), infoX + 5, infoY + 20, TEXT_COLOR);
+            guiGraphics.drawString(this.font, String.format("Position: X %d, Z %d", selectedTown.x, selectedTown.z), infoX + 5, infoY + 32, TEXT_COLOR);
+            guiGraphics.drawString(this.font, "Population: " + selectedTown.population, infoX + 5, infoY + 44, TEXT_COLOR);
+        }
+    }
+    
+    /**
+     * Draw controls help text
+     */
+    private void drawControlsHelp(GuiGraphics guiGraphics) {
+        String[] helpText = {
+            "Drag to pan • Scroll to zoom • Click town for info"
+        };
+        
+        int helpX = panelLeft + panelWidth / 2;
+        int helpY = panelTop + panelHeight - 50;
+        
+        for (int i = 0; i < helpText.length; i++) {
+            int textWidth = this.font.width(helpText[i]);
+            guiGraphics.drawString(this.font, helpText[i], 
+                                  helpX - textWidth/2, helpY + i * 12, 0xFFAAAAAA);
+        }
+    }
+    
+    /**
+     * Handle mouse clicks
+     */
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0) { // Left click
+            // Check if clicking on a platform first (if we have a selected town with platforms)
+            if (selectedTown != null && selectedTownPlatforms != null) {
+                TownPlatformDataResponsePacket.PlatformInfo clickedPlatform = getPlatformAtPosition((int)mouseX, (int)mouseY);
+                if (clickedPlatform != null) {
+                    selectedPlatform = clickedPlatform;
+                    DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Selected platform: {}", clickedPlatform.destinationName);
+                    return true;
+                }
+            }
+            
+            // Check if clicking on a town
+            TownMapDataResponsePacket.TownMapInfo clickedTown = getTownAtPosition((int)mouseX, (int)mouseY);
+            if (clickedTown != null) {
+                // If selecting a different town, clear previous platform data and selection
+                if (selectedTown == null || !selectedTown.townId.equals(clickedTown.townId)) {
+                    selectedTownPlatforms = null;
+                    selectedPlatform = null;
+                    selectedTownInfo = null; // Clear live town info
+                }
+                
+                selectedTown = clickedTown;
+                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Selected town: {}", clickedTown.name);
+                
+                // Request platform data for the selected town
+                requestTownPlatformData(clickedTown.townId);
+                return true;
+            }
+            
+            // Check if clicking outside map area to deselect
+            if (!isInMapArea((int)mouseX, (int)mouseY)) {
+                if (selectedPlatform != null || selectedTown != null) {
+                    selectedPlatform = null;
+                    selectedTown = null;
+                    selectedTownPlatforms = null;
+                    selectedTownInfo = null; // Clear live town info
+                    DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Deselected town and platform");
+                    return true;
+                }
+            }
+            
+            // Start dragging if clicking on map area (and nothing was selected)
+            if (isInMapArea((int)mouseX, (int)mouseY)) {
+                // Clear platform selection when clicking empty space on map
+                if (selectedPlatform != null) {
+                    selectedPlatform = null;
+                    DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Deselected platform");
+                    return true;
+                }
+                
+                isDragging = true;
+                lastMouseX = mouseX;
+                lastMouseY = mouseY;
                 return true;
             }
         }
+        
         return super.mouseClicked(mouseX, mouseY, button);
     }
     
+    /**
+     * Handle mouse dragging for panning
+     */
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0) {
-            isDragging = false;
-        }
-        return super.mouseReleased(mouseX, mouseY, button);
-    }
-    
-    @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDelta) {
-        // Check if scrolling within map bounds
-        int[] bounds = getMapBounds();
-        if (mouseX >= bounds[0] && mouseX <= bounds[2] && mouseY >= bounds[1] && mouseY <= bounds[3]) {
-            double oldZoom = zoomLevel;
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (isDragging && button == 0) {
+            // Pan the map
+            double deltaX = (mouseX - lastMouseX) / (zoomLevel * COORDINATE_CONVERSION);
+            double deltaY = (mouseY - lastMouseY) / (zoomLevel * COORDINATE_CONVERSION);
             
-            if (scrollDelta > 0) {
-                // Zoom in
-                zoomLevel = Math.min(MAX_ZOOM, zoomLevel * ZOOM_FACTOR);
-            } else {
-                // Zoom out
-                zoomLevel = Math.max(MIN_ZOOM, zoomLevel / ZOOM_FACTOR);
-            }
+            mapOffsetX -= deltaX;
+            mapOffsetZ -= deltaY;
             
-            // Adjust map offset to zoom towards mouse position
-            if (zoomLevel != oldZoom) {
-                double mouseWorldX = screenToWorldX((int)mouseX);
-                double mouseWorldZ = screenToWorldZ((int)mouseY);
-                
-                // Calculate how much the mouse position shifted in world coordinates
-                double newMouseWorldX = mapOffsetX + ((int)mouseX - mapCenterX) / (zoomLevel * COORDINATE_CONVERSION);
-                double newMouseWorldZ = mapOffsetZ + ((int)mouseY - mapCenterY) / (zoomLevel * COORDINATE_CONVERSION);
-                
-                // Adjust offset to keep mouse position stable
-                mapOffsetX += mouseWorldX - newMouseWorldX;
-                mapOffsetZ += mouseWorldZ - newMouseWorldZ;
-            }
+            lastMouseX = mouseX;
+            lastMouseY = mouseY;
             
             return true;
         }
-        return super.mouseScrolled(mouseX, mouseY, scrollDelta);
+        
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
     
+    /**
+     * Handle mouse release
+     */
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (isDragging && button == 0) {
+            isDragging = false;
+            return true;
+        }
+        
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+    
+    /**
+     * Handle mouse scrolling for zoom
+     */
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (isInMapArea((int)mouseX, (int)mouseY)) {
+            // Zoom in/out with better scaling
+            // At max zoom (600x), the map should show 5x5 blocks
+            double zoomFactor = delta > 0 ? ZOOM_FACTOR : (1.0 / ZOOM_FACTOR);
+            zoomLevel = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, zoomLevel * zoomFactor));
+            
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Map zoom level: {}", zoomLevel);
+            return true;
+        }
+        
+        return super.mouseScrolled(mouseX, mouseY, delta);
+    }
+    
+    /**
+     * Get map bounds as [left, top, right, bottom]
+     */
+    private int[] getMapBounds() {
+        int mapLeft = mapCenterX - mapWidth / 2;
+        int mapTop = mapCenterY - mapHeight / 2;
+        return new int[]{mapLeft, mapTop, mapLeft + mapWidth, mapTop + mapHeight};
+    }
+    
+    /**
+     * Check if coordinates are within the map area
+     */
+    private boolean isInMapArea(int x, int y) {
+        int[] bounds = getMapBounds();
+        return x >= bounds[0] && x <= bounds[2] && y >= bounds[1] && y <= bounds[3];
+    }
+    
+    /**
+     * Get town at the given screen coordinates
+     */
+    private TownMapDataResponsePacket.TownMapInfo getTownAtPosition(int screenX, int screenY) {
+        if (allTowns == null) return null;
+        
+        for (TownMapDataResponsePacket.TownMapInfo town : allTowns.values()) {
+            if (isTownVisible(town)) {
+                boolean isCurrentTown = currentTownPos != null && 
+                    (town.x == currentTownPos.getX() && town.y == currentTownPos.getY() && town.z == currentTownPos.getZ());
+                boolean withinBounds = isTownWithinMapBounds(town);
+                
+                int townScreenX, townScreenY;
+                if (withinBounds || isCurrentTown) {
+                    townScreenX = worldToScreenX(town.x);
+                    townScreenY = worldToScreenZ(town.z);
+                    
+                    // For current town, use clamped position for click detection
+                    if (isCurrentTown) {
+                        int markerSize = getAdaptiveMarkerSize();
+                        int[] clamped = clampToMapBounds(townScreenX, townScreenY, markerSize/2);
+                        townScreenX = clamped[0];
+                        townScreenY = clamped[1];
+                    }
+                } else {
+                    int[] edgePos = getTownEdgePosition(town);
+                    townScreenX = edgePos[0];
+                    townScreenY = edgePos[1];
+                }
+                
+                int markerSize = getAdaptiveMarkerSize();
+                if (screenX >= townScreenX - markerSize && screenX <= townScreenX + markerSize &&
+                    screenY >= townScreenY - markerSize && screenY <= townScreenY + markerSize) {
+                    return town;
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Get platform at the given screen coordinates
+     */
+    private TownPlatformDataResponsePacket.PlatformInfo getPlatformAtPosition(int screenX, int screenY) {
+        if (selectedTownPlatforms == null || selectedTownPlatforms.isEmpty()) return null;
+        
+        int[] bounds = getMapBounds();
+        int mapLeft = bounds[0], mapTop = bounds[1], mapRight = bounds[2], mapBottom = bounds[3];
+        
+        for (TownPlatformDataResponsePacket.PlatformInfo platform : selectedTownPlatforms.values()) {
+            // Convert world coordinates to screen coordinates
+            int startScreenX = worldToScreenX(platform.x);
+            int startScreenY = worldToScreenZ(platform.z);
+            
+            // Only check platforms that are at least partially visible
+            if (isPointInBounds(startScreenX, startScreenY, mapLeft, mapTop, mapRight, mapBottom)) {
+                int markerSize = Math.max(1, (int)(2 * Math.min(zoomLevel / 10.0, 2.0))); // Same as drawing logic
+                
+                // Check platform marker
+                if (screenX >= startScreenX - markerSize - 2 && screenX <= startScreenX + markerSize + 2 &&
+                    screenY >= startScreenY - markerSize - 2 && screenY <= startScreenY + markerSize + 2) {
+                    return platform;
+                }
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Handle screen close
+     */
     @Override
     public void onClose() {
-        this.minecraft.setScreen(parentScreen);
+        // Clear map cache to ensure fresh data on next open
+        ClientTownMapCache.getInstance().invalidateAll();
+        
+        // Execute close callback BEFORE switching screens
         if (onCloseCallback != null) {
             onCloseCallback.accept(this);
         }
+        
+        // Return to parent screen
+        this.minecraft.setScreen(parentScreen);
+        
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "TownMapModal closed and cache cleared");
     }
     
+    /**
+     * Prevent game from pausing when screen is open
+     */
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+    
+    /**
+     * Set town data (for external initialization)
+     */
+    public void setTownData(Map<UUID, TownMapDataResponsePacket.TownMapInfo> townData) {
+        this.allTowns = townData != null ? new HashMap<>(townData) : new HashMap<>();
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town data set: {} towns", this.allTowns.size());
+    }
+    
+    /**
+     * Refresh town data from cache (called when new data arrives from server)
+     */
+    public void refreshFromCache() {
+        ClientTownMapCache cache = ClientTownMapCache.getInstance();
+        Map<UUID, ClientTownMapCache.CachedTownData> cachedTowns = cache.getAllTowns();
+        
+        this.allTowns = new HashMap<>();
+        for (Map.Entry<UUID, ClientTownMapCache.CachedTownData> entry : cachedTowns.entrySet()) {
+            ClientTownMapCache.CachedTownData cached = entry.getValue();
+            
+            // Convert CachedTownData to TownMapInfo
+            TownMapDataResponsePacket.TownMapInfo townInfo = new TownMapDataResponsePacket.TownMapInfo(
+                cached.getId(),
+                cached.getName(),
+                cached.getX(),
+                cached.getY(),
+                cached.getZ(),
+                0, // population - will be updated from platform data
+                0, // visitCount - will be updated from platform data
+                0, // lastVisited - will be updated from platform data
+                false // isCurrentTown - will be determined by position comparison
+            );
+            
+            this.allTowns.put(entry.getKey(), townInfo);
+        }
+        
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town data refreshed from cache: {} towns", this.allTowns.size());
+    }
+    
+    /**
+     * Request platform data for a specific town
+     */
+    private void requestTownPlatformData(UUID townId) {
+        try {
+            // Always request fresh data from server for live updates
+            // This ensures population and other town data is always current
+            ModMessages.sendToServer(new RequestTownPlatformDataPacket(townId));
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                "Requesting fresh platform and town data for town {}", townId);
+                
+        } catch (Exception e) {
+            LOGGER.error("Failed to request platform data for town {}", townId, e);
+        }
     }
     
     /**
@@ -910,26 +1414,4 @@ public class TownMapModal extends Screen {
             }
         }
     }
-    
-    /**
-     * Refresh cache data from ClientTownMapCache on each render.
-     * This ensures the modal picks up new town data when server responses arrive.
-     */
-    private void refreshCacheData() {
-        ClientTownMapCache cache = ClientTownMapCache.getInstance();
-        Map<UUID, ClientTownMapCache.CachedTownData> freshData = cache.getAllTowns();
-        
-        // Only update if we have new data or the data changed significantly
-        if (!freshData.isEmpty() && (cachedTowns.isEmpty() || freshData.size() != cachedTowns.size())) {
-            LOGGER.debug("Refreshing map modal with {} towns from live cache", freshData.size());
-            
-            this.cachedTowns = new HashMap<>(freshData);
-            this.hasAdvancedMapData = !this.cachedTowns.isEmpty();
-            
-            if (hasAdvancedMapData) {
-                LOGGER.debug("Sophisticated map features now enabled with {} towns", cachedTowns.size());
-            }
-        }
-    }
-    
 }

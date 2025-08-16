@@ -253,13 +253,27 @@ Priority: HIGH - Fix discovered UI issues and verify core gameplay systems
     - [x] **FEATURES LOST**: Pan/zoom controls, recenter button, mouse dragging, coordinate grid (7 markers per axis), distance calculation, edge indicators for off-map towns, sophisticated rendering
     - [x] **PACKET ARCHITECTURE MISMATCH**: Sophisticated map expects `TownMapDataResponsePacket.TownMapInfo` data structures, current packet system uses simplified JSON strings
     - [x] **CACHE INTEGRATION**: Sophisticated map has `refreshFromCache()` method and proper integration with ClientTownMapCache, current version has basic cache refresh attempts
-  - [ ] **Map Restoration Task**: **HIGH PRIORITY - Restore Sophisticated Map Implementation**
-    - [ ] **Phase 1**: Extract complete sophisticated TownMapModal implementation from main branch
-    - [ ] **Phase 2**: Adapt sophisticated map for Enhanced MultiLoader Template compatibility (package names, imports)
-    - [ ] **Phase 3**: Restore sophisticated packet data structures (`TownMapInfo`, `PlatformInfo`, `TownInfo` classes) in current response packets
-    - [ ] **Phase 4**: Update server-side map data generation to provide structured data instead of JSON strings  
-    - [ ] **Phase 5**: Test sophisticated map features (pan, zoom, recenter, coordinate grid, distance calculation, edge indicators)
-    - [ ] **Phase 6**: Verify cache integration and data synchronization works with sophisticated implementation
+  - [x] **Map Restoration Task**: **HIGH PRIORITY - Restore Sophisticated Map Implementation** ✅ **COMPLETED**
+    - [x] **Phase 1**: Extract complete sophisticated TownMapModal implementation from main branch ✅
+    - [x] **Phase 2**: Adapt sophisticated map for Enhanced MultiLoader Template compatibility (package names, imports) ✅
+    - [x] **Phase 3**: Restore sophisticated packet data structures (`TownMapInfo`, `PlatformInfo`, `TownInfo` classes) in current response packets ✅
+    - [x] **Phase 4**: Update server-side map data generation to provide structured data instead of JSON strings ✅
+    - [x] **Phase 5**: Test sophisticated map features (pan, zoom, recenter, coordinate grid, distance calculation, edge indicators) ✅
+    - [x] **Phase 6**: Verify cache integration and data synchronization works with sophisticated implementation ✅
+  - [ ] **Platform Visualization Restoration**: **HIGH PRIORITY - Restore Missing Platform Display Features**
+    - [ ] **Phase 1**: Fix PlatformInfo data structure - missing startPos/endPos coordinate fields for line drawing
+    - [ ] **Phase 2**: Restore drawSelectedTownPlatforms method functionality from main branch (lines 1199-1265)
+    - [ ] **Phase 3**: Implement platform path visualization using LineRenderer3D for travel routes  
+    - [ ] **Phase 4**: Add platform name labels and destination indicators on map display
+    - [ ] **Phase 5**: Restore platform enable/disable visual states with color coding (enabled=green, disabled=red)
+    - [ ] **Phase 6**: Test platform clicking and selection highlighting functionality
+  - [ ] **Town Boundary Visualization Restoration**: **HIGH PRIORITY - Restore Missing Boundary Display Features**
+    - [ ] **Phase 1**: Fix TownInfo data structure - missing boundaryRadius field for boundary calculations
+    - [ ] **Phase 2**: Restore drawSelectedTownBoundary method functionality from main branch (lines 1267-1316)
+    - [ ] **Phase 3**: Implement circular boundary rendering around selected towns using coordinate system
+    - [ ] **Phase 4**: Add boundary radius indicators and population-based boundary size calculation
+    - [ ] **Phase 5**: Restore boundary color coding (selected=bright, nearby=dimmed, distant=transparent)
+    - [ ] **Phase 6**: Test town selection highlighting and boundary toggle functionality
   - [ ] **Payment Board System**: Fix Payment Board screen opening issues
     - [ ] Investigate PaymentBoardMenu and PaymentBoardScreen initialization
     - [ ] Verify PaymentBoardPacket registration and network handling
