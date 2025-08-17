@@ -1193,4 +1193,83 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
         
         return null;
     }
+    
+    /**
+     * Update client-side town platform UI with structured data packet.
+     * This method handles sophisticated map modal updates with structured PlatformInfo data.
+     */
+    @Override
+    public boolean updateTownPlatformUIStructured(Object player, int x, int y, int z, Object packet) {
+        try {
+            // Cast to the structured packet type
+            if (!(packet instanceof com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket)) {
+                LOGGER.warn("Invalid packet type for structured platform UI update: {}", packet.getClass());
+                return false;
+            }
+            
+            com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket structuredPacket = 
+                (com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket) packet;
+            
+            // Get town map modal from current screen
+            Minecraft mc = Minecraft.getInstance();
+            Screen currentScreen = mc.screen;
+            
+            if (currentScreen instanceof com.quackers29.businesscraft.ui.modal.specialized.TownMapModal) {
+                com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal = 
+                    (com.quackers29.businesscraft.ui.modal.specialized.TownMapModal) currentScreen;
+                
+                // Update the modal with structured data directly
+                UUID townId = structuredPacket.getTownId();
+                Map<UUID, com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket.PlatformInfo> platforms = structuredPacket.getPlatforms();
+                com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket.TownInfo townInfo = structuredPacket.getTownInfo();
+                
+                // Convert PlatformInfo to the format expected by the sophisticated map
+                Map<UUID, Object> platformObjects = new HashMap<>();
+                for (Map.Entry<UUID, com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket.PlatformInfo> entry : platforms.entrySet()) {
+                    // The sophisticated map expects PlatformInfo objects with BlockPos startPos and endPos
+                    // We need to convert from int[] coordinates to BlockPos objects
+                    platformObjects.put(entry.getKey(), convertPlatformInfoForMap(entry.getValue()));
+                }
+                
+                // Update the modal
+                mapModal.refreshPlatformData(townId, platformObjects);
+                if (townInfo != null) {
+                    mapModal.refreshTownData(townId, townInfo);
+                }
+                
+                LOGGER.debug("Updated sophisticated map with structured data: {} platforms for town {} at ({}, {}, {})", 
+                    platforms.size(), townId, x, y, z);
+                return true;
+            } else {
+                LOGGER.debug("Town map modal not currently open, structured update skipped");
+                return false;
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to update platform UI with structured data at ({}, {}, {}): {}", 
+                x, y, z, e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Convert PlatformInfo with int[] coordinates to format expected by sophisticated map.
+     * This creates a compatible object with BlockPos startPos and endPos fields.
+     */
+    private Object convertPlatformInfoForMap(com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket.PlatformInfo platformInfo) {
+        // Create BlockPos objects from int[] coordinates
+        net.minecraft.core.BlockPos startPos = new net.minecraft.core.BlockPos(
+            platformInfo.startPos[0], platformInfo.startPos[1], platformInfo.startPos[2]);
+        net.minecraft.core.BlockPos endPos = new net.minecraft.core.BlockPos(
+            platformInfo.endPos[0], platformInfo.endPos[1], platformInfo.endPos[2]);
+        
+        // Return an object that matches the structure expected by the main branch TownMapModal
+        return new Object() {
+            public final UUID id = platformInfo.id;
+            public final String name = platformInfo.name;
+            public final boolean enabled = platformInfo.enabled;
+            public final net.minecraft.core.BlockPos startPos = startPos;
+            public final net.minecraft.core.BlockPos endPos = endPos;
+            public final Set<UUID> enabledDestinations = platformInfo.enabledDestinations;
+        };
+    }
 }

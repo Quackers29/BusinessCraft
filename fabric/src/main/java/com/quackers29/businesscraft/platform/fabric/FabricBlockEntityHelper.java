@@ -47,4 +47,12 @@ public class FabricBlockEntityHelper implements BlockEntityHelper {
         // For now, we return null as this requires integration with the actual block entity
         return null;
     }
+    
+    // NOTE: This implementation may need to implement the common BlockEntityHelper interface
+    // For now, adding a placeholder method to maintain compatibility
+    public boolean updateTownPlatformUIStructured(Object player, int x, int y, int z, Object packet) {
+        // Placeholder implementation for Fabric platform
+        // TODO: Implement when Fabric platform is actively developed
+        return false;
+    }
 }

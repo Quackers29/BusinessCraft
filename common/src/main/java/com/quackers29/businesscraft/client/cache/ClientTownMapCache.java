@@ -227,6 +227,19 @@ public class ClientTownMapCache {
     }
     
     /**
+     * Update platform data for a specific town.
+     * This method is called when receiving structured platform data from the server.
+     * 
+     * @param townId The UUID of the town to update
+     * @param platforms Map of platform data with PlatformInfo objects
+     */
+    public void updateTownPlatforms(UUID townId, Map<UUID, ?> platforms) {
+        LOGGER.debug("Updating platform cache for town {} with {} platforms", townId, platforms.size());
+        // For now, this is a placeholder - the sophisticated map will access platforms directly from the packet
+        // In a more complete implementation, this would store platform data in the cache for persistence
+    }
+    
+    /**
      * Get cache statistics for debugging.
      */
     public Map<String, Object> getCacheStats() {

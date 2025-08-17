@@ -517,4 +517,17 @@ public interface BlockEntityHelper {
      * @return True if platform UI was successfully updated
      */
     boolean updateTownPlatformUI(Object player, int x, int y, int z, String platformData, String destinationData);
+    
+    /**
+     * Update client-side town platform UI with structured data packet.
+     * Platform implementations handle client-side sophisticated map modal updates with structured PlatformInfo data.
+     * 
+     * @param player Platform-specific player object
+     * @param x Block X coordinate
+     * @param y Block Y coordinate
+     * @param z Block Z coordinate
+     * @param packet Structured platform data response packet
+     * @return True if platform UI was successfully updated
+     */
+    boolean updateTownPlatformUIStructured(Object player, int x, int y, int z, Object packet);
 }
