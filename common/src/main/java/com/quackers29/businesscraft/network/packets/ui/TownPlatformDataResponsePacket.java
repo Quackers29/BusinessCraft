@@ -240,6 +240,16 @@ public class TownPlatformDataResponsePacket extends BaseBlockEntityPacket {
         public final int[] endPos;   // [x, y, z]
         public final Set<UUID> enabledDestinations;
         
+        // Additional fields expected by TownMapModal for compatibility
+        public final UUID platformId; // TownMapModal expects 'platformId' not 'id'
+        public final boolean isEnabled; // TownMapModal expects 'isEnabled' not 'enabled'
+        public final int x; // Platform start X coordinate
+        public final int y; // Platform start Y coordinate
+        public final int z; // Platform start Z coordinate  
+        public final UUID destinationTownId; // Primary destination for path drawing
+        public final String destinationName; // Name of destination for display
+        public final int[] pathPoints; // Path coordinates for drawing
+        
         public PlatformInfo(UUID id, String name, boolean enabled, int[] startPos, int[] endPos, Set<UUID> enabledDestinations) {
             this.id = id;
             this.name = name;
@@ -247,6 +257,19 @@ public class TownPlatformDataResponsePacket extends BaseBlockEntityPacket {
             this.startPos = startPos != null ? startPos.clone() : new int[]{0, 0, 0};
             this.endPos = endPos != null ? endPos.clone() : new int[]{0, 0, 0};
             this.enabledDestinations = new HashSet<>(enabledDestinations);
+            
+            // Set compatibility fields
+            this.platformId = id;
+            this.isEnabled = enabled;
+            this.x = startPos != null ? startPos[0] : 0;
+            this.y = startPos != null ? startPos[1] : 64;
+            this.z = startPos != null ? startPos[2] : 0;
+            this.destinationTownId = enabledDestinations.isEmpty() ? null : enabledDestinations.iterator().next();
+            this.destinationName = name; // Use platform name as destination name for now
+            this.pathPoints = (startPos != null && endPos != null) ? new int[]{
+                startPos[0], startPos[2], // Start X,Z
+                endPos[0], endPos[2]      // End X,Z  
+            } : new int[]{0, 0, 0, 0};
         }
     }
     
@@ -259,11 +282,36 @@ public class TownPlatformDataResponsePacket extends BaseBlockEntityPacket {
         public final int touristCount;
         public final int boundaryRadius;
         
+        // Additional fields expected by TownMapModal for compatibility
+        public final int centerX; // Town center X coordinate
+        public final int centerY; // Town center Y coordinate  
+        public final int centerZ; // Town center Z coordinate
+        public final int detectionRadius; // Detection radius for map features
+        
         public TownInfo(String name, int population, int touristCount, int boundaryRadius) {
             this.name = name;
             this.population = population;
             this.touristCount = touristCount;
             this.boundaryRadius = boundaryRadius;
+            
+            // Set compatibility fields with default values
+            // TODO: Get actual town center coordinates from town data
+            this.centerX = 0;
+            this.centerY = 64;
+            this.centerZ = 0;
+            this.detectionRadius = boundaryRadius;
+        }
+        
+        // Alternative constructor with center coordinates
+        public TownInfo(String name, int population, int touristCount, int boundaryRadius, int centerX, int centerY, int centerZ) {
+            this.name = name;
+            this.population = population;
+            this.touristCount = touristCount;
+            this.boundaryRadius = boundaryRadius;
+            this.centerX = centerX;
+            this.centerY = centerY;
+            this.centerZ = centerZ;
+            this.detectionRadius = boundaryRadius;
         }
     }
 }

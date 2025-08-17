@@ -10,12 +10,14 @@ import com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket
 import com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import java.util.Set;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
@@ -951,23 +953,28 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             ServerLevel level = serverPlayer.serverLevel();
             BlockPos pos = new BlockPos(x, y, z);
             
-            // Generate platform connection data
-            String platformData = "{}"; // Placeholder - implement actual platform data generation
-            if (includePlatformConnections) {
-                // TODO: Implement platform connection data generation
-                // This would gather platform layout, connections, and transportation network info
+            // Get town ID for this position to create structured data
+            UUID townId = findTownIdByPosition(x, y, z);
+            if (townId == null) {
+                LOGGER.warn("Could not find town at position ({}, {}, {}) for platform data request", x, y, z);
+                return false;
             }
             
-            // Generate destination town data with actual town information
-            String destinationData = "{}";
-            if (includeDestinationTowns) {
-                destinationData = generateDestinationTownData(level, pos, maxRadius);
-                LOGGER.debug("Generated destination data: {}", destinationData);
-            }
-            
-            // Send response packet to client
+            // Create structured response packet 
             TownPlatformDataResponsePacket response = 
-                new TownPlatformDataResponsePacket(x, y, z, platformData, destinationData, maxRadius);
+                new TownPlatformDataResponsePacket(x, y, z, townId, maxRadius);
+            
+            // Add platform data if requested
+            if (includePlatformConnections) {
+                generateStructuredPlatformData(level, townId, response);
+                LOGGER.debug("Generated structured platform data for town {}", townId);
+            }
+            
+            // Add town info if requested
+            if (includeDestinationTowns) {
+                generateStructuredTownInfo(level, townId, response);
+                LOGGER.debug("Generated structured town info for town {}", townId);
+            }
             
             // Send packet using platform services
             PlatformServices.getNetworkHelper().sendToClient(response, serverPlayer);
@@ -1195,10 +1202,92 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
     }
     
     /**
+     * Generate structured platform data for the response packet.
+     */
+    private void generateStructuredPlatformData(net.minecraft.server.level.ServerLevel level, UUID townId, TownPlatformDataResponsePacket response) {
+        try {
+            // Use platform service to get TownManager
+            ITownManagerService townManagerService = PlatformServices.getTownManagerService();
+            if (townManagerService == null) {
+                LOGGER.debug("TownManagerService not available for platform data generation");
+                return;
+            }
+            
+            // Get the town object
+            Object townObject = townManagerService.getTown(level, townId);
+            if (townObject == null) {
+                LOGGER.debug("Town {} not found for platform data generation", townId);
+                return;
+            }
+            
+            // Get town data provider
+            if (!(townObject instanceof com.quackers29.businesscraft.api.ITownDataProvider)) {
+                LOGGER.debug("Town {} does not implement ITownDataProvider", townId);
+                return;
+            }
+            
+            com.quackers29.businesscraft.api.ITownDataProvider townData = 
+                (com.quackers29.businesscraft.api.ITownDataProvider) townObject;
+            
+            // For now, this is a placeholder - the current Enhanced MultiLoader implementation
+            // may not have the platform system fully integrated yet
+            // TODO: Extract actual platform data from the town's platform system
+            LOGGER.debug("Platform data generation placeholder for town {}", townId);
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to generate structured platform data for town {}: {}", townId, e.getMessage());
+        }
+    }
+    
+    /**
+     * Generate structured town info for the response packet.
+     */
+    private void generateStructuredTownInfo(net.minecraft.server.level.ServerLevel level, UUID townId, TownPlatformDataResponsePacket response) {
+        try {
+            // Use platform service to get TownManager
+            ITownManagerService townManagerService = PlatformServices.getTownManagerService();
+            if (townManagerService == null) {
+                LOGGER.debug("TownManagerService not available for town info generation");
+                return;
+            }
+            
+            // Get the town object
+            Object townObject = townManagerService.getTown(level, townId);
+            if (townObject == null) {
+                LOGGER.debug("Town {} not found for town info generation", townId);
+                return;
+            }
+            
+            // Get town data provider
+            if (!(townObject instanceof com.quackers29.businesscraft.api.ITownDataProvider)) {
+                LOGGER.debug("Town {} does not implement ITownDataProvider", townId);
+                return;
+            }
+            
+            com.quackers29.businesscraft.api.ITownDataProvider townData = 
+                (com.quackers29.businesscraft.api.ITownDataProvider) townObject;
+            
+            // Extract town information
+            String townName = townData.getTownName();
+            int population = townData.getPopulation();
+            int touristCount = townData.getTouristCount();
+            int boundaryRadius = 50; // Default boundary radius - TODO: get from town configuration
+            
+            // Set town info in the response packet
+            response.setTownInfo(townName, population, touristCount, boundaryRadius);
+            
+            LOGGER.debug("Generated town info for {}: population={}, tourists={}, boundary={}", 
+                        townName, population, touristCount, boundaryRadius);
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to generate structured town info for town {}: {}", townId, e.getMessage());
+        }
+    }
+    
+    /**
      * Update client-side town platform UI with structured data packet.
      * This method handles sophisticated map modal updates with structured PlatformInfo data.
      */
-    @Override
     public boolean updateTownPlatformUIStructured(Object player, int x, int y, int z, Object packet) {
         try {
             // Cast to the structured packet type
@@ -1223,16 +1312,9 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                 Map<UUID, com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket.PlatformInfo> platforms = structuredPacket.getPlatforms();
                 com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket.TownInfo townInfo = structuredPacket.getTownInfo();
                 
-                // Convert PlatformInfo to the format expected by the sophisticated map
-                Map<UUID, Object> platformObjects = new HashMap<>();
-                for (Map.Entry<UUID, com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket.PlatformInfo> entry : platforms.entrySet()) {
-                    // The sophisticated map expects PlatformInfo objects with BlockPos startPos and endPos
-                    // We need to convert from int[] coordinates to BlockPos objects
-                    platformObjects.put(entry.getKey(), convertPlatformInfoForMap(entry.getValue()));
-                }
-                
-                // Update the modal
-                mapModal.refreshPlatformData(townId, platformObjects);
+                // The PlatformInfo class now has all the fields that TownMapModal expects
+                // Pass the structured data directly to the sophisticated map
+                mapModal.refreshPlatformData(townId, platforms);
                 if (townInfo != null) {
                     mapModal.refreshTownData(townId, townInfo);
                 }
@@ -1249,27 +1331,5 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                 x, y, z, e.getMessage());
             return false;
         }
-    }
-    
-    /**
-     * Convert PlatformInfo with int[] coordinates to format expected by sophisticated map.
-     * This creates a compatible object with BlockPos startPos and endPos fields.
-     */
-    private Object convertPlatformInfoForMap(com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket.PlatformInfo platformInfo) {
-        // Create BlockPos objects from int[] coordinates
-        net.minecraft.core.BlockPos startPos = new net.minecraft.core.BlockPos(
-            platformInfo.startPos[0], platformInfo.startPos[1], platformInfo.startPos[2]);
-        net.minecraft.core.BlockPos endPos = new net.minecraft.core.BlockPos(
-            platformInfo.endPos[0], platformInfo.endPos[1], platformInfo.endPos[2]);
-        
-        // Return an object that matches the structure expected by the main branch TownMapModal
-        return new Object() {
-            public final UUID id = platformInfo.id;
-            public final String name = platformInfo.name;
-            public final boolean enabled = platformInfo.enabled;
-            public final net.minecraft.core.BlockPos startPos = startPos;
-            public final net.minecraft.core.BlockPos endPos = endPos;
-            public final Set<UUID> enabledDestinations = platformInfo.enabledDestinations;
-        };
     }
 }
