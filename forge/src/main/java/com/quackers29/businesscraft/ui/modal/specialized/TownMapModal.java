@@ -757,12 +757,18 @@ public class TownMapModal extends Screen {
             int endScreenX = startScreenX; // Default to same position if no destination found
             int endScreenY = startScreenY;
             
-            // Look up destination town coordinates if destinationTownId is available
-            if (platform.destinationTownId != null && allTowns != null) {
-                TownMapDataResponsePacket.TownMapInfo destinationTown = allTowns.get(platform.destinationTownId);
-                if (destinationTown != null) {
-                    endScreenX = worldToScreenX(destinationTown.x);
-                    endScreenY = worldToScreenZ(destinationTown.z);
+            // Use platform's actual endPos coordinates for path drawing
+            if (platform.endPos != null && platform.endPos.length >= 3) {
+                endScreenX = worldToScreenX(platform.endPos[0]);
+                endScreenY = worldToScreenZ(platform.endPos[2]); // Use Z coordinate for map Y
+            } else {
+                // Fallback: look up destination town coordinates if destinationTownId is available
+                if (platform.destinationTownId != null && allTowns != null) {
+                    TownMapDataResponsePacket.TownMapInfo destinationTown = allTowns.get(platform.destinationTownId);
+                    if (destinationTown != null) {
+                        endScreenX = worldToScreenX(destinationTown.x);
+                        endScreenY = worldToScreenZ(destinationTown.z);
+                    }
                 }
             }
             
@@ -1446,6 +1452,9 @@ public class TownMapModal extends Screen {
             
             // Update the selected town with fresh data from TownInfo
             // Note: TownInfo doesn't have population/touristCount, so keep existing values
+            LOGGER.warn("TOWNINFO CLIENT DEBUG: Updating selectedTown with center coordinates ({},{},{})", 
+                       townInfo.centerX, townInfo.centerY, townInfo.centerZ);
+            
             selectedTown = new TownMapDataResponsePacket.TownMapInfo(
                 selectedTown.townId,
                 townInfo.name,

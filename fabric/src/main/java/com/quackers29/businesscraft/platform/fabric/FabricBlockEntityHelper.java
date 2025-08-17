@@ -55,4 +55,23 @@ public class FabricBlockEntityHelper implements BlockEntityHelper {
         // TODO: Implement when Fabric platform is actively developed
         return false;
     }
+    
+    // TODO: Add proper @Override annotations when all interface methods are implemented
+    public boolean processPlatformDataRequest(Object player, int x, int y, int z, 
+                                            boolean includePlatformConnections, 
+                                            boolean includeDestinationTowns, 
+                                            int maxRadius) {
+        // Delegate to the overloaded method with null targetTownId
+        return processPlatformDataRequest(player, x, y, z, includePlatformConnections, 
+                                        includeDestinationTowns, maxRadius, null);
+    }
+    
+    public boolean processPlatformDataRequest(Object player, int x, int y, int z, 
+                                            boolean includePlatformConnections, 
+                                            boolean includeDestinationTowns, 
+                                            int maxRadius, String targetTownId) {
+        // Placeholder implementation for Fabric platform
+        // TODO: Implement when Fabric platform is actively developed
+        return false;
+    }
 }

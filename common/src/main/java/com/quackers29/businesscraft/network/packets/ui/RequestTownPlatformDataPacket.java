@@ -101,8 +101,9 @@ public class RequestTownPlatformDataPacket extends BaseBlockEntityPacket {
         
         try {
             // Use platform services to handle the platform data request
+            // Use the overloaded method that accepts targetTownId for UUID-based lookups
             boolean success = PlatformServices.getBlockEntityHelper().processPlatformDataRequest(
-                player, x, y, z, includePlatformConnections, includeDestinationTowns, maxRadius);
+                player, x, y, z, includePlatformConnections, includeDestinationTowns, maxRadius, targetTownId);
             
             if (success) {
                 LOGGER.debug("Successfully processed platform data request at [{}, {}, {}]", x, y, z);

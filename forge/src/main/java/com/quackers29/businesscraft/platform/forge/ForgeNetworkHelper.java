@@ -40,7 +40,8 @@ public class ForgeNetworkHelper implements NetworkHelper {
     }
     
     @Override
-    public <T> void registerClientToServerPacket(Class<T> messageClass, 
+    public <T> void registerClientToServerPacket(String packetId,
+                                                Class<T> messageClass, 
                                                 PacketEncoder<T> encoder,
                                                 PacketDecoder<T> decoder, 
                                                 PacketHandler<T> handler) {
@@ -64,10 +65,11 @@ public class ForgeNetworkHelper implements NetworkHelper {
     }
     
     @Override
-    public <T> void registerServerToClientPacket(Class<T> messageClass,
+    public <T> void registerServerToClientPacket(String packetId,
+                                                Class<T> messageClass,
                                                 PacketEncoder<T> encoder,
                                                 PacketDecoder<T> decoder,
-                                                PacketHandler<T> handler) {
+                                                ClientPacketHandler<T> handler) {
         int id = nextId.getAndIncrement();
         packetIds.put(messageClass, id);
         
@@ -76,10 +78,7 @@ public class ForgeNetworkHelper implements NetworkHelper {
             decoder::decode,
             (packet, ctx) -> {
                 ctx.get().enqueueWork(() -> {
-                    Player player = net.minecraft.client.Minecraft.getInstance().player;
-                    if (player != null) {
-                        handler.handle(packet, player);
-                    }
+                    handler.handle(packet);
                 });
                 ctx.get().setPacketHandled(true);
             },
@@ -88,17 +87,18 @@ public class ForgeNetworkHelper implements NetworkHelper {
     }
     
     @Override
-    public void sendToServer(Object packet) {
+    public <T> void sendToServer(T packet) {
         channel.sendToServer(packet);
     }
     
     @Override
-    public void sendToClient(Object packet, ServerPlayer player) {
-        channel.send(PacketDistributor.PLAYER.with(() -> player), packet);
+    public <T> void sendToClient(T packet, Object player) {
+        ServerPlayer serverPlayer = (ServerPlayer) player;
+        channel.send(PacketDistributor.PLAYER.with(() -> serverPlayer), packet);
     }
     
     @Override
-    public void sendToAllClients(Object packet) {
+    public <T> void sendToAllClients(T packet) {
         channel.send(PacketDistributor.ALL.noArg(), packet);
     }
     

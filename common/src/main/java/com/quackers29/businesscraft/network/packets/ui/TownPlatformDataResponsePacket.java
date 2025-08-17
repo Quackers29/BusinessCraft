@@ -71,6 +71,10 @@ public class TownPlatformDataResponsePacket extends BaseBlockEntityPacket {
         this.townInfo = new TownInfo(name, population, touristCount, boundaryRadius);
     }
     
+    public void setTownInfo(String name, int population, int touristCount, int boundaryRadius, int centerX, int centerY, int centerZ) {
+        this.townInfo = new TownInfo(name, population, touristCount, boundaryRadius, centerX, centerY, centerZ);
+    }
+    
     /**
      * Get the town ID this data is for
      */
@@ -115,7 +119,11 @@ public class TownPlatformDataResponsePacket extends BaseBlockEntityPacket {
             int population = PlatformServices.getNetworkHelper().readInt(buffer);
             int touristCount = PlatformServices.getNetworkHelper().readInt(buffer);
             int boundaryRadius = PlatformServices.getNetworkHelper().readInt(buffer);
-            packet.setTownInfo(townName, population, touristCount, boundaryRadius);
+            // Read center coordinates for boundary rendering
+            int centerX = PlatformServices.getNetworkHelper().readInt(buffer);
+            int centerY = PlatformServices.getNetworkHelper().readInt(buffer);
+            int centerZ = PlatformServices.getNetworkHelper().readInt(buffer);
+            packet.setTownInfo(townName, population, touristCount, boundaryRadius, centerX, centerY, centerZ);
         }
         
         // Read platforms
@@ -162,6 +170,10 @@ public class TownPlatformDataResponsePacket extends BaseBlockEntityPacket {
             PlatformServices.getNetworkHelper().writeInt(buffer, townInfo.population);
             PlatformServices.getNetworkHelper().writeInt(buffer, townInfo.touristCount);
             PlatformServices.getNetworkHelper().writeInt(buffer, townInfo.boundaryRadius);
+            // Write center coordinates for boundary rendering
+            PlatformServices.getNetworkHelper().writeInt(buffer, townInfo.centerX);
+            PlatformServices.getNetworkHelper().writeInt(buffer, townInfo.centerY);
+            PlatformServices.getNetworkHelper().writeInt(buffer, townInfo.centerZ);
         }
         
         // Write platforms
@@ -188,43 +200,58 @@ public class TownPlatformDataResponsePacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Processing platform data response (success: {}) for town {} at position [{}, {}, {}]", 
+        LOGGER.warn("CLIENT PACKET HANDLER: Processing platform data response (success: {}) for town {} at position [{}, {}, {}]", 
                     isSuccess, townId, x, y, z);
         
         if (!isSuccess) {
-            LOGGER.warn("Received failed platform data response at [{}, {}, {}]", x, y, z);
+            LOGGER.warn("CLIENT PACKET HANDLER: Received failed platform data response at [{}, {}, {}]", x, y, z);
             return;
         }
         
         try {
+            LOGGER.warn("CLIENT PACKET HANDLER: Received structured platform data - {} platforms, townInfo: {}", 
+                       platforms.size(), townInfo != null ? townInfo.name : "null");
+            
+            // Debug each platform
+            if (!platforms.isEmpty()) {
+                for (PlatformInfo platform : platforms.values()) {
+                    LOGGER.warn("CLIENT PACKET HANDLER: Platform {} - ID: {}, enabled: {}, startPos: [{},{},{}], endPos: [{},{},{}]",
+                               platform.name, platform.id, platform.enabled, 
+                               platform.startPos[0], platform.startPos[1], platform.startPos[2],
+                               platform.endPos[0], platform.endPos[1], platform.endPos[2]);
+                }
+            }
+            
             // Update ClientTownMapCache with the received structured data
             ClientTownMapCache cache = ClientTownMapCache.getInstance();
             
             // Store town data if available
             if (townInfo != null) {
                 // Add town to cache with structured data
-                LOGGER.debug("Caching town data for {}: {} platforms, boundary radius {}", 
+                LOGGER.warn("CLIENT PACKET HANDLER: Caching town data for {}: {} platforms, boundary radius {}", 
                            townInfo.name, platforms.size(), townInfo.boundaryRadius);
             }
             
             // Store platform data
             if (!platforms.isEmpty()) {
-                LOGGER.debug("Caching {} platforms for town {}", platforms.size(), townId);
+                LOGGER.warn("CLIENT PACKET HANDLER: Caching {} platforms for town {}", platforms.size(), townId);
                 cache.updateTownPlatforms(townId, platforms);
             }
             
             // Update the map UI through platform services with structured data
+            LOGGER.warn("CLIENT PACKET HANDLER: Attempting to update platform UI through BlockEntityHelper...");
             boolean success = PlatformServices.getBlockEntityHelper().updateTownPlatformUIStructured(
                 player, x, y, z, this);
             
             if (success) {
-                LOGGER.debug("Successfully updated platform UI with structured data at [{}, {}, {}]", x, y, z);
+                LOGGER.warn("CLIENT PACKET HANDLER: Successfully updated platform UI with structured data at [{}, {}, {}]", x, y, z);
             } else {
-                LOGGER.warn("Failed to update platform UI at [{}, {}, {}]", x, y, z);
+                LOGGER.warn("CLIENT PACKET HANDLER: Failed to update platform UI at [{}, {}, {}] - TownMapModal not open?", x, y, z);
             }
         } catch (Exception e) {
-            LOGGER.error("Exception while processing platform data response at [{}, {}, {}]: {}", 
+            LOGGER.error("CLIENT PACKET HANDLER: Exception while processing platform data response at [{}, {}, {}]: {}", 
                         x, y, z, e.getMessage());
+            e.printStackTrace();
         }
     }
     

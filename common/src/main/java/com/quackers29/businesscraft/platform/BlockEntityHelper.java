@@ -505,6 +505,25 @@ public interface BlockEntityHelper {
                                      int maxRadius);
     
     /**
+     * Process platform data request with target town ID (UUID-based lookup).
+     * Platform implementations handle server-side platform data generation for specific towns.
+     * 
+     * @param player Platform-specific player object
+     * @param x Block X coordinate (may be placeholder for UUID-based requests)
+     * @param y Block Y coordinate (may be placeholder for UUID-based requests)
+     * @param z Block Z coordinate (may be placeholder for UUID-based requests)
+     * @param includePlatformConnections Include platform layout and connections
+     * @param includeDestinationTowns Include destination town information
+     * @param maxRadius Maximum search radius for connected towns
+     * @param targetTownId Target town UUID as string (null for coordinate-based lookup)
+     * @return True if platform data request was successfully processed
+     */
+    boolean processPlatformDataRequest(Object player, int x, int y, int z, 
+                                     boolean includePlatformConnections, 
+                                     boolean includeDestinationTowns, 
+                                     int maxRadius, String targetTownId);
+    
+    /**
      * Update client-side town platform UI with received data.
      * Platform implementations handle client-side sophisticated map modal updates.
      * 

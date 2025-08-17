@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.lang.reflect.Method;
+import java.util.HashSet;
 
 /**
  * Forge implementation of the BlockEntityHelper interface using the capability system.
@@ -338,16 +340,81 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
     
     // @Override
     public @Nullable int[] getTownPosition(Object town) {
-        // TODO: Implement town position retrieval
-        LOGGER.warn("getTownPosition not yet implemented for Forge");
-        return null;
+        try {
+            if (!(town instanceof ITownDataProvider)) {
+                LOGGER.warn("getTownPosition called with non-ITownDataProvider: {}", town.getClass());
+                return null;
+            }
+            
+            ITownDataProvider townData = (ITownDataProvider) town;
+            ITownDataProvider.Position position = townData.getPosition();
+            
+            if (position == null) {
+                LOGGER.warn("Town position is null for town: {}", townData.getTownName());
+                return null;
+            }
+            
+            return new int[]{position.getX(), position.getY(), position.getZ()};
+            
+        } catch (Exception e) {
+            LOGGER.error("Exception in getTownPosition: {}", e.getMessage());
+            return null;
+        }
     }
     
     // @Override
     public @Nullable Object getTownById(Object player, String townId) {
-        // TODO: Implement town lookup by ID
-        LOGGER.warn("getTownById not yet implemented for Forge");
-        return null;
+        try {
+            if (!(player instanceof ServerPlayer)) {
+                LOGGER.warn("getTownById called with non-ServerPlayer: {}", player.getClass());
+                return null;
+            }
+            
+            ServerPlayer serverPlayer = (ServerPlayer) player;
+            ServerLevel level = serverPlayer.serverLevel();
+            
+            // Get TownManagerService using platform services
+            ITownManagerService townManagerService = PlatformServices.getTownManagerService();
+            if (townManagerService == null) {
+                LOGGER.warn("TownManagerService not available for getTownById");
+                return null;
+            }
+            
+            // Convert string to UUID
+            UUID townUUID;
+            try {
+                townUUID = UUID.fromString(townId);
+            } catch (IllegalArgumentException e) {
+                LOGGER.warn("Invalid town ID format in getTownById: {}", townId);
+                return null;
+            }
+            
+            // Get all towns and find the matching one
+            try {
+                Map<UUID, Object> allTowns = townManagerService.getAllTowns(level);
+                
+                if (allTowns != null) {
+                    Object town = allTowns.get(townUUID);
+                    if (town != null) {
+                        LOGGER.debug("Found town by ID {}: {}", townId, town.getClass().getSimpleName());
+                        return town;
+                    } else {
+                        LOGGER.debug("Town not found by ID: {}", townId);
+                        return null;
+                    }
+                } else {
+                    LOGGER.warn("getAllTowns returned null");
+                    return null;
+                }
+            } catch (Exception e) {
+                LOGGER.error("Failed to access getAllTowns method: {}", e.getMessage());
+                return null;
+            }
+            
+        } catch (Exception e) {
+            LOGGER.error("Exception in getTownById for {}: {}", townId, e.getMessage());
+            return null;
+        }
     }
     
     // @Override
@@ -948,21 +1015,68 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                                             boolean includePlatformConnections, 
                                             boolean includeDestinationTowns, 
                                             int maxRadius) {
+        // Delegate to the overloaded method with null targetTownId for coordinate-based lookup
+        return processPlatformDataRequest(player, x, y, z, includePlatformConnections, 
+                                        includeDestinationTowns, maxRadius, null);
+    }
+    
+    /**
+     * Process platform data request with target town ID (UUID-based lookup).
+     * This method handles UUID-based town lookups and uses the actual town coordinates.
+     */
+    public boolean processPlatformDataRequest(Object player, int x, int y, int z, 
+                                            boolean includePlatformConnections, 
+                                            boolean includeDestinationTowns, 
+                                            int maxRadius, String targetTownId) {
         try {
             ServerPlayer serverPlayer = (ServerPlayer) player;
             ServerLevel level = serverPlayer.serverLevel();
-            BlockPos pos = new BlockPos(x, y, z);
             
-            // Get town ID for this position to create structured data
-            UUID townId = findTownIdByPosition(x, y, z);
-            if (townId == null) {
-                LOGGER.warn("Could not find town at position ({}, {}, {}) for platform data request", x, y, z);
-                return false;
+            UUID townId;
+            int actualX = x, actualY = y, actualZ = z;
+            
+            // Handle UUID-based lookup if targetTownId is provided
+            if (targetTownId != null && !targetTownId.isEmpty()) {
+                LOGGER.debug("Processing UUID-based platform data request for town ID: {}", targetTownId);
+                
+                // Convert string to UUID
+                try {
+                    townId = UUID.fromString(targetTownId);
+                } catch (IllegalArgumentException e) {
+                    LOGGER.warn("Invalid town ID format: {}", targetTownId);
+                    return false;
+                }
+                
+                // Get town by UUID using existing method
+                Object town = getTownById(player, targetTownId);
+                if (town == null) {
+                    LOGGER.warn("Could not find town with ID {} for platform data request", targetTownId);
+                    return false;
+                }
+                
+                // Get actual town coordinates
+                int[] townPosition = getTownPosition(town);
+                if (townPosition != null) {
+                    actualX = townPosition[0];
+                    actualY = townPosition[1];
+                    actualZ = townPosition[2];
+                    LOGGER.debug("Found town {} at actual position ({}, {}, {})", targetTownId, actualX, actualY, actualZ);
+                } else {
+                    LOGGER.warn("Could not get position for town {}, using default coordinates", targetTownId);
+                }
+                
+            } else {
+                // Coordinate-based lookup (original behavior)
+                townId = findTownIdByPosition(x, y, z);
+                if (townId == null) {
+                    LOGGER.warn("Could not find town at position ({}, {}, {}) for platform data request", x, y, z);
+                    return false;
+                }
             }
             
-            // Create structured response packet 
+            // Create structured response packet with actual coordinates
             TownPlatformDataResponsePacket response = 
-                new TownPlatformDataResponsePacket(x, y, z, townId, maxRadius);
+                new TownPlatformDataResponsePacket(actualX, actualY, actualZ, townId, maxRadius);
             
             // Add platform data if requested
             if (includePlatformConnections) {
@@ -977,11 +1091,21 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             }
             
             // Send packet using platform services
-            PlatformServices.getNetworkHelper().sendToClient(response, serverPlayer);
+            LOGGER.warn("SERVER PLATFORM DATA SEND: Sending TownPlatformDataResponsePacket to client - townId: {}, platforms: {}, townInfo: {}", 
+                       response.getTownId(), response.getPlatforms().size(), response.getTownInfo() != null ? response.getTownInfo().name : "null");
+            
+            try {
+                PlatformServices.getNetworkHelper().sendToClient(response, serverPlayer);
+                LOGGER.warn("SERVER PLATFORM DATA SEND: Successfully sent TownPlatformDataResponsePacket to client");
+            } catch (Exception e) {
+                LOGGER.error("SERVER PLATFORM DATA SEND: Failed to send TownPlatformDataResponsePacket to client: {}", e.getMessage());
+                e.printStackTrace();
+                return false;
+            }
             
             return true;
         } catch (Exception e) {
-            LOGGER.error("Failed to process platform data request at ({}, {}, {}): {}", x, y, z, e.getMessage());
+            LOGGER.error("Failed to process platform data request (UUID-based) for town {}: {}", targetTownId, e.getMessage());
             return false;
         }
     }
@@ -1229,10 +1353,68 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             com.quackers29.businesscraft.api.ITownDataProvider townData = 
                 (com.quackers29.businesscraft.api.ITownDataProvider) townObject;
             
-            // For now, this is a placeholder - the current Enhanced MultiLoader implementation
-            // may not have the platform system fully integrated yet
-            // TODO: Extract actual platform data from the town's platform system
-            LOGGER.debug("Platform data generation placeholder for town {}", townId);
+            // Get the town's position to find the TownInterfaceEntity
+            ITownDataProvider.Position townPos = townData.getPosition();
+            if (townPos == null) {
+                LOGGER.debug("Town {} has no position data", townId);
+                return;
+            }
+            
+            // Find the TownInterfaceEntity at the town's position
+            BlockPos townBlockPos = new BlockPos(townPos.getX(), townPos.getY(), townPos.getZ());
+            net.minecraft.world.level.block.entity.BlockEntity blockEntity = level.getBlockEntity(townBlockPos);
+            
+            if (!(blockEntity instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity)) {
+                LOGGER.debug("No TownInterfaceEntity found at town {} position {}", townId, townBlockPos);
+                return;
+            }
+            
+            com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface = 
+                (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) blockEntity;
+            
+            // Get the platforms from the TownInterfaceEntity
+            List<com.quackers29.businesscraft.platform.Platform> platforms = townInterface.getPlatforms();
+            
+            if (platforms == null || platforms.isEmpty()) {
+                LOGGER.debug("Town {} has no platforms created yet", townId);
+                return;
+            }
+            
+            LOGGER.debug("Found {} platforms for town {}", platforms.size(), townId);
+            
+            // Convert platforms to structured data
+            for (com.quackers29.businesscraft.platform.Platform platform : platforms) {
+                try {
+                    UUID platformId = platform.getId();
+                    String platformName = platform.getName() != null ? platform.getName() : "Platform " + platformId.toString().substring(0, 8);
+                    boolean enabled = platform.isEnabled();
+                    
+                    // Get platform path coordinates
+                    BlockPos startPos = platform.getStartPos();
+                    BlockPos endPos = platform.getEndPos();
+                    
+                    if (startPos == null || endPos == null) {
+                        LOGGER.debug("Platform {} has no path set (startPos={}, endPos={})", platformId, startPos, endPos);
+                        continue;
+                    }
+                    
+                    // Convert BlockPos to int arrays for Enhanced MultiLoader compatibility
+                    int[] startCoords = new int[]{startPos.getX(), startPos.getY(), startPos.getZ()};
+                    int[] endCoords = new int[]{endPos.getX(), endPos.getY(), endPos.getZ()};
+                    
+                    // Get enabled destinations (platform system should track these)
+                    Set<UUID> enabledDestinations = new HashSet<>(); // TODO: Get actual destinations from platform
+                    
+                    // Add platform to response packet
+                    response.addPlatform(platformId, platformName, enabled, startCoords, endCoords, enabledDestinations);
+                    
+                    LOGGER.debug("Added platform {} '{}' with path from {} to {}", 
+                               platformId, platformName, startPos, endPos);
+                    
+                } catch (Exception e) {
+                    LOGGER.error("Failed to process platform {}: {}", platform.getId(), e.getMessage());
+                }
+            }
             
         } catch (Exception e) {
             LOGGER.error("Failed to generate structured platform data for town {}: {}", townId, e.getMessage());
@@ -1271,13 +1453,27 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             String townName = townData.getTownName();
             int population = townData.getPopulation();
             int touristCount = townData.getTouristCount();
-            int boundaryRadius = 50; // Default boundary radius - TODO: get from town configuration
             
-            // Set town info in the response packet
-            response.setTownInfo(townName, population, touristCount, boundaryRadius);
+            // Get actual boundary radius from town (matches main branch behavior)
+            int boundaryRadius = 10; // Default fallback
+            if (townObject instanceof com.quackers29.businesscraft.town.Town) {
+                boundaryRadius = ((com.quackers29.businesscraft.town.Town) townObject).getBoundaryRadius();
+            }
             
-            LOGGER.debug("Generated town info for {}: population={}, tourists={}, boundary={}", 
-                        townName, population, touristCount, boundaryRadius);
+            // Get town center coordinates
+            BlockPos townPos = getTownPosition(townData);
+            if (townPos != null) {
+                int[] townPosition = new int[]{townPos.getX(), townPos.getY(), townPos.getZ()};
+                // Set town info with actual center coordinates
+                response.setTownInfo(townName, population, touristCount, boundaryRadius, 
+                                   townPosition[0], townPosition[1], townPosition[2]);
+                LOGGER.warn("TOWNINFO COORD DEBUG: Generated town info for {} at center ({},{},{}): population={}, tourists={}, boundary={} (calculated from town)", 
+                           townName, townPosition[0], townPosition[1], townPosition[2], population, touristCount, boundaryRadius);
+            } else {
+                // Fallback to original method without coordinates (will use defaults)
+                response.setTownInfo(townName, population, touristCount, boundaryRadius);
+                LOGGER.warn("Could not get town center for {}, using default coordinates", townName);
+            }
             
         } catch (Exception e) {
             LOGGER.error("Failed to generate structured town info for town {}: {}", townId, e.getMessage());
@@ -1290,20 +1486,30 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
      */
     public boolean updateTownPlatformUIStructured(Object player, int x, int y, int z, Object packet) {
         try {
+            LOGGER.warn("FORGE BLOCK ENTITY HELPER: updateTownPlatformUIStructured called at ({}, {}, {})", x, y, z);
+            
             // Cast to the structured packet type
             if (!(packet instanceof com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket)) {
-                LOGGER.warn("Invalid packet type for structured platform UI update: {}", packet.getClass());
+                LOGGER.warn("FORGE BLOCK ENTITY HELPER: Invalid packet type for structured platform UI update: {}", packet.getClass());
                 return false;
             }
             
             com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket structuredPacket = 
                 (com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket) packet;
             
+            LOGGER.warn("FORGE BLOCK ENTITY HELPER: Structured packet received - townId: {}, platforms: {}", 
+                       structuredPacket.getTownId(), structuredPacket.getPlatforms().size());
+            
             // Get town map modal from current screen
             Minecraft mc = Minecraft.getInstance();
             Screen currentScreen = mc.screen;
             
+            LOGGER.warn("FORGE BLOCK ENTITY HELPER: Current screen type: {}", 
+                       currentScreen != null ? currentScreen.getClass().getSimpleName() : "null");
+            
             if (currentScreen instanceof com.quackers29.businesscraft.ui.modal.specialized.TownMapModal) {
+                LOGGER.warn("FORGE BLOCK ENTITY HELPER: TownMapModal detected! Updating with platform data...");
+                
                 com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal = 
                     (com.quackers29.businesscraft.ui.modal.specialized.TownMapModal) currentScreen;
                 
@@ -1312,23 +1518,29 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                 Map<UUID, com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket.PlatformInfo> platforms = structuredPacket.getPlatforms();
                 com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket.TownInfo townInfo = structuredPacket.getTownInfo();
                 
+                LOGGER.warn("FORGE BLOCK ENTITY HELPER: Calling mapModal.refreshPlatformData with {} platforms for town {}", 
+                           platforms.size(), townId);
+                
                 // The PlatformInfo class now has all the fields that TownMapModal expects
                 // Pass the structured data directly to the sophisticated map
                 mapModal.refreshPlatformData(townId, platforms);
                 if (townInfo != null) {
+                    LOGGER.warn("FORGE BLOCK ENTITY HELPER: Calling mapModal.refreshTownData with townInfo: {}", townInfo.name);
                     mapModal.refreshTownData(townId, townInfo);
                 }
                 
-                LOGGER.debug("Updated sophisticated map with structured data: {} platforms for town {} at ({}, {}, {})", 
+                LOGGER.warn("FORGE BLOCK ENTITY HELPER: Successfully updated sophisticated map with structured data: {} platforms for town {} at ({}, {}, {})", 
                     platforms.size(), townId, x, y, z);
                 return true;
             } else {
-                LOGGER.debug("Town map modal not currently open, structured update skipped");
+                LOGGER.warn("FORGE BLOCK ENTITY HELPER: Town map modal not currently open, structured update skipped. Current screen: {}", 
+                           currentScreen != null ? currentScreen.getClass().getSimpleName() : "null");
                 return false;
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to update platform UI with structured data at ({}, {}, {}): {}", 
+            LOGGER.error("FORGE BLOCK ENTITY HELPER: Failed to update platform UI with structured data at ({}, {}, {}): {}", 
                 x, y, z, e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
