@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.util.PositionConverter;
 import com.quackers29.businesscraft.town.service.TownBusinessLogic;
+import com.quackers29.businesscraft.town.data.TownPaymentBoard;
+import com.quackers29.businesscraft.town.data.RewardSource;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -404,13 +406,16 @@ public class VisitorProcessingHelper {
             List<net.minecraft.world.item.ItemStack> rewardItems = new ArrayList<>();
             rewardItems.add(new net.minecraft.world.item.ItemStack(Items.EMERALD, payment));
             
-            // TODO: Payment board system needs to be implemented in common Town class
-            // UUID rewardId = town.getPaymentBoard().addReward(
-            //     RewardSource.TOURIST_PAYMENT,
-            //     rewardItems,
-            //     "ALL"
-            // );
-            UUID rewardId = null; // Placeholder
+            TownPaymentBoard paymentBoard = (TownPaymentBoard) town.getPaymentBoard();
+            UUID rewardId = null;
+            
+            if (paymentBoard != null) {
+                rewardId = paymentBoard.addReward(
+                    RewardSource.TOURIST_PAYMENT,
+                    rewardItems,
+                    "ALL"
+                );
+            }
             
             if (rewardId != null) {
                 DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, 
@@ -453,20 +458,21 @@ public class VisitorProcessingHelper {
                 rewardItems.addAll(milestoneResult.rewards);
             }
             
-            // TODO: Payment board system needs to be implemented in common Town class
-            // Create the bundled reward entry
-            // UUID rewardId = town.getPaymentBoard().addReward(
-            //     RewardSource.TOURIST_ARRIVAL,
-            //     rewardItems,
-            //     "ALL"
-            // );
-            UUID rewardId = null; // Placeholder
+            // Create the bundled reward entry using real payment board
+            TownPaymentBoard paymentBoard = (TownPaymentBoard) town.getPaymentBoard();
+            UUID rewardId = null;
             
-            // TODO: Payment board system needs to be implemented in common Town class
-            /*
+            if (paymentBoard != null) {
+                rewardId = paymentBoard.addReward(
+                    RewardSource.TOURIST_ARRIVAL,
+                    rewardItems,
+                    "ALL"
+                );
+            }
+            
             if (rewardId != null) {
                 // Add metadata about the origin town and reward breakdown
-                town.getPaymentBoard().getRewardById(rewardId).ifPresent(rewardEntry -> {
+                paymentBoard.getRewardById(rewardId).ifPresent(rewardEntry -> {
                     rewardEntry.addMetadata("originTown", originTownName);
                     rewardEntry.addMetadata("touristCount", String.valueOf(touristCount));
                     if (payment > 0) {
@@ -487,7 +493,6 @@ public class VisitorProcessingHelper {
             } else {
                 LOGGER.warn("Failed to create bundled tourist reward entry for town '{}'", town.getName());
             }
-            */
             
         } catch (Exception e) {
             LOGGER.error("Failed to create bundled tourist reward for town '{}': {}", town.getName(), e.getMessage());
