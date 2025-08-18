@@ -13,6 +13,8 @@ import com.quackers29.businesscraft.network.packets.misc.PaymentResultPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
+import com.quackers29.businesscraft.town.data.TownPaymentBoard;
+import com.quackers29.businesscraft.town.data.RewardEntry;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -710,28 +712,27 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             return new ArrayList<>();
         }
         
-        // Get unclaimed rewards from the town's payment board data
-        // For Enhanced MultiLoader compatibility, we'll use the existing payment board data system
-        Map<String, Object> paymentBoardData = town.getPaymentBoardData();
+        // Get unclaimed rewards from the town's real TownPaymentBoard system
+        // Use the Enhanced MultiLoader platform service bridge to access the payment board
+        TownPaymentBoard paymentBoard = (TownPaymentBoard) town.getPaymentBoard();
         List<Object> rewards = new ArrayList<>();
         
-        // Check if there are any rewards stored in the payment board data
-        if (paymentBoardData.containsKey("unclaimedRewards")) {
-            Object rewardsData = paymentBoardData.get("unclaimedRewards");
-            if (rewardsData instanceof List) {
-                rewards = new ArrayList<>((List<?>) rewardsData);
-            }
-        }
-        
-        // If no stored rewards, create some dummy reward entries for testing
-        // This ensures the Payment Board UI can display something when tourist payments are generated
-        if (rewards.isEmpty()) {
-            // Create temporary reward entries based on town resources
-            // This is a simplified implementation for Enhanced MultiLoader compatibility
-            rewards.add("Tourist Payment: 5 Emeralds (Generated from tourist visits)");
-            rewards.add("Distance Milestone: 1 Bread, 2 Bottles o' Enchanting");
+        if (paymentBoard != null) {
+            // Get all unclaimed rewards from the sophisticated payment board system
+            List<RewardEntry> unclaimedRewards = paymentBoard.getUnclaimedRewards();
             
-            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Created {} temporary reward entries for testing", rewards.size());
+            // Convert RewardEntry objects to the format expected by the UI
+            for (RewardEntry entry : unclaimedRewards) {
+                rewards.add(entry);
+            }
+            
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
+                "Retrieved {} unclaimed rewards from TownPaymentBoard for town {}", 
+                unclaimedRewards.size(), town.getName());
+        } else {
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
+                "No TownPaymentBoard available for town {} at {}", 
+                town.getName(), townEntity.getBlockPos());
         }
         
         DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Retrieved {} unclaimed rewards for town {} at {}", 
@@ -769,92 +770,98 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                 return false;
             }
             
-            // Use reflection to get the town (Enhanced MultiLoader compatibility)
+            // Get the town through TownManager service (Enhanced MultiLoader)
             net.minecraft.server.level.ServerLevel serverLevel = (net.minecraft.server.level.ServerLevel) townEntity.getLevel();
-            java.lang.reflect.Method getTownMethod = townManagerService.getClass().getMethod("getTown", Object.class, UUID.class);
-            Object town = getTownMethod.invoke(townManagerService, serverLevel, townId);
+            ITownManagerService townManagerServiceTyped = (ITownManagerService) townManagerService;
+            Town town = (Town) townManagerServiceTyped.getTown(serverLevel, townId);
             
             if (town == null) {
                 LOGGER.debug("No town found for ID: {}", townId);
                 return false;
             }
             
-            // Get the payment board data from the town
-            java.lang.reflect.Method getPaymentBoardDataMethod = town.getClass().getMethod("getPaymentBoardData");
-            Object paymentBoardData = getPaymentBoardDataMethod.invoke(town);
-            
-            if (paymentBoardData == null) {
-                LOGGER.debug("Town has no payment board data");
+            // Get the real TownPaymentBoard from the town
+            TownPaymentBoard paymentBoard = (TownPaymentBoard) town.getPaymentBoard();
+            if (paymentBoard == null) {
+                LOGGER.debug("Town has no payment board");
                 return false;
             }
             
-            // For now, simulate successful claiming since payment board implementation is simplified
-            // In the main branch, this would call actual paymentBoard.claimReward method
-            // TODO: Implement full payment board claiming system with actual reward removal
+            // Use the real payment board claiming system
             java.util.UUID rewardUUID = java.util.UUID.fromString(rewardId);
-            LOGGER.debug("Simulating claim of reward {} for player {} (toBuffer: {})", rewardUUID, serverPlayer.getName().getString(), toBuffer);
-            Object claimResult = true; // Simulate successful claim
+            LOGGER.debug("Claiming reward {} for player {} (toBuffer: {})", rewardUUID, serverPlayer.getName().getString(), toBuffer);
+            
+            // Claim the reward using the sophisticated TownPaymentBoard system
+            TownPaymentBoard.ClaimResult claimResult = paymentBoard.claimReward(rewardUUID, "ALL", toBuffer);
             
             if (claimResult == null) {
                 LOGGER.debug("No claim result returned");
                 return false;
             }
             
-            // Check if the claim was successful (simplified approach)
-            boolean success = (Boolean) claimResult; // Since we set claimResult = true
+            // Check if the claim was successful using the real ClaimResult
+            boolean success = claimResult.isSuccess();
             
             if (success) {
-                // For simplified implementation, create sample reward items and give them to player
-                // TODO: Get actual claimed items from payment board system
+                // Get actual claimed items from the payment board system
+                java.util.List<net.minecraft.world.item.ItemStack> claimedItems = claimResult.getClaimedItems();
                 
-                // Create reward items (1 bread, 2 bottles o' enchanting)
-                java.util.List<net.minecraft.world.item.ItemStack> claimedItems = new java.util.ArrayList<>();
-                claimedItems.add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD, 1));
-                claimedItems.add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.EXPERIENCE_BOTTLE, 2));
-                
-                // Always try to give items to player first, regardless of toBuffer preference
-                boolean inventoryFull = false;
-                for (net.minecraft.world.item.ItemStack stack : claimedItems) {
-                    if (!serverPlayer.getInventory().add(stack)) {
-                        // Inventory full - for simplified implementation, notify player
-                        // TODO: Add buffer storage through town interface entity
-                        LOGGER.debug("Player inventory full, would add to buffer: {} x{}", stack.getItem(), stack.getCount());
-                        inventoryFull = true;
-                    } else {
-                        LOGGER.debug("Added {} x{} to player {}'s inventory", stack.getCount(), stack.getItem(), serverPlayer.getName().getString());
+                if (!toBuffer) {
+                    // Try to give items to player inventory first
+                    boolean inventoryFull = false;
+                    for (net.minecraft.world.item.ItemStack stack : claimedItems) {
+                        if (!serverPlayer.getInventory().add(stack.copy())) {
+                            // Inventory full - need to handle overflow
+                            LOGGER.debug("Player inventory full for item: {} x{}", stack.getItem(), stack.getCount());
+                            inventoryFull = true;
+                            break;
+                        } else {
+                            LOGGER.debug("Added {} x{} to player {}'s inventory", stack.getCount(), stack.getItem(), serverPlayer.getName().getString());
+                        }
                     }
-                }
-                
-                if (inventoryFull) {
-                    // Notify town interface entity that buffer has changed
+                    
+                    if (inventoryFull) {
+                        // For inventory full case, re-claim to buffer
+                        claimResult = paymentBoard.claimReward(rewardUUID, "ALL", true);
+                        if (claimResult != null && claimResult.isSuccess()) {
+                            townEntity.onTownBufferChanged();
+                            serverPlayer.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                                "§e" + claimResult.getMessage() + " (Items sent to buffer due to full inventory)"));
+                        }
+                    }
+                } else {
+                    // Items were claimed directly to buffer
                     townEntity.onTownBufferChanged();
-                    serverPlayer.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                        "Some items were sent to buffer storage due to full inventory"));
                 }
                 
-                // Mark town as dirty for saving through Enhanced MultiLoader
-                java.lang.reflect.Method markDirtyMethod = town.getClass().getMethod("markDirty");
-                markDirtyMethod.invoke(town);
+                // Mark town as dirty for saving
+                town.markDirty();
                 
                 // Notify town interface entity that buffer has changed
                 townEntity.onTownBufferChanged();
                 
-                // Send updated payment board data to client (simplified implementation)
-                // TODO: Get actual unclaimed rewards from payment board system
-                java.util.List<Object> rewards = new java.util.ArrayList<>(); // Simplified - empty after claiming
+                // Send updated payment board data to client using real payment board system
+                java.util.List<Object> rewards = new java.util.ArrayList<>();
+                
+                // Get all unclaimed rewards after the claim operation (reuse existing paymentBoard variable)
+                List<RewardEntry> unclaimedRewards = paymentBoard.getUnclaimedRewards();
+                for (RewardEntry entry : unclaimedRewards) {
+                    rewards.add(entry);
+                }
+                
                 com.quackers29.businesscraft.platform.PlatformServices.getNetworkHelper()
                     .sendPaymentBoardResponsePacket(serverPlayer, rewards);
                 
-                // Send success message to player (simplified implementation)
-                String message = "Successfully claimed reward! Check your inventory.";
+                // Send success message to player using real claim result
+                String message = claimResult.getMessage();
                 serverPlayer.sendSystemMessage(net.minecraft.network.chat.Component.literal("§a" + message));
                 
                 LOGGER.debug("Successfully claimed reward {} for player {}", rewardId, serverPlayer.getName().getString());
                 return true;
                 
             } else {
-                // Send failure message to player (simplified implementation)
-                String message = "Failed to claim reward. Please try again.";
+                // Send failure message to player using real claim result
+                String message = claimResult.getMessage();
                 serverPlayer.sendSystemMessage(net.minecraft.network.chat.Component.literal("§c" + message));
                 
                 LOGGER.debug("Failed to claim reward {} for player {}: {}", 
