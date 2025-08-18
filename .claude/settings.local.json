@@ -29,7 +29,8 @@
       "Bash(javap:*)",
       "Bash(GRADLE_USER_HOME=/tmp/gradle_temp ./gradlew --no-daemon :forge:compileJava)",
       "Bash(git ls-tree:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": []
   }

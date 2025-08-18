@@ -47,7 +47,7 @@ import com.quackers29.businesscraft.network.packets.storage.TradeResourcePacket;
 // TODO: Migrate remaining storage packets to common module
 import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket; // ✅ MIGRATED
 import com.quackers29.businesscraft.network.packets.storage.CommunalStorageResponsePacket; // ✅ MIGRATED
-// import com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket;
+import com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket;
 import com.quackers29.businesscraft.network.packets.storage.PaymentBoardRequestPacket;
 import com.quackers29.businesscraft.network.packets.storage.PaymentBoardClaimPacket;
 // TODO: Migrate remaining buffer and personal storage packets to common module  
@@ -311,12 +311,16 @@ public class ModMessages {
                 })
                 .add();
                 
-        // TODO: Migrate PaymentBoardResponsePacket to common module
-        // net.messageBuilder(PaymentBoardResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-        //         .decoder(PaymentBoardResponsePacket::decode)
-        //         .encoder(PaymentBoardResponsePacket::encode)
-        //         .consumerMainThread(PaymentBoardResponsePacket::handle)
-        //         .add();
+        net.messageBuilder(PaymentBoardResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(PaymentBoardResponsePacket::decode)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handleClient();
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
+                .add();
                 
         net.messageBuilder(PaymentBoardRequestPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PaymentBoardRequestPacket::decode)

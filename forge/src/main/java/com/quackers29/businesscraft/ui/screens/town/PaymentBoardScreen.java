@@ -302,8 +302,9 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     }
     
     private void updatePaymentBoardData() {
-        // Get current rewards from the menu
-        List<RewardEntry> rewards = this.menu.getUnclaimedRewards();
+        // Get current rewards from cached data (updated by network packets)
+        // Use cachedRewards if available, fallback to menu if needed
+        List<RewardEntry> rewards = !cachedRewards.isEmpty() ? cachedRewards : this.menu.getUnclaimedRewards();
         
         // Only update if the rewards have changed
         if (!rewards.equals(currentRewards)) {
@@ -840,7 +841,6 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
         
         // Trigger a UI update
         updatePaymentBoardData();
-        
     }
     
 }

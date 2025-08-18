@@ -363,22 +363,88 @@ Priority: HIGH - Fix discovered UI issues and verify core gameplay systems
     - [x] Restore platform path marking system and position selection from main branch ✅
     - [x] Test complete platform creation workflow from UI to data persistence ✅
 
-  - [ ] **CRITICAL ISSUE 3**: Resource Management - Restore main branch trading and payment board functionality ⚠️ **MAJOR ISSUE**  
+  - [ ] **CRITICAL ISSUE 3**: Resource Management - Restore main branch trading and payment board functionality ⚠️ **PARTIALLY RESOLVED**  
     **Problem**: Resource tab functionality partially broken - trading doesn't add resources, payment board missing
     **Main Branch Reference**: Resource management fully functional in main branch with working trade and payment systems
     **Root Cause**: Resource management functionality lost during Enhanced MultiLoader Template migration
     **Priority**: CRITICAL - Core economic functionality broken
-    **Specific Issues**:
-    - [ ] **3a**: Trade button works but trading to the town does not add resources to town - restore main branch resource addition
-    - [ ] **3b**: Payment Board button on resource tab does nothing, no UI - restore main branch payment board system
-    **Tasks**:
-    - [ ] Investigate trade processing and resource addition to match main branch behavior
-    - [ ] Fix town resource storage to properly receive traded items like main branch
-    - [ ] Restore Payment Board UI system to match main branch implementation
-    - [ ] Investigate PaymentBoardMenu and PaymentBoardScreen initialization from main branch
-    - [ ] Verify PaymentBoardPacket registration and network handling matches main branch
-    - [ ] Test payment board data synchronization and display like main branch
-    - [ ] Ensure payment board opens correctly from Town Interface Screen navigation like main branch
+    **Resolution Progress**:
+    - [x] **3a**: Trade button works but trading to the town does not add resources to town ✅ **RESOLVED**
+      - ✅ **Root Cause Identified**: `processResourceTrade` method in ForgeBlockEntityHelper was not implemented (just TODO with warning)
+      - ✅ **Main Branch Analysis**: Examined TradeResourcePacket.java implementation with complete trading logic including emerald payment calculation
+      - ✅ **Implementation Completed**: Added complete `processResourceTrade` method in ForgeBlockEntityHelper with town resource addition and emerald payment system
+      - ✅ **User Testing**: Confirmed resource trading now works - items are added to town resources and emerald payments work correctly
+      - ✅ **Payment Result System**: Also implemented missing `sendPaymentResultPacket` method in ForgeNetworkHelper for trade confirmations
+    - [x] **3b**: Payment Board button basic claiming functionality ✅ **BASIC WORKING - NEEDS FULL SYSTEM RESTORATION**
+      - ✅ **Payment Board UI Opening**: Implemented missing `openPaymentBoardUI` method in ForgeBlockEntityHelper 
+      - ✅ **UI Display System**: Fixed Payment Board UI to show rewards correctly
+      - ✅ **Network Communication**: Implemented PaymentBoardResponsePacket for Enhanced MultiLoader compatibility
+      - ✅ **Basic Claim Implementation**: Fixed all reflection errors, players now receive sample items (1 Bread + 2 Bottles o' Enchanting)
+      - ⚠️ **MAJOR LIMITATION**: Current implementation is simplified mock-up with sample items, not real Payment Board system
+      
+    **🚨 CRITICAL FINDING**: Current Payment Board is simplified placeholder vs sophisticated main branch system
+    **📋 FULL PAYMENT BOARD SYSTEM RESTORATION REQUIRED** (NEW TASK):
+    - [ ] **Phase 1: Core Infrastructure Migration** ⚠️ **HIGH PRIORITY**
+      - [ ] Move `TownPaymentBoard` class from forge module to common module for Enhanced MultiLoader compatibility
+      - [ ] Move `RewardEntry`, `RewardSource`, `ClaimStatus` to common module (already done ✅)
+      - [ ] Create platform-agnostic `SlotBasedStorage` system for 2x9 buffer inventory
+      - [ ] Update Town class to use real TownPaymentBoard instead of simple paymentBoardData Map
+      
+    - [ ] **Phase 2: Real Reward System Implementation**  
+      - [ ] Implement tourist arrival reward creation using `RewardSource.TOURIST_ARRIVAL`
+      - [ ] Implement distance milestone reward creation using `RewardSource.MILESTONE`
+      - [ ] Replace sample reward generation with actual reward processing from town business logic
+      - [ ] Add reward expiration system (7 days default, 30 day cleanup)
+      
+    - [ ] **Phase 3: Advanced Features Restoration**
+      - [ ] Restore reward filtering by source type (Milestones, Tourist Payments, etc.)
+      - [ ] Restore reward sorting by timestamp with proper metadata display
+      - [ ] Add reward statistics (unclaimed/claimed/expired counts)
+      - [ ] Implement proper eligibility checking ("ALL" vs player-specific)
+      
+    - [ ] **Phase 4: Buffer Storage System**  
+      - [ ] Implement 2x9 slot-based buffer storage for overflow items
+      - [ ] Add buffer ↔ player inventory interaction
+      - [ ] Restore hopper automation for buffer storage
+      - [ ] Migrate legacy Map-based buffer to slot-based system
+      
+    - [ ] **Phase 5: UI Enhancement and Integration**
+      - [ ] Update PaymentBoardScreen to show real reward metadata (time, source icons, descriptions)
+      - [ ] Add reward status indicators (UNCLAIMED/CLAIMED/EXPIRED)
+      - [ ] Implement bulk claim operations ("Claim All" functionality)
+      - [ ] Add reward search/filtering UI
+      
+    **📊 MAIN BRANCH PAYMENT BOARD FEATURES ANALYSIS**:
+    
+    **✅ Core System Features Found**:
+    - **TownPaymentBoard**: 370-line sophisticated reward management system
+    - **RewardEntry**: Complete reward tracking with UUID, timestamps, expiration, source tracking, metadata
+    - **RewardSource enum**: 7 reward types (MILESTONE, TOURIST_PAYMENT, TRADE, etc.) with icons and names
+    - **ClaimStatus enum**: UNCLAIMED/CLAIMED/EXPIRED status tracking
+    - **SlotBasedStorage**: 2x9 slot inventory system with NBT serialization
+    - **ClaimResult**: Sophisticated claim response with success/failure, messages, returned items
+    - **PaymentBoardStats**: Statistics tracking (unclaimed/claimed/expired counts)
+    
+    **🔧 Advanced Features**:
+    - **Reward Expiration**: 7-day default expiration, 30-day cleanup system
+    - **Legacy Migration**: Automatic migration from old Map-based buffer to slot-based
+    - **Metadata System**: Source-specific data storage for reward tracking
+    - **Smart Claiming**: Attempts inventory first, falls back to buffer storage
+    - **Eligibility System**: "ALL" rewards vs player-specific rewards
+    - **Reward Cleanup**: Automatic expired reward removal with size limits (100 max rewards)
+    - **NBT Persistence**: Complete save/load system with backwards compatibility
+    
+    **❌ Current Implementation Missing Features**:
+    - Real reward generation from tourist arrivals and distance milestones
+    - Reward expiration and cleanup system
+    - Buffer storage system (2x9 slots)
+    - Reward source tracking and metadata
+    - Proper reward status management
+    - Statistics and bulk operations
+    - Legacy data migration
+    
+    **📈 Implementation Effort**: ~40 hours for full Payment Board system restoration
+    **🎯 Priority**: HIGH - Core economic system functionality missing
   - [ ] **Complete UI System Audit**: Test all UI screens and modals for functionality
     - [ ] Test all tabs in Town Interface Screen (Overview, Platforms, Storage, Trade, etc.)
     - [ ] Verify all modal dialogs open and function correctly

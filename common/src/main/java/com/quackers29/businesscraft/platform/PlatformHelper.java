@@ -148,4 +148,21 @@ public interface PlatformHelper {
      * @return Platform-specific BlockPos object
      */
     Object createBlockPos(int x, int y, int z);
+    
+    /**
+     * Get the current client-side screen if available.
+     * Platform implementations return the current Minecraft screen.
+     * 
+     * @return Platform-specific Screen object or null if no screen is open
+     */
+    Object getCurrentScreen();
+    
+    /**
+     * Update payment board screen with new reward data.
+     * Platform implementations update the payment board UI if it's currently open.
+     * 
+     * @param screen Platform-specific PaymentBoardScreen object
+     * @param rewards List of reward data to display
+     */
+    void updatePaymentBoardScreen(Object screen, java.util.List<Object> rewards);
 }

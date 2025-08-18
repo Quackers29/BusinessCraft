@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import com.quackers29.businesscraft.network.ModMessages;
+import com.quackers29.businesscraft.network.packets.misc.PaymentResultPacket;
 
 /**
  * Forge implementation of the NetworkHelper interface using SimpleChannel.
@@ -204,13 +206,45 @@ public class ForgeNetworkHelper implements NetworkHelper {
     }
     
     public void sendPaymentResultPacket(Object player, Object paymentItemStack) {
-        // TODO: Implement specialized payment result packet sending
-        LOGGER.warn("sendPaymentResultPacket not yet implemented for Forge");
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            LOGGER.warn("FORGE NETWORK HELPER: Player is not a ServerPlayer: {}", 
+                player != null ? player.getClass().getSimpleName() : "null");
+            return;
+        }
+        
+        if (paymentItemStack == null) {
+            LOGGER.warn("FORGE NETWORK HELPER: PaymentItemStack is null");
+            return;
+        }
+        
+        // Create and send the payment result packet
+        PaymentResultPacket packet = new PaymentResultPacket(paymentItemStack);
+        ModMessages.sendToPlayer(packet, serverPlayer);
+        
+        LOGGER.debug("Sent PaymentResultPacket to player {}: {}", 
+            serverPlayer.getName().getString(), paymentItemStack);
     }
     
     public void sendPaymentBoardResponsePacket(Object player, List<Object> unclaimedRewards) {
-        // TODO: Implement specialized payment board response packet sending
-        LOGGER.warn("sendPaymentBoardResponsePacket not yet implemented for Forge");
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            LOGGER.warn("FORGE NETWORK HELPER: Player is not a ServerPlayer: {}", 
+                player != null ? player.getClass().getSimpleName() : "null");
+            return;
+        }
+        
+        if (unclaimedRewards == null) {
+            LOGGER.warn("FORGE NETWORK HELPER: Unclaimed rewards list is null");
+            return;
+        }
+        
+        // Create and send the payment board response packet
+        com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket packet = 
+            new com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket(unclaimedRewards);
+        
+        ModMessages.sendToPlayer(packet, serverPlayer);
+        
+        LOGGER.debug("Sent PaymentBoardResponsePacket to player {}: {} rewards", 
+            serverPlayer.getName().getString(), unclaimedRewards.size());
     }
     
     public void sendBufferSlotStorageResponsePacket(Object player, Object bufferSlots) {
