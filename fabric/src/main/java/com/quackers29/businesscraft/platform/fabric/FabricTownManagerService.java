@@ -161,4 +161,11 @@ public class FabricTownManagerService implements ITownManagerService {
         TownManager.get(serverLevel).clearAllTowns();
         return count;
     }
+
+    @Override
+    public Object getPaymentBoard(Object town) {
+        // For now, return null - Fabric payment board implementation would go here
+        // when Fabric feature parity is implemented
+        return null;
+    }
 }

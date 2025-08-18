@@ -533,6 +533,18 @@ public class Town implements ITownDataProvider {
         markDirty();
     }
     
+    /**
+     * Get payment board for this town using platform services.
+     * This is implemented by platform modules to provide access to the sophisticated payment board system.
+     * 
+     * @return Platform-specific payment board object, or null if not supported
+     */
+    public Object getPaymentBoard() {
+        // This is implemented by platform modules through dependency injection or extension
+        // Common module cannot directly instantiate platform-specific classes
+        return PlatformServices.getTownManagerService().getPaymentBoard(this);
+    }
+    
     // ================================
     // Data Persistence Support
     // ================================

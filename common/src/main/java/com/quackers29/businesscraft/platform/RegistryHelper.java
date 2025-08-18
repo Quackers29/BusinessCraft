@@ -100,4 +100,5 @@ public interface RegistryHelper {
      * @return Array of all item resource location strings
      */
     String[] getAllItemIds();
+    
 }

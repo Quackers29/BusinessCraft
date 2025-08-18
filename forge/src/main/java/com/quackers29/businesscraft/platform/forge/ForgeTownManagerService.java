@@ -4,6 +4,7 @@ import com.quackers29.businesscraft.platform.ITownManagerService;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
+import com.quackers29.businesscraft.town.data.TownPaymentBoard;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
@@ -11,6 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Forge implementation of ITownManagerService.
@@ -19,12 +21,23 @@ import java.util.UUID;
  * Enhanced MultiLoader approach: Direct integration with common business logic.
  */
 public class ForgeTownManagerService implements ITownManagerService {
+    
+    // Map to store TownPaymentBoard instances for each town
+    // This bridges the common Town class with forge-specific TownPaymentBoard
+    private static final Map<UUID, TownPaymentBoard> townPaymentBoards = new ConcurrentHashMap<>();
 
     @Override
     public UUID registerTown(Object level, Object pos, String name) {
         ServerLevel serverLevel = (ServerLevel) level;
         BlockPos blockPos = (BlockPos) pos;
         Town createdTown = TownManager.get(serverLevel).createTown(blockPos.getX(), blockPos.getY(), blockPos.getZ(), name);
+        
+        if (createdTown != null) {
+            // Create a TownPaymentBoard for this town
+            TownPaymentBoard paymentBoard = new TownPaymentBoard();
+            townPaymentBoards.put(createdTown.getId(), paymentBoard);
+        }
+        
         return createdTown != null ? createdTown.getId() : null;
     }
 
@@ -85,6 +98,9 @@ public class ForgeTownManagerService implements ITownManagerService {
     public void removeTown(Object level, UUID id) {
         ServerLevel serverLevel = (ServerLevel) level;
         TownManager.get(serverLevel).removeTown(id);
+        
+        // Clean up the payment board for this town
+        townPaymentBoards.remove(id);
     }
 
     @Override
@@ -110,6 +126,26 @@ public class ForgeTownManagerService implements ITownManagerService {
         ServerLevel serverLevel = (ServerLevel) level;
         int count = TownManager.get(serverLevel).getAllTowns().size();
         TownManager.get(serverLevel).clearAllTowns();
+        
+        // Clear all payment boards
+        townPaymentBoards.clear();
+        
         return count;
+    }
+
+    @Override
+    public Object getPaymentBoard(Object town) {
+        if (town instanceof Town) {
+            Town commonTown = (Town) town;
+            UUID townId = commonTown.getId();
+            
+            // Get or create payment board for this town
+            TownPaymentBoard paymentBoard = townPaymentBoards.computeIfAbsent(townId, 
+                id -> new TownPaymentBoard());
+            
+            return paymentBoard;
+        }
+        
+        return null;
     }
 }

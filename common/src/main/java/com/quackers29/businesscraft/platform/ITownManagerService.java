@@ -99,4 +99,11 @@ public interface ITownManagerService {
      * @return Number of towns removed
      */
     int clearAllTowns(Object level);
+    
+    /**
+     * Get the payment board for a town.
+     * @param town The town object (platform-specific)
+     * @return The payment board object, or null if not supported
+     */
+    Object getPaymentBoard(Object town);
 }
