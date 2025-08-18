@@ -28,11 +28,38 @@ Record everything in a .claude/tasks/[TASK_ID]/onboarding.md file. This file wil
 3. The plan should have a list of todo items that you can check off as you complete them.
 4. Before you begin working, check in with me and I will verify the plan. Use the 'Notify User' command to notify me prior to any input to get my attention (including when you complete).
 5. Then, begin working on the todo items, keep on marking them off as you go in the file so I can track progress.
-6. Finally, if you have noticed you have move onto your next task, move the previously completed task to the bottom of the done.md file, using similar style to whats already in the end of that file.
+6. **Client Testing Protocol**: If any testing requires user interaction with the Minecraft client (UI testing, gameplay verification, save/reload cycles, etc.), notify me to conduct the testing instead of attempting automated testing.
+7. Finally, if you have noticed you have move onto your next task, move the previously completed task to the bottom of the done.md file, using similar style to whats already in the end of that file.
 
 ## Project Overview
 
 BusinessCraft is a sophisticated Minecraft mod featuring a complete town management and tourism economy system. The codebase is production-ready with advanced architectural patterns and enterprise-grade implementation quality.
+
+## 🚨 **CRITICAL PROJECT CONTEXT**
+
+**CURRENT TASK**: Enhanced MultiLoader Fabric/Forge Implementation (NO NEW FEATURES)
+
+**📋 IMPORTANT LIMITATIONS**:
+- **NO NEW FUNCTIONALITY REQUIRED** - This is a platform compatibility enhancement only
+- **PRESERVE ALL EXISTING FUNCTIONALITY** - Forge implementation must retain 100% of features from main branch
+- **REFERENCE IMPLEMENTATION**: The `main` branch contains the fully functional Forge implementation prior to Enhanced MultiLoader migration
+- **FUNCTIONALITY PRESERVATION MANDATE**: Any features that worked in main branch MUST continue working in this enhanced implementation
+
+**🎯 PROJECT GOALS**:
+1. **Primary Goal**: Add Fabric platform support while maintaining 100% Forge feature parity with main branch
+2. **Secondary Goal**: Improve architecture through Enhanced MultiLoader Template for better maintainability
+3. **Critical Requirement**: Zero functionality regression from main branch implementation
+
+**⚠️ DEVELOPMENT APPROACH**:
+- **When investigating issues**: Always reference main branch implementation as the authoritative source
+- **When functionality is broken**: Compare current implementation against main branch to identify regressions
+- **When implementing fixes**: Restore main branch behavior, then adapt for Enhanced MultiLoader compatibility
+- **When in doubt**: Main branch implementation is always the correct reference for expected behavior
+
+**📖 BRANCH REFERENCE GUIDE**:
+- **`main` branch**: Production-ready Forge implementation (reference for all functionality)
+- **`fabric` branch** (current): Enhanced MultiLoader Template implementation in progress
+- **Goal**: Fabric branch should have identical functionality to main branch + Fabric platform support
 
 ### Multi-Platform Architecture
 

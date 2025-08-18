@@ -114,8 +114,10 @@ public class TownManager {
         Town town = new Town(townId, x, y, z, name);
         towns.put(townId, town);
         
-        // Mark persistence as dirty
+        // Mark persistence as dirty (triggers save through platform abstraction)
         persistence.markDirty();
+        // NOTE: Enhanced MultiLoader requires explicit save vs main branch's automatic save
+        saveTowns(); // Ensure immediate persistence for reliability
         
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER,
             "Created new town: {} at ({}, {}, {}) with ID: {}", name, x, y, z, townId);

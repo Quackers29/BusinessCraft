@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Forge implementation of ITownPersistence interface.
@@ -38,49 +39,82 @@ public class ForgeTownPersistence implements ITownPersistence {
     
     @Override
     public void save(Map<String, Object> townData) {
-        // Convert platform-agnostic format to NBT and save via TownSavedData
-        CompoundTag tag = new CompoundTag();
+        // CRITICAL FIX: Properly save town data to TownSavedData for persistence
+        // Convert platform-agnostic format from common module back to TownSavedData format
         
-        // Convert Map<String, Object> to NBT format
-        // The townData contains serialized town information from common module
-        for (Map.Entry<String, Object> entry : townData.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
+        try {
+            // Clear existing towns in SavedData
+            savedData.getTowns().clear();
             
-            if (value instanceof CompoundTag) {
-                tag.put(key, (CompoundTag) value);
-            } else if (value instanceof String) {
-                tag.putString(key, (String) value);
-            } else if (value instanceof Integer) {
-                tag.putInt(key, (Integer) value);
-            } else if (value instanceof Map) {
+            if (townData.containsKey("towns")) {
                 @SuppressWarnings("unchecked")
-                Map<String, Object> mapValue = (Map<String, Object>) value;
-                CompoundTag subTag = new CompoundTag();
-                saveMapToNbt(mapValue, subTag);
-                tag.put(key, subTag);
+                Map<String, Map<String, Object>> townsData = (Map<String, Map<String, Object>>) townData.get("towns");
+                
+                // Convert each town from platform-agnostic format back to Town objects
+                for (Map.Entry<String, Map<String, Object>> entry : townsData.entrySet()) {
+                    try {
+                        UUID townId = UUID.fromString(entry.getKey());
+                        Map<String, Object> townDataMap = entry.getValue();
+                        
+                        // Create Town from data map (platform-agnostic to common Town)
+                        com.quackers29.businesscraft.town.Town town = 
+                            com.quackers29.businesscraft.town.Town.fromDataMap(townDataMap);
+                        
+                        // Store in TownSavedData for actual persistence
+                        savedData.getTowns().put(townId, town);
+                        
+                    } catch (Exception e) {
+                        LOGGER.error("Failed to save town with ID {}: {}", entry.getKey(), e.getMessage());
+                    }
+                }
+                
+                LOGGER.debug("Saved {} towns to TownSavedData", savedData.getTowns().size());
             }
-            // Add more type conversions as needed
+            
+            // Mark TownSavedData as dirty to trigger NBT save
+            savedData.setDirty();
+            this.isDirty = false;
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to save town data: {}", e.getMessage());
+            e.printStackTrace();
         }
-        
-        // Force TownSavedData to save
-        savedData.setDirty();
-        this.isDirty = false;
-        
-        LOGGER.debug("Saved town data with {} entries", townData.size());
     }
     
     @Override
     public Map<String, Object> load() {
-        // The common TownManager will call this to get the serialized data
-        // For the initial implementation, we start with an empty data structure
-        // and let the common TownManager populate it through save() calls
+        // CRITICAL FIX: Properly restore town data from TownSavedData
+        // This was the root cause of the persistence bug - towns were never restored on world reload
         
         Map<String, Object> result = new HashMap<>();
         
-        // If there are existing towns in the SavedData, we could convert them here
-        // But for now, we'll let the migration happen through normal save operations
-        LOGGER.debug("Loaded town data - {} entries", result.size());
+        try {
+            // Get the towns map directly from TownSavedData
+            Map<UUID, com.quackers29.businesscraft.town.Town> savedTowns = savedData.getTowns();
+            
+            if (!savedTowns.isEmpty()) {
+                // Convert saved towns to the platform-agnostic format expected by common TownManager
+                Map<String, Map<String, Object>> townsData = new HashMap<>();
+                
+                for (Map.Entry<UUID, com.quackers29.businesscraft.town.Town> entry : savedTowns.entrySet()) {
+                    UUID townId = entry.getKey();
+                    com.quackers29.businesscraft.town.Town town = entry.getValue();
+                    
+                    // Convert town to data map (platform-agnostic format)
+                    Map<String, Object> townData = town.toDataMap();
+                    townsData.put(townId.toString(), townData);
+                }
+                
+                result.put("towns", townsData);
+                LOGGER.debug("Loaded town data - {} towns restored from SavedData", savedTowns.size());
+            } else {
+                LOGGER.debug("No existing town data found in SavedData");
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to load town data from SavedData: {}", e.getMessage());
+            e.printStackTrace();
+        }
+        
         return result;
     }
     
