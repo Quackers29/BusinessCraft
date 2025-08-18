@@ -31,7 +31,41 @@ public class TownSavedData extends SavedData {
             townsTag.put(id.toString(), townTag);
         });
         tag.put("towns", townsTag);
+        
+        // Save payment board data
+        savePaymentBoardData(tag);
+        
         return tag;
+    }
+    
+    /**
+     * Save payment board data to NBT
+     */
+    private void savePaymentBoardData(CompoundTag tag) {
+        try {
+            // Access the payment boards from ForgeTownManagerService
+            Map<java.util.UUID, com.quackers29.businesscraft.town.data.TownPaymentBoard> paymentBoards = 
+                com.quackers29.businesscraft.platform.forge.ForgeTownManagerService.getPaymentBoards();
+            
+            if (!paymentBoards.isEmpty()) {
+                CompoundTag paymentBoardsTag = new CompoundTag();
+                
+                for (Map.Entry<java.util.UUID, com.quackers29.businesscraft.town.data.TownPaymentBoard> entry : paymentBoards.entrySet()) {
+                    java.util.UUID townId = entry.getKey();
+                    com.quackers29.businesscraft.town.data.TownPaymentBoard paymentBoard = entry.getValue();
+                    
+                    // Save each payment board's NBT data
+                    CompoundTag boardTag = paymentBoard.toNBT();
+                    paymentBoardsTag.put(townId.toString(), boardTag);
+                }
+                
+                tag.put("paymentBoards", paymentBoardsTag);
+                System.out.println("TownSavedData: Saved " + paymentBoards.size() + " payment boards to NBT");
+            }
+        } catch (Exception e) {
+            System.err.println("TownSavedData: Failed to save payment board data: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     public void loadFromNbt(CompoundTag tag) {
@@ -47,6 +81,43 @@ public class TownSavedData extends SavedData {
                 Town town = Town.fromDataMap(townData);
                 towns.put(id, town);
             });
+        }
+        
+        // Load payment board data
+        loadPaymentBoardData(tag);
+    }
+    
+    /**
+     * Load payment board data from NBT
+     */
+    private void loadPaymentBoardData(CompoundTag tag) {
+        try {
+            if (tag.contains("paymentBoards")) {
+                CompoundTag paymentBoardsTag = tag.getCompound("paymentBoards");
+                
+                for (String key : paymentBoardsTag.getAllKeys()) {
+                    try {
+                        java.util.UUID townId = java.util.UUID.fromString(key);
+                        CompoundTag boardTag = paymentBoardsTag.getCompound(key);
+                        
+                        // Create a new payment board and load its data
+                        com.quackers29.businesscraft.town.data.TownPaymentBoard paymentBoard = 
+                            new com.quackers29.businesscraft.town.data.TownPaymentBoard();
+                        paymentBoard.fromNBT(boardTag);
+                        
+                        // Store in ForgeTownManagerService
+                        com.quackers29.businesscraft.platform.forge.ForgeTownManagerService.setPaymentBoard(townId, paymentBoard);
+                        
+                    } catch (Exception e) {
+                        System.err.println("TownSavedData: Failed to load payment board for town " + key + ": " + e.getMessage());
+                    }
+                }
+                
+                System.out.println("TownSavedData: Loaded " + paymentBoardsTag.getAllKeys().size() + " payment boards from NBT");
+            }
+        } catch (Exception e) {
+            System.err.println("TownSavedData: Failed to load payment board data: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     

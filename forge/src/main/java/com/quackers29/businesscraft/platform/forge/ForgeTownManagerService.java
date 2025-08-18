@@ -148,4 +148,19 @@ public class ForgeTownManagerService implements ITownManagerService {
         
         return null;
     }
+    
+    /**
+     * Get the payment boards map for persistence operations.
+     * This is used by ForgeTownPersistence to save/load payment board data.
+     */
+    public static Map<UUID, TownPaymentBoard> getPaymentBoards() {
+        return townPaymentBoards;
+    }
+    
+    /**
+     * Set a payment board for a specific town (used during loading).
+     */
+    public static void setPaymentBoard(UUID townId, TownPaymentBoard paymentBoard) {
+        townPaymentBoards.put(townId, paymentBoard);
+    }
 }

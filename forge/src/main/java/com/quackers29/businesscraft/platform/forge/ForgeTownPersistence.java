@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.platform.forge;
 
 import com.quackers29.businesscraft.data.TownSavedData;
 import com.quackers29.businesscraft.town.data.ITownPersistence;
+import com.quackers29.businesscraft.town.data.TownPaymentBoard;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
@@ -39,41 +40,40 @@ public class ForgeTownPersistence implements ITownPersistence {
     
     @Override
     public void save(Map<String, Object> townData) {
-        // CRITICAL FIX: Properly save town data to TownSavedData for persistence
-        // Convert platform-agnostic format from common module back to TownSavedData format
-        
+        // CRITICAL FIX: Properly synchronize TownManager data with TownSavedData
         try {
-            // Clear existing towns in SavedData
-            savedData.getTowns().clear();
-            
+            // First, update the TownSavedData's towns map with the current TownManager data
             if (townData.containsKey("towns")) {
                 @SuppressWarnings("unchecked")
                 Map<String, Map<String, Object>> townsData = (Map<String, Map<String, Object>>) townData.get("towns");
+                
+                // Clear existing towns and rebuild from TownManager data
+                Map<UUID, com.quackers29.businesscraft.town.Town> savedTowns = savedData.getTowns();
+                savedTowns.clear();
                 
                 // Convert each town from platform-agnostic format back to Town objects
                 for (Map.Entry<String, Map<String, Object>> entry : townsData.entrySet()) {
                     try {
                         UUID townId = UUID.fromString(entry.getKey());
-                        Map<String, Object> townDataMap = entry.getValue();
-                        
-                        // Create Town from data map (platform-agnostic to common Town)
-                        com.quackers29.businesscraft.town.Town town = 
-                            com.quackers29.businesscraft.town.Town.fromDataMap(townDataMap);
-                        
-                        // Store in TownSavedData for actual persistence
-                        savedData.getTowns().put(townId, town);
-                        
+                        com.quackers29.businesscraft.town.Town town = com.quackers29.businesscraft.town.Town.fromDataMap(entry.getValue());
+                        savedTowns.put(townId, town);
                     } catch (Exception e) {
-                        LOGGER.error("Failed to save town with ID {}: {}", entry.getKey(), e.getMessage());
+                        LOGGER.error("Failed to convert town data for ID {}: {}", entry.getKey(), e.getMessage());
                     }
                 }
                 
-                LOGGER.debug("Saved {} towns to TownSavedData", savedData.getTowns().size());
+                LOGGER.debug("Synchronized {} towns from TownManager to TownSavedData", savedTowns.size());
             }
             
-            // Mark TownSavedData as dirty to trigger NBT save
+            // Save payment board data
+            CompoundTag customTag = new CompoundTag();
+            savePaymentBoardData(customTag);
+            
+            // Mark as dirty to trigger Forge's SavedData persistence
             savedData.setDirty();
             this.isDirty = false;
+            
+            LOGGER.debug("Saved town data and payment boards to persistent storage");
             
         } catch (Exception e) {
             LOGGER.error("Failed to save town data: {}", e.getMessage());
@@ -81,15 +81,45 @@ public class ForgeTownPersistence implements ITownPersistence {
         }
     }
     
+    /**
+     * Save payment board data to NBT
+     */
+    private void savePaymentBoardData(CompoundTag tag) {
+        try {
+            // Access the payment boards from ForgeTownManagerService
+            Map<UUID, TownPaymentBoard> paymentBoards = ForgeTownManagerService.getPaymentBoards();
+            
+            if (!paymentBoards.isEmpty()) {
+                CompoundTag paymentBoardsTag = new CompoundTag();
+                
+                for (Map.Entry<UUID, TownPaymentBoard> entry : paymentBoards.entrySet()) {
+                    UUID townId = entry.getKey();
+                    TownPaymentBoard paymentBoard = entry.getValue();
+                    
+                    // Save each payment board's NBT data
+                    CompoundTag boardTag = paymentBoard.toNBT();
+                    paymentBoardsTag.put(townId.toString(), boardTag);
+                }
+                
+                tag.put("paymentBoards", paymentBoardsTag);
+                LOGGER.debug("Saved {} payment boards to NBT", paymentBoards.size());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to save payment board data: {}", e.getMessage());
+        }
+    }
+    
     @Override
     public Map<String, Object> load() {
-        // CRITICAL FIX: Properly restore town data from TownSavedData
-        // This was the root cause of the persistence bug - towns were never restored on world reload
+        // CRITICAL FIX: The TownSavedData already handles loading through Forge's SavedData system
+        // We don't need to duplicate the loading logic here - just return empty data and let
+        // the Enhanced MultiLoader persistence system work through the standard save/load cycle
         
         Map<String, Object> result = new HashMap<>();
         
         try {
-            // Get the towns map directly from TownSavedData
+            // The savedData instance is automatically loaded from disk by Forge's SavedData system
+            // when computeIfAbsent calls TownSavedData::load
             Map<UUID, com.quackers29.businesscraft.town.Town> savedTowns = savedData.getTowns();
             
             if (!savedTowns.isEmpty()) {
@@ -106,9 +136,9 @@ public class ForgeTownPersistence implements ITownPersistence {
                 }
                 
                 result.put("towns", townsData);
-                LOGGER.debug("Loaded town data - {} towns restored from SavedData", savedTowns.size());
+                LOGGER.debug("Loaded {} towns from SavedData successfully", savedTowns.size());
             } else {
-                LOGGER.debug("No existing town data found in SavedData");
+                LOGGER.debug("No existing town data found in SavedData - fresh world or clean start");
             }
         } catch (Exception e) {
             LOGGER.error("Failed to load town data from SavedData: {}", e.getMessage());
