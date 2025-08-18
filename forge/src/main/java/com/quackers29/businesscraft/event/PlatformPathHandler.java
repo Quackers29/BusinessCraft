@@ -4,8 +4,9 @@ import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.network.ModMessages;
 import com.quackers29.businesscraft.network.packets.platform.RefreshPlatformsPacket;
+import com.quackers29.businesscraft.platform.PlatformServices;
+import com.quackers29.businesscraft.platform.ITownManagerService;
 import com.quackers29.businesscraft.town.Town;
-import com.quackers29.businesscraft.town.TownManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -135,11 +136,23 @@ public class PlatformPathHandler {
             return "No town associated with this block";
         }
         
-        Town town = TownManager.get(serverLevel).getTown(townId);
-        if (town == null) {
+        // Get town through platform services
+        ITownManagerService townManagerService = PlatformServices.getTownManagerService();
+        if (townManagerService == null) {
+            return "Town manager service not available";
+        }
+        
+        Object townObj = townManagerService.getTown(serverLevel, townId);
+        if (townObj == null) {
             return "Town not found";
         }
         
+        // Cast to Town object - this should be safe since we're using the common module Town
+        if (!(townObj instanceof Town)) {
+            return "Invalid town object type";
+        }
+        
+        Town town = (Town) townObj;
         int boundaryRadius = town.getBoundaryRadius();
         double distance = Math.sqrt(pos.distSqr(townInterface.getBlockPos()));
         

@@ -53,7 +53,7 @@ public class DestinationsScreenV2 extends Screen {
     private UIGridBuilder destinationsGrid;
     private List<DestinationEntry> currentDestinations = new ArrayList<>();
     
-    // Screen dimensions
+    // Screen dimensions (matching main branch)
     private int imageWidth = 320;
     private int imageHeight = 200;
     
@@ -345,5 +345,19 @@ public class DestinationsScreenV2 extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false; // Don't pause the game like Payment Board and other BC screens
+    }
+    
+    /**
+     * Static factory method to open the destinations screen
+     */
+    public static void open(BlockPos blockPos, UUID platformId, String platformName, Map<UUID, String> townNames, Map<UUID, Boolean> enabledState, Map<UUID, Integer> townDistances, Map<UUID, String> townDirections) {
+        net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
+        DestinationsScreenV2 screen = new DestinationsScreenV2(blockPos, platformId, platformName, townNames, enabledState, townDistances, townDirections);
+        // Initialize the screen properly before setting it
+        screen.minecraft = minecraft;
+        screen.font = minecraft.font;
+        screen.width = minecraft.getWindow().getGuiScaledWidth();
+        screen.height = minecraft.getWindow().getGuiScaledHeight();
+        minecraft.setScreen(screen);
     }
 }

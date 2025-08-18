@@ -348,8 +348,13 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 - Proper resource cleanup on server stop/level unload
 
 ### Testing and Debugging
-- Use `./gradlew runClient` for development testing
-- F3+K toggles town debug overlay
+- **Client Testing Protocol**: If any testing requires user interaction with the Minecraft client (UI testing, gameplay verification, save/reload cycles, etc.), notify me to conduct the testing instead of attempting automated testing.
+- **User Testing Instructions**: When Claude needs client testing:
+  1. Notify user with specific test instructions 
+  2. User runs: `./gradlew runClient` 
+  3. User performs requested testing and reports results back
+  4. Claude continues based on user feedback
+- F3+K toggles town debug overlay  
 - Debug commands available through `/cleartowns`
 - Comprehensive logging throughout all systems
 

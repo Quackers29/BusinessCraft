@@ -52,8 +52,7 @@ public class SetPlatformPathCreationModePacket {
      * This method contains the core server-side logic which is platform-agnostic.
      */
     public void handle(Object player) {
-        LOGGER.debug("Player is setting platform {} path creation mode to {} at [{}, {}, {}]", 
-                    platformId, mode, x, y, z);
+        System.out.println("SET PLATFORM PATH CREATION MODE PACKET: Player is setting platform " + platformId + " path creation mode to " + mode + " at [" + x + ", " + y + ", " + z + "]");
         
         // Get the town interface block entity through platform services
         Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);

@@ -441,7 +441,7 @@ public class PlatformManagementScreenV2 extends Screen {
     }
     
     private void addPlatform() {
-        ModMessages.sendToServer(new AddPlatformPacket(townBlockPos));
+        ModMessages.sendToServer(new AddPlatformPacket(townBlockPos.getX(), townBlockPos.getY(), townBlockPos.getZ()));
         
         // Immediately refresh the UI (like PaymentBoardScreen does)
         refreshPlatformDataFromServer();
