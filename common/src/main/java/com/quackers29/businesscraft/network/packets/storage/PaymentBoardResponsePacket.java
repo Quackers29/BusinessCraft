@@ -28,15 +28,15 @@ public class PaymentBoardResponsePacket {
      * Uses a static decode method pattern for network deserialization.
      */
     public static PaymentBoardResponsePacket decode(Object buffer) {
-        // For Enhanced MultiLoader Template, we'll receive rewards as a serialized format
-        // The rewards will be handled through platform services for proper deserialization
+        // For Enhanced MultiLoader Template, we'll receive RewardEntry objects directly
+        // This preserves all metadata including UUID, timestamps, and status
         int size = PlatformServices.getNetworkHelper().readInt(buffer);
         List<Object> rewards = new ArrayList<>();
         
         for (int i = 0; i < size; i++) {
-            // Read reward entry data - simplified format for Enhanced MultiLoader compatibility
-            String rewardData = PlatformServices.getNetworkHelper().readString(buffer);
-            rewards.add(rewardData);
+            // Read RewardEntry object directly - preserves all original data
+            Object rewardEntry = PlatformServices.getNetworkHelper().readRewardEntry(buffer);
+            rewards.add(rewardEntry);
         }
         
         return new PaymentBoardResponsePacket(rewards);
@@ -49,9 +49,9 @@ public class PaymentBoardResponsePacket {
         PlatformServices.getNetworkHelper().writeInt(buffer, rewards.size());
         
         for (Object reward : rewards) {
-            // For Enhanced MultiLoader compatibility, serialize rewards as strings
-            String rewardData = reward.toString();
-            PlatformServices.getNetworkHelper().writeString(buffer, rewardData);
+            // For Enhanced MultiLoader compatibility, pass RewardEntry objects directly through packet
+            // This preserves all metadata including UUID, timestamps, and status
+            PlatformServices.getNetworkHelper().writeRewardEntry(buffer, reward);
         }
     }
     

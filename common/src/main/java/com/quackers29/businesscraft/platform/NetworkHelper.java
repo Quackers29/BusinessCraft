@@ -256,4 +256,22 @@ public interface NetworkHelper {
      * @param bufferSlots Buffer storage slot data
      */
     void sendBufferSlotStorageResponsePacket(Object player, Object bufferSlots);
+    
+    /**
+     * Write a RewardEntry to the buffer using platform-specific methods.
+     * Platform implementations handle RewardEntry serialization preserving all metadata.
+     * 
+     * @param buffer Platform-specific buffer object
+     * @param rewardEntry Platform-specific RewardEntry object
+     */
+    void writeRewardEntry(Object buffer, Object rewardEntry);
+    
+    /**
+     * Read a RewardEntry from the buffer using platform-specific methods.
+     * Platform implementations handle RewardEntry deserialization preserving all metadata.
+     * 
+     * @param buffer Platform-specific buffer object
+     * @return Platform-specific RewardEntry object
+     */
+    Object readRewardEntry(Object buffer);
 }

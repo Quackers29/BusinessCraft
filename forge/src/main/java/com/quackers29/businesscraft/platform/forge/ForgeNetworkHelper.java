@@ -267,4 +267,138 @@ public class ForgeNetworkHelper implements NetworkHelper {
     public Integer getPacketId(Class<?> packetClass) {
         return packetIds.get(packetClass);
     }
+    
+    @Override
+    public void writeRewardEntry(Object buffer, Object rewardEntry) {
+        if (!(buffer instanceof FriendlyByteBuf buf)) {
+            throw new IllegalArgumentException("Buffer must be a FriendlyByteBuf for Forge");
+        }
+        
+        if (!(rewardEntry instanceof com.quackers29.businesscraft.town.data.RewardEntry entry)) {
+            throw new IllegalArgumentException("RewardEntry must be a BusinessCraft RewardEntry for Forge");
+        }
+        
+        try {
+            // Serialize all RewardEntry data preserving UUID and metadata
+            buf.writeUUID(entry.getId());
+            buf.writeLong(entry.getTimestamp());
+            buf.writeLong(entry.getExpirationTime());
+            buf.writeEnum(entry.getSource());
+            buf.writeEnum(entry.getStatus());
+            buf.writeUtf(entry.getEligibility());
+            
+            // Serialize items
+            buf.writeInt(entry.getRewards().size());
+            for (net.minecraft.world.item.ItemStack stack : entry.getRewards()) {
+                buf.writeItem(stack);
+            }
+            
+            // Serialize metadata
+            buf.writeInt(entry.getMetadata().size());
+            for (java.util.Map.Entry<String, String> metaEntry : entry.getMetadata().entrySet()) {
+                buf.writeUtf(metaEntry.getKey());
+                buf.writeUtf(metaEntry.getValue());
+            }
+            
+            LOGGER.debug("Serialized RewardEntry: ID={}, source={}, items={}", 
+                entry.getId(), entry.getSource(), entry.getRewards().size());
+                
+        } catch (Exception e) {
+            LOGGER.error("Failed to write RewardEntry to buffer", e);
+            throw new RuntimeException("Failed to serialize RewardEntry", e);
+        }
+    }
+    
+    @Override
+    public Object readRewardEntry(Object buffer) {
+        if (!(buffer instanceof FriendlyByteBuf buf)) {
+            throw new IllegalArgumentException("Buffer must be a FriendlyByteBuf for Forge");
+        }
+        
+        try {
+            // Deserialize all RewardEntry data preserving UUID and metadata
+            java.util.UUID id = buf.readUUID();
+            long timestamp = buf.readLong();
+            long expirationTime = buf.readLong();
+            com.quackers29.businesscraft.town.data.RewardSource source = buf.readEnum(com.quackers29.businesscraft.town.data.RewardSource.class);
+            com.quackers29.businesscraft.town.data.ClaimStatus status = buf.readEnum(com.quackers29.businesscraft.town.data.ClaimStatus.class);
+            String eligibility = buf.readUtf();
+            
+            // Deserialize items
+            int itemCount = buf.readInt();
+            java.util.List<net.minecraft.world.item.ItemStack> items = new java.util.ArrayList<>();
+            for (int i = 0; i < itemCount; i++) {
+                items.add(buf.readItem());
+            }
+            
+            // Deserialize metadata
+            int metaCount = buf.readInt();
+            java.util.Map<String, String> metadata = new java.util.HashMap<>();
+            for (int i = 0; i < metaCount; i++) {
+                String key = buf.readUtf();
+                String value = buf.readUtf();
+                metadata.put(key, value);
+            }
+            
+            // Create a RewardEntry using the private constructor to preserve original data
+            com.quackers29.businesscraft.town.data.RewardEntry entry = createRewardEntryWithOriginalData(
+                id, timestamp, expirationTime, source, items, status, eligibility, metadata);
+            
+            LOGGER.debug("Deserialized RewardEntry: preservedID={}, source={}, items={}, timestamp={}, expiration={}", 
+                entry.getId(), source, items.size(), timestamp, expirationTime);
+            
+            return entry;
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to read RewardEntry from buffer", e);
+            throw new RuntimeException("Failed to deserialize RewardEntry", e);
+        }
+    }
+    
+    /**
+     * Create a RewardEntry using the private constructor to preserve original timestamp and UUID
+     */
+    private com.quackers29.businesscraft.town.data.RewardEntry createRewardEntryWithOriginalData(
+            java.util.UUID id, long timestamp, long expirationTime, 
+            com.quackers29.businesscraft.town.data.RewardSource source,
+            java.util.List<net.minecraft.world.item.ItemStack> items,
+            com.quackers29.businesscraft.town.data.ClaimStatus status,
+            String eligibility, java.util.Map<String, String> metadata) {
+        
+        try {
+            // Get the private constructor
+            java.lang.reflect.Constructor<com.quackers29.businesscraft.town.data.RewardEntry> constructor =
+                com.quackers29.businesscraft.town.data.RewardEntry.class.getDeclaredConstructor(
+                    java.util.UUID.class, long.class, long.class,
+                    com.quackers29.businesscraft.town.data.RewardSource.class,
+                    java.util.List.class,
+                    com.quackers29.businesscraft.town.data.ClaimStatus.class,
+                    String.class, java.util.Map.class
+                );
+            
+            // Make it accessible
+            constructor.setAccessible(true);
+            
+            // Create the instance with original data
+            com.quackers29.businesscraft.town.data.RewardEntry entry = constructor.newInstance(
+                id, timestamp, expirationTime, source, items, status, eligibility, metadata);
+            
+            LOGGER.debug("Successfully created RewardEntry with preserved data using reflection");
+            return entry;
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to create RewardEntry with preserved data, falling back to public constructor", e);
+            
+            // Fallback to public constructor if reflection fails
+            com.quackers29.businesscraft.town.data.RewardEntry entry = 
+                new com.quackers29.businesscraft.town.data.RewardEntry(source, items, eligibility);
+            
+            // Store original data in metadata as backup
+            entry.addMetadata("originalUUID", id.toString());
+            entry.addMetadata("originalTimestamp", String.valueOf(timestamp));
+            entry.addMetadata("originalExpirationTime", String.valueOf(expirationTime));
+            
+            return entry;
+        }
+    }
 }

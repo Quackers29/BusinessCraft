@@ -29,19 +29,32 @@ public class TownPaymentBoard {
      * Add a new reward to the payment board
      */
     public UUID addReward(RewardSource source, List<ItemStack> rewardItems, String eligibility) {
+        return addRewardWithTimestamp(source, rewardItems, eligibility, System.currentTimeMillis());
+    }
+    
+    /**
+     * Add a new reward to the payment board with a specific timestamp
+     */
+    public UUID addRewardWithTimestamp(RewardSource source, List<ItemStack> rewardItems, String eligibility, long timestamp) {
         if (rewardItems == null || rewardItems.isEmpty()) {
             LOGGER.warn("Attempted to add empty reward to payment board");
             return null;
         }
         
-        RewardEntry entry = new RewardEntry(source, rewardItems, eligibility);
-        entry.setExpirationTime(System.currentTimeMillis() + DEFAULT_EXPIRATION_TIME);
+        // Use reflection to create RewardEntry with custom timestamp
+        RewardEntry entry = createRewardEntryWithTimestamp(source, rewardItems, eligibility, timestamp);
+        if (entry == null) {
+            LOGGER.error("Failed to create RewardEntry with custom timestamp");
+            return null;
+        }
+        
+        entry.setExpirationTime(timestamp + DEFAULT_EXPIRATION_TIME);
         
         rewards.add(entry);
         
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
-            "Added reward to payment board: {} from {} with {} items", 
-            entry.getId(), source.getDisplayName(), rewardItems.size());
+            "Added reward to payment board: {} from {} with {} items at timestamp {}", 
+            entry.getId(), source.getDisplayName(), rewardItems.size(), timestamp);
         
         // Clean up old rewards if we have too many
         if (rewards.size() > MAX_REWARDS) {
@@ -368,5 +381,47 @@ public class TownPaymentBoard {
         public long getClaimedCount() { return claimedCount; }
         public long getExpiredCount() { return expiredCount; }
         public long getTotalCount() { return totalCount; }
+    }
+    
+    /**
+     * Create a RewardEntry with a custom timestamp using reflection
+     */
+    private RewardEntry createRewardEntryWithTimestamp(RewardSource source, List<ItemStack> rewardItems, String eligibility, long timestamp) {
+        try {
+            // Get the private constructor
+            java.lang.reflect.Constructor<RewardEntry> constructor =
+                RewardEntry.class.getDeclaredConstructor(
+                    java.util.UUID.class, long.class, long.class,
+                    RewardSource.class,
+                    java.util.List.class,
+                    ClaimStatus.class,
+                    String.class, java.util.Map.class
+                );
+            
+            // Make it accessible
+            constructor.setAccessible(true);
+            
+            // Create the instance with custom timestamp
+            RewardEntry entry = constructor.newInstance(
+                java.util.UUID.randomUUID(), // Generate new UUID
+                timestamp, // Use provided timestamp
+                timestamp + DEFAULT_EXPIRATION_TIME, // Set expiration based on timestamp
+                source,
+                new java.util.ArrayList<>(rewardItems), // Copy items list
+                ClaimStatus.UNCLAIMED,
+                eligibility != null ? eligibility : "ALL",
+                new java.util.HashMap<>() // Empty metadata map
+            );
+            
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
+                "Created RewardEntry with custom timestamp {} using reflection", timestamp);
+            return entry;
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to create RewardEntry with custom timestamp, falling back to public constructor", e);
+            
+            // Fallback to public constructor if reflection fails
+            return new RewardEntry(source, rewardItems, eligibility);
+        }
     }
 }

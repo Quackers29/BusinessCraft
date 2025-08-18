@@ -410,9 +410,13 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
             
             // Column 3: Single Claim button (goes directly to buffer)
             if (reward.canBeClaimed("ALL") && reward.getStatus() == ClaimStatus.UNCLAIMED) {
+                // Extract the original server UUID from metadata for proper claiming
+                String originalUUIDStr = reward.getMetadata().get("originalUUID");
+                UUID claimUUID = originalUUIDStr != null ? UUID.fromString(originalUUIDStr) : reward.getId();
+                
                 paymentBoardGrid.addButtonWithTooltip(i, 3, "Claim", 
                     "Claim to buffer storage", 
-                    (v) -> claimReward(reward.getId(), true), // Always claim to buffer (true)
+                    (v) -> claimReward(claimUUID, true), // Use original server UUID for claims
                     SUCCESS_COLOR);
             } else {
                 // Show status instead of button

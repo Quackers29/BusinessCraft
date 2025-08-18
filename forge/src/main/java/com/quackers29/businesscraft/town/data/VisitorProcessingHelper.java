@@ -253,7 +253,7 @@ public class VisitorProcessingHelper {
                 // Create bundled tourist arrival reward (combines fare + milestone rewards)
                 String originTownName = resolveTownName(serverLevel, record.getOriginTownId());
                 if (payment > 0 || milestoneResult.hasRewards()) {
-                    addBundledTouristReward(thisTown, originTownName, payment, milestoneResult, record.getCount());
+                    addBundledTouristReward(thisTown, originTownName, payment, milestoneResult, record.getCount(), record.getTimestamp());
                     // Trigger callback to update client sync after bundled reward is added
                     if (changeCallback != null) {
                         changeCallback.run();
@@ -439,7 +439,7 @@ public class VisitorProcessingHelper {
     /**
      * Creates a bundled tourist arrival reward combining fare payment and milestone rewards
      */
-    private void addBundledTouristReward(Town town, String originTownName, int payment, DistanceMilestoneHelper.MilestoneResult milestoneResult, int touristCount) {
+    private void addBundledTouristReward(Town town, String originTownName, int payment, DistanceMilestoneHelper.MilestoneResult milestoneResult, int touristCount, long visitTimestamp) {
         DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, 
             "BUNDLED TOURIST REWARD - Creating bundled reward for town {} from {} with {} emeralds and {} milestone items",
             town.getName(), originTownName, payment, milestoneResult.hasRewards() ? milestoneResult.rewards.size() : 0);
@@ -463,10 +463,11 @@ public class VisitorProcessingHelper {
             UUID rewardId = null;
             
             if (paymentBoard != null) {
-                rewardId = paymentBoard.addReward(
+                rewardId = paymentBoard.addRewardWithTimestamp(
                     RewardSource.TOURIST_ARRIVAL,
                     rewardItems,
-                    "ALL"
+                    "ALL",
+                    visitTimestamp
                 );
             }
             

@@ -165,4 +165,13 @@ public interface PlatformHelper {
      * @param rewards List of reward data to display
      */
     void updatePaymentBoardScreen(Object screen, java.util.List<Object> rewards);
+    
+    /**
+     * Serialize a reward entry for network transmission.
+     * Platform implementations handle proper RewardEntry serialization.
+     * 
+     * @param reward Platform-specific RewardEntry object
+     * @return Serialized reward data as string
+     */
+    String serializeRewardEntry(Object reward);
 }

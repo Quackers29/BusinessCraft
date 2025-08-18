@@ -156,16 +156,15 @@ public class ForgePlatformHelper implements PlatformHelper {
                     new java.util.ArrayList<>();
                 
                 for (Object reward : rewards) {
-                    if (reward instanceof String rewardString) {
-                        // Create a RewardEntry from the string data
-                        com.quackers29.businesscraft.town.data.RewardEntry rewardEntry = 
-                            createRewardEntryFromString(rewardString);
-                        if (rewardEntry != null) {
-                            rewardEntries.add(rewardEntry);
-                        }
-                    } else if (reward instanceof com.quackers29.businesscraft.town.data.RewardEntry entry) {
-                        // Already a RewardEntry, add it directly
+                    if (reward instanceof com.quackers29.businesscraft.town.data.RewardEntry entry) {
+                        // RewardEntry objects come directly from PaymentBoardResponsePacket now
+                        // These preserve all original data including UUIDs
                         rewardEntries.add(entry);
+                        LOGGER.debug("Added RewardEntry: ID={}, source={}, items={}", 
+                            entry.getId(), entry.getSource(), entry.getRewards().size());
+                    } else {
+                        LOGGER.warn("Expected RewardEntry but got: {} - {}", 
+                            reward.getClass().getName(), reward);
                     }
                 }
                 
@@ -201,18 +200,25 @@ public class ForgePlatformHelper implements PlatformHelper {
      */
     private com.quackers29.businesscraft.town.data.RewardEntry createRewardEntryFromString(String rewardString) {
         try {
-            // Parse the reward string and create appropriate RewardEntry
-            if (rewardString.contains("Tourist Payment")) {
+            LOGGER.debug("Parsing reward string: {}", rewardString);
+            
+            // Check if this is our structured format
+            if (rewardString.startsWith("REWARD_ENTRY|")) {
+                return parseStructuredRewardEntry(rewardString);
+            }
+            
+            // Legacy fallback parsing for older format or toString() output
+            if (rewardString.contains("Tourist Payment") || rewardString.contains("TOURIST_ARRIVAL")) {
                 // Create tourist payment reward
                 java.util.List<net.minecraft.world.item.ItemStack> items = new java.util.ArrayList<>();
                 items.add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.EMERALD, 5));
                 
                 return new com.quackers29.businesscraft.town.data.RewardEntry(
-                    com.quackers29.businesscraft.town.data.RewardSource.TOURIST_PAYMENT,
+                    com.quackers29.businesscraft.town.data.RewardSource.TOURIST_ARRIVAL,
                     items,
                     "ALL"
                 );
-            } else if (rewardString.contains("Distance Milestone")) {
+            } else if (rewardString.contains("Distance Milestone") || rewardString.contains("MILESTONE")) {
                 // Create milestone reward
                 java.util.List<net.minecraft.world.item.ItemStack> items = new java.util.ArrayList<>();
                 items.add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD, 1));
@@ -228,5 +234,113 @@ public class ForgePlatformHelper implements PlatformHelper {
             LOGGER.warn("Failed to create RewardEntry from string: {}", rewardString, e);
         }
         return null;
+    }
+    
+    /**
+     * Parse structured reward entry format: REWARD_ENTRY|id=...|source=...|status=...|timestamp=...|itemCount=...|item0=...|...
+     */
+    private com.quackers29.businesscraft.town.data.RewardEntry parseStructuredRewardEntry(String rewardString) {
+        try {
+            String[] parts = rewardString.split("\\|");
+            
+            java.util.UUID id = null;
+            com.quackers29.businesscraft.town.data.RewardSource source = null;
+            com.quackers29.businesscraft.town.data.ClaimStatus status = null;
+            long timestamp = System.currentTimeMillis();
+            int itemCount = 0;
+            
+            // Parse metadata
+            for (String part : parts) {
+                if (part.startsWith("id=")) {
+                    id = java.util.UUID.fromString(part.substring(3));
+                } else if (part.startsWith("source=")) {
+                    source = com.quackers29.businesscraft.town.data.RewardSource.valueOf(part.substring(7));
+                } else if (part.startsWith("status=")) {
+                    status = com.quackers29.businesscraft.town.data.ClaimStatus.valueOf(part.substring(7));
+                } else if (part.startsWith("timestamp=")) {
+                    timestamp = Long.parseLong(part.substring(10));
+                } else if (part.startsWith("itemCount=")) {
+                    itemCount = Integer.parseInt(part.substring(10));
+                }
+            }
+            
+            // Parse items
+            java.util.List<net.minecraft.world.item.ItemStack> items = new java.util.ArrayList<>();
+            for (int i = 0; i < itemCount; i++) {
+                String itemKey = "item" + i + "=";
+                for (String part : parts) {
+                    if (part.startsWith(itemKey)) {
+                        String itemData = part.substring(itemKey.length());
+                        String[] itemParts = itemData.split(":");
+                        if (itemParts.length >= 2) {
+                            try {
+                                // Simple item parsing - in real implementation would need proper item registry lookup
+                                net.minecraft.world.item.Item item = net.minecraft.world.item.Items.BREAD; // Fallback
+                                if (itemParts[0].contains("emerald")) item = net.minecraft.world.item.Items.EMERALD;
+                                else if (itemParts[0].contains("gold")) item = net.minecraft.world.item.Items.GOLD_INGOT;
+                                else if (itemParts[0].contains("diamond")) item = net.minecraft.world.item.Items.DIAMOND;
+                                else if (itemParts[0].contains("experience_bottle")) item = net.minecraft.world.item.Items.EXPERIENCE_BOTTLE;
+                                
+                                int count = Integer.parseInt(itemParts[1]);
+                                items.add(new net.minecraft.world.item.ItemStack(item, count));
+                            } catch (Exception e) {
+                                LOGGER.warn("Failed to parse item: {}", itemData, e);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            if (source != null && !items.isEmpty()) {
+                LOGGER.debug("Successfully parsed structured reward entry: id={}, source={}, items={}", 
+                    id, source, items.size());
+                // Use the public constructor to create a new reward entry
+                // Note: This creates a new UUID and timestamp, but preserves the items and source
+                return new com.quackers29.businesscraft.town.data.RewardEntry(source, items, "ALL");
+            } else {
+                LOGGER.warn("Missing required fields in structured reward entry: source={}, items={}", 
+                    source, items.size());
+            }
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to parse structured reward entry: {}", rewardString, e);
+        }
+        return null;
+    }
+    
+    @Override
+    public String serializeRewardEntry(Object reward) {
+        try {
+            if (reward instanceof com.quackers29.businesscraft.town.data.RewardEntry entry) {
+                // Create a structured serialization format that can be reliably parsed
+                StringBuilder sb = new StringBuilder();
+                sb.append("REWARD_ENTRY|");
+                sb.append("id=").append(entry.getId().toString()).append("|");
+                sb.append("source=").append(entry.getSource().name()).append("|");
+                sb.append("status=").append(entry.getStatus().name()).append("|");
+                sb.append("timestamp=").append(entry.getTimestamp()).append("|");
+                sb.append("itemCount=").append(entry.getRewards().size());
+                
+                // Add item serialization
+                for (int i = 0; i < entry.getRewards().size(); i++) {
+                    net.minecraft.world.item.ItemStack stack = entry.getRewards().get(i);
+                    sb.append("|item").append(i).append("=").append(stack.getItem().toString())
+                      .append(":").append(stack.getCount());
+                }
+                
+                String result = sb.toString();
+                LOGGER.debug("Serialized RewardEntry: {}", result);
+                return result;
+            } else {
+                // Fallback to toString for other types
+                String result = reward.toString();
+                LOGGER.debug("Serialized non-RewardEntry object: {}", result);
+                return result;
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error serializing reward entry", e);
+            return reward.toString();
+        }
     }
 }

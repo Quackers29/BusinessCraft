@@ -124,4 +124,12 @@ public class FabricPlatformHelper implements PlatformHelper {
         
         LOGGER.debug("updatePaymentBoardScreen not yet implemented for Fabric - would update {} rewards", rewards.size());
     }
+    
+    @Override
+    public String serializeRewardEntry(Object reward) {
+        // For now, use simple toString serialization
+        // Full implementation would mirror the Forge structured serialization
+        LOGGER.debug("serializeRewardEntry not yet fully implemented for Fabric - using toString()");
+        return reward.toString();
+    }
 }
