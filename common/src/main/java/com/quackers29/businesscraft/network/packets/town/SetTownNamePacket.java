@@ -2,7 +2,6 @@ package com.quackers29.businesscraft.network.packets.town;
 
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

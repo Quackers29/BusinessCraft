@@ -61,9 +61,15 @@ public class SetPlatformDestinationPacket extends BaseBlockEntityPacket {
         LOGGER.debug("Player is setting destination {} to {} for platform {} at [{}, {}, {}]", 
                     townId, enabled, platformId, x, y, z);
         
-        // Get the town interface block entity using unified architecture
-        com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-        if (townInterface == null) {
+        // Get the town interface block entity using platform services
+        Object blockEntity = getBlockEntity(player);
+        if (blockEntity == null) {
+            LOGGER.warn("No block entity found at [{}, {}, {}]", x, y, z);
+            return;
+        }
+
+        Object townDataProvider = getTownDataProvider(blockEntity);
+        if (townDataProvider == null) {
             LOGGER.warn("Block entity not found at [{}, {}, {}]", x, y, z);
             return;
         }
@@ -71,7 +77,7 @@ public class SetPlatformDestinationPacket extends BaseBlockEntityPacket {
         // Set the destination enabled state through platform services
         // Note: Complex platform destination operations still need platform layer for town management
         boolean success = PlatformServices.getBlockEntityHelper().setPlatformDestinationEnabled(
-            townInterface, platformId, townId, enabled);
+            townDataProvider, platformId, townId, enabled);
             
         if (!success) {
             LOGGER.warn("Failed to set destination {} to {} for platform {} at [{}, {}, {}]", 
@@ -79,11 +85,11 @@ public class SetPlatformDestinationPacket extends BaseBlockEntityPacket {
             return;
         }
         
-        // Mark changed and sync using unified architecture
-        markChangedAndSync(townInterface);
+        // Mark changed and sync using platform services
+        markTownDataDirty(townDataProvider);
         
         // Send refresh destinations packet back to client
-        sendRefreshDestinationsPacket(player, townInterface);
+        sendRefreshDestinationsPacket(player, townDataProvider);
         
         LOGGER.debug("Successfully set destination {} to {} for platform {} at [{}, {}, {}]", 
                     townId, enabled, platformId, x, y, z);
@@ -92,18 +98,18 @@ public class SetPlatformDestinationPacket extends BaseBlockEntityPacket {
     /**
      * Send refresh destinations packet with updated data to the client.
      */
-    private void sendRefreshDestinationsPacket(Object player, com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface) {
+    private void sendRefreshDestinationsPacket(Object player, Object townDataProvider) {
         try {
             // Get destination states for this platform
             Map<String, Boolean> townDestinations = PlatformServices.getBlockEntityHelper()
-                .getPlatformDestinations(townInterface, platformId);
+                .getPlatformDestinations(townDataProvider, platformId);
             
             // Get all available destination towns
             Map<String, String> townNames = PlatformServices.getBlockEntityHelper()
-                .getAllTownsForDestination(townInterface);
+                .getAllTownsForDestination(townDataProvider);
             
             // Get the origin town for distance calculations
-            Object originTown = PlatformServices.getBlockEntityHelper().getOriginTown(townInterface);
+            Object originTown = PlatformServices.getBlockEntityHelper().getOriginTown(townDataProvider);
             
             // Use block position if town or town position is null
             int[] originPos = (originTown != null) 

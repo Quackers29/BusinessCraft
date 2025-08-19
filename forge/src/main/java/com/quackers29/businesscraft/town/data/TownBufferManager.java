@@ -1,9 +1,8 @@
 package com.quackers29.businesscraft.town.data;
 
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.platform.PlatformServices;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
-import com.quackers29.businesscraft.town.data.TownPaymentBoard;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -18,8 +17,10 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Manages the synchronization between town buffer storage and ItemStackHandler for hopper automation.
+ * Manages the synchronization between town buffer storage and platform-specific inventory handlers for hopper automation.
  * Extracted from TownInterfaceEntity to improve code organization and maintainability.
+ * 
+ * FORGE VERSION: Platform-specific version that can accept TownInterfaceEntity directly.
  */
 public class TownBufferManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownBufferManager.class);
@@ -28,7 +29,7 @@ public class TownBufferManager {
     private static final int BUFFER_SLOTS = 18; // 2x9 grid
     
     // References
-    private final TownInterfaceEntity blockEntity;
+    private final com.quackers29.businesscraft.block.entity.TownInterfaceEntity blockEntity;
     private final Level level;
     private UUID townId;
     
@@ -48,38 +49,18 @@ public class TownBufferManager {
             }
             blockEntity.setChanged();
         }
-
+        
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-            // Buffer is extraction-only for hoppers, no insertion allowed
-            return false;
-        }
-        
-        @Override
-        public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
-            // Allow extraction for hopper automation
-            ItemStack extracted = super.extractItem(slot, amount, simulate);
-            
-            // If not simulating and we actually extracted something, trigger sync
-            if (!simulate && !extracted.isEmpty() && !suppressBufferCallbacks) {
-                // Ensure sync happens after extraction
-                syncBufferToTownData();
-            }
-            
-            return extracted;
-        }
-        
-        @Override
-        public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
-            // Block insertion - buffer is managed internally
-            return stack;
+            return true; // Allow all items in buffer
         }
     };
     
-    public TownBufferManager(TownInterfaceEntity blockEntity, Level level) {
+    public TownBufferManager(com.quackers29.businesscraft.block.entity.TownInterfaceEntity blockEntity, Level level) {
         this.blockEntity = blockEntity;
         this.level = level;
     }
+    
     
     public void setTownId(UUID townId) {
         this.townId = townId;
@@ -96,7 +77,7 @@ public class TownBufferManager {
     public void onLoad() {
         if (!level.isClientSide()) {
             bufferNeedsSync = true; // Force initial sync
-            syncTownDataToBufferIfNeeded(); // Sync town buffer data to ItemStackHandler
+            syncTownDataToBufferIfNeeded(); // Sync town buffer data to platform inventory
         }
     }
     
@@ -113,7 +94,7 @@ public class TownBufferManager {
     
     /**
      * Called when items are added to town buffer storage externally (e.g., from claim system)
-     * Forces a buffer sync to ensure ItemStackHandler reflects the new items
+     * Forces a buffer sync to ensure platform inventory reflects the new items
      */
     public void onTownBufferChanged() {
         bufferNeedsSync = true;
@@ -124,7 +105,32 @@ public class TownBufferManager {
     }
     
     /**
-     * Synchronizes town payment buffer data to the ItemStackHandler for hopper access
+     * Called when platform inventory contents change (e.g., hopper extraction)
+     * Syncs changes back to town data
+     */
+    public void onInventoryChanged() {
+        // Only sync if not suppressed (prevents infinite loops during our own syncing)
+        if (!suppressBufferCallbacks) {
+            // Sync buffer changes back to town data and notify clients
+            syncBufferToTownData();
+        }
+        // Mark block entity as changed for persistence
+        blockEntity.setChanged();
+    }
+    
+    /**
+     * Called when platform inventory extraction occurs
+     */
+    public void onInventoryExtracted() {
+        // If not suppressed, trigger sync after extraction
+        if (!suppressBufferCallbacks) {
+            // Ensure sync happens after extraction
+            syncBufferToTownData();
+        }
+    }
+    
+    /**
+     * Synchronizes town payment buffer data to the platform inventory for hopper access
      * Only syncs when needed to avoid conflicts with hopper operations
      */
     private void syncTownDataToBufferIfNeeded() {
@@ -134,7 +140,7 @@ public class TownBufferManager {
             Town town = TownManager.get(sLevel).getTown(townId);
             if (town != null) {
                 // Get the real payment board buffer storage
-                TownPaymentBoard paymentBoard = (TownPaymentBoard) town.getPaymentBoard();
+                TownPaymentBoard paymentBoard = town.getPaymentBoard();
                 Map<Item, Integer> currentTownBuffer = paymentBoard.getBufferStorage();
                 
                 // Check if town buffer has changed significantly or if we need initial sync
@@ -147,7 +153,7 @@ public class TownBufferManager {
                         lastKnownTownBuffer = new HashMap<>(currentTownBuffer);
                         bufferNeedsSync = false;
                         
-                        LOGGER.debug("Synced town buffer data to ItemStackHandler for town {}", townId);
+                        LOGGER.debug("Synced town buffer data to platform inventory for town {}", townId);
                     }
                 }
             }
@@ -155,21 +161,16 @@ public class TownBufferManager {
     }
     
     /**
-     * Checks if the buffer handler is mostly empty (less than 3 items total)
+     * Checks if the buffer is mostly empty (less than 3 items total)
+     * Platform-specific implementation should override this
      */
-    private boolean isBufferMostlyEmpty() {
-        int totalItems = 0;
-        for (int i = 0; i < bufferHandler.getSlots(); i++) {
-            ItemStack stack = bufferHandler.getStackInSlot(i);
-            if (!stack.isEmpty()) {
-                totalItems += stack.getCount();
-            }
-        }
-        return totalItems < 3; // Consider mostly empty if less than 3 items
+    protected boolean isBufferMostlyEmpty() {
+        // Default implementation - platform should override
+        return true;
     }
     
     /**
-     * Synchronizes town payment buffer data to the ItemStackHandler for hopper access
+     * Synchronizes town payment buffer data to the platform inventory for hopper access
      * Now preserves exact slot positions using SlotBasedStorage
      */
     private void syncTownDataToBuffer(Map<Item, Integer> bufferStorage) {
@@ -179,25 +180,17 @@ public class TownBufferManager {
             Town town = TownManager.get(sLevel).getTown(townId);
             if (town != null) {
                 // Get the actual SlotBasedStorage from the town's payment board
-                TownPaymentBoard paymentBoard = (TownPaymentBoard) town.getPaymentBoard();
+                TownPaymentBoard paymentBoard = town.getPaymentBoard();
                 SlotBasedStorage slotStorage = paymentBoard.getBufferStorageSlots();
                 
                 // Suppress callbacks while we're syncing to prevent infinite loops
                 suppressBufferCallbacks = true;
                 
                 try {
-                    // Copy each slot directly from SlotBasedStorage to ItemStackHandler
-                    for (int i = 0; i < bufferHandler.getSlots() && i < slotStorage.getSlotCount(); i++) {
-                        ItemStack slotStack = slotStorage.getSlot(i);
-                        bufferHandler.setStackInSlot(i, slotStack);
-                    }
+                    // Platform-specific sync implementation
+                    syncSlotsToInventory(slotStorage);
                     
-                    // Clear any remaining slots if handler is larger
-                    for (int i = slotStorage.getSlotCount(); i < bufferHandler.getSlots(); i++) {
-                        bufferHandler.setStackInSlot(i, ItemStack.EMPTY);
-                    }
-                    
-                    LOGGER.debug("Synced {} slots from payment board buffer to ItemStackHandler", slotStorage.getSlotCount());
+                    LOGGER.debug("Synced {} slots from payment board buffer to platform inventory", slotStorage.getSlotCount());
                 } finally {
                     // Always re-enable callbacks
                     suppressBufferCallbacks = false;
@@ -207,7 +200,15 @@ public class TownBufferManager {
     }
     
     /**
-     * Synchronizes ItemStackHandler changes back to town payment buffer data
+     * Platform-specific method to sync SlotBasedStorage to platform inventory
+     * Should be implemented by platform-specific subclasses
+     */
+    protected void syncSlotsToInventory(SlotBasedStorage slotStorage) {
+        // Default no-op - platform implementations should override
+    }
+    
+    /**
+     * Synchronizes platform inventory changes back to town payment buffer data
      * Now preserves exact slot positions using SlotBasedStorage
      */
     private void syncBufferToTownData() {
@@ -218,32 +219,19 @@ public class TownBufferManager {
         if (level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
             if (town != null) {
-                // Get the SlotBasedStorage and update it directly from ItemStackHandler
-                TownPaymentBoard paymentBoard = (TownPaymentBoard) town.getPaymentBoard();
+                // Get the SlotBasedStorage and update it directly from platform inventory
+                TownPaymentBoard paymentBoard = town.getPaymentBoard();
                 SlotBasedStorage slotStorage = paymentBoard.getBufferStorageSlots();
                 
-                boolean bufferChanged = false;
-                
-                // Copy each slot from ItemStackHandler to SlotBasedStorage
-                for (int i = 0; i < bufferHandler.getSlots() && i < slotStorage.getSlotCount(); i++) {
-                    ItemStack handlerStack = bufferHandler.getStackInSlot(i);
-                    ItemStack storageStack = slotStorage.getSlot(i);
-                    
-                    // Check if slot contents changed
-                    if (!ItemStack.isSameItemSameTags(handlerStack, storageStack) || 
-                        handlerStack.getCount() != storageStack.getCount()) {
-                        
-                        slotStorage.setSlot(i, handlerStack);
-                        bufferChanged = true;
-                    }
-                }
+                // Platform-specific sync implementation
+                boolean bufferChanged = syncInventoryToSlots(slotStorage);
                 
                 // Update our tracking if buffer changed
                 if (bufferChanged) {
                     // Update our tracking with the current buffer storage state
                     lastKnownTownBuffer = new HashMap<>(paymentBoard.getBufferStorage());
                     
-                    LOGGER.debug("Synced {} slots from ItemStackHandler back to payment board buffer", slotStorage.getSlotCount());
+                    LOGGER.debug("Synced {} slots from platform inventory back to payment board buffer", slotStorage.getSlotCount());
                     
                     // Notify clients of buffer storage changes for UI updates using new slot-based method
                     notifyClientsOfSlotBasedBufferChange(town);
@@ -256,16 +244,13 @@ public class TownBufferManager {
     }
     
     /**
-     * Notifies all clients with the Payment Board UI open of buffer storage changes (legacy method)
+     * Platform-specific method to sync platform inventory to SlotBasedStorage
+     * Should be implemented by platform-specific subclasses
+     * @return true if any changes were made
      */
-    private void notifyClientsOfBufferChange(Town town) {
-        if (level instanceof ServerLevel sLevel) {
-            // Send legacy buffer update packet to all players with Payment Board UI open
-            // This ensures real-time UI updates when hoppers extract items
-            TownPaymentBoard paymentBoard = (TownPaymentBoard) town.getPaymentBoard();
-            ClientSyncHelper.notifyBufferStorageChange(sLevel, townId, paymentBoard.getBufferStorage());
-            LOGGER.debug("Notified clients of buffer storage changes for town {}", townId);
-        }
+    protected boolean syncInventoryToSlots(SlotBasedStorage slotStorage) {
+        // Default no-op - platform implementations should override
+        return false;
     }
     
     /**
@@ -275,9 +260,23 @@ public class TownBufferManager {
         if (level instanceof ServerLevel sLevel) {
             // Send slot-based buffer update packet to all players with Payment Board UI open
             // This ensures real-time UI updates with exact slot preservation when hoppers extract items
-            TownPaymentBoard paymentBoard = (TownPaymentBoard) town.getPaymentBoard();
+            TownPaymentBoard paymentBoard = town.getPaymentBoard();
             ClientSyncHelper.notifyBufferSlotStorageChange(sLevel, townId, paymentBoard.getBufferStorageSlots());
             LOGGER.debug("Notified clients of slot-based buffer storage changes for town {}", townId);
         }
+    }
+    
+    /**
+     * Get the number of buffer slots
+     */
+    public int getBufferSlots() {
+        return BUFFER_SLOTS;
+    }
+    
+    /**
+     * Check if callbacks are currently suppressed
+     */
+    public boolean areCallbacksSuppressed() {
+        return suppressBufferCallbacks;
     }
 }

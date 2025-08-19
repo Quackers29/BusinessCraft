@@ -1,7 +1,7 @@
 package com.quackers29.businesscraft.network.packets.misc;
 
 import com.quackers29.businesscraft.platform.PlatformServices;
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+// TownInterfaceEntity access through BlockEntityHelper platform services
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -55,36 +55,35 @@ public abstract class BaseBlockEntityPacket {
     }
     
     /**
-     * Get the TownInterfaceEntity at the packet coordinates (Unified Architecture).
-     * Direct access replaces BlockEntityHelper.getBlockEntity + getTownDataProvider.
+     * Get the block entity at the packet coordinates through platform services.
+     * Enhanced MultiLoader approach: Use platform services for cross-platform compatibility.
      * 
-     * @param player Platform-specific player object (should be ServerPlayer)
-     * @return TownInterfaceEntity at coordinates, or null if not found or wrong type
+     * @param player Platform-specific player object
+     * @return Block entity at coordinates, or null if not found
      */
-    protected TownInterfaceEntity getTownInterfaceEntity(Object player) {
-        if (player instanceof ServerPlayer serverPlayer) {
-            BlockPos pos = new BlockPos(x, y, z);
-            BlockEntity blockEntity = serverPlayer.serverLevel().getBlockEntity(pos);
-            if (blockEntity instanceof TownInterfaceEntity townInterface) {
-                return townInterface;
-            }
-        }
-        return null;
+    protected Object getBlockEntity(Object player) {
+        return PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
     }
     
     /**
-     * Mark the block entity as changed and sync to clients (Unified Architecture).
-     * Replaces BlockEntityHelper.markBlockEntityChanged + syncTownData.
+     * Get the town data provider from a block entity through platform services.
      * 
-     * @param townInterface The TownInterfaceEntity to mark changed
+     * @param blockEntity Block entity to get town data from
+     * @return Town data provider, or null if not applicable
      */
-    protected void markChangedAndSync(TownInterfaceEntity townInterface) {
-        if (townInterface != null) {
-            townInterface.setChanged();
-            if (townInterface instanceof BlockEntity blockEntity) {
-                // Sync to tracking clients
-                blockEntity.setChanged();
-            }
+    protected Object getTownDataProvider(Object blockEntity) {
+        return PlatformServices.getBlockEntityHelper().getTownDataProvider(blockEntity);
+    }
+    
+    /**
+     * Mark the town data as changed and sync through platform services.
+     * Enhanced MultiLoader approach: Use platform services for cross-platform compatibility.
+     * 
+     * @param townDataProvider The town data provider to mark changed
+     */
+    protected void markTownDataDirty(Object townDataProvider) {
+        if (townDataProvider != null) {
+            PlatformServices.getBlockEntityHelper().markTownDataDirty(townDataProvider);
         }
     }
     

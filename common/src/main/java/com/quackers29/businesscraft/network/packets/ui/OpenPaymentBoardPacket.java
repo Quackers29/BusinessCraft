@@ -2,7 +2,6 @@ package com.quackers29.businesscraft.network.packets.ui;
 
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,20 +45,30 @@ public class OpenPaymentBoardPacket extends BaseBlockEntityPacket {
     public void handle(Object player) {
         LOGGER.debug("Opening Payment Board for player at position [{}, {}, {}]", getX(), getY(), getZ());
         
-        // Unified Architecture: Direct access to TownInterfaceEntity (replaces 2 BlockEntityHelper calls)
-        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-        if (townInterface == null) {
-            LOGGER.warn("No TownInterfaceEntity found at position [{}, {}, {}] for Payment Board UI", getX(), getY(), getZ());
-            return;
-        }
-        
-        // Direct unified access - no platform service bridge needed!
-        boolean success = townInterface.openPaymentBoardUI(player);
-        
-        if (success) {
-            LOGGER.debug("Successfully opened Payment Board for player at [{}, {}, {}]", getX(), getY(), getZ());
-        } else {
-            LOGGER.warn("Failed to open Payment Board for player at [{}, {}, {}]", getX(), getY(), getZ());
+        try {
+            // Get block entity using platform services
+            Object blockEntity = getBlockEntity(player);
+            if (blockEntity == null) {
+                LOGGER.warn("No block entity found at position [{}, {}, {}] for Payment Board UI", getX(), getY(), getZ());
+                return;
+            }
+            
+            Object townDataProvider = getTownDataProvider(blockEntity);
+            if (townDataProvider == null) {
+                LOGGER.warn("No TownInterfaceEntity found at position [{}, {}, {}] for Payment Board UI", getX(), getY(), getZ());
+                return;
+            }
+            
+            // Use platform service to open Payment Board UI
+            boolean success = PlatformServices.getBlockEntityHelper().openPaymentBoardUI(townDataProvider, player);
+            
+            if (success) {
+                LOGGER.debug("Successfully opened Payment Board for player at [{}, {}, {}]", getX(), getY(), getZ());
+            } else {
+                LOGGER.warn("Failed to open Payment Board for player at [{}, {}, {}]", getX(), getY(), getZ());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error handling open Payment Board request at [{}, {}, {}]", getX(), getY(), getZ(), e);
         }
     }
 }

@@ -2,7 +2,6 @@ package com.quackers29.businesscraft.network.packets.ui;
 
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,15 +44,21 @@ public class OpenTownInterfacePacket extends BaseBlockEntityPacket {
     public void handle(Object player) {
         LOGGER.debug("Opening Town Interface for player at position [{}, {}, {}]", x, y, z);
         
-        // Get the town interface using unified access
-        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-        if (townInterface == null) {
+        // Get the town interface using platform services
+        Object blockEntity = getBlockEntity(player);
+        if (blockEntity == null) {
+            LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
+            return;
+        }
+
+        Object townDataProvider = getTownDataProvider(blockEntity);
+        if (townDataProvider == null) {
             LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
             return;
         }
         
         // Open the Town Interface UI (still uses platform services for complex UI operations)
-        boolean success = PlatformServices.getBlockEntityHelper().openTownInterfaceUI(townInterface, player);
+        boolean success = PlatformServices.getBlockEntityHelper().openTownInterfaceUI(townDataProvider, player);
         
         if (success) {
             LOGGER.debug("Successfully opened Town Interface for player at [{}, {}, {}]", x, y, z);

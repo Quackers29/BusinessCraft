@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -101,9 +100,19 @@ public class RequestTownPlatformDataPacket extends BaseBlockEntityPacket {
                     x, y, z, maxRadius);
         
         try {
-            // Get the town interface entity using unified architecture pattern
-            TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-            if (townInterface == null) {
+            // Get the town interface entity using platform services
+            Object blockEntity = getBlockEntity(player);
+            if (blockEntity == null) {
+                LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
+                // Send empty response to prevent client hanging
+                TownPlatformDataResponsePacket errorResponse = 
+                    new TownPlatformDataResponsePacket(x, y, z, false);
+                PlatformServices.getNetworkHelper().sendToClient(errorResponse, player);
+                return;
+            }
+
+            Object townDataProvider = getTownDataProvider(blockEntity);
+            if (townDataProvider == null) {
                 LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
                 // Send empty response to prevent client hanging
                 TownPlatformDataResponsePacket errorResponse = 

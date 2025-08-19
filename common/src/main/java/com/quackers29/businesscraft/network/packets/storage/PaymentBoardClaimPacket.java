@@ -56,29 +56,37 @@ public class PaymentBoardClaimPacket extends BaseBlockEntityPacket {
                     rewardId, x, y, z, toBuffer);
         
         try {
-            // Get the town interface block entity using unified architecture
-            com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-            if (townInterface == null) {
+            // Get block entity using platform services
+            Object blockEntity = getBlockEntity(player);
+            if (blockEntity == null) {
+                LOGGER.debug("No block entity at [{}, {}, {}]", x, y, z);
+                PlatformServices.getPlatformHelper().sendPlayerMessage(player, 
+                    "Error: Invalid town block", "RED");
+                return;
+            }
+            
+            Object townDataProvider = getTownDataProvider(blockEntity);
+            if (townDataProvider == null) {
                 LOGGER.debug("Block at [{}, {}, {}] is not a TownInterfaceEntity", x, y, z);
                 PlatformServices.getPlatformHelper().sendPlayerMessage(player, 
                     "Error: Invalid town block", "RED");
                 return;
             }
             
-            // Attempt to claim the reward through platform services (complex inventory operations still need platform layer)
+            // Attempt to claim the reward through platform services
             Object claimResult = PlatformServices.getBlockEntityHelper().claimPaymentBoardReward(
-                townInterface, player, rewardId, toBuffer);
+                townDataProvider, player, rewardId, toBuffer);
             
             if (claimResult != null) {
                 LOGGER.debug("Successfully processed claim for reward {} at [{}, {}, {}]", 
                            rewardId, x, y, z);
                 
-                // Get updated payment board data using unified architecture
-                java.util.List<Object> unclaimedRewards = townInterface.getUnclaimedRewards();
+                // Get updated payment board data through platform services
+                java.util.List<Object> unclaimedRewards = PlatformServices.getBlockEntityHelper().getUnclaimedRewards(townDataProvider);
                 PlatformServices.getNetworkHelper().sendPaymentBoardResponsePacket(player, unclaimedRewards);
                 
-                // Mark changed and sync using unified architecture
-                markChangedAndSync(townInterface);
+                // Mark changed and sync through platform services
+                markTownDataDirty(townDataProvider);
                 
                 // Note: Platform implementations will handle sending BufferSlotStorageResponsePacket
                 // and player inventory management as part of claimPaymentBoardReward

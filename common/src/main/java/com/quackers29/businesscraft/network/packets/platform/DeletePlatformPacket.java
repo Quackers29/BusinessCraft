@@ -48,16 +48,22 @@ public class DeletePlatformPacket extends BaseBlockEntityPacket {
     public void handle(Object player) {
         LOGGER.debug("Deleting platform {} from town at ({}, {}, {})", platformId, x, y, z);
         
-        // Get the town interface entity using unified architecture pattern
-        com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-        if (townInterface == null) {
+        // Get the town interface entity using platform services
+        Object blockEntity = getBlockEntity(player);
+        if (blockEntity == null) {
+            LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
+            return;
+        }
+
+        Object townDataProvider = getTownDataProvider(blockEntity);
+        if (townDataProvider == null) {
             LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
             return;
         }
         
         // Delete platform through platform services
         // NOTE: Platform service handles complex platform operations
-        boolean success = PlatformServices.getBlockEntityHelper().removePlatform(townInterface, platformId);
+        boolean success = PlatformServices.getBlockEntityHelper().removePlatform(townDataProvider, platformId);
         
         if (success) {
             LOGGER.debug("Successfully deleted platform {} from town at [{}, {}, {}]", platformId, x, y, z);

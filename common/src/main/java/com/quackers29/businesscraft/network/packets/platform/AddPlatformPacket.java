@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -37,16 +36,21 @@ public class AddPlatformPacket extends BaseBlockEntityPacket {
     public void handle(Object player) {
         LOGGER.debug("Player is adding a new platform to town block at ({}, {}, {})", x, y, z);
         
-        // Get town interface using unified access
-        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-        
-        if (townInterface != null) {
+        // Get town interface using platform services
+        Object blockEntity = getBlockEntity(player);
+        if (blockEntity == null) {
+            LOGGER.warn("No block entity found at [{}, {}, {}]", x, y, z);
+            return;
+        }
+
+        Object townDataProvider = getTownDataProvider(blockEntity);
+        if (townDataProvider != null) {
             // Check if we can add more platforms through platform services
-            boolean canAdd = PlatformServices.getBlockEntityHelper().canAddMorePlatforms(townInterface);
+            boolean canAdd = PlatformServices.getBlockEntityHelper().canAddMorePlatforms(townDataProvider);
             
             if (canAdd) {
                 // Add platform through platform services
-                boolean added = PlatformServices.getBlockEntityHelper().addPlatform(townInterface);
+                boolean added = PlatformServices.getBlockEntityHelper().addPlatform(townDataProvider);
                 
                 if (added) {
                     LOGGER.debug("Successfully added new platform to town block at ({}, {}, {})", x, y, z);

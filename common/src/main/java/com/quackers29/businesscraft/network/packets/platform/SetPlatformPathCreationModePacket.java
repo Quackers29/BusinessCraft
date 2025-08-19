@@ -54,16 +54,22 @@ public class SetPlatformPathCreationModePacket extends BaseBlockEntityPacket {
     public void handle(Object player) {
         System.out.println("SET PLATFORM PATH CREATION MODE PACKET: Player is setting platform " + platformId + " path creation mode to " + mode + " at [" + x + ", " + y + ", " + z + "]");
         
-        // Get the town interface block entity using unified architecture
-        com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-        if (townInterface == null) {
+        // Get the town interface block entity using platform services
+        Object blockEntity = getBlockEntity(player);
+        if (blockEntity == null) {
+            LOGGER.warn("No block entity found at [{}, {}, {}]", x, y, z);
+            return;
+        }
+
+        Object townDataProvider = getTownDataProvider(blockEntity);
+        if (townDataProvider == null) {
             LOGGER.warn("Block entity not found at [{}, {}, {}]", x, y, z);
             return;
         }
         
         // Set the platform path creation mode through platform services
         // NOTE: Platform service handles complex platform operations
-        boolean success = PlatformServices.getBlockEntityHelper().setPlatformCreationMode(townInterface, mode, platformId);
+        boolean success = PlatformServices.getBlockEntityHelper().setPlatformCreationMode(townDataProvider, mode, platformId);
         
         if (!success) {
             LOGGER.warn("Failed to set platform creation mode at [{}, {}, {}]", x, y, z);

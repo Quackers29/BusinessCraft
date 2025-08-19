@@ -50,23 +50,29 @@ public class ResetPlatformPathPacket extends BaseBlockEntityPacket {
     public void handle(Object player) {
         LOGGER.debug("Player is resetting platform {} path at [{}, {}, {}]", platformId, x, y, z);
         
-        // Get the town interface block entity using unified architecture
-        com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-        if (townInterface == null) {
+        // Get the town interface block entity using platform services
+        Object blockEntity = getBlockEntity(player);
+        if (blockEntity == null) {
+            LOGGER.warn("No block entity found at [{}, {}, {}]", x, y, z);
+            return;
+        }
+
+        Object townDataProvider = getTownDataProvider(blockEntity);
+        if (townDataProvider == null) {
             LOGGER.warn("Block entity not found at [{}, {}, {}]", x, y, z);
             return;
         }
         
         // Reset the platform path through platform services (complex path management operations)
-        boolean success = PlatformServices.getBlockEntityHelper().resetPlatformPath(townInterface, platformId);
+        boolean success = PlatformServices.getBlockEntityHelper().resetPlatformPath(townDataProvider, platformId);
             
         if (!success) {
             LOGGER.warn("Failed to reset platform {} path at [{}, {}, {}]", platformId, x, y, z);
             return;
         }
         
-        // Mark changed and sync using unified architecture
-        markChangedAndSync(townInterface);
+        // Mark changed and sync using platform services
+        markTownDataDirty(townDataProvider);
         PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
         
         LOGGER.debug("Successfully reset platform {} path at [{}, {}, {}]", platformId, x, y, z);

@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.client.cache.ClientTownMapCache;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
@@ -239,9 +238,15 @@ public class TownPlatformDataResponsePacket extends BaseBlockEntityPacket {
                 cache.updateTownPlatforms(townId, platforms);
             }
             
-            // Get the town interface entity using unified architecture pattern
-            TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-            if (townInterface == null) {
+            // Get the town interface entity using platform services
+            Object blockEntity = getBlockEntity(player);
+            if (blockEntity == null) {
+                LOGGER.error("CLIENT PACKET HANDLER: No block entity found at position: [{}, {}, {}]", x, y, z);
+                return;
+            }
+
+            Object townDataProvider = getTownDataProvider(blockEntity);
+            if (townDataProvider == null) {
                 LOGGER.error("CLIENT PACKET HANDLER: Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
                 return;
             }

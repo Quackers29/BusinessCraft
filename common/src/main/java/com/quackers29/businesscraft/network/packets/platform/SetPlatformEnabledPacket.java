@@ -55,16 +55,22 @@ public class SetPlatformEnabledPacket extends BaseBlockEntityPacket {
         LOGGER.debug("Player is setting platform {} enabled state to {} at [{}, {}, {}]", 
                     platformId, enabled, x, y, z);
         
-        // Get the town interface block entity using unified architecture
-        com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-        if (townInterface == null) {
+        // Get the town interface block entity using platform services
+        Object blockEntity = getBlockEntity(player);
+        if (blockEntity == null) {
+            LOGGER.warn("No block entity found at [{}, {}, {}]", x, y, z);
+            return;
+        }
+
+        Object townDataProvider = getTownDataProvider(blockEntity);
+        if (townDataProvider == null) {
             LOGGER.warn("Block entity not found at [{}, {}, {}]", x, y, z);
             return;
         }
         
         // Set the platform enabled state through platform services (complex platform management)
         boolean success = PlatformServices.getBlockEntityHelper().setPlatformEnabledById(
-            townInterface, platformId, enabled);
+            townDataProvider, platformId, enabled);
             
         if (!success) {
             LOGGER.warn("Failed to set platform {} enabled state to {} at [{}, {}, {}] - platform not found", 
@@ -72,8 +78,8 @@ public class SetPlatformEnabledPacket extends BaseBlockEntityPacket {
             return;
         }
         
-        // Mark changed and sync using unified architecture
-        markChangedAndSync(townInterface);
+        // Mark changed and sync using platform services
+        markTownDataDirty(townDataProvider);
         PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
         
         // Notify clients tracking this chunk of the platform state change

@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -64,16 +63,22 @@ public class RequestTownMapDataPacket extends BaseBlockEntityPacket {
         LOGGER.debug("Processing town map data request (zoom: {}, structures: {}) at position [{}, {}, {}]", 
                     zoomLevel, includeStructures, x, y, z);
         
-        // Get the town interface entity using unified architecture pattern
-        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-        if (townInterface == null) {
+        // Get the town interface entity using platform services
+        Object blockEntity = getBlockEntity(player);
+        if (blockEntity == null) {
+            LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
+            return;
+        }
+
+        Object townDataProvider = getTownDataProvider(blockEntity);
+        if (townDataProvider == null) {
             LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
             return;
         }
         
         // Process town map data request through platform services
         boolean success = PlatformServices.getBlockEntityHelper().processTownMapDataRequest(
-            townInterface, player, zoomLevel, includeStructures);
+            townDataProvider, player, zoomLevel, includeStructures);
         
         if (success) {
             LOGGER.debug("Successfully processed town map data request (zoom: {}, structures: {}) at [{}, {}, {}]", 

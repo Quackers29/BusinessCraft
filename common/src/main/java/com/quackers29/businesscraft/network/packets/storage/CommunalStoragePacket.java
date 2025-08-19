@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.network.packets.storage;
 
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -62,19 +61,25 @@ public class CommunalStoragePacket extends BaseBlockEntityPacket {
         LOGGER.debug("Processing communal storage {} operation for slot {} at position [{}, {}, {}]", 
                     operation, slotId, x, y, z);
         
-        // Get the town interface block entity using unified access
-        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-        if (townInterface == null) {
+        // Get the town interface block entity using platform services
+        Object blockEntity = getBlockEntity(player);
+        if (blockEntity == null) {
+            LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
+            return;
+        }
+
+        Object townDataProvider = getTownDataProvider(blockEntity);
+        if (townDataProvider == null) {
             LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
             return;
         }
         
-        // Process communal storage operation using direct access
+        // Process communal storage operation using platform services
         boolean success;
         if (isAdd) {
-            success = PlatformServices.getBlockEntityHelper().addToCommunalStorage(townInterface, player, itemStack, slotId);
+            success = PlatformServices.getBlockEntityHelper().addToCommunalStorage(townDataProvider, player, itemStack, slotId);
         } else {
-            success = PlatformServices.getBlockEntityHelper().removeFromCommunalStorage(townInterface, player, itemStack, slotId);
+            success = PlatformServices.getBlockEntityHelper().removeFromCommunalStorage(townDataProvider, player, itemStack, slotId);
         }
         
         if (success) {

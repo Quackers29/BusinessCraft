@@ -70,9 +70,15 @@ public class SetPlatformPathPacket extends BaseBlockEntityPacket {
         LOGGER.debug("Player is setting platform {} path from [{}, {}, {}] to [{}, {}, {}] at [{}, {}, {}]", 
                     platformId, startX, startY, startZ, endX, endY, endZ, x, y, z);
         
-        // Get the town interface block entity using unified architecture
-        com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-        if (townInterface == null) {
+        // Get the town interface block entity using platform services
+        Object blockEntity = getBlockEntity(player);
+        if (blockEntity == null) {
+            LOGGER.warn("No block entity found at [{}, {}, {}]", x, y, z);
+            return;
+        }
+
+        Object townDataProvider = getTownDataProvider(blockEntity);
+        if (townDataProvider == null) {
             LOGGER.warn("Block entity not found at [{}, {}, {}]", x, y, z);
             return;
         }
@@ -80,7 +86,7 @@ public class SetPlatformPathPacket extends BaseBlockEntityPacket {
         // Set the platform path through platform services
         // NOTE: Platform service handles complex coordinate conversions and validations
         boolean success = PlatformServices.getBlockEntityHelper().setPlatformPath(
-            townInterface, platformId, startX, startY, startZ, endX, endY, endZ);
+            townDataProvider, platformId, startX, startY, startZ, endX, endY, endZ);
         
         if (!success) {
             LOGGER.warn("Failed to set platform path at [{}, {}, {}]", x, y, z);

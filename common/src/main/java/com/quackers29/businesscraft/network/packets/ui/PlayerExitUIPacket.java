@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -47,15 +46,21 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
     public void handle(Object player) {
         LOGGER.debug("Player exiting UI at position [{}, {}, {}]", x, y, z);
         
-        // Get the town interface entity using unified architecture pattern
-        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-        if (townInterface == null) {
+        // Get the town interface entity using platform services
+        Object blockEntity = getBlockEntity(player);
+        if (blockEntity == null) {
+            LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
+            return;
+        }
+
+        Object townDataProvider = getTownDataProvider(blockEntity);
+        if (townDataProvider == null) {
             LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
             return;
         }
         
         // Register player UI exit through platform services
-        boolean success = PlatformServices.getBlockEntityHelper().registerPlayerExitUI(townInterface, player);
+        boolean success = PlatformServices.getBlockEntityHelper().registerPlayerExitUI(townDataProvider, player);
         
         if (success) {
             LOGGER.debug("Successfully registered player UI exit at [{}, {}, {}]", x, y, z);

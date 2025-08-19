@@ -61,24 +61,30 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
             return;
         }
         
-        // Get the town interface block entity using unified architecture
-        com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-        if (townInterface == null) {
+        // Get the town interface block entity using platform services
+        Object blockEntity = getBlockEntity(player);
+        if (blockEntity == null) {
+            LOGGER.warn("No block entity found at position [{}, {}, {}] for player", getX(), getY(), getZ());
+            return;
+        }
+
+        Object townDataProvider = getTownDataProvider(blockEntity);
+        if (townDataProvider == null) {
             LOGGER.warn("No town block entity found at position [{}, {}, {}] for player", getX(), getY(), getZ());
             return;
         }
         
         // Process the resource trade through platform services (complex inventory operations still need platform layer)
         Object paymentResult = PlatformServices.getBlockEntityHelper().processResourceTrade(
-            townInterface, player, itemToTrade, slotId);
+            townDataProvider, player, itemToTrade, slotId);
         
         // Send the payment result back to the client
         if (paymentResult != null) {
             PlatformServices.getNetworkHelper().sendPaymentResultPacket(player, paymentResult);
         }
         
-        // Mark changed and sync using unified architecture
-        markChangedAndSync(townInterface);
+        // Mark changed and sync using platform services
+        markTownDataDirty(townDataProvider);
         
         // Force block update to sync changes
         PlatformServices.getPlatformHelper().forceBlockUpdate(player, getX(), getY(), getZ());

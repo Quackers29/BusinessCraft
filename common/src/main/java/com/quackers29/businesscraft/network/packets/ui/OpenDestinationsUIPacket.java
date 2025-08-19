@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -53,14 +52,20 @@ public class OpenDestinationsUIPacket extends BaseBlockEntityPacket {
         LOGGER.debug("Opening Destinations UI for platform '{}' at position [{}, {}, {}]", platformId, x, y, z);
         
         // Get the town interface entity using unified architecture pattern
-        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-        if (townInterface == null) {
+        Object blockEntity = getBlockEntity(player);
+        if (blockEntity == null) {
+            LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
+            return;
+        }
+
+        Object townDataProvider = getTownDataProvider(blockEntity);
+        if (townDataProvider == null) {
             LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
             return;
         }
         
         // Open the destinations UI through platform services
-        boolean success = PlatformServices.getBlockEntityHelper().openDestinationsUI(townInterface, player, platformId);
+        boolean success = PlatformServices.getBlockEntityHelper().openDestinationsUI(townDataProvider, player, platformId);
         
         if (success) {
             LOGGER.debug("Successfully opened Destinations UI for platform '{}' at [{}, {}, {}]", platformId, x, y, z);
