@@ -1,59 +1,16 @@
 package com.quackers29.businesscraft.block.entity;
 
 /**
- * Unified architecture interface for TownInterfaceEntity.
- * Provides direct access methods to replace BlockEntityHelper platform service calls.
- * Implementation in platform modules (TownInterfaceEntity implements this interface).
+ * Placeholder type for TownInterfaceEntity in common module.
+ * This class should not be instantiated - it exists only to allow
+ * common module code to compile with type references.
+ * 
+ * The actual implementation is in platform modules.
  */
-public interface TownInterfaceEntity {
-    
-    /**
-     * Mark the block entity as changed for persistence
-     */
-    void setChanged();
-    
-    /**
-     * Sync data to client (replaces BlockEntityHelper.syncTownData)
-     */
-    void syncToClient();
-    
-    /**
-     * Get the town name (replaces BlockEntityHelper.getTownName)
-     */
-    String getTownName();
-    
-    /**
-     * Set the town name (replaces BlockEntityHelper.setTownName)
-     */
-    void setTownName(String townName);
-    
-    /**
-     * Check if tourist spawning is enabled (replaces BlockEntityHelper.isTouristSpawningEnabled)
-     */
-    boolean isTouristSpawningEnabled();
-    
-    /**
-     * Set tourist spawning enabled state (replaces BlockEntityHelper.setTouristSpawningEnabled)
-     */
-    void setTouristSpawningEnabled(boolean enabled);
-    
-    /**
-     * Get search radius (replaces BlockEntityHelper.getSearchRadius)
-     */
-    int getSearchRadius();
-    
-    /**
-     * Set search radius (replaces BlockEntityHelper.setSearchRadius)
-     */
-    void setSearchRadius(int radius);
-    
-    /**
-     * Get unclaimed rewards from payment board (replaces BlockEntityHelper.getUnclaimedRewards)
-     */
-    java.util.List<Object> getUnclaimedRewards();
-    
-    /**
-     * Open payment board UI for player (replaces BlockEntityHelper.openPaymentBoardUI)
-     */
-    boolean openPaymentBoardUI(Object player);
+public abstract class TownInterfaceEntity {
+    // This class is intentionally empty and abstract
+    // Platform modules provide the real implementation
+    private TownInterfaceEntity() {
+        throw new UnsupportedOperationException("This is a placeholder class");
+    }
 }

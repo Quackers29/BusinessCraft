@@ -143,13 +143,6 @@ public class PlatformPathHandler {
         if (town == null) {
             return "Town not found";
         }
-        
-        // Cast to Town object - this should be safe since we're using the common module Town
-        if (!(townObj instanceof Town)) {
-            return "Invalid town object type";
-        }
-        
-        Town town = (Town) townObj;
         int boundaryRadius = town.getBoundaryRadius();
         double distance = Math.sqrt(pos.distSqr(townInterface.getBlockPos()));
         

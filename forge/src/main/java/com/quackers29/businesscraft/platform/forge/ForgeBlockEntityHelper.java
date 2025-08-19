@@ -16,6 +16,7 @@ import com.quackers29.businesscraft.town.TownManager;
 import com.quackers29.businesscraft.town.data.TownPaymentBoard;
 import com.quackers29.businesscraft.town.data.RewardEntry;
 import com.quackers29.businesscraft.debug.DebugConfig;
+import java.util.Collection;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -1143,10 +1144,9 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             // Debug: Check total towns available before radius filtering
             try {
                 com.quackers29.businesscraft.town.TownManager directTownManager = com.quackers29.businesscraft.town.TownManager.get((ServerLevel) townManager);
-                Map<UUID, com.quackers29.businesscraft.town.Town> debugAllTowns = directTownManager.getAllTowns();
-                LOGGER.warn("DEBUG: TownManager.getAllTowns() returned {} total towns before radius filtering", debugAllTowns.size());
-                for (Map.Entry<UUID, com.quackers29.businesscraft.town.Town> entry : debugAllTowns.entrySet()) {
-                    com.quackers29.businesscraft.town.Town town = entry.getValue();
+                Collection<com.quackers29.businesscraft.town.Town> debugAllTownsCollection = directTownManager.getAllTowns();
+                LOGGER.warn("DEBUG: TownManager.getAllTowns() returned {} total towns before radius filtering", debugAllTownsCollection.size());
+                for (com.quackers29.businesscraft.town.Town town : debugAllTownsCollection) {
                     LOGGER.warn("DEBUG: Town found: '{}' at {}", town.getTownName(), getTownPosition(town));
                 }
             } catch (Exception e) {
@@ -1305,11 +1305,11 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             
             // Get all towns from the unified town manager
             com.quackers29.businesscraft.town.TownManager directTownManager = com.quackers29.businesscraft.town.TownManager.get(level);
-            Map<UUID, com.quackers29.businesscraft.town.Town> allTowns = directTownManager.getAllTowns();
+            Collection<com.quackers29.businesscraft.town.Town> allTowns = directTownManager.getAllTowns();
             
             LOGGER.debug("findTownsInRadius: Retrieved {} total towns from TownManager", allTowns.size());
             
-            for (com.quackers29.businesscraft.town.Town townObj : allTowns.values()) {
+            for (com.quackers29.businesscraft.town.Town townObj : allTowns) {
                 try {
                     com.quackers29.businesscraft.town.Town townData = townObj;
                     BlockPos townPos = getTownPosition(townData);
@@ -1544,7 +1544,7 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager.get(level);
             
             // Get all towns from TownManager
-            Map<UUID, com.quackers29.businesscraft.town.Town> allTowns = townManager.getAllTowns();
+            Collection<com.quackers29.businesscraft.town.Town> allTowns = townManager.getAllTowns();
             
             if (allTowns == null || allTowns.isEmpty()) {
                 LOGGER.debug("getAllTowns returned empty data");
@@ -1556,7 +1556,7 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             jsonBuilder.append("{");
             boolean first = true;
             
-            for (com.quackers29.businesscraft.town.Town town : allTowns.values()) {
+            for (com.quackers29.businesscraft.town.Town town : allTowns) {
                 try {
                     // Town object is already the correct type
                     
@@ -1846,8 +1846,8 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             
             // Get actual boundary radius from town (matches main branch behavior)
             int boundaryRadius = 10; // Default fallback
-            if (townObject instanceof com.quackers29.businesscraft.town.Town) {
-                boundaryRadius = ((com.quackers29.businesscraft.town.Town) townObject).getBoundaryRadius();
+            if (townData instanceof com.quackers29.businesscraft.town.Town) {
+                boundaryRadius = ((com.quackers29.businesscraft.town.Town) townData).getBoundaryRadius();
             }
             
             // Get town center coordinates
@@ -1960,13 +1960,12 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                 if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
                     try {
                         com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager.get(serverPlayer.serverLevel());
-                        Map<UUID, com.quackers29.businesscraft.town.Town> allTowns = townManager.getAllTowns();
+                        Collection<com.quackers29.businesscraft.town.Town> allTowns = townManager.getAllTowns();
                         BlockPos currentPos = townInterface.getBlockPos();
                         
                         if (allTowns != null) {
-                            for (Map.Entry<UUID, com.quackers29.businesscraft.town.Town> entry : allTowns.entrySet()) {
-                                UUID townId = entry.getKey();
-                                com.quackers29.businesscraft.town.Town town = entry.getValue();
+                            for (com.quackers29.businesscraft.town.Town town : allTowns) {
+                                UUID townId = town.getId();
                                 
                                 {
                                     // Skip the current town

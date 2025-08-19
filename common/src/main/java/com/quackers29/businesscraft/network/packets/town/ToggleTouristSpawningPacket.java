@@ -2,7 +2,7 @@ package com.quackers29.businesscraft.network.packets.town;
 
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+// TownInterfaceEntity access through BlockEntityHelper platform services
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,22 +35,25 @@ public class ToggleTouristSpawningPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        // Unified Architecture: Direct access to TownInterfaceEntity (replaces 5 BlockEntityHelper calls)
-        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
-        
-        if (townInterface != null) {
-            // Core business logic - platform-agnostic
-            boolean currentState = townInterface.isTouristSpawningEnabled();
-            boolean newState = !currentState;
-            
-            LOGGER.debug("Toggling tourist spawning to {} at position ({}, {}, {})", newState, x, y, z);
-            
-            // Direct unified access - no platform service bridge needed!
-            townInterface.setTouristSpawningEnabled(newState);
-            townInterface.setChanged();
-            townInterface.syncToClient();
+        // Enhanced MultiLoader: Use platform services for cross-platform compatibility
+        Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
+        if (blockEntity != null) {
+            Object townDataProvider = PlatformServices.getBlockEntityHelper().getTownDataProvider(blockEntity);
+            if (townDataProvider != null) {
+                // Platform-agnostic business logic through platform services
+                boolean currentState = PlatformServices.getBlockEntityHelper().isTouristSpawningEnabled(townDataProvider);
+                boolean newState = !currentState;
+                
+                LOGGER.debug("Toggling tourist spawning to {} at position ({}, {}, {})", newState, x, y, z);
+                
+                // Use platform services for cross-platform compatibility
+                PlatformServices.getBlockEntityHelper().setTouristSpawningEnabled(townDataProvider, newState);
+                PlatformServices.getBlockEntityHelper().markTownDataDirty(townDataProvider);
+            } else {
+                LOGGER.warn("No town data provider found at position ({}, {}, {})", x, y, z);
+            }
         } else {
-            LOGGER.warn("No TownInterfaceEntity found at position ({}, {}, {}) for tourist spawning toggle", x, y, z);
+            LOGGER.warn("No block entity found at position ({}, {}, {}) for tourist spawning toggle", x, y, z);
         }
     }
     
