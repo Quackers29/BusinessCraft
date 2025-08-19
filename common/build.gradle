@@ -1,15 +1,23 @@
-// Common module - platform-agnostic code for BusinessCraft
-// Contains business logic, data structures, and platform abstractions
-// Enhanced MultiLoader approach: No Minecraft dependencies in common module
+// Common module - UNIFIED ARCHITECTURE for BusinessCraft
+// Contains unified business logic with direct Minecraft API access
+// Unified Architecture approach: Direct Minecraft dependencies for natural database queries
 
 plugins {
     id 'java-library'
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
 
 archivesBaseName = 'businesscraft-common'
 
-// Enhanced MultiLoader approach: Common module is pure Java with no Minecraft dependencies
+// UNIFIED ARCHITECTURE: Minecraft configuration for common module
+minecraft {
+    mappings channel: 'parchment', version: '2023.06.26-1.20.1'
+}
+
+// UNIFIED ARCHITECTURE: Common module has direct Minecraft access
 dependencies {
+    minecraft 'net.minecraftforge:forge:1.20.1-47.1.0'
     // Common TOML library for configuration
     api 'com.moandjiezana.toml:toml4j:0.7.2'
     

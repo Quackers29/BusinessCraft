@@ -94,6 +94,14 @@ public class TownPaymentBoard {
     }
     
     /**
+     * Get all rewards (alias for getAllRewards() - enables natural database queries)
+     * Used by unified architecture natural queries: town.getPaymentBoard().getRewards()
+     */
+    public List<RewardEntry> getRewards() {
+        return getAllRewards();
+    }
+    
+    /**
      * Get rewards by source type
      */
     public List<RewardEntry> getRewardsBySource(RewardSource source) {

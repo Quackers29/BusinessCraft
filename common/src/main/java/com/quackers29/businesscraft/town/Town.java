@@ -7,6 +7,12 @@ import com.quackers29.businesscraft.platform.PlatformServices;
 import com.quackers29.businesscraft.town.components.TownComponent;
 // Using ITownDataProvider.VisitHistoryRecord instead
 import com.quackers29.businesscraft.town.service.TownBusinessLogic;
+import com.quackers29.businesscraft.town.data.TownPaymentBoard;
+import com.quackers29.businesscraft.town.data.RewardSource;
+import com.quackers29.businesscraft.town.data.RewardEntry;
+import com.quackers29.businesscraft.town.data.ClaimStatus;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +60,10 @@ public class Town implements ITownDataProvider {
     private int[] pathEnd;   // [x, y, z] - replaces BlockPos  
     private int searchRadius = 10;
     
-    // Payment board system (replaces storage systems)
+    // UNIFIED ARCHITECTURE: Direct payment board ownership (enables natural database queries)
+    private final TownPaymentBoard paymentBoard = new TownPaymentBoard();
+    
+    // Legacy payment board data (for migration compatibility)
     private final Map<String, Object> paymentBoardData = new ConcurrentHashMap<>();
     
     // Business logic service reference
@@ -534,15 +543,78 @@ public class Town implements ITownDataProvider {
     }
     
     /**
-     * Get payment board for this town using platform services.
-     * This is implemented by platform modules to provide access to the sophisticated payment board system.
+     * Gets the payment board for this town.
      * 
-     * @return Platform-specific payment board object, or null if not supported
+     * UNIFIED ARCHITECTURE: Direct access enables natural database queries!
+     * Now you can call: town.getPaymentBoard().getUnclaimedVisitorRewards()
+     * 
+     * @return The town's payment board with direct access to all reward data
      */
-    public Object getPaymentBoard() {
-        // This is implemented by platform modules through dependency injection or extension
-        // Common module cannot directly instantiate platform-specific classes
-        return PlatformServices.getTownManagerService().getPaymentBoard(this);
+    public TownPaymentBoard getPaymentBoard() {
+        // UNIFIED ARCHITECTURE: Direct ownership - no bridge pattern needed!
+        return paymentBoard;
+    }
+    
+    // ================================
+    // UNIFIED ARCHITECTURE: Natural Database-Style Queries
+    // ================================
+    
+    /**
+     * Gets all unclaimed visitor rewards for this town.
+     * 
+     * This is the exact natural database query that was requested!
+     * Example usage: town.getUnclaimedVisitorRewards()
+     * 
+     * @return List of unclaimed tourist arrival rewards
+     */
+    public List<RewardEntry> getUnclaimedVisitorRewards() {
+        return paymentBoard.getRewards().stream()
+            .filter(r -> r.getSource() == RewardSource.TOURIST_ARRIVAL)
+            .filter(r -> r.getStatus() == ClaimStatus.UNCLAIMED)
+            .toList();
+    }
+    
+    /**
+     * Gets all unclaimed rewards from a specific source.
+     * Example: town.getUnclaimedRewards(RewardSource.MILESTONE)
+     * 
+     * @param source The reward source to filter by
+     * @return List of unclaimed rewards from that source
+     */
+    public List<RewardEntry> getUnclaimedRewards(RewardSource source) {
+        return paymentBoard.getRewards().stream()
+            .filter(r -> r.getSource() == source)
+            .filter(r -> r.getStatus() == ClaimStatus.UNCLAIMED)
+            .toList();
+    }
+    
+    /**
+     * Gets total unclaimed emerald value across all rewards.
+     * Example: int emeralds = town.getTotalUnclaimedEmeralds()
+     * 
+     * @return Total emerald count from all unclaimed rewards
+     */
+    public int getTotalUnclaimedEmeralds() {
+        return paymentBoard.getRewards().stream()
+            .filter(r -> r.getStatus() == ClaimStatus.UNCLAIMED)
+            .flatMap(r -> r.getRewards().stream())
+            .filter(stack -> stack.getItem().toString().contains("emerald"))
+            .mapToInt(ItemStack::getCount)
+            .sum();
+    }
+    
+    /**
+     * Gets all rewards received from a specific origin town.
+     * Example: town.getRewardsFromTown(originTownId)
+     * 
+     * @param originTownId UUID of the origin town
+     * @return List of rewards from that town
+     */
+    public List<RewardEntry> getRewardsFromTown(UUID originTownId) {
+        return paymentBoard.getRewards().stream()
+            .filter(r -> r.getMetadata().containsKey("originTown"))
+            .filter(r -> r.getMetadata().get("originTown").equals(originTownId.toString()))
+            .toList();
     }
     
     // ================================
@@ -585,8 +657,11 @@ public class Town implements ITownDataProvider {
         }
         data.put("visitHistory", historyData);
         
-        // Payment board
-        data.put("paymentBoard", new HashMap<>(paymentBoardData));
+        // UNIFIED ARCHITECTURE: Serialize payment board directly
+        data.put("paymentBoard", paymentBoard.toNBT());
+        
+        // Legacy compatibility
+        data.put("paymentBoardData", new HashMap<>(paymentBoardData));
         
         return data;
     }
@@ -642,9 +717,21 @@ public class Town implements ITownDataProvider {
             }
         }
         
-        // Load payment board data
+        // UNIFIED ARCHITECTURE: Load payment board directly
         if (data.containsKey("paymentBoard")) {
-            town.paymentBoardData.putAll((Map<String, Object>) data.get("paymentBoard"));
+            Object paymentBoardData = data.get("paymentBoard");
+            if (paymentBoardData instanceof CompoundTag) {
+                // New unified format
+                town.paymentBoard.fromNBT((CompoundTag) paymentBoardData);
+            } else if (paymentBoardData instanceof Map) {
+                // Legacy compatibility - load old format into legacy map
+                town.paymentBoardData.putAll((Map<String, Object>) paymentBoardData);
+            }
+        }
+        
+        // Legacy compatibility
+        if (data.containsKey("paymentBoardData")) {
+            town.paymentBoardData.putAll((Map<String, Object>) data.get("paymentBoardData"));
         }
         
         return town;
