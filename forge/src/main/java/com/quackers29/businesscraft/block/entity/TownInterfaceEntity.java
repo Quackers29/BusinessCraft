@@ -103,7 +103,7 @@ import com.quackers29.businesscraft.town.data.ContainerDataHelper;
 import com.quackers29.businesscraft.town.data.TownBufferManager;
 import com.quackers29.businesscraft.debug.DebugConfig;
 
-public class TownInterfaceEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownInterfaceEntity> {
+public class TownInterfaceEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownInterfaceEntity>, ITownDataProvider {
     private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
         @Override
         protected void onContentsChanged(int slot) {
@@ -600,11 +600,20 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         return visitingPopulation.getOrDefault(townName, 0);
     }
 
-    public BlockPos getPathStart() {
+    public ITownDataProvider.Position getPathStart() {
+        return convertToPosition(pathStart);
+    }
+
+    public ITownDataProvider.Position getPathEnd() {
+        return convertToPosition(pathEnd);
+    }
+    
+    // Keep the original BlockPos methods for internal use
+    public BlockPos getPathStartBlockPos() {
         return pathStart;
     }
 
-    public BlockPos getPathEnd() {
+    public BlockPos getPathEndBlockPos() {
         return pathEnd;
     }
 
@@ -667,8 +676,9 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         return townId;
     }
 
+    @Override
     public int getBreadCount() {
-        return containerData.getValue("bread_count");
+        return getResourceCount(net.minecraft.world.item.Items.BREAD);
     }
 
     public int getPopulation() {
@@ -756,6 +766,12 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         return town;
     }
 
+    @Override
+    public boolean isTouristSpawningEnabled() {
+        return touristSpawningEnabled;
+    }
+
+    @Override
     public void setTouristSpawningEnabled(boolean enabled) {
         this.touristSpawningEnabled = enabled;
         
@@ -918,9 +934,9 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     }
 
     /**
-     * Gets the visit history for client-side display
+     * Gets the visit history for client-side display (legacy implementation)
      */
-    public List<VisitHistoryRecord> getVisitHistory() {
+    public List<VisitHistoryRecord> getVisitHistoryForClient() {
         return clientSyncHelper.getVisitHistory(level, getTownDataProvider());
     }
 
@@ -1070,6 +1086,137 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
                 return new com.quackers29.businesscraft.menu.PaymentBoardMenu(containerId, playerInventory, friendlyBuf);
             }
         };
+    }
+    
+    // ITownDataProvider interface implementation - delegate to Town
+    // Most methods are delegated to the town instance which already implements ITownDataProvider
+    
+    @Override
+    public void addResource(Object item, int count) {
+        Town town = getTown();
+        if (town != null) {
+            town.addResource(item, count);
+            setChanged();
+        }
+    }
+    
+    @Override
+    public int getResourceCount(Object item) {
+        Town town = getTown();
+        return town != null ? town.getResourceCount(item) : 0;
+    }
+    
+    @Override
+    public Map<Object, Integer> getAllResources() {
+        Town town = getTown();
+        return town != null ? town.getAllResources() : java.util.Collections.emptyMap();
+    }
+    
+    @Override
+    public boolean addToCommunalStorage(Object item, int count) {
+        Town town = getTown();
+        return town != null ? town.addToCommunalStorage(item, count) : false;
+    }
+    
+    @Override
+    public int getCommunalStorageCount(Object item) {
+        Town town = getTown();
+        return town != null ? town.getCommunalStorageCount(item) : 0;
+    }
+    
+    @Override
+    public Map<Object, Integer> getAllCommunalStorageItems() {
+        Town town = getTown();
+        return town != null ? town.getAllCommunalStorageItems() : java.util.Collections.emptyMap();
+    }
+    
+    @Override
+    public boolean addToPersonalStorage(UUID playerId, Object item, int count) {
+        Town town = getTown();
+        return town != null ? town.addToPersonalStorage(playerId, item, count) : false;
+    }
+    
+    @Override
+    public int getPersonalStorageCount(UUID playerId, Object item) {
+        Town town = getTown();
+        return town != null ? town.getPersonalStorageCount(playerId, item) : 0;
+    }
+    
+    @Override
+    public Map<Object, Integer> getPersonalStorageItems(UUID playerId) {
+        Town town = getTown();
+        return town != null ? town.getPersonalStorageItems(playerId) : java.util.Collections.emptyMap();
+    }
+    
+    @Override
+    public int getTouristCount() {
+        Town town = getTown();
+        return town != null ? town.getTouristCount() : 0;
+    }
+    
+    @Override
+    public int getMaxTourists() {
+        Town town = getTown();
+        return town != null ? town.getMaxTourists() : 0;
+    }
+    
+    @Override
+    public boolean canAddMoreTourists() {
+        Town town = getTown();
+        return town != null ? town.canAddMoreTourists() : false;
+    }
+    
+    @Override
+    public boolean canSpawnTourists() {
+        return isTouristSpawningEnabled() && canAddMoreTourists();
+    }
+    
+    @Override
+    public void markDirty() {
+        setChanged();
+    }
+    
+    @Override
+    public ITownDataProvider.Position getPosition() {
+        return convertToPosition(getBlockPos());
+    }
+    
+    @Override
+    public void addVisitor(UUID fromTownId) {
+        Town town = getTown();
+        if (town != null) {
+            town.addVisitor(fromTownId);
+        }
+    }
+    
+    @Override
+    public int getTotalVisitors() {
+        Town town = getTown();
+        return town != null ? town.getTotalVisitors() : 0;
+    }
+    
+    @Override
+    public void recordVisit(UUID originTownId, int count, ITownDataProvider.Position originPos) {
+        Town town = getTown();
+        if (town != null) {
+            town.recordVisit(originTownId, count, originPos);
+        }
+    }
+    
+    @Override
+    public List<ITownDataProvider.VisitHistoryRecord> getVisitHistory() {
+        Town town = getTown();
+        return town != null ? town.getVisitHistory() : java.util.Collections.emptyList();
+    }
+    
+    @Override
+    public void setPathStart(ITownDataProvider.Position pos) {
+        setPathStart(convertToBlockPos(pos));
+    }
+    
+    @Override
+    public void setPathEnd(ITownDataProvider.Position pos) {
+        setPathEnd(convertToBlockPos(pos));
     }
     
     // Position conversion helper methods

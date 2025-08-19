@@ -102,7 +102,7 @@ public class ModEvents {
                 // Update provider
                 ITownDataProvider provider = townInterface.getTownDataProvider();
                 if (provider != null) {
-                    provider.setPathStart(PositionConverter.toPosition(townInterface.getPathStart()));
+                    provider.setPathStart(PositionConverter.toPosition(townInterface.getPathStartBlockPos()));
                     provider.setPathEnd(PositionConverter.toPosition(clickedPos));
                     provider.markDirty();
                 }
