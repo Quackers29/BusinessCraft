@@ -418,13 +418,6 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             ServerPlayer serverPlayer = (ServerPlayer) player;
             ServerLevel level = serverPlayer.serverLevel();
             
-            // Get TownManagerService using platform services
-            ITownManagerService townManagerService = PlatformServices.getTownManagerService();
-            if (townManagerService == null) {
-                LOGGER.warn("TownManagerService not available for getTownById");
-                return null;
-            }
-            
             // Convert string to UUID
             UUID townUUID;
             try {
@@ -434,21 +427,16 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                 return null;
             }
             
-            // Get all towns and find the matching one
+            // Get town using direct unified access
             try {
-                Map<UUID, Object> allTowns = townManagerService.getAllTowns(level);
+                com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager.get(level);
+                com.quackers29.businesscraft.town.Town town = townManager.getTown(townUUID);
                 
-                if (allTowns != null) {
-                    Object town = allTowns.get(townUUID);
-                    if (town != null) {
-                        LOGGER.debug("Found town by ID {}: {}", townId, town.getClass().getSimpleName());
-                        return town;
-                    } else {
-                        LOGGER.debug("Town not found by ID: {}", townId);
-                        return null;
-                    }
+                if (town != null) {
+                    LOGGER.debug("Found town by ID {}: {}", townId, town.getClass().getSimpleName());
+                    return town;
                 } else {
-                    LOGGER.warn("getAllTowns returned null");
+                    LOGGER.debug("Town not found by ID: {}", townId);
                     return null;
                 }
             } catch (Exception e) {
@@ -763,17 +751,10 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                 return false;
             }
             
-            // Get the town through TownManager service
-            Object townManagerService = com.quackers29.businesscraft.platform.PlatformServices.getTownManagerService();
-            if (townManagerService == null) {
-                LOGGER.error("TownManager service not available");
-                return false;
-            }
-            
-            // Get the town through TownManager service (Enhanced MultiLoader)
+            // Get the town using direct unified access
             net.minecraft.server.level.ServerLevel serverLevel = (net.minecraft.server.level.ServerLevel) townEntity.getLevel();
-            ITownManagerService townManagerServiceTyped = (ITownManagerService) townManagerService;
-            Town town = (Town) townManagerServiceTyped.getTown(serverLevel, townId);
+            com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager.get(serverLevel);
+            com.quackers29.businesscraft.town.Town town = townManager.getTown(townId);
             
             if (town == null) {
                 LOGGER.debug("No town found for ID: {}", townId);
@@ -1161,13 +1142,12 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             
             // Debug: Check total towns available before radius filtering
             try {
-                Map<UUID, Object> debugAllTowns = PlatformServices.getTownManagerService().getAllTowns((ServerLevel) townManager);
-                LOGGER.warn("DEBUG: TownManagerService.getAllTowns() returned {} total towns before radius filtering", debugAllTowns.size());
-                for (Map.Entry<UUID, Object> entry : debugAllTowns.entrySet()) {
-                    Object townObj = entry.getValue();
-                    if (townObj instanceof ITownDataProvider townData) {
-                        LOGGER.warn("DEBUG: Town found: '{}' at {}", townData.getTownName(), getTownPosition(townData));
-                    }
+                com.quackers29.businesscraft.town.TownManager directTownManager = com.quackers29.businesscraft.town.TownManager.get((ServerLevel) townManager);
+                Map<UUID, com.quackers29.businesscraft.town.Town> debugAllTowns = directTownManager.getAllTowns();
+                LOGGER.warn("DEBUG: TownManager.getAllTowns() returned {} total towns before radius filtering", debugAllTowns.size());
+                for (Map.Entry<UUID, com.quackers29.businesscraft.town.Town> entry : debugAllTowns.entrySet()) {
+                    com.quackers29.businesscraft.town.Town town = entry.getValue();
+                    LOGGER.warn("DEBUG: Town found: '{}' at {}", town.getTownName(), getTownPosition(town));
                 }
             } catch (Exception e) {
                 LOGGER.error("DEBUG: Failed to check total towns: {}", e.getMessage());
@@ -1323,14 +1303,15 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             // townManager is actually the ServerLevel
             ServerLevel level = (ServerLevel) townManager;
             
-            // Get all towns from the town manager service
-            Map<UUID, Object> allTowns = PlatformServices.getTownManagerService().getAllTowns(level);
+            // Get all towns from the unified town manager
+            com.quackers29.businesscraft.town.TownManager directTownManager = com.quackers29.businesscraft.town.TownManager.get(level);
+            Map<UUID, com.quackers29.businesscraft.town.Town> allTowns = directTownManager.getAllTowns();
             
-            LOGGER.debug("findTownsInRadius: Retrieved {} total towns from TownManagerService", allTowns.size());
+            LOGGER.debug("findTownsInRadius: Retrieved {} total towns from TownManager", allTowns.size());
             
-            for (Object townObj : allTowns.values()) {
+            for (com.quackers29.businesscraft.town.Town townObj : allTowns.values()) {
                 try {
-                    ITownDataProvider townData = (ITownDataProvider) townObj;
+                    com.quackers29.businesscraft.town.Town townData = townObj;
                     BlockPos townPos = getTownPosition(townData);
                     
                     LOGGER.debug("Processing town '{}' at position {}", townData.getTownName(), townPos);
@@ -1559,16 +1540,11 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
      */
     private String generateDestinationTownData(ServerLevel level, BlockPos centerPos, int maxRadius) {
         try {
-            // Use platform service to get TownManager
-            ITownManagerService townManagerService = PlatformServices.getTownManagerService();
+            // Use unified TownManager directly
+            com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager.get(level);
             
-            if (townManagerService == null) {
-                LOGGER.debug("TownManagerService not available, returning empty town data");
-                return "{}";
-            }
-            
-            // Get all towns from TownManagerService
-            Map<UUID, Object> allTowns = townManagerService.getAllTowns(level);
+            // Get all towns from TownManager
+            Map<UUID, com.quackers29.businesscraft.town.Town> allTowns = townManager.getAllTowns();
             
             if (allTowns == null || allTowns.isEmpty()) {
                 LOGGER.debug("getAllTowns returned empty data");
@@ -1580,12 +1556,9 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             jsonBuilder.append("{");
             boolean first = true;
             
-            for (Object town : allTowns.values()) {
+            for (com.quackers29.businesscraft.town.Town town : allTowns.values()) {
                 try {
-                    // Get town position through ITownDataProvider
-                    if (!(town instanceof com.quackers29.businesscraft.api.ITownDataProvider)) {
-                        continue;
-                    }
+                    // Town object is already the correct type
                     
                     com.quackers29.businesscraft.api.ITownDataProvider townData = 
                         (com.quackers29.businesscraft.api.ITownDataProvider) town;
@@ -1773,28 +1746,15 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
      */
     private void generateStructuredPlatformData(net.minecraft.server.level.ServerLevel level, UUID townId, TownPlatformDataResponsePacket response) {
         try {
-            // Use platform service to get TownManager
-            ITownManagerService townManagerService = PlatformServices.getTownManagerService();
-            if (townManagerService == null) {
-                LOGGER.debug("TownManagerService not available for platform data generation");
-                return;
-            }
+            // Use unified TownManager directly
+            com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager.get(level);
             
             // Get the town object
-            Object townObject = townManagerService.getTown(level, townId);
-            if (townObject == null) {
+            com.quackers29.businesscraft.town.Town townData = townManager.getTown(townId);
+            if (townData == null) {
                 LOGGER.debug("Town {} not found for platform data generation", townId);
                 return;
             }
-            
-            // Get town data provider
-            if (!(townObject instanceof com.quackers29.businesscraft.api.ITownDataProvider)) {
-                LOGGER.debug("Town {} does not implement ITownDataProvider", townId);
-                return;
-            }
-            
-            com.quackers29.businesscraft.api.ITownDataProvider townData = 
-                (com.quackers29.businesscraft.api.ITownDataProvider) townObject;
             
             // Get the town's position to find the TownInterfaceEntity
             ITownDataProvider.Position townPos = townData.getPosition();
@@ -1869,28 +1829,15 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
      */
     private void generateStructuredTownInfo(net.minecraft.server.level.ServerLevel level, UUID townId, TownPlatformDataResponsePacket response) {
         try {
-            // Use platform service to get TownManager
-            ITownManagerService townManagerService = PlatformServices.getTownManagerService();
-            if (townManagerService == null) {
-                LOGGER.debug("TownManagerService not available for town info generation");
-                return;
-            }
+            // Use unified TownManager directly
+            com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager.get(level);
             
             // Get the town object
-            Object townObject = townManagerService.getTown(level, townId);
-            if (townObject == null) {
+            com.quackers29.businesscraft.town.Town townData = townManager.getTown(townId);
+            if (townData == null) {
                 LOGGER.debug("Town {} not found for town info generation", townId);
                 return;
             }
-            
-            // Get town data provider
-            if (!(townObject instanceof com.quackers29.businesscraft.api.ITownDataProvider)) {
-                LOGGER.debug("Town {} does not implement ITownDataProvider", townId);
-                return;
-            }
-            
-            com.quackers29.businesscraft.api.ITownDataProvider townData = 
-                (com.quackers29.businesscraft.api.ITownDataProvider) townObject;
             
             // Extract town information
             String townName = townData.getTownName();
@@ -2009,19 +1956,19 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                 Map<UUID, Integer> townDistances = new HashMap<>();
                 Map<UUID, String> townDirections = new HashMap<>();
                 
-                // Get TownManagerService to access all towns
-                ITownManagerService townManagerService = PlatformServices.getTownManagerService();
-                if (townManagerService != null && player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                // Get unified TownManager to access all towns
+                if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
                     try {
-                        Map<UUID, Object> allTowns = townManagerService.getAllTowns(serverPlayer.serverLevel());
+                        com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager.get(serverPlayer.serverLevel());
+                        Map<UUID, com.quackers29.businesscraft.town.Town> allTowns = townManager.getAllTowns();
                         BlockPos currentPos = townInterface.getBlockPos();
                         
                         if (allTowns != null) {
-                            for (Map.Entry<UUID, Object> entry : allTowns.entrySet()) {
+                            for (Map.Entry<UUID, com.quackers29.businesscraft.town.Town> entry : allTowns.entrySet()) {
                                 UUID townId = entry.getKey();
-                                Object townObj = entry.getValue();
+                                com.quackers29.businesscraft.town.Town town = entry.getValue();
                                 
-                                if (townObj instanceof com.quackers29.businesscraft.town.Town town) {
+                                {
                                     // Skip the current town
                                     if (townId.equals(townInterface.getTownId())) continue;
                                     

@@ -136,14 +136,11 @@ public class PlatformPathHandler {
             return "No town associated with this block";
         }
         
-        // Get town through platform services
-        ITownManagerService townManagerService = PlatformServices.getTownManagerService();
-        if (townManagerService == null) {
-            return "Town manager service not available";
-        }
+        // Get town through unified TownManager
+        com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager.get(serverLevel);
         
-        Object townObj = townManagerService.getTown(serverLevel, townId);
-        if (townObj == null) {
+        com.quackers29.businesscraft.town.Town town = townManager.getTown(townId);
+        if (town == null) {
             return "Town not found";
         }
         

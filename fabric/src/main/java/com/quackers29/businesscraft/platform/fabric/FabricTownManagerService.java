@@ -118,7 +118,7 @@ public class FabricTownManagerService implements ITownManagerService {
     public void addResource(Object level, UUID townId, Object item, int count) {
         ServerWorld serverLevel = (ServerWorld) level;
         
-        // Convert item types if needed - using registry helper for consistency
+        // Convert item types if needed - using registry helper for Fabric platform abstraction
         String itemId;
         if (item instanceof ItemStack) {
             ItemStack itemStack = (ItemStack) item;

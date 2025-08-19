@@ -312,12 +312,8 @@ public class BusinessCraft {
                 LOGGER.error("❌ BlockEntityHelper: NOT AVAILABLE");
             }
             
-            // Test new town management services
-            if (PlatformServices.getTownManagerService() != null) {
-                LOGGER.info("✅ TownManagerService: Available (" + PlatformServices.getTownManagerService().getClass().getSimpleName() + ")");
-            } else {
-                LOGGER.error("❌ TownManagerService: NOT AVAILABLE");
-            }
+            // Test unified TownManager - no longer needed as platform service
+            LOGGER.info("✅ TownManager: Using unified architecture (direct access)");
             
             if (PlatformServices.getDataStorageHelper() != null) {
                 LOGGER.info("✅ DataStorageHelper: Available (" + PlatformServices.getDataStorageHelper().getClass().getSimpleName() + ")");
