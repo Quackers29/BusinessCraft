@@ -53,7 +53,7 @@ import com.quackers29.businesscraft.network.packets.storage.PaymentBoardClaimPac
 // TODO: Migrate remaining buffer and personal storage packets to common module  
 // import com.quackers29.businesscraft.network.packets.storage.BufferStoragePacket;
 // import com.quackers29.businesscraft.network.packets.storage.BufferStorageResponsePacket;
-// import com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket;
+import com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket;
 // import com.quackers29.businesscraft.network.packets.storage.PersonalStoragePacket;
 // import com.quackers29.businesscraft.network.packets.storage.PersonalStorageResponsePacket;
 // import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
@@ -359,12 +359,17 @@ public class ModMessages {
         //         .add();
                 
         // Register new slot-based buffer storage response packet
-        // TODO: Migrate BufferSlotStorageResponsePacket to common module
-        // net.messageBuilder(BufferSlotStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-        //         .decoder(BufferSlotStorageResponsePacket::decode)
-        //         .encoder(BufferSlotStorageResponsePacket::encode)
-        //         .consumerMainThread(BufferSlotStorageResponsePacket::handle)
-        //         .add();
+        // ✅ MIGRATED: BufferSlotStorageResponsePacket to common module
+        net.messageBuilder(BufferSlotStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(BufferSlotStorageResponsePacket::decode)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handleClient();
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
+                .add();
                 
         // Register personal storage packets
         // TODO: Migrate PersonalStoragePacket to common module

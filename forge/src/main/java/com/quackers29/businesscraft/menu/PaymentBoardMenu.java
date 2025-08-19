@@ -401,14 +401,13 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
                     if (townId != null && player.level() instanceof net.minecraft.server.level.ServerLevel sLevel) {
                         com.quackers29.businesscraft.town.Town town = com.quackers29.businesscraft.town.TownManager.get(sLevel).getTown(townId);
                         if (town != null) {
-                            // TODO: Payment board system needs to be implemented in common Town class
+                            // UNIFIED ARCHITECTURE: Direct payment board access now available!
                             // Remove item from Payment Board buffer storage
-                            // boolean success = town.getPaymentBoard().removeFromBuffer(itemStack.getItem(), itemStack.getCount());
-                            boolean success = false; // Placeholder
+                            boolean success = town.getPaymentBoard().removeFromBuffer(itemStack.getItem(), itemStack.getCount());
                             
                             DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
-                                "Payment board removal disabled - TODO: implement in common Town: {} {}", 
-                                itemStack.getCount(), itemStack.getItem());
+                                "Payment board buffer removal result: {} for {} x{}", 
+                                success, itemStack.getCount(), itemStack.getItem());
                             
                             // Trigger buffer change notification to sync UI
                             townInterfaceEntity.onTownBufferChanged();

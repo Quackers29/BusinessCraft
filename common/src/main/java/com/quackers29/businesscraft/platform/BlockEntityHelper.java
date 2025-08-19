@@ -449,6 +449,19 @@ public interface BlockEntityHelper {
     boolean updateCommunalStorageUI(Object player, int x, int y, int z, java.util.Map<Integer, Object> storageItems);
     
     /**
+     * Update buffer storage UI on client side.
+     * Platform implementations handle client-side payment board buffer UI updates.
+     * 
+     * @param player Platform-specific player object
+     * @param x Block X coordinate
+     * @param y Block Y coordinate
+     * @param z Block Z coordinate
+     * @param bufferSlots Map of slot IDs to ItemStacks
+     * @return True if buffer storage UI was successfully updated
+     */
+    boolean updateBufferStorageUI(Object player, int x, int y, int z, java.util.Map<Integer, Object> bufferSlots);
+    
+    /**
      * Process town map data request.
      * Platform implementations handle server-side town map data generation and response.
      * 

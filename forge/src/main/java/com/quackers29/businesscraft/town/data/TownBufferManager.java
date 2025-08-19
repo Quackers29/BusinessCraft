@@ -201,10 +201,24 @@ public class TownBufferManager {
     
     /**
      * Platform-specific method to sync SlotBasedStorage to platform inventory
-     * Should be implemented by platform-specific subclasses
+     * Forge implementation: Updates ItemStackHandler from town buffer storage
      */
     protected void syncSlotsToInventory(SlotBasedStorage slotStorage) {
-        // Default no-op - platform implementations should override
+        // Sync each slot from SlotBasedStorage to ItemStackHandler
+        for (int i = 0; i < Math.min(slotStorage.getSlotCount(), bufferHandler.getSlots()); i++) {
+            ItemStack slotStack = slotStorage.getSlot(i);
+            ItemStack handlerStack = bufferHandler.getStackInSlot(i);
+            
+            // Check if the stacks are different
+            if (!ItemStack.matches(slotStack, handlerStack)) {
+                // Update the ItemStackHandler with the current SlotBasedStorage contents
+                bufferHandler.setStackInSlot(i, slotStack.copy());
+                
+                LOGGER.debug("Synced slot {} to inventory: {} -> {}", i,
+                    handlerStack.isEmpty() ? "empty" : handlerStack.getCount() + "x" + handlerStack.getItem(),
+                    slotStack.isEmpty() ? "empty" : slotStack.getCount() + "x" + slotStack.getItem());
+            }
+        }
     }
     
     /**
@@ -245,12 +259,30 @@ public class TownBufferManager {
     
     /**
      * Platform-specific method to sync platform inventory to SlotBasedStorage
-     * Should be implemented by platform-specific subclasses
+     * Forge implementation: Updates town buffer storage from ItemStackHandler
      * @return true if any changes were made
      */
     protected boolean syncInventoryToSlots(SlotBasedStorage slotStorage) {
-        // Default no-op - platform implementations should override
-        return false;
+        boolean changed = false;
+        
+        // Sync each slot from ItemStackHandler to SlotBasedStorage
+        for (int i = 0; i < Math.min(bufferHandler.getSlots(), slotStorage.getSlotCount()); i++) {
+            ItemStack handlerStack = bufferHandler.getStackInSlot(i);
+            ItemStack slotStack = slotStorage.getSlot(i);
+            
+            // Check if the stacks are different
+            if (!ItemStack.matches(handlerStack, slotStack)) {
+                // Update the SlotBasedStorage with the current ItemStackHandler contents
+                slotStorage.setSlot(i, handlerStack.copy());
+                changed = true;
+                
+                LOGGER.debug("Synced slot {}: {} -> {}", i, 
+                    slotStack.isEmpty() ? "empty" : slotStack.getCount() + "x" + slotStack.getItem(),
+                    handlerStack.isEmpty() ? "empty" : handlerStack.getCount() + "x" + handlerStack.getItem());
+            }
+        }
+        
+        return changed;
     }
     
     /**

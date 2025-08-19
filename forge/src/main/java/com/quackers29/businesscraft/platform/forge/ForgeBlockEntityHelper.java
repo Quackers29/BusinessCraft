@@ -846,6 +846,11 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                 
                 com.quackers29.businesscraft.platform.PlatformServices.getNetworkHelper()
                     .sendPaymentBoardResponsePacket(serverPlayer, rewards);
+
+                // Send updated buffer storage data to client
+                var bufferSlots = town.getPaymentBoard().getBufferStorageSlots();
+                com.quackers29.businesscraft.platform.PlatformServices.getNetworkHelper()
+                    .sendBufferSlotStorageResponsePacket(serverPlayer, bufferSlots);
                 
                 // Send success message to player using real claim result
                 String message = claimResult.getMessage();
@@ -2153,6 +2158,65 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
         } catch (Exception e) {
             LOGGER.error("Failed to parse destination data: {}", e.getMessage());
             e.printStackTrace();
+            return false;
+        }
+    }
+    
+    public boolean updateCommunalStorageUI(Object player, int x, int y, int z, java.util.Map<Integer, Object> storageItems) {
+        // TODO: Implement communal storage UI updates for client-side
+        LOGGER.debug("updateCommunalStorageUI called - not yet implemented");
+        return true; // Return true for now to not break the flow
+    }
+    
+    public boolean updateBufferStorageUI(Object player, int x, int y, int z, java.util.Map<Integer, Object> bufferSlots) {
+        try {
+            LOGGER.debug("updateBufferStorageUI called with {} buffer slots", bufferSlots.size());
+            
+            // Get the current client screen
+            Object currentScreen = PlatformServices.getPlatformHelper().getCurrentScreen();
+            if (currentScreen == null) {
+                LOGGER.debug("No current screen to update with buffer storage data");
+                return false;
+            }
+            
+            String simpleClassName = currentScreen.getClass().getSimpleName();
+            LOGGER.debug("Current screen class: {}", simpleClassName);
+            
+            if ("PaymentBoardScreen".equals(simpleClassName)) {
+                // Convert Map<Integer, Object> (slot -> ItemStack) to Map<Item, Integer> (Item -> count)
+                java.util.Map<net.minecraft.world.item.Item, Integer> itemCounts = new java.util.HashMap<>();
+                
+                for (java.util.Map.Entry<Integer, Object> entry : bufferSlots.entrySet()) {
+                    if (entry.getValue() instanceof net.minecraft.world.item.ItemStack stack && !stack.isEmpty()) {
+                        net.minecraft.world.item.Item item = stack.getItem();
+                        int count = stack.getCount();
+                        
+                        // Add to existing count if item already exists
+                        itemCounts.merge(item, count, Integer::sum);
+                        
+                        LOGGER.debug("Slot {}: {} x{}", entry.getKey(), item, count);
+                    }
+                }
+                
+                LOGGER.debug("Converted {} slots to {} unique items", bufferSlots.size(), itemCounts.size());
+                
+                // Use reflection to call updateBufferStorageItems method
+                java.lang.reflect.Method updateMethod = currentScreen.getClass()
+                    .getMethod("updateBufferStorageItems", java.util.Map.class);
+                
+                LOGGER.debug("Found updateBufferStorageItems method: {}", updateMethod);
+                
+                updateMethod.invoke(currentScreen, itemCounts);
+                
+                LOGGER.debug("Successfully invoked PaymentBoardScreen.updateBufferStorageItems() with {} items", itemCounts.size());
+                return true;
+            } else {
+                LOGGER.debug("Screen is not PaymentBoardScreen: {}", simpleClassName);
+                return false;
+            }
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to update buffer storage UI: {}", e.getMessage(), e);
             return false;
         }
     }

@@ -248,8 +248,45 @@ public class ForgeNetworkHelper implements NetworkHelper {
     }
     
     public void sendBufferSlotStorageResponsePacket(Object player, Object bufferSlots) {
-        // TODO: Implement specialized buffer slot storage response packet sending
-        LOGGER.warn("sendBufferSlotStorageResponsePacket not yet implemented for Forge");
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            LOGGER.warn("FORGE NETWORK HELPER: Player is not a ServerPlayer: {}", 
+                player != null ? player.getClass().getSimpleName() : "null");
+            return;
+        }
+
+        if (bufferSlots == null) {
+            LOGGER.warn("FORGE NETWORK HELPER: Buffer slots is null");
+            return;
+        }
+
+        if (!(bufferSlots instanceof com.quackers29.businesscraft.town.data.SlotBasedStorage slotStorage)) {
+            LOGGER.warn("FORGE NETWORK HELPER: Buffer slots is not SlotBasedStorage: {}", 
+                bufferSlots.getClass().getSimpleName());
+            return;
+        }
+
+        // Convert SlotBasedStorage to Map<Integer, Object> for packet transmission
+        Map<Integer, Object> slotMap = new HashMap<>();
+        for (int i = 0; i < slotStorage.getSlotCount(); i++) {
+            net.minecraft.world.item.ItemStack stack = slotStorage.getSlot(i);
+            if (!stack.isEmpty()) {
+                slotMap.put(i, stack);
+            }
+        }
+
+        // Get block position from player's currently interacting town interface
+        // For now we'll use the player's position - this should be improved to get the actual block position
+        net.minecraft.core.BlockPos playerPos = serverPlayer.blockPosition();
+
+        // Create and send the buffer slot storage response packet
+        com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket packet = 
+            new com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket(
+                playerPos.getX(), playerPos.getY(), playerPos.getZ(), slotMap);
+
+        ModMessages.sendToPlayer(packet, serverPlayer);
+
+        LOGGER.debug("Sent BufferSlotStorageResponsePacket to player {}: {} slots with items", 
+            serverPlayer.getName().getString(), slotMap.size());
     }
     
     /**
