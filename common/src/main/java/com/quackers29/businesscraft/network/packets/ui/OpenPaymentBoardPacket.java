@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.network.packets.ui;
 
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,15 +46,15 @@ public class OpenPaymentBoardPacket extends BaseBlockEntityPacket {
     public void handle(Object player) {
         LOGGER.debug("Opening Payment Board for player at position [{}, {}, {}]", getX(), getY(), getZ());
         
-        // Get the town interface block entity through platform services
-        Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, getX(), getY(), getZ());
-        if (blockEntity == null) {
-            LOGGER.warn("Block entity not found at position [{}, {}, {}] for Payment Board UI", getX(), getY(), getZ());
+        // Unified Architecture: Direct access to TownInterfaceEntity (replaces 2 BlockEntityHelper calls)
+        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
+        if (townInterface == null) {
+            LOGGER.warn("No TownInterfaceEntity found at position [{}, {}, {}] for Payment Board UI", getX(), getY(), getZ());
             return;
         }
         
-        // Open the Payment Board UI through platform services
-        boolean success = PlatformServices.getBlockEntityHelper().openPaymentBoardUI(blockEntity, player);
+        // Direct unified access - no platform service bridge needed!
+        boolean success = townInterface.openPaymentBoardUI(player);
         
         if (success) {
             LOGGER.debug("Successfully opened Payment Board for player at [{}, {}, {}]", getX(), getY(), getZ());

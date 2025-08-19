@@ -46,4 +46,14 @@ public interface TownInterfaceEntity {
      * Set search radius (replaces BlockEntityHelper.setSearchRadius)
      */
     void setSearchRadius(int radius);
+    
+    /**
+     * Get unclaimed rewards from payment board (replaces BlockEntityHelper.getUnclaimedRewards)
+     */
+    java.util.List<Object> getUnclaimedRewards();
+    
+    /**
+     * Open payment board UI for player (replaces BlockEntityHelper.openPaymentBoardUI)
+     */
+    boolean openPaymentBoardUI(Object player);
 }

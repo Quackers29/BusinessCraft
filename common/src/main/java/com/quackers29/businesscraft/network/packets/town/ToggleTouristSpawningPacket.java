@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.network.packets.town;
 
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,29 +35,22 @@ public class ToggleTouristSpawningPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        // Platform services will provide block entity access
-        Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
+        // Unified Architecture: Direct access to TownInterfaceEntity (replaces 5 BlockEntityHelper calls)
+        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
         
-        if (blockEntity != null) {
-            // Use platform services to access town interface functionality
-            Object townDataProvider = PlatformServices.getBlockEntityHelper().getTownDataProvider(blockEntity);
+        if (townInterface != null) {
+            // Core business logic - platform-agnostic
+            boolean currentState = townInterface.isTouristSpawningEnabled();
+            boolean newState = !currentState;
             
-            if (townDataProvider != null) {
-                // This is the core business logic - platform-agnostic
-                boolean currentState = PlatformServices.getBlockEntityHelper().isTouristSpawningEnabled(townDataProvider);
-                boolean newState = !currentState;
-                
-                LOGGER.debug("Toggling tourist spawning to {} at position ({}, {}, {})", newState, x, y, z);
-                
-                // Update through platform services
-                PlatformServices.getBlockEntityHelper().setTouristSpawningEnabled(townDataProvider, newState);
-                PlatformServices.getBlockEntityHelper().markTownDataDirty(townDataProvider);
-                PlatformServices.getBlockEntityHelper().syncTownData(blockEntity);
-            } else {
-                LOGGER.warn("No town data provider found at position ({}, {}, {})", x, y, z);
-            }
+            LOGGER.debug("Toggling tourist spawning to {} at position ({}, {}, {})", newState, x, y, z);
+            
+            // Direct unified access - no platform service bridge needed!
+            townInterface.setTouristSpawningEnabled(newState);
+            townInterface.setChanged();
+            townInterface.syncToClient();
         } else {
-            LOGGER.warn("No block entity found at position ({}, {}, {}) for tourist spawning toggle", x, y, z);
+            LOGGER.warn("No TownInterfaceEntity found at position ({}, {}, {}) for tourist spawning toggle", x, y, z);
         }
     }
     

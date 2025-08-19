@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.network.packets.platform;
 
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,32 +49,25 @@ public class SetSearchRadiusPacket extends BaseBlockEntityPacket {
     public void handle(Object player) {
         LOGGER.debug("Processing SetSearchRadiusPacket for position ({}, {}, {}) with radius: {}", x, y, z, radius);
         
-        // Platform services will provide block entity access
-        Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
+        // Unified Architecture: Direct access to TownInterfaceEntity (replaces 5 BlockEntityHelper calls)
+        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
         
-        if (blockEntity != null) {
-            // Use platform services to access town interface functionality
-            Object townDataProvider = PlatformServices.getBlockEntityHelper().getTownDataProvider(blockEntity);
+        if (townInterface != null) {
+            // Core business logic - update search radius
+            int oldRadius = townInterface.getSearchRadius();
             
-            if (townDataProvider != null) {
-                // Core business logic - update search radius
-                int oldRadius = PlatformServices.getBlockEntityHelper().getSearchRadius(townDataProvider);
-                
-                // Update through platform services
-                PlatformServices.getBlockEntityHelper().setSearchRadius(townDataProvider, radius);
-                PlatformServices.getBlockEntityHelper().markTownDataDirty(townDataProvider);
-                PlatformServices.getBlockEntityHelper().syncTownData(blockEntity);
-                
-                LOGGER.debug("Search radius updated successfully from {} to {}", oldRadius, radius);
-                
-                // Platform services can handle menu refreshing if needed
-                PlatformServices.getMenuHelper().refreshActiveMenu(player, "search_radius");
-                
-            } else {
-                LOGGER.warn("No town data provider found at position ({}, {}, {})", x, y, z);
-            }
+            // Direct unified access - no platform service bridge needed!
+            townInterface.setSearchRadius(radius);
+            townInterface.setChanged();
+            townInterface.syncToClient();
+            
+            LOGGER.debug("Search radius updated successfully from {} to {}", oldRadius, radius);
+            
+            // Platform services can handle menu refreshing if needed (this stays - UI management)
+            PlatformServices.getMenuHelper().refreshActiveMenu(player, "search_radius");
+            
         } else {
-            LOGGER.warn("No block entity found at position ({}, {}, {}) for search radius change", x, y, z);
+            LOGGER.warn("No TownInterfaceEntity found at position ({}, {}, {}) for search radius change", x, y, z);
         }
     }
     

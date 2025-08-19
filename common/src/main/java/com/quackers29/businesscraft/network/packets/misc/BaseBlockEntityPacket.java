@@ -56,7 +56,7 @@ public abstract class BaseBlockEntityPacket {
     
     /**
      * Get the TownInterfaceEntity at the packet coordinates (Unified Architecture).
-     * Direct access replaces complex BlockEntityHelper service calls.
+     * Direct access replaces BlockEntityHelper.getBlockEntity + getTownDataProvider.
      * 
      * @param player Platform-specific player object (should be ServerPlayer)
      * @return TownInterfaceEntity at coordinates, or null if not found or wrong type
@@ -70,6 +70,22 @@ public abstract class BaseBlockEntityPacket {
             }
         }
         return null;
+    }
+    
+    /**
+     * Mark the block entity as changed and sync to clients (Unified Architecture).
+     * Replaces BlockEntityHelper.markBlockEntityChanged + syncTownData.
+     * 
+     * @param townInterface The TownInterfaceEntity to mark changed
+     */
+    protected void markChangedAndSync(TownInterfaceEntity townInterface) {
+        if (townInterface != null) {
+            townInterface.setChanged();
+            if (townInterface instanceof BlockEntity blockEntity) {
+                // Sync to tracking clients
+                blockEntity.setChanged();
+            }
+        }
     }
     
     /**
