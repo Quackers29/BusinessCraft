@@ -31,7 +31,8 @@
       "Bash(git ls-tree:*)",
       "Bash(git stash:*)",
       "WebFetch(domain:github.com)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(wc:*)"
     ],
     "deny": []
   }
