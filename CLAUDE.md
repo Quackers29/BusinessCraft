@@ -24,12 +24,11 @@ Record everything in a .claude/tasks/[TASK_ID]/onboarding.md file. This file wil
 
 0. Always read ALL of CLAUDE.md and tasks/todo.md every time the user has prompted you to continue on so this stays fresh.
 1. First, read the codebase for relevant files, and write a plan to tasks/todo.md.
-2. Read tasks/toImprove.md, this is a log of future improvements to be made but not the current task, update as needed
-3. The plan should have a list of todo items that you can check off as you complete them.
-4. Before you begin working, check in with me and I will verify the plan. Use the 'Notify User' command to notify me prior to any input to get my attention (including when you complete).
-5. Then, begin working on the todo items, keep on marking them off as you go in the file so I can track progress.
-6. **Client Testing Protocol**: If any testing requires user interaction with the Minecraft client (UI testing, gameplay verification, save/reload cycles, etc.), notify me to conduct the testing instead of attempting automated testing.
-7. Finally, if you have noticed you have move onto your next task, move the previously completed task to the bottom of the done.md file, using similar style to whats already in the end of that file.
+2. The plan should have a list of todo items that you can check off as you complete them.
+3. Before you begin working, check in with me and I will verify the plan. Use the 'Notify User' command to notify me prior to any input to get my attention (including when you complete).
+4. Then, begin working on the todo items, keep on marking them off as you go in the file so I can track progress.
+5. **Client Testing Protocol**: If any testing requires user interaction with the Minecraft client (UI testing, gameplay verification, save/reload cycles, etc.), notify me to conduct the testing instead of attempting automated testing.
+6. Finally, if you have noticed you have move onto your next task, move the previously completed task to the bottom of the done.md file, using similar style to whats already in the end of that file.
 
 ## Project Overview
 
