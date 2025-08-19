@@ -25,21 +25,12 @@ public class MenuTypeFactory {
             ResourceLocation id = new ResourceLocation(BusinessCraft.MOD_ID, "town_interface");
             MenuType<?> menuType = BuiltInRegistries.MENU.get(id);
             
-            System.out.println("DEBUG: MenuTypeFactory lookup for " + id);
-            System.out.println("DEBUG: Found MenuType: " + menuType);
-            System.out.println("DEBUG: Registry size: " + BuiltInRegistries.MENU.size());
+            // Removed debug output - registry lookup is working correctly
             
             if (menuType != null) {
                 return (MenuType<TownInterfaceMenu>) menuType;
             } else {
                 LOGGER.warn("TownInterface MenuType not found in registry - registration may be incomplete");
-                // Try to see all registered menu types
-                System.out.println("DEBUG: All registered menu types:");
-                BuiltInRegistries.MENU.entrySet().forEach(entry -> {
-                    if (entry.getKey().location().getNamespace().equals(BusinessCraft.MOD_ID)) {
-                        System.out.println("  - " + entry.getKey().location() + " -> " + entry.getValue());
-                    }
-                });
                 return null;
             }
         } catch (Exception e) {

@@ -35,7 +35,7 @@ public class ForgeTownPersistence implements ITownPersistence {
             TownSavedData::create,
             TownSavedData.NAME
         );
-        LOGGER.debug("ForgeTownPersistence initialized for level: {}", level.dimension().location());
+        // Removed debug logging - initialization is not critical for logs
     }
     
     @Override
@@ -54,7 +54,7 @@ public class ForgeTownPersistence implements ITownPersistence {
                 
                 // Directly use the actual Town objects from TownManager
                 savedTowns.putAll(townObjects);
-                LOGGER.debug("Synchronized {} towns from TownManager to TownSavedData (direct objects)", savedTowns.size());
+                // Removed excessive debug logging for performance
                 
             } else if (townData.containsKey("towns")) {
                 // Fallback to data map conversion for backwards compatibility
@@ -71,7 +71,7 @@ public class ForgeTownPersistence implements ITownPersistence {
                         LOGGER.error("Failed to convert town data for ID {}: {}", entry.getKey(), e.getMessage());
                     }
                 }
-                LOGGER.debug("Synchronized {} towns from TownManager to TownSavedData (data conversion)", savedTowns.size());
+                // Removed excessive debug logging for performance
             }
             
             // UNIFIED ARCHITECTURE: Payment board data is now included in Town.toDataMap() 
@@ -81,7 +81,7 @@ public class ForgeTownPersistence implements ITownPersistence {
             savedData.setDirty();
             this.isDirty = false;
             
-            LOGGER.debug("Saved town data and payment boards to persistent storage");
+            // Removed excessive debug logging for performance
             
         } catch (Exception e) {
             LOGGER.error("Failed to save town data: {}", e.getMessage());
@@ -122,9 +122,9 @@ public class ForgeTownPersistence implements ITownPersistence {
                 }
                 
                 result.put("towns", townsData);
-                LOGGER.debug("Loaded {} towns from SavedData successfully", savedTowns.size());
+                // Town data loaded successfully 
             } else {
-                LOGGER.debug("No existing town data found in SavedData - fresh world or clean start");
+                // Fresh world or clean start - no existing town data
             }
         } catch (Exception e) {
             LOGGER.error("Failed to load town data from SavedData: {}", e.getMessage());

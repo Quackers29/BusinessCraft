@@ -35,7 +35,7 @@ public class RefreshPlatformsPacket extends BaseBlockEntityPacket {
     @Override
     public void handle(Object player) {
         // This is a client-side packet, player parameter is not used
-        LOGGER.debug("Received platform refresh packet for block at ({}, {}, {})", x, y, z);
+        // Platform refresh packet received - removed debug logging
         
         // Check if we're on client side
         if (!PlatformServices.getPlatformHelper().isClientSide()) {

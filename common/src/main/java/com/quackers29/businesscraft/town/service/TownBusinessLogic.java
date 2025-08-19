@@ -61,8 +61,7 @@ public class TownBusinessLogic {
             // Calculate rewards based on distance and tourist count
             TouristVisitResult result = calculateVisitRewards(distance, touristCount);
             
-            LOGGER.debug("Processed tourist visit: {} tourists, distance: {}, rewards: {}", 
-                        touristCount, distance, result.getTotalRewardValue());
+            // Removed excessive debug logging for tourist visits
             
             return Result.success(result);
             

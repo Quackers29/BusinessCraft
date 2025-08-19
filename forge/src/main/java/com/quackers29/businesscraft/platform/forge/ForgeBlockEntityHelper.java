@@ -160,7 +160,7 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
     
     // @Override
     public @Nullable Object getBlockEntity(Object player, int x, int y, int z) {
-        LOGGER.debug("FORGE BLOCK ENTITY HELPER: getBlockEntity called for position [{}, {}, {}]", x, y, z);
+        // Platform service call - removed debug logging
         
         if (!(player instanceof ServerPlayer serverPlayer)) {
             LOGGER.warn("Player object is not a ServerPlayer: {}", player);
@@ -171,23 +171,21 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
         BlockPos pos = new BlockPos(x, y, z);
         BlockEntity blockEntity = level.getBlockEntity(pos);
         
-        LOGGER.debug("FORGE BLOCK ENTITY HELPER: Found block entity: {}", 
-            blockEntity != null ? blockEntity.getClass().getSimpleName() : "null");
+        // Block entity found - removed debug logging
             
         return blockEntity;
     }
     
     // @Override
     public @Nullable Object getTownDataProvider(Object blockEntity) {
-        LOGGER.debug("FORGE BLOCK ENTITY HELPER: getTownDataProvider called with: {}", 
-            blockEntity != null ? blockEntity.getClass().getSimpleName() : "null");
+        // Platform service call - removed debug logging
             
         if (blockEntity instanceof ITownDataProvider provider) {
-            LOGGER.debug("FORGE BLOCK ENTITY HELPER: Block entity is ITownDataProvider, returning provider");
+            // Found town data provider - removed debug logging
             return provider;
         }
         
-        LOGGER.debug("FORGE BLOCK ENTITY HELPER: Block entity is NOT ITownDataProvider, returning null");
+        // Block entity is not a town data provider - removed debug logging
         return null;
     }
     

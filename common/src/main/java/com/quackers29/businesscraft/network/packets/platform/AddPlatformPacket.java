@@ -34,7 +34,7 @@ public class AddPlatformPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Player is adding a new platform to town block at ({}, {}, {})", x, y, z);
+        // Platform addition request - removed debug logging
         
         // Get town interface using platform services
         Object blockEntity = getBlockEntity(player);
@@ -53,7 +53,7 @@ public class AddPlatformPacket extends BaseBlockEntityPacket {
                 boolean added = PlatformServices.getBlockEntityHelper().addPlatform(townDataProvider);
                 
                 if (added) {
-                    LOGGER.debug("Successfully added new platform to town block at ({}, {}, {})", x, y, z);
+                    // Platform added successfully - removed debug logging
                     PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
                     
                     // Send refresh packet to all tracking clients
