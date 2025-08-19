@@ -744,12 +744,19 @@ public class Town implements ITownDataProvider {
     
     /**
      * Mark town data as dirty for persistence.
-     * This is a placeholder - actual dirty marking will be handled by TownManager.
+     * Notifies all active TownManager instances to save changes.
      */
     @Override
     public void markDirty() {
-        // The TownManager will handle actual dirty marking through its persistence layer
-        // This method exists for consistency with the existing codebase patterns
+        // UNIFIED ARCHITECTURE FIX: Properly mark persistence as dirty
+        // Since Town doesn't have direct access to ServerLevel, mark all active TownManagers
+        Collection<TownManager> managers = TownManager.getAllInstances();
+        for (TownManager manager : managers) {
+            manager.markDirty();
+        }
+        
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+            "Town {} marked dirty across {} TownManager instances", name, managers.size());
     }
     
     @Override

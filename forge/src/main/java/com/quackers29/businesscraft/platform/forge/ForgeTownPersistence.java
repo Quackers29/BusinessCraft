@@ -65,9 +65,8 @@ public class ForgeTownPersistence implements ITownPersistence {
                 LOGGER.debug("Synchronized {} towns from TownManager to TownSavedData", savedTowns.size());
             }
             
-            // Save payment board data
-            CompoundTag customTag = new CompoundTag();
-            savePaymentBoardData(customTag);
+            // UNIFIED ARCHITECTURE: Payment board data is now included in Town.toDataMap() 
+            // No separate payment board saving needed
             
             // Mark as dirty to trigger Forge's SavedData persistence
             savedData.setDirty();
@@ -81,33 +80,11 @@ public class ForgeTownPersistence implements ITownPersistence {
         }
     }
     
-    /**
-     * Save payment board data to NBT
+    /*
+     * UNIFIED ARCHITECTURE: Payment board persistence is now handled directly by Town class.
+     * The savePaymentBoardData() method has been removed because payment board data is 
+     * automatically included in Town.toDataMap() and handled by the save() method above.
      */
-    private void savePaymentBoardData(CompoundTag tag) {
-        try {
-            // Access the payment boards from ForgeTownManagerService
-            Map<UUID, TownPaymentBoard> paymentBoards = ForgeTownManagerService.getPaymentBoards();
-            
-            if (!paymentBoards.isEmpty()) {
-                CompoundTag paymentBoardsTag = new CompoundTag();
-                
-                for (Map.Entry<UUID, TownPaymentBoard> entry : paymentBoards.entrySet()) {
-                    UUID townId = entry.getKey();
-                    TownPaymentBoard paymentBoard = entry.getValue();
-                    
-                    // Save each payment board's NBT data
-                    CompoundTag boardTag = paymentBoard.toNBT();
-                    paymentBoardsTag.put(townId.toString(), boardTag);
-                }
-                
-                tag.put("paymentBoards", paymentBoardsTag);
-                LOGGER.debug("Saved {} payment boards to NBT", paymentBoards.size());
-            }
-        } catch (Exception e) {
-            LOGGER.error("Failed to save payment board data: {}", e.getMessage());
-        }
-    }
     
     @Override
     public Map<String, Object> load() {

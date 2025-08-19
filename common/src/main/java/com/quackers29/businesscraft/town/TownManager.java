@@ -453,9 +453,15 @@ public class TownManager {
     
     /**
      * Mark town data as dirty for persistence.
+     * Enhanced MultiLoader requires explicit save for reliability.
      */
     public void markDirty() {
         persistence.markDirty();
+        // NOTE: Enhanced MultiLoader requires explicit save vs main branch's automatic save
+        saveTowns(); // Ensure immediate persistence for reliability
+        
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, 
+            "Town data marked dirty and saved immediately");
     }
     
     // ================================

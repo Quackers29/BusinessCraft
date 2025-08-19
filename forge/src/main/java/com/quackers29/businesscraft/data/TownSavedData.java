@@ -20,53 +20,27 @@ public class TownSavedData extends SavedData {
     
     @Override
     public CompoundTag save(CompoundTag tag) {
-        // NOTE: This class is deprecated - new persistence uses ForgeTownPersistence
-        // This method is maintained for backward compatibility only
+        // UNIFIED ARCHITECTURE: Simple town persistence - payment boards included in Town data
         CompoundTag townsTag = new CompoundTag();
         towns.forEach((id, town) -> {
             CompoundTag townTag = new CompoundTag();
-            // Convert common Town's data format to NBT
+            // Convert common Town's data format to NBT - includes payment board data automatically
             Map<String, Object> townData = town.toDataMap();
             saveMapToNbt(townData, townTag);
             townsTag.put(id.toString(), townTag);
         });
         tag.put("towns", townsTag);
         
-        // Save payment board data
-        savePaymentBoardData(tag);
+        // NOTE: Payment board data is now included in Town.toDataMap() - no separate saving needed
         
         return tag;
     }
     
-    /**
-     * Save payment board data to NBT
+    /*
+     * UNIFIED ARCHITECTURE: Payment board persistence is now handled directly by Town class.
+     * The savePaymentBoardData() method has been removed because payment board data is 
+     * automatically included in Town.toDataMap().
      */
-    private void savePaymentBoardData(CompoundTag tag) {
-        try {
-            // Access the payment boards from ForgeTownManagerService
-            Map<java.util.UUID, com.quackers29.businesscraft.town.data.TownPaymentBoard> paymentBoards = 
-                com.quackers29.businesscraft.platform.forge.ForgeTownManagerService.getPaymentBoards();
-            
-            if (!paymentBoards.isEmpty()) {
-                CompoundTag paymentBoardsTag = new CompoundTag();
-                
-                for (Map.Entry<java.util.UUID, com.quackers29.businesscraft.town.data.TownPaymentBoard> entry : paymentBoards.entrySet()) {
-                    java.util.UUID townId = entry.getKey();
-                    com.quackers29.businesscraft.town.data.TownPaymentBoard paymentBoard = entry.getValue();
-                    
-                    // Save each payment board's NBT data
-                    CompoundTag boardTag = paymentBoard.toNBT();
-                    paymentBoardsTag.put(townId.toString(), boardTag);
-                }
-                
-                tag.put("paymentBoards", paymentBoardsTag);
-                System.out.println("TownSavedData: Saved " + paymentBoards.size() + " payment boards to NBT");
-            }
-        } catch (Exception e) {
-            System.err.println("TownSavedData: Failed to save payment board data: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
     
     public void loadFromNbt(CompoundTag tag) {
         // NOTE: This class is deprecated - new persistence uses ForgeTownPersistence
@@ -83,43 +57,14 @@ public class TownSavedData extends SavedData {
             });
         }
         
-        // Load payment board data
-        loadPaymentBoardData(tag);
+        // NOTE: Payment board data is now included in Town.fromDataMap() - no separate loading needed
     }
     
-    /**
-     * Load payment board data from NBT
+    /*
+     * UNIFIED ARCHITECTURE: Payment board loading is now handled directly by Town class.
+     * The loadPaymentBoardData() method has been removed because payment board data is
+     * automatically included in Town.fromDataMap().
      */
-    private void loadPaymentBoardData(CompoundTag tag) {
-        try {
-            if (tag.contains("paymentBoards")) {
-                CompoundTag paymentBoardsTag = tag.getCompound("paymentBoards");
-                
-                for (String key : paymentBoardsTag.getAllKeys()) {
-                    try {
-                        java.util.UUID townId = java.util.UUID.fromString(key);
-                        CompoundTag boardTag = paymentBoardsTag.getCompound(key);
-                        
-                        // Create a new payment board and load its data
-                        com.quackers29.businesscraft.town.data.TownPaymentBoard paymentBoard = 
-                            new com.quackers29.businesscraft.town.data.TownPaymentBoard();
-                        paymentBoard.fromNBT(boardTag);
-                        
-                        // Store in ForgeTownManagerService
-                        com.quackers29.businesscraft.platform.forge.ForgeTownManagerService.setPaymentBoard(townId, paymentBoard);
-                        
-                    } catch (Exception e) {
-                        System.err.println("TownSavedData: Failed to load payment board for town " + key + ": " + e.getMessage());
-                    }
-                }
-                
-                System.out.println("TownSavedData: Loaded " + paymentBoardsTag.getAllKeys().size() + " payment boards from NBT");
-            }
-        } catch (Exception e) {
-            System.err.println("TownSavedData: Failed to load payment board data: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
     
     /**
      * Helper method to convert Map to NBT.
@@ -147,6 +92,10 @@ public class TownSavedData extends SavedData {
                 CompoundTag subTag = new CompoundTag();
                 saveMapToNbt(subMap, subTag);
                 tag.put(key, subTag);
+            } else if (value instanceof CompoundTag) {
+                // UNIFIED ARCHITECTURE FIX: Handle CompoundTag objects directly
+                CompoundTag compoundValue = (CompoundTag) value;
+                tag.put(key, compoundValue);
             }
             // Add more type conversions as needed
         }
@@ -173,7 +122,12 @@ public class TownSavedData extends SavedData {
                 result.put(key, tag.getIntArray(key));
             } else if (tag.contains(key, 10)) { // Compound
                 CompoundTag subTag = tag.getCompound(key);
-                result.put(key, nbtToMap(subTag));
+                // UNIFIED ARCHITECTURE FIX: For paymentBoard, preserve as CompoundTag
+                if ("paymentBoard".equals(key)) {
+                    result.put(key, subTag);
+                } else {
+                    result.put(key, nbtToMap(subTag));
+                }
             }
             // Add more type conversions as needed
         }
