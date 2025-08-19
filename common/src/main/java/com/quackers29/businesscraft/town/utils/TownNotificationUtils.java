@@ -5,8 +5,13 @@ import net.minecraft.core.BlockPos;
 import com.quackers29.businesscraft.town.data.DistanceMilestoneHelper;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.quackers29.businesscraft.debug.DebugConfig;
 
 import java.util.UUID;
 
@@ -16,12 +21,123 @@ import java.util.UUID;
  */
 public class TownNotificationUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownNotificationUtils.class);
+    private static final int NOTIFICATION_RANGE = 64; // Range in blocks for player notifications
     
-    public static void notifyTouristArrivals(ServerLevel serverLevel, BlockPos townBlockPos, 
-                                           String originTownName, String townName, 
-                                           int count, int payment, double averageDistance, 
-                                           DistanceMilestoneHelper.MilestoneResult milestoneResult) {
-        // STUB: No-op for now
+    /**
+     * Notifies nearby players of tourist arrivals with payment, distance, and milestone information
+     * 
+     * @param level The server level
+     * @param platformPos The position of the town/platform
+     * @param originTownName The name of the origin town
+     * @param destinationName The name of the destination town
+     * @param count The number of tourists that arrived
+     * @param payment The amount of emeralds paid by tourists
+     * @param distance The travel distance in blocks
+     * @param milestoneResult The milestone achievement result (if any)
+     */
+    public static void notifyTouristArrivals(ServerLevel level, BlockPos platformPos, 
+                                           String originTownName, String destinationName, 
+                                           int count, int payment, double distance, DistanceMilestoneHelper.MilestoneResult milestoneResult) {
+        // Enhanced arrival notification with refined styling
+        Component message;
+        int distanceRounded = (int) Math.round(distance);
+        
+        if (count == 1) {
+            if (payment > 0) {
+                message = Component.literal("💰 Tourism Revenue | ")
+                    .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
+                    .append(Component.literal(originTownName + " → " + destinationName + " (" + distanceRounded + "m) | +")
+                        .withStyle(ChatFormatting.WHITE))
+                    .append(Component.literal(payment + " emeralds")
+                        .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD));
+            } else {
+                message = Component.literal("🚶 Tourist Arrival | ")
+                    .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
+                    .append(Component.literal(originTownName + " → " + destinationName + " (" + distanceRounded + "m)")
+                        .withStyle(ChatFormatting.WHITE));
+            }
+        } else {
+            if (payment > 0) {
+                message = Component.literal("💰 Tourism Revenue | ")
+                    .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
+                    .append(Component.literal(count + " from " + originTownName + " (" + distanceRounded + "m) | +")
+                        .withStyle(ChatFormatting.WHITE))
+                    .append(Component.literal(payment + " emeralds")
+                        .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD));
+            } else {
+                message = Component.literal("🚶 Tourist Arrival | ")
+                    .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
+                    .append(Component.literal(count + " from " + originTownName + " → " + destinationName + " (" + distanceRounded + "m)")
+                        .withStyle(ChatFormatting.WHITE));
+            }
+        }
+        
+        // Send arrival notification
+        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
+            if (player.level() == level && isNearPosition(player.blockPosition(), platformPos, NOTIFICATION_RANGE)) {
+                player.sendSystemMessage(message);
+            }
+        }
+        
+        // Send milestone achievement notification if applicable
+        if (milestoneResult != null && milestoneResult.hasRewards()) {
+            notifyMilestoneAchievement(level, platformPos, milestoneResult);
+        }
+    }
+    
+    /**
+     * Sends a milestone achievement notification to nearby players
+     * 
+     * @param level The server level
+     * @param platformPos The position of the town/platform
+     * @param milestoneResult The milestone achievement result
+     */
+    public static void notifyMilestoneAchievement(ServerLevel level, BlockPos platformPos, 
+                                                DistanceMilestoneHelper.MilestoneResult milestoneResult) {
+        if (!milestoneResult.hasRewards()) return;
+        
+        // Create concise reward text
+        StringBuilder rewardText = new StringBuilder();
+        for (int i = 0; i < milestoneResult.rewards.size(); i++) {
+            ItemStack reward = milestoneResult.rewards.get(i);
+            if (i > 0) rewardText.append(", ");
+            
+            // Simplify item names (remove "minecraft:" prefix and make readable)
+            String itemName = reward.getItem().getDescription().getString()
+                .replace("minecraft:", "")
+                .replace("_", " ");
+            // Capitalize first letter
+            itemName = itemName.substring(0, 1).toUpperCase() + itemName.substring(1);
+            
+            rewardText.append(reward.getCount()).append(" ").append(itemName);
+        }
+        
+        // Refined milestone message with consistent theme - show actual distance traveled
+        int actualDistanceRounded = (int) Math.round(milestoneResult.actualDistance);
+        Component milestoneMessage = Component.literal("🏆 Distance Milestone | ")
+            .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD)
+            .append(Component.literal(actualDistanceRounded + "m journey | +")
+                .withStyle(ChatFormatting.WHITE))
+            .append(Component.literal(rewardText.toString())
+                .withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD));
+        
+        // Find nearby players to notify
+        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
+            if (player.level() == level && isNearPosition(player.blockPosition(), platformPos, NOTIFICATION_RANGE)) {
+                player.sendSystemMessage(milestoneMessage);
+            }
+        }
+        
+        // Log the milestone achievement
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Milestone achievement: {}m journey ({}m milestone) earned {} rewards", 
+            (int) Math.round(milestoneResult.actualDistance), milestoneResult.milestoneAchieved, milestoneResult.rewards.size());
+    }
+    
+    /**
+     * Checks if a position is within range of another position
+     */
+    private static boolean isNearPosition(BlockPos pos1, BlockPos pos2, int range) {
+        return pos1.distSqr(pos2) <= (range * range);
     }
     
     /**

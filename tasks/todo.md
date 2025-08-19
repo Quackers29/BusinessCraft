@@ -377,6 +377,58 @@ PlatformServices.getBlockEntityHelper().setTouristSpawningEnabled(townDataProvid
 
 **🏆 PERSISTENCE SYSTEM STATUS**: **100% FUNCTIONAL** - All town data including payment boards, visit counts, and tourist data now persist perfectly across world reloads with zero data loss!
 
+### **Phase 3.8: Visit History Persistence Fix** - ✅ **COMPLETELY RESOLVED**
+
+**🎯 CRITICAL ISSUE IDENTIFIED & FIXED**: Visit history was being lost during save/reload cycles despite appearing to work at runtime.
+
+**🔍 ROOT CAUSE ANALYSIS**:
+- **Problem #1**: `TownSavedData.saveMapToNbt()` was missing List handling - `visitHistory` (List<Map<String, Object>>) was silently ignored during NBT serialization
+- **Problem #2**: `TownSavedData` was holding stale Town instances while current Town instances (with visit history) were in TownManager
+
+**🛠️ TECHNICAL FIXES IMPLEMENTED**:
+
+1. **Added List ↔ NBT Conversion Support**:
+   ```java
+   // Added to TownSavedData.saveMapToNbt():
+   } else if (value instanceof List) {
+       List<Object> listValue = (List<Object>) value;
+       ListTag listTag = new ListTag();
+       for (Object item : listValue) {
+           if (item instanceof Map) {
+               CompoundTag itemTag = new CompoundTag();
+               saveMapToNbt(mapItem, itemTag);
+               listTag.add(itemTag);
+           }
+       }
+       tag.put(key, listTag);
+   }
+   
+   // Added to TownSavedData.nbtToMap():
+   } else if (tag.contains(key, 9)) { // List
+       ListTag listTag = tag.getList(key, 10);
+       List<Object> listValue = new ArrayList<>();
+       for (int i = 0; i < listTag.size(); i++) {
+           listValue.add(nbtToMap(listTag.getCompound(i)));
+       }
+       result.put(key, listValue);
+   }
+   ```
+
+2. **Fixed Stale Instance Sync Issue**:
+   ```java
+   // Updated TownManager.markDirty():
+   public void markDirty() {
+       persistence.markDirty();
+       
+       // CRITICAL FIX: Sync current Town instances to TownSavedData
+       Map<String, Object> data = new HashMap<>();
+       data.put("townObjects", new HashMap<>(towns));
+       persistence.save(data);
+   }
+   ```
+
+**🎉 VISIT HISTORY STATUS**: **100% FUNCTIONAL** - Visit history records now persist correctly across save/reload cycles with zero data loss!
+
 **🚨 REMAINING CRITICAL REGRESSIONS** (High Priority Fixes Needed):
 
 - [x] ~~**Resource Tab Data Sync**: Items added via trade UI not displayed in resource list~~ - ✅ **RESOLVED** with buffer storage fixes

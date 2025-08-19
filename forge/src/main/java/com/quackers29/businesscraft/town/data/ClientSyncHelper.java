@@ -127,7 +127,7 @@ public class ClientSyncHelper {
         if (provider == null) return;
         
         List<ITownDataProvider.VisitHistoryRecord> history = provider.getVisitHistory();
-        if (history.isEmpty()) return;
+        // Always sync visit history data, even if empty, to keep client informed
         
         ListTag historyTag = new ListTag();
         for (ITownDataProvider.VisitHistoryRecord record : history) {

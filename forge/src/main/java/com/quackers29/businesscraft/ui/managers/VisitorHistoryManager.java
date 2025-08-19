@@ -1,7 +1,9 @@
 package com.quackers29.businesscraft.ui.managers;
 
+import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.network.ModMessages;
 import com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket;
 import com.quackers29.businesscraft.ui.modal.factories.BCModalGridFactory;
@@ -80,14 +82,55 @@ public class VisitorHistoryManager extends BaseModalManager {
     private static List<VisitHistoryRecord> getVisitHistoryFromBlockEntity(BlockPos blockPos) {
         List<VisitHistoryRecord> visitHistory = new ArrayList<>();
         
+        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+            "VISIT HISTORY DEBUG - VisitorHistoryManager.getVisitHistoryFromBlockEntity() called for pos {}", blockPos);
+        
         if (Minecraft.getInstance() != null && Minecraft.getInstance().level != null) {
             BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(blockPos);
+            DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+                "VISIT HISTORY DEBUG - BlockEntity found: {}", blockEntity != null ? blockEntity.getClass().getSimpleName() : "null");
+                
             if (blockEntity instanceof TownInterfaceEntity townInterface) {
                 // Request the town block entity to sync its town data with the server
                 ModMessages.sendToServer(new PlayerExitUIPacket(blockPos.getX(), blockPos.getY(), blockPos.getZ()));
                 
+                // Brief delay to allow server sync to complete
+                try {
+                    Thread.sleep(100); // 100ms delay for sync
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                
                 // Get the visit history
-                visitHistory.addAll(townInterface.getVisitHistory());
+                List<ITownDataProvider.VisitHistoryRecord> rawHistory = townInterface.getVisitHistory();
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+                    "VISIT HISTORY DEBUG - TownInterface returned {} raw records", rawHistory.size());
+                    
+                for (ITownDataProvider.VisitHistoryRecord record : rawHistory) {
+                    DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+                        "VISIT HISTORY DEBUG - Converting record: {} tourists from {} at timestamp {}", 
+                        record.getCount(), record.getOriginTownId(), record.getTimestamp());
+                        
+                    // Create Position object for the constructor  
+                    ITownDataProvider.Position pos = new ITownDataProvider.Position() {
+                        @Override
+                        public int getX() { return record.getOriginPos().getX(); }
+                        @Override
+                        public int getY() { return record.getOriginPos().getY(); }
+                        @Override
+                        public int getZ() { return record.getOriginPos().getZ(); }
+                    };
+                    
+                    visitHistory.add(new VisitHistoryRecord(
+                        record.getTimestamp(),
+                        record.getOriginTownId(),
+                        record.getCount(),
+                        pos
+                    ));
+                }
+                
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+                    "VISIT HISTORY DEBUG - Final converted visitHistory size: {}", visitHistory.size());
             }
         }
         

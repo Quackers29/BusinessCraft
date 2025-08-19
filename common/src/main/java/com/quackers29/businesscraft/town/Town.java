@@ -342,7 +342,17 @@ public class Town implements ITownDataProvider {
     @Override
     public List<ITownDataProvider.VisitHistoryRecord> getVisitHistory() {
         // Return copy to prevent external mutation
-        return new ArrayList<>(visitHistory);
+        List<ITownDataProvider.VisitHistoryRecord> result = new ArrayList<>(visitHistory);
+        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+            "VISIT HISTORY DEBUG - Town {} getVisitHistory() returning {} records", 
+            name, result.size());
+        for (int i = 0; i < result.size() && i < 3; i++) { // Log first 3 records
+            ITownDataProvider.VisitHistoryRecord record = result.get(i);
+            DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+                "  Record {}: {} tourists from {} at timestamp {}", 
+                i, record.getCount(), record.getOriginTownId(), record.getTimestamp());
+        }
+        return result;
     }
     
     // ================================
@@ -661,6 +671,9 @@ public class Town implements ITownDataProvider {
             historyData.add(recordData);
         }
         data.put("visitHistory", historyData);
+        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+            "PERSISTENCE DEBUG - Saving {} visit history records for town {}", 
+            historyData.size(), name);
         
         // UNIFIED ARCHITECTURE: Serialize payment board directly
         data.put("paymentBoard", paymentBoard.toNBT());
@@ -704,6 +717,9 @@ public class Town implements ITownDataProvider {
         // Load visit history
         if (data.containsKey("visitHistory")) {
             List<Map<String, Object>> historyData = (List<Map<String, Object>>) data.get("visitHistory");
+            DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+                "PERSISTENCE DEBUG - Loading {} visit history records for town {}", 
+                historyData.size(), town.name);
             for (Map<String, Object> recordData : historyData) {
                 UUID originTownId = recordData.get("originTownId") != null ? 
                     UUID.fromString((String) recordData.get("originTownId")) : null;
@@ -719,7 +735,13 @@ public class Town implements ITownDataProvider {
                     originPos
                 );
                 town.visitHistory.add(record);
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+                    "PERSISTENCE DEBUG - Loaded visit record: {} tourists from {} at timestamp {}", 
+                    record.getCount(), originTownId, record.getTimestamp());
             }
+        } else {
+            DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+                "PERSISTENCE DEBUG - No visitHistory data found for town {}", town.name);
         }
         
         // UNIFIED ARCHITECTURE: Load payment board directly

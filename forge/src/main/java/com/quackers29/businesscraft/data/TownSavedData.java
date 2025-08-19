@@ -3,8 +3,11 @@ package com.quackers29.businesscraft.data;
 import com.quackers29.businesscraft.BusinessCraft;
 import com.quackers29.businesscraft.town.Town;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.world.level.saveddata.SavedData;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -96,6 +99,22 @@ public class TownSavedData extends SavedData {
                 // UNIFIED ARCHITECTURE FIX: Handle CompoundTag objects directly
                 CompoundTag compoundValue = (CompoundTag) value;
                 tag.put(key, compoundValue);
+            } else if (value instanceof List) {
+                // UNIFIED ARCHITECTURE FIX: Handle List objects (needed for visitHistory)
+                @SuppressWarnings("unchecked")
+                List<Object> listValue = (List<Object>) value;
+                ListTag listTag = new ListTag();
+                for (Object item : listValue) {
+                    if (item instanceof Map) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> mapItem = (Map<String, Object>) item;
+                        CompoundTag itemTag = new CompoundTag();
+                        saveMapToNbt(mapItem, itemTag);
+                        listTag.add(itemTag);
+                    }
+                    // Add more item type handling as needed
+                }
+                tag.put(key, listTag);
             }
             // Add more type conversions as needed
         }
@@ -128,6 +147,15 @@ public class TownSavedData extends SavedData {
                 } else {
                     result.put(key, nbtToMap(subTag));
                 }
+            } else if (tag.contains(key, 9)) { // List
+                // UNIFIED ARCHITECTURE FIX: Handle List objects (needed for visitHistory)
+                ListTag listTag = tag.getList(key, 10); // List of Compounds
+                List<Object> listValue = new ArrayList<>();
+                for (int i = 0; i < listTag.size(); i++) {
+                    CompoundTag itemTag = listTag.getCompound(i);
+                    listValue.add(nbtToMap(itemTag));
+                }
+                result.put(key, listValue);
             }
             // Add more type conversions as needed
         }

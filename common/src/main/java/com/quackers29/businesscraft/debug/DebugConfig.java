@@ -38,7 +38,7 @@ public class DebugConfig {
     public static final boolean TOWN_MANAGER = true;
     public static final boolean NBT_DATA_HELPER = false;
     public static final boolean SYNC_HELPERS = false;
-    public static final boolean VISITOR_PROCESSING = false;
+    public static final boolean VISITOR_PROCESSING = true;
     public static final boolean UI_BASE_SCREEN = false;
     
     // Platform System

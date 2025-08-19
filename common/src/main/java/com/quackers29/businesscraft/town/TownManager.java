@@ -116,8 +116,7 @@ public class TownManager {
         
         // Mark persistence as dirty (triggers save through platform abstraction)
         persistence.markDirty();
-        // NOTE: Enhanced MultiLoader requires explicit save vs main branch's automatic save
-        saveTowns(); // Ensure immediate persistence for reliability
+        // UNIFIED ARCHITECTURE FIX: Let persistence layer handle save scheduling
         
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER,
             "Created new town: {} at ({}, {}, {}) with ID: {}", name, x, y, z, townId);
@@ -432,14 +431,18 @@ public class TownManager {
      */
     public void saveTowns() {
         try {
+            // UNIFIED ARCHITECTURE FIX: Pass actual Town objects to avoid circular conversion
+            // that was losing visit history data during save/load cycles
             Map<String, Object> data = new HashMap<>();
-            Map<String, Map<String, Object>> townsData = new HashMap<>();
+            data.put("townObjects", new HashMap<>(towns)); // Pass actual Town objects
             
+            // Also include the data map format for backwards compatibility
+            Map<String, Map<String, Object>> townsData = new HashMap<>();
             for (Map.Entry<UUID, Town> entry : towns.entrySet()) {
                 townsData.put(entry.getKey().toString(), entry.getValue().toDataMap());
             }
-            
             data.put("towns", townsData);
+            
             persistence.save(data);
             
             DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER,
@@ -453,15 +456,24 @@ public class TownManager {
     
     /**
      * Mark town data as dirty for persistence.
-     * Enhanced MultiLoader requires explicit save for reliability.
+     * Let persistence layer handle save scheduling to prevent infinite loops.
      */
     public void markDirty() {
         persistence.markDirty();
-        // NOTE: Enhanced MultiLoader requires explicit save vs main branch's automatic save
-        saveTowns(); // Ensure immediate persistence for reliability
         
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, 
-            "Town data marked dirty and saved immediately");
+        // CRITICAL FIX: Sync current Town instances to TownSavedData to prevent stale data
+        // This ensures that when Minecraft's automatic save calls TownSavedData.save(),
+        // it has the latest Town instances with current visit history records
+        try {
+            Map<String, Object> data = new HashMap<>();
+            data.put("townObjects", new HashMap<>(towns)); // Pass current Town objects
+            persistence.save(data);
+            
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, 
+                "Synced {} current Town instances to persistence layer", towns.size());
+        } catch (Exception e) {
+            LOGGER.error("Failed to sync current Town instances to persistence layer: {}", e.getMessage());
+        }
     }
     
     // ================================

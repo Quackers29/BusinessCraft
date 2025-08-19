@@ -232,8 +232,16 @@ public class VisitorProcessingHelper {
         // Add to the town data provider (single source of truth)
         for (ITownDataProvider.VisitHistoryRecord record : newVisits) {
             try {
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+                    "VISIT HISTORY DEBUG - Processing visit record: {} tourists from {} to town {}", 
+                    record.getCount(), record.getOriginTownId(), thisTown.getName());
+                    
                 // Record the visit in the Town
                 provider.recordVisit(record.getOriginTownId(), record.getCount(), record.getOriginPos());
+                
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+                    "VISIT HISTORY DEBUG - After recordVisit(), town {} now has {} visit history records", 
+                    thisTown.getName(), thisTown.getVisitHistory().size());
                 
                 // Each visitor should be processed by adding them to the town's tally
                 for (int i = 0; i < record.getCount(); i++) {

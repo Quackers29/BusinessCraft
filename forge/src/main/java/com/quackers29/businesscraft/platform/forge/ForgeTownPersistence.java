@@ -40,16 +40,26 @@ public class ForgeTownPersistence implements ITownPersistence {
     
     @Override
     public void save(Map<String, Object> townData) {
-        // CRITICAL FIX: Properly synchronize TownManager data with TownSavedData
+        // UNIFIED ARCHITECTURE FIX: Use actual Town objects to preserve visit history
         try {
-            // First, update the TownSavedData's towns map with the current TownManager data
-            if (townData.containsKey("towns")) {
+            Map<UUID, com.quackers29.businesscraft.town.Town> savedTowns = savedData.getTowns();
+            savedTowns.clear();
+            
+            // CRITICAL FIX: Use actual Town objects when available to avoid circular conversion
+            // that was losing visit history data during save/load cycles
+            if (townData.containsKey("townObjects")) {
+                @SuppressWarnings("unchecked")
+                Map<UUID, com.quackers29.businesscraft.town.Town> townObjects = 
+                    (Map<UUID, com.quackers29.businesscraft.town.Town>) townData.get("townObjects");
+                
+                // Directly use the actual Town objects from TownManager
+                savedTowns.putAll(townObjects);
+                LOGGER.debug("Synchronized {} towns from TownManager to TownSavedData (direct objects)", savedTowns.size());
+                
+            } else if (townData.containsKey("towns")) {
+                // Fallback to data map conversion for backwards compatibility
                 @SuppressWarnings("unchecked")
                 Map<String, Map<String, Object>> townsData = (Map<String, Map<String, Object>>) townData.get("towns");
-                
-                // Clear existing towns and rebuild from TownManager data
-                Map<UUID, com.quackers29.businesscraft.town.Town> savedTowns = savedData.getTowns();
-                savedTowns.clear();
                 
                 // Convert each town from platform-agnostic format back to Town objects
                 for (Map.Entry<String, Map<String, Object>> entry : townsData.entrySet()) {
@@ -61,8 +71,7 @@ public class ForgeTownPersistence implements ITownPersistence {
                         LOGGER.error("Failed to convert town data for ID {}: {}", entry.getKey(), e.getMessage());
                     }
                 }
-                
-                LOGGER.debug("Synchronized {} towns from TownManager to TownSavedData", savedTowns.size());
+                LOGGER.debug("Synchronized {} towns from TownManager to TownSavedData (data conversion)", savedTowns.size());
             }
             
             // UNIFIED ARCHITECTURE: Payment board data is now included in Town.toDataMap() 

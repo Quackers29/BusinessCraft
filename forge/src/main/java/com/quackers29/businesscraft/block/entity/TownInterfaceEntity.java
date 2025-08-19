@@ -1205,8 +1205,13 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     
     @Override
     public List<ITownDataProvider.VisitHistoryRecord> getVisitHistory() {
-        Town town = getTown();
-        return town != null ? town.getVisitHistory() : java.util.Collections.emptyList();
+        // Use client sync helper for cross-platform compatibility
+        List<ITownDataProvider.VisitHistoryRecord> result = clientSyncHelper.getVisitHistory(level, this);
+        
+        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+            "VISIT HISTORY DEBUG - TownInterfaceEntity getVisitHistory() using ClientSyncHelper - Records: {}", 
+            result.size());
+        return result;
     }
     
     @Override
