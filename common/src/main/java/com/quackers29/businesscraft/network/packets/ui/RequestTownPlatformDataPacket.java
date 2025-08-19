@@ -96,11 +96,30 @@ public class RequestTownPlatformDataPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Processing platform data request at position [{}, {}, {}] with radius {}", 
-                    x, y, z, maxRadius);
+        LOGGER.debug("Processing platform data request at position [{}, {}, {}] with radius {} for town {}", 
+                    x, y, z, maxRadius, targetTownId);
         
         try {
-            // Get the town interface entity using platform services
+            // FIXED: Support UUID-based town lookup for map view
+            if (targetTownId != null && !targetTownId.equals("null")) {
+                // UUID-based lookup for map view
+                LOGGER.debug("Using UUID-based town lookup for town ID: {}", targetTownId);
+                boolean success = PlatformServices.getBlockEntityHelper().processPlatformDataRequestByTownId(
+                    player, targetTownId, includePlatformConnections, includeDestinationTowns, maxRadius);
+                
+                if (success) {
+                    LOGGER.debug("Successfully processed UUID-based platform data request for town {}", targetTownId);
+                } else {
+                    LOGGER.warn("Failed to process UUID-based platform data request for town {}", targetTownId);
+                    // Send empty response to prevent client hanging
+                    TownPlatformDataResponsePacket errorResponse = 
+                        new TownPlatformDataResponsePacket(x, y, z, false);
+                    PlatformServices.getNetworkHelper().sendToClient(errorResponse, player);
+                }
+                return;
+            }
+            
+            // FALLBACK: Block entity-based lookup for legacy code
             Object blockEntity = getBlockEntity(player);
             if (blockEntity == null) {
                 LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
@@ -122,8 +141,6 @@ public class RequestTownPlatformDataPacket extends BaseBlockEntityPacket {
             }
             
             // Use platform services to handle the platform data request
-            // NOTE: Platform service still uses old signature - keeping for compatibility
-            // Use the overloaded method that accepts targetTownId for UUID-based lookups
             boolean success = PlatformServices.getBlockEntityHelper().processPlatformDataRequest(
                 player, x, y, z, includePlatformConnections, includeDestinationTowns, maxRadius, targetTownId);
             

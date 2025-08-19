@@ -209,13 +209,13 @@ public class TownPlatformDataResponsePacket extends BaseBlockEntityPacket {
         }
         
         try {
-            LOGGER.warn("CLIENT PACKET HANDLER: Received structured platform data - {} platforms, townInfo: {}", 
+            LOGGER.debug("CLIENT PACKET HANDLER: Received structured platform data - {} platforms, townInfo: {}", 
                        platforms.size(), townInfo != null ? townInfo.name : "null");
             
             // Debug each platform
             if (!platforms.isEmpty()) {
                 for (PlatformInfo platform : platforms.values()) {
-                    LOGGER.warn("CLIENT PACKET HANDLER: Platform {} - ID: {}, enabled: {}, startPos: [{},{},{}], endPos: [{},{},{}]",
+                    LOGGER.debug("CLIENT PACKET HANDLER: Platform {} - ID: {}, enabled: {}, startPos: [{},{},{}], endPos: [{},{},{}]",
                                platform.name, platform.id, platform.enabled, 
                                platform.startPos[0], platform.startPos[1], platform.startPos[2],
                                platform.endPos[0], platform.endPos[1], platform.endPos[2]);
@@ -228,39 +228,26 @@ public class TownPlatformDataResponsePacket extends BaseBlockEntityPacket {
             // Store town data if available
             if (townInfo != null) {
                 // Add town to cache with structured data
-                LOGGER.warn("CLIENT PACKET HANDLER: Caching town data for {}: {} platforms, boundary radius {}", 
+                LOGGER.debug("CLIENT PACKET HANDLER: Caching town data for {}: {} platforms, boundary radius {}", 
                            townInfo.name, platforms.size(), townInfo.boundaryRadius);
             }
             
             // Store platform data
             if (!platforms.isEmpty()) {
-                LOGGER.warn("CLIENT PACKET HANDLER: Caching {} platforms for town {}", platforms.size(), townId);
+                LOGGER.debug("CLIENT PACKET HANDLER: Caching {} platforms for town {}", platforms.size(), townId);
                 cache.updateTownPlatforms(townId, platforms);
             }
             
-            // Get the town interface entity using platform services
-            Object blockEntity = getBlockEntity(player);
-            if (blockEntity == null) {
-                LOGGER.error("CLIENT PACKET HANDLER: No block entity found at position: [{}, {}, {}]", x, y, z);
-                return;
-            }
-
-            Object townDataProvider = getTownDataProvider(blockEntity);
-            if (townDataProvider == null) {
-                LOGGER.error("CLIENT PACKET HANDLER: Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
-                return;
-            }
-            
-            // Update the map UI through platform services with structured data
-            LOGGER.warn("CLIENT PACKET HANDLER: Attempting to update platform UI through BlockEntityHelper...");
-            // NOTE: Platform service still uses old signature - keeping for compatibility
+            // FIXED: Client-side packet handler should directly update the map modal
+            // No need to lookup block entity on client - just update the open map modal
+            LOGGER.debug("CLIENT PACKET HANDLER: Attempting to update platform UI through BlockEntityHelper...");
             boolean success = PlatformServices.getBlockEntityHelper().updateTownPlatformUIStructured(
                 player, x, y, z, this);
             
             if (success) {
-                LOGGER.warn("CLIENT PACKET HANDLER: Successfully updated platform UI with structured data at [{}, {}, {}]", x, y, z);
+                LOGGER.debug("CLIENT PACKET HANDLER: Successfully updated platform UI with structured data at [{}, {}, {}]", x, y, z);
             } else {
-                LOGGER.warn("CLIENT PACKET HANDLER: Failed to update platform UI at [{}, {}, {}] - TownMapModal not open?", x, y, z);
+                LOGGER.debug("CLIENT PACKET HANDLER: Failed to update platform UI at [{}, {}, {}] - TownMapModal not open?", x, y, z);
             }
         } catch (Exception e) {
             LOGGER.error("CLIENT PACKET HANDLER: Exception while processing platform data response at [{}, {}, {}]: {}", 

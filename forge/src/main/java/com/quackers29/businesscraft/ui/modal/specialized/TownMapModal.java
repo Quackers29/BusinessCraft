@@ -1452,7 +1452,7 @@ public class TownMapModal extends Screen {
             
             // Update the selected town with fresh data from TownInfo
             // Note: TownInfo doesn't have population/touristCount, so keep existing values
-            LOGGER.warn("TOWNINFO CLIENT DEBUG: Updating selectedTown with center coordinates ({},{},{})", 
+            LOGGER.debug("TOWNINFO CLIENT DEBUG: Updating selectedTown with center coordinates ({},{},{})", 
                        townInfo.centerX, townInfo.centerY, townInfo.centerZ);
             
             selectedTown = new TownMapDataResponsePacket.TownMapInfo(

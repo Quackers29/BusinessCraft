@@ -84,21 +84,8 @@ public class TownMapDataResponsePacket extends BaseBlockEntityPacket {
             return;
         }
         
-        // Get the town interface entity using platform services
-        Object blockEntity = getBlockEntity(player);
-        if (blockEntity == null) {
-            LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
-            return;
-        }
-
-        Object townDataProvider = getTownDataProvider(blockEntity);
-        if (townDataProvider == null) {
-            LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
-            return;
-        }
-        
-        // Update client-side town map modal through platform services
-        // NOTE: Platform service still uses old signature - keeping for compatibility
+        // FIXED: Client-side packet handler should directly update the map modal
+        // No need to lookup block entity on client - just update the open map modal
         boolean success = PlatformServices.getBlockEntityHelper().updateTownMapUI(player, x, y, z, mapData, zoomLevel);
         
         if (success) {
