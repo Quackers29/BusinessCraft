@@ -3,7 +3,6 @@ package com.quackers29.businesscraft.town;
 import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.debug.DebugConfig;
-import com.quackers29.businesscraft.platform.PlatformServices;
 import com.quackers29.businesscraft.town.components.TownComponent;
 // Using ITownDataProvider.VisitHistoryRecord instead
 import com.quackers29.businesscraft.town.service.TownBusinessLogic;
@@ -12,6 +11,9 @@ import com.quackers29.businesscraft.town.data.RewardSource;
 import com.quackers29.businesscraft.town.data.RewardEntry;
 import com.quackers29.businesscraft.town.data.ClaimStatus;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.nbt.CompoundTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 
  * This class has been migrated from the Forge module to the common module
  * to enable full Enhanced MultiLoader Template compatibility. All platform-specific
- * operations are abstracted through PlatformServices.
+ * operations use direct Minecraft API access (Unified Architecture).
  * 
  * Key design principles:
  * - Zero platform dependencies (no BlockPos, Item, etc.)
@@ -170,10 +172,10 @@ public class Town implements ITownDataProvider {
     // ITownDataProvider interface implementation
     @Override
     public Map<Object, Integer> getAllResources() {
-        // Convert string keys to platform-specific Item objects via PlatformServices
+        // Convert string keys to Items via direct registry access (Unified Architecture)
         Map<Object, Integer> result = new HashMap<>(); 
         for (Map.Entry<String, Integer> entry : resources.entrySet()) {
-            Object item = PlatformServices.getRegistryHelper().getItem(entry.getKey());
+            Item item = BuiltInRegistries.ITEM.get(new ResourceLocation(entry.getKey()));
             if (item != null) {
                 result.put(item, entry.getValue());
             }
@@ -195,16 +197,19 @@ public class Town implements ITownDataProvider {
     
     @Override
     public void addResource(Object item, int count) {
-        String itemId = PlatformServices.getRegistryHelper().getItemId(item);
-        if (itemId != null) {
+        if (item instanceof Item minecraftItem) {
+            String itemId = BuiltInRegistries.ITEM.getKey(minecraftItem).toString();
             addResource(itemId, count);
         }
     }
     
     @Override
     public int getResourceCount(Object item) {
-        String itemId = PlatformServices.getRegistryHelper().getItemId(item);
-        return itemId != null ? getResourceCount(itemId) : 0;
+        if (item instanceof Item minecraftItem) {
+            String itemId = BuiltInRegistries.ITEM.getKey(minecraftItem).toString();
+            return getResourceCount(itemId);
+        }
+        return 0;
     }
     
     // Communal storage - redirect to payment board for now

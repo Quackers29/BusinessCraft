@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.network.packets.storage;
 
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
+import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,8 +54,8 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
     public void handle(Object player) {
         LOGGER.debug("Player is trading resource in slot {} at [{}, {}, {}]", slotId, getX(), getY(), getZ());
         
-        // Check if the item to trade is empty through platform services
-        if (!PlatformServices.getInventoryHelper().isItemStackValid(itemToTrade)) {
+        // Check if the item to trade is empty using direct access (Unified Architecture)
+        if (!(itemToTrade instanceof ItemStack itemStack) || itemStack.isEmpty()) {
             LOGGER.warn("Received empty item in trade packet from player");
             return;
         }

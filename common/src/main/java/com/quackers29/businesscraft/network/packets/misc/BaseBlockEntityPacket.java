@@ -1,6 +1,10 @@
 package com.quackers29.businesscraft.network.packets.misc;
 
 import com.quackers29.businesscraft.platform.PlatformServices;
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +52,24 @@ public abstract class BaseBlockEntityPacket {
      */
     public void encode(Object buffer) {
         PlatformServices.getNetworkHelper().writeBlockPos(buffer, x, y, z);
+    }
+    
+    /**
+     * Get the TownInterfaceEntity at the packet coordinates (Unified Architecture).
+     * Direct access replaces complex BlockEntityHelper service calls.
+     * 
+     * @param player Platform-specific player object (should be ServerPlayer)
+     * @return TownInterfaceEntity at coordinates, or null if not found or wrong type
+     */
+    protected TownInterfaceEntity getTownInterfaceEntity(Object player) {
+        if (player instanceof ServerPlayer serverPlayer) {
+            BlockPos pos = new BlockPos(x, y, z);
+            BlockEntity blockEntity = serverPlayer.serverLevel().getBlockEntity(pos);
+            if (blockEntity instanceof TownInterfaceEntity townInterface) {
+                return townInterface;
+            }
+        }
+        return null;
     }
     
     /**

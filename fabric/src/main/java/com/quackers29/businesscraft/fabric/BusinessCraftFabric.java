@@ -150,11 +150,7 @@ public class BusinessCraftFabric implements ModInitializer {
                 LOGGER.error("❌ EventHelper: NOT AVAILABLE");
             }
             
-            if (PlatformServices.getInventoryHelper() != null) {
-                LOGGER.info("✅ InventoryHelper: Available (" + PlatformServices.getInventoryHelper().getClass().getSimpleName() + ")");
-            } else {
-                LOGGER.error("❌ InventoryHelper: NOT AVAILABLE");
-            }
+            // ✅ InventoryHelper: Eliminated - using direct ItemStack access (Unified Architecture)
             
             if (PlatformServices.getMenuHelper() != null) {
                 LOGGER.info("✅ MenuHelper: Available (" + PlatformServices.getMenuHelper().getClass().getSimpleName() + ")");

@@ -1,7 +1,7 @@
 package com.quackers29.businesscraft.platform.forge;
 
 import com.quackers29.businesscraft.platform.ITownManagerService;
-import com.quackers29.businesscraft.platform.PlatformServices;
+import net.minecraft.core.registries.BuiltInRegistries;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
 import com.quackers29.businesscraft.town.data.TownPaymentBoard;
@@ -82,13 +82,13 @@ public class ForgeTownManagerService implements ITownManagerService {
     public void addResource(Object level, UUID townId, Object item, int count) {
         ServerLevel serverLevel = (ServerLevel) level;
         
-        // Convert item to resource location string using platform services
+        // Convert item to resource location string using direct registry access
         String itemId;
         if (item instanceof ItemStack) {
             ItemStack itemStack = (ItemStack) item;
-            itemId = PlatformServices.getRegistryHelper().getItemId(itemStack.getItem());
+            itemId = BuiltInRegistries.ITEM.getKey(itemStack.getItem()).toString();
         } else {
-            itemId = PlatformServices.getRegistryHelper().getItemId(item);
+            itemId = BuiltInRegistries.ITEM.getKey((net.minecraft.world.item.Item) item).toString();
         }
         
         TownManager.get(serverLevel).addResourceToTown(townId, itemId, count);
