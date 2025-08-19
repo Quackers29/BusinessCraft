@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.network.packets.storage;
 
+import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,12 +8,11 @@ import org.slf4j.LoggerFactory;
 /**
  * Platform-agnostic client-to-server packet for claiming rewards from the payment board.
  * 
- * Enhanced MultiLoader approach: Common module defines packet structure and logic,
- * platform modules handle platform-specific operations through PlatformServices.
+ * Unified Architecture approach: Direct access to TownInterfaceEntity methods
+ * instead of platform service wrapper calls.
  */
-public class PaymentBoardClaimPacket {
+public class PaymentBoardClaimPacket extends BaseBlockEntityPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(PaymentBoardClaimPacket.class);
-    private final int x, y, z;
     private final String rewardId;
     private final boolean toBuffer;
     
@@ -20,9 +20,7 @@ public class PaymentBoardClaimPacket {
      * Create packet for sending.
      */
     public PaymentBoardClaimPacket(int x, int y, int z, String rewardId, boolean toBuffer) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        super(x, y, z);
         this.rewardId = rewardId;
         this.toBuffer = toBuffer;
     }
@@ -41,42 +39,46 @@ public class PaymentBoardClaimPacket {
     /**
      * Encode packet data for network transmission.
      */
+    @Override
     public void encode(Object buffer) {
-        PlatformServices.getNetworkHelper().writeBlockPos(buffer, x, y, z);
+        super.encode(buffer); // Write block position
         PlatformServices.getNetworkHelper().writeUUID(buffer, rewardId);
         PlatformServices.getNetworkHelper().writeBoolean(buffer, toBuffer);
     }
     
     /**
      * Handle the packet on the server side.
-     * This method contains the core server-side logic which is platform-agnostic.
+     * Unified Architecture approach: Direct access to TownInterfaceEntity methods.
      */
+    @Override
     public void handle(Object player) {
         LOGGER.debug("Processing claim request from player for reward {} at [{}, {}, {}], toBuffer: {}", 
                     rewardId, x, y, z, toBuffer);
         
         try {
-            // Get the town interface block entity through platform services
-            Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
-            if (blockEntity == null) {
+            // Get the town interface block entity using unified architecture
+            com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
+            if (townInterface == null) {
                 LOGGER.debug("Block at [{}, {}, {}] is not a TownInterfaceEntity", x, y, z);
                 PlatformServices.getPlatformHelper().sendPlayerMessage(player, 
                     "Error: Invalid town block", "RED");
                 return;
             }
             
-            // Attempt to claim the reward through platform services
+            // Attempt to claim the reward through platform services (complex inventory operations still need platform layer)
             Object claimResult = PlatformServices.getBlockEntityHelper().claimPaymentBoardReward(
-                blockEntity, player, rewardId, toBuffer);
+                townInterface, player, rewardId, toBuffer);
             
             if (claimResult != null) {
                 LOGGER.debug("Successfully processed claim for reward {} at [{}, {}, {}]", 
                            rewardId, x, y, z);
                 
-                // Send updated payment board data to client through platform services
-                java.util.List<Object> unclaimedRewards = PlatformServices.getBlockEntityHelper()
-                    .getUnclaimedRewards(blockEntity);
+                // Get updated payment board data using unified architecture
+                java.util.List<Object> unclaimedRewards = townInterface.getUnclaimedRewards();
                 PlatformServices.getNetworkHelper().sendPaymentBoardResponsePacket(player, unclaimedRewards);
+                
+                // Mark changed and sync using unified architecture
+                markChangedAndSync(townInterface);
                 
                 // Note: Platform implementations will handle sending BufferSlotStorageResponsePacket
                 // and player inventory management as part of claimPaymentBoardReward
@@ -94,9 +96,6 @@ public class PaymentBoardClaimPacket {
     }
     
     // Getters for testing
-    public int getX() { return x; }
-    public int getY() { return y; }
-    public int getZ() { return z; }
     public String getRewardId() { return rewardId; }
     public boolean isToBuffer() { return toBuffer; }
 }

@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -36,21 +37,19 @@ public class AddPlatformPacket extends BaseBlockEntityPacket {
     public void handle(Object player) {
         LOGGER.debug("Player is adding a new platform to town block at ({}, {}, {})", x, y, z);
         
-        // Platform services will provide block entity access
-        Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
+        // Get town interface using unified access
+        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
         
-        if (blockEntity != null) {
-            // Use platform services to access town interface functionality
-            boolean canAdd = PlatformServices.getBlockEntityHelper().canAddMorePlatforms(blockEntity);
+        if (townInterface != null) {
+            // Check if we can add more platforms through platform services
+            boolean canAdd = PlatformServices.getBlockEntityHelper().canAddMorePlatforms(townInterface);
             
             if (canAdd) {
-                boolean added = PlatformServices.getBlockEntityHelper().addPlatform(blockEntity);
+                // Add platform through platform services
+                boolean added = PlatformServices.getBlockEntityHelper().addPlatform(townInterface);
                 
                 if (added) {
                     LOGGER.debug("Successfully added new platform to town block at ({}, {}, {})", x, y, z);
-                    
-                    // Mark changed and update clients through platform services
-                    PlatformServices.getBlockEntityHelper().markBlockEntityChanged(blockEntity);
                     PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
                     
                     // Send refresh packet to all tracking clients
@@ -64,7 +63,7 @@ public class AddPlatformPacket extends BaseBlockEntityPacket {
                 LOGGER.debug("Failed to add platform to town block at ({}, {}, {}) - already at max capacity", x, y, z);
             }
         } else {
-            LOGGER.warn("No block entity found at position ({}, {}, {}) for platform addition", x, y, z);
+            LOGGER.warn("No TownInterfaceEntity found at position ({}, {}, {}) for platform addition", x, y, z);
         }
     }
 }

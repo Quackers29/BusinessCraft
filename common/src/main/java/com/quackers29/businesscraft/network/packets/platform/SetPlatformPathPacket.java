@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
+import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,12 +8,11 @@ import org.slf4j.LoggerFactory;
 /**
  * Platform-agnostic client-to-server packet for setting a platform's path coordinates.
  * 
- * Enhanced MultiLoader approach: Common module defines packet structure and logic,
- * platform modules handle platform-specific operations through PlatformServices.
+ * Unified Architecture approach: Direct access to TownInterfaceEntity methods
+ * instead of platform service wrapper calls.
  */
-public class SetPlatformPathPacket {
+public class SetPlatformPathPacket extends BaseBlockEntityPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(SetPlatformPathPacket.class);
-    private final int blockX, blockY, blockZ;
     private final String platformId;
     private final int startX, startY, startZ;
     private final int endX, endY, endZ;
@@ -23,9 +23,7 @@ public class SetPlatformPathPacket {
     public SetPlatformPathPacket(int blockX, int blockY, int blockZ, String platformId,
                                int startX, int startY, int startZ,
                                int endX, int endY, int endZ) {
-        this.blockX = blockX;
-        this.blockY = blockY;
-        this.blockZ = blockZ;
+        super(blockX, blockY, blockZ);
         this.platformId = platformId;
         this.startX = startX;
         this.startY = startY;
@@ -55,8 +53,9 @@ public class SetPlatformPathPacket {
     /**
      * Encode packet data for network transmission.
      */
+    @Override
     public void encode(Object buffer) {
-        PlatformServices.getNetworkHelper().writeBlockPos(buffer, blockX, blockY, blockZ);
+        super.encode(buffer); // Write block position
         PlatformServices.getNetworkHelper().writeUUID(buffer, platformId);
         PlatformServices.getNetworkHelper().writeBlockPos(buffer, startX, startY, startZ);
         PlatformServices.getNetworkHelper().writeBlockPos(buffer, endX, endY, endZ);
@@ -64,41 +63,35 @@ public class SetPlatformPathPacket {
     
     /**
      * Handle the packet on the server side.
-     * This method contains the core server-side logic which is platform-agnostic.
+     * Unified Architecture approach: Direct access to TownInterfaceEntity methods.
      */
+    @Override
     public void handle(Object player) {
         LOGGER.debug("Player is setting platform {} path from [{}, {}, {}] to [{}, {}, {}] at [{}, {}, {}]", 
-                    platformId, startX, startY, startZ, endX, endY, endZ, blockX, blockY, blockZ);
+                    platformId, startX, startY, startZ, endX, endY, endZ, x, y, z);
         
-        // Get the town interface block entity through platform services
-        Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, blockX, blockY, blockZ);
-        if (blockEntity == null) {
-            LOGGER.warn("Block entity not found at [{}, {}, {}]", blockX, blockY, blockZ);
+        // Get the town interface block entity using unified architecture
+        com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
+        if (townInterface == null) {
+            LOGGER.warn("Block entity not found at [{}, {}, {}]", x, y, z);
             return;
         }
         
         // Set the platform path through platform services
+        // NOTE: Platform service handles complex coordinate conversions and validations
         boolean success = PlatformServices.getBlockEntityHelper().setPlatformPath(
-            blockEntity, platformId, startX, startY, startZ, endX, endY, endZ);
-            
+            townInterface, platformId, startX, startY, startZ, endX, endY, endZ);
+        
         if (!success) {
-            LOGGER.warn("Failed to set platform {} path from [{}, {}, {}] to [{}, {}, {}] at [{}, {}, {}]", 
-                       platformId, startX, startY, startZ, endX, endY, endZ, blockX, blockY, blockZ);
+            LOGGER.warn("Failed to set platform path at [{}, {}, {}]", x, y, z);
             return;
         }
         
-        // Mark the block entity as changed and sync to client
-        PlatformServices.getBlockEntityHelper().markBlockEntityChanged(blockEntity);
-        PlatformServices.getPlatformHelper().forceBlockUpdate(player, blockX, blockY, blockZ);
-        
         LOGGER.debug("Successfully set platform {} path from [{}, {}, {}] to [{}, {}, {}] at [{}, {}, {}]", 
-                    platformId, startX, startY, startZ, endX, endY, endZ, blockX, blockY, blockZ);
+                    platformId, startX, startY, startZ, endX, endY, endZ, x, y, z);
     }
     
     // Getters for testing
-    public int getBlockX() { return blockX; }
-    public int getBlockY() { return blockY; }
-    public int getBlockZ() { return blockZ; }
     public String getPlatformId() { return platformId; }
     public int getStartX() { return startX; }
     public int getStartY() { return startY; }

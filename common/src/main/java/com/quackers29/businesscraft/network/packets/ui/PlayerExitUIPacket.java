@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,22 +13,18 @@ import org.slf4j.LoggerFactory;
  * Enhanced MultiLoader approach: Common module defines packet structure and logic,
  * platform modules handle platform-specific operations through PlatformServices.
  */
-public class PlayerExitUIPacket {
+public class PlayerExitUIPacket extends BaseBlockEntityPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlayerExitUIPacket.class);
-    private final int x, y, z;
     
     /**
      * Create packet for sending.
      */
     public PlayerExitUIPacket(int x, int y, int z) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        super(x, y, z);
     }
     
     /**
      * Create packet from network buffer (decode constructor).
-     * Uses a static decode method pattern for network deserialization.
      */
     public static PlayerExitUIPacket decode(Object buffer) {
         int[] pos = PlatformServices.getNetworkHelper().readBlockPos(buffer);
@@ -36,26 +34,28 @@ public class PlayerExitUIPacket {
     /**
      * Encode packet data for network transmission.
      */
+    @Override
     public void encode(Object buffer) {
-        PlatformServices.getNetworkHelper().writeBlockPos(buffer, x, y, z);
+        super.encode(buffer); // Write block position
     }
     
     /**
      * Handle the packet on the server side.
      * This method registers player UI exit with the town interface entity for proper cleanup.
      */
+    @Override
     public void handle(Object player) {
         LOGGER.debug("Player exiting UI at position [{}, {}, {}]", x, y, z);
         
-        // Get the town interface block entity through platform services
-        Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
-        if (blockEntity == null) {
+        // Get the town interface entity using unified architecture pattern
+        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
+        if (townInterface == null) {
             LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
             return;
         }
         
         // Register player UI exit through platform services
-        boolean success = PlatformServices.getBlockEntityHelper().registerPlayerExitUI(blockEntity, player);
+        boolean success = PlatformServices.getBlockEntityHelper().registerPlayerExitUI(townInterface, player);
         
         if (success) {
             LOGGER.debug("Successfully registered player UI exit at [{}, {}, {}]", x, y, z);
@@ -64,8 +64,4 @@ public class PlayerExitUIPacket {
         }
     }
     
-    // Getters for testing
-    public int getX() { return x; }
-    public int getY() { return y; }
-    public int getZ() { return z; }
 }

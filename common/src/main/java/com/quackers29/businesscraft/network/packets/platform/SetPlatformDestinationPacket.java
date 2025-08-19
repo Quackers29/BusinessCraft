@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
+import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,12 +10,11 @@ import java.util.HashMap;
 /**
  * Platform-agnostic client-to-server packet to set a destination enabled state for a platform.
  * 
- * Enhanced MultiLoader approach: Common module defines packet structure and logic,
- * platform modules handle platform-specific operations through PlatformServices.
+ * Unified Architecture approach: Direct access to TownInterfaceEntity methods
+ * instead of platform service wrapper calls where possible.
  */
-public class SetPlatformDestinationPacket {
+public class SetPlatformDestinationPacket extends BaseBlockEntityPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(SetPlatformDestinationPacket.class);
-    private final int x, y, z;
     private final String platformId;
     private final String townId;
     private final boolean enabled;
@@ -23,9 +23,7 @@ public class SetPlatformDestinationPacket {
      * Create packet for sending.
      */
     public SetPlatformDestinationPacket(int x, int y, int z, String platformId, String townId, boolean enabled) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        super(x, y, z);
         this.platformId = platformId;
         this.townId = townId;
         this.enabled = enabled;
@@ -46,8 +44,9 @@ public class SetPlatformDestinationPacket {
     /**
      * Encode packet data for network transmission.
      */
+    @Override
     public void encode(Object buffer) {
-        PlatformServices.getNetworkHelper().writeBlockPos(buffer, x, y, z);
+        super.encode(buffer); // Write block position
         PlatformServices.getNetworkHelper().writeUUID(buffer, platformId);
         PlatformServices.getNetworkHelper().writeUUID(buffer, townId);
         PlatformServices.getNetworkHelper().writeBoolean(buffer, enabled);
@@ -55,22 +54,24 @@ public class SetPlatformDestinationPacket {
     
     /**
      * Handle the packet on the server side.
-     * This method contains the core server-side logic which is platform-agnostic.
+     * Unified Architecture approach: Direct access to TownInterfaceEntity methods where possible.
      */
+    @Override
     public void handle(Object player) {
         LOGGER.debug("Player is setting destination {} to {} for platform {} at [{}, {}, {}]", 
                     townId, enabled, platformId, x, y, z);
         
-        // Get the town interface block entity through platform services
-        Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
-        if (blockEntity == null) {
+        // Get the town interface block entity using unified architecture
+        com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
+        if (townInterface == null) {
             LOGGER.warn("Block entity not found at [{}, {}, {}]", x, y, z);
             return;
         }
         
         // Set the destination enabled state through platform services
+        // Note: Complex platform destination operations still need platform layer for town management
         boolean success = PlatformServices.getBlockEntityHelper().setPlatformDestinationEnabled(
-            blockEntity, platformId, townId, enabled);
+            townInterface, platformId, townId, enabled);
             
         if (!success) {
             LOGGER.warn("Failed to set destination {} to {} for platform {} at [{}, {}, {}]", 
@@ -78,11 +79,11 @@ public class SetPlatformDestinationPacket {
             return;
         }
         
-        // Mark the block entity as changed
-        PlatformServices.getBlockEntityHelper().markBlockEntityChanged(blockEntity);
+        // Mark changed and sync using unified architecture
+        markChangedAndSync(townInterface);
         
         // Send refresh destinations packet back to client
-        sendRefreshDestinationsPacket(player, blockEntity);
+        sendRefreshDestinationsPacket(player, townInterface);
         
         LOGGER.debug("Successfully set destination {} to {} for platform {} at [{}, {}, {}]", 
                     townId, enabled, platformId, x, y, z);
@@ -91,18 +92,18 @@ public class SetPlatformDestinationPacket {
     /**
      * Send refresh destinations packet with updated data to the client.
      */
-    private void sendRefreshDestinationsPacket(Object player, Object blockEntity) {
+    private void sendRefreshDestinationsPacket(Object player, com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface) {
         try {
             // Get destination states for this platform
             Map<String, Boolean> townDestinations = PlatformServices.getBlockEntityHelper()
-                .getPlatformDestinations(blockEntity, platformId);
+                .getPlatformDestinations(townInterface, platformId);
             
             // Get all available destination towns
             Map<String, String> townNames = PlatformServices.getBlockEntityHelper()
-                .getAllTownsForDestination(blockEntity);
+                .getAllTownsForDestination(townInterface);
             
             // Get the origin town for distance calculations
-            Object originTown = PlatformServices.getBlockEntityHelper().getOriginTown(blockEntity);
+            Object originTown = PlatformServices.getBlockEntityHelper().getOriginTown(townInterface);
             
             // Use block position if town or town position is null
             int[] originPos = (originTown != null) 
@@ -190,9 +191,6 @@ public class SetPlatformDestinationPacket {
     }
     
     // Getters for testing
-    public int getX() { return x; }
-    public int getY() { return y; }
-    public int getZ() { return z; }
     public String getPlatformId() { return platformId; }
     public String getTownId() { return townId; }
     public boolean isEnabled() { return enabled; }

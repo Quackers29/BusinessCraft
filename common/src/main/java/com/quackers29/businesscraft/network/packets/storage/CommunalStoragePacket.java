@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.network.packets.storage;
 
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -61,19 +62,19 @@ public class CommunalStoragePacket extends BaseBlockEntityPacket {
         LOGGER.debug("Processing communal storage {} operation for slot {} at position [{}, {}, {}]", 
                     operation, slotId, x, y, z);
         
-        // Get the town interface block entity through platform services
-        Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
-        if (blockEntity == null) {
+        // Get the town interface block entity using unified access
+        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
+        if (townInterface == null) {
             LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
             return;
         }
         
-        // Process communal storage operation through platform services
+        // Process communal storage operation using direct access
         boolean success;
         if (isAdd) {
-            success = PlatformServices.getBlockEntityHelper().addToCommunalStorage(blockEntity, player, itemStack, slotId);
+            success = PlatformServices.getBlockEntityHelper().addToCommunalStorage(townInterface, player, itemStack, slotId);
         } else {
-            success = PlatformServices.getBlockEntityHelper().removeFromCommunalStorage(blockEntity, player, itemStack, slotId);
+            success = PlatformServices.getBlockEntityHelper().removeFromCommunalStorage(townInterface, player, itemStack, slotId);
         }
         
         if (success) {

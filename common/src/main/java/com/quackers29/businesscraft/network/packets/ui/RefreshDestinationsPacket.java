@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,9 +13,8 @@ import org.slf4j.LoggerFactory;
  * Enhanced MultiLoader approach: Common module defines packet structure and logic,
  * platform modules handle platform-specific operations through PlatformServices.
  */
-public class RefreshDestinationsPacket {
+public class RefreshDestinationsPacket extends BaseBlockEntityPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(RefreshDestinationsPacket.class);
-    private final int x, y, z;
     private final String platformId;
     private final String destinationData; // JSON or serialized destination data
     
@@ -21,9 +22,7 @@ public class RefreshDestinationsPacket {
      * Create packet for sending.
      */
     public RefreshDestinationsPacket(int x, int y, int z, String platformId, String destinationData) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        super(x, y, z);
         this.platformId = platformId != null ? platformId : "";
         this.destinationData = destinationData != null ? destinationData : "{}";
     }
@@ -48,8 +47,9 @@ public class RefreshDestinationsPacket {
     /**
      * Encode packet data for network transmission.
      */
+    @Override
     public void encode(Object buffer) {
-        PlatformServices.getNetworkHelper().writeBlockPos(buffer, x, y, z);
+        super.encode(buffer); // Write block position
         PlatformServices.getNetworkHelper().writeString(buffer, platformId);
         PlatformServices.getNetworkHelper().writeString(buffer, destinationData);
     }
@@ -58,10 +58,19 @@ public class RefreshDestinationsPacket {
      * Handle the packet on the client side.
      * This method updates the client-side destination data cache.
      */
+    @Override
     public void handle(Object player) {
         LOGGER.debug("Refreshing destinations for platform '{}' at position [{}, {}, {}]", platformId, x, y, z);
         
+        // Get the town interface entity using unified architecture pattern
+        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
+        if (townInterface == null) {
+            LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
+            return;
+        }
+        
         // Update client-side destination data through platform services
+        // NOTE: Platform service still uses old signature - keeping for compatibility
         boolean success = PlatformServices.getBlockEntityHelper().refreshDestinationData(player, x, y, z, platformId, destinationData);
         
         if (success) {
@@ -72,9 +81,6 @@ public class RefreshDestinationsPacket {
     }
     
     // Getters for testing
-    public int getX() { return x; }
-    public int getY() { return y; }
-    public int getZ() { return z; }
     public String getPlatformId() { return platformId; }
     public String getDestinationData() { return destinationData; }
 }

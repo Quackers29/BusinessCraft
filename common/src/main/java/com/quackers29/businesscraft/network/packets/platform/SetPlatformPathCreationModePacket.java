@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
+import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,12 +8,11 @@ import org.slf4j.LoggerFactory;
 /**
  * Platform-agnostic client-to-server packet for setting platform path creation mode.
  * 
- * Enhanced MultiLoader approach: Common module defines packet structure and logic,
- * platform modules handle platform-specific operations through PlatformServices.
+ * Unified Architecture approach: Direct access to TownInterfaceEntity methods
+ * instead of platform service wrapper calls.
  */
-public class SetPlatformPathCreationModePacket {
+public class SetPlatformPathCreationModePacket extends BaseBlockEntityPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(SetPlatformPathCreationModePacket.class);
-    private final int x, y, z;
     private final String platformId;
     private final boolean mode;
     
@@ -20,9 +20,7 @@ public class SetPlatformPathCreationModePacket {
      * Create packet for sending.
      */
     public SetPlatformPathCreationModePacket(int x, int y, int z, String platformId, boolean mode) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        super(x, y, z);
         this.platformId = platformId;
         this.mode = mode;
     }
@@ -41,37 +39,38 @@ public class SetPlatformPathCreationModePacket {
     /**
      * Encode packet data for network transmission.
      */
+    @Override
     public void encode(Object buffer) {
-        PlatformServices.getNetworkHelper().writeBlockPos(buffer, x, y, z);
+        super.encode(buffer); // Write block position
         PlatformServices.getNetworkHelper().writeUUID(buffer, platformId);
         PlatformServices.getNetworkHelper().writeBoolean(buffer, mode);
     }
     
     /**
      * Handle the packet on the server side.
-     * This method contains the core server-side logic which is platform-agnostic.
+     * Unified Architecture approach: Direct access to TownInterfaceEntity methods.
      */
+    @Override
     public void handle(Object player) {
         System.out.println("SET PLATFORM PATH CREATION MODE PACKET: Player is setting platform " + platformId + " path creation mode to " + mode + " at [" + x + ", " + y + ", " + z + "]");
         
-        // Get the town interface block entity through platform services
-        Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
-        if (blockEntity == null) {
+        // Get the town interface block entity using unified architecture
+        com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
+        if (townInterface == null) {
             LOGGER.warn("Block entity not found at [{}, {}, {}]", x, y, z);
             return;
         }
         
         // Set the platform path creation mode through platform services
-        boolean success = PlatformServices.getBlockEntityHelper().setPlatformCreationMode(
-            blockEntity, mode, platformId);
-            
+        // NOTE: Platform service handles complex platform operations
+        boolean success = PlatformServices.getBlockEntityHelper().setPlatformCreationMode(townInterface, mode, platformId);
+        
         if (!success) {
-            LOGGER.warn("Failed to set platform {} path creation mode to {} at [{}, {}, {}]", 
-                       platformId, mode, x, y, z);
+            LOGGER.warn("Failed to set platform creation mode at [{}, {}, {}]", x, y, z);
             return;
         }
         
-        // Update the platform path handler state through platform services
+        // Update the platform path handler state through platform services (client-side state management)
         if (mode) {
             PlatformServices.getPlatformHelper().setActivePlatformForPathCreation(x, y, z, platformId);
         } else {
@@ -83,9 +82,6 @@ public class SetPlatformPathCreationModePacket {
     }
     
     // Getters for testing
-    public int getX() { return x; }
-    public int getY() { return y; }
-    public int getZ() { return z; }
     public String getPlatformId() { return platformId; }
     public boolean getMode() { return mode; }
 }

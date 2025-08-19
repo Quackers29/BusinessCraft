@@ -43,7 +43,8 @@ public class RefreshPlatformsPacket extends BaseBlockEntityPacket {
             return;
         }
         
-        // Platform services will handle client-side block entity access
+        // Note: This is a client-side packet, so we still use platform services for client-side operations
+        // which involve complex UI and cache management not yet unified
         Object blockEntity = PlatformServices.getBlockEntityHelper().getClientBlockEntity(x, y, z);
         
         if (blockEntity != null) {

@@ -42,35 +42,27 @@ public class DeletePlatformPacket extends BaseBlockEntityPacket {
 
     /**
      * Handle the packet on the server side.
-     * This method contains the core business logic which is platform-agnostic.
+     * Unified Architecture approach: Direct access to TownInterfaceEntity methods.
      */
     @Override
     public void handle(Object player) {
         LOGGER.debug("Deleting platform {} from town at ({}, {}, {})", platformId, x, y, z);
         
-        // Platform services will provide block entity access
-        Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
+        // Get the town interface entity using unified architecture pattern
+        com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
+        if (townInterface == null) {
+            LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
+            return;
+        }
         
-        if (blockEntity != null) {
-            // Delete the platform by UUID
-            boolean deleted = PlatformServices.getBlockEntityHelper().removePlatform(blockEntity, platformId);
-            
-            if (deleted) {
-                LOGGER.debug("Successfully deleted platform {} from town at ({}, {}, {})", platformId, x, y, z);
-                
-                // Mark changed and update clients through platform services
-                PlatformServices.getBlockEntityHelper().markBlockEntityChanged(blockEntity);
-                PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
-                
-                // Send refresh packet to all tracking clients
-                PlatformServices.getNetworkHelper().sendToAllClients(
-                    new RefreshPlatformsPacket(x, y, z)
-                );
-            } else {
-                LOGGER.debug("Failed to delete platform {} from town at ({}, {}, {})", platformId, x, y, z);
-            }
+        // Delete platform through platform services
+        // NOTE: Platform service handles complex platform operations
+        boolean success = PlatformServices.getBlockEntityHelper().removePlatform(townInterface, platformId);
+        
+        if (success) {
+            LOGGER.debug("Successfully deleted platform {} from town at [{}, {}, {}]", platformId, x, y, z);
         } else {
-            LOGGER.warn("No block entity found at position ({}, {}, {}) for platform deletion", x, y, z);
+            LOGGER.warn("Failed to delete platform {} from town at [{}, {}, {}]", platformId, x, y, z);
         }
     }
     

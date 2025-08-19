@@ -78,6 +78,8 @@ public class CommunalStorageResponsePacket extends BaseBlockEntityPacket {
     /**
      * Handle the packet on the client side.
      * This method updates the client-side communal storage UI.
+     * Note: This packet is for client-side UI updates, so we still use platform services
+     * for UI operations which haven't been unified yet.
      */
     @Override
     public void handle(Object player) {
@@ -90,6 +92,7 @@ public class CommunalStorageResponsePacket extends BaseBlockEntityPacket {
         }
         
         // Update client-side communal storage UI through platform services
+        // Note: Client-side UI operations still use platform services as they involve complex GUI interactions
         boolean success = PlatformServices.getBlockEntityHelper().updateCommunalStorageUI(player, x, y, z, storageItems);
         
         if (success) {

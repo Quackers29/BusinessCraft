@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -84,7 +85,15 @@ public class TownMapDataResponsePacket extends BaseBlockEntityPacket {
             return;
         }
         
+        // Get the town interface entity using unified architecture pattern
+        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
+        if (townInterface == null) {
+            LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
+            return;
+        }
+        
         // Update client-side town map modal through platform services
+        // NOTE: Platform service still uses old signature - keeping for compatibility
         boolean success = PlatformServices.getBlockEntityHelper().updateTownMapUI(player, x, y, z, mapData, zoomLevel);
         
         if (success) {

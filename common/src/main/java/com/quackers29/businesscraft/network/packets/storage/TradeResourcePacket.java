@@ -49,8 +49,9 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
     
     /**
      * Handle the packet on the server side.
-     * This method contains the core server-side logic which is platform-agnostic.
+     * Unified Architecture approach: Direct access to TownInterfaceEntity methods.
      */
+    @Override
     public void handle(Object player) {
         LOGGER.debug("Player is trading resource in slot {} at [{}, {}, {}]", slotId, getX(), getY(), getZ());
         
@@ -60,21 +61,24 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
             return;
         }
         
-        // Get the town interface block entity through platform services
-        Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, getX(), getY(), getZ());
-        if (blockEntity == null) {
+        // Get the town interface block entity using unified architecture
+        com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
+        if (townInterface == null) {
             LOGGER.warn("No town block entity found at position [{}, {}, {}] for player", getX(), getY(), getZ());
             return;
         }
         
-        // Process the resource trade through platform services
+        // Process the resource trade through platform services (complex inventory operations still need platform layer)
         Object paymentResult = PlatformServices.getBlockEntityHelper().processResourceTrade(
-            blockEntity, player, itemToTrade, slotId);
+            townInterface, player, itemToTrade, slotId);
         
         // Send the payment result back to the client
         if (paymentResult != null) {
             PlatformServices.getNetworkHelper().sendPaymentResultPacket(player, paymentResult);
         }
+        
+        // Mark changed and sync using unified architecture
+        markChangedAndSync(townInterface);
         
         // Force block update to sync changes
         PlatformServices.getPlatformHelper().forceBlockUpdate(player, getX(), getY(), getZ());

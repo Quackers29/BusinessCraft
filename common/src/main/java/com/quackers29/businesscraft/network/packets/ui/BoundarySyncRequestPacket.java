@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -63,16 +64,16 @@ public class BoundarySyncRequestPacket extends BaseBlockEntityPacket {
         LOGGER.debug("Processing boundary sync request (enable: {}, distance: {}) at position [{}, {}, {}]", 
                     enableVisualization, renderDistance, x, y, z);
         
-        // Get the town interface block entity through platform services
-        Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
-        if (blockEntity == null) {
+        // Get the town interface entity using unified architecture pattern
+        TownInterfaceEntity townInterface = getTownInterfaceEntity(player);
+        if (townInterface == null) {
             LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
             return;
         }
         
         // Process boundary sync request through platform services
         boolean success = PlatformServices.getBlockEntityHelper().processBoundarySyncRequest(
-            blockEntity, player, enableVisualization, renderDistance);
+            townInterface, player, enableVisualization, renderDistance);
         
         if (success) {
             LOGGER.debug("Successfully processed boundary sync request (enable: {}, distance: {}) at [{}, {}, {}]", 
