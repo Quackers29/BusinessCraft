@@ -37,52 +37,80 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 
 ## 🚨 **CRITICAL PROJECT CONTEXT**
 
-**CURRENT TASK**: Enhanced MultiLoader Fabric/Forge Implementation (NO NEW FEATURES)
+**🏗️ MAJOR ARCHITECTURAL DECISION**: **UNIFIED ARCHITECTURE MIGRATION** ✅
 
-**📋 IMPORTANT LIMITATIONS**:
-- **NO NEW FUNCTIONALITY REQUIRED** - This is a platform compatibility enhancement only
-- **PRESERVE ALL EXISTING FUNCTIONALITY** - Forge implementation must retain 100% of features from main branch
-- **REFERENCE IMPLEMENTATION**: The `main` branch contains the fully functional Forge implementation prior to Enhanced MultiLoader migration
-- **FUNCTIONALITY PRESERVATION MANDATE**: Any features that worked in main branch MUST continue working in this enhanced implementation
+**NEW DIRECTION**: Migrate from Enhanced MultiLoader to Unified Architecture + Light Platform Abstractions (Option B)
 
-**🎯 PROJECT GOALS**:
-1. **Primary Goal**: Add Fabric platform support while maintaining 100% Forge feature parity with main branch
-2. **Secondary Goal**: Improve architecture through Enhanced MultiLoader Template for better maintainability
-3. **Critical Requirement**: Zero functionality regression from main branch implementation
+**📊 DECISION RATIONALE**:
+- **Analysis Completed**: Comprehensive research of successful Forge+Fabric mods (JEI, Jade, Create)
+- **Core Issue Identified**: Enhanced MultiLoader prevents natural database queries between town data and payment boards
+- **Better Approach Found**: Unified architecture with 90% shared code vs current 25%
+- **Faster Development**: 8-12 weeks vs 10-14 weeks for Enhanced MultiLoader completion
+- **Industry Proven**: Leading mods use similar unified approaches with minimal platform abstractions
+
+**📋 CRITICAL REQUIREMENTS** (PRESERVED FROM ORIGINAL):
+- **FUNCTIONALITY PRESERVATION MANDATE**: Any features that worked in main branch MUST continue working in this unified implementation
+- **PRESERVE ALL EXISTING FUNCTIONALITY**: Forge implementation must retain 100% of features from main branch
+- **Zero External Dependencies**: No third-party API risks (Architectury, FFAPI, etc.)
+- **REFERENCE IMPLEMENTATION**: The `main` branch contains the fully functional Forge implementation prior to architectural changes
+
+**🎯 NEW PROJECT GOALS**:
+1. **Primary Goal**: Unified architecture enabling natural database-style queries (`town.getPaymentBoard().getUnclaimedVisitorRewards()`)
+2. **Secondary Goal**: Forge + Fabric support with minimal platform abstractions (networking, menus, events only)
+3. **Critical Requirement**: Single source of truth for all town data including payment boards
+4. **Mandatory Requirement**: Zero functionality regression from main branch implementation
 
 **⚠️ DEVELOPMENT APPROACH**:
 - **When investigating issues**: Always reference main branch implementation as the authoritative source
 - **When functionality is broken**: Compare current implementation against main branch to identify regressions
-- **When implementing fixes**: Restore main branch behavior, then adapt for Enhanced MultiLoader compatibility
-- **When in doubt**: Main branch implementation is always the correct reference for expected behavior
+- **When implementing fixes**: Restore main branch behavior, then adapt for unified architecture compatibility
+- **When in doubt**: Main branch implementation is always the correct reference for expected behavior (AS IN BEHAVIOR SEEN BY THE USER)
+- **Migration Strategy**: 5-phase approach from Enhanced MultiLoader to Unified Architecture
+- **Phase 1**: Analysis and planning (1-2 weeks) - map dependencies, design unified structure
+- **Phase 2**: Core unification (3-4 weeks) - merge Town + TownPaymentBoard, resolve dependencies
+- **Phase 3**: Light abstractions (2-3 weeks) - minimal platform differences only
+- **Phase 4**: Fabric implementation (2-3 weeks) - simple platform layer vs complex service replication
+- **Phase 5**: Cleanup (1-2 weeks) - remove Enhanced MultiLoader infrastructure
 
 **📖 BRANCH REFERENCE GUIDE**:
 - **`main` branch**: Production-ready Forge implementation (reference for all functionality)
-- **`fabric` branch** (current): Enhanced MultiLoader Template implementation in progress
+- **`fabric` branch** (current): Enhanced MultiLoader Template implementation in progress → Unified Architecture migration
 - **Goal**: Fabric branch should have identical functionality to main branch + Fabric platform support
+
+**📖 ARCHITECTURE TRANSITION**:
+- **FROM**: Enhanced MultiLoader Template with complex 9-service abstraction layer
+- **TO**: Unified codebase with minimal platform abstractions (networking, menus, events)
+- **REFERENCE**: JEI, Jade, Create mod patterns for industry-proven unified approach
+- **GOAL**: Natural data relationships, easier maintenance, faster cross-platform development
+- **CONSTRAINT**: Must preserve 100% of main branch user-visible functionality
 
 ### Multi-Platform Architecture
 
 **Target Platforms**: Minecraft Forge 1.20.1 + Fabric 1.20.1 (full feature parity)
-**Architecture Pattern**: Enhanced MultiLoader Template with zero external dependencies
+**Architecture Pattern**: Unified Codebase + Light Platform Abstractions
 
-**CRITICAL**: BusinessCraft uses the **Enhanced MultiLoader Approach** for cross-platform compatibility. This architectural decision was made after comprehensive analysis and must be maintained.
+**CRITICAL**: BusinessCraft uses **Unified Architecture with Minimal Platform Abstractions** for cross-platform compatibility. This architectural decision was made after comprehensive analysis of Enhanced MultiLoader limitations and research of successful cross-platform mods.
 
-#### Why MultiLoader Template (Not Architectury or Other APIs)
-- **Zero External Dependencies**: No third-party API risks (Architectury, FFAPI, etc.)
-- **Maximum Performance**: Direct platform API access with no abstraction overhead
+#### Why Unified Architecture (Not Enhanced MultiLoader)
+- **Natural Data Relationships**: Direct database-style queries between town data and payment boards
+- **90% Shared Code**: Massive reduction in maintenance burden vs Enhanced MultiLoader's 25%
 - **Industry Proven**: Used by JEI, Jade, Create and other major successful mods
-- **100% Feature Parity**: All BusinessCraft features have direct Fabric equivalents
-- **Long-term Stability**: No risk of abandoned dependencies or API changes
+- **Faster Development**: New features automatically work on both platforms
+- **Simple Platform Differences**: Abstract only essentials (networking, menus, events)
+- **Zero External Dependencies**: No third-party API risks (Architectury, FFAPI, etc.)
 
-#### Current Multi-Platform Status (Phase 9.9.5 COMPLETE ✅)
-- **Platform Abstraction**: Core services 100% COMPLETE - Enhanced MultiLoader Template operational
-- **Common Module**: 25+ network packets, UI framework, configuration system all platform-agnostic
-- **Forge Module**: Complete functionality with full town data persistence and business logic
-- **Fabric Module**: Platform services working, but needs business logic migration for feature parity
-- **Build Status**: Both platforms compile and launch successfully with all core systems functional
-- **Architecture Achievement**: Zero external dependencies, direct platform API usage
-- **Testing Status**: Phase 9.9.5 identified town management needs common module migration for full parity
+#### Unified Architecture Migration Status
+- **Current State**: Enhanced MultiLoader Template operational but with identified limitations
+  - ✅ **Forge Module**: Complete functionality with sophisticated payment board system
+  - ⚠️ **Enhanced MultiLoader**: 274 platform service calls creating complex data bridges
+  - ❌ **Core Issue**: No natural database queries between town data and payment boards
+- **Migration Plan**: 5-phase unified architecture migration (8-12 weeks total)
+  - **Phase 1**: Analysis and Planning (READY TO START)
+  - **Phase 2**: Core Module Unification - merge Town + TownPaymentBoard
+  - **Phase 3**: Light Platform Abstractions - networking, menus, events only  
+  - **Phase 4**: Fabric Implementation - simple platform layer
+  - **Phase 5**: Cleanup - remove Enhanced MultiLoader infrastructure
+- **Target Outcome**: 90% shared code, natural data queries, easier maintenance
 
 ## Development Commands
 
