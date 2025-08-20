@@ -51,11 +51,11 @@ public class ForgePlatformHelper implements PlatformHelper {
         try {
             BlockPos pos = new BlockPos(x, y, z);
             UUID uuid = UUID.fromString(platformId);
-            System.out.println("FORGE PLATFORM HELPER: Setting active platform for path creation: " + platformId + " at " + pos);
+            DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Setting active platform for path creation: {} at {}", platformId, pos);
             PlatformPathHandler.setActivePlatform(pos, uuid);
         } catch (IllegalArgumentException e) {
             // Invalid UUID format
-            System.out.println("FORGE PLATFORM HELPER: Invalid platform ID format: " + platformId);
+            DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Invalid platform ID format: {}", platformId);
             throw new RuntimeException("Invalid platform ID format: " + platformId, e);
         }
     }

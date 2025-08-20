@@ -53,7 +53,8 @@ public class SetPlatformPathCreationModePacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        System.out.println("SET PLATFORM PATH CREATION MODE PACKET: Player is setting platform " + platformId + " path creation mode to " + mode + " at [" + x + ", " + y + ", " + z + "]");
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Player is setting platform {} path creation mode to {} at [{}, {}, {}]", 
+            platformId, mode, x, y, z);
         
         // Get the town interface block entity using platform services
         Object blockEntity = getBlockEntity(player);

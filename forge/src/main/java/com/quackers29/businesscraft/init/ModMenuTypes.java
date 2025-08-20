@@ -45,7 +45,7 @@ public class ModMenuTypes {
         // Register menus using platform abstraction
         TOWN_INTERFACE = REGISTRY.registerMenu("town_interface", 
             () -> {
-                System.out.println("DEBUG: TOWN_INTERFACE supplier called - creating MenuType");
+                DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "TOWN_INTERFACE supplier called - creating MenuType");
                 return IForgeMenuType.create((windowId, inv, data) -> {
                     BlockPos pos = data.readBlockPos();
                     return new TownInterfaceMenu(windowId, inv, pos);
@@ -78,8 +78,9 @@ public class ModMenuTypes {
         
             // Menu registration completed successfully
         } catch (Exception e) {
-            System.out.println("CRITICAL EXCEPTION in ModMenuTypes.initialize(): " + e.getClass().getSimpleName() + ": " + e.getMessage());
-            e.printStackTrace();
+            DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "CRITICAL EXCEPTION in ModMenuTypes.initialize(): {}: {}", 
+                e.getClass().getSimpleName(), e.getMessage());
+            LOGGER.error("Failed to initialize ModMenuTypes", e);
             throw new RuntimeException("Failed to initialize ModMenuTypes", e);
         }
     }

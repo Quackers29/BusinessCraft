@@ -158,9 +158,11 @@ public class BusinessCraft {
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
-        System.out.println("DEBUG: commonSetup() called - Thread: " + Thread.currentThread().getName());
-        System.out.println("DEBUG: commonSetup() - this object: " + this.getClass().getSimpleName() + "@" + Integer.toHexString(System.identityHashCode(this)));
-        System.out.println("DEBUG: commonSetup() - TOURIST_VEHICLE_MANAGER: " + (TOURIST_VEHICLE_MANAGER != null ? "initialized" : "NULL"));
+        DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "commonSetup() called - Thread: {}", Thread.currentThread().getName());
+        DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "commonSetup() - this object: {}@{}", 
+            this.getClass().getSimpleName(), Integer.toHexString(System.identityHashCode(this)));
+        DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "commonSetup() - TOURIST_VEHICLE_MANAGER: {}", 
+            (TOURIST_VEHICLE_MANAGER != null ? "initialized" : "NULL"));
         
         ConfigLoader.loadConfig();
         
@@ -242,7 +244,7 @@ public class BusinessCraft {
      */
     private void initializeTownServices(ForgePlatformServices forgeServices) {
         try {
-            System.out.println("DEBUG: initializeTownServices() starting");
+            DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "initializeTownServices() starting");
             // Use reflection to access private fields and set the town services
             java.lang.reflect.Field townManagerField = PlatformServices.class.getDeclaredField("townManagerService");
             townManagerField.setAccessible(true);
@@ -253,11 +255,11 @@ public class BusinessCraft {
             dataStorageField.set(null, forgeServices.getDataStorageHelper());
             
             LOGGER.info("Initialized town management services via reflection");
-            System.out.println("DEBUG: initializeTownServices() completed successfully");
+            DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "initializeTownServices() completed successfully");
         } catch (Exception e) {
-            System.out.println("DEBUG: initializeTownServices() FAILED: " + e.getClass().getSimpleName() + ": " + e.getMessage());
-            LOGGER.error("Failed to initialize town management services: " + e.getMessage());
-            e.printStackTrace();
+            DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "initializeTownServices() FAILED: {}: {}", 
+                e.getClass().getSimpleName(), e.getMessage());
+            LOGGER.error("Failed to initialize town management services: " + e.getMessage(), e);
             // Re-throw the exception to see if this is blocking registration
             throw new RuntimeException("Town services initialization failed", e);
         }

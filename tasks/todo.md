@@ -82,6 +82,95 @@
 - [ ] **Network & Client-Server Sync** (Priority 7 - Multiplayer Compatibility)
 - [ ] **Configuration & Debug** (Priority 8 - Development Tools)
 
+### **Phase 3.2: Pre-Fabric Code Cleanup & Architectural Review** ⚠️ **IN PROGRESS**
+
+**OBJECTIVE**: Resolve 274+ architectural conflicts and code quality issues before Fabric implementation
+
+**COMPREHENSIVE ANALYSIS COMPLETED**: Full codebase review identified critical issues blocking unified architecture goals
+
+#### **🔥 CRITICAL ISSUES IDENTIFIED (Must Fix Before Phase 4)**
+
+**1. DEBUG LOGGING CHAOS (67+ instances)**
+- **22 Hardcoded System.out.println**: Bypassing professional DebugConfig system
+  - `BusinessCraft.java:161-163, 247, 258, 260` - Main class initialization debugging
+  - `SetPlatformPathCreationModePacket.java:56` - Network packet debugging
+  - `ForgePlatformHelper.java:54, 58` - Platform abstraction debugging
+  - `ModMenuTypes.java:48, 81-82` - Critical registration code debugging
+- **45+ Excessive LOGGER.info**: Should be DebugConfig-controlled for clean production logs
+  - Configuration loading, platform verification, error handlers, initialization messages
+- **8 printStackTrace()**: Should use proper structured error logging
+
+**2. ARCHITECTURAL CONFLICTS - UNIFIED vs ENHANCED MULTILOADER MIXING**
+- **274+ Platform Service Calls**: Contradicts unified architecture goal of 90% shared code
+  - `PlatformServices.getBlockEntityHelper()` - 50+ instances
+  - `PlatformServices.getNetworkHelper()` - 45+ instances  
+  - `PlatformServices.getPlatformHelper()` - 30+ instances
+- **Fragmented Data Access**: Prevents natural database queries (`town.getPaymentBoard().getUnclaimedVisitorRewards()`)
+- **Complex Service Bridges**: Should be simplified for unified approach
+
+**3. UNIMPLEMENTED CODE DEBT (45+ TODOs)**
+- **Critical Fabric Platform Gaps**: 18 methods in `FabricPlatformHelper.java` 
+  - Player communication, block sync, cache management, UI updates, visualization
+- **Forge Platform Gaps**: 8 methods in `ForgePlatformHelper.java`
+- **Personal Storage System**: TODOs in `Town.java:261, 267, 273` blocking unified architecture
+- **Network Packet Migration**: 15+ packets need common module migration
+
+**4. UNIFIED ARCHITECTURE VIOLATIONS**
+- **Root Cause**: `ClientSyncHelper.java:324` - "TODO: Communal storage needs to be implemented in unified Town class"
+- **Impact**: Current abstraction layers prevent the core unified goal of natural database queries
+- **Target Pattern**: Direct access like `town.getPaymentBoard().getUnclaimedVisitorRewards()`
+- **Current Problem**: Complex service calls instead of simple data relationships
+
+#### **📋 CLEANUP PHASES**
+
+**Phase 3.2.1: Critical Debug Cleanup** (1-2 days) - ⚠️ **IN PROGRESS**
+- [x] Replace hardcoded debug statements with DebugConfig system (Started: 3/22 completed)
+  - ✅ `BusinessCraft.java` main class - professional logging restored
+  - ✅ `SetPlatformPathCreationModePacket.java` - network packet debugging fixed
+  - [ ] `ForgePlatformHelper.java` - platform abstraction debugging
+  - [ ] `ModMenuTypes.java` - registration code debugging
+  - [ ] 18+ remaining files with hardcoded debug statements
+- [ ] Convert 45+ excessive LOGGER.info to debug-controlled logging
+- [ ] Replace printStackTrace usage with structured error logging
+
+**Phase 3.2.2: Architectural Unification** (1-2 weeks)
+- [ ] **Complete Unified Town Class**: Eliminate TODO workarounds preventing database-style queries
+- [ ] **Implement Personal Storage System**: Remove TODOs in Town.java that block unified architecture
+- [ ] **Reduce Platform Service Calls by 60%+**: From 274+ calls to <100 essential abstractions
+  - Keep: Networking, menus, events (core platform differences)
+  - Remove: Data access, business logic, UI components (should be unified)
+- [ ] **Enable Natural Database Queries**: `town.getPaymentBoard().getUnclaimedVisitorRewards()` pattern
+- [ ] **Consolidate Fragmented Caches**: Single unified data access instead of complex service bridges
+
+**Phase 3.2.3: Platform Implementation Gaps** (1 week)
+- [ ] **Complete Fabric Platform Methods**: 18 missing implementations for feature parity
+- [ ] **Complete Forge Platform Gaps**: 8 missing methods for consistency
+- [ ] **Network Packet Migration**: Move remaining 15+ packets to common module
+
+**Phase 3.2.4: Final Architecture Validation** (2-3 days)
+- [ ] **Remove Dead Code**: Unused abstractions and duplicate functionality
+- [ ] **Verify Unified Architecture Goals**: Confirm 90% shared code achieved
+- [ ] **Test Natural Database Queries**: Ensure direct access patterns work correctly
+
+#### **🎯 SUCCESS METRICS**
+
+**Before Cleanup (Current State):**
+- ❌ 274+ platform service calls (excessive abstraction)
+- ❌ Fragmented data access patterns  
+- ❌ 67+ unprofessional debug statements
+- ❌ 45+ TODO comments indicating incomplete architecture
+- ❌ Mixed Enhanced MultiLoader/Unified patterns
+
+**After Cleanup (Target State):**
+- ✅ <100 platform service calls (80%+ reduction)
+- ✅ Natural database queries (`town.getX().getY()` patterns)
+- ✅ Professional DebugConfig-controlled logging throughout
+- ✅ Complete unified Town class enabling direct data access
+- ✅ Zero architectural TODO comments
+- ✅ Pure unified architecture with minimal platform abstractions
+
+**CRITICAL PATH**: Debug cleanup → Architectural unification → Platform completion → Fabric implementation
+
 ## 🚀 **FUTURE PHASES**
 
 ### **Phase 3.11: Critical Architecture Fix** ⚠️ **MUST COMPLETE BEFORE PHASE 4**
