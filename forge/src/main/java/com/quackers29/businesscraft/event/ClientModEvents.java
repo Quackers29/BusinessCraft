@@ -7,15 +7,17 @@ import com.quackers29.businesscraft.ui.screens.town.TradeScreen;
 import com.quackers29.businesscraft.ui.screens.town.StorageScreen;
 import com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen;
 import com.quackers29.businesscraft.client.TownDebugOverlay;
-import com.quackers29.businesscraft.client.TownDebugNetwork;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import net.minecraft.client.gui.screens.MenuScreens;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Platform-agnostic client-side event handling.
  * Uses EventHelper abstraction for cross-platform compatibility.
  */
 public class ClientModEvents {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClientModEvents.class);
     
     /**
      * Initialize client-side platform-agnostic event handlers.
@@ -45,8 +47,7 @@ public class ClientModEvents {
         
         // Note: TOWN_BLOCK menu type is used internally only and doesn't need a screen registration
         
-        // Register network handlers for debug overlay
-        TownDebugNetwork.register();
+        // Debug overlay now uses the main ModMessages network channel
     }
     
     /**

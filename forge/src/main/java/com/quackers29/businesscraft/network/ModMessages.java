@@ -58,6 +58,8 @@ import com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageRes
 // import com.quackers29.businesscraft.network.packets.storage.PersonalStorageResponsePacket;
 // import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
 import com.quackers29.businesscraft.network.packets.misc.PaymentResultPacket;
+import com.quackers29.businesscraft.network.packets.misc.RequestTownDebugDataPacket;
+import com.quackers29.businesscraft.network.packets.misc.TownDebugDataResponsePacket;
 
 /**
  * Platform-agnostic network packet manager.
@@ -488,6 +490,23 @@ public class ModMessages {
                         msg.handle(ctx.get().getSender());
                     });
                     ctx.get().setPacketHandled(true);
+                })
+                .add();
+                
+        // Register debug packets
+        net.messageBuilder(RequestTownDebugDataPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(RequestTownDebugDataPacket::new)
+                .encoder((msg, buf) -> msg.toBytes(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().setPacketHandled(msg.handle(ctx));
+                })
+                .add();
+                
+        net.messageBuilder(TownDebugDataResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(TownDebugDataResponsePacket::new)
+                .encoder((msg, buf) -> msg.toBytes(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().setPacketHandled(msg.handle(ctx));
                 })
                 .add();
     }

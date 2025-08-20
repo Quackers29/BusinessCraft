@@ -21,13 +21,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Handles network communication for the town debug overlay
  */
 public class TownDebugNetwork {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TownDebugNetwork.class);
     private static final String PROTOCOL_VERSION = "1";
-    private static SimpleChannel INSTANCE;
+    public static SimpleChannel INSTANCE;
     
     private static int packetId = 0;
     private static int nextId() {
@@ -35,33 +38,43 @@ public class TownDebugNetwork {
     }
     
     public static void register() {
-        // Create a separate network channel for debug packets
-        INSTANCE = NetworkRegistry.newSimpleChannel(
-                new ResourceLocation(BusinessCraft.MOD_ID, "town_debug"),
-                () -> PROTOCOL_VERSION,
-                PROTOCOL_VERSION::equals,
-                PROTOCOL_VERSION::equals
-        );
-        
-        // Register the request packet (client -> server)
-        INSTANCE.messageBuilder(RequestTownDataPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(buf -> new RequestTownDataPacket())
-                .encoder((msg, buf) -> {})
-                .consumerMainThread(RequestTownDataPacket::handle)
-                .add();
-                
-        // Register the response packet (server -> client)
-        INSTANCE.messageBuilder(TownDataResponsePacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(TownDataResponsePacket::new)
-                .encoder(TownDataResponsePacket::encode)
-                .consumerMainThread(TownDataResponsePacket::handle)
-                .add();
+        try {
+            // Create a separate network channel for debug packets
+            INSTANCE = NetworkRegistry.newSimpleChannel(
+                    new ResourceLocation(BusinessCraft.MOD_ID, "town_debug"),
+                    () -> PROTOCOL_VERSION,
+                    PROTOCOL_VERSION::equals,
+                    PROTOCOL_VERSION::equals
+            );
+            
+            // Register the request packet (client -> server)
+            INSTANCE.messageBuilder(RequestTownDataPacket.class, nextId(), NetworkDirection.PLAY_TO_SERVER)
+                    .decoder(buf -> new RequestTownDataPacket())
+                    .encoder((msg, buf) -> {})
+                    .consumerMainThread(RequestTownDataPacket::handle)
+                    .add();
+                    
+            // Register the response packet (server -> client)
+            INSTANCE.messageBuilder(TownDataResponsePacket.class, nextId(), NetworkDirection.PLAY_TO_CLIENT)
+                    .decoder(TownDataResponsePacket::new)
+                    .encoder(TownDataResponsePacket::encode)
+                    .consumerMainThread(TownDataResponsePacket::handle)
+                    .add();
+                    
+            LOGGER.info("TownDebugNetwork registered successfully");
+        } catch (Exception e) {
+            LOGGER.error("Failed to register TownDebugNetwork: {}", e.getMessage(), e);
+        }
     }
     
     /**
      * Client-side method to request town data from the server
      */
     public static void requestTownData() {
+        if (INSTANCE == null) {
+            LOGGER.error("Cannot request town data: TownDebugNetwork.INSTANCE is null. Network may not have been registered properly.");
+            return;
+        }
         INSTANCE.sendToServer(new RequestTownDataPacket());
     }
     

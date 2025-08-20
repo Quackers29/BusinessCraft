@@ -49,7 +49,9 @@ public class TownDebugOverlay implements IGuiOverlay {
      * Requests fresh data from the server
      */
     public static void refreshData() {
-        TownDebugNetwork.requestTownData();
+        com.quackers29.businesscraft.network.ModMessages.sendToServer(
+            new com.quackers29.businesscraft.network.packets.misc.RequestTownDebugDataPacket()
+        );
         lastRefreshTime = System.currentTimeMillis();
     }
     
