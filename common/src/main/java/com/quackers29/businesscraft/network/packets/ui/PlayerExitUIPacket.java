@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.ui;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -44,7 +45,7 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Player exiting UI at position [{}, {}, {}]", x, y, z);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Player exiting UI at position [{}, {}, {}]", x, y, z);
         
         // Get the town interface entity using platform services
         Object blockEntity = getBlockEntity(player);
@@ -63,7 +64,7 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
         boolean success = PlatformServices.getBlockEntityHelper().registerPlayerExitUI(townDataProvider, player);
         
         if (success) {
-            LOGGER.debug("Successfully registered player UI exit at [{}, {}, {}]", x, y, z);
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully registered player UI exit at [{}, {}, {}]", x, y, z);
         } else {
             LOGGER.warn("Failed to register player UI exit at [{}, {}, {}]", x, y, z);
         }

@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.platform;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -67,7 +68,7 @@ public class SetPlatformPathPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Player is setting platform {} path from [{}, {}, {}] to [{}, {}, {}] at [{}, {}, {}]", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Player is setting platform {} path from [{}, {}, {}] to [{}, {}, {}] at [{}, {}, {}]", 
                     platformId, startX, startY, startZ, endX, endY, endZ, x, y, z);
         
         // Get the town interface block entity using platform services
@@ -93,7 +94,7 @@ public class SetPlatformPathPacket extends BaseBlockEntityPacket {
             return;
         }
         
-        LOGGER.debug("Successfully set platform {} path from [{}, {}, {}] to [{}, {}, {}] at [{}, {}, {}]", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully set platform {} path from [{}, {}, {}] to [{}, {}, {}] at [{}, {}, {}]", 
                     platformId, startX, startY, startZ, endX, endY, endZ, x, y, z);
     }
     

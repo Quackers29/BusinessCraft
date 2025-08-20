@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -46,7 +47,7 @@ public class DeletePlatformPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Deleting platform {} from town at ({}, {}, {})", platformId, x, y, z);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Deleting platform {} from town at ({}, {}, {})", platformId, x, y, z);
         
         // Get the town interface entity using platform services
         Object blockEntity = getBlockEntity(player);
@@ -66,7 +67,7 @@ public class DeletePlatformPacket extends BaseBlockEntityPacket {
         boolean success = PlatformServices.getBlockEntityHelper().removePlatform(townDataProvider, platformId);
         
         if (success) {
-            LOGGER.debug("Successfully deleted platform {} from town at [{}, {}, {}]", platformId, x, y, z);
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully deleted platform {} from town at [{}, {}, {}]", platformId, x, y, z);
         } else {
             LOGGER.warn("Failed to delete platform {} from town at [{}, {}, {}]", platformId, x, y, z);
         }

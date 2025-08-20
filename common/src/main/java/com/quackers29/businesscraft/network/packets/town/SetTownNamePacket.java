@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.town;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -46,7 +47,7 @@ public class SetTownNamePacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Processing SetTownNamePacket for position ({}, {}, {}) with new name: '{}'", x, y, z, newName);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing SetTownNamePacket for position ({}, {}, {}) with new name: '{}'", x, y, z, newName);
         
         // Platform services will provide block entity access
         Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
@@ -80,7 +81,7 @@ public class SetTownNamePacket extends BaseBlockEntityPacket {
                 // Clear client-side caches through platform services
                 PlatformServices.getPlatformHelper().clearClientCaches();
                 
-                LOGGER.debug("Town renamed successfully from '{}' to '{}'", oldName, trimmedName);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Town renamed successfully from '{}' to '{}'", oldName, trimmedName);
                 
                 // Send confirmation message
                 String confirmMessage = "Town renamed to: " + trimmedName;

@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -52,7 +53,7 @@ public class SetPlatformEnabledPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Player is setting platform {} enabled state to {} at [{}, {}, {}]", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Player is setting platform {} enabled state to {} at [{}, {}, {}]", 
                     platformId, enabled, x, y, z);
         
         // Get the town interface block entity using platform services
@@ -85,7 +86,7 @@ public class SetPlatformEnabledPacket extends BaseBlockEntityPacket {
         // Notify clients tracking this chunk of the platform state change
         PlatformServices.getNetworkHelper().sendRefreshPlatformsPacketToChunk(player, x, y, z);
         
-        LOGGER.debug("Successfully set platform {} enabled state to {} at [{}, {}, {}]", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully set platform {} enabled state to {} at [{}, {}, {}]", 
                     platformId, enabled, x, y, z);
     }
     

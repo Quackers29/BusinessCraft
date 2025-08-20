@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -60,7 +61,7 @@ public class RequestTownMapDataPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Processing town map data request (zoom: {}, structures: {}) at position [{}, {}, {}]", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing town map data request (zoom: {}, structures: {}) at position [{}, {}, {}]", 
                     zoomLevel, includeStructures, x, y, z);
         
         // Get the town interface entity using platform services
@@ -81,7 +82,7 @@ public class RequestTownMapDataPacket extends BaseBlockEntityPacket {
             townDataProvider, player, zoomLevel, includeStructures);
         
         if (success) {
-            LOGGER.debug("Successfully processed town map data request (zoom: {}, structures: {}) at [{}, {}, {}]", 
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed town map data request (zoom: {}, structures: {}) at [{}, {}, {}]", 
                         zoomLevel, includeStructures, x, y, z);
         } else {
             LOGGER.warn("Failed to process town map data request (zoom: {}, structures: {}) at [{}, {}, {}]", 

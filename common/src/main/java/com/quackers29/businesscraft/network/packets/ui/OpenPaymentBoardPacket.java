@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.ui;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -43,7 +44,7 @@ public class OpenPaymentBoardPacket extends BaseBlockEntityPacket {
      * This method contains the core server-side logic which is platform-agnostic.
      */
     public void handle(Object player) {
-        LOGGER.debug("Opening Payment Board for player at position [{}, {}, {}]", getX(), getY(), getZ());
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Opening Payment Board for player at position [{}, {}, {}]", getX(), getY(), getZ());
         
         try {
             // Get block entity using platform services
@@ -63,7 +64,7 @@ public class OpenPaymentBoardPacket extends BaseBlockEntityPacket {
             boolean success = PlatformServices.getBlockEntityHelper().openPaymentBoardUI(townDataProvider, player);
             
             if (success) {
-                LOGGER.debug("Successfully opened Payment Board for player at [{}, {}, {}]", getX(), getY(), getZ());
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully opened Payment Board for player at [{}, {}, {}]", getX(), getY(), getZ());
             } else {
                 LOGGER.warn("Failed to open Payment Board for player at [{}, {}, {}]", getX(), getY(), getZ());
             }

@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.platform;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -48,7 +49,7 @@ public class ResetPlatformPathPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Player is resetting platform {} path at [{}, {}, {}]", platformId, x, y, z);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Player is resetting platform {} path at [{}, {}, {}]", platformId, x, y, z);
         
         // Get the town interface block entity using platform services
         Object blockEntity = getBlockEntity(player);
@@ -75,7 +76,7 @@ public class ResetPlatformPathPacket extends BaseBlockEntityPacket {
         markTownDataDirty(townDataProvider);
         PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
         
-        LOGGER.debug("Successfully reset platform {} path at [{}, {}, {}]", platformId, x, y, z);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully reset platform {} path at [{}, {}, {}]", platformId, x, y, z);
     }
     
     // Getters for testing

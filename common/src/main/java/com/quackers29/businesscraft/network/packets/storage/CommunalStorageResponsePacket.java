@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.storage;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.HashMap;
@@ -83,7 +84,7 @@ public class CommunalStorageResponsePacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Processing communal storage response with {} items at position [{}, {}, {}]", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing communal storage response with {} items at position [{}, {}, {}]", 
                     storageItems.size(), x, y, z);
         
         if (!isSuccess) {
@@ -96,7 +97,7 @@ public class CommunalStorageResponsePacket extends BaseBlockEntityPacket {
         boolean success = PlatformServices.getBlockEntityHelper().updateCommunalStorageUI(player, x, y, z, storageItems);
         
         if (success) {
-            LOGGER.debug("Successfully updated communal storage UI with {} items at [{}, {}, {}]", 
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully updated communal storage UI with {} items at [{}, {}, {}]", 
                         storageItems.size(), x, y, z);
         } else {
             LOGGER.warn("Failed to update communal storage UI at [{}, {}, {}]", x, y, z);

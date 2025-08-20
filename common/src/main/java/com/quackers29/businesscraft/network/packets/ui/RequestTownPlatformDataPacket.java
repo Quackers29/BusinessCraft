@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.ui;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
@@ -96,19 +97,19 @@ public class RequestTownPlatformDataPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Processing platform data request at position [{}, {}, {}] with radius {} for town {}", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing platform data request at position [{}, {}, {}] with radius {} for town {}", 
                     x, y, z, maxRadius, targetTownId);
         
         try {
             // FIXED: Support UUID-based town lookup for map view
             if (targetTownId != null && !targetTownId.equals("null")) {
                 // UUID-based lookup for map view
-                LOGGER.debug("Using UUID-based town lookup for town ID: {}", targetTownId);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Using UUID-based town lookup for town ID: {}", targetTownId);
                 boolean success = PlatformServices.getBlockEntityHelper().processPlatformDataRequestByTownId(
                     player, targetTownId, includePlatformConnections, includeDestinationTowns, maxRadius);
                 
                 if (success) {
-                    LOGGER.debug("Successfully processed UUID-based platform data request for town {}", targetTownId);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed UUID-based platform data request for town {}", targetTownId);
                 } else {
                     LOGGER.warn("Failed to process UUID-based platform data request for town {}", targetTownId);
                     // Send empty response to prevent client hanging
@@ -145,7 +146,7 @@ public class RequestTownPlatformDataPacket extends BaseBlockEntityPacket {
                 player, x, y, z, includePlatformConnections, includeDestinationTowns, maxRadius, targetTownId);
             
             if (success) {
-                LOGGER.debug("Successfully processed platform data request at [{}, {}, {}]", x, y, z);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed platform data request at [{}, {}, {}]", x, y, z);
             } else {
                 LOGGER.warn("Failed to process platform data request at [{}, {}, {}]", x, y, z);
                 

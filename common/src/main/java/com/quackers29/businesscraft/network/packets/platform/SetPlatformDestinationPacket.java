@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.platform;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.HashMap;
@@ -58,7 +59,7 @@ public class SetPlatformDestinationPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Player is setting destination {} to {} for platform {} at [{}, {}, {}]", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Player is setting destination {} to {} for platform {} at [{}, {}, {}]", 
                     townId, enabled, platformId, x, y, z);
         
         // Get the town interface block entity using platform services
@@ -91,7 +92,7 @@ public class SetPlatformDestinationPacket extends BaseBlockEntityPacket {
         // Send refresh destinations packet back to client
         sendRefreshDestinationsPacket(player, townDataProvider);
         
-        LOGGER.debug("Successfully set destination {} to {} for platform {} at [{}, {}, {}]", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully set destination {} to {} for platform {} at [{}, {}, {}]", 
                     townId, enabled, platformId, x, y, z);
     }
     

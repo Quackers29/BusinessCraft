@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.storage;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.HashMap;
@@ -81,7 +82,7 @@ public class BufferSlotStorageResponsePacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Processing buffer slot storage response with {} items at position [{}, {}, {}]", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing buffer slot storage response with {} items at position [{}, {}, {}]", 
                     bufferSlots.size(), x, y, z);
         
         if (!isSuccess) {
@@ -93,7 +94,7 @@ public class BufferSlotStorageResponsePacket extends BaseBlockEntityPacket {
         boolean success = PlatformServices.getBlockEntityHelper().updateBufferStorageUI(player, x, y, z, bufferSlots);
         
         if (success) {
-            LOGGER.debug("Successfully updated buffer storage UI with {} items at [{}, {}, {}]", 
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully updated buffer storage UI with {} items at [{}, {}, {}]", 
                         bufferSlots.size(), x, y, z);
         } else {
             LOGGER.warn("Failed to update buffer storage UI at [{}, {}, {}]", x, y, z);
@@ -105,7 +106,7 @@ public class BufferSlotStorageResponsePacket extends BaseBlockEntityPacket {
      * This method contains the core client-side logic which is platform-agnostic.
      */
     public void handleClient() {
-        LOGGER.debug("Received buffer slot storage update with {} items", bufferSlots.size());
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Received buffer slot storage update with {} items", bufferSlots.size());
         
         try {
             // Get the current client screen through platform services
@@ -116,13 +117,13 @@ public class BufferSlotStorageResponsePacket extends BaseBlockEntityPacket {
                 boolean success = PlatformServices.getBlockEntityHelper().updateBufferStorageUI(null, x, y, z, bufferSlots);
                 
                 if (success) {
-                    LOGGER.debug("Successfully updated buffer storage UI with {} items at [{}, {}, {}]", 
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully updated buffer storage UI with {} items at [{}, {}, {}]", 
                                 bufferSlots.size(), x, y, z);
                 } else {
                     LOGGER.warn("Failed to update buffer storage UI at [{}, {}, {}]", x, y, z);
                 }
             } else {
-                LOGGER.debug("No current screen to update with buffer storage data");
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "No current screen to update with buffer storage data");
             }
             
         } catch (Exception e) {

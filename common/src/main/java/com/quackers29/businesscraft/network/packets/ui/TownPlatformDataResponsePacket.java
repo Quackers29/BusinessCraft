@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
 import com.quackers29.businesscraft.client.cache.ClientTownMapCache;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -209,13 +210,13 @@ public class TownPlatformDataResponsePacket extends BaseBlockEntityPacket {
         }
         
         try {
-            LOGGER.debug("CLIENT PACKET HANDLER: Received structured platform data - {} platforms, townInfo: {}", 
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "CLIENT PACKET HANDLER: Received structured platform data - {} platforms, townInfo: {}", 
                        platforms.size(), townInfo != null ? townInfo.name : "null");
             
             // Debug each platform
             if (!platforms.isEmpty()) {
                 for (PlatformInfo platform : platforms.values()) {
-                    LOGGER.debug("CLIENT PACKET HANDLER: Platform {} - ID: {}, enabled: {}, startPos: [{},{},{}], endPos: [{},{},{}]",
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "CLIENT PACKET HANDLER: Platform {} - ID: {}, enabled: {}, startPos: [{},{},{}], endPos: [{},{},{}]",
                                platform.name, platform.id, platform.enabled, 
                                platform.startPos[0], platform.startPos[1], platform.startPos[2],
                                platform.endPos[0], platform.endPos[1], platform.endPos[2]);
@@ -228,26 +229,26 @@ public class TownPlatformDataResponsePacket extends BaseBlockEntityPacket {
             // Store town data if available
             if (townInfo != null) {
                 // Add town to cache with structured data
-                LOGGER.debug("CLIENT PACKET HANDLER: Caching town data for {}: {} platforms, boundary radius {}", 
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "CLIENT PACKET HANDLER: Caching town data for {}: {} platforms, boundary radius {}", 
                            townInfo.name, platforms.size(), townInfo.boundaryRadius);
             }
             
             // Store platform data
             if (!platforms.isEmpty()) {
-                LOGGER.debug("CLIENT PACKET HANDLER: Caching {} platforms for town {}", platforms.size(), townId);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "CLIENT PACKET HANDLER: Caching {} platforms for town {}", platforms.size(), townId);
                 cache.updateTownPlatforms(townId, platforms);
             }
             
             // FIXED: Client-side packet handler should directly update the map modal
             // No need to lookup block entity on client - just update the open map modal
-            LOGGER.debug("CLIENT PACKET HANDLER: Attempting to update platform UI through BlockEntityHelper...");
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "CLIENT PACKET HANDLER: Attempting to update platform UI through BlockEntityHelper...");
             boolean success = PlatformServices.getBlockEntityHelper().updateTownPlatformUIStructured(
                 player, x, y, z, this);
             
             if (success) {
-                LOGGER.debug("CLIENT PACKET HANDLER: Successfully updated platform UI with structured data at [{}, {}, {}]", x, y, z);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "CLIENT PACKET HANDLER: Successfully updated platform UI with structured data at [{}, {}, {}]", x, y, z);
             } else {
-                LOGGER.debug("CLIENT PACKET HANDLER: Failed to update platform UI at [{}, {}, {}] - TownMapModal not open?", x, y, z);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "CLIENT PACKET HANDLER: Failed to update platform UI at [{}, {}, {}] - TownMapModal not open?", x, y, z);
             }
         } catch (Exception e) {
             LOGGER.error("CLIENT PACKET HANDLER: Exception while processing platform data response at [{}, {}, {}]: {}", 

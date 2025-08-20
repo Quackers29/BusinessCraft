@@ -4,6 +4,7 @@ import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -53,7 +54,7 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Player is trading resource in slot {} at [{}, {}, {}]", slotId, getX(), getY(), getZ());
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Player is trading resource in slot {} at [{}, {}, {}]", slotId, getX(), getY(), getZ());
         
         // Check if the item to trade is empty using direct access (Unified Architecture)
         if (!(itemToTrade instanceof ItemStack itemStack) || itemStack.isEmpty()) {
@@ -89,7 +90,7 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
         // Force block update to sync changes
         PlatformServices.getPlatformHelper().forceBlockUpdate(player, getX(), getY(), getZ());
         
-        LOGGER.debug("Successfully processed resource trade in slot {} at [{}, {}, {}]", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed resource trade in slot {} at [{}, {}, {}]", 
                     slotId, getX(), getY(), getZ());
     }
     

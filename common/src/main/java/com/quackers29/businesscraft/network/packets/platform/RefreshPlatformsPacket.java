@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.platform;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -55,14 +56,14 @@ public class RefreshPlatformsPacket extends BaseBlockEntityPacket {
                 if (townId != null) {
                     // Clear platform cache through platform services
                     PlatformServices.getPlatformHelper().clearTownPlatformCache(townId);
-                    LOGGER.debug("Cleared platform cache for town {}", townId);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Cleared platform cache for town {}", townId);
                 }
             }
             
             // Refresh any open platform management screens
             PlatformServices.getPlatformHelper().refreshPlatformManagementScreen();
         } else {
-            LOGGER.debug("No block entity found at position ({}, {}, {}) for platform refresh", x, y, z);
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "No block entity found at position ({}, {}, {}) for platform refresh", x, y, z);
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.network.packets.storage;
 
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +61,7 @@ public class PaymentBoardResponsePacket {
      * This method contains the core client-side logic which is platform-agnostic.
      */
     public void handleClient() {
-        LOGGER.debug("Received payment board update with {} rewards", rewards.size());
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Received payment board update with {} rewards", rewards.size());
         
         try {
             // Get the current client screen through platform services
@@ -71,14 +72,14 @@ public class PaymentBoardResponsePacket {
                 String screenClassName = currentScreen.getClass().getSimpleName();
                 
                 if (screenClassName.equals("PaymentBoardScreen")) {
-                    LOGGER.debug("Updating PaymentBoardScreen with reward data");
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Updating PaymentBoardScreen with reward data");
                     // Platform-specific screen updating will be handled by platform implementations
                     PlatformServices.getPlatformHelper().updatePaymentBoardScreen(currentScreen, rewards);
                 } else {
-                    LOGGER.debug("Current screen is not PaymentBoardScreen: {}", screenClassName);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Current screen is not PaymentBoardScreen: {}", screenClassName);
                 }
             } else {
-                LOGGER.debug("No current screen to update with payment board data");
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "No current screen to update with payment board data");
             }
             
         } catch (Exception e) {

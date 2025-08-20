@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.network.packets.misc;
 
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -43,7 +44,7 @@ public class PaymentResultPacket {
      */
     public void handle(Object player) {
         // This is a client-side packet, player parameter is not used
-        LOGGER.debug("Payment result received: {}", paymentItem);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Payment result received: {}", paymentItem);
         
         // Check if we're on client side
         if (!PlatformServices.getPlatformHelper().isClientSide()) {

@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.network.packets.storage;
 
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -45,19 +46,19 @@ public class PaymentBoardRequestPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Received payment board data request from player for town block at [{}, {}, {}]", getX(), getY(), getZ());
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Received payment board data request from player for town block at [{}, {}, {}]", getX(), getY(), getZ());
         
         try {
             // Enhanced MultiLoader: Use platform services for cross-platform compatibility
             Object blockEntity = getBlockEntity(player);
             if (blockEntity == null) {
-                LOGGER.debug("No block entity found at [{}, {}, {}]", getX(), getY(), getZ());
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "No block entity found at [{}, {}, {}]", getX(), getY(), getZ());
                 return;
             }
             
             Object townDataProvider = getTownDataProvider(blockEntity);
             if (townDataProvider == null) {
-                LOGGER.debug("No TownInterfaceEntity found at [{}, {}, {}]", getX(), getY(), getZ());
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "No TownInterfaceEntity found at [{}, {}, {}]", getX(), getY(), getZ());
                 return;
             }
             
@@ -65,13 +66,13 @@ public class PaymentBoardRequestPacket extends BaseBlockEntityPacket {
             List<Object> unclaimedRewards = PlatformServices.getBlockEntityHelper().getUnclaimedRewards(townDataProvider);
             
             if (unclaimedRewards != null) {
-                LOGGER.debug("Sending {} rewards to player for town block at [{}, {}, {}]", 
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Sending {} rewards to player for town block at [{}, {}, {}]", 
                            unclaimedRewards.size(), x, y, z);
                 
                 // Send the rewards to the client through platform services
                 PlatformServices.getNetworkHelper().sendPaymentBoardResponsePacket(player, unclaimedRewards);
             } else {
-                LOGGER.debug("No unclaimed rewards found for town block at [{}, {}, {}]", x, y, z);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "No unclaimed rewards found for town block at [{}, {}, {}]", x, y, z);
             }
             
         } catch (Exception e) {

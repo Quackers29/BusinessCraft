@@ -4,6 +4,7 @@ import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 // TownInterfaceEntity access through BlockEntityHelper platform services
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -44,7 +45,7 @@ public class ToggleTouristSpawningPacket extends BaseBlockEntityPacket {
                 boolean currentState = PlatformServices.getBlockEntityHelper().isTouristSpawningEnabled(townDataProvider);
                 boolean newState = !currentState;
                 
-                LOGGER.debug("Toggling tourist spawning to {} at position ({}, {}, {})", newState, x, y, z);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Toggling tourist spawning to {} at position ({}, {}, {})", newState, x, y, z);
                 
                 // Use platform services for cross-platform compatibility
                 PlatformServices.getBlockEntityHelper().setTouristSpawningEnabled(townDataProvider, newState);

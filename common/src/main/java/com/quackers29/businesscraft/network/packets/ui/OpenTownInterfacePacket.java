@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.ui;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -42,7 +43,7 @@ public class OpenTownInterfacePacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Opening Town Interface for player at position [{}, {}, {}]", x, y, z);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Opening Town Interface for player at position [{}, {}, {}]", x, y, z);
         
         // Get the town interface using platform services
         Object blockEntity = getBlockEntity(player);
@@ -61,7 +62,7 @@ public class OpenTownInterfacePacket extends BaseBlockEntityPacket {
         boolean success = PlatformServices.getBlockEntityHelper().openTownInterfaceUI(townDataProvider, player);
         
         if (success) {
-            LOGGER.debug("Successfully opened Town Interface for player at [{}, {}, {}]", x, y, z);
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully opened Town Interface for player at [{}, {}, {}]", x, y, z);
         } else {
             LOGGER.warn("Failed to open Town Interface for player at [{}, {}, {}]", x, y, z);
         }

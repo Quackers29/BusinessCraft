@@ -3,6 +3,8 @@ package com.quackers29.businesscraft.client.cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.quackers29.businesscraft.debug.DebugConfig;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -73,7 +75,7 @@ public class ClientTownMapCache {
      * Private constructor for singleton pattern.
      */
     private ClientTownMapCache() {
-        LOGGER.debug("ClientTownMapCache initialized with {}ms TTL", CACHE_TTL_MS);
+        DebugConfig.debug(LOGGER, DebugConfig.CLIENT_HANDLERS, "ClientTownMapCache initialized with {}ms TTL", CACHE_TTL_MS);
     }
     
     /**
@@ -108,7 +110,7 @@ public class ClientTownMapCache {
             }
         }
         
-        LOGGER.debug("getAllTowns() returning {} cached towns", result.size());
+        DebugConfig.debug(LOGGER, DebugConfig.CLIENT_HANDLERS, "getAllTowns() returning {} cached towns", result.size());
         return result;
     }
     
@@ -127,7 +129,7 @@ public class ClientTownMapCache {
         townCache.put(townId, townData);
         cacheTimestamps.put("town_" + townId.toString(), System.currentTimeMillis());
         
-        LOGGER.debug("Cached town data for '{}' at ({}, {}, {}) with {} additional properties", 
+        DebugConfig.debug(LOGGER, DebugConfig.CLIENT_HANDLERS, "Cached town data for '{}' at ({}, {}, {}) with {} additional properties", 
                     name, x, y, z, additionalData != null ? additionalData.size() : 0);
     }
     
@@ -140,7 +142,7 @@ public class ClientTownMapCache {
     public void invalidateTown(UUID townId) {
         townCache.remove(townId);
         cacheTimestamps.remove("town_" + townId.toString());
-        LOGGER.debug("Invalidated cache for town: {}", townId);
+        DebugConfig.debug(LOGGER, DebugConfig.CLIENT_HANDLERS, "Invalidated cache for town: {}", townId);
     }
     
     /**
@@ -151,7 +153,7 @@ public class ClientTownMapCache {
         int removedCount = townCache.size();
         townCache.clear();
         cacheTimestamps.clear();
-        LOGGER.debug("Invalidated all cached town data ({} entries removed)", removedCount);
+        DebugConfig.debug(LOGGER, DebugConfig.CLIENT_HANDLERS, "Invalidated all cached town data ({} entries removed)", removedCount);
     }
     
     /**
@@ -194,7 +196,7 @@ public class ClientTownMapCache {
                 townId, newName, oldData.x, oldData.y, oldData.z, oldData.additionalData);
             townCache.put(townId, updatedData);
             cacheTimestamps.put("town_" + townId.toString(), System.currentTimeMillis());
-            LOGGER.debug("Updated cached name for town {} to '{}'", townId, newName);
+            DebugConfig.debug(LOGGER, DebugConfig.CLIENT_HANDLERS, "Updated cached name for town {} to '{}'", townId, newName);
         }
     }
     
@@ -220,7 +222,7 @@ public class ClientTownMapCache {
         }
         
         if (!expiredTowns.isEmpty()) {
-            LOGGER.debug("Cleaned up {} expired town cache entries", expiredTowns.size());
+            DebugConfig.debug(LOGGER, DebugConfig.CLIENT_HANDLERS, "Cleaned up {} expired town cache entries", expiredTowns.size());
         }
         
         lastCleanupTime = currentTime;
@@ -234,7 +236,7 @@ public class ClientTownMapCache {
      * @param platforms Map of platform data with PlatformInfo objects
      */
     public void updateTownPlatforms(UUID townId, Map<UUID, ?> platforms) {
-        LOGGER.debug("Updating platform cache for town {} with {} platforms", townId, platforms.size());
+        DebugConfig.debug(LOGGER, DebugConfig.CLIENT_HANDLERS, "Updating platform cache for town {} with {} platforms", townId, platforms.size());
         // For now, this is a placeholder - the sophisticated map will access platforms directly from the packet
         // In a more complete implementation, this would store platform data in the cache for persistence
     }

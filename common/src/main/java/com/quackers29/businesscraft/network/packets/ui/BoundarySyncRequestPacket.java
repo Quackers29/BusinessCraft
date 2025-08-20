@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.ui;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -60,7 +61,7 @@ public class BoundarySyncRequestPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Processing boundary sync request (enable: {}, distance: {}) at position [{}, {}, {}]", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing boundary sync request (enable: {}, distance: {}) at position [{}, {}, {}]", 
                     enableVisualization, renderDistance, x, y, z);
         
         // Get the town interface entity using platform services
@@ -81,7 +82,7 @@ public class BoundarySyncRequestPacket extends BaseBlockEntityPacket {
             townDataProvider, player, enableVisualization, renderDistance);
         
         if (success) {
-            LOGGER.debug("Successfully processed boundary sync request (enable: {}, distance: {}) at [{}, {}, {}]", 
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed boundary sync request (enable: {}, distance: {}) at [{}, {}, {}]", 
                         enableVisualization, renderDistance, x, y, z);
         } else {
             LOGGER.warn("Failed to process boundary sync request (enable: {}, distance: {}) at [{}, {}, {}]", 

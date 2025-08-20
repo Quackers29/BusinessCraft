@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.platform;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -61,10 +62,10 @@ public class AddPlatformPacket extends BaseBlockEntityPacket {
                         new RefreshPlatformsPacket(x, y, z)
                     );
                 } else {
-                    LOGGER.debug("Failed to add platform to town block at ({}, {}, {}) - internal error", x, y, z);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Failed to add platform to town block at ({}, {}, {}) - internal error", x, y, z);
                 }
             } else {
-                LOGGER.debug("Failed to add platform to town block at ({}, {}, {}) - already at max capacity", x, y, z);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Failed to add platform to town block at ({}, {}, {}) - already at max capacity", x, y, z);
             }
         } else {
             LOGGER.warn("No TownInterfaceEntity found at position ({}, {}, {}) for platform addition", x, y, z);

@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -92,7 +93,7 @@ public class RefreshDestinationsPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Refreshing destinations for platform '{}' at position [{}, {}, {}]", platformId, x, y, z);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Refreshing destinations for platform '{}' at position [{}, {}, {}]", platformId, x, y, z);
         LOGGER.info("DEBUG DESTINATIONS CLIENT: Received packet with platform: '{}', town count: {}", platformName, townNames.size());
         
         // Debug log all received town data

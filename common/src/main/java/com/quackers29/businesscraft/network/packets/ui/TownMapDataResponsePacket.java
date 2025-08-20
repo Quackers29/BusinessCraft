@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
@@ -76,7 +77,7 @@ public class TownMapDataResponsePacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Processing town map data response (zoom: {}, success: {}) at position [{}, {}, {}]", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing town map data response (zoom: {}, success: {}) at position [{}, {}, {}]", 
                     zoomLevel, isSuccess, x, y, z);
         
         if (!isSuccess) {
@@ -89,7 +90,7 @@ public class TownMapDataResponsePacket extends BaseBlockEntityPacket {
         boolean success = PlatformServices.getBlockEntityHelper().updateTownMapUI(player, x, y, z, mapData, zoomLevel);
         
         if (success) {
-            LOGGER.debug("Successfully updated town map UI (zoom: {}) at [{}, {}, {}]", 
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully updated town map UI (zoom: {}) at [{}, {}, {}]", 
                         zoomLevel, x, y, z);
         } else {
             LOGGER.warn("Failed to update town map UI at [{}, {}, {}]", x, y, z);

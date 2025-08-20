@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.platform;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -46,7 +47,7 @@ public class SetSearchRadiusPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Processing SetSearchRadiusPacket for position ({}, {}, {}) with radius: {}", x, y, z, radius);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing SetSearchRadiusPacket for position ({}, {}, {}) with radius: {}", x, y, z, radius);
         
         // Enhanced MultiLoader: Use platform services for cross-platform compatibility
         Object blockEntity = getBlockEntity(player);
@@ -60,7 +61,7 @@ public class SetSearchRadiusPacket extends BaseBlockEntityPacket {
                 PlatformServices.getBlockEntityHelper().setSearchRadius(townDataProvider, radius);
                 markTownDataDirty(townDataProvider);
                 
-                LOGGER.debug("Search radius updated successfully from {} to {}", oldRadius, radius);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Search radius updated successfully from {} to {}", oldRadius, radius);
                 
                 // Platform services can handle menu refreshing if needed
                 PlatformServices.getMenuHelper().refreshActiveMenu(player, "search_radius");

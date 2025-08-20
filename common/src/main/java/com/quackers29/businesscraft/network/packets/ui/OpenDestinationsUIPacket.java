@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.ui;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -49,7 +50,7 @@ public class OpenDestinationsUIPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Processing Destinations UI request for platform '{}' at position [{}, {}, {}]", platformId, x, y, z);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing Destinations UI request for platform '{}' at position [{}, {}, {}]", platformId, x, y, z);
         
         try {
             // Get the block entity directly using unified architecture pattern
@@ -68,7 +69,7 @@ public class OpenDestinationsUIPacket extends BaseBlockEntityPacket {
                 new java.util.HashMap<>()  // directions - will be populated by server
             );
             
-            LOGGER.debug("Successfully sent destinations data for platform '{}' at [{}, {}, {}]", 
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully sent destinations data for platform '{}' at [{}, {}, {}]", 
                 platformId, x, y, z);
         } catch (Exception e) {
             LOGGER.warn("Failed to process destinations data for platform '{}' at [{}, {}, {}]: {}", 

@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.storage;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -52,14 +53,14 @@ public class PaymentBoardClaimPacket extends BaseBlockEntityPacket {
      */
     @Override
     public void handle(Object player) {
-        LOGGER.debug("Processing claim request from player for reward {} at [{}, {}, {}], toBuffer: {}", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing claim request from player for reward {} at [{}, {}, {}], toBuffer: {}", 
                     rewardId, x, y, z, toBuffer);
         
         try {
             // Get block entity using platform services
             Object blockEntity = getBlockEntity(player);
             if (blockEntity == null) {
-                LOGGER.debug("No block entity at [{}, {}, {}]", x, y, z);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "No block entity at [{}, {}, {}]", x, y, z);
                 PlatformServices.getPlatformHelper().sendPlayerMessage(player, 
                     "Error: Invalid town block", "RED");
                 return;
@@ -67,7 +68,7 @@ public class PaymentBoardClaimPacket extends BaseBlockEntityPacket {
             
             Object townDataProvider = getTownDataProvider(blockEntity);
             if (townDataProvider == null) {
-                LOGGER.debug("Block at [{}, {}, {}] is not a TownInterfaceEntity", x, y, z);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Block at [{}, {}, {}] is not a TownInterfaceEntity", x, y, z);
                 PlatformServices.getPlatformHelper().sendPlayerMessage(player, 
                     "Error: Invalid town block", "RED");
                 return;
@@ -78,7 +79,7 @@ public class PaymentBoardClaimPacket extends BaseBlockEntityPacket {
                 townDataProvider, player, rewardId, toBuffer);
             
             if (claimResult != null) {
-                LOGGER.debug("Successfully processed claim for reward {} at [{}, {}, {}]", 
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed claim for reward {} at [{}, {}, {}]", 
                            rewardId, x, y, z);
                 
                 // Get updated payment board data through platform services
@@ -91,7 +92,7 @@ public class PaymentBoardClaimPacket extends BaseBlockEntityPacket {
                 // Note: Platform implementations will handle sending BufferSlotStorageResponsePacket
                 // and player inventory management as part of claimPaymentBoardReward
             } else {
-                LOGGER.debug("Failed to claim reward {} at [{}, {}, {}]", rewardId, x, y, z);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Failed to claim reward {} at [{}, {}, {}]", rewardId, x, y, z);
                 PlatformServices.getPlatformHelper().sendPlayerMessage(player, 
                     "Failed to process claim request", "RED");
             }
