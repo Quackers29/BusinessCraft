@@ -141,6 +141,24 @@ public class TownNotificationUtils {
     }
     
     /**
+     * Handles both the town management and notification for a tourist departure
+     */
+    public static void notifyTouristDeparture(ServerLevel level, UUID originTownId, String originTownName, 
+                                             String destinationName, boolean died, BlockPos lastPosition) {
+        if (originTownId == null) {
+            LOGGER.warn("Cannot notify tourist departure: origin town ID is null");
+            return;
+        }
+        
+        // Update the town's tourist count
+        Town town = removeTouristFromOrigin(level, originTownId);
+        if (town == null) return;
+        
+        // Display notification to nearby players
+        displayTouristDepartureNotification(level, town, originTownName, destinationName, died, lastPosition);
+    }
+    
+    /**
      * Updates the origin town's tourist count without displaying notifications
      * Returns the town object if successful, null otherwise
      */
@@ -161,5 +179,34 @@ public class TownNotificationUtils {
         town.removeTourist();
         
         return town;
+    }
+    
+    /**
+     * Displays notification to nearby players about a tourist departure
+     * Does not update the town's tourist count
+     */
+    public static void displayTouristDepartureNotification(ServerLevel level, Town town, String originTownName, 
+                                                          String destinationName, boolean died, BlockPos lastPosition) {
+        // Format message based on whether the tourist died or timed out
+        String actionText = died ? "died" : "quit";
+        Component message = Component.literal("A tourist from " + originTownName + " has " + actionText + "!")
+            .withStyle(ChatFormatting.GOLD);
+        
+        // Get town block position - need to import PositionConverter
+        BlockPos townPos = com.quackers29.businesscraft.util.PositionConverter.toBlockPos(town.getPosition());
+        if (townPos == null) {
+            LOGGER.warn("Cannot display tourist departure notification: town position is null for {}", originTownName);
+            return;
+        }
+        
+        // Find nearby players to notify
+        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
+            if (player.level() == level && isNearPosition(player.blockPosition(), townPos, NOTIFICATION_RANGE)) {
+                player.sendSystemMessage(message);
+            }
+        }
+        
+        // Log the event
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Tourist from {} heading to {} has {}", originTownName, destinationName, actionText);
     }
 }
