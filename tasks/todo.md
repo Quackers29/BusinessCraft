@@ -206,12 +206,102 @@
 - **Packet Migration**: 20+ packets migrated to unified architecture pattern
 - **Shared Code Achievement**: 90% shared code target reached through TownInterfaceData foundation
 
-**🚀 READY FOR PHASE 4: FABRIC IMPLEMENTATION**
-- **Risk Level**: VERY LOW - all core systems tested and working
-- **Foundation**: Rock-solid unified architecture with minimal platform abstractions
-- **Architecture**: Proven pattern ready for cross-platform development
+**⚠️ PHASE 4 BLOCKED: CRITICAL ARCHITECTURAL DEBT**
+- **Risk Level**: HIGH - business logic duplication prevents clean Fabric implementation
+- **Foundation**: Platform service abstraction achieved, but business logic still split between modules
+- **Architecture**: Requires consolidation to single source of truth before cross-platform development
 
-## 🚀 **PHASE 4: FABRIC IMPLEMENTATION** ⚠️ **READY TO START**
+## 🚨 **PHASE 3.3: CRITICAL BUSINESS LOGIC CONSOLIDATION** ⚠️ **MUST COMPLETE BEFORE PHASE 4**
+
+**🔥 CRITICAL ARCHITECTURAL VIOLATION DISCOVERED**: Systematic analysis revealed **duplicate business logic** between common and forge modules - a fundamental violation of unified architecture principles that blocks Fabric implementation.
+
+### **Phase 3.3.1: Business Logic Duplication Analysis** ✅ **COMPLETED**
+
+**CRITICAL FINDINGS:**
+- **8 duplicate business logic files** with divergent implementations between modules
+- **Platform-specific business logic** in forge module contradicts unified architecture goals
+- **Different import chains** causing architectural split (forge imports forge versions, common imports common versions)
+
+**DUPLICATE FILES IDENTIFIED:**
+- `TownPaymentBoard.java` - **CRITICAL**: Different methods (`getRewards()` only in common), different registry access
+- `SlotBasedStorage.java` - Core storage system with platform-specific differences
+- `VisitBuffer.java` - Tourist visit tracking with implementation divergence
+- `RewardEntry.java` - Payment system data model inconsistencies
+- `DistanceMilestoneHelper.java` - Business calculation logic differences
+- `PlatformManager.java` - Platform coordination logic split
+- `ClientSyncHelper.java` - Data synchronization implementation differences
+- `VisitorProcessingHelper.java` - Tourist processing business logic split
+
+**ARCHITECTURAL IMPACT:**
+- **Fabric Implementation Blocked**: No way to create consistent Fabric platform with split business logic
+- **Registry Access Inconsistency**: Common uses `BuiltInRegistries.ITEM`, Forge uses `ForgeRegistries.ITEMS` 
+- **Method Availability Differences**: Common has natural database query methods (`getRewards()`), Forge doesn't
+- **Import Chain Conflicts**: ForgeBlockEntityHelper imports forge TownPaymentBoard, breaking unified architecture
+
+### **Phase 3.3.2: Business Logic Consolidation Plan** ⚠️ **CRITICAL PRIORITY**
+
+**OBJECTIVE**: Eliminate **ALL** business logic from forge module, consolidate in common module using platform abstractions
+
+**APPROACH**: **Single Source of Truth Strategy**
+1. **Audit Implementation Differences**: Compare each duplicate file to identify platform-specific vs business logic
+2. **Create Platform-Agnostic Versions**: Convert forge-specific code to use PlatformServices abstractions
+3. **Remove Forge Business Logic**: Delete forge module versions, update imports to common module
+4. **Registry Abstraction**: Use RegistryHelper for all item/block registry access instead of direct platform calls
+5. **Verify Unified Architecture**: Ensure forge still works with common module business logic only
+
+**DETAILED TASK BREAKDOWN:**
+
+**Phase 3.3.2a: Critical Business Logic Consolidation** (Priority 1)
+- [ ] **TownPaymentBoard Consolidation**: 
+  - Analyze differences between common and forge versions
+  - Create unified version in common module using platform abstractions for registry access
+  - Add missing methods (`getRewards()`) to unified version for natural database queries
+  - Update ForgeBlockEntityHelper imports to use common module version
+- [ ] **SlotBasedStorage Consolidation**:
+  - Merge implementations, abstract platform-specific ItemStack handling
+  - Ensure unified version works for both inventory and container operations
+- [ ] **Core Data Model Consolidation**: 
+  - RewardEntry.java, VisitBuffer.java unification with platform abstraction
+  - Ensure consistent data serialization across platforms
+
+**Phase 3.3.2b: Helper Class Consolidation** (Priority 2)  
+- [ ] **DistanceMilestoneHelper**: Remove platform-specific calculation differences
+- [ ] **PlatformManager**: Consolidate platform coordination logic
+- [ ] **VisitorProcessingHelper**: Unify tourist processing business logic
+- [ ] **ClientSyncHelper**: Merge data synchronization implementations
+
+**Phase 3.3.2c: Import Chain Cleanup** (Priority 3)
+- [ ] **Update All Imports**: Change forge module files to import from common module
+- [ ] **Remove Forge Business Logic Files**: Delete duplicate files from forge module
+- [ ] **Verify Compilation**: Ensure forge module still compiles with common-only business logic
+- [ ] **Registry Helper Integration**: Convert all registry access to use RegistryHelper abstraction
+
+### **Phase 3.3.3: Unified Architecture Validation** (2-3 days)
+- [ ] **Forge Functionality Test**: Verify 100% functionality preservation with common module business logic
+- [ ] **Natural Database Queries Test**: Confirm `town.getPaymentBoard().getRewards()` patterns work
+- [ ] **Platform Abstraction Verification**: Ensure no direct platform API calls in business logic
+- [ ] **Import Dependency Audit**: Verify common module has zero forge/fabric-specific imports
+
+### **🎯 SUCCESS CRITERIA**
+
+**Before Phase 3.3:**
+- ❌ 8 duplicate business logic files with divergent implementations
+- ❌ Platform-specific business logic preventing Fabric implementation  
+- ❌ Import chain conflicts (forge business logic imports forge platform APIs)
+- ❌ Registry access inconsistencies between modules
+- ❌ Missing natural database query methods in platform-specific versions
+
+**After Phase 3.3 (Required for Phase 4):**
+- ✅ **Single Source Business Logic**: All business logic consolidated in common module
+- ✅ **Platform Abstraction Complete**: No direct platform API calls in business logic  
+- ✅ **Registry Access Unified**: All registry operations through RegistryHelper abstraction
+- ✅ **Import Chain Clean**: Forge module imports only from common module for business logic
+- ✅ **Natural Database Queries**: Unified methods available across all platforms
+- ✅ **Fabric Ready**: Clean foundation for Fabric platform implementation
+
+**CRITICAL PATH UPDATE**: ✅ Debug cleanup → ✅ Packet migration → **Business logic consolidation** → Fabric implementation
+
+## 🚀 **PHASE 4: FABRIC IMPLEMENTATION** ⚠️ **BLOCKED UNTIL PHASE 3.3 COMPLETE**
 
 ### **Phase 3.11: Critical Architecture Fix** ✅ **COMPLETED**
 
