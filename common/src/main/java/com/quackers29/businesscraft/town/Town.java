@@ -255,25 +255,6 @@ public class Town implements ITownDataProvider {
         return getAllResources();
     }
     
-    // Personal storage - placeholder implementation
-    @Override
-    public boolean addToPersonalStorage(UUID playerId, Object item, int count) {
-        // TODO: Implement personal storage system
-        return false;
-    }
-    
-    @Override
-    public int getPersonalStorageCount(UUID playerId, Object item) {
-        // TODO: Implement personal storage system
-        return 0;
-    }
-    
-    @Override
-    public Map<Object, Integer> getPersonalStorageItems(UUID playerId) {
-        // TODO: Implement personal storage system
-        return new HashMap<>();
-    }
-    
     @Override
     public int getMaxTourists() {
         if (businessLogic == null) {

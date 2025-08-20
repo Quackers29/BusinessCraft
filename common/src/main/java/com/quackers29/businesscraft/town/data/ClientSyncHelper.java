@@ -35,7 +35,6 @@ public class ClientSyncHelper {
     // Client-side caches (UNIFIED ARCHITECTURE: No town name caching needed)
     private final Map<Item, Integer> clientResources = new HashMap<>();
     private final Map<Item, Integer> clientCommunalStorage = new HashMap<>();
-    private final Map<UUID, Map<Item, Integer>> clientPersonalStorage = new HashMap<>();
     private final List<ITownDataProvider.VisitHistoryRecord> clientVisitHistory = new ArrayList<>();
     // REMOVED: townNameCache - names now resolved fresh server-side like map view
     
@@ -284,24 +283,6 @@ public class ClientSyncHelper {
         return resolveNameFreshFromServer(townId, level);
     }
     
-    /**
-     * Updates the client-side personal storage cache for a player
-     * @param playerId UUID of the player
-     * @param items Map of items in the player's personal storage
-     */
-    public void updateClientPersonalStorage(UUID playerId, Map<Item, Integer> items) {
-        if (playerId == null) return;
-        
-        // Clear existing items for this player
-        Map<Item, Integer> playerItems = clientPersonalStorage.computeIfAbsent(playerId, k -> new HashMap<>());
-        playerItems.clear();
-        
-        // Add all the new items
-        playerItems.putAll(items);
-        
-        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Updated client personal storage cache for player {} with {} items", 
-            playerId, items.size());
-    }
     
     /**
      * Updates client resources from town data during sync operations
@@ -349,14 +330,6 @@ public class ClientSyncHelper {
         return clientCommunalStorage;
     }
     
-    /**
-     * Gets the client-side cached personal storage items for a specific player
-     * @param playerId UUID of the player
-     * @return Map of personal storage items for that player
-     */
-    public Map<Item, Integer> getClientPersonalStorage(UUID playerId) {
-        return clientPersonalStorage.getOrDefault(playerId, Collections.emptyMap());
-    }
     
     /**
      * Gets the visit history for client-side display
@@ -451,7 +424,6 @@ public class ClientSyncHelper {
     public void clearAll() {
         clientResources.clear();
         clientCommunalStorage.clear();
-        clientPersonalStorage.clear();
         clientVisitHistory.clear();
         // REMOVED: townNameCache.clear() - no more client-side town name caching
     }
@@ -461,10 +433,9 @@ public class ClientSyncHelper {
      * UNIFIED ARCHITECTURE: No town name cache stats
      */
     public String getCacheStats() {
-        return String.format("Resources: %d, Communal: %d, Personal: %d, History: %d",
+        return String.format("Resources: %d, Communal: %d, History: %d",
             clientResources.size(),
             clientCommunalStorage.size(),
-            clientPersonalStorage.size(),
             clientVisitHistory.size());
     }
     

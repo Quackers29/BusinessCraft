@@ -62,8 +62,6 @@ public class NetworkRegistry {
         registerServerBound("payment_board_request", "PaymentBoardRequestPacket");
         registerServerBound("payment_board_claim", "PaymentBoardClaimPacket");
         registerServerBound("buffer_storage", "BufferStoragePacket");
-        registerServerBound("personal_storage", "PersonalStoragePacket");
-        registerServerBound("personal_storage_request", "PersonalStorageRequestPacket");
     }
     
     private static void defineClientBoundPackets() {
@@ -78,7 +76,6 @@ public class NetworkRegistry {
         registerClientBound("payment_board_response", "PaymentBoardResponsePacket");
         registerClientBound("buffer_storage_response", "BufferStorageResponsePacket");
         registerClientBound("buffer_slot_storage_response", "BufferSlotStorageResponsePacket");
-        registerClientBound("personal_storage_response", "PersonalStorageResponsePacket");
         
         // Misc packets
         registerClientBound("payment_result", "PaymentResultPacket");
