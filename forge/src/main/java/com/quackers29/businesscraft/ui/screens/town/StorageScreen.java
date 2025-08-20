@@ -106,8 +106,8 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
         guiGraphics.fill(x + 1, y + 1, x + this.imageWidth - 1, y + this.imageHeight - 1, InventoryRenderer.BORDER_COLOR);
         guiGraphics.fill(x + 2, y + 2, x + this.imageWidth - 2, y + this.imageHeight - 2, InventoryRenderer.BACKGROUND_COLOR);
         
-        // Determine the title based on storage mode
-        String storageTitle = "Town " + (this.menu.isPersonalStorageMode() ? "Personal" : "Communal") + " Storage";
+        // Set the storage title
+        String storageTitle = "Town " + COMMUNAL_LABEL + " Storage";
         
         // Draw screen title with improved visibility
         InventoryRenderer.drawLabel(guiGraphics, this.font, storageTitle, 
@@ -156,12 +156,6 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                 BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT, 
                 "B", this.font, isBackButtonHovered);
                 
-        // Draw the toggle button
-        boolean isToggleButtonHovered = isMouseOverToggleButton(mouseX, mouseY);
-        InventoryRenderer.drawButton(guiGraphics, 
-                x + TOGGLE_BUTTON_X, y + TOGGLE_BUTTON_Y, 
-                TOGGLE_BUTTON_WIDTH, TOGGLE_BUTTON_HEIGHT, 
-                this.menu.isPersonalStorageMode() ? "P" : "C", this.font, isToggleButtonHovered);
     }
     
     @Override
@@ -179,30 +173,6 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
             return true;
         }
         
-        // Check if the toggle button was clicked
-        if (button == 0 && isMouseOverToggleButton((int)mouseX, (int)mouseY)) {
-            // Play a click sound
-            net.minecraft.client.resources.sounds.SimpleSoundInstance sound = 
-                net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
-                    net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F);
-            this.minecraft.getSoundManager().play(sound);
-            
-            // Toggle storage mode
-            boolean isPersonal = this.menu.toggleStorageMode();
-            
-            // Request the appropriate storage data based on the new mode
-            if (isPersonal) {
-                // Request personal storage data
-                // We don't have direct access to the player's personal storage data yet
-                // The next time they interact with a slot, it will trigger a request
-            } else {
-                // Request communal storage data
-                // We don't have direct access to the communal storage data yet
-                // The next time they interact with a slot, it will trigger a request
-            }
-            
-            return true;
-        }
         
         return super.mouseClicked(mouseX, mouseY, button);
     }
@@ -217,7 +187,7 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
         // Get the item in the slot before the click
         ItemStack slotBefore = slot.hasItem() ? slot.getItem().copy() : ItemStack.EMPTY;
         boolean isStorageSlot = slotId < STORAGE_INVENTORY_SIZE;
-        boolean isPersonalMode = this.menu.isPersonalStorageMode();
+        boolean isPersonalMode = false; // Only communal storage mode
 
         // Handle special case for shift-clicking
         if (type == ClickType.QUICK_MOVE) {
@@ -247,12 +217,8 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                         ItemStack itemsToRemove = removedStack.copy();
                         itemsToRemove.setCount(itemsTaken);
                         
-                        // Process the removal operation based on mode
-                        if (isPersonalMode) {
-                            this.menu.processPersonalStorageRemove(this.minecraft.player, slotId, itemsToRemove);
-                        } else {
-                            this.menu.processCommunalStorageRemove(this.minecraft.player, slotId, itemsToRemove);
-                        }
+                        // Process the removal operation (communal storage only)
+                        this.menu.processCommunalStorageRemove(this.minecraft.player, slotId, itemsToRemove);
                     }
                 }
                 return;
@@ -290,12 +256,8 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                             ItemStack itemsToAdd = storageSlotAfter.copy();
                             itemsToAdd.setCount(itemsAdded);
                             
-                            // Process the storage add operation based on mode
-                            if (isPersonalMode) {
-                                this.menu.processPersonalStorageAdd(this.minecraft.player, i, itemsToAdd);
-                            } else {
-                                this.menu.processCommunalStorageAdd(this.minecraft.player, i, itemsToAdd);
-                            }
+                            // Process the storage add operation (communal storage only)
+                            this.menu.processCommunalStorageAdd(this.minecraft.player, i, itemsToAdd);
                             anySlotUpdated = true;
                         } 
                         else if (storageSlotAfter.getCount() == storageSlotBefore.getCount() && 
@@ -319,12 +281,8 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                                 // Get the itemstack that was shift-clicked
                                 ItemStack itemToAdd = slotBefore.copy();
                                 
-                                // Process the server update
-                                if (isPersonalMode) {
-                                    this.menu.processPersonalStorageAdd(this.minecraft.player, i, itemToAdd);
-                                } else {
-                                    this.menu.processCommunalStorageAdd(this.minecraft.player, i, itemToAdd);
-                                }
+                                // Process the server update (communal storage only)
+                                this.menu.processCommunalStorageAdd(this.minecraft.player, i, itemToAdd);
                                 anySlotUpdated = true;
                                 affectedDragSlots.add(i);
                             }
@@ -336,23 +294,15 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                         boolean isMatchingItem = ItemStack.isSameItemSameTags(storageSlotAfter, slotBefore);
                         
                         if (isMatchingItem) {
-                            // Process the storage add operation based on mode
-                            if (isPersonalMode) {
-                                this.menu.processPersonalStorageAdd(this.minecraft.player, i, storageSlotAfter.copy());
-                            } else {
-                                this.menu.processCommunalStorageAdd(this.minecraft.player, i, storageSlotAfter.copy());
-                            }
+                            // Process the storage add operation (communal storage only)
+                            this.menu.processCommunalStorageAdd(this.minecraft.player, i, storageSlotAfter.copy());
                             anySlotUpdated = true;
                         } else {
                             // This slot changed but doesn't match our shift-clicked item - this shouldn't happen
                             LOGGER.warn("Unexpected item type in storage slot {} after shift-click", i);
                             
-                            // Send an update anyway to be safe
-                            if (isPersonalMode) {
-                                this.menu.processPersonalStorageAdd(this.minecraft.player, i, storageSlotAfter.copy());
-                            } else {
-                                this.menu.processCommunalStorageAdd(this.minecraft.player, i, storageSlotAfter.copy());
-                            }
+                            // Send an update anyway to be safe (communal storage only)
+                            this.menu.processCommunalStorageAdd(this.minecraft.player, i, storageSlotAfter.copy());
                             anySlotUpdated = true;
                         }
                     }
@@ -362,12 +312,7 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                 if (!anySlotUpdated) {
                     BlockPos townPos = this.menu.getTownBlockPos();
                     if (townPos != null && this.minecraft != null && this.minecraft.player != null) {
-                        if (isPersonalMode) {
-                            // TODO: Migrate PersonalStorageRequestPacket to common module
-                            // ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
-                        } else {
-                            ModMessages.sendToServer(new CommunalStoragePacket(townPos.getX(), townPos.getY(), townPos.getZ(), ItemStack.EMPTY, -1, true));
-                        }
+                        ModMessages.sendToServer(new CommunalStoragePacket(townPos.getX(), townPos.getY(), townPos.getZ(), ItemStack.EMPTY, -1, true));
                     }
                 }
                 return;
@@ -399,14 +344,8 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                 // Request updated storage data to keep the backend in sync
                 BlockPos townPos = this.menu.getTownBlockPos();
                 if (townPos != null && this.minecraft != null && this.minecraft.player != null) {
-                    if (isPersonalMode) {
-                        // TODO: Migrate PersonalStorageRequestPacket to common module
-                        // Request personal storage data refresh
-                        // ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
-                    } else {
-                        // Request communal storage data refresh
-                        requestCommunalStorageData();
-                    }
+                    // Request communal storage data refresh
+                    requestCommunalStorageData();
                 }
             }
             
@@ -445,7 +384,7 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                 LOGGER.debug("Ending drag operation with {} affected slots", this.affectedDragSlots.size());
                 
                 // At the end of the drag, process all affected slots individually
-                processAffectedDragSlots(new ArrayList<>(this.affectedDragSlots), isPersonalMode);
+                processAffectedDragSlots(new ArrayList<>(this.affectedDragSlots));
             }
             
             return;
@@ -487,12 +426,8 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                         
                         LOGGER.debug("Adding {} items to storage at slot {}", itemsAddedToSlot, slotId);
                         
-                        // Process the storage add operation based on mode
-                        if (isPersonalMode) {
-                            this.menu.processPersonalStorageAdd(this.minecraft.player, slotId, itemToAdd);
-                        } else {
-                            this.menu.processCommunalStorageAdd(this.minecraft.player, slotId, itemToAdd);
-                        }
+                        // Process the storage add operation (communal storage only)
+                        this.menu.processCommunalStorageAdd(this.minecraft.player, slotId, itemToAdd);
                     }
                 }
                 // Handle the case where we swapped different items (not just adding more of the same type)
@@ -503,18 +438,10 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                         slotId, slotBeforeAdd.getHoverName().getString(), slotAfterAdd.getHoverName().getString());
                     
                     // First, remove the original item from storage
-                    if (isPersonalMode) {
-                        this.menu.processPersonalStorageRemove(this.minecraft.player, slotId, slotBeforeAdd);
-                    } else {
-                        this.menu.processCommunalStorageRemove(this.minecraft.player, slotId, slotBeforeAdd);
-                    }
+                    this.menu.processCommunalStorageRemove(this.minecraft.player, slotId, slotBeforeAdd);
                     
                     // Then, add the new item to storage
-                    if (isPersonalMode) {
-                        this.menu.processPersonalStorageAdd(this.minecraft.player, slotId, slotAfterAdd.copy());
-                    } else {
-                        this.menu.processCommunalStorageAdd(this.minecraft.player, slotId, slotAfterAdd.copy());
-                    }
+                    this.menu.processCommunalStorageAdd(this.minecraft.player, slotId, slotAfterAdd.copy());
                 }
                 return;
             }
@@ -538,19 +465,11 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                     slotAfterSplit.getCount(), carriedAfterSplit.getCount());
                 
                 // Remove the entire stack from storage first
-                if (isPersonalMode) {
-                    this.menu.processPersonalStorageRemove(this.minecraft.player, slotId, slotBeforeSplit);
-                } else {
-                    this.menu.processCommunalStorageRemove(this.minecraft.player, slotId, slotBeforeSplit);
-                }
+                this.menu.processCommunalStorageRemove(this.minecraft.player, slotId, slotBeforeSplit);
                 
                 // Then add back the remaining items if any
                 if (!slotAfterSplit.isEmpty()) {
-                    if (isPersonalMode) {
-                        this.menu.processPersonalStorageAdd(this.minecraft.player, slotId, slotAfterSplit);
-                    } else {
-                        this.menu.processCommunalStorageAdd(this.minecraft.player, slotId, slotAfterSplit);
-                    }
+                    this.menu.processCommunalStorageAdd(this.minecraft.player, slotId, slotAfterSplit);
                 }
                 
                 return;
@@ -563,12 +482,8 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                 // Let the standard handling happen first
                 super.slotClicked(slot, slotId, mouseButton, type);
                 
-                // Then process the storage remove operation based on mode
-                if (isPersonalMode) {
-                    this.menu.processPersonalStorageRemove(this.minecraft.player, slotId, itemStackToRemove);
-                } else {
-                    this.menu.processCommunalStorageRemove(this.minecraft.player, slotId, itemStackToRemove);
-                }
+                // Then process the storage remove operation (communal storage only)
+                this.menu.processCommunalStorageRemove(this.minecraft.player, slotId, itemStackToRemove);
                 return;
             }
 
@@ -607,12 +522,8 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                         
                         LOGGER.debug("Right-click adding {} items to storage at slot {}", itemsAddedByRightClick, slotId);
                         
-                        // Process the storage add operation based on mode
-                        if (isPersonalMode) {
-                            this.menu.processPersonalStorageAdd(this.minecraft.player, slotId, itemToAdd);
-                        } else {
-                            this.menu.processCommunalStorageAdd(this.minecraft.player, slotId, itemToAdd);
-                        }
+                        // Process the storage add operation (communal storage only)
+                        this.menu.processCommunalStorageAdd(this.minecraft.player, slotId, itemToAdd);
                     }
                 }
                 return;
@@ -660,16 +571,6 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
         this.menu.updateStorageItems(items);
     }
     
-    /**
-     * Update the storage display with personal items from the server
-     * Called when the client receives a PersonalStorageResponsePacket
-     * 
-     * @param items Map of items and their counts from the player's personal storage
-     */
-    public void updatePersonalStorageItems(Map<Item, Integer> items) {
-        // This is just a pass-through to the menu
-        this.menu.updatePersonalStorageItems(items);
-    }
     
     // Helper method to find a slot at the given mouse coordinates
     private Slot findSlot(double mouseX, double mouseY) {
@@ -689,13 +590,6 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                 BACK_BUTTON_X, BACK_BUTTON_Y, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT);
     }
     
-    private boolean isMouseOverToggleButton(int mouseX, int mouseY) {
-        int x = (this.width - this.imageWidth) / 2;
-        int y = (this.height - this.imageHeight) / 2;
-        
-        return InventoryRenderer.isMouseOverElement(mouseX, mouseY, x, y, 
-                TOGGLE_BUTTON_X, TOGGLE_BUTTON_Y, TOGGLE_BUTTON_WIDTH, TOGGLE_BUTTON_HEIGHT);
-    }
     
     private void returnToMainUI() {
         // Close the current screen
@@ -722,24 +616,6 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
         }
     }
     
-    /**
-     * Helper method to request personal storage data refresh from the server
-     * Uses a PersonalStorageRequestPacket to request data for the current player
-     */
-    private void requestPersonalStorageData() {
-        BlockPos townPos = this.menu.getTownBlockPos();
-        if (townPos != null && this.minecraft != null && this.minecraft.player != null) {
-            LOGGER.debug("Requesting personal storage refresh from server");
-            try {
-                // TODO: Migrate PersonalStorageRequestPacket to common module
-                // Send the request packet with the player UUID
-                UUID playerId = this.minecraft.player.getUUID();
-                // ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
-            } catch (Exception e) {
-                LOGGER.error("Error sending personal storage request", e);
-            }
-        }
-    }
     
     /**
      * Process each slot affected by a drag operation, sending individual updates to the server.
@@ -747,18 +623,13 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
      * with the server by sending individual update packets.
      * 
      * @param affectedSlots List of slot indices affected by the drag operation
-     * @param isPersonalMode Whether we're in personal storage mode
      */
-    private void processAffectedDragSlots(List<Integer> affectedSlots, boolean isPersonalMode) {
+    private void processAffectedDragSlots(List<Integer> affectedSlots) {
         LOGGER.debug("Processing {} affected slots after drag operation", affectedSlots.size());
         
         if (affectedSlots.isEmpty()) {
             // If no slots were affected but we tracked a drag, request full refresh
-            if (isPersonalMode) {
-                requestPersonalStorageData();
-            } else {
-                requestCommunalStorageData();
-            }
+            requestCommunalStorageData();
             return;
         }
         
@@ -772,15 +643,7 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                     Slot slot = this.menu.slots.get(slotIndex);
                     ItemStack stack = slot.getItem();
                     
-                    if (isPersonalMode) {
-                        // TODO: Migrate PersonalStoragePacket to common module
-                        // Use the proper constructor: BlockPos, ItemStack, slotId, isAddOperation, playerId
-                        BlockPos townPosition = this.menu.getTownBlockPos();
-                        if (townPosition != null) {
-                            // ModMessages.sendToServer(new PersonalStoragePacket(
-                            //     townPosition, stack, slotIndex, true, this.minecraft.player.getUUID()));
-                        }
-                    } else if (townPos != null) {
+                    if (townPos != null) {
                         ModMessages.sendToServer(new CommunalStoragePacket(townPos.getX(), townPos.getY(), townPos.getZ(), stack, slotIndex, true));
                     }
                     
@@ -795,11 +658,7 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
         
         // If we didn't process any valid slots but had affected slots, request a full refresh
         if (!updateNeeded && !affectedSlots.isEmpty()) {
-            if (isPersonalMode) {
-                requestPersonalStorageData();
-            } else {
-                requestCommunalStorageData();
-            }
+            requestCommunalStorageData();
         }
     }
 } 

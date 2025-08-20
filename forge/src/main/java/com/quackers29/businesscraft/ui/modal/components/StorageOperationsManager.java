@@ -2,8 +2,6 @@ package com.quackers29.businesscraft.ui.modal.components;
 
 import com.quackers29.businesscraft.menu.StorageMenu;
 import com.quackers29.businesscraft.network.ModMessages;
-// TODO: Migrate PersonalStorageRequestPacket to common module
-// import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
 import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.Font;
@@ -20,7 +18,7 @@ import java.util.UUID;
 /**
  * Manages storage-specific operations for modal inventory screens.
  * Extracted from BCModalInventoryScreen to follow single responsibility principle.
- * Handles personal/communal storage switching, storage visualization, and storage operations.
+ * Handles communal storage visualization and storage operations.
  */
 public class StorageOperationsManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(StorageOperationsManager.class);
@@ -33,7 +31,6 @@ public class StorageOperationsManager {
     private static final int STORAGE_INFO_HEIGHT = 40;
     
     // Storage colors
-    private static final int PERSONAL_STORAGE_COLOR = 0xFF4A90E2;    // Blue
     private static final int COMMUNAL_STORAGE_COLOR = 0xFF50C878;    // Green
     private static final int STORAGE_BACKGROUND_COLOR = 0xFF2A2A2A; // Dark gray
     
@@ -81,11 +78,10 @@ public class StorageOperationsManager {
         int toggleX = leftPos + 10;
         int toggleY = topPos + 5;
         
-        boolean isPersonalMode = storageMenu.isPersonalStorageMode();
         boolean isHovered = isMouseOverStorageModeToggle(mouseX, mouseY, toggleX, toggleY);
         
-        String modeText = isPersonalMode ? "Personal" : "Communal";
-        int modeColor = isPersonalMode ? PERSONAL_STORAGE_COLOR : COMMUNAL_STORAGE_COLOR;
+        String modeText = "Communal";
+        int modeColor = COMMUNAL_STORAGE_COLOR;
         
         // Render toggle button with current mode color
         renderingEngine.renderSectionBackground(guiGraphics, toggleX, toggleY, STORAGE_MODE_TOGGLE_WIDTH, 
@@ -112,19 +108,8 @@ public class StorageOperationsManager {
         int infoWidth = 60;
         
         // Storage stats
-        boolean isPersonalMode = storageMenu.isPersonalStorageMode();
-        
-        if (isPersonalMode) {
-            // Personal storage stats (placeholder - actual implementation would track storage data)
-            // TODO: Replace with actual storage counts when StorageMenu API is expanded
-            String personalInfo = "Personal Storage";
-            renderingEngine.renderLabel(guiGraphics, font, "Personal Storage:", infoX, infoY, PERSONAL_STORAGE_COLOR);
-            renderingEngine.renderLabel(guiGraphics, font, "Ready", infoX, infoY + 10, 0xFFDDDDDD);
-        } else {
-            // Communal storage stats (placeholder)
-            renderingEngine.renderLabel(guiGraphics, font, "Communal Storage:", infoX, infoY, COMMUNAL_STORAGE_COLOR);
-            renderingEngine.renderLabel(guiGraphics, font, "Ready", infoX, infoY + 10, 0xFFDDDDDD);
-        }
+        renderingEngine.renderLabel(guiGraphics, font, "Communal Storage:", infoX, infoY, COMMUNAL_STORAGE_COLOR);
+        renderingEngine.renderLabel(guiGraphics, font, "Ready", infoX, infoY + 10, 0xFFDDDDDD);
         
         // Last access info (placeholder)
         renderingEngine.renderLabel(guiGraphics, font, "Status: Active", infoX, infoY + 20, 0xFF888888);
@@ -140,11 +125,9 @@ public class StorageOperationsManager {
         int capacityHeight = 8;
         int capacityX = leftPos + 10;
         
-        boolean isPersonalMode = storageMenu.isPersonalStorageMode();
-        
         // TODO: Replace with actual storage capacity when StorageMenu API is expanded
         float usedRatio = 0.3f; // Placeholder ratio
-        int progressColor = isPersonalMode ? PERSONAL_STORAGE_COLOR : COMMUNAL_STORAGE_COLOR;
+        int progressColor = COMMUNAL_STORAGE_COLOR;
         
         // Render capacity bar
         renderingEngine.renderProgressBar(guiGraphics, capacityX, capacityY, capacityWidth, capacityHeight,
@@ -177,11 +160,8 @@ public class StorageOperationsManager {
         
         if (storageMenu != null) {
             try {
-                // TODO: Replace with actual storage mode toggle when StorageMenu API is expanded
-                boolean newPersonalMode = !storageMenu.isPersonalStorageMode();
-                // storageMenu.setPersonalStorageMode(newPersonalMode); // TODO: Implement when API is available
-                
-                DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Toggled storage mode to: {}", newPersonalMode ? "Personal" : "Communal");
+                // Storage mode toggle disabled - only communal storage available
+                DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Storage mode toggle disabled - communal only");
                 return true;
             } catch (Exception e) {
                 LOGGER.error("Failed to toggle storage mode", e);
@@ -191,28 +171,7 @@ public class StorageOperationsManager {
         return true; // Consumed the click even if toggle failed
     }
     
-    /**
-     * Loads personal storage items from the menu.
-     */
-    public void loadPersonalStorageItems(StorageMenu storageMenu) {
-        if (storageMenu == null) return;
-        
-        try {
-            // TODO: Replace with actual storage data request when StorageMenu API is expanded
-            DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Personal storage ready (placeholder implementation)");
-        } catch (Exception e) {
-            LOGGER.error("Failed to load personal storage items", e);
-        }
-    }
     
-    /**
-     * Requests personal storage data from the server.
-     * TODO: Implement when StorageMenu API is expanded
-     */
-    private void requestPersonalStorageData(StorageMenu storageMenu) {
-        // Placeholder implementation
-        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Personal storage data request (placeholder)");
-    }
     
     /**
      * Requests communal storage data from the server.
@@ -249,25 +208,13 @@ public class StorageOperationsManager {
         int toggleY = topPos + 5;
         
         if (isMouseOverStorageModeToggle(mouseX, mouseY, toggleX, toggleY)) {
-            boolean isPersonalMode = storageMenu.isPersonalStorageMode();
-            if (isPersonalMode) {
-                return "Switch to Communal Storage\n(Shared with all town members)";
-            } else {
-                return "Switch to Personal Storage\n(Only accessible by you)";
-            }
+            return "Communal Storage\n(Shared with all town members)";
         }
         
         // Check if mouse is over capacity bar
         int capacityY = topPos + STORAGE_INFO_HEIGHT - 15;
         if (mouseY >= capacityY && mouseY <= capacityY + 8) {
-            boolean isPersonalMode = storageMenu.isPersonalStorageMode();
-            
-            if (isPersonalMode) {
-                // TODO: Replace with actual storage counts when StorageMenu API is expanded
-                return "Personal Storage: Ready for use";
-            } else {
-                return "Communal Storage: Ready for use";
-            }
+            return "Communal Storage: Ready for use";
         }
         
         return null;
@@ -279,7 +226,6 @@ public class StorageOperationsManager {
     public boolean validateStorageOperation(StorageMenu storageMenu, String operation) {
         if (storageMenu == null) return false;
         
-        boolean isPersonalMode = storageMenu.isPersonalStorageMode();
         
         switch (operation.toLowerCase()) {
             case "read":
@@ -287,9 +233,6 @@ public class StorageOperationsManager {
                 return true;
                 
             case "write":
-                // Personal storage always allows writing for the owner
-                if (isPersonalMode) return true;
-                
                 // TODO: Replace with actual permission check when StorageMenu API is expanded
                 return true; // Placeholder - allow communal storage operations
                 

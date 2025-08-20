@@ -142,9 +142,7 @@ public class BCModalInventoryScreenV2<T extends AbstractContainerMenu> extends A
         switch (inventoryType) {
             case STORAGE:
                 if (menu instanceof StorageMenu storageMenu) {
-                    if (storageMenu.isPersonalStorageMode()) {
-                        storageManager.loadPersonalStorageItems(storageMenu);
-                    }
+                    // Only communal storage mode supported
                 }
                 break;
                 

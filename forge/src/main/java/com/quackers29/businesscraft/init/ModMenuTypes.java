@@ -6,6 +6,9 @@ import com.quackers29.businesscraft.menu.StorageMenu;
 import com.quackers29.businesscraft.menu.PaymentBoardMenu;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import com.quackers29.businesscraft.platform.RegistryHelper;
+import com.quackers29.businesscraft.debug.DebugConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraftforge.common.extensions.IForgeMenuType;
@@ -19,6 +22,8 @@ import net.minecraftforge.items.ItemStackHandler;
  * This system works across different mod loaders (Forge, Fabric, etc.).
  */
 public class ModMenuTypes {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ModMenuTypes.class);
+    
     // Platform abstraction helper - initialize lazily to avoid static initialization issues
     private static RegistryHelper REGISTRY = null;
     

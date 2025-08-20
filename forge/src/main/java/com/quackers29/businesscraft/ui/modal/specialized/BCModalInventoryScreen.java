@@ -139,13 +139,10 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
             .build()
         );
         
-        // If this is a storage screen, initialize with the correct mode data
+        // Storage screen initialization (communal storage only)
         if (this.inventoryType == InventoryType.STORAGE && 
             this.menu instanceof StorageMenu storageMenu) {
-            if (storageMenu.isPersonalStorageMode()) {
-                // Load personal storage items if in personal mode
-                loadPersonalStorageItems(storageMenu);
-            }
+            // Only communal storage mode supported
         }
     }
     
@@ -487,15 +484,6 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
             }
         }
         
-        // For storage screen, add tooltip for the storage mode toggle button
-        if (this.inventoryType == InventoryType.STORAGE && isMouseOverStorageModeToggle(mouseX, mouseY) && 
-            this.menu instanceof StorageMenu storageMenu) {
-            String currentMode = storageMenu.isPersonalStorageMode() ? COMMUNAL_LABEL : PERSONAL_LABEL;
-            String nextMode = storageMenu.isPersonalStorageMode() ? PERSONAL_LABEL : COMMUNAL_LABEL;
-            guiGraphics.renderTooltip(this.font, 
-                Component.literal("Current: " + currentMode + "\nClick to switch to " + nextMode), 
-                mouseX, mouseY);
-        }
     }
 
     /**
@@ -688,25 +676,9 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                 this.leftPos + STORAGE_START_X, this.topPos + STORAGE_START_Y, 
                 STORAGE_COLS, STORAGE_ROWS);
         
-        // Draw the toggle button for storage mode if this is a storage menu
-        if (this.menu instanceof StorageMenu storageMenu) {
-            boolean isToggleButtonHovered = isMouseOverStorageModeToggle(mouseX, mouseY);
-            InventoryRenderer.drawButton(guiGraphics, 
-                    this.leftPos + TOGGLE_BUTTON_X, this.topPos + TOGGLE_BUTTON_Y, 
-                    TOGGLE_BUTTON_WIDTH, TOGGLE_BUTTON_HEIGHT, 
-                    storageMenu.isPersonalStorageMode() ? "P" : "C", this.font, isToggleButtonHovered);
-        }
+        // Toggle button removed - communal storage only
     }
     
-    /**
-     * Check if mouse is over the storage mode toggle button
-     */
-    private boolean isMouseOverStorageModeToggle(int mouseX, int mouseY) {
-        return mouseX >= this.leftPos + TOGGLE_BUTTON_X && 
-               mouseX < this.leftPos + TOGGLE_BUTTON_X + TOGGLE_BUTTON_WIDTH && 
-               mouseY >= this.topPos + TOGGLE_BUTTON_Y && 
-               mouseY < this.topPos + TOGGLE_BUTTON_Y + TOGGLE_BUTTON_HEIGHT;
-    }
     
     /**
      * Helper method to get the StorageMenu from the current menu
@@ -733,71 +705,11 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
             return true;
         }
         
-        // Check if storage mode toggle button was clicked (for storage screen only)
-        if (button == 0 && this.inventoryType == InventoryType.STORAGE && 
-            isMouseOverStorageModeToggle((int)mouseX, (int)mouseY) && 
-            this.menu instanceof StorageMenu storageMenu) {
-            
-            // Toggle storage mode
-            boolean isPersonal = storageMenu.toggleStorageMode();
-            
-            // Play a click sound
-            playClickSound();
-            
-            // Update the display title based on the storage mode
-            this.displayTitle = Component.literal("Town " + (isPersonal ? "Personal" : "Communal") + " Storage");
-            
-            // Refresh the storage data based on the new mode
-            if (isPersonal) {
-                loadPersonalStorageItems(storageMenu);
-            } else {
-                loadCommunalStorageItems(storageMenu);
-            }
-            
-            return true;
-        }
         
         // Let AbstractContainerScreen handle normal inventory interactions
         return super.mouseClicked(mouseX, mouseY, button);
     }
     
-    /**
-     * Helper method to load personal storage items
-     */
-    private void loadPersonalStorageItems(StorageMenu storageMenu) {
-        if (this.minecraft != null && this.minecraft.player != null) {
-            // Get personal storage data for the current player
-            UUID playerId = this.minecraft.player.getUUID();
-            try {
-                BlockPos townPos = storageMenu.getTownBlockPos();
-                if (townPos != null) {
-                    // First, request personal storage data from the server
-                    DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Requesting personal storage data for player {} at position {}", playerId, townPos);
-                    // TODO: Migrate PersonalStorageRequestPacket to common module
-                    // ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
-                    
-                    // Then try to fetch from local cache as a fallback
-                    var townMenu = storageMenu.getTownInterfaceMenu();
-                    if (townMenu != null) {
-                        // Get the personal storage items through the town data provider
-                        var townDataProvider = townMenu.getTownDataProvider();
-                        Map<Item, Integer> personalItems = townDataProvider != null ? 
-                            ItemConverter.toItemMap(townDataProvider.getPersonalStorageItems(playerId)) : java.util.Collections.emptyMap();
-                        
-                        // Update with personal storage items
-                        storageMenu.updatePersonalStorageItems(personalItems);
-                        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Updated personal storage display with {} items from local cache", personalItems.size());
-                    } else {
-                        LOGGER.warn("Could not access TownInterfaceMenu for personal storage");
-                    }
-                } else {
-                    LOGGER.warn("No town position available for personal storage request");
-                }
-            } catch (Exception e) {
-                LOGGER.error("Error loading personal storage items", e);
-            }
-        }
-    }
     
     /**
      * Helper method to load communal storage items
@@ -831,7 +743,7 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
             return;
         }
         
-        boolean isPersonalMode = storageMenu.isPersonalStorageMode();
+        boolean isPersonalMode = false; // Only communal storage mode
         
         // Handle double-click to collect all items of same type (DOUBLE_CLICK)
         if (type == ClickType.PICKUP && mouseButton == 0 && 
@@ -912,11 +824,8 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                             ItemStack slotStack = affectedSlot.getItem();
                             if (!slotStack.isEmpty()) {
                                 // Process the storage add operation based on mode
-                                if (isPersonalMode) {
-                                    storageMenu.processPersonalStorageAdd(this.minecraft.player, affectedSlotId, slotStack.copy());
-                                } else {
-                                    storageMenu.processCommunalStorageAdd(this.minecraft.player, affectedSlotId, slotStack.copy());
-                                }
+                                // Only communal storage mode
+                                storageMenu.processCommunalStorageAdd(this.minecraft.player, affectedSlotId, slotStack.copy());
                                 anySlotUpdated = true;
                             }
                         }
@@ -979,11 +888,8 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                         DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Adding {} items to storage at slot {}", itemsAdded, slotId);
                         
                         // Process the storage add operation based on mode
-                        if (isPersonalMode) {
-                            storageMenu.processPersonalStorageAdd(this.minecraft.player, slotId, itemToAdd);
-                        } else {
-                            storageMenu.processCommunalStorageAdd(this.minecraft.player, slotId, itemToAdd);
-                        }
+                        // Only communal storage mode
+                        storageMenu.processCommunalStorageAdd(this.minecraft.player, slotId, itemToAdd);
                     }
                 }
                 // Handle the case where we swapped different items (not just adding more of the same type)
@@ -993,19 +899,11 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                     LOGGER.debug("Swapping different items in slot {}: {} -> {}", 
                         slotId, slotBefore.getHoverName().getString(), slotAfter.getHoverName().getString());
                     
-                    // First, remove the original item from storage
-                    if (isPersonalMode) {
-                        storageMenu.processPersonalStorageRemove(this.minecraft.player, slotId, slotBefore);
-                    } else {
-                        storageMenu.processCommunalStorageRemove(this.minecraft.player, slotId, slotBefore);
-                    }
+                    // First, remove the original item from storage (communal only)
+                    storageMenu.processCommunalStorageRemove(this.minecraft.player, slotId, slotBefore);
                     
-                    // Then, add the new item to storage
-                    if (isPersonalMode) {
-                        storageMenu.processPersonalStorageAdd(this.minecraft.player, slotId, slotAfter.copy());
-                    } else {
-                        storageMenu.processCommunalStorageAdd(this.minecraft.player, slotId, slotAfter.copy());
-                    }
+                    // Then, add the new item to storage (communal only)
+                    storageMenu.processCommunalStorageAdd(this.minecraft.player, slotId, slotAfter.copy());
                 }
                 return;
             }
@@ -1032,12 +930,8 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                 ItemStack splitStack = slotBefore.copy();
                 splitStack.setCount(itemsRemoved);
                 
-                // Process the storage remove operation based on mode
-                if (isPersonalMode) {
-                    storageMenu.processPersonalStorageRemove(this.minecraft.player, slotId, splitStack);
-                } else {
-                    storageMenu.processCommunalStorageRemove(this.minecraft.player, slotId, splitStack);
-                }
+                // Process the storage remove operation (communal only)
+                storageMenu.processCommunalStorageRemove(this.minecraft.player, slotId, splitStack);
                 
                 return;
             }
@@ -1050,11 +944,8 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                 super.slotClicked(slot, slotId, mouseButton, type);
                 
                 // Then process the storage remove operation based on mode
-                if (isPersonalMode) {
-                    storageMenu.processPersonalStorageRemove(this.minecraft.player, slotId, itemStack);
-                } else {
-                    storageMenu.processCommunalStorageRemove(this.minecraft.player, slotId, itemStack);
-                }
+                // Only communal storage mode
+                storageMenu.processCommunalStorageRemove(this.minecraft.player, slotId, itemStack);
                 return;
             }
 
@@ -1094,11 +985,8 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                         LOGGER.debug("Right-click adding {} items to storage at slot {}", itemsAdded, slotId);
                         
                         // Process the storage add operation based on mode
-                        if (isPersonalMode) {
-                            storageMenu.processPersonalStorageAdd(this.minecraft.player, slotId, itemToAdd);
-                        } else {
-                            storageMenu.processCommunalStorageAdd(this.minecraft.player, slotId, itemToAdd);
-                        }
+                        // Only communal storage mode
+                        storageMenu.processCommunalStorageAdd(this.minecraft.player, slotId, itemToAdd);
                     }
                 }
                 return;
@@ -1136,12 +1024,8 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                 ItemStack itemsToRemove = slotBefore.copy();
                 itemsToRemove.setCount(itemsMoved);
                 
-                // Process the storage remove operation based on mode
-                if (isPersonalMode) {
-                    storageMenu.processPersonalStorageRemove(this.minecraft.player, slotId, itemsToRemove);
-                } else {
-                    storageMenu.processCommunalStorageRemove(this.minecraft.player, slotId, itemsToRemove);
-                }
+                // Process the storage remove operation (communal only)
+                storageMenu.processCommunalStorageRemove(this.minecraft.player, slotId, itemsToRemove);
             }
             // If moving from player inventory to storage
             else if (!isStorageSlot && !slotBefore.isEmpty()) {
@@ -1176,12 +1060,8 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                             ItemStack itemsToAdd = storageSlotAfter.copy();
                             itemsToAdd.setCount(itemsAdded);
                             
-                            // Process the storage add operation based on mode
-                            if (isPersonalMode) {
-                                storageMenu.processPersonalStorageAdd(this.minecraft.player, i, itemsToAdd);
-                            } else {
-                                storageMenu.processCommunalStorageAdd(this.minecraft.player, i, itemsToAdd);
-                            }
+                            // Process the storage add operation (communal only)
+                            storageMenu.processCommunalStorageAdd(this.minecraft.player, i, itemsToAdd);
                             anySlotUpdated = true;
                         } 
                         else if (storageSlotAfter.getCount() == storageSlotBefore.getCount() && 
@@ -1205,12 +1085,8 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                                 // Get the itemstack that was shift-clicked
                                 ItemStack itemToAdd = slotBefore.copy();
                                 
-                                // Process the server update
-                                if (isPersonalMode) {
-                                    storageMenu.processPersonalStorageAdd(this.minecraft.player, i, itemToAdd);
-                                } else {
-                                    storageMenu.processCommunalStorageAdd(this.minecraft.player, i, itemToAdd);
-                                }
+                                // Process the server update (communal only)
+                                storageMenu.processCommunalStorageAdd(this.minecraft.player, i, itemToAdd);
                                 anySlotUpdated = true;
                                 affectedDragSlots.add(i);
                             }
@@ -1222,23 +1098,15 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                         boolean isMatchingItem = ItemStack.isSameItemSameTags(storageSlotAfter, slotBefore);
                         
                         if (isMatchingItem) {
-                            // Process the storage add operation based on mode
-                            if (isPersonalMode) {
-                                storageMenu.processPersonalStorageAdd(this.minecraft.player, i, storageSlotAfter.copy());
-                            } else {
-                                storageMenu.processCommunalStorageAdd(this.minecraft.player, i, storageSlotAfter.copy());
-                            }
+                            // Process the storage add operation (communal only)
+                            storageMenu.processCommunalStorageAdd(this.minecraft.player, i, storageSlotAfter.copy());
                             anySlotUpdated = true;
                         } else {
                             // This slot changed but doesn't match our shift-clicked item - this shouldn't happen
                             LOGGER.warn("Unexpected item type in storage slot {} after shift-click", i);
                             
-                            // Send an update anyway to be safe
-                            if (isPersonalMode) {
-                                storageMenu.processPersonalStorageAdd(this.minecraft.player, i, storageSlotAfter.copy());
-                            } else {
-                                storageMenu.processCommunalStorageAdd(this.minecraft.player, i, storageSlotAfter.copy());
-                            }
+                            // Send an update anyway to be safe (communal only)
+                            storageMenu.processCommunalStorageAdd(this.minecraft.player, i, storageSlotAfter.copy());
                             anySlotUpdated = true;
                         }
                     }
