@@ -574,4 +574,10 @@ public interface BlockEntityHelper {
      * @return True if platform UI was successfully updated
      */
     boolean updateTownPlatformUIStructured(Object player, int x, int y, int z, Object packet);
+    
+    /**
+     * Handle visitor history request with server-side name resolution
+     * Uses town UUID for direct town lookup instead of coordinates
+     */
+    void handleVisitorHistoryRequest(Object player, java.util.UUID townId);
 }

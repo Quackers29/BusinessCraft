@@ -440,6 +440,16 @@ public class BCModalGridScreen<T> extends Screen {
     }
     
     /**
+     * Update the data displayed in the grid (for async updates)
+     * This will refresh the grid with new data without recreating the modal
+     */
+    public void updateData(List<T> newData) {
+        this.dataItems = new ArrayList<>(newData);
+        // Force a rebuild of the grid UI with new data
+        this.init();
+    }
+    
+    /**
      * Add a column to the grid
      * 
      * @param title The column header text

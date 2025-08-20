@@ -47,11 +47,38 @@ public class VisitorHistoryManager extends BaseModalManager {
             String targetTab,
             Consumer<BCModalGridScreen<VisitHistoryRecord>> onScreenClosed) {
         
-        // Get the block entity and visit history
+        // UNIFIED ARCHITECTURE: Request server-resolved data (like payment board system)
+        // The server will resolve names fresh from TownManager and send back resolved names
+        java.util.UUID townId = getTownIdFromBlockEntity(blockPos);
+        if (townId != null) {
+            com.quackers29.businesscraft.network.packets.ui.VisitorHistoryRequestPacket requestPacket = 
+                new com.quackers29.businesscraft.network.packets.ui.VisitorHistoryRequestPacket(townId);
+            com.quackers29.businesscraft.network.ModMessages.sendToServer(requestPacket);
+        }
+        
+        // Get actual visitor history data from block entity (has real UUIDs)
         List<VisitHistoryRecord> visitHistory = getVisitHistoryFromBlockEntity(blockPos);
         
-        // Create town name lookup function
-        Function<UUID, String> townNameLookup = createTownNameLookup(blockPos);
+        // Server will send resolved names, use those instead of client-side UUID resolution
+        Function<UUID, String> townNameLookup = (uuid) -> {
+            if (uuid == null) {
+                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "townNameLookup called with null UUID");
+                return "Unknown";
+            }
+            
+            // First try server-resolved names (from VisitorHistoryResponsePacket)
+            String resolvedName = com.quackers29.businesscraft.network.ModMessages.getServerResolvedTownName(uuid);
+            LOGGER.info("TOWN NAME LOOKUP: UUID {} -> resolved name '{}'", uuid, resolvedName);
+            
+            if (resolvedName != null) {
+                return resolvedName;
+            }
+            
+            // If not available yet, show loading (server response will trigger refresh)
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
+                "No server-resolved name found for UUID {}, returning Loading...", uuid);
+            return "Loading...";
+        };
         
         // Validate inputs and prepare parent screen
         validateParentScreen(parentScreen, "parentScreen");
@@ -123,12 +150,15 @@ public class VisitorHistoryManager extends BaseModalManager {
                         public int getZ() { return record.getOriginPos().getZ(); }
                     };
                     
+                    // UNIFIED ARCHITECTURE: Store only UUIDs, names resolved fresh when needed
                     visitHistory.add(new VisitHistoryRecord(
                         record.getTimestamp(),
                         record.getOriginTownId(),
                         record.getCount(),
                         pos
                     ));
+                    DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+                        "VISIT HISTORY DEBUG - Added record for town UUID {}", record.getOriginTownId());
                 }
                 
                 DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
@@ -235,26 +265,62 @@ public class VisitorHistoryManager extends BaseModalManager {
             if (townId == null) return "Unknown";
             
             try {
-                // On the client side, we need to rely on the TownInterfaceEntity to get the town name
+                // UNIFIED ARCHITECTURE: Try server-side lookup first if available
                 if (Minecraft.getInstance() != null && Minecraft.getInstance().level != null) {
                     BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(blockPos);
                     if (blockEntity instanceof TownInterfaceEntity townInterface) {
-                        // Use the getTownNameFromId method to look up the town name
+                        // Try to get fresh name from server
                         String townName = townInterface.getTownNameFromId(townId);
                         
-                        // If we got a name, return it
-                        if (townName != null) {
+                        // If we got a proper name (not truncated UUID format), return it
+                        if (townName != null && !townName.startsWith("Town-")) {
                             return townName;
                         }
                     }
                 }
             } catch (Exception e) {
-                // Log the error but don't crash
                 LOGGER.error("Error looking up town name for UUID {}: {}", townId, e.getMessage());
             }
             
-            // Fallback if town not found
-            return "Town-" + townId.toString().substring(0, 8);
+            // TEMPORARY: Better fallback display while server-side resolution is being implemented
+            return "⚠ " + townId.toString().substring(0, 8) + " (resolving...)";
+        };
+    }
+    
+    /**
+     * Get the town UUID from the block entity at the specified position
+     */
+    private static java.util.UUID getTownIdFromBlockEntity(BlockPos blockPos) {
+        if (Minecraft.getInstance() != null && Minecraft.getInstance().level != null) {
+            BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(blockPos);
+            if (blockEntity instanceof TownInterfaceEntity townInterface) {
+                return townInterface.getTownId();
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * UNIFIED ARCHITECTURE: Create town name lookup function that resolves fresh from server
+     * Like payment board system - gets current names, not cached ones
+     */
+    private static Function<UUID, String> createTownNameLookupFunction(BlockPos blockPos) {
+        return (townUuid) -> {
+            if (townUuid == null) return "Unknown";
+            
+            // Get the block entity and use its client sync helper for name resolution
+            if (Minecraft.getInstance() != null && Minecraft.getInstance().level != null) {
+                BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(blockPos);
+                if (blockEntity instanceof TownInterfaceEntity townInterface) {
+                    String resolvedName = townInterface.getTownNameFromId(townUuid);
+                    DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS,
+                        "Town name lookup: {} -> '{}'", townUuid, resolvedName);
+                    return resolvedName;
+                }
+            }
+            
+            // Fallback: show truncated UUID
+            return "Town-" + townUuid.toString().substring(0, 8);
         };
     }
 } 

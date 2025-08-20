@@ -4,6 +4,8 @@ import com.quackers29.businesscraft.BusinessCraft;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import com.quackers29.businesscraft.platform.forge.ForgeNetworkHelper;
 import net.minecraft.resources.ResourceLocation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
@@ -43,6 +45,8 @@ import com.quackers29.businesscraft.network.packets.ui.RequestTownMapDataPacket;
 import com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket; // ✅ MIGRATED
 import com.quackers29.businesscraft.network.packets.ui.RequestTownPlatformDataPacket; // ✅ MIGRATED
 import com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket; // ✅ MIGRATED
+import com.quackers29.businesscraft.network.packets.ui.VisitorHistoryRequestPacket; // ✅ MIGRATED
+import com.quackers29.businesscraft.network.packets.ui.VisitorHistoryResponsePacket; // ✅ MIGRATED
 import com.quackers29.businesscraft.network.packets.storage.TradeResourcePacket;
 // TODO: Migrate remaining storage packets to common module
 import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket; // ✅ MIGRATED
@@ -74,8 +78,20 @@ import com.quackers29.businesscraft.network.packets.misc.TownDebugDataResponsePa
  * ARCHITECTURE: ModMessages → ForgeNetworkHelper → SimpleChannel
  */
 public class ModMessages {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ModMessages.class);
     private static SimpleChannel INSTANCE;
     private static ForgeNetworkHelper networkHelper;
+    
+    // Static storage for server-resolved town names (UUID -> resolved name)
+    private static final java.util.concurrent.ConcurrentHashMap<java.util.UUID, String> serverResolvedTownNames = new java.util.concurrent.ConcurrentHashMap<>();
+    
+    /**
+     * Get a server-resolved town name by UUID, or null if not available
+     * Used by visitor history UI to display current town names
+     */
+    public static String getServerResolvedTownName(java.util.UUID townId) {
+        return serverResolvedTownNames.get(townId);
+    }
 
     private static int packetId = 0;
     private static int id() {
@@ -446,6 +462,31 @@ public class ModMessages {
                 })
                 .add();
                 
+        // Register visitor history data packets
+        net.messageBuilder(VisitorHistoryRequestPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(VisitorHistoryRequestPacket::new)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        // Handle visitor history request via platform service
+                        PlatformServices.getBlockEntityHelper().handleVisitorHistoryRequest(
+                            ctx.get().getSender(), msg.getTownId());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
+                .add();
+                
+        net.messageBuilder(VisitorHistoryResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(VisitorHistoryResponsePacket::new)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        handleVisitorHistoryResponse(msg);
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
+                .add();
+                
         // Register town platform data packets
         net.messageBuilder(RequestTownPlatformDataPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(RequestTownPlatformDataPacket::decode)
@@ -525,5 +566,50 @@ public class ModMessages {
     public static <MSG> void sendToAllTrackingChunk(MSG message, Level level, BlockPos pos) {
         INSTANCE.send(PacketDistributor.TRACKING_CHUNK.with(() -> 
             level.getChunkAt(pos)), message);
+    }
+    
+    /**
+     * Handle visitor history response packet on client side
+     * Simple implementation updates visitor history screen with resolved names
+     */
+    private static void handleVisitorHistoryResponse(VisitorHistoryResponsePacket packet) {
+        LOGGER.info("Received visitor history response with {} entries", packet.getEntries().size());
+        
+        // UNIFIED ARCHITECTURE: Update client cache with fresh server-resolved data
+        // This will cause all visitor history UIs to show current town names
+        // For now, update all active ClientSyncHelper instances (could be optimized later)
+        // In practice there's usually only one town interface open at a time
+        java.util.UUID targetTownId = null;
+        if (!packet.getEntries().isEmpty()) {
+            // All entries should be for the same requested town - use the town ID this is all about
+            // Actually, entries are visitor origins, not the target town. Let me just broadcast to all instances.
+        }
+        
+        // Process server response with resolved names
+        LOGGER.info("Processing visitor history response with {} entries from server", packet.getEntries().size());
+        
+        // Store server-resolved names for UI lookup
+        LOGGER.info("SERVER RESOLVED VISITOR HISTORY:");
+        for (var entry : packet.getEntries()) {
+            LOGGER.info("  {} tourists from '{}' at timestamp {}", 
+                entry.count, entry.resolvedName, entry.timestamp);
+            
+            // Store the resolved name so the UI can use it
+            serverResolvedTownNames.put(entry.townId, entry.resolvedName);
+        }
+        
+        // Try to update the currently displayed modal if it's a visitor history modal
+        if (net.minecraft.client.Minecraft.getInstance().screen instanceof com.quackers29.businesscraft.ui.modal.specialized.BCModalGridScreen) {
+            // Force a refresh of the modal to use the new resolved names
+            net.minecraft.client.Minecraft.getInstance().screen.init(
+                net.minecraft.client.Minecraft.getInstance(),
+                net.minecraft.client.Minecraft.getInstance().screen.width,
+                net.minecraft.client.Minecraft.getInstance().screen.height
+            );
+            LOGGER.info("Refreshed visitor history modal with server-resolved names");
+        }
+        
+        // The UI will automatically refresh on next display since it reads from the updated client cache
+        LOGGER.debug("Client visit history cache updated with fresh server-resolved names");
     }
 } 

@@ -585,33 +585,27 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     }
     
     /**
-     * Gets the origin town name, always trying to get the most current name possible
+     * Gets the origin town name using server-resolved names or UUID lookup
+     * UNIFIED ARCHITECTURE: Names resolved fresh from server, no caching
      */
     private String getOriginTownName(RewardEntry reward) {
-        String originTownId = reward.getMetadata().get("originTownId");
-        
-        // First try: Use UUID for live lookup (for new rewards)
-        if (originTownId != null && !originTownId.isEmpty()) {
-            try {
-                UUID townUUID = UUID.fromString(originTownId);
-                if (minecraft.level != null) {
-                    BlockEntity blockEntity = minecraft.level.getBlockEntity(menu.getTownBlockPos());
-                    if (blockEntity instanceof TownInterfaceEntity townInterface) {
-                        String liveTownName = townInterface.getTownNameFromId(townUUID);
-                        if (liveTownName != null && !liveTownName.startsWith("Town-")) {
-                            return liveTownName; // Use live name from UUID
-                        }
-                    }
-                }
-            } catch (IllegalArgumentException e) {
-                // Invalid UUID format, continue to fallback
-            }
+        // First try server-refreshed name (new approach)
+        String serverResolvedName = reward.getMetadata().get("originTown");
+        if (serverResolvedName != null && !serverResolvedName.isEmpty()) {
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS,
+                "Payment board: using server-resolved town name '{}'", serverResolvedName);
+            return serverResolvedName;
         }
         
-        // Second try: Since visitor history cache refreshes every 5 seconds,
-        // just return the cached name and let natural cache expiration handle updates
-        String cachedName = reward.getMetadata().get("originTown");
-        return cachedName != null ? cachedName : "Unknown";
+        // New approach: display UUID directly since names come from server refresh
+        String originTownId = reward.getMetadata().get("originTownId");
+        if (originTownId != null && !originTownId.isEmpty()) {
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS,
+                "Payment board: displaying UUID '{}' (server refresh should provide name)", originTownId);
+            return "Town-" + originTownId.substring(0, Math.min(8, originTownId.length()));
+        }
+        
+        return "Unknown";
     }
 
     /**

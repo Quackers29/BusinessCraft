@@ -8,6 +8,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.core.BlockPos;
 import com.quackers29.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
 import com.quackers29.businesscraft.util.PositionConverter;
+import com.quackers29.businesscraft.debug.DebugConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -21,6 +24,7 @@ import net.minecraft.world.item.Item;
  * Factory class for creating common types of modal grid screens
  */
 public class BCModalGridFactory {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BCModalGridFactory.class);
 
     /**
      * Common color themes for modal grids
@@ -96,9 +100,9 @@ public class BCModalGridFactory {
             onCloseCallback
         );
         
-        // Configure with standard visitor history columns
+        // Configure with standard visitor history columns (UNIFIED ARCHITECTURE: Use pre-resolved names)
         screen.addColumn("Time", record -> formatTime(record.getTimestamp()))
-              .addColumn("Origin", record -> formatOrigin(record, townNameLookup))
+              .addColumn("Origin", record -> formatOriginUnified(record, townNameLookup))
               .addColumn("Count", record -> String.valueOf(record.getCount()))
               .withData(visitHistory)
               .withBackButtonText("Back")
@@ -225,12 +229,36 @@ public class BCModalGridFactory {
         return timeFormat.format(new Date(timestamp));
     }
     
-    private static String formatOrigin(VisitHistoryRecord record, Function<UUID, String> townNameLookup) {
-        // Get town UUID
-        UUID townId = record.getOriginTownId();
+    /**
+     * UNIFIED ARCHITECTURE: Format origin using pre-resolved names (like map view)
+     * This eliminates client-side UUID lookups and stale name issues
+     */
+    private static String formatOriginUnified(VisitHistoryRecord record, Function<UUID, String> townNameLookup) {
+        String originName;
         
-        // Use the lookup function to get the actual town name
-        String originName = townNameLookup.apply(townId);
+        // UNIFIED ARCHITECTURE: Names resolved fresh from server when needed
+        UUID townId = record.getOriginTownId();
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS,
+            "Resolving town name for UUID: {}", townId);
+        
+        // Try legacy fallback but improve error handling
+        if (townNameLookup != null) {
+            try {
+                originName = townNameLookup.apply(townId);
+                if (originName != null && !originName.startsWith("Town-")) {
+                    DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS,
+                        "Town name resolved: {} -> '{}'", townId, originName);
+                } else {
+                    LOGGER.warn("Town name lookup returned truncated UUID format: '{}' for town {}", originName, townId);
+                }
+            } catch (Exception e) {
+                LOGGER.error("Town name lookup failed for town {}: {}", townId, e.getMessage());
+                originName = "Town-" + (townId != null ? townId.toString().substring(0, 8) : "Unknown");
+            }
+        } else {
+            LOGGER.warn("No townNameLookup function available for town {}", townId);
+            originName = "Town-" + (townId != null ? townId.toString().substring(0, 8) : "Unknown");
+        }
         
         // Add direction if position available
         if (record.getOriginPos() != null) {
@@ -247,6 +275,14 @@ public class BCModalGridFactory {
         }
         
         return originName;
+    }
+    
+    /**
+     * DEPRECATED: Legacy method that uses problematic client-side lookups
+     */
+    @Deprecated
+    private static String formatOrigin(VisitHistoryRecord record, Function<UUID, String> townNameLookup) {
+        return formatOriginUnified(record, townNameLookup);
     }
     
     // Old method for backwards compatibility

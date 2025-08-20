@@ -274,4 +274,10 @@ public interface NetworkHelper {
      * @return Platform-specific RewardEntry object
      */
     Object readRewardEntry(Object buffer);
+    
+    /**
+     * Send visitor history response packet with resolved town names
+     * Simple implementation following payment board pattern
+     */
+    void sendVisitorHistoryResponsePacket(Object player, com.quackers29.businesscraft.network.packets.ui.VisitorHistoryResponsePacket packet);
 }

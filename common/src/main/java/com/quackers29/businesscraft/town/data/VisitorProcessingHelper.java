@@ -259,9 +259,8 @@ public class VisitorProcessingHelper {
                     DistanceMilestoneHelper.checkMilestones(averageDistance, record.getCount());
                 
                 // Create bundled tourist arrival reward (combines fare + milestone rewards)
-                String originTownName = resolveTownName(serverLevel, record.getOriginTownId());
                 if (payment > 0 || milestoneResult.hasRewards()) {
-                    addBundledTouristReward(thisTown, originTownName, payment, milestoneResult, record.getCount(), record.getTimestamp());
+                    addBundledTouristReward(thisTown, record.getOriginTownId(), payment, milestoneResult, record.getCount(), record.getTimestamp());
                     // Trigger callback to update client sync after bundled reward is added
                     if (changeCallback != null) {
                         changeCallback.run();
@@ -270,6 +269,8 @@ public class VisitorProcessingHelper {
                 
                 // Send grouped notification with payment and milestone information
                 if (ConfigLoader.notifyOnTouristDeparture) {
+                    // Get origin town name for notifications only (not cached anywhere)
+                    String originTownName = resolveTownName(serverLevel, record.getOriginTownId());
                     TownNotificationUtils.notifyTouristArrivals(
                         serverLevel,
                         townBlockPos,
@@ -443,11 +444,12 @@ public class VisitorProcessingHelper {
     
     /**
      * Creates a bundled tourist arrival reward combining fare payment and milestone rewards
+     * UNIFIED ARCHITECTURE: Stores only UUID, name resolved fresh from server when needed
      */
-    private void addBundledTouristReward(Town town, String originTownName, int payment, DistanceMilestoneHelper.MilestoneResult milestoneResult, int touristCount, long visitTimestamp) {
+    private void addBundledTouristReward(Town town, UUID originTownId, int payment, DistanceMilestoneHelper.MilestoneResult milestoneResult, int touristCount, long visitTimestamp) {
         DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, 
-            "BUNDLED TOURIST REWARD - Creating bundled reward for town {} from {} with {} emeralds and {} milestone items",
-            town.getName(), originTownName, payment, milestoneResult.hasRewards() ? milestoneResult.rewards.size() : 0);
+            "BUNDLED TOURIST REWARD - Creating bundled reward for town {} from UUID {} with {} emeralds and {} milestone items",
+            town.getName(), originTownId, payment, milestoneResult.hasRewards() ? milestoneResult.rewards.size() : 0);
         
         try {
             // Combine all reward items into a single list
@@ -479,7 +481,7 @@ public class VisitorProcessingHelper {
             if (rewardId != null) {
                 // Add metadata about the origin town and reward breakdown
                 paymentBoard.getRewardById(rewardId).ifPresent(rewardEntry -> {
-                    rewardEntry.addMetadata("originTown", originTownName);
+                    rewardEntry.addMetadata("originTownId", originTownId.toString());
                     rewardEntry.addMetadata("touristCount", String.valueOf(touristCount));
                     if (payment > 0) {
                         rewardEntry.addMetadata("fareAmount", String.valueOf(payment));
@@ -491,11 +493,11 @@ public class VisitorProcessingHelper {
                 });
                 
                 DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, 
-                    "BUNDLED TOURIST REWARD - Created reward entry {} for {} emeralds + {} milestone items from {} in town {}", 
-                    rewardId, payment, milestoneResult.hasRewards() ? milestoneResult.rewards.size() : 0, originTownName, town.getName());
+                    "BUNDLED TOURIST REWARD - Created reward entry {} for {} emeralds + {} milestone items from UUID {} in town {}", 
+                    rewardId, payment, milestoneResult.hasRewards() ? milestoneResult.rewards.size() : 0, originTownId, town.getName());
                 
-                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "Added bundled tourist arrival reward to town '{}' from '{}': {} emeralds + {} milestone items", 
-                    town.getName(), originTownName, payment, milestoneResult.hasRewards() ? milestoneResult.rewards.size() : 0);
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "Added bundled tourist arrival reward to town '{}' from UUID '{}': {} emeralds + {} milestone items", 
+                    town.getName(), originTownId, payment, milestoneResult.hasRewards() ? milestoneResult.rewards.size() : 0);
             } else {
                 LOGGER.warn("Failed to create bundled tourist reward entry for town '{}'", town.getName());
             }

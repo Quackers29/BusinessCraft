@@ -724,13 +724,15 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             // Get all unclaimed rewards from the sophisticated payment board system
             List<RewardEntry> unclaimedRewards = paymentBoard.getUnclaimedRewards();
             
+            // UNIFIED ARCHITECTURE: Town names refreshed by ForgeNetworkHelper before sending to client
+            
             // Convert RewardEntry objects to the format expected by the UI
             for (RewardEntry entry : unclaimedRewards) {
                 rewards.add(entry);
             }
             
             DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
-                "Retrieved {} unclaimed rewards from TownPaymentBoard for town {}", 
+                "Retrieved {} unclaimed rewards from TownPaymentBoard for town {} (with refreshed town names)", 
                 unclaimedRewards.size(), town.getName());
         } else {
             DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
@@ -743,6 +745,11 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
         
         return rewards;
     }
+    
+    /**
+     * UNIFIED ARCHITECTURE: Refresh cached town names in reward entries with fresh server data
+     * This eliminates stale names issue in payment board (like map view system)
+     */
     
     // @Override
     public Object claimPaymentBoardReward(Object blockEntity, Object player, String rewardId, boolean toBuffer) {
@@ -841,6 +848,9 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                 
                 // Get all unclaimed rewards after the claim operation (reuse existing paymentBoard variable)
                 List<RewardEntry> unclaimedRewards = paymentBoard.getUnclaimedRewards();
+                
+                // UNIFIED ARCHITECTURE: Town names refreshed by ForgeNetworkHelper before sending to client
+                
                 for (RewardEntry entry : unclaimedRewards) {
                     rewards.add(entry);
                 }
@@ -2163,6 +2173,83 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
         } catch (Exception e) {
             LOGGER.error("Failed to register player UI exit: {}", e.getMessage(), e);
             return false;
+        }
+    }
+    
+    @Override
+    public void handleVisitorHistoryRequest(Object player, java.util.UUID townId) {
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            LOGGER.warn("FORGE BLOCK ENTITY HELPER: Player is not a ServerPlayer: {}", 
+                player != null ? player.getClass().getSimpleName() : "null");
+            return;
+        }
+        
+        ServerLevel level = serverPlayer.serverLevel();
+        
+        try {
+            com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager.get(level);
+            com.quackers29.businesscraft.town.Town requestedTown = townManager.getTown(townId);
+            
+            // Debug: Log all available towns
+            Collection<com.quackers29.businesscraft.town.Town> allTowns = townManager.getAllTowns();
+            LOGGER.info("VISITOR HISTORY DEBUG: TownManager has {} towns loaded:", allTowns.size());
+            for (com.quackers29.businesscraft.town.Town town : allTowns) {
+                LOGGER.info("  - {} ({})", town.getName(), town.getId());
+            }
+            
+            if (requestedTown == null) {
+                LOGGER.warn("VISITOR HISTORY REQUEST: Town with UUID {} not found", townId);
+                return;
+            }
+            
+            // Get raw visitor history data directly from town
+            List<com.quackers29.businesscraft.api.ITownDataProvider.VisitHistoryRecord> rawHistory = requestedTown.getVisitHistory();
+            
+            LOGGER.info("VISITOR HISTORY DEBUG: Town {} has {} history records:", requestedTown.getName(), rawHistory.size());
+            for (com.quackers29.businesscraft.api.ITownDataProvider.VisitHistoryRecord record : rawHistory) {
+                LOGGER.info("  - {} tourists from {} at {}", record.getCount(), record.getOriginTownId(), record.getTimestamp());
+            }
+            
+            // Resolve town names fresh from server
+            List<com.quackers29.businesscraft.network.packets.ui.VisitorHistoryResponsePacket.VisitorEntry> resolvedEntries = new ArrayList<>();
+            
+            for (com.quackers29.businesscraft.api.ITownDataProvider.VisitHistoryRecord record : rawHistory) {
+                String resolvedName = "Unknown";
+                if (record.getOriginTownId() != null) {
+                    com.quackers29.businesscraft.town.Town originTown = townManager.getTown(record.getOriginTownId());
+                    if (originTown != null) {
+                        resolvedName = originTown.getName();
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                            "Resolved origin town {} -> '{}'", record.getOriginTownId(), resolvedName);
+                    } else {
+                        LOGGER.warn("Origin town {} not found for visitor history", record.getOriginTownId());
+                        resolvedName = "Town-" + record.getOriginTownId().toString().substring(0, 8);
+                    }
+                }
+                
+                resolvedEntries.add(new com.quackers29.businesscraft.network.packets.ui.VisitorHistoryResponsePacket.VisitorEntry(
+                    record.getTimestamp(),
+                    record.getOriginTownId(),
+                    record.getCount(),
+                    record.getOriginPos().getX(),
+                    record.getOriginPos().getY(), 
+                    record.getOriginPos().getZ(),
+                    resolvedName
+                ));
+            }
+            
+            // Send response packet with resolved names
+            com.quackers29.businesscraft.network.packets.ui.VisitorHistoryResponsePacket responsePacket = 
+                new com.quackers29.businesscraft.network.packets.ui.VisitorHistoryResponsePacket(resolvedEntries);
+            
+            PlatformServices.getNetworkHelper().sendVisitorHistoryResponsePacket(serverPlayer, responsePacket);
+            
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                "Processed visitor history request for town {} ({}): {} entries", 
+                requestedTown.getName(), townId, resolvedEntries.size());
+                
+        } catch (Exception e) {
+            LOGGER.error("Error handling visitor history request for town {}: {}", townId, e.getMessage(), e);
         }
     }
 }

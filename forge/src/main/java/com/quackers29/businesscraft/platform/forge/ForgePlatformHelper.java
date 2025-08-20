@@ -77,19 +77,19 @@ public class ForgePlatformHelper implements PlatformHelper {
     
     @Override
     public void clearClientCaches() {
-        LOGGER.debug("clearClientCaches called - clearing town name caches and refreshing UI data");
+        LOGGER.debug("clearClientCaches called - refreshing UI data (UNIFIED ARCHITECTURE: no cache clearing needed)");
         
         net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
         
-        // 1. Clear all town name caches globally
-        com.quackers29.businesscraft.town.data.ClientSyncHelper.clearAllTownNameCaches();
+        // UNIFIED ARCHITECTURE: No client-side town name caches to clear
+        // Names are now resolved fresh from server (like map view system)
         
-        // 2. Refresh payment board if open (this will get fresh data from server with current town names)
+        // Refresh payment board if open (this will get fresh data from server with current town names)
         if (minecraft.screen instanceof com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen paymentScreen) {
             paymentScreen.refreshPaymentBoardData();
         }
         
-        LOGGER.debug("Cleared all town name caches and refreshed UI components");
+        LOGGER.debug("Refreshed UI components (no cache clearing needed with unified architecture)");
     }
     
     @Override

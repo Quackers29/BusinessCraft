@@ -380,21 +380,36 @@ public class ForgeNetworkHelper implements NetworkHelper {
     
     /**
      * Refreshes origin town names in reward metadata with current town names
+     * UNIFIED ARCHITECTURE: Server-side name resolution like map view system
      */
     private List<Object> refreshOriginTownNames(List<Object> rewards, net.minecraft.server.level.ServerLevel serverLevel) {
         List<Object> refreshedRewards = new ArrayList<>();
+        int refreshedCount = 0;
+        
+        LOGGER.info("REWARD REFRESH DEBUG: Processing {} rewards for name refresh", rewards.size());
         
         for (Object reward : rewards) {
             if (reward instanceof com.quackers29.businesscraft.town.data.RewardEntry rewardEntry) {
+                LOGGER.info("REWARD REFRESH DEBUG: Processing RewardEntry {}", rewardEntry.getId());
+                
                 // Create a copy of the reward with refreshed origin town name
                 com.quackers29.businesscraft.town.data.RewardEntry refreshedReward = createRewardCopyWithRefreshedOriginName(rewardEntry, serverLevel);
                 refreshedRewards.add(refreshedReward);
+                
+                // Check if name was actually refreshed
+                String oldName = rewardEntry.getMetadata().get("originTown");
+                String newName = refreshedReward.getMetadata().get("originTown");
+                if (!java.util.Objects.equals(oldName, newName)) {
+                    refreshedCount++;
+                }
             } else {
                 // Non-RewardEntry objects pass through unchanged
                 refreshedRewards.add(reward);
+                LOGGER.info("REWARD REFRESH DEBUG: Non-RewardEntry object passed through: {}", reward.getClass().getSimpleName());
             }
         }
         
+        LOGGER.info("REWARD REFRESH DEBUG: Refreshed {} out of {} reward names", refreshedCount, rewards.size());
         return refreshedRewards;
     }
     
@@ -407,15 +422,21 @@ public class ForgeNetworkHelper implements NetworkHelper {
         
         // Get the origin town UUID from metadata
         String originTownId = original.getMetadata().get("originTownId");
+        String currentOriginName = original.getMetadata().get("originTown");
+        
+        LOGGER.info("REFRESH DETAIL: Reward {} has originTownId='{}', current originTown='{}'", 
+            original.getId(), originTownId, currentOriginName);
         
         if (originTownId != null && !originTownId.isEmpty()) {
             try {
                 java.util.UUID townUUID = java.util.UUID.fromString(originTownId);
+                LOGGER.info("REFRESH DETAIL: Looking up town with UUID {}", townUUID);
                 
                 // Get current town name from server
                 com.quackers29.businesscraft.town.Town town = com.quackers29.businesscraft.town.TownManager.get(serverLevel).getTown(townUUID);
                 if (town != null) {
                     String currentTownName = town.getName();
+                    LOGGER.info("REFRESH DETAIL: Found town {} with current name '{}'", townUUID, currentTownName);
                     
                     // Create a copy with updated origin town name
                     com.quackers29.businesscraft.town.data.RewardEntry copy = com.quackers29.businesscraft.town.data.RewardEntry.fromNetworkWithMetadata(
@@ -432,17 +453,22 @@ public class ForgeNetworkHelper implements NetworkHelper {
                     // Update the origin town name to current name
                     copy.addMetadata("originTown", currentTownName);
                     
-                    LOGGER.debug("Refreshed origin town name for reward {}: {} -> {}", 
-                        original.getId(), original.getMetadata().get("originTown"), currentTownName);
+                    LOGGER.info("REFRESH DETAIL: Updated reward {} origin town: '{}' -> '{}'", 
+                        original.getId(), currentOriginName, currentTownName);
                     
                     return copy;
+                } else {
+                    LOGGER.warn("REFRESH DETAIL: Town with UUID {} not found in TownManager!", townUUID);
                 }
             } catch (IllegalArgumentException e) {
-                LOGGER.debug("Invalid UUID in reward metadata: {}", originTownId);
+                LOGGER.warn("REFRESH DETAIL: Invalid UUID in reward metadata: '{}'", originTownId);
             }
+        } else {
+            LOGGER.info("REFRESH DETAIL: Reward {} has no originTownId metadata", original.getId());
         }
         
         // Return original if we can't refresh
+        LOGGER.info("REFRESH DETAIL: Returning original reward {} unchanged", original.getId());
         return original;
     }
     
@@ -636,5 +662,25 @@ public class ForgeNetworkHelper implements NetworkHelper {
             
             return entry;
         }
+    }
+    
+    @Override
+    public void sendVisitorHistoryResponsePacket(Object player, com.quackers29.businesscraft.network.packets.ui.VisitorHistoryResponsePacket packet) {
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            LOGGER.warn("FORGE NETWORK HELPER: Player is not a ServerPlayer: {}", 
+                player != null ? player.getClass().getSimpleName() : "null");
+            return;
+        }
+        
+        if (packet == null) {
+            LOGGER.warn("FORGE NETWORK HELPER: Visitor history response packet is null");
+            return;
+        }
+        
+        // Send the packet to the client
+        ModMessages.sendToPlayer(packet, serverPlayer);
+        
+        LOGGER.debug("Sent VisitorHistoryResponsePacket to player {}: {} entries", 
+            serverPlayer.getName().getString(), packet.getEntries().size());
     }
 }

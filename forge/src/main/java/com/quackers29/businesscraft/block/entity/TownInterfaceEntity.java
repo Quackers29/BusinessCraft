@@ -969,10 +969,15 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     }
     
     /**
-     * Clears the town name cache (used when town names change)
+     * DEPRECATED: clearTownNameCache() - no longer needed with unified architecture
+     * UNIFIED ARCHITECTURE: No client-side town name caching, names resolved fresh from server
      */
+    @Deprecated
     public void clearTownNameCache() {
-        clientSyncHelper.clearTownNameCache();
+        // UNIFIED ARCHITECTURE: No client-side town name cache to clear
+        // Names are now resolved fresh server-side like the map view system
+        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, 
+            "clearTownNameCache() called - no action needed with unified architecture");
     }
 
 

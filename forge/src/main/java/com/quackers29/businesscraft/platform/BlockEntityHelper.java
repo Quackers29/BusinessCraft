@@ -183,4 +183,10 @@ public interface BlockEntityHelper {
             return helper.getInventory(blockEntity, Direction.DOWN);
         }
     }
+    
+    /**
+     * Handle visitor history request with server-side name resolution
+     * Uses town UUID for direct town lookup instead of coordinates
+     */
+    void handleVisitorHistoryRequest(Object player, java.util.UUID townId);
 }

@@ -32,12 +32,12 @@ import java.util.*;
 public class ClientSyncHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientSyncHelper.class);
     
-    // Client-side caches
+    // Client-side caches (UNIFIED ARCHITECTURE: No town name caching needed)
     private final Map<Item, Integer> clientResources = new HashMap<>();
     private final Map<Item, Integer> clientCommunalStorage = new HashMap<>();
     private final Map<UUID, Map<Item, Integer>> clientPersonalStorage = new HashMap<>();
     private final List<ITownDataProvider.VisitHistoryRecord> clientVisitHistory = new ArrayList<>();
-    private final Map<UUID, String> townNameCache = new HashMap<>();
+    // REMOVED: townNameCache - names now resolved fresh server-side like map view
     
     /**
      * Adds resource data to the provided tag for client-side rendering
@@ -124,29 +124,32 @@ public class ClientSyncHelper {
     
     /**
      * Adds visit history data to the provided tag for client-side rendering
+     * UNIFIED ARCHITECTURE: Server-side name resolution like map view system
      */
     public void syncVisitHistoryForClient(CompoundTag tag, ITownDataProvider provider, Level level) {
         if (provider == null) return;
         
         List<ITownDataProvider.VisitHistoryRecord> history = provider.getVisitHistory();
         DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
-            "VISIT HISTORY DEBUG - ClientSyncHelper.syncVisitHistoryForClient() syncing {} records", 
+            "VISIT HISTORY DEBUG - ClientSyncHelper.syncVisitHistoryForClient() syncing {} records with fresh server-side name resolution", 
             history.size());
-        // Always sync visit history data, even if empty, to keep client informed
         
         ListTag historyTag = new ListTag();
         for (ITownDataProvider.VisitHistoryRecord record : history) {
             CompoundTag visitTag = new CompoundTag();
             visitTag.putLong("timestamp", record.getTimestamp());
             
-            // Store both UUID and resolved name for client display
+            // Store UUID and resolve name fresh from server (like map view)
             if (record.getOriginTownId() != null) {
                 UUID townId = record.getOriginTownId();
                 visitTag.putUUID("townId", townId);
                 
-                // Resolve town name using the centralized method
-                String townName = resolveTownName(townId, true, level);
+                // FIXED: Fresh server-side name resolution (like map view pattern)
+                String townName = resolveNameFreshFromServer(townId, level);
                 visitTag.putString("townName", townName);
+                
+                DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, 
+                    "Visit history: resolved town {} -> '{}' (fresh from server)", townId, townName);
             }
             
             visitTag.putInt("count", record.getCount());
@@ -167,6 +170,7 @@ public class ClientSyncHelper {
     
     /**
      * Loads visit history from the provided tag into the client-side cache
+     * UNIFIED ARCHITECTURE: Client just stores pre-resolved names from server (no caching)
      */
     public void loadVisitHistoryFromTag(CompoundTag tag) {
         if (tag.contains("visitHistory")) {
@@ -192,19 +196,16 @@ public class ClientSyncHelper {
                     continue;
                 }
                 
-                // Store the pre-resolved town name from the server in a client field
+                // FIXED: Pre-resolved names from server are stored directly in VisitHistoryRecord
+                // No client-side caching needed - names are already fresh from server
+                String preResolvedTownName = "Unknown";
                 if (visitTag.contains("townName")) {
-                    String townName = visitTag.getString("townName");
-                    // Only log when a town name is added for the first time
-                    if (!townNameCache.containsKey(townId)) {
-                        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Loaded town name for {}: {}", townId, townName);
-                    }
-                    // Store the name in a map for client-side lookup
-                    townNameCache.put(townId, townName);
+                    preResolvedTownName = visitTag.getString("townName");
+                    DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, 
+                        "Loaded pre-resolved town name for {}: {}", townId, preResolvedTownName);
                 } else {
-                    LOGGER.warn("Missing town name for visit record with ID {}", townId);
-                    // If no name is provided, use a fallback
-                    townNameCache.put(townId, "Town-" + townId.toString().substring(0, 8));
+                    LOGGER.warn("Missing pre-resolved town name for visit record with ID {}", townId);
+                    preResolvedTownName = "Town-" + townId.toString().substring(0, 8);
                 }
                 
                 BlockPos originPos = BlockPos.ZERO;
@@ -217,62 +218,70 @@ public class ClientSyncHelper {
                     );
                 }
                 
-                // Create the visit record - convert BlockPos to Position using converter
+                // Create the visit record - convert BlockPos to Position
                 ITownDataProvider.Position position = PositionConverter.toPosition(originPos);
+                // UNIFIED ARCHITECTURE: Store only UUID, no cached names
                 clientVisitHistory.add(new ITownDataProvider.VisitHistoryRecord(timestamp, townId, count, position));
             }
         }
     }
     
     /**
-     * Resolves a town name from its UUID with flexible behavior for client/server contexts
+     * Fresh server-side name resolution (like map view pattern)
+     * UNIFIED ARCHITECTURE: Always resolve names fresh from server data
      * @param townId The UUID of the town to resolve
-     * @param logResolveFailure Whether to log when resolution fails
      * @param level The level for server-side lookups
      * @return The resolved name or a fallback
      */
-    public String resolveTownName(UUID townId, boolean logResolveFailure, Level level) {
+    private String resolveNameFreshFromServer(UUID townId, Level level) {
         if (townId == null) return "Unknown";
         
-        // For server-side or forced server-side lookup
-        if (level != null && !level.isClientSide()) {
-            if (level instanceof ServerLevel serverLevel) {
-                Town town = TownManager.get(serverLevel).getTown(townId);
-                if (town != null) {
-                    return town.getName();
-                } else if (logResolveFailure) {
-                    DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Could not resolve town name for {}", townId);
-                }
-            }
-            return "Unknown Town";
-        }
-        
-        // For client-side lookup
-        if (townNameCache.containsKey(townId)) {
-            String cachedName = townNameCache.get(townId);
-            if (cachedName != null && !cachedName.isEmpty()) {
-                return cachedName;
+        // Always resolve fresh from server (like map view system)
+        if (level != null && !level.isClientSide() && level instanceof ServerLevel serverLevel) {
+            Town town = TownManager.get(serverLevel).getTown(townId);
+            if (town != null) {
+                String freshName = town.getName();
+                DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, 
+                    "Resolved town {} -> '{}' fresh from server (like map view)", townId, freshName);
+                return freshName;
+            } else {
+                DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, 
+                    "Could not resolve town name for {} (town not found)", townId);
             }
         }
         
-        // Fallback for client-side with no cache
+        // Fallback if not on server
         return "Town-" + townId.toString().substring(0, 8);
     }
     
     /**
-     * Helper method to resolve town name from UUID - simplified version for backward compatibility
+     * DEPRECATED: Legacy method kept for backward compatibility
+     * NEW CODE SHOULD USE: resolveNameFreshFromServer() for server-side resolution
+     * or rely on pre-resolved names from server packets (like map view)
      */
-    public String resolveTownName(UUID townId, Level level) {
-        return resolveTownName(townId, false, level);
+    @Deprecated
+    public String resolveTownName(UUID townId, boolean logResolveFailure, Level level) {
+        return resolveNameFreshFromServer(townId, level);
     }
     
     /**
-     * Helper method to get town name from client cache or resolve from server
+     * DEPRECATED: Legacy method kept for backward compatibility
      */
+    @Deprecated
+    public String resolveTownName(UUID townId, Level level) {
+        return resolveNameFreshFromServer(townId, level);
+    }
+    
+    /**
+     * DEPRECATED: Legacy method - client should use pre-resolved names from server packets
+     * This now resolves fresh from server if available (like map view system)
+     */
+    @Deprecated
     public String getTownNameFromId(UUID townId, Level level) {
         if (townId == null) return "Unknown";
         
-        return resolveTownName(townId, level != null && !level.isClientSide(), level);
+        // UNIFIED ARCHITECTURE: Always try to resolve fresh from server
+        return resolveNameFreshFromServer(townId, level);
     }
     
     /**
@@ -356,6 +365,71 @@ public class ClientSyncHelper {
         return Collections.unmodifiableList(clientVisitHistory);
     }
     
+    // Static registry for active ClientSyncHelper instances
+    private static final java.util.concurrent.ConcurrentHashMap<java.util.UUID, ClientSyncHelper> activeInstances = new java.util.concurrent.ConcurrentHashMap<>();
+    
+    /**
+     * Register this ClientSyncHelper instance for a town
+     */
+    public void register(java.util.UUID townId) {
+        if (townId != null) {
+            activeInstances.put(townId, this);
+        }
+    }
+    
+    /**
+     * Unregister this ClientSyncHelper instance
+     */
+    public void unregister(java.util.UUID townId) {
+        if (townId != null) {
+            activeInstances.remove(townId);
+        }
+    }
+    
+    /**
+     * UNIFIED ARCHITECTURE: Update client visit history from server response
+     * Called when VisitorHistoryResponsePacket received with server-resolved names
+     */
+    public static void updateVisitHistoryFromServer(java.util.UUID townId, List<com.quackers29.businesscraft.network.packets.ui.VisitorHistoryResponsePacket.VisitorEntry> serverEntries) {
+        if (townId != null) {
+            // Update specific town
+            ClientSyncHelper helper = activeInstances.get(townId);
+            if (helper != null) {
+                helper.updateVisitHistoryFromServerInstance(serverEntries);
+            } else {
+                LOGGER.debug("No active ClientSyncHelper found for town {}", townId);
+            }
+        } else {
+            // Update all active instances (broadcast mode)
+            for (ClientSyncHelper helper : activeInstances.values()) {
+                helper.updateVisitHistoryFromServerInstance(serverEntries);
+            }
+            LOGGER.debug("Updated {} active ClientSyncHelper instances with server data", activeInstances.size());
+        }
+    }
+    
+    /**
+     * Instance method to update visit history from server response
+     */
+    public void updateVisitHistoryFromServerInstance(List<com.quackers29.businesscraft.network.packets.ui.VisitorHistoryResponsePacket.VisitorEntry> serverEntries) {
+        clientVisitHistory.clear();
+        
+        for (var entry : serverEntries) {
+            ITownDataProvider.Position position = new ITownDataProvider.Position() {
+                @Override public int getX() { return entry.x; }
+                @Override public int getY() { return entry.y; }
+                @Override public int getZ() { return entry.z; }
+            };
+            
+            // UNIFIED ARCHITECTURE: Store only UUID - names come from server when needed
+            clientVisitHistory.add(new ITownDataProvider.VisitHistoryRecord(
+                entry.timestamp, entry.townId, entry.count, position
+            ));
+        }
+        
+        LOGGER.debug("Updated client visit history from server: {} entries", clientVisitHistory.size());
+    }
+    
     /**
      * Gets the visit history, choosing between client cache and server data
      */
@@ -372,25 +446,26 @@ public class ClientSyncHelper {
     
     /**
      * Clears all client-side caches (useful for cleanup)
+     * UNIFIED ARCHITECTURE: No town name cache to clear
      */
     public void clearAll() {
         clientResources.clear();
         clientCommunalStorage.clear();
         clientPersonalStorage.clear();
         clientVisitHistory.clear();
-        townNameCache.clear();
+        // REMOVED: townNameCache.clear() - no more client-side town name caching
     }
     
     /**
      * Gets the size of all cached data for debugging
+     * UNIFIED ARCHITECTURE: No town name cache stats
      */
     public String getCacheStats() {
-        return String.format("Resources: %d, Communal: %d, Personal: %d, History: %d, Names: %d",
+        return String.format("Resources: %d, Communal: %d, Personal: %d, History: %d",
             clientResources.size(),
             clientCommunalStorage.size(),
             clientPersonalStorage.size(),
-            clientVisitHistory.size(),
-            townNameCache.size());
+            clientVisitHistory.size());
     }
     
     /**

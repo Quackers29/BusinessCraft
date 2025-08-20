@@ -112,6 +112,7 @@ public interface ITownDataProvider {
     /**
      * Record for storing visit history information.
      * Platform-agnostic representation of town visit data.
+     * UNIFIED ARCHITECTURE: Stores only UUIDs, names resolved fresh from server when needed
      */
     class VisitHistoryRecord {
         private final long timestamp;
