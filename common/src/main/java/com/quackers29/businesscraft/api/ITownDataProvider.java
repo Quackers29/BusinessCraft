@@ -11,6 +11,7 @@ import java.util.List;
 public interface ITownDataProvider {
     UUID getTownId();
     String getTownName();
+    void setTownName(String name);
     
     // Legacy resource methods
     int getBreadCount();

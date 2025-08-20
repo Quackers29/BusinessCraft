@@ -452,6 +452,29 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         }
         return "Initializing...";
     }
+    
+    @Override
+    public void setTownName(String name) {
+        // Get town directly from TownManager instead of relying on cached field
+        Town town = null;
+        if (townId != null && level instanceof ServerLevel sLevel) {
+            town = TownManager.get(sLevel).getTown(townId);
+        }
+        
+        if (town != null) {
+            town.setName(name);
+            
+            // Update our local cached name too
+            this.name = name;
+            
+            setChanged();
+            
+            // Force block update to sync to clients immediately
+            if (level != null && !level.isClientSide()) {
+                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
+            }
+        }
+    }
 
     private String getRandomTownName() {
         if (ConfigLoader.townNames == null || ConfigLoader.townNames.isEmpty()) {

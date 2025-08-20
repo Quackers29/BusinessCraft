@@ -33,6 +33,11 @@ public class ForgeTownAdapter implements ITownDataProvider {
     }
     
     @Override
+    public void setTownName(String name) {
+        forgeTown.setName(name);
+    }
+    
+    @Override
     public int getBreadCount() {
         return forgeTown.getBreadCount();
     }

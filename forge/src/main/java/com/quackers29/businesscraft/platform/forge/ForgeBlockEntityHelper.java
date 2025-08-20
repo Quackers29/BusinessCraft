@@ -228,8 +228,11 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
     
     // @Override
     public void setTownName(Object townDataProvider, String townName) {
-        // TODO: Implement setTownName - method doesn't exist in current ITownDataProvider
-        LOGGER.warn("setTownName not yet implemented for Forge");
+        if (townDataProvider instanceof ITownDataProvider provider) {
+            provider.setTownName(townName);
+        } else {
+            LOGGER.warn("Cannot set town name: townDataProvider is not an ITownDataProvider instance");
+        }
     }
     
     // @Override

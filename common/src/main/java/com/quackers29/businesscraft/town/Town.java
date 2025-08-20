@@ -212,6 +212,11 @@ public class Town implements ITownDataProvider {
     public String getTownName() { return name; }
     
     @Override
+    public void setTownName(String name) { 
+        setName(name);
+    }
+    
+    @Override
     public int getBreadCount() {
         return getResourceCount("minecraft:bread");
     }
