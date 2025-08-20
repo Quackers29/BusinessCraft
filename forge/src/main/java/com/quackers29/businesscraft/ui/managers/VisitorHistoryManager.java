@@ -18,7 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -134,7 +136,92 @@ public class VisitorHistoryManager extends BaseModalManager {
             }
         }
         
-        return visitHistory;
+        // Smart deduplication: merge records from same town with same count within short time window
+        // This handles cases where migration creates records with BlockPos.ZERO and new records have coordinates
+        List<VisitHistoryRecord> deduplicated = new ArrayList<>();
+        Map<String, VisitHistoryRecord> visitMap = new HashMap<>();
+        
+        for (VisitHistoryRecord record : visitHistory) {
+            // Create key based on town ID, count, and 1-minute time window to catch near-simultaneous duplicates
+            long timeWindow = record.getTimestamp() / (60 * 1000); // 1-minute windows  
+            String key = record.getOriginTownId() + "_" + record.getCount() + "_" + timeWindow;
+            
+            VisitHistoryRecord existing = visitMap.get(key);
+            if (existing == null) {
+                visitMap.put(key, record);
+            } else {
+                // Choose the record with better coordinate data (non-zero coordinates preferred)
+                VisitHistoryRecord better = chooseBetterRecord(existing, record);
+                visitMap.put(key, better);
+                
+                DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+                    "VISIT HISTORY DEBUG - Merged duplicate records from town {} with count {}", 
+                    record.getOriginTownId(), record.getCount());
+            }
+        }
+        
+        deduplicated.addAll(visitMap.values());
+        
+        // Sort by timestamp descending (newest first) to match expected behavior
+        deduplicated.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
+        
+        DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+            "VISIT HISTORY DEBUG - Deduplicated {} raw records into {} unique visits", 
+            visitHistory.size(), deduplicated.size());
+        
+        return deduplicated;
+    }
+    
+    /**
+     * Chooses the better of two visit history records, preferring the one with actual coordinates.
+     * 
+     * @param record1 First record
+     * @param record2 Second record  
+     * @return The record with better data (coordinates preferred over BlockPos.ZERO)
+     */
+    private static VisitHistoryRecord chooseBetterRecord(VisitHistoryRecord record1, VisitHistoryRecord record2) {
+        // Use the later timestamp
+        long laterTimestamp = Math.max(record1.getTimestamp(), record2.getTimestamp());
+        
+        // Check if either record has meaningful coordinates (not 0,0,0)
+        boolean record1HasCoords = hasValidCoordinates(record1);
+        boolean record2HasCoords = hasValidCoordinates(record2);
+        
+        // Prefer the record with valid coordinates, or use the later one if both/neither have coords
+        VisitHistoryRecord chosen;
+        if (record1HasCoords && !record2HasCoords) {
+            chosen = record1;
+        } else if (record2HasCoords && !record1HasCoords) {
+            chosen = record2;
+        } else {
+            // Both have coordinates or both lack coordinates, use the later timestamp
+            chosen = record1.getTimestamp() >= record2.getTimestamp() ? record1 : record2;
+        }
+        
+        // Create a new record with the later timestamp but the chosen record's other data
+        return new VisitHistoryRecord(
+            laterTimestamp,
+            chosen.getOriginTownId(), 
+            chosen.getCount(),
+            chosen.getOriginPos()
+        );
+    }
+    
+    /**
+     * Checks if a visit history record has valid (non-zero) coordinates.
+     * 
+     * @param record The visit history record to check
+     * @return true if the record has coordinates other than (0,0,0)
+     */
+    private static boolean hasValidCoordinates(VisitHistoryRecord record) {
+        if (record.getOriginPos() == null) return false;
+        
+        int x = record.getOriginPos().getX();
+        int y = record.getOriginPos().getY(); 
+        int z = record.getOriginPos().getZ();
+        
+        // Consider (0,0,0) as invalid coordinates (likely from migration default)
+        return !(x == 0 && y == 0 && z == 0);
     }
     
     /**

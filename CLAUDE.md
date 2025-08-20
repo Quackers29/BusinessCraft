@@ -37,7 +37,11 @@ Record everything in a .claude/tasks/[TASK_ID]/onboarding.md file. This file wil
 ### Webhook Communication
 - **URL**: `https://sawfly-hardy-randomly.ngrok-free.app/webhook/6f7b288e-1efe-4504-a6fd-660931327269?message=[YOUR_MESSAGE]`
 - **Usage**: Send messages via WebFetch tool to notify user of progress, completion, or need for input
-- **Response**: User responds through Telegram integration linked to the webhook
+- **Response Handling**: User responds through Telegram integration linked to the webhook
+  - **CRITICAL**: Always read and act on the webhook response message returned by WebFetch
+  - **Response Processing**: The WebFetch response contains the user's reply from Telegram
+  - **Action Required**: Parse the response and adjust behavior accordingly (continue, stop, change direction, etc.)
+  - **Two-Way Communication**: This enables real-time bidirectional communication during development
 - **Stop Protocol**: If user responds with 'stop', finish current task and return to command line communication
 - **Default Method**: Use this for all notifications, progress updates, and requests for user input
 
