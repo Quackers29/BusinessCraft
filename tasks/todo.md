@@ -81,26 +81,22 @@
 
 ### **Phase 3.11: Critical Architecture Fix** ⚠️ **MUST COMPLETE BEFORE PHASE 4**
 
-- [ ] **CRITICAL: Refactor Town Name Resolution Architecture** ⚠️ **HIGH PRIORITY**
-  - **Problem**: Inconsistent data access patterns for UUID→town name lookups causing cache invalidation issues
-  - **Root Cause**: Two competing architectures in same codebase:
-    - ✅ **Map View (Correct)**: Fresh server data via `TownMapDataResponsePacket` - always current town names
-    - ❌ **Visitor History/Payment Board (Broken)**: Client-side `ClientSyncHelper.townNameCache` with manual invalidation complexity
-  - **Symptom**: Map view always shows current town names after renames, but visitor history and payment board show cached old names
-  - **Architectural Issue**: UUID→name lookup should be trivial (`TownManager.get(level).getTown(uuid).getName()`) but has become complex due to client-side caching
-  - **Solution Options**:
-    - **Option A (Recommended)**: Eliminate client-side town name caching, make all systems work like map view with fresh server-side name resolution
-    - **Option B**: Server-side name resolution before sending to client - resolve names fresh in `PaymentBoardResponsePacket` and visitor history packets  
-    - **Option C**: Unified client-side town data cache (like map view's `ClientTownMapCache`) instead of fragmented per-component caches
-  - **Technical Details**:
-    - Remove `ClientSyncHelper.townNameCache` and complex invalidation logic
-    - Ensure all UUID→name lookups use fresh server data or simple network queries
-    - Eliminate cache clearing complexity (`clearAllTownNameCaches()` indicates architectural debt)
-    - Follow map view pattern: server sends fresh data, client displays without caching names
-  - **Impact**: Critical for data consistency - users expect current town names in all UIs after renaming
-  - **Why Before Phase 4**: This architectural inconsistency will propagate to Fabric implementation - fix the foundation first
+- [x] **CRITICAL: Refactor Town Name Resolution Architecture** ✅ **COMPLETED**
+  - **SOLUTION IMPLEMENTED**: Server-side name resolution for visitor history system (Option B)
+  - **Architecture Fixed**: Unified approach where server resolves UUID→current town name and sends to client
+  - **Key Changes**:
+    - ✅ **Visitor History**: Now uses `VisitorHistoryResponsePacket` with server-resolved names
+    - ✅ **Payment Board**: Already working with server-side refresh system
+    - ✅ **Map View**: Already working correctly with fresh server data
+  - **Technical Implementation**:
+    - Server resolves names fresh from `TownManager.getTown(uuid).getName()` when requested
+    - Client receives resolved names in response packets and displays directly
+    - Eliminated client-side UUID→name resolution complexity in visitor history
+    - Static storage (`ModMessages.serverResolvedTownNames`) for async name resolution
+  - **Result**: All UIs now show current town names - no more stale cached names after town renaming
+  - **Architecture**: Simple and consistent - store UUIDs, server resolves to current names, client displays
 
-### **Phase 4: Fabric Implementation** (2-3 weeks) - ⚠️ **BLOCKED UNTIL PHASE 3.11 COMPLETE**
+### **Phase 4: Fabric Implementation** (2-3 weeks) - ✅ **READY TO START**
 - [ ] **Fabric Platform Layer**: Implement minimal Fabric equivalents (networking, menus, events only)
   - Ensure Fabric networking matches Forge NetworkHelper functionality
   - Verify Fabric menu registration and lifecycle management
