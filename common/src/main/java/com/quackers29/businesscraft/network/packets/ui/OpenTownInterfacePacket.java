@@ -39,32 +39,33 @@ public class OpenTownInterfacePacket extends BaseBlockEntityPacket {
     
     /**
      * Handle the packet on the server side.
-     * This method contains the core server-side logic which is platform-agnostic.
+     * Unified Architecture approach: Direct access to TownInterfaceData without BlockEntityHelper abstraction.
      */
     @Override
     public void handle(Object player) {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Opening Town Interface for player at position [{}, {}, {}]", x, y, z);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing OpenTownInterfacePacket at position ({}, {}, {})", x, y, z);
         
-        // Get the town interface using platform services
-        Object blockEntity = getBlockEntity(player);
-        if (blockEntity == null) {
-            LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
-            return;
-        }
-
-        Object townDataProvider = getTownDataProvider(blockEntity);
-        if (townDataProvider == null) {
-            LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
-            return;
-        }
+        // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
         
-        // Open the Town Interface UI (still uses platform services for complex UI operations)
-        boolean success = PlatformServices.getBlockEntityHelper().openTownInterfaceUI(townDataProvider, player);
-        
-        if (success) {
-            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully opened Town Interface for player at [{}, {}, {}]", x, y, z);
+        if (townData != null) {
+            // Basic validation through unified architecture
+            if (!townData.isTownRegistered()) {
+                LOGGER.warn("Town not registered at position ({}, {}, {}) for UI opening", x, y, z);
+                return;
+            }
+            
+            // Complex UI operations still use platform services (appropriate abstraction)
+            Object blockEntity = getBlockEntity(player);
+            boolean success = PlatformServices.getBlockEntityHelper().openTownInterfaceUI(blockEntity, player);
+            
+            if (success) {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully opened Town Interface for player at ({}, {}, {})", x, y, z);
+            } else {
+                LOGGER.warn("Failed to open Town Interface for player at ({}, {}, {}) - UI opening failed", x, y, z);
+            }
         } else {
-            LOGGER.warn("Failed to open Town Interface for player at [{}, {}, {}]", x, y, z);
+            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for UI opening", x, y, z);
         }
     }
 }

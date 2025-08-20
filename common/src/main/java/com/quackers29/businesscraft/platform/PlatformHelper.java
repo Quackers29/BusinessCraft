@@ -197,4 +197,17 @@ public interface PlatformHelper {
      * @return true if boundary visualization was successfully updated
      */
     boolean updateBoundaryVisualization(int x, int y, int z, int boundaryRadius);
+    
+    /**
+     * Get TownInterfaceData from a TownInterface block entity (Unified Architecture).
+     * Platform implementations extract the TownInterfaceData from platform-specific block entities.
+     * This replaces the over-abstracted BlockEntityHelper pattern for direct data access.
+     * 
+     * @param player Platform-specific player object (for world access)
+     * @param x Block X coordinate
+     * @param y Block Y coordinate
+     * @param z Block Z coordinate
+     * @return TownInterfaceData object or null if not found or not a town interface
+     */
+    com.quackers29.businesscraft.town.TownInterfaceData getTownInterfaceData(Object player, int x, int y, int z);
 }

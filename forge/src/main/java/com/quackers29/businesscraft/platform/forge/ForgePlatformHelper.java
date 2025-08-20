@@ -459,4 +459,29 @@ public class ForgePlatformHelper implements PlatformHelper {
             return false;
         }
     }
+    
+    @Override
+    public com.quackers29.businesscraft.town.TownInterfaceData getTownInterfaceData(Object player, int x, int y, int z) {
+        try {
+            // Platform-specific: Cast player and get world access
+            net.minecraft.server.level.ServerPlayer serverPlayer = (net.minecraft.server.level.ServerPlayer) player;
+            net.minecraft.server.level.ServerLevel level = serverPlayer.serverLevel();
+            
+            // Platform-specific: Create BlockPos and get block entity
+            net.minecraft.core.BlockPos pos = new net.minecraft.core.BlockPos(x, y, z);
+            net.minecraft.world.level.block.entity.BlockEntity blockEntity = level.getBlockEntity(pos);
+            
+            // Platform-specific: Check if it's a TownInterfaceEntity
+            if (blockEntity instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity townEntity) {
+                // Unified Architecture: Get the TownInterfaceData from the platform-specific entity
+                return townEntity.getTownInterfaceData();
+            }
+            
+            return null;
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to get TownInterfaceData at [{}, {}, {}]: {}", x, y, z, e.getMessage(), e);
+            return null;
+        }
+    }
 }

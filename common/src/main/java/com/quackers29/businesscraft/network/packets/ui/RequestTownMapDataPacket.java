@@ -57,36 +57,37 @@ public class RequestTownMapDataPacket extends BaseBlockEntityPacket {
     
     /**
      * Handle the packet on the server side.
-     * This method processes the town map data request and sends a response to the client.
+     * Unified Architecture approach: Direct access to TownInterfaceData without BlockEntityHelper abstraction.
      */
     @Override
     public void handle(Object player) {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing town map data request (zoom: {}, structures: {}) at position [{}, {}, {}]", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing town map data request (zoom: {}, structures: {}) at position ({}, {}, {})", 
                     zoomLevel, includeStructures, x, y, z);
         
-        // Get the town interface entity using platform services
-        Object blockEntity = getBlockEntity(player);
-        if (blockEntity == null) {
-            LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
-            return;
-        }
-
-        Object townDataProvider = getTownDataProvider(blockEntity);
-        if (townDataProvider == null) {
-            LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
-            return;
-        }
+        // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
         
-        // Process town map data request through platform services
-        boolean success = PlatformServices.getBlockEntityHelper().processTownMapDataRequest(
-            townDataProvider, player, zoomLevel, includeStructures);
-        
-        if (success) {
-            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed town map data request (zoom: {}, structures: {}) at [{}, {}, {}]", 
-                        zoomLevel, includeStructures, x, y, z);
+        if (townData != null) {
+            // Basic validation through unified architecture
+            if (!townData.isTownRegistered()) {
+                LOGGER.warn("Town not registered at position ({}, {}, {}) for map data request", x, y, z);
+                return;
+            }
+            
+            // Complex map data operations still use platform services (world data, structure analysis)
+            Object townDataProvider = getTownDataProvider(getBlockEntity(player));
+            boolean success = PlatformServices.getBlockEntityHelper().processTownMapDataRequest(
+                townDataProvider, player, zoomLevel, includeStructures);
+            
+            if (success) {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed town map data request (zoom: {}, structures: {}) at ({}, {}, {})", 
+                            zoomLevel, includeStructures, x, y, z);
+            } else {
+                LOGGER.warn("Failed to process town map data request (zoom: {}, structures: {}) at ({}, {}, {})", 
+                           zoomLevel, includeStructures, x, y, z);
+            }
         } else {
-            LOGGER.warn("Failed to process town map data request (zoom: {}, structures: {}) at [{}, {}, {}]", 
-                       zoomLevel, includeStructures, x, y, z);
+            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for map data request", x, y, z);
         }
     }
     

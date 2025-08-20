@@ -1257,5 +1257,38 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     private BlockPos convertToBlockPos(ITownDataProvider.Position pos) {
         return pos != null ? new BlockPos(pos.getX(), pos.getY(), pos.getZ()) : null;
     }
+    
+    // === UNIFIED ARCHITECTURE: TOWN INTERFACE DATA ===
+    
+    /**
+     * Unified Architecture: TownInterfaceData holds all business logic.
+     * This platform-specific entity is a thin wrapper around the common data object.
+     */
+    private com.quackers29.businesscraft.town.TownInterfaceData townInterfaceData;
+    
+    /**
+     * Initialize TownInterfaceData for unified architecture.
+     * Called during block entity construction and NBT loading.
+     */
+    private void initializeTownInterfaceData() {
+        if (townInterfaceData == null) {
+            townInterfaceData = new com.quackers29.businesscraft.town.TownInterfaceData(
+                worldPosition.getX(), 
+                worldPosition.getY(), 
+                worldPosition.getZ()
+            );
+        }
+    }
+    
+    /**
+     * Get the TownInterfaceData for unified architecture direct access.
+     * This replaces the over-abstracted BlockEntityHelper pattern.
+     * 
+     * @return TownInterfaceData containing all business logic
+     */
+    public com.quackers29.businesscraft.town.TownInterfaceData getTownInterfaceData() {
+        initializeTownInterfaceData();
+        return townInterfaceData;
+    }
 
 }

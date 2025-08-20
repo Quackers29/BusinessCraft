@@ -43,55 +43,45 @@ public class SetTownNamePacket extends BaseBlockEntityPacket {
 
     /**
      * Handle the packet on the server side.
-     * This method contains the core business logic which is platform-agnostic.
+     * Unified Architecture approach: Direct access to TownInterfaceData without BlockEntityHelper abstraction.
      */
     @Override
     public void handle(Object player) {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing SetTownNamePacket for position ({}, {}, {}) with new name: '{}'", x, y, z, newName);
         
-        // Platform services will provide block entity access
-        Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
+        // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
         
-        if (blockEntity != null) {
-            // Use platform services to access town interface functionality
-            Object townDataProvider = PlatformServices.getBlockEntityHelper().getTownDataProvider(blockEntity);
+        if (townData != null) {
+            // Core business logic - validate the new name
+            String trimmedName = newName.trim();
             
-            if (townDataProvider != null) {
-                // Core business logic - validate the new name
-                String trimmedName = newName.trim();
-                
-                // Validation logic (platform-agnostic)
-                String validationError = validateTownName(trimmedName);
-                if (validationError != null) {
-                    // Send error message through platform services
-                    PlatformServices.getPlatformHelper().sendPlayerMessage(player, validationError, "RED");
-                    return;
-                }
-                
-                String oldName = PlatformServices.getBlockEntityHelper().getTownName(townDataProvider);
-                
-                // Update through platform services
-                PlatformServices.getBlockEntityHelper().setTownName(townDataProvider, trimmedName);
-                PlatformServices.getBlockEntityHelper().markTownDataDirty(townDataProvider);
-                PlatformServices.getBlockEntityHelper().syncTownData(blockEntity);
-                
-                // Force block update through platform services
-                PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
-                
-                // Clear client-side caches through platform services
-                PlatformServices.getPlatformHelper().clearClientCaches();
-                
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Town renamed successfully from '{}' to '{}'", oldName, trimmedName);
-                
-                // Send confirmation message
-                String confirmMessage = "Town renamed to: " + trimmedName;
-                PlatformServices.getPlatformHelper().sendPlayerMessage(player, confirmMessage, "GREEN");
-                
-            } else {
-                LOGGER.warn("No town data provider found at position ({}, {}, {})", x, y, z);
+            // Validation logic (platform-agnostic)
+            String validationError = validateTownName(trimmedName);
+            if (validationError != null) {
+                // Send error message through platform services
+                PlatformServices.getPlatformHelper().sendPlayerMessage(player, validationError, "RED");
+                return;
             }
+            
+            String oldName = townData.getTownName();
+            
+            // Direct update using unified architecture - no abstraction layer needed
+            townData.setTownName(trimmedName);
+            townData.markDirty(); // Direct dirty marking
+            
+            // Platform-specific operations still use platform services
+            PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
+            PlatformServices.getPlatformHelper().clearClientCaches();
+            
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Town renamed successfully from '{}' to '{}'", oldName, trimmedName);
+            
+            // Send confirmation message
+            String confirmMessage = "Town renamed to: " + trimmedName;
+            PlatformServices.getPlatformHelper().sendPlayerMessage(player, confirmMessage, "GREEN");
+            
         } else {
-            LOGGER.warn("No block entity found at position ({}, {}, {}) for town name change", x, y, z);
+            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for town name change", x, y, z);
         }
     }
     

@@ -51,32 +51,24 @@ public class ResetPlatformPathPacket extends BaseBlockEntityPacket {
     public void handle(Object player) {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Player is resetting platform {} path at [{}, {}, {}]", platformId, x, y, z);
         
-        // Get the town interface block entity using platform services
-        Object blockEntity = getBlockEntity(player);
-        if (blockEntity == null) {
-            LOGGER.warn("No block entity found at [{}, {}, {}]", x, y, z);
-            return;
-        }
-
-        Object townDataProvider = getTownDataProvider(blockEntity);
-        if (townDataProvider == null) {
-            LOGGER.warn("Block entity not found at [{}, {}, {}]", x, y, z);
-            return;
-        }
+        // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
         
-        // Reset the platform path through platform services (complex path management operations)
-        boolean success = PlatformServices.getBlockEntityHelper().resetPlatformPath(townDataProvider, platformId);
+        if (townData != null) {
+            // Direct business logic access - no abstraction layer needed
+            boolean success = townData.resetPlatformPath(platformId);
             
-        if (!success) {
-            LOGGER.warn("Failed to reset platform {} path at [{}, {}, {}]", platformId, x, y, z);
-            return;
+            if (success) {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully reset platform {} path at ({}, {}, {})", platformId, x, y, z);
+                
+                // Platform-specific operations still use platform services
+                PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
+            } else {
+                LOGGER.warn("Failed to reset platform {} path at ({}, {}, {}) - platform not found", platformId, x, y, z);
+            }
+        } else {
+            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for platform path reset", x, y, z);
         }
-        
-        // Mark changed and sync using platform services
-        markTownDataDirty(townDataProvider);
-        PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
-        
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully reset platform {} path at [{}, {}, {}]", platformId, x, y, z);
     }
     
     // Getters for testing

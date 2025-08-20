@@ -62,33 +62,32 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
             return;
         }
         
-        // Get the town interface block entity using platform services
-        Object blockEntity = getBlockEntity(player);
-        if (blockEntity == null) {
-            LOGGER.warn("No block entity found at position [{}, {}, {}] for player", getX(), getY(), getZ());
-            return;
+        // Unified Architecture: Get TownInterfaceData for basic validation (reduces abstraction)
+        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
+        
+        if (townData != null) {
+            // Basic validation through unified architecture
+            if (!townData.isTownRegistered()) {
+                LOGGER.warn("Town not registered at position ({}, {}, {}) for trade", getX(), getY(), getZ());
+                return;
+            }
+            
+            // Complex inventory operations still use platform services (appropriate abstraction)
+            // NOTE: processResourceTrade involves platform-specific ItemStack handling
+            Object blockEntity = getBlockEntity(player); // Still needed for platform-specific trade processing
+            Object paymentResult = PlatformServices.getBlockEntityHelper().processResourceTrade(
+                blockEntity, player, itemToTrade, slotId);
+            
+            // Send the payment result back to the client
+            if (paymentResult != null) {
+                PlatformServices.getNetworkHelper().sendPaymentResultPacket(player, paymentResult);
+            }
+            
+            // Platform-specific operations
+            PlatformServices.getPlatformHelper().forceBlockUpdate(player, getX(), getY(), getZ());
+        } else {
+            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for trade", getX(), getY(), getZ());
         }
-
-        Object townDataProvider = getTownDataProvider(blockEntity);
-        if (townDataProvider == null) {
-            LOGGER.warn("No town block entity found at position [{}, {}, {}] for player", getX(), getY(), getZ());
-            return;
-        }
-        
-        // Process the resource trade through platform services (complex inventory operations still need platform layer)
-        Object paymentResult = PlatformServices.getBlockEntityHelper().processResourceTrade(
-            townDataProvider, player, itemToTrade, slotId);
-        
-        // Send the payment result back to the client
-        if (paymentResult != null) {
-            PlatformServices.getNetworkHelper().sendPaymentResultPacket(player, paymentResult);
-        }
-        
-        // Mark changed and sync using platform services
-        markTownDataDirty(townDataProvider);
-        
-        // Force block update to sync changes
-        PlatformServices.getPlatformHelper().forceBlockUpdate(player, getX(), getY(), getZ());
         
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed resource trade in slot {} at [{}, {}, {}]", 
                     slotId, getX(), getY(), getZ());

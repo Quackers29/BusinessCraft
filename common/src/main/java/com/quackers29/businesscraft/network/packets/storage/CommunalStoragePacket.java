@@ -62,33 +62,36 @@ public class CommunalStoragePacket extends BaseBlockEntityPacket {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing communal storage {} operation for slot {} at position [{}, {}, {}]", 
                     operation, slotId, x, y, z);
         
-        // Get the town interface block entity using platform services
-        Object blockEntity = getBlockEntity(player);
-        if (blockEntity == null) {
-            LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
-            return;
-        }
-
-        Object townDataProvider = getTownDataProvider(blockEntity);
-        if (townDataProvider == null) {
-            LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
-            return;
-        }
+        // Unified Architecture: Get TownInterfaceData for basic validation (reduces abstraction)
+        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
         
-        // Process communal storage operation using platform services
-        boolean success;
-        if (isAdd) {
-            success = PlatformServices.getBlockEntityHelper().addToCommunalStorage(townDataProvider, player, itemStack, slotId);
+        if (townData != null) {
+            // Basic validation through unified architecture
+            if (!townData.isTownRegistered()) {
+                LOGGER.warn("Town not registered at position ({}, {}, {}) for communal storage {}", x, y, z, operation);
+                return;
+            }
+            
+            // Complex inventory operations still use platform services (appropriate abstraction)
+            // NOTE: Communal storage involves platform-specific ItemStack and container handling
+            Object blockEntity = getBlockEntity(player); // Still needed for platform-specific storage operations
+            
+            boolean success;
+            if (isAdd) {
+                success = PlatformServices.getBlockEntityHelper().addToCommunalStorage(blockEntity, player, itemStack, slotId);
+            } else {
+                success = PlatformServices.getBlockEntityHelper().removeFromCommunalStorage(blockEntity, player, itemStack, slotId);
+            }
+            
+            if (success) {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed communal storage {} operation for slot {} at ({}, {}, {})", 
+                            operation, slotId, x, y, z);
+            } else {
+                LOGGER.warn("Failed to process communal storage {} operation for slot {} at ({}, {}, {})", 
+                           operation, slotId, x, y, z);
+            }
         } else {
-            success = PlatformServices.getBlockEntityHelper().removeFromCommunalStorage(townDataProvider, player, itemStack, slotId);
-        }
-        
-        if (success) {
-            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed communal storage {} operation for slot {} at [{}, {}, {}]", 
-                        operation, slotId, x, y, z);
-        } else {
-            LOGGER.warn("Failed to process communal storage {} operation for slot {} at [{}, {}, {}]", 
-                       operation, slotId, x, y, z);
+            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for communal storage {}", x, y, z, operation);
         }
     }
     

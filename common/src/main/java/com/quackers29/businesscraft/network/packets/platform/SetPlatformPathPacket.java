@@ -71,31 +71,25 @@ public class SetPlatformPathPacket extends BaseBlockEntityPacket {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Player is setting platform {} path from [{}, {}, {}] to [{}, {}, {}] at [{}, {}, {}]", 
                     platformId, startX, startY, startZ, endX, endY, endZ, x, y, z);
         
-        // Get the town interface block entity using platform services
-        Object blockEntity = getBlockEntity(player);
-        if (blockEntity == null) {
-            LOGGER.warn("No block entity found at [{}, {}, {}]", x, y, z);
-            return;
-        }
-
-        Object townDataProvider = getTownDataProvider(blockEntity);
-        if (townDataProvider == null) {
-            LOGGER.warn("Block entity not found at [{}, {}, {}]", x, y, z);
-            return;
-        }
+        // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
         
-        // Set the platform path through platform services
-        // NOTE: Platform service handles complex coordinate conversions and validations
-        boolean success = PlatformServices.getBlockEntityHelper().setPlatformPath(
-            townDataProvider, platformId, startX, startY, startZ, endX, endY, endZ);
-        
-        if (!success) {
-            LOGGER.warn("Failed to set platform path at [{}, {}, {}]", x, y, z);
-            return;
+        if (townData != null) {
+            // Direct business logic access - no abstraction layer needed
+            boolean success = townData.setPlatformPath(platformId, startX, startY, startZ, endX, endY, endZ);
+            
+            if (success) {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully set platform {} path from ({}, {}, {}) to ({}, {}, {}) at ({}, {}, {})", 
+                            platformId, startX, startY, startZ, endX, endY, endZ, x, y, z);
+                
+                // Platform-specific operations still use platform services
+                PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
+            } else {
+                LOGGER.warn("Failed to set platform {} path at ({}, {}, {}) - platform not found", platformId, x, y, z);
+            }
+        } else {
+            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for platform path setting", x, y, z);
         }
-        
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully set platform {} path from [{}, {}, {}] to [{}, {}, {}] at [{}, {}, {}]", 
-                    platformId, startX, startY, startZ, endX, endY, endZ, x, y, z);
     }
     
     // Getters for testing

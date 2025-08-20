@@ -32,29 +32,29 @@ public class ToggleTouristSpawningPacket extends BaseBlockEntityPacket {
 
     /**
      * Handle the packet on the server side.
-     * This method contains the core business logic which is platform-agnostic.
+     * Unified Architecture approach: Direct access to TownInterfaceData without BlockEntityHelper abstraction.
      */
     @Override
     public void handle(Object player) {
-        // Enhanced MultiLoader: Use platform services for cross-platform compatibility
-        Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
-        if (blockEntity != null) {
-            Object townDataProvider = PlatformServices.getBlockEntityHelper().getTownDataProvider(blockEntity);
-            if (townDataProvider != null) {
-                // Platform-agnostic business logic through platform services
-                boolean currentState = PlatformServices.getBlockEntityHelper().isTouristSpawningEnabled(townDataProvider);
-                boolean newState = !currentState;
-                
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Toggling tourist spawning to {} at position ({}, {}, {})", newState, x, y, z);
-                
-                // Use platform services for cross-platform compatibility
-                PlatformServices.getBlockEntityHelper().setTouristSpawningEnabled(townDataProvider, newState);
-                PlatformServices.getBlockEntityHelper().markTownDataDirty(townDataProvider);
-            } else {
-                LOGGER.warn("No town data provider found at position ({}, {}, {})", x, y, z);
-            }
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing ToggleTouristSpawningPacket at position ({}, {}, {})", x, y, z);
+        
+        // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
+        
+        if (townData != null) {
+            // Direct business logic access - no abstraction layer needed
+            boolean currentState = townData.isTouristSpawningEnabled();
+            boolean newState = !currentState;
+            
+            townData.setTouristSpawningEnabled(newState);
+            
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Tourist spawning toggled from {} to {} at position ({}, {}, {})", 
+                        currentState, newState, x, y, z);
+            
+            // Platform-specific operations still use platform services
+            PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
         } else {
-            LOGGER.warn("No block entity found at position ({}, {}, {}) for tourist spawning toggle", x, y, z);
+            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for tourist spawning toggle", x, y, z);
         }
     }
     

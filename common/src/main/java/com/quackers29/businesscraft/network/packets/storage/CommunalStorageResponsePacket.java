@@ -78,29 +78,26 @@ public class CommunalStorageResponsePacket extends BaseBlockEntityPacket {
     
     /**
      * Handle the packet on the client side.
-     * This method updates the client-side communal storage UI.
-     * Note: This packet is for client-side UI updates, so we still use platform services
-     * for UI operations which haven't been unified yet.
+     * Unified Architecture approach: Client-side UI operations appropriately use platform services.
      */
     @Override
     public void handle(Object player) {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing communal storage response with {} items at position [{}, {}, {}]", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing communal storage response with {} items at position ({}, {}, {})", 
                     storageItems.size(), x, y, z);
         
         if (!isSuccess) {
-            LOGGER.warn("Received failed communal storage response at [{}, {}, {}]", x, y, z);
+            LOGGER.warn("Received failed communal storage response at ({}, {}, {})", x, y, z);
             return;
         }
         
-        // Update client-side communal storage UI through platform services
-        // Note: Client-side UI operations still use platform services as they involve complex GUI interactions
+        // Client-side UI operations appropriately use platform services (complex GUI interactions)
         boolean success = PlatformServices.getBlockEntityHelper().updateCommunalStorageUI(player, x, y, z, storageItems);
         
         if (success) {
-            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully updated communal storage UI with {} items at [{}, {}, {}]", 
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully updated communal storage UI with {} items at ({}, {}, {})", 
                         storageItems.size(), x, y, z);
         } else {
-            LOGGER.warn("Failed to update communal storage UI at [{}, {}, {}]", x, y, z);
+            LOGGER.warn("Failed to update communal storage UI at ({}, {}, {})", x, y, z);
         }
     }
     

@@ -64,29 +64,31 @@ public class BoundarySyncRequestPacket extends BaseBlockEntityPacket {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing boundary sync request (enable: {}, distance: {}) at position [{}, {}, {}]", 
                     enableVisualization, renderDistance, x, y, z);
         
-        // Get the town interface entity using platform services
-        Object blockEntity = getBlockEntity(player);
-        if (blockEntity == null) {
-            LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
-            return;
-        }
-
-        Object townDataProvider = getTownDataProvider(blockEntity);
-        if (townDataProvider == null) {
-            LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
-            return;
-        }
+        // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
         
-        // Process boundary sync request through platform services
-        boolean success = PlatformServices.getBlockEntityHelper().processBoundarySyncRequest(
-            townDataProvider, player, enableVisualization, renderDistance);
-        
-        if (success) {
-            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed boundary sync request (enable: {}, distance: {}) at [{}, {}, {}]", 
-                        enableVisualization, renderDistance, x, y, z);
+        if (townData != null) {
+            // Basic validation through unified architecture
+            if (!townData.isTownRegistered()) {
+                LOGGER.warn("Town not registered at position ({}, {}, {}) for boundary sync", x, y, z);
+                return;
+            }
+            
+            // Boundary visualization is platform-specific (client rendering)
+            // Still use platform services for complex visualization operations
+            Object townDataProvider = getTownDataProvider(getBlockEntity(player));
+            boolean success = PlatformServices.getBlockEntityHelper().processBoundarySyncRequest(
+                townDataProvider, player, enableVisualization, renderDistance);
+            
+            if (success) {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed boundary sync request (enable: {}, distance: {}) at ({}, {}, {})", 
+                            enableVisualization, renderDistance, x, y, z);
+            } else {
+                LOGGER.warn("Failed to process boundary sync request (enable: {}, distance: {}) at ({}, {}, {})", 
+                           enableVisualization, renderDistance, x, y, z);
+            }
         } else {
-            LOGGER.warn("Failed to process boundary sync request (enable: {}, distance: {}) at [{}, {}, {}]", 
-                       enableVisualization, renderDistance, x, y, z);
+            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for boundary sync", x, y, z);
         }
     }
     

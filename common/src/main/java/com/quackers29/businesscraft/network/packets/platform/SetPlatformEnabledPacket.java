@@ -49,45 +49,36 @@ public class SetPlatformEnabledPacket extends BaseBlockEntityPacket {
     
     /**
      * Handle the packet on the server side.
-     * Unified Architecture approach: Direct access to TownInterfaceEntity methods.
+     * Unified Architecture approach: Direct access to TownInterfaceData without BlockEntityHelper abstraction.
      */
     @Override
     public void handle(Object player) {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Player is setting platform {} enabled state to {} at [{}, {}, {}]", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing SetPlatformEnabledPacket for platform {} enabled={} at ({}, {}, {})", 
                     platformId, enabled, x, y, z);
         
-        // Get the town interface block entity using platform services
-        Object blockEntity = getBlockEntity(player);
-        if (blockEntity == null) {
-            LOGGER.warn("No block entity found at [{}, {}, {}]", x, y, z);
-            return;
-        }
-
-        Object townDataProvider = getTownDataProvider(blockEntity);
-        if (townDataProvider == null) {
-            LOGGER.warn("Block entity not found at [{}, {}, {}]", x, y, z);
-            return;
-        }
+        // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
         
-        // Set the platform enabled state through platform services (complex platform management)
-        boolean success = PlatformServices.getBlockEntityHelper().setPlatformEnabledById(
-            townDataProvider, platformId, enabled);
+        if (townData != null) {
+            // Direct business logic access - no abstraction layer needed
+            boolean success = townData.setPlatformEnabledById(platformId, enabled);
             
-        if (!success) {
-            LOGGER.warn("Failed to set platform {} enabled state to {} at [{}, {}, {}] - platform not found", 
-                       platformId, enabled, x, y, z);
-            return;
+            if (success) {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully set platform {} enabled state to {} at ({}, {}, {})", 
+                            platformId, enabled, x, y, z);
+                
+                // Platform-specific operations still use platform services
+                PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
+                
+                // Notify clients tracking this chunk of the platform state change
+                PlatformServices.getNetworkHelper().sendRefreshPlatformsPacketToChunk(player, x, y, z);
+            } else {
+                LOGGER.warn("Failed to set platform {} enabled state to {} at ({}, {}, {}) - platform not found", 
+                           platformId, enabled, x, y, z);
+            }
+        } else {
+            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for platform enabled state change", x, y, z);
         }
-        
-        // Mark changed and sync using platform services
-        markTownDataDirty(townDataProvider);
-        PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
-        
-        // Notify clients tracking this chunk of the platform state change
-        PlatformServices.getNetworkHelper().sendRefreshPlatformsPacketToChunk(player, x, y, z);
-        
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully set platform {} enabled state to {} at [{}, {}, {}]", 
-                    platformId, enabled, x, y, z);
     }
     
     // Getters for testing

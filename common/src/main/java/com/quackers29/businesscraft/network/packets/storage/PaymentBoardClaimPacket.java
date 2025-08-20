@@ -57,50 +57,43 @@ public class PaymentBoardClaimPacket extends BaseBlockEntityPacket {
                     rewardId, x, y, z, toBuffer);
         
         try {
-            // Get block entity using platform services
-            Object blockEntity = getBlockEntity(player);
-            if (blockEntity == null) {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "No block entity at [{}, {}, {}]", x, y, z);
-                PlatformServices.getPlatformHelper().sendPlayerMessage(player, 
-                    "Error: Invalid town block", "RED");
-                return;
-            }
+            // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+            com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
             
-            Object townDataProvider = getTownDataProvider(blockEntity);
-            if (townDataProvider == null) {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Block at [{}, {}, {}] is not a TownInterfaceEntity", x, y, z);
-                PlatformServices.getPlatformHelper().sendPlayerMessage(player, 
-                    "Error: Invalid town block", "RED");
-                return;
-            }
-            
-            // Attempt to claim the reward through platform services
-            Object claimResult = PlatformServices.getBlockEntityHelper().claimPaymentBoardReward(
-                townDataProvider, player, rewardId, toBuffer);
-            
-            if (claimResult != null) {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed claim for reward {} at [{}, {}, {}]", 
-                           rewardId, x, y, z);
+            if (townData != null) {
+                // Basic validation through unified architecture
+                if (!townData.isTownRegistered()) {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Town not registered at position ({}, {}, {}) for reward claim", x, y, z);
+                    PlatformServices.getPlatformHelper().sendPlayerMessage(player, "Error: Town not registered", "RED");
+                    return;
+                }
                 
-                // Get updated payment board data through platform services
-                java.util.List<Object> unclaimedRewards = PlatformServices.getBlockEntityHelper().getUnclaimedRewards(townDataProvider);
-                PlatformServices.getNetworkHelper().sendPaymentBoardResponsePacket(player, unclaimedRewards);
+                // Complex reward claiming still uses platform services (inventory, item handling)
+                Object blockEntity = getBlockEntity(player);
+                Object claimResult = PlatformServices.getBlockEntityHelper().claimPaymentBoardReward(
+                    blockEntity, player, rewardId, toBuffer);
                 
-                // Mark changed and sync through platform services
-                markTownDataDirty(townDataProvider);
-                
-                // Note: Platform implementations will handle sending BufferSlotStorageResponsePacket
-                // and player inventory management as part of claimPaymentBoardReward
+                if (claimResult != null) {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed claim for reward {} at ({}, {}, {})", 
+                               rewardId, x, y, z);
+                    
+                    // Get updated payment board data through platform services
+                    java.util.List<Object> unclaimedRewards = PlatformServices.getBlockEntityHelper().getUnclaimedRewards(blockEntity);
+                    PlatformServices.getNetworkHelper().sendPaymentBoardResponsePacket(player, unclaimedRewards);
+                    
+                    // Note: Platform implementations handle BufferSlotStorageResponsePacket and inventory management
+                } else {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Failed to claim reward {} at ({}, {}, {})", rewardId, x, y, z);
+                    PlatformServices.getPlatformHelper().sendPlayerMessage(player, "Failed to process claim request", "RED");
+                }
             } else {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Failed to claim reward {} at [{}, {}, {}]", rewardId, x, y, z);
-                PlatformServices.getPlatformHelper().sendPlayerMessage(player, 
-                    "Failed to process claim request", "RED");
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "No TownInterfaceData found at position ({}, {}, {}) for reward claim", x, y, z);
+                PlatformServices.getPlatformHelper().sendPlayerMessage(player, "Error: Invalid town block", "RED");
             }
             
         } catch (Exception e) {
-            LOGGER.error("Error handling claim request at [{}, {}, {}]", x, y, z, e);
-            PlatformServices.getPlatformHelper().sendPlayerMessage(player, 
-                "Error: Failed to process claim request", "RED");
+            LOGGER.error("Error handling claim request at ({}, {}, {})", x, y, z, e);
+            PlatformServices.getPlatformHelper().sendPlayerMessage(player, "Error: Failed to process claim request", "RED");
         }
     }
     

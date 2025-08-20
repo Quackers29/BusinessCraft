@@ -46,33 +46,40 @@ public class OpenDestinationsUIPacket extends BaseBlockEntityPacket {
     
     /**
      * Handle the packet on the server side.
-     * Unified architecture: Gather town data directly and send RefreshDestinationsPacket back to client.
+     * Unified Architecture approach: Direct access to TownInterfaceData without BlockEntityHelper abstraction.
      */
     @Override
     public void handle(Object player) {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing Destinations UI request for platform '{}' at position [{}, {}, {}]", platformId, x, y, z);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing Destinations UI request for platform '{}' at position ({}, {}, {})", platformId, x, y, z);
         
         try {
-            // Get the block entity directly using unified architecture pattern
-            Object blockEntity = PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
-            if (blockEntity == null) {
-                LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
-                return;
-            }
-
-            // Use the NetworkHelper method to gather data and send RefreshDestinationsPacket
-            PlatformServices.getNetworkHelper().sendRefreshDestinationsPacket(
-                player, x, y, z, platformId, 
-                new java.util.HashMap<>(), // townDestinations - will be populated by server
-                new java.util.HashMap<>(), // townNames - will be populated by server  
-                new java.util.HashMap<>(), // distances - will be populated by server
-                new java.util.HashMap<>()  // directions - will be populated by server
-            );
+            // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+            com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
             
-            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully sent destinations data for platform '{}' at [{}, {}, {}]", 
-                platformId, x, y, z);
+            if (townData != null) {
+                // Basic validation through unified architecture
+                if (!townData.isTownRegistered()) {
+                    LOGGER.warn("Town not registered at position ({}, {}, {}) for Destinations UI", x, y, z);
+                    return;
+                }
+                
+                // Complex operations (town lookups, distance calculations) still use platform services
+                // Send refresh destinations packet with updated data
+                PlatformServices.getNetworkHelper().sendRefreshDestinationsPacket(
+                    player, x, y, z, platformId, 
+                    new java.util.HashMap<>(), // townDestinations - will be populated by server
+                    new java.util.HashMap<>(), // townNames - will be populated by server  
+                    new java.util.HashMap<>(), // distances - will be populated by server
+                    new java.util.HashMap<>()  // directions - will be populated by server
+                );
+                
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully sent destinations data for platform '{}' at ({}, {}, {})", 
+                    platformId, x, y, z);
+            } else {
+                LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for Destinations UI", x, y, z);
+            }
         } catch (Exception e) {
-            LOGGER.warn("Failed to process destinations data for platform '{}' at [{}, {}, {}]: {}", 
+            LOGGER.warn("Failed to process destinations data for platform '{}' at ({}, {}, {}): {}", 
                 platformId, x, y, z, e.getMessage());
         }
     }

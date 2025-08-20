@@ -41,32 +41,29 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
     
     /**
      * Handle the packet on the server side.
-     * This method registers player UI exit with the town interface entity for proper cleanup.
+     * Unified Architecture approach: Direct access to TownInterfaceData without BlockEntityHelper abstraction.
      */
     @Override
     public void handle(Object player) {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Player exiting UI at position [{}, {}, {}]", x, y, z);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing PlayerExitUIPacket at position ({}, {}, {})", x, y, z);
         
-        // Get the town interface entity using platform services
-        Object blockEntity = getBlockEntity(player);
-        if (blockEntity == null) {
-            LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
-            return;
-        }
-
-        Object townDataProvider = getTownDataProvider(blockEntity);
-        if (townDataProvider == null) {
-            LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
-            return;
-        }
+        // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
         
-        // Register player UI exit through platform services
-        boolean success = PlatformServices.getBlockEntityHelper().registerPlayerExitUI(townDataProvider, player);
-        
-        if (success) {
-            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully registered player UI exit at [{}, {}, {}]", x, y, z);
+        if (townData != null) {
+            // For UI exit, the primary concern is platform-specific cleanup
+            // The town data itself doesn't need updates, but we need platform services for UI cleanup
+            
+            // Platform-specific operations for UI cleanup
+            boolean success = PlatformServices.getBlockEntityHelper().registerPlayerExitUI(getBlockEntity(player), player);
+            
+            if (success) {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully registered player UI exit at ({}, {}, {})", x, y, z);
+            } else {
+                LOGGER.warn("Failed to register player UI exit at ({}, {}, {}) - platform cleanup failed", x, y, z);
+            }
         } else {
-            LOGGER.warn("Failed to register player UI exit at [{}, {}, {}]", x, y, z);
+            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for player UI exit", x, y, z);
         }
     }
     

@@ -49,34 +49,35 @@ public class PaymentBoardRequestPacket extends BaseBlockEntityPacket {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Received payment board data request from player for town block at [{}, {}, {}]", getX(), getY(), getZ());
         
         try {
-            // Enhanced MultiLoader: Use platform services for cross-platform compatibility
-            Object blockEntity = getBlockEntity(player);
-            if (blockEntity == null) {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "No block entity found at [{}, {}, {}]", getX(), getY(), getZ());
-                return;
-            }
+            // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+            com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
             
-            Object townDataProvider = getTownDataProvider(blockEntity);
-            if (townDataProvider == null) {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "No TownInterfaceEntity found at [{}, {}, {}]", getX(), getY(), getZ());
-                return;
-            }
-            
-            // Get unclaimed rewards through platform services
-            List<Object> unclaimedRewards = PlatformServices.getBlockEntityHelper().getUnclaimedRewards(townDataProvider);
-            
-            if (unclaimedRewards != null) {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Sending {} rewards to player for town block at [{}, {}, {}]", 
-                           unclaimedRewards.size(), x, y, z);
+            if (townData != null) {
+                // Basic validation through unified architecture
+                if (!townData.isTownRegistered()) {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Town not registered at position ({}, {}, {}) for payment board request", x, y, z);
+                    return;
+                }
                 
-                // Send the rewards to the client through platform services
-                PlatformServices.getNetworkHelper().sendPaymentBoardResponsePacket(player, unclaimedRewards);
+                // Complex payment board operations still use platform services (reward data handling)
+                Object blockEntity = getBlockEntity(player);
+                List<Object> unclaimedRewards = PlatformServices.getBlockEntityHelper().getUnclaimedRewards(blockEntity);
+                
+                if (unclaimedRewards != null) {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Sending {} rewards to player for town block at ({}, {}, {})", 
+                               unclaimedRewards.size(), x, y, z);
+                    
+                    // Send the rewards to the client through platform services
+                    PlatformServices.getNetworkHelper().sendPaymentBoardResponsePacket(player, unclaimedRewards);
+                } else {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "No unclaimed rewards found for town block at ({}, {}, {})", x, y, z);
+                }
             } else {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "No unclaimed rewards found for town block at [{}, {}, {}]", x, y, z);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "No TownInterfaceData found at position ({}, {}, {}) for payment board request", x, y, z);
             }
             
         } catch (Exception e) {
-            LOGGER.error("Error handling payment board data request at [{}, {}, {}]", x, y, z, e);
+            LOGGER.error("Error handling payment board data request at ({}, {}, {})", x, y, z, e);
         }
     }
     

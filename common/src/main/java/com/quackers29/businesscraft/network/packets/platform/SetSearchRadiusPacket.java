@@ -49,27 +49,23 @@ public class SetSearchRadiusPacket extends BaseBlockEntityPacket {
     public void handle(Object player) {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing SetSearchRadiusPacket for position ({}, {}, {}) with radius: {}", x, y, z, radius);
         
-        // Enhanced MultiLoader: Use platform services for cross-platform compatibility
-        Object blockEntity = getBlockEntity(player);
-        if (blockEntity != null) {
-            Object townDataProvider = getTownDataProvider(blockEntity);
-            if (townDataProvider != null) {
-                // Core business logic - update search radius through platform services
-                int oldRadius = PlatformServices.getBlockEntityHelper().getSearchRadius(townDataProvider);
-                
-                // Use platform services for cross-platform compatibility
-                PlatformServices.getBlockEntityHelper().setSearchRadius(townDataProvider, radius);
-                markTownDataDirty(townDataProvider);
-                
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Search radius updated successfully from {} to {}", oldRadius, radius);
-                
-                // Platform services can handle menu refreshing if needed
-                PlatformServices.getMenuHelper().refreshActiveMenu(player, "search_radius");
-            } else {
-                LOGGER.warn("No town data provider found at position ({}, {}, {}) for search radius change", x, y, z);
-            }
+        // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
+        
+        if (townData != null) {
+            // Direct business logic access - no abstraction layer needed
+            int oldRadius = townData.getSearchRadius();
+            townData.setSearchRadius(radius);
+            
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Search radius updated successfully from {} to {}", oldRadius, radius);
+            
+            // Platform-specific operations still use platform services
+            PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
+            
+            // Platform services can handle menu refreshing if needed
+            PlatformServices.getMenuHelper().refreshActiveMenu(player, "search_radius");
         } else {
-            LOGGER.warn("No block entity found at position ({}, {}, {}) for search radius change", x, y, z);
+            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for search radius change", x, y, z);
         }
     }
     

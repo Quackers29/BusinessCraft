@@ -41,35 +41,36 @@ public class OpenPaymentBoardPacket extends BaseBlockEntityPacket {
 
     /**
      * Handle the packet on the server side.
-     * This method contains the core server-side logic which is platform-agnostic.
+     * Unified Architecture approach: Direct access to TownInterfaceData without BlockEntityHelper abstraction.
      */
     public void handle(Object player) {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Opening Payment Board for player at position [{}, {}, {}]", getX(), getY(), getZ());
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing OpenPaymentBoardPacket at position ({}, {}, {})", getX(), getY(), getZ());
         
         try {
-            // Get block entity using platform services
-            Object blockEntity = getBlockEntity(player);
-            if (blockEntity == null) {
-                LOGGER.warn("No block entity found at position [{}, {}, {}] for Payment Board UI", getX(), getY(), getZ());
-                return;
-            }
+            // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+            com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
             
-            Object townDataProvider = getTownDataProvider(blockEntity);
-            if (townDataProvider == null) {
-                LOGGER.warn("No TownInterfaceEntity found at position [{}, {}, {}] for Payment Board UI", getX(), getY(), getZ());
-                return;
-            }
-            
-            // Use platform service to open Payment Board UI
-            boolean success = PlatformServices.getBlockEntityHelper().openPaymentBoardUI(townDataProvider, player);
-            
-            if (success) {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully opened Payment Board for player at [{}, {}, {}]", getX(), getY(), getZ());
+            if (townData != null) {
+                // Basic validation through unified architecture
+                if (!townData.isTownRegistered()) {
+                    LOGGER.warn("Town not registered at position ({}, {}, {}) for Payment Board UI", getX(), getY(), getZ());
+                    return;
+                }
+                
+                // Complex UI operations still use platform services (appropriate abstraction)
+                Object blockEntity = getBlockEntity(player);
+                boolean success = PlatformServices.getBlockEntityHelper().openPaymentBoardUI(blockEntity, player);
+                
+                if (success) {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully opened Payment Board for player at ({}, {}, {})", getX(), getY(), getZ());
+                } else {
+                    LOGGER.warn("Failed to open Payment Board for player at ({}, {}, {}) - UI opening failed", getX(), getY(), getZ());
+                }
             } else {
-                LOGGER.warn("Failed to open Payment Board for player at [{}, {}, {}]", getX(), getY(), getZ());
+                LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for Payment Board UI", getX(), getY(), getZ());
             }
         } catch (Exception e) {
-            LOGGER.error("Error handling open Payment Board request at [{}, {}, {}]", getX(), getY(), getZ(), e);
+            LOGGER.error("Error handling open Payment Board request at ({}, {}, {})", getX(), getY(), getZ(), e);
         }
     }
 }

@@ -78,32 +78,32 @@ public class BufferSlotStorageResponsePacket extends BaseBlockEntityPacket {
     
     /**
      * Handle the packet on the client side.
-     * This method updates the client-side payment board buffer UI.
+     * Unified Architecture approach: Client-side UI operations appropriately use platform services.
      */
     @Override
     public void handle(Object player) {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing buffer slot storage response with {} items at position [{}, {}, {}]", 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing buffer slot storage response with {} items at position ({}, {}, {})", 
                     bufferSlots.size(), x, y, z);
         
         if (!isSuccess) {
-            LOGGER.warn("Received failed buffer slot storage response at [{}, {}, {}]", x, y, z);
+            LOGGER.warn("Received failed buffer slot storage response at ({}, {}, {})", x, y, z);
             return;
         }
         
-        // Update client-side buffer storage UI through platform services
+        // Client-side UI operations appropriately use platform services (complex GUI interactions)
         boolean success = PlatformServices.getBlockEntityHelper().updateBufferStorageUI(player, x, y, z, bufferSlots);
         
         if (success) {
-            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully updated buffer storage UI with {} items at [{}, {}, {}]", 
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully updated buffer storage UI with {} items at ({}, {}, {})", 
                         bufferSlots.size(), x, y, z);
         } else {
-            LOGGER.warn("Failed to update buffer storage UI at [{}, {}, {}]", x, y, z);
+            LOGGER.warn("Failed to update buffer storage UI at ({}, {}, {})", x, y, z);
         }
     }
     
     /**
-     * Handle the packet on the client side.
-     * This method contains the core client-side logic which is platform-agnostic.
+     * Alternative client-side handler.
+     * Unified Architecture approach: Client-side operations appropriately use platform services.
      */
     public void handleClient() {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Received buffer slot storage update with {} items", bufferSlots.size());
@@ -113,14 +113,14 @@ public class BufferSlotStorageResponsePacket extends BaseBlockEntityPacket {
             Object currentScreen = PlatformServices.getPlatformHelper().getCurrentScreen();
             
             if (currentScreen != null) {
-                // Update client-side buffer storage UI through platform services
+                // Client-side UI operations appropriately use platform services (complex GUI interactions)
                 boolean success = PlatformServices.getBlockEntityHelper().updateBufferStorageUI(null, x, y, z, bufferSlots);
                 
                 if (success) {
-                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully updated buffer storage UI with {} items at [{}, {}, {}]", 
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully updated buffer storage UI with {} items at ({}, {}, {})", 
                                 bufferSlots.size(), x, y, z);
                 } else {
-                    LOGGER.warn("Failed to update buffer storage UI at [{}, {}, {}]", x, y, z);
+                    LOGGER.warn("Failed to update buffer storage UI at ({}, {}, {})", x, y, z);
                 }
             } else {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "No current screen to update with buffer storage data");

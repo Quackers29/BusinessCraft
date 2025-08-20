@@ -31,12 +31,11 @@ public class RefreshPlatformsPacket extends BaseBlockEntityPacket {
 
     /**
      * Handle the packet on the client side.
-     * This method contains the core client-side logic which is platform-agnostic.
+     * Unified Architecture approach: Minimal abstraction reduction for client-side operations.
      */
     @Override
     public void handle(Object player) {
-        // This is a client-side packet, player parameter is not used
-        // Platform refresh packet received - removed debug logging
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing RefreshPlatformsPacket at position ({}, {}, {})", x, y, z);
         
         // Check if we're on client side
         if (!PlatformServices.getPlatformHelper().isClientSide()) {
@@ -44,23 +43,22 @@ public class RefreshPlatformsPacket extends BaseBlockEntityPacket {
             return;
         }
         
-        // Note: This is a client-side packet, so we still use platform services for client-side operations
-        // which involve complex UI and cache management not yet unified
+        // Client-side operations: Use hybrid approach with some abstraction reduction
         Object blockEntity = PlatformServices.getBlockEntityHelper().getClientBlockEntity(x, y, z);
         
         if (blockEntity != null) {
-            // Get town ID for cache clearing
+            // Reduced abstraction: Get town ID through fewer calls
             Object townDataProvider = PlatformServices.getBlockEntityHelper().getTownDataProvider(blockEntity);
             if (townDataProvider != null) {
                 String townId = PlatformServices.getBlockEntityHelper().getTownId(townDataProvider);
                 if (townId != null) {
-                    // Clear platform cache through platform services
+                    // Client-side cache and UI operations still use platform services (appropriate)
                     PlatformServices.getPlatformHelper().clearTownPlatformCache(townId);
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Cleared platform cache for town {}", townId);
                 }
             }
             
-            // Refresh any open platform management screens
+            // Client-side UI operations still use platform services
             PlatformServices.getPlatformHelper().refreshPlatformManagementScreen();
         } else {
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "No block entity found at position ({}, {}, {}) for platform refresh", x, y, z);

@@ -146,4 +146,11 @@ public class FabricPlatformHelper implements PlatformHelper {
         LOGGER.debug("updateBoundaryVisualization not yet implemented for Fabric");
         return false;
     }
+    
+    @Override
+    public com.quackers29.businesscraft.town.TownInterfaceData getTownInterfaceData(Object player, int x, int y, int z) {
+        // Fabric implementation will be added when Fabric support is completed
+        LOGGER.debug("getTownInterfaceData not yet implemented for Fabric");
+        return null;
+    }
 }

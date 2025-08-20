@@ -43,33 +43,34 @@ public class DeletePlatformPacket extends BaseBlockEntityPacket {
 
     /**
      * Handle the packet on the server side.
-     * Unified Architecture approach: Direct access to TownInterfaceEntity methods.
+     * Unified Architecture approach: Direct access to TownInterfaceData without BlockEntityHelper abstraction.
      */
     @Override
     public void handle(Object player) {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Deleting platform {} from town at ({}, {}, {})", platformId, x, y, z);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing DeletePlatformPacket for platform {} at ({}, {}, {})", platformId, x, y, z);
         
-        // Get the town interface entity using platform services
-        Object blockEntity = getBlockEntity(player);
-        if (blockEntity == null) {
-            LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
-            return;
-        }
-
-        Object townDataProvider = getTownDataProvider(blockEntity);
-        if (townDataProvider == null) {
-            LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
-            return;
-        }
+        // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
         
-        // Delete platform through platform services
-        // NOTE: Platform service handles complex platform operations
-        boolean success = PlatformServices.getBlockEntityHelper().removePlatform(townDataProvider, platformId);
-        
-        if (success) {
-            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully deleted platform {} from town at [{}, {}, {}]", platformId, x, y, z);
+        if (townData != null) {
+            // Direct business logic access - no abstraction layer needed
+            boolean success = townData.removePlatformById(platformId);
+            
+            if (success) {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully deleted platform {} from town at ({}, {}, {})", platformId, x, y, z);
+                
+                // Platform-specific operations still use platform services
+                PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
+                
+                // Send refresh packet to all tracking clients
+                PlatformServices.getNetworkHelper().sendToAllClients(
+                    new RefreshPlatformsPacket(x, y, z)
+                );
+            } else {
+                LOGGER.warn("Failed to delete platform {} from town at ({}, {}, {}) - platform not found", platformId, x, y, z);
+            }
         } else {
-            LOGGER.warn("Failed to delete platform {} from town at [{}, {}, {}]", platformId, x, y, z);
+            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for platform deletion", x, y, z);
         }
     }
     

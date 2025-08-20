@@ -31,30 +31,24 @@ public class AddPlatformPacket extends BaseBlockEntityPacket {
 
     /**
      * Handle the packet on the server side.
-     * This method contains the core business logic which is platform-agnostic.
+     * Unified Architecture approach: Direct access to TownInterfaceData without BlockEntityHelper abstraction.
      */
     @Override
     public void handle(Object player) {
-        // Platform addition request - removed debug logging
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing AddPlatformPacket for position ({}, {}, {})", x, y, z);
         
-        // Get town interface using platform services
-        Object blockEntity = getBlockEntity(player);
-        if (blockEntity == null) {
-            LOGGER.warn("No block entity found at [{}, {}, {}]", x, y, z);
-            return;
-        }
-
-        Object townDataProvider = getTownDataProvider(blockEntity);
-        if (townDataProvider != null) {
-            // Check if we can add more platforms through platform services
-            boolean canAdd = PlatformServices.getBlockEntityHelper().canAddMorePlatforms(townDataProvider);
-            
-            if (canAdd) {
-                // Add platform through platform services
-                boolean added = PlatformServices.getBlockEntityHelper().addPlatform(townDataProvider);
+        // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
+        
+        if (townData != null) {
+            // Direct business logic access - no abstraction layer needed
+            if (townData.canAddMorePlatforms()) {
+                boolean added = townData.addPlatform();
                 
                 if (added) {
-                    // Platform added successfully - removed debug logging
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Platform added successfully at ({}, {}, {})", x, y, z);
+                    
+                    // Platform-specific operations still use platform services
                     PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
                     
                     // Send refresh packet to all tracking clients
@@ -62,13 +56,13 @@ public class AddPlatformPacket extends BaseBlockEntityPacket {
                         new RefreshPlatformsPacket(x, y, z)
                     );
                 } else {
-                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Failed to add platform to town block at ({}, {}, {}) - internal error", x, y, z);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Failed to add platform at ({}, {}, {}) - internal error", x, y, z);
                 }
             } else {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Failed to add platform to town block at ({}, {}, {}) - already at max capacity", x, y, z);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Cannot add platform at ({}, {}, {}) - already at max capacity", x, y, z);
             }
         } else {
-            LOGGER.warn("No TownInterfaceEntity found at position ({}, {}, {}) for platform addition", x, y, z);
+            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for platform addition", x, y, z);
         }
     }
 }

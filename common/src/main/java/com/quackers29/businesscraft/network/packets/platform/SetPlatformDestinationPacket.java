@@ -55,45 +55,33 @@ public class SetPlatformDestinationPacket extends BaseBlockEntityPacket {
     
     /**
      * Handle the packet on the server side.
-     * Unified Architecture approach: Direct access to TownInterfaceEntity methods where possible.
+     * Unified Architecture approach: Direct access to TownInterfaceData without BlockEntityHelper abstraction.
      */
     @Override
     public void handle(Object player) {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Player is setting destination {} to {} for platform {} at [{}, {}, {}]", 
-                    townId, enabled, platformId, x, y, z);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing SetPlatformDestinationPacket: platform {} destination {} enabled={} at ({}, {}, {})", 
+                    platformId, townId, enabled, x, y, z);
         
-        // Get the town interface block entity using platform services
-        Object blockEntity = getBlockEntity(player);
-        if (blockEntity == null) {
-            LOGGER.warn("No block entity found at [{}, {}, {}]", x, y, z);
-            return;
-        }
-
-        Object townDataProvider = getTownDataProvider(blockEntity);
-        if (townDataProvider == null) {
-            LOGGER.warn("Block entity not found at [{}, {}, {}]", x, y, z);
-            return;
-        }
+        // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
+        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
         
-        // Set the destination enabled state through platform services
-        // Note: Complex platform destination operations still need platform layer for town management
-        boolean success = PlatformServices.getBlockEntityHelper().setPlatformDestinationEnabled(
-            townDataProvider, platformId, townId, enabled);
+        if (townData != null) {
+            // Direct business logic access - no abstraction layer needed
+            boolean success = townData.setPlatformDestinationEnabled(platformId, townId, enabled);
             
-        if (!success) {
-            LOGGER.warn("Failed to set destination {} to {} for platform {} at [{}, {}, {}]", 
-                       townId, enabled, platformId, x, y, z);
-            return;
+            if (success) {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully set destination {} to {} for platform {} at ({}, {}, {})", 
+                            townId, enabled, platformId, x, y, z);
+                
+                // Complex operations (town lookups, distance calculations) still use platform services
+                sendRefreshDestinationsPacket(player, getTownDataProvider(getBlockEntity(player)));
+            } else {
+                LOGGER.warn("Failed to set destination {} to {} for platform {} at ({}, {}, {}) - platform or town not found", 
+                           townId, enabled, platformId, x, y, z);
+            }
+        } else {
+            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for platform destination setting", x, y, z);
         }
-        
-        // Mark changed and sync using platform services
-        markTownDataDirty(townDataProvider);
-        
-        // Send refresh destinations packet back to client
-        sendRefreshDestinationsPacket(player, townDataProvider);
-        
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully set destination {} to {} for platform {} at [{}, {}, {}]", 
-                    townId, enabled, platformId, x, y, z);
     }
     
     /**

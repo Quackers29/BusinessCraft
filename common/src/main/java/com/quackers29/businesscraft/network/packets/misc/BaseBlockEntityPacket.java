@@ -55,32 +55,38 @@ public abstract class BaseBlockEntityPacket {
     }
     
     /**
-     * Get the block entity at the packet coordinates through platform services.
-     * Enhanced MultiLoader approach: Use platform services for cross-platform compatibility.
+     * Get TownInterfaceData at the packet coordinates (Unified Architecture).
+     * This replaces the over-abstracted BlockEntityHelper pattern with direct data access.
      * 
      * @param player Platform-specific player object
-     * @return Block entity at coordinates, or null if not found
+     * @return TownInterfaceData object, or null if not found
      */
+    protected com.quackers29.businesscraft.town.TownInterfaceData getTownInterfaceData(Object player) {
+        return PlatformServices.getPlatformHelper().getTownInterfaceData(player, x, y, z);
+    }
+    
+    // === LEGACY METHODS (DEPRECATED - Use getTownInterfaceData() instead) ===
+    
+    /**
+     * @deprecated Use getTownInterfaceData() for unified architecture
+     */
+    @Deprecated
     protected Object getBlockEntity(Object player) {
         return PlatformServices.getBlockEntityHelper().getBlockEntity(player, x, y, z);
     }
     
     /**
-     * Get the town data provider from a block entity through platform services.
-     * 
-     * @param blockEntity Block entity to get town data from
-     * @return Town data provider, or null if not applicable
+     * @deprecated Use getTownInterfaceData() for unified architecture
      */
+    @Deprecated
     protected Object getTownDataProvider(Object blockEntity) {
         return PlatformServices.getBlockEntityHelper().getTownDataProvider(blockEntity);
     }
     
     /**
-     * Mark the town data as changed and sync through platform services.
-     * Enhanced MultiLoader approach: Use platform services for cross-platform compatibility.
-     * 
-     * @param townDataProvider The town data provider to mark changed
+     * @deprecated Use TownInterfaceData.markDirty() for unified architecture
      */
+    @Deprecated
     protected void markTownDataDirty(Object townDataProvider) {
         if (townDataProvider != null) {
             PlatformServices.getBlockEntityHelper().markTownDataDirty(townDataProvider);
