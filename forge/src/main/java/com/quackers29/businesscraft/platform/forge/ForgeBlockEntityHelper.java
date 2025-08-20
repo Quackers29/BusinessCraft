@@ -2098,32 +2098,29 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Current screen class: {}", simpleClassName);
             
             if ("PaymentBoardScreen".equals(simpleClassName)) {
-                // Convert Map<Integer, Object> (slot -> ItemStack) to Map<Item, Integer> (Item -> count)
-                java.util.Map<net.minecraft.world.item.Item, Integer> itemCounts = new java.util.HashMap<>();
+                // Convert Map<Integer, Object> to SlotBasedStorage for slot-based update
+                com.quackers29.businesscraft.town.data.SlotBasedStorage clientSlotStorage = 
+                    new com.quackers29.businesscraft.town.data.SlotBasedStorage(18); // 18 slots for buffer
                 
                 for (java.util.Map.Entry<Integer, Object> entry : bufferSlots.entrySet()) {
+                    int slotIndex = entry.getKey();
                     if (entry.getValue() instanceof net.minecraft.world.item.ItemStack stack && !stack.isEmpty()) {
-                        net.minecraft.world.item.Item item = stack.getItem();
-                        int count = stack.getCount();
-                        
-                        // Add to existing count if item already exists
-                        itemCounts.merge(item, count, Integer::sum);
-                        
-                        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Slot {}: {} x{}", entry.getKey(), item, count);
+                        clientSlotStorage.setSlot(slotIndex, stack);
+                        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Setting slot {}: {} x{}", slotIndex, stack.getItem(), stack.getCount());
                     }
                 }
                 
-                DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Converted {} slots to {} unique items", bufferSlots.size(), itemCounts.size());
+                DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Created SlotBasedStorage with {} slots", bufferSlots.size());
                 
-                // Use reflection to call updateBufferStorageItems method
+                // Use reflection to call updateBufferStorageSlots method (the new slot-based method)
                 java.lang.reflect.Method updateMethod = currentScreen.getClass()
-                    .getMethod("updateBufferStorageItems", java.util.Map.class);
+                    .getMethod("updateBufferStorageSlots", com.quackers29.businesscraft.town.data.SlotBasedStorage.class);
                 
-                DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Found updateBufferStorageItems method: {}", updateMethod);
+                DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Found updateBufferStorageSlots method: {}", updateMethod);
                 
-                updateMethod.invoke(currentScreen, itemCounts);
+                updateMethod.invoke(currentScreen, clientSlotStorage);
                 
-                DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Successfully invoked PaymentBoardScreen.updateBufferStorageItems() with {} items", itemCounts.size());
+                DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Successfully invoked PaymentBoardScreen.updateBufferStorageSlots() with {} slots", bufferSlots.size());
                 return true;
             } else {
                 DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Screen is not PaymentBoardScreen: {}", simpleClassName);

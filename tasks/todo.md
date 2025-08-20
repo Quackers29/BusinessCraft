@@ -37,6 +37,11 @@
   - **Bread Resource Fix**: Resolved negative bread issue on new towns with tourist spawning
   - **Bread-to-Population Conversion**: Added bread-to-population conversion logic matching main branch behavior
   - **Tourist Visit Population Increase**: Fixed using correct config `populationPerTourist=10` (every 10 tourists = +1 pop) instead of incorrect `touristsPerPopulationIncrease=2`
+- [x] **Payment Board Buffer Storage Ghost Items Fix**: Fixed claims not converting to actual clickable items in buffer storage - **USER TESTED ✅**
+  - **Root Cause**: `ForgeBlockEntityHelper.updateBufferStorageUI()` was using legacy `updateBufferStorageItems()` method that collapsed slot data into item counts, losing exact slot positions needed for proper UI display
+  - **Solution**: Changed to use slot-based `updateBufferStorageSlots()` method throughout the chain, preserving exact slot positions using `SlotBasedStorage`
+  - **Technical Fix**: Modified `ForgeBlockEntityHelper.java:2086-2134` and added `PaymentBoardScreen.updateBufferStorageSlots()` method
+  - **Result**: Claimed rewards now appear as proper clickable items in buffer storage instead of disappearing ghost items
 
 ## 🔧 **DEVELOPMENT NOTES**
 

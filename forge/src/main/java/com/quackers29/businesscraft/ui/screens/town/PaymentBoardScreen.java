@@ -842,10 +842,17 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     }
     
     /**
-     * Update the buffer storage display with items from the server
+     * Update the buffer storage display with items from the server (legacy method)
      */
     public void updateBufferStorageItems(Map<Item, Integer> items) {
         this.menu.updateBufferStorageItems(items);
+    }
+    
+    /**
+     * Update the buffer storage display with slot-based data from the server (new method)
+     */
+    public void updateBufferStorageSlots(com.quackers29.businesscraft.town.data.SlotBasedStorage slotStorage) {
+        this.menu.updateBufferStorageSlots(slotStorage);
     }
     
     private boolean isMouseOverBackButton(int mouseX, int mouseY) {
