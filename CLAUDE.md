@@ -25,10 +25,25 @@ Record everything in a .claude/tasks/[TASK_ID]/onboarding.md file. This file wil
 0. Always read ALL of CLAUDE.md and tasks/todo.md every time the user has prompted you to continue on so this stays fresh.
 1. First, read the codebase for relevant files, and write a plan to tasks/todo.md.
 2. The plan should have a list of todo items that you can check off as you complete them.
-3. Before you begin working, check in with me and I will verify the plan. Use the 'Notify User' command to notify me prior to any input to get my attention (including when you complete).
+3. Before you begin working, check in with me and I will verify the plan. Use the webhook communication method to notify me prior to any input to get my attention (including when you complete).
 4. Then, begin working on the todo items, keep on marking them off as you go in the file so I can track progress.
 5. **Client Testing Protocol**: If any testing requires user interaction with the Minecraft client (UI testing, gameplay verification, save/reload cycles, etc.), notify me to conduct the testing instead of attempting automated testing.
 6. Finally, if you have noticed you have move onto your next task, move the previously completed task to the bottom of the done.md file, using similar style to whats already in the end of that file.
+
+## Communication Protocol
+
+**PRIMARY COMMUNICATION METHOD**: Use webhook notifications to communicate with the user during development work.
+
+### Webhook Communication
+- **URL**: `https://sawfly-hardy-randomly.ngrok-free.app/webhook/6f7b288e-1efe-4504-a6fd-660931327269?message=[YOUR_MESSAGE]`
+- **Usage**: Send messages via WebFetch tool to notify user of progress, completion, or need for input
+- **Response**: User responds through Telegram integration linked to the webhook
+- **Stop Protocol**: If user responds with 'stop', finish current task and return to command line communication
+- **Default Method**: Use this for all notifications, progress updates, and requests for user input
+
+### Legacy Communication
+- **Beep Command**: `powershell.exe -Command "[console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200)"`
+- **Usage**: Fallback method only when webhook is not available
 
 ## Project Overview
 
@@ -118,7 +133,8 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 - **Run client**: `./gradlew runClient`
 - **Run server**: `./gradlew runServer`
 - **Clean build**: `./gradlew clean build`
-- **Notify User**: `powershell.exe -Command "[console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200)"`
+- **Notify User (Legacy)**: `powershell.exe -Command "[console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200)"`
+- **Communicate with User (Primary)**: Send message via webhook: `https://sawfly-hardy-randomly.ngrok-free.app/webhook/6f7b288e-1efe-4504-a6fd-660931327269?message=[YOUR_MESSAGE]`
 
 ### Testing
 - **Run all tests**: `./gradlew test`

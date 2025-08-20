@@ -33,7 +33,8 @@
       "WebFetch(domain:github.com)",
       "WebSearch",
       "Bash(wc:*)",
-      "Bash(GRADLE_USER_HOME=/tmp/gradle_temp ./gradlew --no-daemon build)"
+      "Bash(GRADLE_USER_HOME=/tmp/gradle_temp ./gradlew --no-daemon build)",
+      "WebFetch(domain:sawfly-hardy-randomly.ngrok-free.app)"
     ],
     "deny": []
   }
