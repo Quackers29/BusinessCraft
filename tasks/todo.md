@@ -17,7 +17,10 @@
 - [x] **Map View System**: Towns visible, platforms displayed, boundaries rendered - fully functional
 - [x] **Payment Board System**: Rewards claimable, buffer storage working, persistence operational
 - [x] **Town Data Persistence**: All town data persists correctly across save/reload cycles
-- [x] **Visit History System**: Visit tracking and persistence working correctly
+- [x] **Visit History System**: Visit tracking and persistence working correctly - **USER VERIFIED ✅**
+  - **Visitor History Display**: Fixed duplicate entries (legacy records with 0,0,0 coords vs new records with actual coords)
+  - **Smart Deduplication**: Implemented intelligent merging preferring records with valid coordinates
+  - **Proper Sorting**: Added timestamp sorting (newest first) matching main branch behavior
 - [x] **Platform Creation**: "Add Platform" button working - platform creation functional
 - [x] **Platform Destinations**: Destination button opens UI correctly - navigation working
 - [x] **Platform Path Setting**: Setting new path works correctly - path creation functional
