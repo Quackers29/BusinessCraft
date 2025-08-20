@@ -38,6 +38,13 @@ public class ClientSyncHelper {
     private final Map<UUID, String> townNameCache = new HashMap<>();
     
     /**
+     * Constructor - registers this instance for global cache clearing
+     */
+    public ClientSyncHelper() {
+        registerInstance();
+    }
+    
+    /**
      * Adds resource data to the provided tag for client-side rendering
      * This centralizes our resource serialization logic in one place
      */
@@ -372,6 +379,42 @@ public class ClientSyncHelper {
         clientPersonalStorage.clear();
         clientVisitHistory.clear();
         townNameCache.clear();
+    }
+    
+    /**
+     * Clears only the town name cache (for when town names change)
+     */
+    public void clearTownNameCache() {
+        townNameCache.clear();
+    }
+    
+    // Static reference for global cache clearing
+    private static final java.util.Set<ClientSyncHelper> allInstances = java.util.Collections.synchronizedSet(new java.util.HashSet<>());
+    
+    /**
+     * Register this instance for global cache clearing
+     */
+    private void registerInstance() {
+        allInstances.add(this);
+    }
+    
+    /**
+     * Unregister this instance (for cleanup)
+     */
+    private void unregisterInstance() {
+        allInstances.remove(this);
+    }
+    
+    /**
+     * Global method to clear all town name caches across all ClientSyncHelper instances
+     */
+    public static void clearAllTownNameCaches() {
+        synchronized (allInstances) {
+            for (ClientSyncHelper instance : allInstances) {
+                instance.clearTownNameCache();
+            }
+        }
+        LOGGER.debug("Cleared town name caches for {} ClientSyncHelper instances", allInstances.size());
     }
     
     /**

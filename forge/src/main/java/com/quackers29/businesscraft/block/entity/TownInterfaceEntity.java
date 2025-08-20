@@ -967,6 +967,13 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     public String getTownNameFromId(UUID townId) {
         return clientSyncHelper.getTownNameFromId(townId, level);
     }
+    
+    /**
+     * Clears the town name cache (used when town names change)
+     */
+    public void clearTownNameCache() {
+        clientSyncHelper.clearTownNameCache();
+    }
 
 
 

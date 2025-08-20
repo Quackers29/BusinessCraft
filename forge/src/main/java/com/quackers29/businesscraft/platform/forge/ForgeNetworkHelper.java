@@ -13,6 +13,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import net.minecraftforge.network.PacketDistributor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -363,14 +364,86 @@ public class ForgeNetworkHelper implements NetworkHelper {
             return;
         }
         
-        // Create and send the payment board response packet
+        // Refresh origin town names with current names before sending to client
+        LOGGER.info("DEBUG: About to refresh {} reward names before sending to client", unclaimedRewards.size());
+        List<Object> refreshedRewards = refreshOriginTownNames(unclaimedRewards, serverPlayer.serverLevel());
+        
+        // Create and send the payment board response packet with refreshed data
         com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket packet = 
-            new com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket(unclaimedRewards);
+            new com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket(refreshedRewards);
         
         ModMessages.sendToPlayer(packet, serverPlayer);
         
         LOGGER.debug("Sent PaymentBoardResponsePacket to player {}: {} rewards", 
-            serverPlayer.getName().getString(), unclaimedRewards.size());
+            serverPlayer.getName().getString(), refreshedRewards.size());
+    }
+    
+    /**
+     * Refreshes origin town names in reward metadata with current town names
+     */
+    private List<Object> refreshOriginTownNames(List<Object> rewards, net.minecraft.server.level.ServerLevel serverLevel) {
+        List<Object> refreshedRewards = new ArrayList<>();
+        
+        for (Object reward : rewards) {
+            if (reward instanceof com.quackers29.businesscraft.town.data.RewardEntry rewardEntry) {
+                // Create a copy of the reward with refreshed origin town name
+                com.quackers29.businesscraft.town.data.RewardEntry refreshedReward = createRewardCopyWithRefreshedOriginName(rewardEntry, serverLevel);
+                refreshedRewards.add(refreshedReward);
+            } else {
+                // Non-RewardEntry objects pass through unchanged
+                refreshedRewards.add(reward);
+            }
+        }
+        
+        return refreshedRewards;
+    }
+    
+    /**
+     * Creates a copy of a RewardEntry with refreshed origin town name
+     */
+    private com.quackers29.businesscraft.town.data.RewardEntry createRewardCopyWithRefreshedOriginName(
+            com.quackers29.businesscraft.town.data.RewardEntry original, 
+            net.minecraft.server.level.ServerLevel serverLevel) {
+        
+        // Get the origin town UUID from metadata
+        String originTownId = original.getMetadata().get("originTownId");
+        
+        if (originTownId != null && !originTownId.isEmpty()) {
+            try {
+                java.util.UUID townUUID = java.util.UUID.fromString(originTownId);
+                
+                // Get current town name from server
+                com.quackers29.businesscraft.town.Town town = com.quackers29.businesscraft.town.TownManager.get(serverLevel).getTown(townUUID);
+                if (town != null) {
+                    String currentTownName = town.getName();
+                    
+                    // Create a copy with updated origin town name
+                    com.quackers29.businesscraft.town.data.RewardEntry copy = com.quackers29.businesscraft.town.data.RewardEntry.fromNetworkWithMetadata(
+                        original.getId(),
+                        original.getTimestamp(),
+                        original.getExpirationTime(),
+                        original.getSource(),
+                        original.getRewards(),
+                        original.getStatus(),
+                        original.getEligibility(),
+                        new java.util.HashMap<>(original.getMetadata())
+                    );
+                    
+                    // Update the origin town name to current name
+                    copy.addMetadata("originTown", currentTownName);
+                    
+                    LOGGER.debug("Refreshed origin town name for reward {}: {} -> {}", 
+                        original.getId(), original.getMetadata().get("originTown"), currentTownName);
+                    
+                    return copy;
+                }
+            } catch (IllegalArgumentException e) {
+                LOGGER.debug("Invalid UUID in reward metadata: {}", originTownId);
+            }
+        }
+        
+        // Return original if we can't refresh
+        return original;
     }
     
     public void sendBufferSlotStorageResponsePacket(Object player, Object bufferSlots) {

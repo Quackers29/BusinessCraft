@@ -7,7 +7,10 @@ import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import com.quackers29.businesscraft.town.data.RewardEntry;
 import com.quackers29.businesscraft.town.data.ClaimStatus;
 import com.quackers29.businesscraft.town.data.RewardSource;
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.client.gui.GuiGraphics;
+import java.util.UUID;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -582,12 +585,43 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     }
     
     /**
+     * Gets the origin town name, always trying to get the most current name possible
+     */
+    private String getOriginTownName(RewardEntry reward) {
+        String originTownId = reward.getMetadata().get("originTownId");
+        
+        // First try: Use UUID for live lookup (for new rewards)
+        if (originTownId != null && !originTownId.isEmpty()) {
+            try {
+                UUID townUUID = UUID.fromString(originTownId);
+                if (minecraft.level != null) {
+                    BlockEntity blockEntity = minecraft.level.getBlockEntity(menu.getTownBlockPos());
+                    if (blockEntity instanceof TownInterfaceEntity townInterface) {
+                        String liveTownName = townInterface.getTownNameFromId(townUUID);
+                        if (liveTownName != null && !liveTownName.startsWith("Town-")) {
+                            return liveTownName; // Use live name from UUID
+                        }
+                    }
+                }
+            } catch (IllegalArgumentException e) {
+                // Invalid UUID format, continue to fallback
+            }
+        }
+        
+        // Second try: Since visitor history cache refreshes every 5 seconds,
+        // just return the cached name and let natural cache expiration handle updates
+        String cachedName = reward.getMetadata().get("originTown");
+        return cachedName != null ? cachedName : "Unknown";
+    }
+
+    /**
      * Creates simplified MC-style multi-line tooltip components for tourist arrival rewards
      */
     private List<net.minecraft.network.chat.Component> createTouristArrivalTooltip(RewardEntry reward) {
         List<net.minecraft.network.chat.Component> tooltipLines = new ArrayList<>();
         
-        String originTown = reward.getMetadata().get("originTown");
+        // Get origin town name - prefer live lookup by UUID if available
+        String originTown = getOriginTownName(reward);
         String fareAmount = reward.getMetadata().get("fareAmount");
         String milestoneDistance = reward.getMetadata().get("milestoneDistance");
         
@@ -832,6 +866,13 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     private void returnToMainUI() {
         this.onClose();
         ScreenNavigationHelper.returnToTownInterface(this.minecraft, this.minecraft.player, this.menu.getTownBlockPos());
+    }
+    
+    /**
+     * Public method to refresh payment board data (called when town names change)
+     */
+    public void refreshPaymentBoardData() {
+        requestPaymentBoardData();
     }
     
     /**
