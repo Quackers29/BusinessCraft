@@ -9,7 +9,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.core.registries.BuiltInRegistries;
+import com.quackers29.businesscraft.platform.PlatformServices;
 
 import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.town.Town;
@@ -135,8 +135,8 @@ public class DistanceMilestoneHelper {
             String itemName = parts[1];
             ResourceLocation itemId = new ResourceLocation(namespace, itemName);
             
-            // Get item from unified registry
-            Item item = BuiltInRegistries.ITEM.get(itemId);
+            // Get item from registry using platform abstraction
+            Item item = (Item) PlatformServices.getRegistryHelper().getItem(itemId.toString());
             if (item == null) {
                 LOGGER.warn("Unknown item in milestone reward: '{}'", itemId);
                 return ItemStack.EMPTY;

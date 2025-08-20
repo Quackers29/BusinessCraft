@@ -930,23 +930,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         return clientSyncHelper.getClientCommunalStorage();
     }
     
-    /**
-     * Gets the client-side cached personal storage items for a specific player
-     * @param playerId UUID of the player
-     * @return Map of personal storage items for that player
-     */
-    public Map<Item, Integer> getClientPersonalStorage(UUID playerId) {
-        return clientSyncHelper.getClientPersonalStorage(playerId);
-    }
-    
-    /**
-     * Updates the client-side personal storage cache for a player
-     * @param playerId UUID of the player
-     * @param items Map of items in the player's personal storage
-     */
-    public void updateClientPersonalStorage(UUID playerId, Map<Item, Integer> items) {
-        clientSyncHelper.updateClientPersonalStorage(playerId, items);
-    }
+    // Personal storage methods removed - feature was cleaned up in Phase 3.2.2
 
     /**
      * Creates the update packet for sending to clients

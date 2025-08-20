@@ -12,7 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-import net.minecraft.core.registries.BuiltInRegistries;
+import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
@@ -52,7 +52,7 @@ public class ClientSyncHelper {
         provider.getAllResources().forEach((item, count) -> {
             // provider.getAllResources() returns Map<Object, Integer> for platform independence
             if (item instanceof Item) {
-                String itemKey = BuiltInRegistries.ITEM.getKey((Item) item).toString();
+                String itemKey = PlatformServices.getRegistryHelper().getItemId(item);
                 resourcesTag.putInt(itemKey, count);
             }
         });
@@ -65,7 +65,7 @@ public class ClientSyncHelper {
         provider.getAllCommunalStorageItems().forEach((item, count) -> {
             // provider.getAllCommunalStorageItems() returns Map<Object, Integer> for platform independence
             if (item instanceof Item) {
-                String itemKey = BuiltInRegistries.ITEM.getKey((Item) item).toString();
+                String itemKey = PlatformServices.getRegistryHelper().getItemId(item);
                 communalTag.putInt(itemKey, count);
             }
         });
@@ -87,7 +87,7 @@ public class ClientSyncHelper {
             for (String key : resourcesTag.getAllKeys()) {
                 try {
                     ResourceLocation resourceLocation = new ResourceLocation(key);
-                    Item item = BuiltInRegistries.ITEM.get(resourceLocation);
+                    Item item = (Item) PlatformServices.getRegistryHelper().getItem(resourceLocation.toString());
                     if (item != null && item != Items.AIR) {
                         int count = resourcesTag.getInt(key);
                         clientResources.put(item, count);
@@ -109,7 +109,7 @@ public class ClientSyncHelper {
             for (String key : communalTag.getAllKeys()) {
                 try {
                     ResourceLocation resourceLocation = new ResourceLocation(key);
-                    Item item = BuiltInRegistries.ITEM.get(resourceLocation);
+                    Item item = (Item) PlatformServices.getRegistryHelper().getItem(resourceLocation.toString());
                     if (item != null && item != Items.AIR) {
                         int count = communalTag.getInt(key);
                         clientCommunalStorage.put(item, count);
