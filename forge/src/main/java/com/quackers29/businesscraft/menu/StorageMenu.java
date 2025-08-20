@@ -15,8 +15,6 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.core.BlockPos;
 import com.quackers29.businesscraft.network.ModMessages;
 import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
-// TODO: Migrate PersonalStoragePacket to common module
-// import com.quackers29.businesscraft.network.packets.storage.PersonalStoragePacket;
 import net.minecraft.world.item.Item;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,8 +47,6 @@ public class StorageMenu extends AbstractContainerMenu {
     private static final int STORAGE_START_Y = 28;
     private static final int SLOT_SIZE = 18;
     
-    // Track current storage mode
-    private boolean isPersonalStorageMode = false;
     
     // Constructor for client-side creation
     public StorageMenu(int containerId, Inventory playerInventory) {
@@ -194,25 +190,7 @@ public class StorageMenu extends AbstractContainerMenu {
         return null;
     }
     
-    /**
-     * Toggle between personal and communal storage modes
-     * 
-     * @return The new storage mode (true = personal, false = communal)
-     */
-    public boolean toggleStorageMode() {
-        isPersonalStorageMode = !isPersonalStorageMode;
-        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Toggled storage mode to: {}", isPersonalStorageMode ? "Personal" : "Communal");
-        return isPersonalStorageMode;
-    }
     
-    /**
-     * Get the current storage mode
-     * 
-     * @return The current storage mode (true = personal, false = communal)
-     */
-    public boolean isPersonalStorageMode() {
-        return isPersonalStorageMode;
-    }
     
     /**
      * Process communal storage action when an item is put into a storage slot
@@ -258,51 +236,7 @@ public class StorageMenu extends AbstractContainerMenu {
         return true;
     }
     
-    /**
-     * Process personal storage action when an item is put into a storage slot
-     * This sends a packet to the server to add the item to the player's personal storage
-     * 
-     * @param player The player performing the action
-     * @param slotId The slot that was interacted with
-     * @param itemStack The specific item stack to add
-     * @return true if the action was processed, false otherwise
-     */
-    public boolean processPersonalStorageAdd(Player player, int slotId, ItemStack itemStack) {
-        // Only process slots in the storage inventory (0-17)
-        if (slotId >= INVENTORY_SIZE || itemStack.isEmpty()) {
-            return false;
-        }
-        
-        // TODO: Migrate PersonalStoragePacket to common module
-        // Send a packet to the server to add the item to personal storage
-        // We're copying the stack to ensure we don't modify it before the server responds
-        // ModMessages.sendToServer(new PersonalStoragePacket(townBlockPos, itemStack.copy(), slotId, true, player.getUUID()));
-        
-        // Storage slot will be updated when server responds
-        return true;
-    }
     
-    /**
-     * Process personal storage removal when an item is taken from a storage slot
-     * This sends a packet to the server to remove the item from the player's personal storage
-     * 
-     * @param player The player performing the action
-     * @param slotId The slot that was interacted with
-     * @param itemStack The item that was taken
-     * @return true if the action was processed, false otherwise
-     */
-    public boolean processPersonalStorageRemove(Player player, int slotId, ItemStack itemStack) {
-        // Only process slots in the storage inventory (0-17)
-        if (slotId >= INVENTORY_SIZE || itemStack.isEmpty()) {
-            return false;
-        }
-        
-        // TODO: Migrate PersonalStoragePacket to common module
-        // Send a packet to the server to remove the item from personal storage
-        // ModMessages.sendToServer(new PersonalStoragePacket(townBlockPos, itemStack.copy(), slotId, false, player.getUUID()));
-        
-        return true;
-    }
     
     /**
      * Update the storage inventory with the communal storage items from the server
@@ -311,44 +245,16 @@ public class StorageMenu extends AbstractContainerMenu {
      * @param items Map of items and their counts from the town's communal storage
      */
     public void updateStorageItems(Map<Item, Integer> items) {
-        // Only update if we're in communal storage mode
-        if (isPersonalStorageMode) {
-            DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Ignoring communal storage update because we're in personal mode");
-            return;
-        }
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Updating storage inventory with {} items from server", items.size());
         
-        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Updating communal storage inventory with {} items from server", items.size());
-        
-        // Log each item being added to communal storage
+        // Log each item being added to storage
         items.forEach((storageItem, count) -> {
-            DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Communal storage item: {} x{}", storageItem.getDescription().getString(), count);
+            DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Storage item: {} x{}", storageItem.getDescription().getString(), count);
         });
         
         updateInventoryWithItems(items);
     }
     
-    /**
-     * Update the storage inventory with the personal storage items from the server
-     * This is called when the client receives a PersonalStorageResponsePacket
-     * 
-     * @param items Map of items and their counts from the player's personal storage
-     */
-    public void updatePersonalStorageItems(Map<Item, Integer> items) {
-        // Only update if we're in personal storage mode
-        if (!isPersonalStorageMode) {
-            DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Ignoring personal storage update because we're in communal mode");
-            return;
-        }
-        
-        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Updating personal storage inventory with {} items from server", items.size());
-        
-        // Log each item being added to personal storage
-        items.forEach((storageItem, count) -> {
-            DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Personal storage item: {} x{}", storageItem.getDescription().getString(), count);
-        });
-        
-        updateInventoryWithItems(items);
-    }
     
     /**
      * Helper method to update the inventory with the provided items
@@ -447,8 +353,7 @@ public class StorageMenu extends AbstractContainerMenu {
                 filledSlots++;
             }
         }
-        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "STORAGE-DEBUG [{}]: {} out of {} slots filled. Storage mode: {}", 
-            context, filledSlots, storageInventory.getSlots(), 
-            isPersonalStorageMode ? "PERSONAL" : "COMMUNAL");
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "STORAGE-DEBUG [{}]: {} out of {} slots filled.", 
+            context, filledSlots, storageInventory.getSlots());
     }
 } 

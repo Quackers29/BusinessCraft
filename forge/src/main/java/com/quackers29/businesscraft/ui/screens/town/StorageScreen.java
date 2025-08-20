@@ -15,12 +15,8 @@ import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.core.BlockPos;
-// TODO: Migrate PersonalStorageRequestPacket to common module
-// import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
 import com.quackers29.businesscraft.network.ModMessages;
 import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
-// TODO: Migrate PersonalStoragePacket to common module
-// import com.quackers29.businesscraft.network.packets.storage.PersonalStoragePacket;
 
 import java.util.Map;
 import java.util.Set;
@@ -41,11 +37,6 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
     private static final int BACK_BUTTON_WIDTH = 20;
     private static final int BACK_BUTTON_HEIGHT = 20;
     
-    // Toggle button coordinates
-    private static final int TOGGLE_BUTTON_X = 136;
-    private static final int TOGGLE_BUTTON_Y = 6;
-    private static final int TOGGLE_BUTTON_WIDTH = 32;
-    private static final int TOGGLE_BUTTON_HEIGHT = 20;
     
     // Inventory positions (matching vanilla layout)
     private static final int INV_START_X = 8;
@@ -69,9 +60,8 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
     // Keep track of all slots affected during a drag operation
     private final java.util.Set<Integer> affectedDragSlots = new java.util.HashSet<>();
     
-    // Storage mode labels
+    // Storage label
     private static final String COMMUNAL_LABEL = "Communal";
-    private static final String PERSONAL_LABEL = "Personal";
     
     public StorageScreen(StorageMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -103,12 +93,6 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
             guiGraphics.renderTooltip(this.font, Component.literal("Return to Town Interface"), mouseX, mouseY);
         }
         
-        // Render tooltip for toggle button if mouse is over it
-        if (isMouseOverToggleButton(mouseX, mouseY)) {
-            String currentMode = this.menu.isPersonalStorageMode() ? PERSONAL_LABEL : COMMUNAL_LABEL;
-            String nextMode = this.menu.isPersonalStorageMode() ? COMMUNAL_LABEL : PERSONAL_LABEL;
-            guiGraphics.renderTooltip(this.font, Component.literal("Current: " + currentMode + "\nClick to switch to " + nextMode), mouseX, mouseY);
-        }
     }
     
     @Override

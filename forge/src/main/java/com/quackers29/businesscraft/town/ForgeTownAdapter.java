@@ -100,34 +100,6 @@ public class ForgeTownAdapter implements ITownDataProvider {
             ));
     }
     
-    @Override
-    public boolean addToPersonalStorage(UUID playerId, Object item, int count) {
-        if (item instanceof Item) {
-            return forgeTown.addToPersonalStorage(playerId, (Item) item, count);
-        } else {
-            throw new IllegalArgumentException("Expected Minecraft Item, got: " + 
-                (item != null ? item.getClass().getSimpleName() : "null"));
-        }
-    }
-    
-    @Override
-    public int getPersonalStorageCount(UUID playerId, Object item) {
-        if (item instanceof Item) {
-            return forgeTown.getPersonalStorageCount(playerId, (Item) item);
-        } else {
-            throw new IllegalArgumentException("Expected Minecraft Item, got: " + 
-                (item != null ? item.getClass().getSimpleName() : "null"));
-        }
-    }
-    
-    @Override
-    public Map<Object, Integer> getPersonalStorageItems(UUID playerId) {
-        return forgeTown.getPersonalStorageItems(playerId).entrySet().stream()
-            .collect(Collectors.toMap(
-                entry -> (Object) entry.getKey(),
-                Map.Entry::getValue
-            ));
-    }
     
     @Override
     public int getPopulation() {

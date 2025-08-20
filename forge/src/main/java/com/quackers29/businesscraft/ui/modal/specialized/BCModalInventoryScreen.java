@@ -5,8 +5,6 @@ import com.quackers29.businesscraft.menu.StorageMenu;
 import com.quackers29.businesscraft.menu.TradeMenu;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import com.quackers29.businesscraft.network.ModMessages;
-// TODO: Migrate PersonalStorageRequestPacket to common module
-// import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
 import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
 import com.quackers29.businesscraft.ui.util.InventoryRenderer;
 import net.minecraft.client.gui.GuiGraphics;
@@ -66,15 +64,9 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
     // Title scale factor
     private float titleScale = 1.5f;
     
-    // Storage mode labels
+    // Storage mode label
     private static final String COMMUNAL_LABEL = "Communal";
-    private static final String PERSONAL_LABEL = "Personal";
     
-    // Toggle button coordinates for storage mode
-    private static final int TOGGLE_BUTTON_X = 136;
-    private static final int TOGGLE_BUTTON_Y = 6;
-    private static final int TOGGLE_BUTTON_WIDTH = 32;
-    private static final int TOGGLE_BUTTON_HEIGHT = 20;
     
     // Display title that can be updated (unlike the final 'title' field inherited from Screen)
     private Component displayTitle;

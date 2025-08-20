@@ -1165,23 +1165,6 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         return town != null ? town.getAllCommunalStorageItems() : java.util.Collections.emptyMap();
     }
     
-    @Override
-    public boolean addToPersonalStorage(UUID playerId, Object item, int count) {
-        Town town = getTown();
-        return town != null ? town.addToPersonalStorage(playerId, item, count) : false;
-    }
-    
-    @Override
-    public int getPersonalStorageCount(UUID playerId, Object item) {
-        Town town = getTown();
-        return town != null ? town.getPersonalStorageCount(playerId, item) : 0;
-    }
-    
-    @Override
-    public Map<Object, Integer> getPersonalStorageItems(UUID playerId) {
-        Town town = getTown();
-        return town != null ? town.getPersonalStorageItems(playerId) : java.util.Collections.emptyMap();
-    }
     
     @Override
     public int getTouristCount() {

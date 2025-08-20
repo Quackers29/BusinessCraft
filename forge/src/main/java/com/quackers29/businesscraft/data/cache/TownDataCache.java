@@ -92,13 +92,6 @@ public class TownDataCache {
         return getOrFetchValue("visitHistory", dataProvider::getVisitHistory, DEFAULT_TTL);
     }
     
-    /**
-     * Get the personal storage items for a player, either from cache or from the provider
-     */
-    public Map<Item, Integer> getPersonalStorageItems(UUID playerId) {
-        return getOrFetchValue("personalStorage:" + playerId, 
-            () -> ItemConverter.toItemMap(dataProvider.getPersonalStorageItems(playerId)), DEFAULT_TTL);
-    }
     
     /**
      * Force refresh a specific cache entry
