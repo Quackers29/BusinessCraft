@@ -41,10 +41,12 @@ public class ClientRenderEvents {
     public static void onRenderLevelStage(RenderLevelStageEvent event) {
         // Check if we should render at this stage
         if (event.getStage() == RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS) {
-            // Use the new modular rendering system with EventHelper abstraction
-            platformRenderer.render(event.getPoseStack(), null, 
+            // Use the new modular rendering system - get buffer source from Minecraft instance
+            net.minecraft.client.renderer.MultiBufferSource bufferSource = 
+                net.minecraft.client.Minecraft.getInstance().renderBuffers().bufferSource();
+            platformRenderer.render(event.getPoseStack(), bufferSource, 
                                   event.getCamera().getEntity().level());
-            boundaryRenderer.render(event.getPoseStack(), null, 
+            boundaryRenderer.render(event.getPoseStack(), bufferSource, 
                                   event.getCamera().getEntity().level());
             
             // Future: Additional renderer types can be added here

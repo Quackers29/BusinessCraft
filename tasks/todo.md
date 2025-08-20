@@ -25,6 +25,10 @@
 - [x] **Debug Logging Cleanup**: All excessive DEBUG-level logs converted to DebugConfig system (149 conversions across 108 files)
 - [x] **Critical Crash Fix**: NoSuchMethodError in TouristAllocationTracker.selectFairDestination resolved - tourist spawning operational
 - [x] **Tourist Death Crash Fix**: NoSuchMethodError in TownNotificationUtils.displayTouristDepartureNotification resolved - tourist death/kill operational
+- [x] **Platform/Boundary Visualization Fix**: Restored missing platform lines and town boundaries after UI exit - Enhanced MultiLoader migration regression resolved
+  - Fixed missing PlatformVisualizationPacket network registration
+  - Implemented missing BoundarySyncResponsePacket and processBoundarySyncRequest method
+  - Fixed boundary visualization timing - now appears instantly when exiting UI (matching main branch behavior)
 
 ## 🔧 **DEVELOPMENT NOTES**
 
@@ -86,6 +90,7 @@
 ### **Phase 5: Cleanup and Optimization** (1-2 weeks)
 - [ ] **Remove Enhanced MultiLoader Infrastructure**: Clean up complex abstraction layers
 - [ ] **Resolve Architectural Conflicts**: Address hybrid Enhanced MultiLoader/Unified patterns causing unnecessary complexity (e.g., ForgeBlockEntityHelper mixing direct TownManager access with platform service abstractions)
+- [ ] **Review Unimplemented Code**: Systematically review all code containing "not yet implemented", "not implemented", "TODO: Implement", and similar placeholder patterns - either implement functionality or remove dead code
 - [ ] **Performance Optimization**: Direct access should improve performance over service calls
 - [ ] **Code Review**: Ensure unified architecture follows best practices
 - [ ] **Testing**: Comprehensive testing of natural database-style queries

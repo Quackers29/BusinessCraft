@@ -470,6 +470,18 @@ public interface BlockEntityHelper {
     boolean processTownMapDataRequest(Object blockEntity, Object player, int zoomLevel, boolean includeStructures);
     
     /**
+     * Process boundary sync request.
+     * Platform implementations handle server-side boundary data synchronization and response.
+     * 
+     * @param townDataProvider Platform-specific town data provider
+     * @param player Platform-specific player object
+     * @param enableVisualization Whether to enable boundary visualization
+     * @param renderDistance Boundary render distance
+     * @return True if boundary sync request was successfully processed
+     */
+    boolean processBoundarySyncRequest(Object townDataProvider, Object player, boolean enableVisualization, int renderDistance);
+    
+    /**
      * Update town map UI on client side.
      * Platform implementations handle client-side town map UI updates.
      * 
@@ -482,18 +494,6 @@ public interface BlockEntityHelper {
      * @return True if town map UI was successfully updated
      */
     boolean updateTownMapUI(Object player, int x, int y, int z, String mapData, int zoomLevel);
-    
-    /**
-     * Process boundary sync request.
-     * Platform implementations handle server-side boundary data synchronization.
-     * 
-     * @param blockEntity Platform-specific town interface block entity
-     * @param player Platform-specific player object
-     * @param enableVisualization Whether to enable boundary visualization
-     * @param renderDistance Boundary render distance
-     * @return True if boundary sync request was successfully processed
-     */
-    boolean processBoundarySyncRequest(Object blockEntity, Object player, boolean enableVisualization, int renderDistance);
     
     /**
      * Process platform data request for sophisticated map view.

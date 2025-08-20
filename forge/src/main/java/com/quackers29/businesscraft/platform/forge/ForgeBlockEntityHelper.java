@@ -949,6 +949,62 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
         }
     }
     
+    public boolean processBoundarySyncRequest(Object townDataProvider, Object player, boolean enableVisualization, int renderDistance) {
+        if (!(townDataProvider instanceof TownInterfaceEntity) || !(player instanceof ServerPlayer)) {
+            return false;
+        }
+        
+        try {
+            TownInterfaceEntity townEntity = (TownInterfaceEntity) townDataProvider;
+            ServerPlayer serverPlayer = (ServerPlayer) player;
+            
+            DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, 
+                "Processing boundary sync request (enable: {}, distance: {}) at position: {}", 
+                enableVisualization, renderDistance, townEntity.getBlockPos());
+            
+            // Get town information from the TownInterfaceEntity
+            UUID townId = townEntity.getTownId();
+            if (townId == null) {
+                LOGGER.warn("No town ID found for boundary sync request at {}", townEntity.getBlockPos());
+                return false;
+            }
+            
+            // Get the server level
+            ServerLevel serverLevel = (ServerLevel) serverPlayer.level();
+            
+            // Get town from TownManager (main branch approach)
+            com.quackers29.businesscraft.town.TownManager townManager = 
+                com.quackers29.businesscraft.town.TownManager.get(serverLevel);
+            
+            com.quackers29.businesscraft.town.Town town = townManager.getTown(townId);
+            if (town == null) {
+                LOGGER.warn("No town found with ID {} for boundary sync request", townId);
+                return false;
+            }
+            
+            // Calculate boundary radius from town (main branch approach)
+            int currentBoundaryRadius = town.getBoundaryRadius();
+            
+            // Send boundary update back to client
+            BlockPos pos = townEntity.getBlockPos();
+            com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket responsePacket = 
+                new com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket(
+                    pos.getX(), pos.getY(), pos.getZ(), currentBoundaryRadius);
+            
+            PlatformServices.getNetworkHelper().sendToClient(responsePacket, serverPlayer);
+            
+            DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, 
+                "Successfully sent boundary sync response for town {} at {}: radius={}", 
+                town.getName(), pos, currentBoundaryRadius);
+            
+            return true;
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to process boundary sync request", e);
+            return false;
+        }
+    }
+    
     public boolean updateTownMapUI(Object player, int x, int y, int z, String mapData, int zoomLevel) {
         try {
             DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "updateTownMapUI called with mapData: {}", mapData);
@@ -2063,6 +2119,46 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             
         } catch (Exception e) {
             LOGGER.error("Failed to update buffer storage UI: {}", e.getMessage(), e);
+            return false;
+        }
+    }
+    
+    public boolean registerPlayerExitUI(Object blockEntity, Object player) {
+        try {
+            if (!(player instanceof ServerPlayer serverPlayer)) {
+                LOGGER.warn("registerPlayerExitUI called with non-ServerPlayer: {}", player.getClass());
+                return false;
+            }
+            
+            // Get the town interface entity
+            if (!(blockEntity instanceof TownInterfaceEntity townEntity)) {
+                LOGGER.warn("registerPlayerExitUI called with non-TownInterfaceEntity: {}", blockEntity.getClass());
+                return false;
+            }
+            
+            // Register player UI exit for visualization (same as main branch)
+            townEntity.registerPlayerExitUI(serverPlayer.getUUID());
+            
+            // Send platform visualization packet to trigger client-side visualization
+            UUID playerId = serverPlayer.getUUID();
+            BlockPos pos = townEntity.getBlockPos();
+            Level level = townEntity.getLevel();
+            
+            if (level != null) {
+                // Create and send platform visualization packet through platform abstraction
+                PlatformServices.getNetworkHelper().sendToClient(
+                    new com.quackers29.businesscraft.network.packets.ui.PlatformVisualizationPacket(pos.getX(), pos.getY(), pos.getZ()),
+                    serverPlayer
+                );
+                
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                    "Player {} exited UI, registered for visualization at {}", playerId, pos);
+            }
+            
+            return true;
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to register player UI exit: {}", e.getMessage(), e);
             return false;
         }
     }

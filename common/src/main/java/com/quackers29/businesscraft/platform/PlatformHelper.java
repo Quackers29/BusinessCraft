@@ -174,4 +174,27 @@ public interface PlatformHelper {
      * @return Serialized reward data as string
      */
     String serializeRewardEntry(Object reward);
+    
+    /**
+     * Enable platform and boundary visualization for a town block.
+     * Platform implementations handle client-side visualization rendering.
+     * 
+     * @param x Block X coordinate
+     * @param y Block Y coordinate
+     * @param z Block Z coordinate
+     * @return true if visualization was successfully enabled
+     */
+    boolean enablePlatformVisualization(int x, int y, int z);
+    
+    /**
+     * Update boundary visualization radius on the client side.
+     * Platform implementations handle updating the boundary renderer with new radius data.
+     * 
+     * @param x Block X coordinate
+     * @param y Block Y coordinate
+     * @param z Block Z coordinate
+     * @param boundaryRadius New boundary radius in blocks
+     * @return true if boundary visualization was successfully updated
+     */
+    boolean updateBoundaryVisualization(int x, int y, int z, int boundaryRadius);
 }

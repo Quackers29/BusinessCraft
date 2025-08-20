@@ -33,9 +33,9 @@ import com.quackers29.businesscraft.network.packets.platform.SetPlatformDestinat
 import com.quackers29.businesscraft.network.packets.ui.OpenDestinationsUIPacket; // ✅ MIGRATED
 import com.quackers29.businesscraft.network.packets.ui.RefreshDestinationsPacket; // ✅ MIGRATED
 import com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket; // ✅ MIGRATED
-// import com.quackers29.businesscraft.network.packets.ui.PlatformVisualizationPacket;
+import com.quackers29.businesscraft.network.packets.ui.PlatformVisualizationPacket;
 import com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket; // ✅ MIGRATED
-// import com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket;
+import com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket;
 import com.quackers29.businesscraft.network.packets.ui.OpenTownInterfacePacket;
 import com.quackers29.businesscraft.network.packets.ui.OpenPaymentBoardPacket;
 // TODO: Migrate remaining UI response packets to common module
@@ -257,12 +257,16 @@ public class ModMessages {
                 .add();
 
         // Register platform visualization packet (server to client)
-        // TODO: Migrate PlatformVisualizationPacket to common module
-        // net.messageBuilder(PlatformVisualizationPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-        //         .decoder(PlatformVisualizationPacket::decode)
-        //         .encoder(PlatformVisualizationPacket::encode)
-        //         .consumerMainThread(PlatformVisualizationPacket::handle)
-        //         .add();
+        net.messageBuilder(PlatformVisualizationPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(PlatformVisualizationPacket::decode)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
+                .add();
 
         // Register resource trading packet
         net.messageBuilder(TradeResourcePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
@@ -475,12 +479,17 @@ public class ModMessages {
                 })
                 .add();
                 
-        // TODO: Migrate BoundarySyncResponsePacket to common module
-        // net.messageBuilder(BoundarySyncResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-        //         .decoder(BoundarySyncResponsePacket::decode)
-        //         .encoder(BoundarySyncResponsePacket::encode)
-        //         .consumerMainThread(BoundarySyncResponsePacket::handle)
-        //         .add();
+        // Register boundary sync response packet (server to client)
+        net.messageBuilder(BoundarySyncResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(BoundarySyncResponsePacket::decode)
+                .encoder((msg, buf) -> msg.encode(buf))
+                .consumerMainThread((msg, ctx) -> {
+                    ctx.get().enqueueWork(() -> {
+                        msg.handle(ctx.get().getSender());
+                    });
+                    ctx.get().setPacketHandled(true);
+                })
+                .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {

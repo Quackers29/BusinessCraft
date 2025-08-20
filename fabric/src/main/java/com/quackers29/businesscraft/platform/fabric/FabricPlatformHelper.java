@@ -132,4 +132,18 @@ public class FabricPlatformHelper implements PlatformHelper {
         LOGGER.debug("serializeRewardEntry not yet fully implemented for Fabric - using toString()");
         return reward.toString();
     }
+    
+    @Override
+    public boolean enablePlatformVisualization(int x, int y, int z) {
+        // Platform visualization for Fabric will be implemented when Fabric support is added
+        LOGGER.debug("enablePlatformVisualization not yet implemented for Fabric");
+        return false;
+    }
+    
+    @Override
+    public boolean updateBoundaryVisualization(int x, int y, int z, int boundaryRadius) {
+        // Boundary visualization for Fabric will be implemented when Fabric support is added
+        LOGGER.debug("updateBoundaryVisualization not yet implemented for Fabric");
+        return false;
+    }
 }

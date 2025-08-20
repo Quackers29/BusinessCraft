@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.platform.forge;
 
 import com.quackers29.businesscraft.platform.PlatformHelper;
 import com.quackers29.businesscraft.event.PlatformPathHandler;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.core.BlockPos;
 import net.minecraftforge.fml.ModList;
@@ -341,6 +342,73 @@ public class ForgePlatformHelper implements PlatformHelper {
         } catch (Exception e) {
             LOGGER.error("Error serializing reward entry", e);
             return reward.toString();
+        }
+    }
+    
+    @Override
+    public boolean enablePlatformVisualization(int x, int y, int z) {
+        try {
+            // Only execute on client side
+            if (!isClientSide()) {
+                LOGGER.warn("enablePlatformVisualization called on server side");
+                return false;
+            }
+            
+            // Get current game time from client level
+            net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getInstance();
+            net.minecraft.world.level.Level level = minecraft.level;
+            if (level == null) {
+                LOGGER.warn("No client level available for platform visualization");
+                return false;
+            }
+            
+            long currentTime = level.getGameTime();
+            net.minecraft.core.BlockPos pos = new net.minecraft.core.BlockPos(x, y, z);
+            
+            // Use the visualization manager from the main branch approach
+            com.quackers29.businesscraft.client.render.world.VisualizationManager.getInstance()
+                .showVisualization(com.quackers29.businesscraft.client.render.world.VisualizationManager.TYPE_PLATFORM, pos, null);
+            
+            com.quackers29.businesscraft.client.render.world.VisualizationManager.getInstance()
+                .showVisualization(com.quackers29.businesscraft.client.render.world.VisualizationManager.TYPE_TOWN_BOUNDARY, pos, null);
+            
+            // Immediately request boundary data for instant visualization (main branch approach)
+            com.quackers29.businesscraft.network.ModMessages.sendToServer(
+                new com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket(x, y, z, true, 32));
+            
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                "Successfully enabled platform and boundary visualization at [{}, {}, {}] and requested immediate boundary sync", x, y, z);
+            
+            return true;
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to enable platform visualization at [{}, {}, {}]: {}", x, y, z, e.getMessage(), e);
+            return false;
+        }
+    }
+    
+    @Override
+    public boolean updateBoundaryVisualization(int x, int y, int z, int boundaryRadius) {
+        try {
+            // Only execute on client side
+            if (!isClientSide()) {
+                LOGGER.warn("updateBoundaryVisualization called on server side");
+                return false;
+            }
+            
+            // Update boundary visualization radius through the renderer
+            net.minecraft.core.BlockPos pos = new net.minecraft.core.BlockPos(x, y, z);
+            com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer
+                .updateBoundaryRadius(pos, boundaryRadius);
+            
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                "Successfully updated boundary visualization at [{}, {}, {}] to radius={}", x, y, z, boundaryRadius);
+            
+            return true;
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to update boundary visualization at [{}, {}, {}]: {}", x, y, z, e.getMessage(), e);
+            return false;
         }
     }
 }
