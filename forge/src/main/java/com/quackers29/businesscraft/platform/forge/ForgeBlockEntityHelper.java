@@ -478,7 +478,7 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
     
     // @Override
     public boolean setPlatformEnabledById(Object blockEntity, String platformId, boolean enabled) {
-        LOGGER.info("FORGE BLOCK ENTITY HELPER: Setting platform {} enabled state to {} on block entity {}", platformId, enabled, blockEntity.getClass().getSimpleName());
+        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Setting platform {} enabled state to {} on block entity {}", platformId, enabled, blockEntity.getClass().getSimpleName());
         
         if (blockEntity instanceof TownInterfaceEntity townInterface) {
             try {
@@ -495,7 +495,7 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                 // Mark the block entity as changed to trigger NBT save
                 townInterface.setChanged();
                 
-                LOGGER.info("FORGE BLOCK ENTITY HELPER: Successfully set platform {} enabled state to {}", platformId, enabled);
+                DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Successfully set platform {} enabled state to {}", platformId, enabled);
                 return true;
                 
             } catch (IllegalArgumentException e) {

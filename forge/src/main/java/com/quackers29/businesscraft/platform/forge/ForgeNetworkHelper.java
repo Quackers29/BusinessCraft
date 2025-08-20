@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import com.quackers29.businesscraft.network.ModMessages;
 import com.quackers29.businesscraft.network.packets.misc.PaymentResultPacket;
+import com.quackers29.businesscraft.debug.DebugConfig;
 
 /**
  * Forge implementation of the NetworkHelper interface using SimpleChannel.
@@ -233,14 +234,14 @@ public class ForgeNetworkHelper implements NetworkHelper {
             try {
                 com.quackers29.businesscraft.town.TownManager townManager = 
                     com.quackers29.businesscraft.town.TownManager.get(serverPlayer.serverLevel());
-                LOGGER.info("DEBUG DESTINATIONS: Got TownManager: {}", townManager);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Got TownManager: {}", townManager);
                 
                 java.util.Collection<com.quackers29.businesscraft.town.Town> allTowns = townManager.getAllTowns();
-                LOGGER.info("DEBUG DESTINATIONS: TownManager.getAllTowns() returned: {} towns", allTowns != null ? allTowns.size() : "null");
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "TownManager.getAllTowns() returned: {} towns", allTowns != null ? allTowns.size() : "null");
                 
                 BlockPos currentPos = townInterface.getBlockPos();
                 java.util.UUID currentTownId = townInterface.getTownId();
-                LOGGER.info("DEBUG DESTINATIONS: Current position: {}, Current town ID: {}", currentPos, currentTownId);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Current position: {}, Current town ID: {}", currentPos, currentTownId);
                 
                 if (allTowns != null) {
                     int townIndex = 0;
@@ -248,16 +249,16 @@ public class ForgeNetworkHelper implements NetworkHelper {
                         java.util.UUID townId = town.getId();
                         String townName = town.getName();
                         
-                        LOGGER.info("DEBUG DESTINATIONS: Processing town #{}: ID={}, Name={}", townIndex++, townId, townName);
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing town #{}: ID={}, Name={}", townIndex++, townId, townName);
                         
                         // Skip the current town
                         if (townId.equals(currentTownId)) {
-                            LOGGER.info("DEBUG DESTINATIONS: Skipping current town: {}", townName);
+                            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Skipping current town: {}", townName);
                             continue;
                         }
                         
                         townNamesMap.put(townId, townName);
-                        LOGGER.info("DEBUG DESTINATIONS: Added town '{}' to destinations", townName);
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Added town '{}' to destinations", townName);
                         
                         // Calculate distance and direction
                         com.quackers29.businesscraft.api.ITownDataProvider.Position townPos = town.getPosition();
@@ -272,19 +273,19 @@ public class ForgeNetworkHelper implements NetworkHelper {
                             String direction = Math.abs(dx) > Math.abs(dz) ? (dx > 0 ? "East" : "West") : (dz > 0 ? "South" : "North");
                             townDirectionsMap.put(townId, direction);
                             
-                            LOGGER.info("DEBUG DESTINATIONS: Town '{}' at {} - distance: {}m, direction: {}", 
+                            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Town '{}' at {} - distance: {}m, direction: {}", 
                                 townName, townBlockPos, (int)distance, direction);
                         } else {
-                            LOGGER.warn("DEBUG DESTINATIONS: Town '{}' has null position!", townName);
+                            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Town '{}' has null position!", townName);
                         }
                         
                         // Get enabled state from platform
                         boolean enabled = platform.isDestinationEnabled(townId);
                         enabledStateMap.put(townId, enabled);
-                        LOGGER.info("DEBUG DESTINATIONS: Town '{}' destination enabled: {}", townName, enabled);
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Town '{}' destination enabled: {}", townName, enabled);
                     }
                 } else {
-                    LOGGER.warn("DEBUG DESTINATIONS: TownManager.getAllTowns() returned null!");
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "TownManager.getAllTowns() returned null!");
                 }
             } catch (Exception e) {
                 LOGGER.error("Failed to get town data for destinations: {}", e.getMessage(), e);
@@ -295,8 +296,8 @@ public class ForgeNetworkHelper implements NetworkHelper {
             com.quackers29.businesscraft.network.packets.ui.RefreshDestinationsPacket responsePacket = 
                 new com.quackers29.businesscraft.network.packets.ui.RefreshDestinationsPacket(x, y, z, platformId, platformName);
             
-            LOGGER.info("DEBUG DESTINATIONS: Creating packet with platform name: '{}'", platformName);
-            LOGGER.info("DEBUG DESTINATIONS: About to add {} towns to packet", townNamesMap.size());
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Creating packet with platform name: '{}'", platformName);
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "About to add {} towns to packet", townNamesMap.size());
             
             // Add all town data to the packet
             for (java.util.Map.Entry<java.util.UUID, String> entry : townNamesMap.entrySet()) {
@@ -307,16 +308,16 @@ public class ForgeNetworkHelper implements NetworkHelper {
                 String direction = townDirectionsMap.getOrDefault(townId, "");
                 
                 responsePacket.addTown(townId, townName, enabled, distance, direction);
-                LOGGER.info("DEBUG DESTINATIONS: Added to packet - Town: '{}', Enabled: {}, Distance: {}m, Direction: {}", 
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Added to packet - Town: '{}', Enabled: {}, Distance: {}m, Direction: {}", 
                     townName, enabled, distance, direction);
             }
 
-            LOGGER.info("DEBUG DESTINATIONS: Packet created with {} towns total", townNamesMap.size());
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Packet created with {} towns total", townNamesMap.size());
 
             // Send to client using Forge networking
             ModMessages.sendToPlayer(responsePacket, serverPlayer);
             
-            LOGGER.info("DEBUG DESTINATIONS: Successfully sent RefreshDestinationsPacket for platform '{}' with {} towns at [{}, {}, {}]", 
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully sent RefreshDestinationsPacket for platform '{}' with {} towns at [{}, {}, {}]", 
                 platformId, townNamesMap.size(), x, y, z);
                 
         } catch (Exception e) {
@@ -327,7 +328,7 @@ public class ForgeNetworkHelper implements NetworkHelper {
     
     public void sendRefreshPlatformsPacketToChunk(Object player, int x, int y, int z) {
         // TODO: Implement specialized refresh platforms packet sending to chunk
-        LOGGER.warn("sendRefreshPlatformsPacketToChunk not yet implemented for Forge");
+        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "sendRefreshPlatformsPacketToChunk not yet implemented for Forge");
     }
     
     public void sendPaymentResultPacket(Object player, Object paymentItemStack) {

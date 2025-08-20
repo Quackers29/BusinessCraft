@@ -94,7 +94,7 @@ public class RefreshDestinationsPacket extends BaseBlockEntityPacket {
     @Override
     public void handle(Object player) {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Refreshing destinations for platform '{}' at position [{}, {}, {}]", platformId, x, y, z);
-        LOGGER.info("DEBUG DESTINATIONS CLIENT: Received packet with platform: '{}', town count: {}", platformName, townNames.size());
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Received packet with platform: '{}', town count: {}", platformName, townNames.size());
         
         // Debug log all received town data
         for (java.util.Map.Entry<java.util.UUID, String> entry : townNames.entrySet()) {
@@ -104,7 +104,7 @@ public class RefreshDestinationsPacket extends BaseBlockEntityPacket {
             int distance = townDistances.getOrDefault(townId, 0);
             String direction = townDirections.getOrDefault(townId, "");
             
-            LOGGER.info("DEBUG DESTINATIONS CLIENT: Town data - '{}': enabled={}, distance={}m, direction={}", 
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Town data - '{}': enabled={}, distance={}m, direction={}", 
                 townName, enabled, distance, direction);
         }
         
