@@ -233,10 +233,20 @@ public class TouristSpawningHelper {
             // Update town stats
             originTown.addTourist();
             
-            // Decrement bread for population (same as before)
+            // Only decrement bread if the town has enough (fix for negative bread issue)
             int breadNeeded = CONFIG.breadPerPop;
             if (breadNeeded > 0) {
-                originTown.addResource(Items.BREAD, -breadNeeded);
+                int currentBread = originTown.getResourceCount(Items.BREAD);
+                if (currentBread >= breadNeeded) {
+                    originTown.addResource(Items.BREAD, -breadNeeded);
+                    DebugConfig.debug(LOGGER, DebugConfig.TOURIST_SPAWNING, 
+                        "Consumed {} bread for tourist spawning. Town {} has {} bread remaining", 
+                        breadNeeded, originTown.getName(), currentBread - breadNeeded);
+                } else {
+                    DebugConfig.debug(LOGGER, DebugConfig.TOURIST_SPAWNING, 
+                        "Town {} has insufficient bread ({}) for tourist spawning (needs {})", 
+                        originTown.getName(), currentBread, breadNeeded);
+                }
             }
         }
     }

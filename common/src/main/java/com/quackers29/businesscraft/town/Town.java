@@ -125,9 +125,30 @@ public class Town implements ITownDataProvider {
     /**
      * Add resources using item resource location string.
      * Platform modules convert Items to/from resource location strings.
+     * Handles bread-to-population conversion matching main branch behavior.
      */
     public void addResource(String itemId, int count) {
         resources.merge(itemId, count, Integer::sum);
+        
+        // Handle bread-to-population conversion (matches main branch TownEconomyComponent logic)
+        if ("minecraft:bread".equals(itemId) && count > 0) {
+            int breadCount = resources.get("minecraft:bread");
+            int popToAdd = breadCount / ConfigLoader.breadPerPop;
+            
+            if (popToAdd > 0) {
+                // Consume the bread used for population (matches main branch logic)
+                resources.put("minecraft:bread", breadCount - (popToAdd * ConfigLoader.breadPerPop));
+                if (resources.get("minecraft:bread") == 0) {
+                    resources.remove("minecraft:bread");
+                }
+                
+                this.population += popToAdd;
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
+                    "Town {} population increased by {} to {} (consumed {} bread)", 
+                    name, popToAdd, population, popToAdd * ConfigLoader.breadPerPop);
+            }
+        }
+        
         markDirty();
         
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
@@ -199,7 +220,7 @@ public class Town implements ITownDataProvider {
     public void addResource(Object item, int count) {
         if (item instanceof Item minecraftItem) {
             String itemId = BuiltInRegistries.ITEM.getKey(minecraftItem).toString();
-            addResource(itemId, count);
+            addResource(itemId, count); // This will call the bread-to-population logic
         }
     }
     
@@ -324,6 +345,24 @@ public class Town implements ITownDataProvider {
     @Override
     public void addVisitor(UUID fromTownId) {
         visitors.merge(fromTownId, 1, Integer::sum);
+        
+        // Increment counter for tourists received
+        touristsReceivedCounter++;
+        
+        // Check if population growth from tourism is enabled and if we should increase population  
+        // Use populationPerTourist (default 10) - every 10 tourists increases population by 1
+        if (ConfigLoader.populationPerTourist > 0 && 
+            touristsReceivedCounter >= ConfigLoader.populationPerTourist) {
+            // Increase population by 1
+            setPopulation(population + 1);
+            
+            // Reset counter, subtracting any excess tourists
+            touristsReceivedCounter -= ConfigLoader.populationPerTourist;
+            
+            DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "Town [{}] population increased to {} after receiving {} tourists", 
+                name, population, ConfigLoader.populationPerTourist);
+        }
+        
         markDirty();
     }
     
@@ -432,17 +471,7 @@ public class Town implements ITownDataProvider {
         int emeraldReward = touristCount * 2;
         addResource("minecraft:emerald", emeraldReward);
         
-        // Increment tourists received counter
-        this.touristsReceivedCounter += touristCount;
-        
-        // Simple population growth - every 10 tourists increases population by 1
-        if (this.touristsReceivedCounter >= 10) {
-            setPopulation(population + 1);
-            this.touristsReceivedCounter = 0; // Reset counter after population increase
-            
-            DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
-                "Town {} reached population milestone! New population: {}", name, population);
-        }
+        // Note: Population increase is handled per-tourist in addVisitor() method
         
         markDirty();
     }

@@ -107,12 +107,48 @@ public class ForgePlatformHelper implements PlatformHelper {
     
     @Override
     public void updateTradeScreenOutput(Object itemStack) {
-        LOGGER.debug("updateTradeScreenOutput not yet implemented for Forge");
+        if (!(itemStack instanceof net.minecraft.world.item.ItemStack paymentItem)) {
+            LOGGER.warn("updateTradeScreenOutput called with invalid itemStack type: {}", 
+                itemStack != null ? itemStack.getClass().getSimpleName() : "null");
+            return;
+        }
+        
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "updateTradeScreenOutput called with: {}", paymentItem);
+        
+        // Get the current screen and update the output slot on either TradeScreen or BCModalInventoryScreen
+        net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
+        
+        client.execute(() -> {
+            try {
+                // Handle traditional TradeScreen first
+                if (client.screen instanceof com.quackers29.businesscraft.ui.screens.town.TradeScreen tradeScreen) {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Setting payment item in TradeScreen: {}", paymentItem);
+                    tradeScreen.setOutputItem(paymentItem);
+                } 
+                // Also check for our new modal inventory screen
+                else if (client.screen instanceof com.quackers29.businesscraft.ui.modal.specialized.BCModalInventoryScreen<?> modalScreen) {
+                    // Check if the container is a TradeMenu
+                    if (modalScreen.getMenu() instanceof com.quackers29.businesscraft.menu.TradeMenu tradeMenu) {
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                            "Setting payment item in BCModalInventoryScreen: {}", paymentItem);
+                        tradeMenu.setOutputItem(paymentItem.copy());
+                    }
+                }
+                else {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        "Current screen is not a trade screen: {}", 
+                        client.screen != null ? client.screen.getClass().getSimpleName() : "null");
+                }
+            } catch (Exception e) {
+                LOGGER.error("Error updating trade screen output: {}", e.getMessage(), e);
+            }
+        });
     }
     
     @Override
     public void executeClientTask(Runnable task) {
-        LOGGER.debug("executeClientTask not yet implemented for Forge");
+        net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
+        client.execute(task);
     }
     
     @Override
