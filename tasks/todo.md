@@ -22,6 +22,7 @@
 - [x] **Payment Board System**: Rewards claimable, buffer storage working, persistence operational
 - [x] **Town Data Persistence**: All town data persists correctly across save/reload cycles
 - [x] **Visit History System**: Visit tracking and persistence working correctly
+- [x] **Critical Crash Fix**: NoSuchMethodError in TouristAllocationTracker.selectFairDestination resolved - tourist spawning operational
 
 ## 🔧 **DEVELOPMENT NOTES**
 

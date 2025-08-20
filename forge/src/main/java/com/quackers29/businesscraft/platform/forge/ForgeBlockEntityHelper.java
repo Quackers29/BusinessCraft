@@ -1978,212 +1978,31 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
         }
     }
     
-    // @Override
-    public boolean openDestinationsUI(Object blockEntity, Object player, String platformId) {
-        LOGGER.info("FORGE BLOCK ENTITY HELPER: Opening destinations UI for platform: {} at block entity: {}", platformId, blockEntity.getClass().getSimpleName());
-        
-        if (blockEntity instanceof TownInterfaceEntity townInterface) {
-            try {
-                // Get the platform by ID
-                UUID platformUUID = UUID.fromString(platformId);
-                Platform platform = townInterface.getPlatform(platformUUID);
-                
-                if (platform == null) {
-                    LOGGER.warn("Platform not found with ID: {}", platformId);
-                    return false;
-                }
-                
-                // Get all available town destinations from TownManager
-                Map<UUID, String> townNames = new HashMap<>();
-                Map<UUID, Boolean> enabledState = new HashMap<>();
-                Map<UUID, Integer> townDistances = new HashMap<>();
-                Map<UUID, String> townDirections = new HashMap<>();
-                
-                // Get unified TownManager to access all towns
-                if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-                    try {
-                        com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager.get(serverPlayer.serverLevel());
-                        Collection<com.quackers29.businesscraft.town.Town> allTowns = townManager.getAllTowns();
-                        BlockPos currentPos = townInterface.getBlockPos();
-                        
-                        if (allTowns != null) {
-                            for (com.quackers29.businesscraft.town.Town town : allTowns) {
-                                UUID townId = town.getId();
-                                
-                                {
-                                    // Skip the current town
-                                    if (townId.equals(townInterface.getTownId())) continue;
-                                    
-                                    townNames.put(townId, town.getName());
-                                    
-                                    // Calculate distance
-                                    com.quackers29.businesscraft.api.ITownDataProvider.Position townPos = town.getPosition();
-                                    if (townPos != null) {
-                                        double distance = currentPos.distManhattan(new BlockPos(townPos.getX(), townPos.getY(), townPos.getZ()));
-                                        townDistances.put(townId, (int) distance);
-                                        
-                                        // Calculate direction
-                                        int dx = townPos.getX() - currentPos.getX();
-                                        int dz = townPos.getZ() - currentPos.getZ();
-                                        String direction = getCardinalDirection(dx, dz);
-                                        townDirections.put(townId, direction);
-                                    }
-                                    
-                                    // Get enabled state from platform destinations
-                                    enabledState.put(townId, platform.isDestinationEnabled(townId));
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        LOGGER.error("Failed to get town data for destinations: {}", e.getMessage());
-                        // Fall back to empty data
-                    }
-                }
-                
-                // Open the destinations screen on client side
-                BlockPos blockPos = townInterface.getBlockPos();
-                String platformName = "Platform #" + (townInterface.getPlatforms().indexOf(platform) + 1);
-                
-                LOGGER.info("FORGE BLOCK ENTITY HELPER: Sending RefreshDestinationsPacket for platform {} at position {}", platformName, blockPos);
-                
-                // Send RefreshDestinationsPacket back to client with the real data
-                com.quackers29.businesscraft.network.packets.ui.RefreshDestinationsPacket responsePacket = 
-                    new com.quackers29.businesscraft.network.packets.ui.RefreshDestinationsPacket(
-                        blockPos.getX(), blockPos.getY(), blockPos.getZ(), platformId, 
-                        serializeDestinationData(townNames, enabledState, townDistances, townDirections, platformName));
-                
-                // Send to the specific player
-                PlatformServices.getNetworkHelper().sendToClient(responsePacket, player);
-                
-                return true;
-                
-            } catch (Exception e) {
-                LOGGER.error("Failed to open destinations UI for platform {}: {}", platformId, e.getMessage());
-                e.printStackTrace();
-                return false;
-            }
-        }
-        
-        LOGGER.warn("Block entity is not a TownInterfaceEntity: {}", blockEntity.getClass().getSimpleName());
-        return false;
-    }
     
     /**
-     * Calculate cardinal direction from coordinate differences
+     * Open destinations UI on client side with provided town data.
+     * Unified architecture approach - direct UI opening like main branch.
      */
-    private String getCardinalDirection(int dx, int dz) {
-        if (Math.abs(dx) > Math.abs(dz)) {
-            return dx > 0 ? "East" : "West";
-        } else {
-            return dz > 0 ? "South" : "North";
-        }
-    }
-    
-    /**
-     * Serialize destination data for RefreshDestinationsPacket
-     */
-    private String serializeDestinationData(Map<UUID, String> townNames, Map<UUID, Boolean> enabledState, 
-                                          Map<UUID, Integer> townDistances, Map<UUID, String> townDirections, 
-                                          String platformName) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{\"platformName\":\"").append(platformName).append("\",\"towns\":[");
-        
-        boolean first = true;
-        for (Map.Entry<UUID, String> entry : townNames.entrySet()) {
-            if (!first) sb.append(",");
-            UUID townId = entry.getKey();
-            sb.append("{\"id\":\"").append(townId.toString()).append("\"");
-            sb.append(",\"name\":\"").append(entry.getValue()).append("\"");
-            sb.append(",\"enabled\":").append(enabledState.getOrDefault(townId, false));
-            sb.append(",\"distance\":").append(townDistances.getOrDefault(townId, 0));
-            sb.append(",\"direction\":\"").append(townDirections.getOrDefault(townId, "")).append("\"");
-            sb.append("}");
-            first = false;
-        }
-        
-        sb.append("]}");
-        return sb.toString();
-    }
-    
-    /**
-     * Handle RefreshDestinationsPacket on client side to open destinations UI
-     */
-    public boolean refreshDestinationData(Object player, int x, int y, int z, String platformId, String destinationData) {
-        LOGGER.info("FORGE BLOCK ENTITY HELPER: Refreshing destination data for platform {} at [{}, {}, {}]", platformId, x, y, z);
-        
+    // Implementation of BlockEntityHelper.openDestinationsUI
+    public void openDestinationsUI(int x, int y, int z, String platformId, String platformName, 
+                           java.util.Map<java.util.UUID, String> townNames,
+                           java.util.Map<java.util.UUID, Boolean> enabledState,
+                           java.util.Map<java.util.UUID, Integer> townDistances,
+                           java.util.Map<java.util.UUID, String> townDirections) {
         try {
-            // Parse the JSON data (simple JSON parsing)
-            Map<UUID, String> townNames = new HashMap<>();
-            Map<UUID, Boolean> enabledState = new HashMap<>();
-            Map<UUID, Integer> townDistances = new HashMap<>();
-            Map<UUID, String> townDirections = new HashMap<>();
-            String platformName = "Platform";
+            LOGGER.debug("Opening destinations UI for platform {} at [{}, {}, {}]", platformId, x, y, z);
             
-            // Simple JSON parsing (this is basic but functional)
-            if (destinationData.contains("\"platformName\":")) {
-                int nameStart = destinationData.indexOf("\"platformName\":\"") + 16;
-                int nameEnd = destinationData.indexOf("\"", nameStart);
-                if (nameEnd > nameStart) {
-                    platformName = destinationData.substring(nameStart, nameEnd);
-                }
-            }
-            
-            // Parse towns array
-            if (destinationData.contains("\"towns\":[")) {
-                String townsSection = destinationData.substring(destinationData.indexOf("\"towns\":[") + 9);
-                townsSection = townsSection.substring(0, townsSection.lastIndexOf("]"));
-                
-                // Split by objects (simple approach)
-                String[] townObjects = townsSection.split("\\},\\{");
-                for (String townObj : townObjects) {
-                    townObj = townObj.replace("{", "").replace("}", "");
-                    String[] pairs = townObj.split(",");
-                    
-                    String townIdStr = null, townNameStr = null, directionStr = "";
-                    boolean enabled = false;
-                    int distance = 0;
-                    
-                    for (String pair : pairs) {
-                        String[] keyValue = pair.split(":");
-                        if (keyValue.length == 2) {
-                            String key = keyValue[0].replace("\"", "").trim();
-                            String value = keyValue[1].replace("\"", "").trim();
-                            
-                            switch (key) {
-                                case "id": townIdStr = value; break;
-                                case "name": townNameStr = value; break;
-                                case "enabled": enabled = Boolean.parseBoolean(value); break;
-                                case "distance": distance = Integer.parseInt(value); break;
-                                case "direction": directionStr = value; break;
-                            }
-                        }
-                    }
-                    
-                    if (townIdStr != null && townNameStr != null) {
-                        UUID townId = UUID.fromString(townIdStr);
-                        townNames.put(townId, townNameStr);
-                        enabledState.put(townId, enabled);
-                        townDistances.put(townId, distance);
-                        townDirections.put(townId, directionStr);
-                    }
-                }
-            }
-            
-            LOGGER.info("FORGE BLOCK ENTITY HELPER: Parsed {} towns for destinations UI", townNames.size());
-            
-            // Open the destinations UI on client side
+            // Open the destinations UI directly on client side - unified architecture approach
             BlockPos blockPos = new BlockPos(x, y, z);
-            UUID platformUUID = UUID.fromString(platformId);
+            java.util.UUID platformUUID = java.util.UUID.fromString(platformId);
             
             com.quackers29.businesscraft.ui.screens.platform.DestinationsScreenV2.open(
                 blockPos, platformUUID, platformName, townNames, enabledState, townDistances, townDirections);
             
-            return true;
+            LOGGER.debug("Successfully opened destinations UI for platform {}", platformId);
             
         } catch (Exception e) {
-            LOGGER.error("Failed to parse destination data: {}", e.getMessage());
-            e.printStackTrace();
-            return false;
+            LOGGER.error("Failed to open destinations UI: {}", e.getMessage(), e);
         }
     }
     

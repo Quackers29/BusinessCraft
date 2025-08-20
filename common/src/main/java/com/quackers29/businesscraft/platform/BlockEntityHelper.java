@@ -386,30 +386,26 @@ public interface BlockEntityHelper {
      */
     boolean registerPlayerExitUI(Object blockEntity, Object player);
     
-    /**
-     * Open the destinations UI for platform management.
-     * Platform implementations handle opening the platform destinations screen.
-     * 
-     * @param blockEntity Platform-specific town interface block entity
-     * @param player Platform-specific player object
-     * @param platformId Platform UUID as string
-     * @return True if the destinations UI was successfully opened
-     */
-    boolean openDestinationsUI(Object blockEntity, Object player, String platformId);
     
     /**
-     * Refresh destination data on client side.
-     * Platform implementations handle client-side destination data updates.
+     * Open destinations UI on client side with provided town data.
+     * Unified architecture approach - direct UI opening like main branch.
      * 
-     * @param player Platform-specific player object
      * @param x Block X coordinate
      * @param y Block Y coordinate
      * @param z Block Z coordinate
      * @param platformId Platform UUID as string
-     * @param destinationData JSON or serialized destination data
-     * @return True if destination data was successfully refreshed
+     * @param platformName Platform display name
+     * @param townNames Map of town IDs to names
+     * @param enabledState Map of town IDs to enabled states
+     * @param townDistances Map of town IDs to distances
+     * @param townDirections Map of town IDs to directions
      */
-    boolean refreshDestinationData(Object player, int x, int y, int z, String platformId, String destinationData);
+    void openDestinationsUI(int x, int y, int z, String platformId, String platformName, 
+                           java.util.Map<java.util.UUID, String> townNames,
+                           java.util.Map<java.util.UUID, Boolean> enabledState,
+                           java.util.Map<java.util.UUID, Integer> townDistances,
+                           java.util.Map<java.util.UUID, String> townDirections);
     
     /**
      * Add an item to communal storage.

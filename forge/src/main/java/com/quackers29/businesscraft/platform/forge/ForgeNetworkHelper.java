@@ -6,6 +6,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
@@ -196,8 +197,132 @@ public class ForgeNetworkHelper implements NetworkHelper {
                                             Map<String, String> townNames,
                                             Map<String, Integer> distances,
                                             Map<String, String> directions) {
-        // TODO: Implement specialized refresh destinations packet sending
-        LOGGER.warn("sendRefreshDestinationsPacket not yet implemented for Forge");
+        LOGGER.debug("FORGE NETWORK HELPER: Implementing sendRefreshDestinationsPacket for platform {} at [{}, {}, {}]", 
+            platformId, x, y, z);
+        
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            LOGGER.warn("Player is not a ServerPlayer: {}", player);
+            return;
+        }
+        
+        try {
+            // Get the block entity at the specified position
+            BlockPos pos = new BlockPos(x, y, z);
+            BlockEntity blockEntity = serverPlayer.level().getBlockEntity(pos);
+            
+            if (!(blockEntity instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface)) {
+                LOGGER.error("Block entity is not a TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
+                return;
+            }
+
+            // Get the platform by ID
+            java.util.UUID platformUUID = java.util.UUID.fromString(platformId);
+            com.quackers29.businesscraft.platform.Platform platform = townInterface.getPlatform(platformUUID);
+            if (platform == null) {
+                LOGGER.warn("Platform not found with ID: {}", platformId);
+                return;
+            }
+
+            // Gather town data using unified architecture (like main branch)
+            java.util.Map<java.util.UUID, String> townNamesMap = new java.util.HashMap<>();
+            java.util.Map<java.util.UUID, Boolean> enabledStateMap = new java.util.HashMap<>();
+            java.util.Map<java.util.UUID, Integer> townDistancesMap = new java.util.HashMap<>();
+            java.util.Map<java.util.UUID, String> townDirectionsMap = new java.util.HashMap<>();
+
+            // Get all towns and populate data (main branch approach)
+            try {
+                com.quackers29.businesscraft.town.TownManager townManager = 
+                    com.quackers29.businesscraft.town.TownManager.get(serverPlayer.serverLevel());
+                LOGGER.info("DEBUG DESTINATIONS: Got TownManager: {}", townManager);
+                
+                java.util.Collection<com.quackers29.businesscraft.town.Town> allTowns = townManager.getAllTowns();
+                LOGGER.info("DEBUG DESTINATIONS: TownManager.getAllTowns() returned: {} towns", allTowns != null ? allTowns.size() : "null");
+                
+                BlockPos currentPos = townInterface.getBlockPos();
+                java.util.UUID currentTownId = townInterface.getTownId();
+                LOGGER.info("DEBUG DESTINATIONS: Current position: {}, Current town ID: {}", currentPos, currentTownId);
+                
+                if (allTowns != null) {
+                    int townIndex = 0;
+                    for (com.quackers29.businesscraft.town.Town town : allTowns) {
+                        java.util.UUID townId = town.getId();
+                        String townName = town.getName();
+                        
+                        LOGGER.info("DEBUG DESTINATIONS: Processing town #{}: ID={}, Name={}", townIndex++, townId, townName);
+                        
+                        // Skip the current town
+                        if (townId.equals(currentTownId)) {
+                            LOGGER.info("DEBUG DESTINATIONS: Skipping current town: {}", townName);
+                            continue;
+                        }
+                        
+                        townNamesMap.put(townId, townName);
+                        LOGGER.info("DEBUG DESTINATIONS: Added town '{}' to destinations", townName);
+                        
+                        // Calculate distance and direction
+                        com.quackers29.businesscraft.api.ITownDataProvider.Position townPos = town.getPosition();
+                        if (townPos != null) {
+                            BlockPos townBlockPos = new BlockPos(townPos.getX(), townPos.getY(), townPos.getZ());
+                            double distance = currentPos.distManhattan(townBlockPos);
+                            townDistancesMap.put(townId, (int) distance);
+                            
+                            // Calculate direction
+                            int dx = townPos.getX() - currentPos.getX();
+                            int dz = townPos.getZ() - currentPos.getZ();
+                            String direction = Math.abs(dx) > Math.abs(dz) ? (dx > 0 ? "East" : "West") : (dz > 0 ? "South" : "North");
+                            townDirectionsMap.put(townId, direction);
+                            
+                            LOGGER.info("DEBUG DESTINATIONS: Town '{}' at {} - distance: {}m, direction: {}", 
+                                townName, townBlockPos, (int)distance, direction);
+                        } else {
+                            LOGGER.warn("DEBUG DESTINATIONS: Town '{}' has null position!", townName);
+                        }
+                        
+                        // Get enabled state from platform
+                        boolean enabled = platform.isDestinationEnabled(townId);
+                        enabledStateMap.put(townId, enabled);
+                        LOGGER.info("DEBUG DESTINATIONS: Town '{}' destination enabled: {}", townName, enabled);
+                    }
+                } else {
+                    LOGGER.warn("DEBUG DESTINATIONS: TownManager.getAllTowns() returned null!");
+                }
+            } catch (Exception e) {
+                LOGGER.error("Failed to get town data for destinations: {}", e.getMessage(), e);
+            }
+
+            // Create and send RefreshDestinationsPacket directly (unified architecture)
+            String platformName = "Platform #" + (townInterface.getPlatforms().indexOf(platform) + 1);
+            com.quackers29.businesscraft.network.packets.ui.RefreshDestinationsPacket responsePacket = 
+                new com.quackers29.businesscraft.network.packets.ui.RefreshDestinationsPacket(x, y, z, platformId, platformName);
+            
+            LOGGER.info("DEBUG DESTINATIONS: Creating packet with platform name: '{}'", platformName);
+            LOGGER.info("DEBUG DESTINATIONS: About to add {} towns to packet", townNamesMap.size());
+            
+            // Add all town data to the packet
+            for (java.util.Map.Entry<java.util.UUID, String> entry : townNamesMap.entrySet()) {
+                java.util.UUID townId = entry.getKey();
+                String townName = entry.getValue();
+                boolean enabled = enabledStateMap.getOrDefault(townId, false);
+                int distance = townDistancesMap.getOrDefault(townId, 0);
+                String direction = townDirectionsMap.getOrDefault(townId, "");
+                
+                responsePacket.addTown(townId, townName, enabled, distance, direction);
+                LOGGER.info("DEBUG DESTINATIONS: Added to packet - Town: '{}', Enabled: {}, Distance: {}m, Direction: {}", 
+                    townName, enabled, distance, direction);
+            }
+
+            LOGGER.info("DEBUG DESTINATIONS: Packet created with {} towns total", townNamesMap.size());
+
+            // Send to client using Forge networking
+            ModMessages.sendToPlayer(responsePacket, serverPlayer);
+            
+            LOGGER.info("DEBUG DESTINATIONS: Successfully sent RefreshDestinationsPacket for platform '{}' with {} towns at [{}, {}, {}]", 
+                platformId, townNamesMap.size(), x, y, z);
+                
+        } catch (Exception e) {
+            LOGGER.error("Failed to send RefreshDestinationsPacket for platform '{}' at [{}, {}, {}]: {}", 
+                platformId, x, y, z, e.getMessage());
+        }
     }
     
     public void sendRefreshPlatformsPacketToChunk(Object player, int x, int y, int z) {

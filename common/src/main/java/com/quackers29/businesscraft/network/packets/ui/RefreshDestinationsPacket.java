@@ -4,33 +4,30 @@ import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.UUID;
 
 /**
- * Platform-agnostic server-to-client packet to refresh platform destination data.
- * This updates the client-side destination cache for platform management UI.
- * 
- * Enhanced MultiLoader approach: Common module defines packet structure and logic,
- * platform modules handle platform-specific operations through PlatformServices.
+ * Server-to-client packet to refresh platform destination data and open destinations UI.
+ * Uses unified architecture approach - direct client-side handling like main branch.
  */
 public class RefreshDestinationsPacket extends BaseBlockEntityPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(RefreshDestinationsPacket.class);
     private final String platformId;
-    private final String destinationData; // JSON or serialized destination data
+    private final String platformName;
+    private final Map<UUID, String> townNames = new HashMap<>();
+    private final Map<UUID, Boolean> enabledState = new HashMap<>();
+    private final Map<UUID, Integer> townDistances = new HashMap<>();
+    private final Map<UUID, String> townDirections = new HashMap<>();
     
     /**
-     * Create packet for sending.
+     * Create packet for sending with town data.
      */
-    public RefreshDestinationsPacket(int x, int y, int z, String platformId, String destinationData) {
+    public RefreshDestinationsPacket(int x, int y, int z, String platformId, String platformName) {
         super(x, y, z);
         this.platformId = platformId != null ? platformId : "";
-        this.destinationData = destinationData != null ? destinationData : "{}";
-    }
-    
-    /**
-     * Constructor for simple refresh without specific data.
-     */
-    public RefreshDestinationsPacket(int x, int y, int z) {
-        this(x, y, z, "", "{}");
+        this.platformName = platformName != null ? platformName : "Platform";
     }
     
     /**
@@ -39,8 +36,23 @@ public class RefreshDestinationsPacket extends BaseBlockEntityPacket {
     public static RefreshDestinationsPacket decode(Object buffer) {
         int[] pos = PlatformServices.getNetworkHelper().readBlockPos(buffer);
         String platformId = PlatformServices.getNetworkHelper().readString(buffer);
-        String destinationData = PlatformServices.getNetworkHelper().readString(buffer);
-        return new RefreshDestinationsPacket(pos[0], pos[1], pos[2], platformId, destinationData);
+        String platformName = PlatformServices.getNetworkHelper().readString(buffer);
+        
+        RefreshDestinationsPacket packet = new RefreshDestinationsPacket(pos[0], pos[1], pos[2], platformId, platformName);
+        
+        // Read town data
+        int size = PlatformServices.getNetworkHelper().readInt(buffer);
+        for (int i = 0; i < size; i++) {
+            String townIdStr = PlatformServices.getNetworkHelper().readUUID(buffer);
+            UUID townId = UUID.fromString(townIdStr);
+            String name = PlatformServices.getNetworkHelper().readString(buffer);
+            boolean enabled = PlatformServices.getNetworkHelper().readBoolean(buffer);
+            int distance = PlatformServices.getNetworkHelper().readInt(buffer);
+            String direction = PlatformServices.getNetworkHelper().readString(buffer);
+            packet.addTown(townId, name, enabled, distance, direction);
+        }
+        
+        return packet;
     }
     
     /**
@@ -50,42 +62,60 @@ public class RefreshDestinationsPacket extends BaseBlockEntityPacket {
     public void encode(Object buffer) {
         super.encode(buffer); // Write block position
         PlatformServices.getNetworkHelper().writeString(buffer, platformId);
-        PlatformServices.getNetworkHelper().writeString(buffer, destinationData);
+        PlatformServices.getNetworkHelper().writeString(buffer, platformName);
+        
+        // Write town data
+        PlatformServices.getNetworkHelper().writeInt(buffer, townNames.size());
+        for (Map.Entry<UUID, String> entry : townNames.entrySet()) {
+            UUID townId = entry.getKey();
+            PlatformServices.getNetworkHelper().writeUUID(buffer, townId.toString());
+            PlatformServices.getNetworkHelper().writeString(buffer, entry.getValue());
+            PlatformServices.getNetworkHelper().writeBoolean(buffer, enabledState.getOrDefault(townId, false));
+            PlatformServices.getNetworkHelper().writeInt(buffer, townDistances.getOrDefault(townId, 0));
+            PlatformServices.getNetworkHelper().writeString(buffer, townDirections.getOrDefault(townId, ""));
+        }
+    }
+    
+    /**
+     * Add town data to this packet
+     */
+    public void addTown(UUID townId, String name, boolean enabled, int distance, String direction) {
+        townNames.put(townId, name);
+        enabledState.put(townId, enabled);
+        townDistances.put(townId, distance);
+        townDirections.put(townId, direction);
     }
     
     /**
      * Handle the packet on the client side.
-     * This method updates the client-side destination data cache.
+     * Opens the destinations UI directly using unified architecture approach.
      */
     @Override
     public void handle(Object player) {
         LOGGER.debug("Refreshing destinations for platform '{}' at position [{}, {}, {}]", platformId, x, y, z);
+        LOGGER.info("DEBUG DESTINATIONS CLIENT: Received packet with platform: '{}', town count: {}", platformName, townNames.size());
         
-        // Get the town interface entity using platform services
-        Object blockEntity = getBlockEntity(player);
-        if (blockEntity == null) {
-            LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
-            return;
-        }
-
-        Object townDataProvider = getTownDataProvider(blockEntity);
-        if (townDataProvider == null) {
-            LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
-            return;
+        // Debug log all received town data
+        for (java.util.Map.Entry<java.util.UUID, String> entry : townNames.entrySet()) {
+            java.util.UUID townId = entry.getKey();
+            String townName = entry.getValue();
+            boolean enabled = enabledState.getOrDefault(townId, false);
+            int distance = townDistances.getOrDefault(townId, 0);
+            String direction = townDirections.getOrDefault(townId, "");
+            
+            LOGGER.info("DEBUG DESTINATIONS CLIENT: Town data - '{}': enabled={}, distance={}m, direction={}", 
+                townName, enabled, distance, direction);
         }
         
-        // Update client-side destination data through platform services
-        // NOTE: Platform service still uses old signature - keeping for compatibility
-        boolean success = PlatformServices.getBlockEntityHelper().refreshDestinationData(player, x, y, z, platformId, destinationData);
-        
-        if (success) {
-            LOGGER.debug("Successfully refreshed destinations for platform '{}' at [{}, {}, {}]", platformId, x, y, z);
-        } else {
-            LOGGER.warn("Failed to refresh destinations for platform '{}' at [{}, {}, {}]", platformId, x, y, z);
-        }
+        // Delegate to platform services for unified handling - but simplified approach
+        PlatformServices.getBlockEntityHelper().openDestinationsUI(x, y, z, platformId, platformName, townNames, enabledState, townDistances, townDirections);
     }
     
-    // Getters for testing
+    // Getters
     public String getPlatformId() { return platformId; }
-    public String getDestinationData() { return destinationData; }
+    public String getPlatformName() { return platformName; }
+    public Map<UUID, String> getTownNames() { return townNames; }
+    public Map<UUID, Boolean> getEnabledState() { return enabledState; }
+    public Map<UUID, Integer> getTownDistances() { return townDistances; }
+    public Map<UUID, String> getTownDirections() { return townDirections; }
 }
