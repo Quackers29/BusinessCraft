@@ -59,9 +59,8 @@ public class BusinessCraftFabric implements ModInitializer {
         // Load configuration from common module
         com.quackers29.businesscraft.config.ConfigLoader.loadConfig();
         
-        // Initialize networking using common definitions
-        // CommonNetworking definitions are loaded via CommonRegistration.initialize()
-        // Platform-specific packet registration will be implemented later
+        // Initialize Fabric networking
+        com.quackers29.businesscraft.network.FabricModMessages.initializeNetworking();
         
         // TODO: Initialize platform-agnostic event handlers (once moved to common module)
         // ModEvents.initialize();

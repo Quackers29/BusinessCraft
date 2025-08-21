@@ -1,23 +1,19 @@
 package com.quackers29.businesscraft.platform.fabric;
 
 import com.quackers29.businesscraft.platform.MenuHelper;
-import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Fabric implementation of MenuHelper using Yarn mappings.
- * Implements cross-platform menu operations using Fabric Screen Handler API.
+ * Simplified to match common interface pattern for unified architecture.
  */
 public class FabricMenuHelper implements MenuHelper {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FabricMenuHelper.class);
     
     @Override
-    public Object createExtendedScreenHandlerFactory(Object factory) {
-        // In Fabric, we can directly use ExtendedScreenHandlerFactory
-        if (factory instanceof ExtendedScreenHandlerFactory) {
-            return factory;
-        }
-        
-        // If it's not already an ExtendedScreenHandlerFactory, we need to wrap it
-        // This is a simplification - in practice, you might need more sophisticated handling
-        return factory;
+    public void refreshActiveMenu(Object player, String refreshType) {
+        LOGGER.debug("FABRIC MENU HELPER: refreshActiveMenu not yet implemented");
+        // TODO: Implement Fabric-specific menu refreshing
     }
 }

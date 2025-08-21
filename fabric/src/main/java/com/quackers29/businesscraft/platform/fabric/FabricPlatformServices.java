@@ -19,7 +19,7 @@ public class FabricPlatformServices {
     public FabricPlatformServices() {
         this.platformHelper = new FabricPlatformHelper();
         this.registryHelper = new FabricRegistryHelper();
-        this.networkHelper = new FabricNetworkHelper();
+        this.networkHelper = new FabricNetworkHelper("businesscraft");
         this.eventHelper = new FabricEventHelper();
         this.inventoryHelper = new FabricInventoryHelper();
         this.menuHelper = new FabricMenuHelper();

@@ -35,8 +35,11 @@ dependencies {
     modImplementation 'net.fabricmc:fabric-loader:0.15.11'
     modImplementation 'net.fabricmc.fabric-api:fabric-api:0.92.2+1.20.1'
     
-    // Include common module
-    implementation project(':common')
+    // Include common module but exclude Forge dependencies
+    implementation(project(':common')) {
+        exclude group: 'net.minecraftforge', module: 'forge'
+        exclude group: 'net.minecraftforge'
+    }
     
     // Enhanced MultiLoader approach: Zero external dependencies
     // No Architectury or third-party APIs - direct platform API usage only

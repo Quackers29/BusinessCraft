@@ -2,6 +2,9 @@ package com.quackers29.businesscraft.platform.fabric;
 
 import com.quackers29.businesscraft.platform.PlatformHelper;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,12 +47,52 @@ public class FabricPlatformHelper implements PlatformHelper {
     
     @Override
     public void sendPlayerMessage(Object player, String message, String color) {
-        LOGGER.debug("sendPlayerMessage not yet implemented for Fabric");
+        if (!(player instanceof ServerPlayerEntity serverPlayer)) {
+            LOGGER.warn("Player is not a ServerPlayerEntity: {}", player);
+            return;
+        }
+        
+        try {
+            Formatting formatting = switch (color.toUpperCase()) {
+                case "RED" -> Formatting.RED;
+                case "GREEN" -> Formatting.GREEN;
+                case "GOLD" -> Formatting.GOLD;
+                case "BLUE" -> Formatting.BLUE;
+                case "YELLOW" -> Formatting.YELLOW;
+                case "AQUA" -> Formatting.AQUA;
+                case "WHITE" -> Formatting.WHITE;
+                case "GRAY", "GREY" -> Formatting.GRAY;
+                default -> Formatting.WHITE;
+            };
+            
+            Text text = Text.literal(message).formatted(formatting);
+            serverPlayer.sendMessage(text, false);
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to send message to player: {}", e.getMessage(), e);
+        }
     }
     
     @Override
     public void forceBlockUpdate(Object player, int x, int y, int z) {
-        LOGGER.debug("forceBlockUpdate not yet implemented for Fabric");
+        if (!(player instanceof ServerPlayerEntity serverPlayer)) {
+            LOGGER.warn("Player is not a ServerPlayerEntity: {}", player);
+            return;
+        }
+        
+        try {
+            net.minecraft.util.math.BlockPos pos = new net.minecraft.util.math.BlockPos(x, y, z);
+            net.minecraft.world.World world = serverPlayer.getWorld();
+            
+            // Force block state update
+            net.minecraft.block.BlockState state = world.getBlockState(pos);
+            world.updateNeighbors(pos, state.getBlock());
+            
+            LOGGER.debug("Forced block update at ({}, {}, {})", x, y, z);
+            
+        } catch (Exception e) {
+            LOGGER.error("Failed to force block update: {}", e.getMessage(), e);
+        }
     }
     
     @Override
