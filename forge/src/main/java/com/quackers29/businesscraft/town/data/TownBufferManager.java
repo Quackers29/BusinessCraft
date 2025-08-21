@@ -204,6 +204,8 @@ public class TownBufferManager {
      * Forge implementation: Updates ItemStackHandler from town buffer storage
      */
     protected void syncSlotsToInventory(SlotBasedStorage slotStorage) {
+        boolean anyChanges = false;
+        
         // Sync each slot from SlotBasedStorage to ItemStackHandler
         for (int i = 0; i < Math.min(slotStorage.getSlotCount(), bufferHandler.getSlots()); i++) {
             ItemStack slotStack = slotStorage.getSlot(i);
@@ -213,10 +215,25 @@ public class TownBufferManager {
             if (!ItemStack.matches(slotStack, handlerStack)) {
                 // Update the ItemStackHandler with the current SlotBasedStorage contents
                 bufferHandler.setStackInSlot(i, slotStack.copy());
+                anyChanges = true;
                 
                 LOGGER.debug("Synced slot {} to inventory: {} -> {}", i,
                     handlerStack.isEmpty() ? "empty" : handlerStack.getCount() + "x" + handlerStack.getItem(),
                     slotStack.isEmpty() ? "empty" : slotStack.getCount() + "x" + slotStack.getItem());
+            }
+        }
+        
+        // CRITICAL: Notify clients of inventory changes if any slots were updated
+        if (anyChanges) {
+            blockEntity.setChanged();
+            
+            // Force block update to synchronize container to client
+            if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                net.minecraft.core.BlockPos pos = blockEntity.getBlockPos();
+                net.minecraft.world.level.block.state.BlockState state = serverLevel.getBlockState(pos);
+                serverLevel.sendBlockUpdated(pos, state, state, net.minecraft.world.level.block.Block.UPDATE_ALL);
+                
+                LOGGER.debug("Forced client sync for buffer inventory changes at position {}", pos);
             }
         }
     }
