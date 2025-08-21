@@ -30,4 +30,18 @@ public class ForgeMenuHelper implements com.quackers29.businesscraft.platform.Fo
         // TODO: Implement menu refresh logic for Forge
         // This method will be used to update active menus with new data
     }
+    
+    @Override
+    public void openScreen(Object player, Object menuProvider, Object pos) {
+        // Use Forge's NetworkHooks for opening screens
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer &&
+            menuProvider instanceof net.minecraft.world.MenuProvider menuProv &&
+            pos instanceof net.minecraft.core.BlockPos blockPos) {
+            
+            net.minecraftforge.network.NetworkHooks.openScreen(serverPlayer, menuProv, blockPos);
+        } else {
+            throw new IllegalArgumentException("Invalid arguments for Forge openScreen: player=" + 
+                player.getClass() + ", menuProvider=" + menuProvider.getClass() + ", pos=" + pos.getClass());
+        }
+    }
 }
