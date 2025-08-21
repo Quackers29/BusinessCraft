@@ -25,13 +25,13 @@ public class ConfigLoader {
     
     // Town-related config
     public static List<String> townNames = new ArrayList<>();
-    public static int breadPerPop = 1;
+    public static int breadPerPop = 8;
     public static int minPopForTourists = 5;
-    public static int minDistanceBetweenTowns = 100; // Minimum distance between towns in blocks
+    public static int minDistanceBetweenTowns = 10; // Minimum distance between towns in blocks
     public static int defaultStartingPopulation = 5; // Default starting population for new towns
-    public static int maxTouristsPerTown = 10; // Maximum number of tourists per town
-    public static int populationPerTourist = 10; // Population required for each tourist (1 tourist per 10 population)
-    public static int maxPopBasedTourists = 20; // Maximum population-based tourists (200 pop = 20 tourists)
+    public static int maxTouristsPerTown = 100; // Maximum number of tourists per town
+    public static int populationPerTourist = 5; // Population required for each tourist (1 tourist per 5 population)
+    public static int maxPopBasedTourists = 20; // Maximum population-based tourists (100 pop = 20 tourists)
     
     // Tourist-related config
     public static double touristExpiryMinutes = 120.0; // Tourist expiry time in minutes (default: 120 = 2 hours)

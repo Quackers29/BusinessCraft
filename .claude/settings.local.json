@@ -36,7 +36,12 @@
       "Bash(GRADLE_USER_HOME=/tmp/gradle_temp ./gradlew --no-daemon build)",
       "WebFetch(domain:sawfly-hardy-randomly.ngrok-free.app)",
       "WebFetch(domain:linkie.shedaniel.me)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(GRADLE_USER_HOME=/tmp/gradle_temp ./gradlew --no-daemon :fabric:compileJava)",
+      "Bash(GRADLE_USER_HOME=/tmp/gradle_temp timeout 30s ./gradlew --no-daemon :fabric:runClient --args=\"--username TestUser\")",
+      "Bash(GRADLE_USER_HOME=/tmp/gradle_temp timeout 30s ./gradlew --no-daemon :forge:runClient --args=\"--username TestUser\")",
+      "Bash(GRADLE_USER_HOME=/tmp/gradle_temp timeout 30s ./gradlew --no-daemon :forge:compileJava)",
+      "Bash(GRADLE_USER_HOME=/tmp/gradle_temp timeout 30s ./gradlew --no-daemon :fabric:compileJava)"
     ],
     "deny": []
   }
