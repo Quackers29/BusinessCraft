@@ -62,6 +62,11 @@ public class ModEvents {
         }
         if (activeTownBlockPos == null) return (Object) InteractionResult.PASS;
         
+        // If PlatformPathHandler is active, let it handle the event instead
+        if (PlatformPathHandler.isActivePlatformSet()) {
+            return (Object) InteractionResult.PASS;
+        }
+        
         // Skip if on client side - only process on server
         if (level.isClientSide()) return (Object) InteractionResult.PASS;
         
@@ -76,7 +81,7 @@ public class ModEvents {
         BlockEntity be = level.getBlockEntity(activeTownBlockPos);
         LOGGER.debug("Right click event with active town block at {}", activeTownBlockPos);
         
-        if (be instanceof TownInterfaceEntity townInterface && townInterface.isInPathCreationMode()) {
+        if (be instanceof TownInterfaceEntity townInterface && townInterface.isInPathCreationMode() && !townInterface.isInPlatformCreationMode()) {
             LOGGER.debug("Path creation mode active, clicked: {}, awaitingSecondClick: {}", clickedPos, awaitingSecondClick);
             
             if (!townInterface.isValidPathDistance(clickedPos)) {

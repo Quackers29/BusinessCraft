@@ -45,29 +45,38 @@ public class ResetPlatformPathPacket extends BaseBlockEntityPacket {
     
     /**
      * Handle the packet on the server side.
-     * Unified Architecture approach: Direct access to TownInterfaceEntity methods.
+     * FIXED: Use TownInterfaceEntity instead of TownInterfaceData.
      */
     @Override
     public void handle(Object player) {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Player is resetting platform {} path at [{}, {}, {}]", platformId, x, y, z);
         
-        // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
-        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
-        
-        if (townData != null) {
-            // Direct business logic access - no abstraction layer needed
-            boolean success = townData.resetPlatformPath(platformId);
-            
-            if (success) {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully reset platform {} path at ({}, {}, {})", platformId, x, y, z);
+        // CRITICAL FIX: Use the actual TownInterfaceEntity platform system, not TownInterfaceData
+        Object blockEntity = getBlockEntity(player);
+        if (blockEntity != null) {
+            try {
+                // Convert platformId string to UUID and call resetPlatformPath method
+                java.util.UUID platformUUID = java.util.UUID.fromString(platformId);
+                boolean success = (Boolean) blockEntity.getClass()
+                    .getMethod("resetPlatformPath", java.util.UUID.class)
+                    .invoke(blockEntity, platformUUID);
                 
-                // Platform-specific operations still use platform services
-                PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
-            } else {
-                LOGGER.warn("Failed to reset platform {} path at ({}, {}, {}) - platform not found", platformId, x, y, z);
+                if (success) {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully reset platform {} path at ({}, {}, {})", platformId, x, y, z);
+                    
+                    // Platform-specific operations still use platform services
+                    PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
+                    
+                    // Send chat message to player
+                    PlatformServices.getPlatformHelper().sendPlayerMessage(player, "Platform path reset. You'll need to set a new path.", "YELLOW");
+                } else {
+                    LOGGER.warn("Failed to reset platform {} path at ({}, {}, {}) - platform not found", platformId, x, y, z);
+                }
+            } catch (Exception e) {
+                LOGGER.error("Failed to reset platform path via TownInterfaceEntity: {}", e.getMessage(), e);
             }
         } else {
-            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for platform path reset", x, y, z);
+            LOGGER.warn("No TownInterfaceEntity found at position ({}, {}, {}) for platform path reset", x, y, z);
         }
     }
     

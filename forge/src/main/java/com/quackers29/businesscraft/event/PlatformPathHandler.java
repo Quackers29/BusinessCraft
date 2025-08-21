@@ -33,6 +33,8 @@ public class PlatformPathHandler {
         activeTownBlockPos = pos;
         activePlatformId = platformId;
         awaitingSecondClick = false;
+        // Reset debounce timer when activating platform path mode
+        lastClickTime = 0;
     }
 
     public static void clearActivePlatform() {
@@ -40,6 +42,10 @@ public class PlatformPathHandler {
         activePlatformId = null;
         awaitingSecondClick = false;
         LOGGER.debug("Cleared active platform");
+    }
+    
+    public static boolean isActivePlatformSet() {
+        return activeTownBlockPos != null && activePlatformId != null;
     }
 
     @SubscribeEvent
@@ -49,12 +55,19 @@ public class PlatformPathHandler {
         // Skip if on client side - only process on server
         if (event.getLevel().isClientSide()) return;
         
+        // Only process main hand interactions to avoid duplicate events
+        if (event.getHand() != net.minecraft.world.InteractionHand.MAIN_HAND) return;
+        
         // Debounce clicks - prevent multiple rapid clicks
         long currentTime = System.currentTimeMillis();
-        if (currentTime - lastClickTime < 500) {
-            LOGGER.debug("Ignoring click due to debounce (time since last: {}ms)", currentTime - lastClickTime);
+        long timeSinceLastClick = currentTime - lastClickTime;
+        
+        if (timeSinceLastClick < 500) {
+            LOGGER.debug("Ignoring click due to debounce (time since last: {}ms)", timeSinceLastClick);
             return;
         }
+        
+        // Update lastClickTime only after passing debounce check
         lastClickTime = currentTime;
         
         Level level = event.getLevel();

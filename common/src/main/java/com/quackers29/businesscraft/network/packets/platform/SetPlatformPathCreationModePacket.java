@@ -49,31 +49,38 @@ public class SetPlatformPathCreationModePacket extends BaseBlockEntityPacket {
     
     /**
      * Handle the packet on the server side.
-     * Unified Architecture approach: Direct access to TownInterfaceData without BlockEntityHelper abstraction.
+     * FIXED: Use TownInterfaceEntity instead of TownInterfaceData.
      */
     @Override
     public void handle(Object player) {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing SetPlatformPathCreationModePacket: platform {} mode={} at ({}, {}, {})", 
             platformId, mode, x, y, z);
         
-        // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
-        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
-        
-        if (townData != null) {
-            // Direct business logic access - no abstraction layer needed
-            townData.setPathCreationMode(mode, platformId);
-            
-            // Platform-specific client-side state management still uses platform services
-            if (mode) {
-                PlatformServices.getPlatformHelper().setActivePlatformForPathCreation(x, y, z, platformId);
-            } else {
-                PlatformServices.getPlatformHelper().clearActivePlatformForPathCreation();
+        // CRITICAL FIX: Use the actual TownInterfaceEntity platform system, not TownInterfaceData
+        Object blockEntity = getBlockEntity(player);
+        if (blockEntity != null) {
+            try {
+                // Convert platformId string to UUID and call setPlatformCreationMode method
+                java.util.UUID platformUUID = java.util.UUID.fromString(platformId);
+                blockEntity.getClass()
+                    .getMethod("setPlatformCreationMode", boolean.class, java.util.UUID.class)
+                    .invoke(blockEntity, mode, platformUUID);
+                
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully set platform creation mode via TownInterfaceEntity: platform {} mode={} at ({}, {}, {})", 
+                            platformId, mode, x, y, z);
+                
+                // Platform-specific client-side state management still uses platform services
+                if (mode) {
+                    PlatformServices.getPlatformHelper().setActivePlatformForPathCreation(x, y, z, platformId);
+                } else {
+                    PlatformServices.getPlatformHelper().clearActivePlatformForPathCreation();
+                }
+                
+            } catch (Exception e) {
+                LOGGER.error("Failed to set platform creation mode via TownInterfaceEntity: {}", e.getMessage(), e);
             }
-            
-            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully set platform {} path creation mode to {} at ({}, {}, {})", 
-                        platformId, mode, x, y, z);
         } else {
-            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for platform path creation mode", x, y, z);
+            LOGGER.warn("No TownInterfaceEntity found at position ({}, {}, {}) for platform path creation mode", x, y, z);
         }
     }
     

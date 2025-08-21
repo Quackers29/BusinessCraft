@@ -1043,6 +1043,20 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     }
     
     /**
+     * Resets the path for a specific platform (clears start and end positions)
+     */
+    public boolean resetPlatformPath(UUID platformId) {
+        Platform platform = platformManager.getPlatform(platformId);
+        if (platform != null) {
+            platform.setStartPos(null);
+            platform.setEndPos(null);
+            setChanged(); // Mark entity as changed for persistence
+            return true;
+        }
+        return false;
+    }
+    
+    /**
      * Toggles a platform's enabled state
      */
     public void togglePlatformEnabled(UUID platformId) {
