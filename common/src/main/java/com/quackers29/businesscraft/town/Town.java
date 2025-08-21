@@ -12,7 +12,7 @@ import com.quackers29.businesscraft.town.data.RewardEntry;
 import com.quackers29.businesscraft.town.data.ClaimStatus;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Item;
-import net.minecraft.core.registries.BuiltInRegistries;
+import com.quackers29.businesscraft.platform.PlatformServices;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.nbt.CompoundTag;
 import org.slf4j.Logger;
@@ -196,7 +196,7 @@ public class Town implements ITownDataProvider {
         // Convert string keys to Items via direct registry access (Unified Architecture)
         Map<Object, Integer> result = new HashMap<>(); 
         for (Map.Entry<String, Integer> entry : resources.entrySet()) {
-            Item item = BuiltInRegistries.ITEM.get(new ResourceLocation(entry.getKey()));
+            Item item = (Item) PlatformServices.getRegistryHelper().getItem(entry.getKey());
             if (item != null) {
                 result.put(item, entry.getValue());
             }
@@ -224,7 +224,7 @@ public class Town implements ITownDataProvider {
     @Override
     public void addResource(Object item, int count) {
         if (item instanceof Item minecraftItem) {
-            String itemId = BuiltInRegistries.ITEM.getKey(minecraftItem).toString();
+            String itemId = PlatformServices.getRegistryHelper().getItemId(minecraftItem);
             addResource(itemId, count); // This will call the bread-to-population logic
         }
     }
@@ -232,7 +232,7 @@ public class Town implements ITownDataProvider {
     @Override
     public int getResourceCount(Object item) {
         if (item instanceof Item minecraftItem) {
-            String itemId = BuiltInRegistries.ITEM.getKey(minecraftItem).toString();
+            String itemId = PlatformServices.getRegistryHelper().getItemId(minecraftItem);
             return getResourceCount(itemId);
         }
         return 0;
