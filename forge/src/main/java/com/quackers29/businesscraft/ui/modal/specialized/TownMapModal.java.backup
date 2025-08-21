@@ -1,0 +1,343 @@
+package com.quackers29.businesscraft.ui.modal.specialized;
+
+import com.quackers29.businesscraft.debug.DebugConfig;
+import com.quackers29.businesscraft.network.ModMessages;
+import com.quackers29.businesscraft.network.packets.ui.RequestTownMapDataPacket;
+import com.quackers29.businesscraft.network.packets.ui.RequestTownPlatformDataPacket;
+import com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket;
+import com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket;
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
+import net.minecraft.core.BlockPos;
+import net.minecraft.client.Minecraft;
+import net.minecraft.server.level.ServerLevel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+import java.util.HashMap;
+import java.util.UUID;
+import java.util.function.Consumer;
+import com.quackers29.businesscraft.client.cache.ClientTownMapCache;
+
+/**
+ * A modal screen that displays a map view of all towns in the world.
+ * Allows users to see town locations, distances, and directions.
+ * 
+ * Enhanced MultiLoader Template: Uses migrated packets from common module.
+ * Packets available: RequestTownMapDataPacket, TownMapDataResponsePacket
+ */
+public class TownMapModal extends Screen {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TownMapModal.class);
+    
+    private final Screen parentScreen;
+    private final BlockPos townPos;
+    private final Consumer<TownMapModal> onClose;
+    private Map<String, String> townMapData;
+    private Map<UUID, ClientTownMapCache.CachedTownData> cachedTowns;
+    private int currentZoomLevel = 1;
+    private boolean isDataLoaded = false;
+    private boolean hasAdvancedMapData = false;
+    
+    public TownMapModal(Screen parentScreen, BlockPos townPos, Consumer<TownMapModal> onClose) {
+        super(Component.literal("Town Map View"));
+        this.parentScreen = parentScreen;
+        this.townPos = townPos;
+        this.onClose = onClose;
+        this.townMapData = new HashMap<>();
+        this.cachedTowns = new HashMap<>();
+    }
+    
+    @Override
+    protected void init() {
+        super.init();
+        
+        // Add close button
+        this.addRenderableWidget(Button.builder(Component.literal("Close"), button -> {
+            this.onClose();
+        }).bounds(this.width - 80, 10, 70, 20).build());
+        
+        // Add zoom buttons
+        this.addRenderableWidget(Button.builder(Component.literal("Zoom In"), button -> {
+            if (currentZoomLevel < 5) {
+                currentZoomLevel++;
+                requestMapData();
+            }
+        }).bounds(10, this.height - 60, 60, 20).build());
+        
+        this.addRenderableWidget(Button.builder(Component.literal("Zoom Out"), button -> {
+            if (currentZoomLevel > 1) {
+                currentZoomLevel--;
+                requestMapData();
+            }
+        }).bounds(80, this.height - 60, 60, 20).build());
+        
+        // Request initial map data
+        requestMapData();
+    }
+    
+    private void requestMapData() {
+        LOGGER.debug("Requesting town map data for position: {} with zoom level: {}", townPos, currentZoomLevel);
+        
+        // Send packet to request map data
+        RequestTownMapDataPacket packet = new RequestTownMapDataPacket(
+            townPos.getX(), townPos.getY(), townPos.getZ(), currentZoomLevel, true);
+        ModMessages.sendToServer(packet);
+        
+        isDataLoaded = false;
+    }
+    
+    public void updateMapData(String mapData, int zoomLevel) {
+        LOGGER.debug("Received map data for zoom level: {}", zoomLevel);
+        // Simple implementation - store the data
+        this.townMapData.put("zoom_" + zoomLevel, mapData);
+        if (zoomLevel == this.currentZoomLevel) {
+            this.isDataLoaded = true;
+        }
+    }
+    
+    /**
+     * Set cached town data for sophisticated map rendering.
+     * This method restores the advanced map functionality that was temporarily disabled.
+     * 
+     * @param townData Map of town UUIDs to cached town data from ClientTownMapCache
+     */
+    public void setTownData(Map<UUID, ClientTownMapCache.CachedTownData> townData) {
+        this.cachedTowns = townData != null ? new HashMap<>(townData) : new HashMap<>();
+        this.hasAdvancedMapData = !this.cachedTowns.isEmpty();
+        
+        LOGGER.debug("Set town data for map modal: {} towns loaded, advanced features: {}", 
+                    this.cachedTowns.size(), hasAdvancedMapData);
+        
+        // Request additional platform data for enhanced visualization
+        if (hasAdvancedMapData) {
+            requestPlatformData();
+        }
+    }
+    
+    /**
+     * Request platform data for enhanced map visualization.
+     * This enables sophisticated features like transportation network display.
+     */
+    private void requestPlatformData() {
+        LOGGER.debug("Requesting platform data for enhanced map visualization at position: {}", townPos);
+        
+        // Send packet to request platform and connection data
+        RequestTownPlatformDataPacket packet = new RequestTownPlatformDataPacket(
+            townPos.getX(), townPos.getY(), townPos.getZ(), true, true, 5000);
+        ModMessages.sendToServer(packet);
+    }
+    
+    @Override
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        // Render background
+        guiGraphics.fill(0, 0, this.width, this.height, 0x80000000);
+        
+        // Render title
+        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
+        
+        // Render map area
+        int mapX = 50;
+        int mapY = 50;
+        int mapWidth = this.width - 100;
+        int mapHeight = this.height - 130;
+        
+        // Map background
+        guiGraphics.fill(mapX, mapY, mapX + mapWidth, mapY + mapHeight, 0xFF333333);
+        
+        // Check for fresh cache data on each render (in case server responded with new data)
+        refreshCacheData();
+        
+        // Render sophisticated map content
+        if (hasAdvancedMapData && !cachedTowns.isEmpty()) {
+            renderAdvancedMap(guiGraphics, mapX, mapY, mapWidth, mapHeight, mouseX, mouseY);
+        } else if (isDataLoaded) {
+            String currentMapData = townMapData.get("zoom_" + currentZoomLevel);
+            if (currentMapData != null && !currentMapData.equals("{}")) {
+                // Fallback to basic map data rendering
+                guiGraphics.drawCenteredString(this.font, "Map Data Loaded (Zoom: " + currentZoomLevel + ")", 
+                    mapX + mapWidth / 2, mapY + mapHeight / 2, 0xFFFFFF);
+                guiGraphics.drawCenteredString(this.font, "Advanced features loading...", 
+                    mapX + mapWidth / 2, mapY + mapHeight / 2 + 15, 0xFFFF88);
+            } else {
+                guiGraphics.drawCenteredString(this.font, "No map data available", 
+                    mapX + mapWidth / 2, mapY + mapHeight / 2, 0xFF8888);
+            }
+        } else {
+            guiGraphics.drawCenteredString(this.font, "Loading map data...", 
+                mapX + mapWidth / 2, mapY + mapHeight / 2, 0xFFFF88);
+        }
+        
+        // Render zoom level indicator
+        guiGraphics.drawString(this.font, "Zoom: " + currentZoomLevel, 10, this.height - 40, 0xFFFFFF);
+        
+        super.render(guiGraphics, mouseX, mouseY, partialTick);
+    }
+    
+    @Override
+    public void onClose() {
+        this.minecraft.setScreen(parentScreen);
+        if (onClose != null) {
+            onClose.accept(this);
+        }
+    }
+    
+    /**
+     * Render the sophisticated map with advanced features restored from the original implementation.
+     * Features: Town markers with names, coordinate grid, distance calculation, north-oriented display.
+     */
+    private void renderAdvancedMap(GuiGraphics guiGraphics, int mapX, int mapY, int mapWidth, int mapHeight, int mouseX, int mouseY) {
+        // Calculate map scale and center point
+        double mapScale = 1.0 / currentZoomLevel;
+        int centerX = townPos.getX();
+        int centerZ = townPos.getZ();
+        
+        // Render coordinate grid (7 markers per axis as documented in done.md)
+        renderCoordinateGrid(guiGraphics, mapX, mapY, mapWidth, mapHeight, centerX, centerZ, mapScale);
+        
+        // Render town markers with names
+        for (ClientTownMapCache.CachedTownData town : cachedTowns.values()) {
+            renderTownMarker(guiGraphics, mapX, mapY, mapWidth, mapHeight, town, centerX, centerZ, mapScale, mouseX, mouseY);
+        }
+        
+        // Render current town marker (special highlighting)
+        guiGraphics.fill(mapX + mapWidth / 2 - 2, mapY + mapHeight / 2 - 2, mapX + mapWidth / 2 + 2, mapY + mapHeight / 2 + 2, 0xFFFF0000);
+        guiGraphics.drawCenteredString(this.font, "You", mapX + mapWidth / 2, mapY + mapHeight / 2 - 15, 0xFFFFFF);
+        
+        // Render map info
+        guiGraphics.drawString(this.font, "Towns: " + cachedTowns.size(), mapX + 5, mapY + 5, 0xFFFFFF);
+        
+        // Render mouse coordinates if hovering over map
+        if (mouseX >= mapX && mouseX <= mapX + mapWidth && mouseY >= mapY && mouseY <= mapY + mapHeight) {
+            int worldX = (int) (centerX + (mouseX - mapX - mapWidth / 2) * mapScale);
+            int worldZ = (int) (centerZ + (mouseY - mapY - mapHeight / 2) * mapScale);
+            guiGraphics.drawString(this.font, String.format("X: %d, Z: %d", worldX, worldZ), 
+                mapX + 5, mapY + mapHeight - 25, 0xFFFFAA);
+        }
+    }
+    
+    /**
+     * Render coordinate grid with 7 markers per axis (as documented in done.md).
+     */
+    private void renderCoordinateGrid(GuiGraphics guiGraphics, int mapX, int mapY, int mapWidth, int mapHeight, 
+                                    int centerX, int centerZ, double mapScale) {
+        int gridColor = 0xFF666666;
+        
+        // Calculate grid spacing for 7 markers per axis
+        int gridSpacing = (int) (Math.max(mapWidth, mapHeight) * mapScale / 7);
+        gridSpacing = Math.max(100, (gridSpacing / 100) * 100); // Round to nearest 100
+        
+        // Draw vertical grid lines
+        for (int i = -3; i <= 3; i++) {
+            int worldX = centerX + i * gridSpacing;
+            int screenX = (int) (mapX + mapWidth / 2 + i * gridSpacing / mapScale);
+            if (screenX >= mapX && screenX <= mapX + mapWidth) {
+                guiGraphics.vLine(screenX, mapY, mapY + mapHeight, gridColor);
+                guiGraphics.drawString(this.font, String.valueOf(worldX), screenX - 10, mapY + mapHeight + 5, 0xFFAAAA);
+            }
+        }
+        
+        // Draw horizontal grid lines
+        for (int i = -3; i <= 3; i++) {
+            int worldZ = centerZ + i * gridSpacing;
+            int screenY = (int) (mapY + mapHeight / 2 + i * gridSpacing / mapScale);
+            if (screenY >= mapY && screenY <= mapY + mapHeight) {
+                guiGraphics.hLine(mapX, mapX + mapWidth, screenY, gridColor);
+                // Avoid overlapping with town info panel as documented in done.md
+                if (screenY < mapY + 30 || screenY > mapY + mapHeight - 30) {
+                    guiGraphics.drawString(this.font, String.valueOf(worldZ), mapX - 25, screenY - 4, 0xFFAAAA);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Render individual town marker with name and distance calculation.
+     */
+    private void renderTownMarker(GuiGraphics guiGraphics, int mapX, int mapY, int mapWidth, int mapHeight,
+                                ClientTownMapCache.CachedTownData town, int centerX, int centerZ, double mapScale,
+                                int mouseX, int mouseY) {
+        // Calculate screen position
+        int screenX = (int) (mapX + mapWidth / 2 + (town.getX() - centerX) / mapScale);
+        int screenY = (int) (mapY + mapHeight / 2 + (town.getZ() - centerZ) / mapScale);
+        
+        // Check if town is within map bounds or add edge indicators as documented in done.md
+        boolean isOnMap = screenX >= mapX && screenX <= mapX + mapWidth && screenY >= mapY && screenY <= mapY + mapHeight;
+        
+        if (isOnMap) {
+            // Render town marker
+            guiGraphics.fill(screenX - 1, screenY - 1, screenX + 1, screenY + 1, 0xFF00FF00);
+            
+            // Render town name above marker
+            guiGraphics.drawCenteredString(this.font, town.getName(), screenX, screenY - 15, 0xFFFFFF);
+            
+            // Show distance on hover/click as documented in done.md
+            if (mouseX >= screenX - 10 && mouseX <= screenX + 10 && mouseY >= screenY - 15 && mouseY <= screenY + 5) {
+                int distance = (int) Math.sqrt(Math.pow(town.getX() - centerX, 2) + Math.pow(town.getZ() - centerZ, 2));
+                guiGraphics.drawCenteredString(this.font, distance + "m", screenX, screenY + 10, 0xFFFFAA);
+            }
+        } else {
+            // Render edge indicators for off-map towns as documented in done.md
+            renderEdgeIndicator(guiGraphics, mapX, mapY, mapWidth, mapHeight, town, centerX, centerZ, mapScale);
+        }
+    }
+    
+    /**
+     * Render edge indicators for off-map towns (as documented in done.md).
+     */
+    private void renderEdgeIndicator(GuiGraphics guiGraphics, int mapX, int mapY, int mapWidth, int mapHeight,
+                                   ClientTownMapCache.CachedTownData town, int centerX, int centerZ, double mapScale) {
+        // Calculate direction to town
+        double dx = town.getX() - centerX;
+        double dz = town.getZ() - centerZ;
+        double distance = Math.sqrt(dx * dx + dz * dz);
+        
+        if (distance > 0) {
+            // Normalize direction
+            dx /= distance;
+            dz /= distance;
+            
+            // Find edge intersection point
+            double scale = Math.min(mapWidth / 2.0 / Math.abs(dx), mapHeight / 2.0 / Math.abs(dz));
+            int edgeX = (int) (mapX + mapWidth / 2 + dx * scale * 0.9); // 0.9 to keep arrow inside map
+            int edgeY = (int) (mapY + mapHeight / 2 + dz * scale * 0.9);
+            
+            // Draw arrow pointing to off-map town
+            guiGraphics.fill(edgeX - 1, edgeY - 1, edgeX + 1, edgeY + 1, 0xFFFFAA00);
+            
+            // Draw town name near edge
+            String name = town.getName();
+            if (name.length() > 8) name = name.substring(0, 6) + ".."; // Truncate long names
+            guiGraphics.drawCenteredString(this.font, name, edgeX, edgeY - 12, 0xFFFFAA);
+        }
+    }
+    
+    /**
+     * Refresh cache data from ClientTownMapCache on each render.
+     * This ensures the modal picks up new town data when server responses arrive.
+     */
+    private void refreshCacheData() {
+        ClientTownMapCache cache = ClientTownMapCache.getInstance();
+        Map<UUID, ClientTownMapCache.CachedTownData> freshData = cache.getAllTowns();
+        
+        // Only update if we have new data or the data changed significantly
+        if (!freshData.isEmpty() && (cachedTowns.isEmpty() || freshData.size() != cachedTowns.size())) {
+            LOGGER.debug("Refreshing map modal with {} towns from live cache", freshData.size());
+            
+            this.cachedTowns = new HashMap<>(freshData);
+            this.hasAdvancedMapData = !this.cachedTowns.isEmpty();
+            
+            if (hasAdvancedMapData) {
+                LOGGER.debug("Sophisticated map features now enabled with {} towns", cachedTowns.size());
+            }
+        }
+    }
+    
+    @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
+}

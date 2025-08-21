@@ -7,3 +7,11 @@
 /.claude
 /.cursor
 .cursorignore
+/forge/build/tmp
+/fabric/build/loom-cache
+/forge/build
+/common/build
+/fabric/run
+
+/fabric/build
+/fabric/run

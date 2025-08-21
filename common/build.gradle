@@ -1,0 +1,46 @@
+// Common module - UNIFIED ARCHITECTURE for BusinessCraft
+// Contains unified business logic with direct Minecraft API access
+// Unified Architecture approach: Direct Minecraft dependencies for natural database queries
+
+plugins {
+    id 'java-library'
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+}
+
+archivesBaseName = 'businesscraft-common'
+
+// UNIFIED ARCHITECTURE: Minecraft configuration for common module
+minecraft {
+    mappings channel: 'parchment', version: '2023.06.26-1.20.1'
+}
+
+// UNIFIED ARCHITECTURE: Common module has direct Minecraft access
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.20.1-47.1.0'
+    // Common TOML library for configuration
+    api 'com.moandjiezana.toml:toml4j:0.7.2'
+    
+    // SLF4J for logging (used by debug and configuration classes)
+    api 'org.slf4j:slf4j-api:1.7.36'
+    
+    // Log4j for DebugConfig (commonly available in Minecraft environments)
+    compileOnly 'org.apache.logging.log4j:log4j-api:2.17.1'
+    
+    // JetBrains annotations for @NotNull/@Nullable
+    api 'org.jetbrains:annotations:23.0.0'
+}
+
+jar {
+    manifest {
+        attributes([
+            "Specification-Title": "businesscraft-common",
+            "Specification-Vendor": "Quackers29", 
+            "Specification-Version": "1",
+            "Implementation-Title": "BusinessCraft Common",
+            "Implementation-Version": project.version,
+            "Implementation-Vendor": "Quackers29",
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}

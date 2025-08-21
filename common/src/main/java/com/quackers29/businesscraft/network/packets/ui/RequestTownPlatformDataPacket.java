@@ -1,0 +1,174 @@
+package com.quackers29.businesscraft.network.packets.ui;
+
+import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
+import com.quackers29.businesscraft.platform.PlatformServices;
+import org.slf4j.Logger;
+import com.quackers29.businesscraft.debug.DebugConfig;
+import org.slf4j.LoggerFactory;
+
+import java.util.UUID;
+
+/**
+ * Platform-agnostic client-to-server packet to request town platform positioning data.
+ * This is used by the sophisticated town map modal to display platform connections,
+ * destinations, and transportation network visualization.
+ * 
+ * This packet was temporarily removed during Enhanced MultiLoader Template migration
+ * and is now restored in the common module for cross-platform compatibility.
+ * 
+ * Enhanced MultiLoader approach: Common module defines packet structure and logic,
+ * platform modules handle platform-specific operations through PlatformServices.
+ */
+public class RequestTownPlatformDataPacket extends BaseBlockEntityPacket {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RequestTownPlatformDataPacket.class);
+    
+    private final boolean includePlatformConnections;
+    private final boolean includeDestinationTowns;
+    private final int maxRadius; // Maximum search radius for connected towns
+    private final String targetTownId; // Optional town ID for specific town requests
+    
+    /**
+     * Create packet for requesting comprehensive platform data.
+     * 
+     * @param x Town X coordinate
+     * @param y Town Y coordinate
+     * @param z Town Z coordinate
+     * @param includePlatformConnections Include platform layout and connections
+     * @param includeDestinationTowns Include destination town information
+     * @param maxRadius Maximum radius to search for connected towns
+     */
+    public RequestTownPlatformDataPacket(int x, int y, int z, 
+                                       boolean includePlatformConnections, 
+                                       boolean includeDestinationTowns, 
+                                       int maxRadius, String targetTownId) {
+        super(x, y, z);
+        this.includePlatformConnections = includePlatformConnections;
+        this.includeDestinationTowns = includeDestinationTowns;
+        this.maxRadius = maxRadius;
+        this.targetTownId = targetTownId;
+    }
+    
+    /**
+     * Create packet with default parameters for standard map view.
+     */
+    public RequestTownPlatformDataPacket(int x, int y, int z) {
+        this(x, y, z, true, true, 5000, null); // Default 5000 block radius, no specific town
+    }
+    
+    /**
+     * Create packet for specific town ID (used by sophisticated map)
+     */
+    public RequestTownPlatformDataPacket(UUID townId) {
+        this(0, 64, 0, true, true, 5000, townId.toString()); // Use UUID-based lookup
+    }
+    
+    /**
+     * Create packet from network buffer (decode constructor).
+     */
+    public static RequestTownPlatformDataPacket decode(Object buffer) {
+        int[] pos = PlatformServices.getNetworkHelper().readBlockPos(buffer);
+        boolean includePlatformConnections = PlatformServices.getNetworkHelper().readBoolean(buffer);
+        boolean includeDestinationTowns = PlatformServices.getNetworkHelper().readBoolean(buffer);
+        int maxRadius = PlatformServices.getNetworkHelper().readInt(buffer);
+        String targetTownId = PlatformServices.getNetworkHelper().readUUID(buffer);
+        
+        return new RequestTownPlatformDataPacket(pos[0], pos[1], pos[2], 
+                                               includePlatformConnections, 
+                                               includeDestinationTowns, 
+                                               maxRadius, targetTownId);
+    }
+    
+    /**
+     * Encode packet data for network transmission.
+     */
+    @Override
+    public void encode(Object buffer) {
+        super.encode(buffer); // Write block position
+        PlatformServices.getNetworkHelper().writeBoolean(buffer, includePlatformConnections);
+        PlatformServices.getNetworkHelper().writeBoolean(buffer, includeDestinationTowns);
+        PlatformServices.getNetworkHelper().writeInt(buffer, maxRadius);
+        PlatformServices.getNetworkHelper().writeUUID(buffer, targetTownId);
+    }
+    
+    /**
+     * Handle the packet on the server side.
+     * This method processes the platform data request and sends back comprehensive
+     * platform and destination information for map visualization.
+     */
+    @Override
+    public void handle(Object player) {
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing platform data request at position [{}, {}, {}] with radius {} for town {}", 
+                    x, y, z, maxRadius, targetTownId);
+        
+        try {
+            // FIXED: Support UUID-based town lookup for map view
+            if (targetTownId != null && !targetTownId.equals("null")) {
+                // UUID-based lookup for map view
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Using UUID-based town lookup for town ID: {}", targetTownId);
+                boolean success = PlatformServices.getBlockEntityHelper().processPlatformDataRequestByTownId(
+                    player, targetTownId, includePlatformConnections, includeDestinationTowns, maxRadius);
+                
+                if (success) {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed UUID-based platform data request for town {}", targetTownId);
+                } else {
+                    LOGGER.warn("Failed to process UUID-based platform data request for town {}", targetTownId);
+                    // Send empty response to prevent client hanging
+                    TownPlatformDataResponsePacket errorResponse = 
+                        new TownPlatformDataResponsePacket(x, y, z, false);
+                    PlatformServices.getNetworkHelper().sendToClient(errorResponse, player);
+                }
+                return;
+            }
+            
+            // FALLBACK: Block entity-based lookup for legacy code
+            Object blockEntity = getBlockEntity(player);
+            if (blockEntity == null) {
+                LOGGER.error("No block entity found at position: [{}, {}, {}]", x, y, z);
+                // Send empty response to prevent client hanging
+                TownPlatformDataResponsePacket errorResponse = 
+                    new TownPlatformDataResponsePacket(x, y, z, false);
+                PlatformServices.getNetworkHelper().sendToClient(errorResponse, player);
+                return;
+            }
+
+            Object townDataProvider = getTownDataProvider(blockEntity);
+            if (townDataProvider == null) {
+                LOGGER.error("Failed to get TownInterfaceEntity at position: [{}, {}, {}]", x, y, z);
+                // Send empty response to prevent client hanging
+                TownPlatformDataResponsePacket errorResponse = 
+                    new TownPlatformDataResponsePacket(x, y, z, false);
+                PlatformServices.getNetworkHelper().sendToClient(errorResponse, player);
+                return;
+            }
+            
+            // Use platform services to handle the platform data request
+            boolean success = PlatformServices.getBlockEntityHelper().processPlatformDataRequest(
+                player, x, y, z, includePlatformConnections, includeDestinationTowns, maxRadius, targetTownId);
+            
+            if (success) {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Successfully processed platform data request at [{}, {}, {}]", x, y, z);
+            } else {
+                LOGGER.warn("Failed to process platform data request at [{}, {}, {}]", x, y, z);
+                
+                // Send empty response to prevent client hanging
+                TownPlatformDataResponsePacket errorResponse = 
+                    new TownPlatformDataResponsePacket(x, y, z, false);
+                PlatformServices.getNetworkHelper().sendToClient(errorResponse, player);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception while processing platform data request at [{}, {}, {}]: {}", 
+                        x, y, z, e.getMessage());
+            
+            // Send error response
+            TownPlatformDataResponsePacket errorResponse = 
+                new TownPlatformDataResponsePacket(x, y, z, false);
+            PlatformServices.getNetworkHelper().sendToClient(errorResponse, player);
+        }
+    }
+    
+    // Getters for server-side processing
+    public boolean includePlatformConnections() { return includePlatformConnections; }
+    public boolean includeDestinationTowns() { return includeDestinationTowns; }
+    public int getMaxRadius() { return maxRadius; }
+    public String getTargetTownId() { return targetTownId; }
+}
