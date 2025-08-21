@@ -4,6 +4,8 @@ import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import com.quackers29.businesscraft.platform.PlatformServiceProvider;
 import com.quackers29.businesscraft.platform.fabric.FabricPlatformServices;
+import com.quackers29.businesscraft.fabric.init.FabricModBlocks;
+import com.quackers29.businesscraft.fabric.init.FabricModBlockEntities;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
@@ -52,6 +54,10 @@ public class BusinessCraftFabric implements ModInitializer {
         
         // Initialize platform-agnostic registration coordination from common module
         com.quackers29.businesscraft.init.CommonRegistration.initialize();
+        
+        // Initialize Fabric-specific blocks and entities (Bridge Pattern)
+        FabricModBlocks.initialize();
+        FabricModBlockEntities.initialize();
         
         // UI framework platform services are available through MenuHelper abstraction
         // ModMenuTypes is handled by platform-specific implementations
