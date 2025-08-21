@@ -5,6 +5,7 @@ import com.quackers29.businesscraft.platform.PlatformServices;
 import org.slf4j.Logger;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import org.slf4j.LoggerFactory;
+import java.util.UUID;
 
 /**
  * Platform-agnostic packet for setting a town name.
@@ -68,6 +69,41 @@ public class SetTownNamePacket extends BaseBlockEntityPacket {
             
             // Direct update using unified architecture - no abstraction layer needed
             townData.setTownName(trimmedName);
+            
+            // CRITICAL: Also update the actual Town object in TownManager
+            UUID townId = townData.getTownId();
+            if (townId != null) {
+                // Get the level from the player (platform-specific player casting)
+                try {
+                    // Cast player to ServerPlayer to get the level
+                    Object level = null;
+                    if (player.getClass().getName().contains("ServerPlayer")) {
+                        java.lang.reflect.Method getLevelMethod = player.getClass().getMethod("serverLevel");
+                        level = getLevelMethod.invoke(player);
+                    }
+                    
+                    if (level != null) {
+                        // Get the town object and update its name
+                        Object town = PlatformServices.getTownManagerService().getTown(level, townId);
+                        if (town != null) {
+                            // Use reflection to update the town name
+                            java.lang.reflect.Method setNameMethod = town.getClass().getMethod("setName", String.class);
+                            setNameMethod.invoke(town, trimmedName);
+                            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Updated actual Town object name to '{}'", trimmedName);
+                            
+                            // Mark the town manager data as dirty for saving
+                            PlatformServices.getTownManagerService().markDirty(level);
+                        } else {
+                            LOGGER.warn("Town object not found for ID: {}", townId);
+                        }
+                    } else {
+                        LOGGER.warn("Could not get level from player for town name update");
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Failed to update Town object name: {}", e.getMessage(), e);
+                }
+            }
+            
             townData.markDirty(); // Direct dirty marking
             
             // Platform-specific operations still use platform services

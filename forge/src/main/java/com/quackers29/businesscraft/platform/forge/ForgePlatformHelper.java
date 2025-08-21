@@ -67,12 +67,64 @@ public class ForgePlatformHelper implements PlatformHelper {
     
     @Override
     public void sendPlayerMessage(Object player, String message, String color) {
-        LOGGER.debug("sendPlayerMessage not yet implemented for Forge");
+        try {
+            if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                // Create chat component with specified color
+                net.minecraft.network.chat.Component chatComponent;
+                
+                if (color != null && !color.isEmpty()) {
+                    // Parse color and create styled component
+                    net.minecraft.ChatFormatting chatColor = switch (color.toUpperCase()) {
+                        case "RED" -> net.minecraft.ChatFormatting.RED;
+                        case "GREEN" -> net.minecraft.ChatFormatting.GREEN;
+                        case "BLUE" -> net.minecraft.ChatFormatting.BLUE;
+                        case "YELLOW" -> net.minecraft.ChatFormatting.YELLOW;
+                        case "GOLD" -> net.minecraft.ChatFormatting.GOLD;
+                        case "AQUA" -> net.minecraft.ChatFormatting.AQUA;
+                        case "LIGHT_PURPLE" -> net.minecraft.ChatFormatting.LIGHT_PURPLE;
+                        case "GRAY" -> net.minecraft.ChatFormatting.GRAY;
+                        case "WHITE" -> net.minecraft.ChatFormatting.WHITE;
+                        default -> net.minecraft.ChatFormatting.WHITE;
+                    };
+                    chatComponent = net.minecraft.network.chat.Component.literal(message).withStyle(chatColor);
+                } else {
+                    chatComponent = net.minecraft.network.chat.Component.literal(message);
+                }
+                
+                // Send message to player
+                serverPlayer.sendSystemMessage(chatComponent);
+                LOGGER.debug("Sent message to player {}: {}", serverPlayer.getName().getString(), message);
+            } else {
+                LOGGER.warn("Player object is not ServerPlayer: {}", player.getClass());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to send message to player: {}", e.getMessage(), e);
+        }
     }
     
     @Override
     public void forceBlockUpdate(Object player, int x, int y, int z) {
-        LOGGER.debug("forceBlockUpdate not yet implemented for Forge");
+        try {
+            if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                net.minecraft.server.level.ServerLevel level = serverPlayer.serverLevel();
+                net.minecraft.core.BlockPos pos = new net.minecraft.core.BlockPos(x, y, z);
+                
+                // Force block update to sync changes to client
+                net.minecraft.world.level.block.state.BlockState blockState = level.getBlockState(pos);
+                
+                // Notify the client of the block change
+                level.sendBlockUpdated(pos, blockState, blockState, net.minecraft.world.level.block.Block.UPDATE_ALL);
+                
+                // Mark the chunk as dirty for saving
+                level.getChunkAt(pos).setUnsaved(true);
+                
+                LOGGER.debug("Forced block update at [{}, {}, {}] for player {}", x, y, z, serverPlayer.getName().getString());
+            } else {
+                LOGGER.warn("Player object is not ServerPlayer: {}", player.getClass());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to force block update at [{}, {}, {}]: {}", x, y, z, e.getMessage(), e);
+        }
     }
     
     @Override
