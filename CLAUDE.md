@@ -53,76 +53,44 @@ Record everything in a .claude/tasks/[TASK_ID]/onboarding.md file. This file wil
 
 BusinessCraft is a sophisticated Minecraft mod featuring a complete town management and tourism economy system. The codebase is production-ready with advanced architectural patterns and enterprise-grade implementation quality.
 
-## 🚨 **CRITICAL PROJECT CONTEXT**
+## 🚨 **CURRENT PROJECT STATUS**
 
-**🏗️ ARCHITECTURAL ACHIEVEMENT**: **UNIFIED ARCHITECTURE OPERATIONAL** ✅
+**🏗️ ARCHITECTURE**: **UNIFIED ARCHITECTURE WITH MINIMAL PLATFORM ABSTRACTIONS** ✅
 
-**CURRENT STATE**: Unified Architecture with Light Platform Abstractions successfully implemented
+**CURRENT PHASE**: Phase 4 - Fabric Implementation
 
-**📊 ACHIEVEMENT STATUS**:
+**📊 CURRENT STATE**:
 - **Unified Architecture**: ✅ Operational with 90% shared code achieved
 - **Natural Database Queries**: ✅ Direct access patterns working (`town.getPaymentBoard().getUnclaimedVisitorRewards()`)
 - **Platform Abstractions**: ✅ Minimal abstractions for networking, menus, events only
-- **Feature Parity**: ✅ 100% functionality preservation from main branch achieved
-- **Build Stability**: ✅ Both platforms compile and run successfully
+- **Forge Platform**: ✅ 100% feature parity with main branch maintained
+- **Fabric Platform**: ⚠️ Platform layer in progress
 
-**📋 CRITICAL REQUIREMENTS** (ACHIEVED):
-- **FUNCTIONALITY PRESERVATION**: ✅ All main branch features working identically in unified implementation
-- **FORGE PLATFORM**: ✅ 100% feature parity with main branch maintained
-- **ZERO EXTERNAL DEPENDENCIES**: ✅ No third-party API dependencies
-- **REFERENCE IMPLEMENTATION**: The `main` branch remains the authoritative source for expected behavior
-
-**🎯 PROJECT GOALS** (ACHIEVED):
-1. **Primary Goal**: ✅ Unified architecture enabling natural database-style queries
-2. **Secondary Goal**: ✅ Forge platform complete, Fabric implementation ready to start
-3. **Critical Requirement**: ✅ Single source of truth for all town data including payment boards
-4. **Mandatory Requirement**: ✅ Zero functionality regression from main branch implementation
+**📖 BRANCH REFERENCE GUIDE**:
+- **`main` branch**: Unified Architecture at start of Phase 4 - 100% functional Forge implementation (authoritative reference for all functionality)
+- **`fabric` branch** (current): Phase 4 - Fabric platform implementation in progress
+- **Goal**: Fabric branch should have identical functionality to main branch + Fabric platform support
 
 **⚠️ DEVELOPMENT APPROACH**:
 - **When investigating issues**: Always reference main branch implementation as the authoritative source
 - **When functionality is broken**: Compare current implementation against main branch to identify regressions
-- **When implementing fixes**: Restore main branch behavior, then adapt for unified architecture compatibility
+- **When implementing fixes**: Restore main branch behavior, then adapt for fabric platform compatibility
 - **When in doubt**: Main branch implementation is always the correct reference for expected behavior
-- **Current Phase**: Phase 4 - Fabric Implementation
-
-**📖 BRANCH REFERENCE GUIDE**:
-- **`main` branch**: Production-ready Forge implementation (reference for all functionality)
-- **`fabric` branch** (current): Unified Architecture foundation complete, ready for Fabric implementation
-- **Goal**: Fabric branch should have identical functionality to main branch + Fabric platform support
-
-**📖 ARCHITECTURE STATUS**:
-- **ACHIEVED**: Unified codebase with minimal platform abstractions (networking, menus, events)
-- **REFERENCE**: Following JEI, Jade, Create mod patterns for industry-proven unified approach
-- **RESULT**: Natural data relationships, easier maintenance, faster cross-platform development
-- **VERIFIED**: 100% preservation of main branch user-visible functionality
 
 ### Multi-Platform Architecture
 
 **Target Platforms**: Minecraft Forge 1.20.1 + Fabric 1.20.1 (full feature parity)
-**Architecture Pattern**: Unified Codebase + Light Platform Abstractions
+**Architecture Pattern**: Unified Codebase + Minimal Platform Abstractions
 
-**CRITICAL**: BusinessCraft uses **Unified Architecture with Minimal Platform Abstractions** for cross-platform compatibility. This architectural decision was made after comprehensive analysis of Enhanced MultiLoader limitations and research of successful cross-platform mods.
+**APPROACH**: BusinessCraft uses **Unified Architecture with Minimal Platform Abstractions** for cross-platform compatibility, following patterns used by JEI, Jade, Create and other successful cross-platform mods.
 
-#### Why Unified Architecture (Not Enhanced MultiLoader)
+#### Why Unified Architecture
 - **Natural Data Relationships**: Direct database-style queries between town data and payment boards
-- **90% Shared Code**: Massive reduction in maintenance burden vs Enhanced MultiLoader's 25%
-- **Industry Proven**: Used by JEI, Jade, Create and other major successful mods
+- **90% Shared Code**: Massive reduction in maintenance burden
+- **Industry Proven**: Used by major successful cross-platform mods
 - **Faster Development**: New features automatically work on both platforms
 - **Simple Platform Differences**: Abstract only essentials (networking, menus, events)
-- **Zero External Dependencies**: No third-party API risks (Architectury, FFAPI, etc.)
-
-#### Unified Architecture Migration Status
-- **Current State**: Enhanced MultiLoader Template operational but with identified limitations
-  - ✅ **Forge Module**: Complete functionality with sophisticated payment board system
-  - ⚠️ **Enhanced MultiLoader**: 274 platform service calls creating complex data bridges
-  - ❌ **Core Issue**: No natural database queries between town data and payment boards
-- **Migration Plan**: 5-phase unified architecture migration (8-12 weeks total)
-  - **Phase 1**: Analysis and Planning (READY TO START)
-  - **Phase 2**: Core Module Unification - merge Town + TownPaymentBoard
-  - **Phase 3**: Light Platform Abstractions - networking, menus, events only  
-  - **Phase 4**: Fabric Implementation - simple platform layer
-  - **Phase 5**: Cleanup - remove Enhanced MultiLoader infrastructure
-- **Target Outcome**: 90% shared code, natural data queries, easier maintenance
+- **Zero External Dependencies**: No third-party API risks
 
 ## Development Commands
 
@@ -210,9 +178,9 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
   - Visit history tracking with persistence
   - Population growth from tourism
   - Dynamic tourist capacity based on population
-- `TownManager`: ⚠️ **Currently in forge module** - needs common module migration for Fabric parity
+- `TownManager`: Core town management system
 - Component architecture: `TownEconomyComponent`, `TownResources`
-- **Status**: Full functionality on Forge, limited on Fabric due to architecture location
+- **Status**: Full functionality on Forge, Fabric platform layer in development
 
 **Platform System** (`com.yourdomain.businesscraft.platform`)
 - `Platform`: Advanced 275-line implementation with:
@@ -269,28 +237,21 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 - Complete save/load system with NBT format
 - Tourist processing and reward systems active
 
-**Fabric Platform** (⚠️ Partial):
+**Fabric Platform** (⚠️ In Development):
 - Platform services working correctly
 - Network packet system functional
 - UI framework operational
-- **MISSING**: Town management business logic (needs common module migration)
-
-### ⚠️ Architectural Migration Needed
-
-**Current Issue**: Core business logic in forge module violates Enhanced MultiLoader principle
-- `TownManager` (forge module) - should be in common
-- `TownSavedData` (forge module) - should use DataStorageHelper abstraction  
-- `Town` class dependencies need platform abstraction review
+- **IN PROGRESS**: Fabric platform layer implementation for full feature parity
 
 ### Key Architectural Patterns
 
-**MultiLoader Template Pattern**: Cross-platform compatibility through service abstraction
+**Unified Architecture**: 90% shared code with minimal platform abstractions
 **Provider Pattern**: Consistent data access through `ITownDataProvider`
 **Service-Oriented Architecture**: Platform services (`PlatformServices`, `RegistryHelper`, `NetworkHelper`, `EventHelper`)
 **Component-Based UI**: Reusable components with composition over inheritance
 **Separation of Concerns**: Clear layer separation between UI, data, and logic
 **Event-Driven Design**: Clean event handling throughout UI system
-**Maximum Common Code**: Business logic abstracted to common module
+**Natural Database Queries**: Direct access patterns between related systems
 **Rate Limiting**: Smart performance optimizations in rendering and updates
 
 ## File Organization
@@ -337,11 +298,11 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 
 ## Multi-Platform Development Guidelines
 
-### MANDATORY: Enhanced MultiLoader Approach
-**All development must follow the MultiLoader Template pattern. Do not use:**
+### MANDATORY: Unified Architecture Approach
+**All development must follow the Unified Architecture pattern. Do not use:**
 - Architectury API (dependency risk, performance overhead)
 - Forgified Fabric API (experimental, unnecessary complexity)
-- Platform-specific development (abandons abstraction work)
+- Platform-specific development (abandons shared code benefits)
 
 ### Platform Abstraction Rules
 1. **Maximize Common Code**: All business logic goes in common module
@@ -379,14 +340,14 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 - Cache frequently accessed data through `TownDataCacheManager`
 - **Platform Abstraction**: Use service interfaces for inventory, networking, events
 
-### Network Development (Enhanced MultiLoader Complete ✅)
+### Network Development (Cross-Platform ✅)
 - **Platform Abstraction**: Use `NetworkHelper` interface for all networking
-- **Achievement**: 26+ packets successfully migrated to common module with platform services
+- **Achievement**: 25+ packets successfully implemented with platform services
 - Extend `BaseBlockEntityPacket` for block entity-related packets
 - Organize new packets in appropriate subdirectories  
 - Register all packets through `PlatformServices.getNetworkHelper()`
 - **Common Definitions**: Packet classes in common, serialization through platform services
-- **Status**: All packet functionality restored and working on both platforms
+- **Status**: All packet functionality working on Forge, Fabric platform layer in development
 
 ### Performance Considerations
 - UI components use virtualization for large lists
@@ -411,19 +372,20 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 - **Usage Pattern**: ModEvents and PlayerBoundaryTracker use `PlatformServices.getEventHelper()`
 - **Achievement**: Complete abstraction without moving files - already properly structured
 
-## Enhanced MultiLoader Architecture Status
+## Current Development Status
 
 ### ✅ **COMPLETED SYSTEMS**
-- **Platform Services**: All 7 service interfaces implemented (NetworkHelper, EventHelper, etc.)
-- **Packet Architecture**: 26+ packets migrated with platform abstraction
+- **Unified Architecture**: 90% shared code with minimal platform abstractions
+- **Platform Services**: All service interfaces implemented (NetworkHelper, EventHelper, etc.)
+- **Packet Architecture**: 25+ packets with platform abstraction
 - **Event System**: Platform-agnostic event handling via EventHelper pattern
-- **Build System**: Both Forge and Fabric compile and launch successfully
-- **Code Restoration**: All temporarily disabled functionality restored and working
+- **Forge Platform**: Complete functionality with full feature parity to main branch
+- **Build System**: Forge compiles and runs successfully
 
-### 🎯 **CURRENT MILESTONE: Ready for Phase 9.8**
-- **Foundation**: Rock-solid Enhanced MultiLoader Template implementation
-- **Risk Level**: VERY LOW - all core systems tested and working
-- **Next Steps**: Fabric platform integration and comprehensive testing
+### 🎯 **CURRENT MILESTONE: Phase 4 - Fabric Implementation**
+- **Foundation**: Solid unified architecture with natural database queries
+- **Risk Level**: LOW - core systems tested and working on Forge
+- **Next Steps**: Complete Fabric platform layer for full cross-platform support
 
 ## Configuration
 - `ConfigLoader` handles TOML configuration files
