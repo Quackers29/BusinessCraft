@@ -57,6 +57,19 @@ public class SetSearchRadiusPacket extends BaseBlockEntityPacket {
             int oldRadius = townData.getSearchRadius();
             townData.setSearchRadius(radius);
             
+            // CRITICAL: Also update the actual TownInterfaceEntity to persist the change
+            Object blockEntity = getBlockEntity(player);
+            if (blockEntity != null) {
+                try {
+                    // Use reflection to call the entity's setSearchRadius method
+                    java.lang.reflect.Method setRadiusMethod = blockEntity.getClass().getMethod("setSearchRadius", int.class);
+                    setRadiusMethod.invoke(blockEntity, radius);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Updated TownInterfaceEntity search radius from {} to {}", oldRadius, radius);
+                } catch (Exception e) {
+                    LOGGER.error("Failed to update TownInterfaceEntity search radius: {}", e.getMessage(), e);
+                }
+            }
+            
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Search radius updated successfully from {} to {}", oldRadius, radius);
             
             // Platform-specific operations still use platform services
