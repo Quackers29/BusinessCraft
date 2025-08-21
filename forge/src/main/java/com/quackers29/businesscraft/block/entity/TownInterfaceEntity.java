@@ -327,6 +327,17 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         this.townId = result.townId;
         this.name = result.name;
         this.town = result.town;
+        
+        // Update TownInterfaceData with loaded town ID and name for unified architecture
+        initializeTownInterfaceData();
+        if (townInterfaceData != null) {
+            if (townId != null) {
+                townInterfaceData.setTownId(townId);
+            }
+            if (name != null) {
+                townInterfaceData.setTownName(name);
+            }
+        }
         this.pathStart = result.pathStart;
         this.pathEnd = result.pathEnd;
         this.touristSpawningEnabled = result.touristSpawningEnabled;
@@ -732,9 +743,22 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
 
     public void setTownId(UUID id) {
         this.townId = id;
+        
+        // Update TownInterfaceData with the new town ID for unified architecture
+        initializeTownInterfaceData();
+        if (townInterfaceData != null && id != null) {
+            townInterfaceData.setTownId(id);
+        }
+        
         if (level instanceof ServerLevel sLevel1) {
             Town town = TownManager.get(sLevel1).getTown(id);
             this.name = town != null ? town.getName() : "Unnamed";
+            
+            // Also update the town name in TownInterfaceData
+            if (townInterfaceData != null && town != null) {
+                townInterfaceData.setTownName(town.getName());
+            }
+            
             syncTownData();
         }
     }
