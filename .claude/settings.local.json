@@ -46,7 +46,9 @@
       "Bash(env GRADLE_USER_HOME=/tmp/gradle_temp ./gradlew --no-daemon :common:compileJava)",
       "Bash(env GRADLE_USER_HOME=/tmp/gradle_temp ./gradlew --no-daemon :fabric:compileJava)",
       "Bash(env GRADLE_USER_HOME=/tmp/gradle_temp timeout 30s ./gradlew --no-daemon :forge:runClient --args=\"--username TestUser\")",
-      "Bash(env GRADLE_USER_HOME=/tmp/gradle_temp timeout 45s ./gradlew --no-daemon :forge:runClient --args=\"--username TestUser\")"
+      "Bash(env GRADLE_USER_HOME=/tmp/gradle_temp timeout 45s ./gradlew --no-daemon :forge:runClient --args=\"--username TestUser\")",
+      "Bash(env GRADLE_USER_HOME=/tmp/gradle_temp timeout 30s ./gradlew --no-daemon :fabric:compileJava)",
+      "Bash(env GRADLE_USER_HOME=/tmp/gradle_temp timeout 45s ./gradlew --no-daemon :fabric:runClient --args=\"--username TestUser\")"
     ],
     "deny": []
   }
