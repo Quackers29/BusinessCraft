@@ -144,6 +144,12 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 - **Run all tests**: `./gradlew test`
 - **Run specific test**: `./gradlew test --tests "ClassName.methodName"`
 
+### Code Review and Cleanup
+- **Review Changes**: `git diff` - Highly efficient method for analyzing all modifications
+- **Change Summary**: `git diff --stat` - Shows file-by-file change statistics
+- **Cleanup Strategy**: After fixing issues, use `git diff` to identify over-engineered solutions and remove unnecessary complexity
+- **Best Practice**: Fix the root cause first, then review all changes to ensure they're minimal and necessary
+
 ## Task Management Files
 
 ### **tasks/todo.md** - Current Active Tasks
