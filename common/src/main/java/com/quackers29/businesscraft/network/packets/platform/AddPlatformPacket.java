@@ -31,38 +31,47 @@ public class AddPlatformPacket extends BaseBlockEntityPacket {
 
     /**
      * Handle the packet on the server side.
-     * Unified Architecture approach: Direct access to TownInterfaceData without BlockEntityHelper abstraction.
+     * FIXED: Use TownInterfaceEntity platformManager instead of TownInterfaceData.
      */
     @Override
     public void handle(Object player) {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing AddPlatformPacket for position ({}, {}, {})", x, y, z);
         
-        // Unified Architecture: Direct access to TownInterfaceData (no BlockEntityHelper abstraction)
-        com.quackers29.businesscraft.town.TownInterfaceData townData = getTownInterfaceData(player);
-        
-        if (townData != null) {
-            // Direct business logic access - no abstraction layer needed
-            if (townData.canAddMorePlatforms()) {
-                boolean added = townData.addPlatform();
+        // CRITICAL FIX: Use the actual TownInterfaceEntity platform system, not TownInterfaceData
+        Object blockEntity = getBlockEntity(player);
+        if (blockEntity != null) {
+            try {
+                // Use simplified reflection - call methods directly on the block entity
+                boolean canAdd = (Boolean) blockEntity.getClass().getMethod("canAddMorePlatforms").invoke(blockEntity);
                 
-                if (added) {
-                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Platform added successfully at ({}, {}, {})", x, y, z);
+                if (canAdd) {
+                    boolean added = (Boolean) blockEntity.getClass().getMethod("addPlatform").invoke(blockEntity);
                     
-                    // Platform-specific operations still use platform services
-                    PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
-                    
-                    // Send refresh packet to all tracking clients
-                    PlatformServices.getNetworkHelper().sendToAllClients(
-                        new RefreshPlatformsPacket(x, y, z)
-                    );
+                    if (added) {
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Platform added successfully via TownInterfaceEntity at ({}, {}, {})", x, y, z);
+                        
+                        // Mark the entity as changed for persistence and client sync
+                        blockEntity.getClass().getMethod("setChanged").invoke(blockEntity);
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Marked TownInterfaceEntity as changed for client sync");
+                    } else {
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Failed to add platform via TownInterfaceEntity at ({}, {}, {})", x, y, z);
+                    }
                 } else {
-                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Failed to add platform at ({}, {}, {}) - internal error", x, y, z);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Cannot add platform at ({}, {}, {}) - already at max capacity", x, y, z);
                 }
-            } else {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Cannot add platform at ({}, {}, {}) - already at max capacity", x, y, z);
+            } catch (Exception e) {
+                LOGGER.error("Failed to add platform via TownInterfaceEntity: {}", e.getMessage(), e);
             }
+                    
+            // Platform-specific operations still use platform services
+            PlatformServices.getPlatformHelper().forceBlockUpdate(player, x, y, z);
+            
+            // Send refresh packet to all tracking clients
+            PlatformServices.getNetworkHelper().sendToAllClients(
+                new RefreshPlatformsPacket(x, y, z)
+            );
         } else {
-            LOGGER.warn("No TownInterfaceData found at position ({}, {}, {}) for platform addition", x, y, z);
+            LOGGER.warn("No TownInterfaceEntity found at position ({}, {}, {}) for platform addition", x, y, z);
         }
     }
 }
