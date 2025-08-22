@@ -125,8 +125,21 @@ public class TownInterfaceBlock extends BaseEntityBlock {
                     entity.getClass().getMethod("setTownId", UUID.class).invoke(entity, townId);
                     entity.setChanged(); // Mark as dirty for saving
                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Associated town ID {} with entity at {}", townId, pos);
+                    
+                    // CRITICAL FIX: Create default platform using reflection (preserves main branch behavior)
+                    boolean platformAdded = (Boolean) entity.getClass().getMethod("addPlatform").invoke(entity);
+                    if (platformAdded) {
+                        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Created default platform for unified town at {}", pos);
+                        
+                        // CRITICAL FIX: Set platform path coordinates (main branch functionality)
+                        setupDefaultPlatformPath(entity, pos, placer);
+                        
+                    } else {
+                        LOGGER.error("Failed to add default platform for unified town at {}", pos);
+                    }
+                    
                 } catch (Exception e) {
-                    LOGGER.error("Failed to associate town ID with entity", e);
+                    LOGGER.error("Failed to associate town ID with entity or create platform", e);
                 }
             }
             
@@ -195,5 +208,76 @@ public class TownInterfaceBlock extends BaseEntityBlock {
         String suffix = suffixes[random.nextInt(suffixes.length)];
         
         return prefix + suffix;
+    }
+    
+    /**
+     * Sets up default platform path coordinates based on main branch implementation
+     */
+    private void setupDefaultPlatformPath(BlockEntity entity, BlockPos townPos, @Nullable LivingEntity placer) {
+        try {
+            // Get the platforms list using reflection
+            @SuppressWarnings("unchecked")
+            java.util.List<Object> platforms = (java.util.List<Object>) entity.getClass().getMethod("getPlatforms").invoke(entity);
+            
+            if (platforms.isEmpty()) {
+                LOGGER.error("No platforms found after adding default platform for town at {}", townPos);
+                return;
+            }
+            
+            Object platform = platforms.get(0); // Get the first (default) platform
+            
+            // Determine orientation based on placer's facing direction (from main branch logic)
+            Direction direction = Direction.NORTH; // Default direction
+            
+            if (placer != null) {
+                direction = Direction.getNearest(
+                    (float) placer.getLookAngle().x,
+                    (float) placer.getLookAngle().y,
+                    (float) placer.getLookAngle().z
+                );
+            }
+            
+            // Calculate platform start and end positions based on direction (from main branch)
+            BlockPos platformStart = null;
+            BlockPos platformEnd = null;
+            
+            switch (direction) {
+                case NORTH -> {
+                    platformStart = townPos.north(3).below(1);  // 3 blocks north, 1 below
+                    platformEnd = townPos.north(5).below(1);    // 5 blocks north, 1 below
+                }
+                case SOUTH -> {
+                    platformStart = townPos.south(3).below(1);
+                    platformEnd = townPos.south(5).below(1);
+                }
+                case WEST -> {
+                    platformStart = townPos.west(3).below(1);
+                    platformEnd = townPos.west(5).below(1);
+                }
+                case EAST -> {
+                    platformStart = townPos.east(3).below(1);
+                    platformEnd = townPos.east(5).below(1);
+                }
+                default -> {
+                    platformStart = townPos.north(3).below(1);
+                    platformEnd = townPos.north(5).below(1);
+                }
+            }
+            
+            // Set platform properties using reflection (mimics main branch createDefaultPlatform)
+            platform.getClass().getMethod("setStartPos", BlockPos.class).invoke(platform, platformStart);
+            platform.getClass().getMethod("setEndPos", BlockPos.class).invoke(platform, platformEnd);
+            platform.getClass().getMethod("setName", String.class).invoke(platform, "Platform 1");
+            platform.getClass().getMethod("setEnabled", boolean.class).invoke(platform, true);
+            
+            entity.setChanged(); // Mark as dirty for saving
+            
+            DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, 
+                "Set default platform path for unified town at {} with start {} and end {}", 
+                townPos, platformStart, platformEnd);
+                
+        } catch (Exception e) {
+            LOGGER.error("Failed to setup default platform path for unified town at {}", townPos, e);
+        }
     }
 }
