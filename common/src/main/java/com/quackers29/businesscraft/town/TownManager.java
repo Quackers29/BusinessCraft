@@ -165,8 +165,10 @@ public class TownManager {
         }
         
         if (closestTown != null) {
-            return String.format("Too close to existing town '%s' (%.1f blocks away, minimum %d required)", 
-                closestTown.getName(), closestDistance, ConfigLoader.minDistanceBetweenTowns);
+            // FIXED: Show the actual required distance based on the town's dynamic boundary
+            int requiredDistance = Math.max(ConfigLoader.minDistanceBetweenTowns, closestTown.getBoundaryRadius() + 5);
+            return String.format("Too close to existing town '%s' (%.1f blocks away, %d required - town boundary: %d blocks)", 
+                closestTown.getName(), closestDistance, requiredDistance, closestTown.getBoundaryRadius());
         }
         
         return "Invalid location for town placement";
@@ -298,7 +300,15 @@ public class TownManager {
         for (Town existingTown : existingTowns) {
             int[] existingPos = existingTown.getPositionArray();
             double distance = calculateDistance(x, y, z, existingPos);
-            if (distance < minDistance) {
+            
+            // FIXED: Use the existing town's actual dynamic boundary radius instead of static minDistance
+            // This accounts for towns expanded with bread (population growth = boundary expansion)
+            int requiredDistance = Math.max(minDistance, existingTown.getBoundaryRadius() + 5); // +5 buffer
+            
+            if (distance < requiredDistance) {
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER,
+                    "Town placement invalid: distance {} < required {} (town {} has boundary radius {})", 
+                    distance, requiredDistance, existingTown.getName(), existingTown.getBoundaryRadius());
                 return false;
             }
         }
