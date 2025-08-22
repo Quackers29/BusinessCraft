@@ -130,8 +130,14 @@
 **🎯 DISCOVERY 3: BLOCKING COMPONENTS IDENTIFIED**  
 - ❌ **TownInterfaceBlock** - Still in forge module (only ~20 lines need platform conditionals)
 - ❌ **TownInterfaceEntity** - Still in forge module (complex Forge capabilities integration)
-- ❌ **TownInterfaceMenu** - Was in forge module, now unified in common
+- ❌ **TownInterfaceMenu** - Still in forge module (needs MenuType compatibility)
 - **ROOT CAUSE**: Artificial complexity from over-abstraction, not actual platform differences
+
+**🎯 CRITICAL LESSON LEARNED**: 
+- ❌ **MenuType System**: Cannot simply move TownInterfaceMenu to common - breaks Minecraft's MenuType registration
+- ⚠️ **Forge Broken**: Common TownInterfaceMenu with getType() returning null caused "invalid screen" error
+- ✅ **Immediately Reverted**: Removed common/menu/TownInterfaceMenu.java to restore Forge functionality
+- 📝 **Key Insight**: MenuType is platform-specific, needs different approach
 
 **🎯 DISCOVERY 4: FABRIC CRASH ROOT CAUSE**
 - Fabric uses basic Block instead of TownInterfaceBlock
