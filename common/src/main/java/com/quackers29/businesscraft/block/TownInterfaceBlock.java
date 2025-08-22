@@ -117,6 +117,19 @@ public class TownInterfaceBlock extends BaseEntityBlock {
             UUID townId = newTown.getId();
             DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Created new town with ID: {}", townId);
             
+            // CRITICAL FIX: Associate the town ID with the block entity
+            BlockEntity entity = level.getBlockEntity(pos);
+            if (entity != null) {
+                // Use reflection to call setTownId on the platform-specific entity
+                try {
+                    entity.getClass().getMethod("setTownId", UUID.class).invoke(entity, townId);
+                    entity.setChanged(); // Mark as dirty for saving
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Associated town ID {} with entity at {}", townId, pos);
+                } catch (Exception e) {
+                    LOGGER.error("Failed to associate town ID with entity", e);
+                }
+            }
+            
             // Town is successfully created and managed by TownManager - unified architecture success!
         }
         
