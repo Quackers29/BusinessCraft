@@ -16,23 +16,4 @@ public class FabricMenuHelper implements MenuHelper {
         LOGGER.debug("FABRIC MENU HELPER: refreshActiveMenu not yet implemented");
         // TODO: Implement Fabric-specific menu refreshing
     }
-    
-    @Override
-    public void openScreen(Object player, Object menuProvider, Object pos) {
-        // Fabric uses different mappings, so use reflection to avoid mapping conflicts
-        try {
-            // Get player class (should be ServerPlayer)
-            Class<?> playerClass = player.getClass();
-            
-            // Call openMenu method on the player
-            java.lang.reflect.Method openMenuMethod = playerClass.getMethod("openMenu", Object.class);
-            openMenuMethod.invoke(player, menuProvider);
-            
-            LOGGER.debug("Successfully opened Fabric menu screen");
-            
-        } catch (Exception e) {
-            LOGGER.error("Failed to open Fabric menu screen: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to open Fabric menu screen", e);
-        }
-    }
 }

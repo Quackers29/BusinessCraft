@@ -1,7 +1,5 @@
 package com.quackers29.businesscraft.platform.forge;
 
-// Use common module BlockEntityHelper interface for unified architecture
-// This replaces the forge-specific BlockEntityHelper interface
 import com.quackers29.businesscraft.platform.BlockEntityHelper;
 import com.quackers29.businesscraft.platform.InventoryHelper;
 import com.quackers29.businesscraft.platform.Platform;
