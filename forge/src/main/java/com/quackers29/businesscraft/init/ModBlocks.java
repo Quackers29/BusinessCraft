@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.init;
 
+// UNIFIED ARCHITECTURE: Use TownInterfaceBlock from common module
 import com.quackers29.businesscraft.block.TownInterfaceBlock;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import com.quackers29.businesscraft.platform.RegistryHelper;

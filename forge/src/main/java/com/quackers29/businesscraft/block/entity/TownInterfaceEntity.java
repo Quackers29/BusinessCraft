@@ -786,7 +786,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     public int getSearchRadius() {
         // Use default if not yet initialized from NBT
         int result = searchRadius > 0 ? searchRadius : DEFAULT_SEARCH_RADIUS;
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "getSearchRadius() field={}, result={}", searchRadius, result);
+        // Removed excessive debug logging - this method is called frequently
         return result;
     }
 
