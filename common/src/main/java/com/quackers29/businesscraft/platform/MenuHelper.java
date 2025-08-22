@@ -15,4 +15,15 @@ public interface MenuHelper {
      * @param refreshType Type of refresh needed (e.g., "search_radius", "town_data")
      */
     void refreshActiveMenu(Object player, String refreshType);
+    
+    /**
+     * Open a town interface menu for the player.
+     * Platform implementations handle the specific menu opening mechanics.
+     * 
+     * @param player Platform-specific player object
+     * @param blockPos Block position as int array [x, y, z]
+     * @param displayName Menu display name
+     * @return true if menu was opened successfully, false otherwise
+     */
+    boolean openTownInterfaceMenu(Object player, int[] blockPos, String displayName);
 }
