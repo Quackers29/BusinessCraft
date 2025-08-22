@@ -16,7 +16,7 @@ public class DebugConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/DebugConfig");
     
     // Global override - when true, enables ALL debug logging regardless of individual flags
-    public static final boolean FORCE_ALL_DEBUG = false;
+    public static final boolean FORCE_ALL_DEBUG = true;
     
     // Core Systems - High Priority (Milestone 2)
     public static final boolean TOWN_BLOCK_ENTITY = false;

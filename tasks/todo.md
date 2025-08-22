@@ -37,7 +37,7 @@
 - **✅ Foundation Ready**: Established minimal viable implementation enabling systematic testing of cross-platform feature parity
 - **🎯 Next Phase**: Ready for Phase 4.3 cross-platform testing with solid platform service foundation
 
-#### **Phase 4.3: Cross-Platform Testing** 🚧 **IN PROGRESS - UNIFIED ARCHITECTURE APPROACH**
+#### **Phase 4.3: Cross-Platform Testing** 🚧 **IN PROGRESS - ULTRA-CAREFUL MIGRATION APPROACH**
 
 **🎯 OBJECTIVE**: Enable Fabric town creation using unified architecture approach
 
@@ -96,8 +96,65 @@
 - ✅ **Fabric Client Loading**: Fixed compilation issues, Fabric launches with all platform services working
 - ✅ **Configuration Loading**: Both platforms load config correctly (no more zeros)
 - ✅ **Platform Services**: All 7+ platform services verified operational in Fabric
-- 🚧 **Town Creation**: Requires unified TownInterfaceBlock implementation
+- ✅ **MenuHelper Platform Abstraction**: Added openTownInterfaceMenu method for unified menu opening
+- ⚠️ **TownInterfaceBlock Migration**: First attempt identified critical import/registration conflicts
+- 🚧 **Town Creation**: Requires careful unified TownInterfaceBlock implementation
 - ❓ **Feature Parity**: Not yet tested - depends on unified implementation
+
+**📚 CRITICAL LESSONS LEARNED FROM MIGRATION ATTEMPT**:
+- ✅ **Platform Service Abstraction Works**: Successfully added MenuHelper.openTownInterfaceMenu() 
+- ✅ **Forge Implementation Complete**: ForgeMenuHelper properly abstracts NetworkHooks.openScreen()
+- ❌ **Duplicate Class Names Fatal**: Creating common/TownInterfaceBlock.java breaks forge registration
+- ❌ **Import Path Conflicts**: Java classpath picks common version over forge version automatically
+- ✅ **Safe Testing Protocol**: Incremental changes with user verification prevents major breakage
+- ✅ **Quick Recovery**: Removing duplicate class immediately restored Forge functionality
+
+**🔧 REVISED MIGRATION STRATEGY - ULTRA-CAREFUL APPROACH**:
+
+**🚨 MANDATORY PRINCIPLES LEARNED**:
+- **NO DUPLICATE CLASS NAMES**: Never create competing classes in common module
+- **PHYSICAL FILE MOVES ONLY**: Must move actual files, not create duplicates
+- **IMPORT DEPENDENCY MAPPING**: Must analyze ALL imports before any move
+- **USER TESTING EVERY STEP**: Test Forge client functionality after each micro-change
+- **IMMEDIATE ROLLBACK PROTOCOL**: Any Forge breakage requires immediate revert
+
+**📋 DETAILED MIGRATION ROADMAP**:
+
+**Phase 4.3.1a: Pre-Migration Dependency Analysis** ⏸️ **NEXT STEP**
+- [ ] **Map ALL TownInterfaceBlock dependencies**: What imports it, what it imports
+- [ ] **Identify platform-specific vs common dependencies**: NetworkHooks, ModBlockEntities, etc.
+- [ ] **Plan import path updates**: Which files need updated imports after move
+- [ ] **Identify missing common dependencies**: TownInterfaceEntity, registration system
+- [ ] **Create migration order**: Which dependencies must move first
+
+**Phase 4.3.1b: Foundation Preparation** ⏸️ **PENDING**
+- [ ] **Move TownInterfaceEntity to common first**: Block depends on entity
+- [ ] **Test Forge still works**: Verify entity move doesn't break anything
+- [ ] **Create common block registration system**: Prepare for block registration
+- [ ] **Test Forge still works**: Verify registration changes don't break anything
+
+**Phase 4.3.1c: Careful TownInterfaceBlock Migration** ⏸️ **PENDING**
+- [ ] **Step 1**: Copy TownInterfaceBlock to common (don't move yet)
+- [ ] **Step 2**: Replace NetworkHooks with PlatformServices.getMenuHelper()
+- [ ] **Step 3**: Update imports to use common dependencies  
+- [ ] **Step 4**: Test compilation of common module only
+- [ ] **Step 5**: Remove forge TownInterfaceBlock (the critical moment)
+- [ ] **Step 6**: Update forge registration to import from common
+- [ ] **Step 7**: Test Forge client - IMMEDIATE ROLLBACK if broken
+- [ ] **Step 8**: Verify all functionality: town creation, menu opening, town management
+
+**Phase 4.3.1d: Registration and Integration** ⏸️ **PENDING**
+- [ ] **Update Fabric registration**: Use common TownInterfaceBlock
+- [ ] **Test Fabric town creation**: Verify Fabric can now create towns
+- [ ] **Cross-platform testing**: Both platforms should work identically
+- [ ] **Feature parity verification**: All main branch features working
+
+**⚠️ CRITICAL SUCCESS FACTORS**:
+- **One micro-change at a time**: Never change multiple things simultaneously
+- **User testing mandatory**: Human verification after each step prevents automation blindness
+- **Immediate rollback protocol**: Any Forge dysfunction = instant revert
+- **Dependency-first approach**: Move dependencies before dependents
+- **Import path vigilance**: Every import change must be tracked and verified
 
 **📋 SUCCESS CRITERIA**:
 - ✅ Fabric client compiles and launches (ACHIEVED)
