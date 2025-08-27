@@ -13,7 +13,6 @@ import com.quackers29.businesscraft.town.TownManager;
 import com.quackers29.businesscraft.api.ITownDataProvider;
 import java.util.Collection;
 // import com.quackers29.businesscraft.data.VisitHistoryRecord;
-import com.quackers29.businesscraft.scoreboard.TownScoreboardManager;
 import net.minecraft.core.particles.ParticleTypes;
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.BlockPos;
