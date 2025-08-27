@@ -18,8 +18,9 @@ import java.util.*;
 import java.util.function.Predicate;
 
 /**
- * Manages the mounting of tourists to different vehicle types
- * Extracted from TownBlockEntity to create a more modular and maintainable component
+ * Manages the mounting of tourists to different vehicle types.
+ * Unified architecture implementation supporting both Forge and Fabric platforms.
+ * Extracted from TownBlockEntity to create a more modular and maintainable component.
  */
 public class TouristVehicleManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(TouristVehicleManager.class);
@@ -274,4 +275,4 @@ public class TouristVehicleManager {
     public void clearTrackedVehicles() {
         lastVehiclePositions.clear();
     }
-} 
+}
