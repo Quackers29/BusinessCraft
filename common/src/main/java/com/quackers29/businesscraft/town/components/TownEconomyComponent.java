@@ -8,7 +8,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
 
-public class TownEconomyComponent implements ForgeTownComponent {
+/**
+ * Unified architecture town economy component.
+ * Handles resource management and population growth for cross-platform compatibility.
+ */
+public class TownEconomyComponent implements TownComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownEconomyComponent.class);
     private final TownResources resources = new TownResources();
     private int population;
@@ -30,7 +34,7 @@ public class TownEconomyComponent implements ForgeTownComponent {
         if (item == null) return;
         
         // Special logging for emerald deductions
-        boolean isEmerald = item == net.minecraft.world.item.Items.EMERALD;
+        boolean isEmerald = item == Items.EMERALD;
         
         // Log only significant emerald deductions (> 1)
         if (count < 0 && isEmerald && count <= -5) {
@@ -100,21 +104,31 @@ public class TownEconomyComponent implements ForgeTownComponent {
     }
 
     @Override
-    public void save(CompoundTag tag) {
-        // Save population separately
-        tag.putInt("population", population);
-        
-        // Save all resources using the TownResources
-        resources.save(tag);
+    public void save(Object data) {
+        if (data instanceof CompoundTag tag) {
+            // Save population separately
+            tag.putInt("population", population);
+            
+            // Save all resources using the TownResources
+            resources.save(tag);
+        } else {
+            throw new IllegalArgumentException("TownEconomyComponent requires CompoundTag for save, got: " + 
+                (data != null ? data.getClass().getSimpleName() : "null"));
+        }
     }
 
     @Override
-    public void load(CompoundTag tag) {
-        // Load population
-        population = tag.getInt("population");
-        
-        // Load resources
-        resources.load(tag);
+    public void load(Object data) {
+        if (data instanceof CompoundTag tag) {
+            // Load population
+            population = tag.getInt("population");
+            
+            // Load resources
+            resources.load(tag);
+        } else {
+            throw new IllegalArgumentException("TownEconomyComponent requires CompoundTag for load, got: " + 
+                (data != null ? data.getClass().getSimpleName() : "null"));
+        }
     }
 
     // Getters
@@ -128,4 +142,4 @@ public class TownEconomyComponent implements ForgeTownComponent {
     public TownResources getResources() {
         return resources;
     }
-} 
+}

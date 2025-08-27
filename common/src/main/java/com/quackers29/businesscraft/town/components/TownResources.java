@@ -1,11 +1,9 @@
 package com.quackers29.businesscraft.town.components;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.registries.ForgeRegistries;
+import com.quackers29.businesscraft.platform.PlatformServices;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -16,6 +14,7 @@ import com.quackers29.businesscraft.debug.DebugConfig;
 
 /**
  * Stores various resources in a town with their quantities
+ * Uses unified architecture with platform services for cross-platform compatibility
  */
 public class TownResources {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownResources.class);
@@ -38,22 +37,24 @@ public class TownResources {
         if (count > 0) {
             // Adding resources
             resources.merge(item, count, Integer::sum);
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Added {} of resource {}", count, ForgeRegistries.ITEMS.getKey(item));
+            String itemId = PlatformServices.getRegistryHelper().getItemId(item);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Added {} of resource {}", count, itemId);
         } else if (count < 0) {
             // Removing resources (count is negative)
             int currentAmount = resources.getOrDefault(item, 0);
             int newAmount = Math.max(0, currentAmount + count); // Ensure we don't go below 0
             
             // Special logging for emeralds (more important for debugging)
-            boolean isEmerald = item == net.minecraft.world.item.Items.EMERALD;
+            boolean isEmerald = item == Items.EMERALD;
             
             if (currentAmount > 0) {
+                String itemId = PlatformServices.getRegistryHelper().getItemId(item);
                 if (isEmerald && count <= -5) {
                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Emerald change: {} -> {} (removed {})", 
                         currentAmount, newAmount, -count);
                 } else {
                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Removed {} of resource {} (new amount: {})", 
-                        -count, ForgeRegistries.ITEMS.getKey(item), newAmount);
+                        -count, itemId, newAmount);
                 }
                 
                 // Store the updated amount
@@ -103,7 +104,7 @@ public class TownResources {
     }
     
     /**
-     * Save resources to NBT
+     * Save resources to NBT using unified platform services
      * 
      * @param tag The tag to save to
      */
@@ -111,9 +112,9 @@ public class TownResources {
         CompoundTag resourcesTag = new CompoundTag();
         
         for (Map.Entry<Item, Integer> entry : resources.entrySet()) {
-            ResourceLocation key = ForgeRegistries.ITEMS.getKey(entry.getKey());
-            if (key != null) {
-                resourcesTag.putInt(key.toString(), entry.getValue());
+            String itemId = PlatformServices.getRegistryHelper().getItemId(entry.getKey());
+            if (itemId != null) {
+                resourcesTag.putInt(itemId, entry.getValue());
             }
         }
         
@@ -121,7 +122,7 @@ public class TownResources {
     }
     
     /**
-     * Load resources from NBT
+     * Load resources from NBT using unified platform services
      * 
      * @param tag The tag to load from
      */
@@ -131,12 +132,11 @@ public class TownResources {
         if (tag.contains("resources")) {
             CompoundTag resourcesTag = tag.getCompound("resources");
             
-            for (String key : resourcesTag.getAllKeys()) {
-                ResourceLocation resourceLocation = new ResourceLocation(key);
-                Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
+            for (String itemId : resourcesTag.getAllKeys()) {
+                Object itemObj = PlatformServices.getRegistryHelper().getItem(itemId);
                 
-                if (item != null && item != Items.AIR) {
-                    resources.put(item, resourcesTag.getInt(key));
+                if (itemObj instanceof Item item && item != Items.AIR) {
+                    resources.put(item, resourcesTag.getInt(itemId));
                 }
             }
         }
@@ -149,4 +149,4 @@ public class TownResources {
             }
         }
     }
-} 
+}
