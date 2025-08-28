@@ -1,7 +1,7 @@
 package com.quackers29.businesscraft.ui.modal.specialized;
 
 import com.quackers29.businesscraft.debug.DebugConfig;
-import com.quackers29.businesscraft.network.ModMessages;
+import com.quackers29.businesscraft.platform.PlatformServices;
 import com.quackers29.businesscraft.network.packets.ui.RequestTownMapDataPacket;
 import com.quackers29.businesscraft.network.packets.ui.RequestTownPlatformDataPacket;
 import com.quackers29.businesscraft.client.cache.ClientTownMapCache;
@@ -150,7 +150,7 @@ public class TownMapModal extends Screen {
             int x = currentTownPos != null ? currentTownPos.getX() : 0;
             int y = currentTownPos != null ? currentTownPos.getY() : 64;
             int z = currentTownPos != null ? currentTownPos.getZ() : 0;
-            ModMessages.sendToServer(new RequestTownMapDataPacket(x, y, z));
+            PlatformServices.getNetworkHelper().sendToServer(new RequestTownMapDataPacket(x, y, z));
             
             DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
                 "Requested fresh town data from server (always fresh on map open)");
@@ -1402,7 +1402,7 @@ public class TownMapModal extends Screen {
         try {
             // Always request fresh data from server for live updates
             // This ensures population and other town data is always current
-            ModMessages.sendToServer(new RequestTownPlatformDataPacket(townId));
+            PlatformServices.getNetworkHelper().sendToServer(new RequestTownPlatformDataPacket(townId));
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                 "Requesting fresh platform and town data for town {}", townId);
                 
