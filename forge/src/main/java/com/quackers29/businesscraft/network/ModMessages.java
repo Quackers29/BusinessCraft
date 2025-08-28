@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.network;
 
-import com.quackers29.businesscraft.BusinessCraft;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import com.quackers29.businesscraft.platform.forge.ForgeNetworkHelper;
 import net.minecraft.resources.ResourceLocation;
@@ -68,7 +67,8 @@ import com.quackers29.businesscraft.network.packets.misc.TownDebugDataResponsePa
 /**
  * Platform-agnostic network packet manager.
  * 
- * MIGRATION STATUS: ✅ PARTIALLY MIGRATED
+ * MIGRATION STATUS: ✅ MIGRATED (UNIFIED ARCHITECTURE COMPATIBLE)
+ * - Removed unused BusinessCraft import (unified architecture compatibility)
  * - Now uses ForgeNetworkHelper internally via PlatformServices
  * - Maintains full backward compatibility with existing packet registrations
  * - 37 packets still registered using Forge SimpleChannel (preservation of existing functionality)
