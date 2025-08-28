@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.platform;
 /**
  * Platform abstraction service that provides access to platform-specific functionality.
  * This allows the common business logic to work across different mod platforms.
+ * Unified architecture implementation for cross-platform compatibility.
  */
 public interface PlatformService {
     

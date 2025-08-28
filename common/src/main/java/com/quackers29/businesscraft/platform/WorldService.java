@@ -4,6 +4,7 @@ import com.quackers29.businesscraft.api.ITownDataProvider;
 
 /**
  * Service for world/level related operations
+ * Unified architecture implementation for cross-platform compatibility.
  */
 public interface WorldService {
     /**

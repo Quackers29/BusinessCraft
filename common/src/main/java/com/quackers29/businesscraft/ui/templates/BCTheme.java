@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 /**
  * Theme class for BusinessCraft UI components.
  * Provides consistent styling across all UI elements.
+ * Unified architecture implementation for cross-platform compatibility.
  */
 public class BCTheme {
     // Default colors with improved visibility
@@ -253,4 +254,4 @@ public class BCTheme {
             return theme;
         }
     }
-} 
+}

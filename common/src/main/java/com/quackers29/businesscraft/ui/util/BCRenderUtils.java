@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation;
  * Utility class for rendering common UI elements
  * Provides simplified methods for drawing rectangles, boxes, borders and other shapes
  * with consistent styling and less boilerplate code.
+ * Unified architecture implementation for cross-platform compatibility.
  */
 public class BCRenderUtils {
 
@@ -314,4 +315,4 @@ public class BCRenderUtils {
         int a = Math.max(0, Math.min(255, (int) (alpha * 255))) << 24;
         return (color & 0x00FFFFFF) | a;
     }
-} 
+}

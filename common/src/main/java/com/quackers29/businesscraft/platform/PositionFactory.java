@@ -4,6 +4,7 @@ import com.quackers29.businesscraft.api.ITownDataProvider;
 
 /**
  * Factory for creating platform-specific position instances
+ * Unified architecture implementation for cross-platform compatibility.
  */
 public interface PositionFactory {
     /**

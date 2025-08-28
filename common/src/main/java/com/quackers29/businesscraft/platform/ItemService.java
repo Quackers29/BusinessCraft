@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.platform;
 
 /**
  * Service for item-related operations that need platform abstraction
+ * Unified architecture implementation for cross-platform compatibility.
  */
 public interface ItemService {
     /**

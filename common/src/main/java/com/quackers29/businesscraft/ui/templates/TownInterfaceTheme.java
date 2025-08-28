@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.ui.templates;
 /**
  * Centralized theme constants for the Town Interface Screen and related components.
  * This class provides consistent color definitions across all town interface elements.
+ * Unified architecture implementation for cross-platform compatibility.
  */
 public final class TownInterfaceTheme {
     
@@ -47,4 +48,4 @@ public final class TownInterfaceTheme {
             .roundedCorners(true)
             .build();
     }
-} 
+}

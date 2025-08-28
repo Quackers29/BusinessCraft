@@ -4,6 +4,10 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import java.util.function.Consumer;
 
+/**
+ * Base interface for all UI components in the BusinessCraft UI framework.
+ * Unified architecture implementation for cross-platform compatibility.
+ */
 public interface UIComponent {
     void init(Consumer<Button> register);
     void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY);

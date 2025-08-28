@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.platform;
 
 /**
  * Service for data serialization/deserialization
+ * Unified architecture implementation for cross-platform compatibility.
  */
 public interface DataSerializationService {
     /**

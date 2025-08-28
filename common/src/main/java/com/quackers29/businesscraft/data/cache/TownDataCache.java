@@ -16,6 +16,7 @@ import com.quackers29.businesscraft.util.ItemConverter;
 /**
  * Client-side cache for town data to reduce network requests
  * and provide faster UI updates.
+ * Unified architecture implementation for cross-platform compatibility.
  */
 public class TownDataCache {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownDataCache.class);
@@ -153,4 +154,4 @@ public class TownDataCache {
     private interface Supplier<T> {
         T get();
     }
-} 
+}
