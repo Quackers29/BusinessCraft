@@ -36,10 +36,13 @@ public class BCScreenTemplates {
             .build();
     }
     
+    // Note: Tab functionality commented out until BCTabPanel is migrated
+    /*
     /**
      * Creates a standard tabbed management screen with tabs for different categories.
      * Useful for screens that need to display different types of related information.
      */
+    /*
     public static <T extends AbstractContainerMenu> AbstractContainerScreen<T> createTabbedScreen(
             T menu, Inventory inventory, Component title,
             List<TabConfig> tabs) {
@@ -62,6 +65,7 @@ public class BCScreenTemplates {
         
         return builder.build();
     }
+    */
     
     /**
      * Creates a standard resource management screen with a list of resources and action buttons.
@@ -185,9 +189,12 @@ public class BCScreenTemplates {
         }
     }
     
+    // Note: Tab functionality commented out until BCTabPanel is migrated
+    /*
     /**
      * Configuration for a tab
      */
+    /*
     public static class TabConfig {
         private final String id;
         private final Component title;
@@ -203,6 +210,7 @@ public class BCScreenTemplates {
             return new TabConfig(id, title, configurator);
         }
     }
+    */
     
     /**
      * Configuration for a resource
@@ -239,4 +247,4 @@ public class BCScreenTemplates {
             return new SettingConfig(label, control);
         }
     }
-} 
+}

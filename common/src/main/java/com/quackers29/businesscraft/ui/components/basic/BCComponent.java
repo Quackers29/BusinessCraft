@@ -576,4 +576,4 @@ public abstract class BCComponent implements UIComponent {
     
     // Field to store animation completion callback
     private Runnable animationCompletionCallback = null;
-} 
+}

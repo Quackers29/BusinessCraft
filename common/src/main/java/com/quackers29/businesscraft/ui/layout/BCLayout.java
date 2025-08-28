@@ -18,4 +18,4 @@ public interface BCLayout {
      * @param components The components to layout
      */
     void layout(BCPanel container, List<UIComponent> components);
-} 
+}

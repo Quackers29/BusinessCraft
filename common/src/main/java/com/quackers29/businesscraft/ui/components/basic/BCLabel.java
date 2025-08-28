@@ -139,4 +139,4 @@ public class BCLabel extends BCComponent {
     public void init(Consumer<Button> register) {
         // No buttons to register
     }
-} 
+}

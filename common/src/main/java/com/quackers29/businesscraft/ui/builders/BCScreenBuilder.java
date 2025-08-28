@@ -1,9 +1,10 @@
 package com.quackers29.businesscraft.ui.builders;
 
 import com.quackers29.businesscraft.ui.components.basic.*;
-import com.quackers29.businesscraft.ui.components.containers.*;
-import com.quackers29.businesscraft.ui.components.display.*;
-import com.quackers29.businesscraft.ui.components.input.*;
+// Note: Container components not yet migrated - will be added when available
+// import com.quackers29.businesscraft.ui.components.containers.*;
+// import com.quackers29.businesscraft.ui.components.display.*;
+// import com.quackers29.businesscraft.ui.components.input.*;
 import com.quackers29.businesscraft.ui.layout.*;
 import com.quackers29.businesscraft.ui.templates.*;
 import net.minecraft.client.gui.GuiGraphics;
@@ -26,8 +27,9 @@ import java.util.function.Consumer;
 public class BCScreenBuilder<T extends AbstractContainerMenu> {
     private final AbstractContainerScreen<T> screen;
     private final List<UIComponent> components = new ArrayList<>();
-    private BCTabPanel tabPanel = null;
-    private final Map<String, BCPanel> tabPanels = new HashMap<>();
+    // Note: BCTabPanel not yet migrated - will be added when available
+    // private BCTabPanel tabPanel = null;
+    // private final Map<String, BCPanel> tabPanels = new HashMap<>();
     private BCLayout mainLayout = null;
     private int padding = 5;
     private int screenWidth;
@@ -92,9 +94,12 @@ public class BCScreenBuilder<T extends AbstractContainerMenu> {
         return this;
     }
     
+    // Note: Tab functionality commented out until BCTabPanel is migrated
+    /*
     /**
      * Create a tabbed interface for the screen
      */
+    /*
     public BCScreenBuilder<T> withTabs(int tabHeight) {
         this.tabHeight = tabHeight;
         // Create a tab panel that fills the screen
@@ -102,10 +107,13 @@ public class BCScreenBuilder<T extends AbstractContainerMenu> {
         
         return this;
     }
+    */
     
+    /*
     /**
      * Add a tab to the tabbed interface
      */
+    /*
     public BCScreenBuilder<T> addTab(String id, Component title, Consumer<BCPanel> configurator) {
         if (tabPanel == null) {
             throw new IllegalStateException("Must call withTabs before adding tabs");
@@ -123,6 +131,7 @@ public class BCScreenBuilder<T extends AbstractContainerMenu> {
         
         return this;
     }
+    */
     
     /**
      * Build the screen
@@ -137,14 +146,17 @@ public class BCScreenBuilder<T extends AbstractContainerMenu> {
                 super.init();
                 
                 // Initialize components
+                // Note: Tab functionality commented out until BCTabPanel is migrated
+                /*
                 if (tabPanel != null) {
                     tabPanel.position(leftPos + padding, topPos + padding);
                     tabPanel.init(this::addRenderableWidget);
                 } else {
+                */
                     for (UIComponent component : components) {
                         component.init(this::addRenderableWidget);
                     }
-                }
+                // }
             }
             
             @Override
@@ -153,7 +165,7 @@ public class BCScreenBuilder<T extends AbstractContainerMenu> {
                 guiGraphics.fill(leftPos, topPos, leftPos + width, topPos + height, 0xFF000000);
                 
                 // Apply layout if specified
-                if (mainLayout != null && tabPanel == null) {
+                if (mainLayout != null /* && tabPanel == null */) {
                     BCPanel container = new BCPanel(width, height);
                     container.position(leftPos, topPos);
                     container.withLayout(mainLayout);
@@ -177,18 +189,21 @@ public class BCScreenBuilder<T extends AbstractContainerMenu> {
                 super.render(guiGraphics, mouseX, mouseY, partialTick);
                 
                 // Render components
+                // Note: Tab functionality commented out until BCTabPanel is migrated
+                /*
                 if (tabPanel != null) {
                     tabPanel.render(guiGraphics, leftPos + padding, topPos + padding, mouseX, mouseY);
                 } else {
+                */
                     for (UIComponent component : components) {
                         if (component.isVisible()) {
                             component.render(guiGraphics, component.getX(), component.getY(), mouseX, mouseY);
                         }
                     }
-                }
+                // }
             }
         };
         
         return finalScreen;
     }
-} 
+}

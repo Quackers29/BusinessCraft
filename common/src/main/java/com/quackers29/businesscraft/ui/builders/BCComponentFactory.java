@@ -1,15 +1,13 @@
 package com.quackers29.businesscraft.ui.builders;
 
 import com.quackers29.businesscraft.ui.components.basic.*;
-import com.quackers29.businesscraft.ui.components.containers.*;
-import com.quackers29.businesscraft.ui.components.display.*;
-import com.quackers29.businesscraft.ui.components.input.*;
+import com.quackers29.businesscraft.ui.components.containers.SlotComponent;
+import com.quackers29.businesscraft.ui.components.display.DataLabelComponent;
+import com.quackers29.businesscraft.ui.components.input.DataBoundButtonComponent;
 import com.quackers29.businesscraft.ui.layout.BCFlowLayout;
 import com.quackers29.businesscraft.ui.layout.BCGridLayout;
-import com.quackers29.businesscraft.ui.modal.core.BCPopupScreen;
 import com.quackers29.businesscraft.ui.templates.BCTheme;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 
 import java.util.function.Consumer;
@@ -195,24 +193,6 @@ public class BCComponentFactory {
     }
     
     /**
-     * Creates an edit box with consistent styling using BC components.
-     */
-    public static BCEditBoxComponent createEditBox(int width, Supplier<String> initialText, Consumer<String> onTextChanged, int maxLength) {
-        return new BCEditBoxComponent(width, STANDARD_BUTTON_HEIGHT, initialText, onTextChanged, maxLength);
-    }
-    
-    /**
-     * Creates a toggle button with consistent styling using BC components.
-     */
-    public static BCToggleButton createToggleButton(Component text, Consumer<Button> onPress, int width) {
-        // Note: BCToggleButton constructor already sets default size, we can create with custom text
-        BCToggleButton toggleButton = new BCToggleButton(false, onPress);
-        toggleButton.withText(text.getString());
-        // TODO: Add method to BCToggleButton for custom sizing if needed
-        return toggleButton;
-    }
-    
-    /**
      * Creates a data-bound button with consistent styling.
      */
     public static DataBoundButtonComponent createDataBoundButton(Supplier<Component> textSupplier, Consumer<Button> onPress, int width) {
@@ -296,47 +276,6 @@ public class BCComponentFactory {
     }
     
     /**
-     * Create a popup for string input
-     * 
-     * @param title The title of the popup
-     * @param initialValue The initial value for the input field
-     * @param resultCallback Callback that receives the result when the popup is closed
-     * @return A new BCPopupScreen configured for string input
-     */
-    public static BCPopupScreen createStringInputPopup(String title, String initialValue, Consumer<BCPopupScreen.PopupResult> resultCallback) {
-        BCPopupScreen popup = BCPopupScreen.createStringInputPopup(title, resultCallback);
-        if (initialValue != null) {
-            popup.setInitialValue(initialValue);
-        }
-        return popup;
-    }
-    
-    /**
-     * Create a popup for numeric input
-     * 
-     * @param title The title of the popup
-     * @param initialValue The initial numeric value for the input field
-     * @param resultCallback Callback that receives the result when the popup is closed
-     * @return A new BCPopupScreen configured for numeric input
-     */
-    public static BCPopupScreen createNumericInputPopup(String title, int initialValue, Consumer<BCPopupScreen.PopupResult> resultCallback) {
-        BCPopupScreen popup = BCPopupScreen.createNumericInputPopup(title, resultCallback);
-        popup.setInitialValue(String.valueOf(initialValue));
-        return popup;
-    }
-    
-    /**
-     * Create a confirmation popup
-     * 
-     * @param title The title of the popup
-     * @param resultCallback Callback that receives the result when the popup is closed
-     * @return A new BCPopupScreen configured for confirmation
-     */
-    public static BCPopupScreen createConfirmationPopup(String title, Consumer<BCPopupScreen.PopupResult> resultCallback) {
-        return BCPopupScreen.createConfirmationPopup(title, resultCallback);
-    }
-    
-    /**
      * Creates a primary button with a tooltip
      * 
      * @param text The button text
@@ -395,4 +334,4 @@ public class BCComponentFactory {
         button.withTooltip(Component.literal(tooltip));
         return button;
     }
-} 
+}

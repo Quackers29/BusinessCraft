@@ -83,7 +83,9 @@ public class BCScreenTemplateDemo {
     
     /**
      * Creates a demo tabbed screen.
+     * TODO: Restore when BCTabPanel is migrated to common
      */
+    /*
     public static <T extends AbstractContainerMenu> AbstractContainerScreen<T> createTabbedScreenDemo(
             T menu, Inventory inventory) {
         
@@ -116,6 +118,7 @@ public class BCScreenTemplateDemo {
             menu, inventory, title, tabs
         );
     }
+    */
     
     /**
      * Creates a demo resource screen.
@@ -223,6 +226,8 @@ public class BCScreenTemplateDemo {
     
     // Helper methods to configure tab contents
     
+    // TODO: Restore when BCTabPanel is migrated to common
+    /*
     private static Consumer<BCPanel> configureOverviewTab() {
         return panel -> {
             panel.addChild(BCComponentFactory.createHeaderLabel("Business Overview", 210));
@@ -347,6 +352,7 @@ public class BCScreenTemplateDemo {
             panel.addChild(settingsPanel);
         };
     }
+    */
     
     /**
      * A dummy toggle button implementation for demonstration purposes.

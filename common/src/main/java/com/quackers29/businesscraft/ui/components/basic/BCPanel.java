@@ -540,4 +540,4 @@ public class BCPanel extends BCComponent {
                                   theme.getPanelBorder(),
                                   theme.hasRoundedCorners() ? 3 : 0);
     }
-} 
+}

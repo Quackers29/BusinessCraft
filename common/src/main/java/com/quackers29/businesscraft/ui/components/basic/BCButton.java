@@ -5,7 +5,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import com.quackers29.businesscraft.BusinessCraft;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -382,4 +381,4 @@ public class BCButton extends BCComponent {
     public Component getText() {
         return this.text;
     }
-} 
+}
