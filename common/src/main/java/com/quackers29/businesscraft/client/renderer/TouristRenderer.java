@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.client.renderer;
 
-import com.quackers29.businesscraft.BusinessCraft;
 import com.quackers29.businesscraft.client.renderer.layer.TouristHatLayer;
 import com.quackers29.businesscraft.entity.TouristEntity;
 import net.minecraft.client.model.VillagerModel;

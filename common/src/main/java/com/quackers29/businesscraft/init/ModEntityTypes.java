@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.init;
 
-import com.quackers29.businesscraft.BusinessCraft;
 import com.quackers29.businesscraft.entity.TouristEntity;
 import com.quackers29.businesscraft.platform.PlatformServices;
 import com.quackers29.businesscraft.platform.RegistryHelper;
@@ -30,7 +29,7 @@ public class ModEntityTypes {
             () -> EntityType.Builder.<TouristEntity>of(TouristEntity::new, MobCategory.CREATURE)
                 .sized(0.6F, 1.95F) // Same size as regular villager
                 .clientTrackingRange(10)
-                .build(new ResourceLocation(BusinessCraft.MOD_ID, "tourist").toString())
+                .build(new ResourceLocation("businesscraft", "tourist").toString())
         );
         
         // Entity attribute registration is handled directly in ForgeEventHelper
