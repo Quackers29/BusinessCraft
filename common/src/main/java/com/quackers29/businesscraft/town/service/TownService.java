@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Service layer for town business logic operations.
+ * Unified architecture implementation for cross-platform compatibility.
  * Extracted from Town class to separate business logic from data storage.
  * Provides validated operations with explicit error handling using Result pattern.
  */

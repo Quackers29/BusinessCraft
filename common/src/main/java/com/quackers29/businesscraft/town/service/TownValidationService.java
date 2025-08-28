@@ -12,6 +12,7 @@ import java.util.UUID;
 
 /**
  * Validation service for town-related operations.
+ * Unified architecture implementation for cross-platform compatibility.
  * Provides comprehensive validation logic with descriptive error messages
  * using the Result pattern for type-safe error handling.
  */
