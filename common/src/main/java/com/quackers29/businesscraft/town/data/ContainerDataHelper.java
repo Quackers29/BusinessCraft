@@ -13,6 +13,7 @@ import java.util.function.IntConsumer;
  * A modular, user-friendly ContainerData implementation that allows dynamic registration
  * of data fields with automatic synchronization and type safety.
  * 
+ * Unified architecture implementation for cross-platform compatibility.
  * This replaces the static, hardcoded ContainerData approach with a flexible system
  * where data fields can be registered by name with their getter/setter functions.
  */
@@ -261,4 +262,4 @@ public class ContainerDataHelper implements ContainerData {
     public static Builder builder(String contextName) {
         return new Builder(contextName);
     }
-} 
+}
