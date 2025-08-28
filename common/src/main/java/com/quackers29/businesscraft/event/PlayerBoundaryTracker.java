@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.event;
 
-import com.quackers29.businesscraft.BusinessCraft;
 import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
