@@ -7,6 +7,10 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 
+/**
+ * Admin command for clearing all towns.
+ * Unified architecture implementation for cross-platform compatibility.
+ */
 public class ClearTownsCommand {
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
@@ -22,4 +26,4 @@ public class ClearTownsCommand {
         context.getSource().sendSuccess(() -> Component.literal("Cleared " + count + " towns."), true);
         return 1;
     }
-} 
+}

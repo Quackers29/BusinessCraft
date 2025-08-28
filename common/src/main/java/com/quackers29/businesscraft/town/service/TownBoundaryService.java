@@ -14,6 +14,7 @@ import java.util.Collection;
 
 /**
  * Service for town boundary calculations and validation.
+ * Unified architecture implementation for cross-platform compatibility.
  * Handles population-based boundary system with dynamic distance calculations.
  */
 public class TownBoundaryService {
