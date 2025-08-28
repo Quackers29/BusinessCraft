@@ -5,9 +5,12 @@ import net.minecraft.client.gui.GuiGraphics;
 import java.util.function.Consumer;
 import com.quackers29.businesscraft.ui.components.basic.UIComponent;
 import java.util.function.Supplier;
-import com.quackers29.businesscraft.ui.components.basic.UIComponent;
 import net.minecraft.client.gui.components.Button;
 
+/**
+ * Data-bound label component that displays dynamic text.
+ * Unified architecture implementation for cross-platform compatibility.
+ */
 public class DataLabelComponent implements UIComponent {
     private final Supplier<String> textSupplier;
     private final int color;

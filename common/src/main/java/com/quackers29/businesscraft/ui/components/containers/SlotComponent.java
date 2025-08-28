@@ -5,6 +5,10 @@ import net.minecraft.client.gui.components.Button;
 import java.util.function.Consumer;
 import com.quackers29.businesscraft.ui.components.basic.UIComponent;
 
+/**
+ * Simple slot component for UI rendering.
+ * Unified architecture implementation for cross-platform compatibility.
+ */
 public class SlotComponent implements UIComponent {
     private int x;
     private int y;
@@ -50,4 +54,4 @@ public class SlotComponent implements UIComponent {
     public int getY() {
         return y;
     }
-} 
+}

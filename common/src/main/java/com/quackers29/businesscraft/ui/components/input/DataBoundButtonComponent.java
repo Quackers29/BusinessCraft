@@ -6,8 +6,11 @@ import net.minecraft.network.chat.Component;
 import java.util.function.Consumer;
 import com.quackers29.businesscraft.ui.components.basic.UIComponent;
 import java.util.function.Supplier;
-import com.quackers29.businesscraft.ui.components.basic.UIComponent;
 
+/**
+ * Data-bound button component with dynamic text and click handling.
+ * Unified architecture implementation for cross-platform compatibility.
+ */
 public class DataBoundButtonComponent implements UIComponent {
     private final Supplier<Component> textSupplier;
     private final Consumer<Button> onPress;

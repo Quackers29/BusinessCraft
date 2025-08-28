@@ -6,6 +6,7 @@ import net.minecraft.client.gui.Font;
 /**
  * Utility class for rendering inventory UI components.
  * Provides reusable methods for drawing inventory slots, borders, and other common UI elements.
+ * Unified architecture implementation for cross-platform compatibility.
  */
 public class InventoryRenderer {
     // Common UI color constants
@@ -311,4 +312,4 @@ public class InventoryRenderer {
         
         return isMouseOverElement(mouseX, mouseY, x, y, elementX, elementY, elementWidth, elementHeight);
     }
-} 
+}
