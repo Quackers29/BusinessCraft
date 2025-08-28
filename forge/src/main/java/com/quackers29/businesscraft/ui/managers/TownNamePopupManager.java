@@ -77,11 +77,12 @@ public class TownNamePopupManager {
         
         @Override
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+            // Let popup handle keys first (including ESC)
             if (popup != null && popup.keyPressed(keyCode, scanCode, modifiers)) {
                 return true;
             }
             
-            // ESC key closes the popup
+            // Fallback ESC handling in case popup didn't handle it
             if (keyCode == 256) { // ESC key
                 this.onClose();
                 return true;
@@ -172,9 +173,15 @@ public class TownNamePopupManager {
                 
                 // Create wrapper screen and display it
                 PopupWrapperScreen wrapper = new PopupWrapperScreen(activePopup, Minecraft.getInstance().screen);
+                
+                // Set close handler to return to the original screen
+                activePopup.setClosePopupHandler(button -> {
+                    wrapper.onClose(); // This will return to parent screen
+                });
+                
                 Minecraft.getInstance().setScreen(wrapper);
                 activePopup.focusInput(); // Focus the input field for immediate typing
-                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town name popup displayed via wrapper screen with input focused");
+                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town name popup displayed via wrapper screen with input focused and close handler set");
             }
             
         } catch (Exception e) {
@@ -274,9 +281,15 @@ public class TownNamePopupManager {
                 
                 // Create wrapper screen and display it
                 PopupWrapperScreen wrapper = new PopupWrapperScreen(popup, Minecraft.getInstance().screen);
+                
+                // Set close handler to return to the original screen
+                popup.setClosePopupHandler(button -> {
+                    wrapper.onClose(); // This will return to parent screen
+                });
+                
                 Minecraft.getInstance().setScreen(wrapper);
                 popup.focusInput(); // Focus the input field for immediate typing
-                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Static town name popup displayed via wrapper screen with input focused");
+                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Static town name popup displayed via wrapper screen with input focused and close handler set");
             }
             
             return popup;
