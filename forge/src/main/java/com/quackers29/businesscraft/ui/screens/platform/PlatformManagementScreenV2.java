@@ -478,7 +478,13 @@ public class PlatformManagementScreenV2 extends Screen {
             
             if (be instanceof TownInterfaceEntity townInterface) {
                 // Get fresh platform data from server
-                List<Platform> freshPlatforms = townInterface.getPlatforms();
+                List<Object> platformsObj = townInterface.getPlatforms();
+                List<Platform> freshPlatforms = new ArrayList<>();
+                for (Object obj : platformsObj) {
+                    if (obj instanceof Platform platform) {
+                        freshPlatforms.add(platform);
+                    }
+                }
                 
                 // Always update platforms and force grid refresh (simplified logic)
                 this.platforms = new ArrayList<>(freshPlatforms);
@@ -522,7 +528,13 @@ public class PlatformManagementScreenV2 extends Screen {
             BlockEntity be = level.getBlockEntity(blockPos);
             
             if (be instanceof TownInterfaceEntity townInterface) {
-                List<Platform> platforms = townInterface.getPlatforms();
+                List<Object> platformsObj = townInterface.getPlatforms();
+                List<Platform> platforms = new ArrayList<>();
+                for (Object obj : platformsObj) {
+                    if (obj instanceof Platform platform) {
+                        platforms.add(platform);
+                    }
+                }
                 PlatformManagementScreenV2 screen = new PlatformManagementScreenV2(blockPos, platforms);
                 minecraft.setScreen(screen);
             }
@@ -560,7 +572,14 @@ public class PlatformManagementScreenV2 extends Screen {
             
             if (be instanceof TownInterfaceEntity townInterface) {
                 // Update our platform list with fresh data from the server
-                this.platforms = new ArrayList<>(townInterface.getPlatforms());
+                List<Object> platformsObj = townInterface.getPlatforms();
+                List<Platform> platforms = new ArrayList<>();
+                for (Object obj : platformsObj) {
+                    if (obj instanceof Platform platform) {
+                        platforms.add(platform);
+                    }
+                }
+                this.platforms = new ArrayList<>(platforms);
                 
                 // Force UI update by clearing currentPlatforms to ensure refresh
                 currentPlatforms.clear();

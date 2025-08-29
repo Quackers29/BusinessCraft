@@ -276,7 +276,8 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
     // @Override
     public boolean addPlatform(Object blockEntity) {
         if (blockEntity instanceof TownInterfaceEntity townInterface) {
-            return townInterface.addPlatform();
+            Object result = townInterface.addPlatform();
+            return result != null; // Return true if platform was successfully added
         }
         return false;
     }
@@ -349,7 +350,8 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                 UUID platformUUID = UUID.fromString(platformId);
                 UUID townUUID = UUID.fromString(townId);
                 
-                Platform platform = townInterface.getPlatform(platformUUID);
+                Object platformObj = townInterface.getPlatform(platformUUID);
+                Platform platform = platformObj instanceof Platform ? (Platform) platformObj : null;
                 if (platform == null) {
                     LOGGER.warn("Platform not found with ID: {}", platformId);
                     return false;
@@ -487,7 +489,8 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
             try {
                 UUID platformUUID = UUID.fromString(platformId);
                 
-                Platform platform = townInterface.getPlatform(platformUUID);
+                Object platformObj = townInterface.getPlatform(platformUUID);
+                Platform platform = platformObj instanceof Platform ? (Platform) platformObj : null;
                 if (platform == null) {
                     LOGGER.warn("Platform not found with ID: {}", platformId);
                     return false;
@@ -909,7 +912,8 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
         
         try {
             // Create the Payment Board menu provider from the town interface entity
-            MenuProvider menuProvider = townEntity.createPaymentBoardMenuProvider();
+            Object menuProviderObj = townEntity.createPaymentBoardMenuProvider();
+            MenuProvider menuProvider = menuProviderObj instanceof MenuProvider ? (MenuProvider) menuProviderObj : null;
             
             // Use NetworkHooks to properly open the container with server-client sync
             // This matches the main branch implementation exactly
@@ -1890,7 +1894,13 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
                 (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) blockEntity;
             
             // Get the platforms from the TownInterfaceEntity
-            List<com.quackers29.businesscraft.platform.Platform> platforms = townInterface.getPlatforms();
+            List<Object> platformsObj = townInterface.getPlatforms();
+            List<com.quackers29.businesscraft.platform.Platform> platforms = new ArrayList<>();
+            for (Object obj : platformsObj) {
+                if (obj instanceof com.quackers29.businesscraft.platform.Platform platform) {
+                    platforms.add(platform);
+                }
+            }
             
             if (platforms == null || platforms.isEmpty()) {
                 DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "Town {} has no platforms created yet", townId);

@@ -526,7 +526,9 @@ public class ForgePlatformHelper implements PlatformHelper {
             // Platform-specific: Check if it's a TownInterfaceEntity
             if (blockEntity instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity townEntity) {
                 // Unified Architecture: Get the TownInterfaceData from the platform-specific entity
-                return townEntity.getTownInterfaceData();
+                Object dataObj = townEntity.getTownInterfaceData();
+                return dataObj instanceof com.quackers29.businesscraft.town.TownInterfaceData ?
+                    (com.quackers29.businesscraft.town.TownInterfaceData) dataObj : null;
             }
             
             return null;

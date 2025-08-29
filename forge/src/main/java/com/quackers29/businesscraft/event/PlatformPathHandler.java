@@ -79,7 +79,8 @@ public class PlatformPathHandler {
             LOGGER.debug("Platform path creation mode active, clicked: {}, awaitingSecondClick: {}", clickedPos, awaitingSecondClick);
             
             // Check if the platform exists
-            Platform platform = townInterface.getPlatform(activePlatformId);
+            Object platformObj = townInterface.getPlatform(activePlatformId);
+            Platform platform = platformObj instanceof Platform ? (Platform) platformObj : null;
             if (platform == null) {
                 LOGGER.error("Platform {} not found in town block at {}", activePlatformId, activeTownBlockPos);
                 clearActivePlatform();

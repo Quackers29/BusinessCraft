@@ -346,4 +346,134 @@ public abstract class TownInterfaceEntityCommon extends BlockEntity implements I
         // Default implementation - return current tourist count
         return getTouristCount();
     }
+
+    @Override
+    public void addVisitor(UUID visitorId) {
+        // Default implementation - platform subclasses should override with actual visitor tracking
+        // This could be implemented by platform-specific visitor tracking systems
+    }
+
+    @Override
+    public ITownDataProvider.Position getPosition() {
+        // Return the block position as a Position
+        return new ITownDataProvider.Position() {
+            @Override public int getX() { return TownInterfaceEntityCommon.this.worldPosition.getX(); }
+            @Override public int getY() { return TownInterfaceEntityCommon.this.worldPosition.getY(); }
+            @Override public int getZ() { return TownInterfaceEntityCommon.this.worldPosition.getZ(); }
+        };
+    }
+
+    @Override
+    public void markDirty() {
+        // Mark the block entity as dirty to trigger synchronization
+        setChanged();
+    }
+
+    @Override
+    public boolean canSpawnTourists() {
+        // Return the tourist spawning enabled flag
+        return isTouristSpawningEnabled();
+    }
+
+    @Override
+    public void setPathStart(ITownDataProvider.Position pos) {
+        // Set the path start position
+        if (pos != null) {
+            setPathStart(new BlockPos(pos.getX(), pos.getY(), pos.getZ()));
+        }
+    }
+
+    @Override
+    public void setPathEnd(ITownDataProvider.Position pos) {
+        // Set the path end position
+        if (pos != null) {
+            setPathEnd(new BlockPos(pos.getX(), pos.getY(), pos.getZ()));
+        }
+    }
+
+    @Override
+    public String getTownName() {
+        // Return the town name
+        return getName();
+    }
+
+    @Override
+    public void setTownName(String name) {
+        // Set the town name
+        setName(name);
+    }
+
+    @Override
+    public int getBreadCount() {
+        // Return the current bread count
+        // Default implementation - can be overridden by platform implementations
+        return 0; // Default bread count
+    }
+
+    @Override
+    public int getPopulation() {
+        // Return the current population
+        // Default implementation - can be overridden by platform implementations
+        return 0; // Default population
+    }
+
+    @Override
+    public int getTouristCount() {
+        // Return the current number of tourists
+        // Default implementation - can be overridden by platform implementations
+        return 0; // Default tourist count
+    }
+
+    @Override
+    public int getMaxTourists() {
+        // Return the maximum number of tourists allowed
+        // Default implementation - can be overridden by platform implementations
+        return 10; // Default max tourists
+    }
+
+    @Override
+    public boolean canAddMoreTourists() {
+        // Check if we can add more tourists based on current count and max
+        return getTouristCount() < getMaxTourists();
+    }
+
+    // Communal storage methods
+    @Override
+    public boolean addToCommunalStorage(Object item, int count) {
+        // Default implementation - platform subclasses should override
+        return false;
+    }
+
+    @Override
+    public int getCommunalStorageCount(Object item) {
+        // Default implementation - platform subclasses should override
+        return 0;
+    }
+
+    @Override
+    public Map<Object, Integer> getAllCommunalStorageItems() {
+        // Default implementation - platform subclasses should override
+        return new HashMap<>();
+    }
+
+    // Resource methods
+    @Override
+    public void addResource(Object item, int count) {
+        // Default implementation - platform subclasses should override
+        // This could add items to the entity's inventory
+    }
+
+    @Override
+    public int getResourceCount(Object item) {
+        // Default implementation - platform subclasses should override
+        return 0;
+    }
+
+    @Override
+    public Map<Object, Integer> getAllResources() {
+        // Default implementation - platform subclasses should override
+        return new HashMap<>();
+    }
+
+
 }

@@ -270,7 +270,8 @@ public class VisitorHistoryManager extends BaseModalManager {
                     BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(blockPos);
                     if (blockEntity instanceof TownInterfaceEntity townInterface) {
                         // Try to get fresh name from server
-                        String townName = townInterface.getTownNameFromId(townId);
+                        Object townNameObj = townInterface.getTownNameFromId(townId);
+                        String townName = townNameObj instanceof String ? (String) townNameObj : null;
                         
                         // If we got a proper name (not truncated UUID format), return it
                         if (townName != null && !townName.startsWith("Town-")) {
@@ -312,7 +313,8 @@ public class VisitorHistoryManager extends BaseModalManager {
             if (Minecraft.getInstance() != null && Minecraft.getInstance().level != null) {
                 BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(blockPos);
                 if (blockEntity instanceof TownInterfaceEntity townInterface) {
-                    String resolvedName = townInterface.getTownNameFromId(townUuid);
+                    Object resolvedNameObj = townInterface.getTownNameFromId(townUuid);
+                    String resolvedName = resolvedNameObj instanceof String ? (String) resolvedNameObj : null;
                     DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS,
                         "Town name lookup: {} -> '{}'", townUuid, resolvedName);
                     return resolvedName;

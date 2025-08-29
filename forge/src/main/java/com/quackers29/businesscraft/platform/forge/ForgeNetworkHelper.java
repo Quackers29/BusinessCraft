@@ -219,7 +219,8 @@ public class ForgeNetworkHelper implements NetworkHelper {
 
             // Get the platform by ID
             java.util.UUID platformUUID = java.util.UUID.fromString(platformId);
-            com.quackers29.businesscraft.platform.Platform platform = townInterface.getPlatform(platformUUID);
+            Object platformObj = townInterface.getPlatform(platformUUID);
+            com.quackers29.businesscraft.platform.Platform platform = platformObj instanceof com.quackers29.businesscraft.platform.Platform ? (com.quackers29.businesscraft.platform.Platform) platformObj : null;
             if (platform == null) {
                 LOGGER.warn("Platform not found with ID: {}", platformId);
                 return;

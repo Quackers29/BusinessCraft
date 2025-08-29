@@ -76,7 +76,9 @@ public class ForgeTownInterfaceEntityService implements TownInterfaceEntityServi
                             VisitorProcessingHelper vph = (VisitorProcessingHelper) visitorHelper;
                             // Use visitor processing helper with proper parameters
                             Object visitBufferObj = forgeEntity.getVisitBuffer();
-                            Object visitBuffer = visitBufferObj != null ? visitBufferObj :
+                            com.quackers29.businesscraft.town.data.VisitBuffer visitBuffer =
+                                visitBufferObj instanceof com.quackers29.businesscraft.town.data.VisitBuffer ?
+                                (com.quackers29.businesscraft.town.data.VisitBuffer) visitBufferObj :
                                 new com.quackers29.businesscraft.town.data.VisitBuffer();
 
                             vph.processVisitors(
