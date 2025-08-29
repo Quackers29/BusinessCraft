@@ -42,8 +42,10 @@ public class ForgeTownInterfaceEntityService implements TownInterfaceEntityServi
                 // Get platforms from the entity - we need to access platformManager
                 try {
                     if (entity instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity forgeEntity) {
-                        var platformManager = forgeEntity.getPlatformManager();
-                        if (platformManager != null) {
+                        var platformManagerObj = forgeEntity.getPlatformManager();
+                        if (platformManagerObj != null) {
+                            com.quackers29.businesscraft.town.data.PlatformManager platformManager =
+                                (com.quackers29.businesscraft.town.data.PlatformManager) platformManagerObj;
                             var enabledPlatforms = platformManager.getEnabledPlatforms();
                             for (var platform : enabledPlatforms) {
                                 touristSpawningHelper.spawnTouristOnPlatform(level, town, platform,
@@ -69,19 +71,27 @@ public class ForgeTownInterfaceEntityService implements TownInterfaceEntityServi
             if (town != null) {
                 try {
                     if (entity instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity forgeEntity) {
-                        // Use visitor processing helper with proper parameters
-                        forgeEntity.getVisitorProcessingHelper().processVisitors(
-                            level,
-                            pos,
-                            java.util.UUID.fromString(townId),
-                            forgeEntity.getPlatformManager(),
-                            forgeEntity.getVisitBuffer(),
-                            searchRadius,
-                            townName,
-                            entity::setChanged
-                        );
-                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY,
-                            "Successfully processed visitor interactions for town {} at {}", townId, pos);
+                        var visitorHelper = forgeEntity.getVisitorProcessingHelper();
+                        if (visitorHelper != null) {
+                            VisitorProcessingHelper vph = (VisitorProcessingHelper) visitorHelper;
+                            // Use visitor processing helper with proper parameters
+                            Object visitBufferObj = forgeEntity.getVisitBuffer();
+                            Object visitBuffer = visitBufferObj != null ? visitBufferObj :
+                                new com.quackers29.businesscraft.town.data.VisitBuffer();
+
+                            vph.processVisitors(
+                                level,
+                                pos,
+                                java.util.UUID.fromString(townId),
+                                forgeEntity.getPlatformManager(),
+                                visitBuffer,
+                                searchRadius,
+                                townName,
+                                entity::setChanged
+                            );
+                            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY,
+                                "Successfully processed visitor interactions for town {} at {}", townId, pos);
+                        }
                     }
                 } catch (Exception e) {
                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY,
@@ -101,8 +111,10 @@ public class ForgeTownInterfaceEntityService implements TownInterfaceEntityServi
             if (town != null && town.canSpawnTourists()) {
                 try {
                     if (entity instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity forgeEntity) {
-                        var platformManager = forgeEntity.getPlatformManager();
-                        if (platformManager != null) {
+                        var platformManagerObj = forgeEntity.getPlatformManager();
+                        if (platformManagerObj != null) {
+                            com.quackers29.businesscraft.town.data.PlatformManager platformManager =
+                                (com.quackers29.businesscraft.town.data.PlatformManager) platformManagerObj;
                             var enabledPlatforms = platformManager.getEnabledPlatforms();
                             for (var platform : enabledPlatforms) {
                                 // Use the proper TouristVehicleManager from the entity or the service
