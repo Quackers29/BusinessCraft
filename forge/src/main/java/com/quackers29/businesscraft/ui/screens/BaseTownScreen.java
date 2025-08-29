@@ -4,7 +4,8 @@ import com.quackers29.businesscraft.ui.templates.TownInterfaceTheme;
 import com.quackers29.businesscraft.ui.templates.BCTheme;
 import com.quackers29.businesscraft.ui.interfaces.ScreenRenderingCapabilities;
 import com.quackers29.businesscraft.ui.interfaces.ScreenEventCapabilities;
-import com.quackers29.businesscraft.menu.TownInterfaceMenu;
+// TownInterfaceMenu has been migrated to common module
+// import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import com.quackers29.businesscraft.ui.modal.core.BCModalScreen;
 import com.quackers29.businesscraft.ui.modal.core.BCPopupScreen;
 import com.quackers29.businesscraft.ui.components.containers.BCTabPanel;
@@ -29,7 +30,7 @@ import java.util.function.Consumer;
  * Extracted from TownInterfaceScreen to improve code reusability.
  * Refactored to use composite interfaces and reduce coupling.
  */
-public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends AbstractContainerScreen<T> 
+public abstract class BaseTownScreen<T extends com.quackers29.businesscraft.menu.TownInterfaceMenu> extends AbstractContainerScreen<T> 
         implements ScreenRenderingCapabilities,
                    ScreenEventCapabilities,
                    TownTabController.TabDataProvider {
@@ -101,8 +102,8 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
      */
     protected void initializeCacheManager() {
         TownDataCache dataCache = null;
-        if (menu instanceof TownInterfaceMenu) {
-            ITownDataProvider dataProvider = ((TownInterfaceMenu) menu).getTownDataProvider();
+        if (menu instanceof com.quackers29.businesscraft.menu.TownInterfaceMenu) {
+            ITownDataProvider dataProvider = ((com.quackers29.businesscraft.menu.TownInterfaceMenu) menu).getTownDataProvider();
             if (dataProvider != null) {
                 dataCache = new TownDataCache(dataProvider);
             }

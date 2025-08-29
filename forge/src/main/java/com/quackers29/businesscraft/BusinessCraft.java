@@ -179,26 +179,58 @@ public class BusinessCraft {
 
     private void clientSetup(final FMLClientSetupEvent event) {
         LOGGER.info("BusinessCraft client setup starting");
-        
+
         // Initialize platform-agnostic client event handlers
         ClientModEvents.initialize();
         ClientSetup.initialize();
-        
-        // Register menu screens - ModMenuTypes should now be properly initialized
+
+        // Register menu screens directly in client setup to ensure proper initialization order
         event.enqueueWork(() -> {
             LOGGER.info("Client setup: Registering menu screen types");
-            net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.TOWN_INTERFACE.get(), 
-                com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen::new);
-            net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.TRADE_MENU.get(), 
-                com.quackers29.businesscraft.ui.screens.town.TradeScreen::new);
-            net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.STORAGE_MENU.get(), 
-                com.quackers29.businesscraft.ui.screens.town.StorageScreen::new);
-            net.minecraft.client.gui.screens.MenuScreens.register(ModMenuTypes.PAYMENT_BOARD_MENU.get(), 
-                com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen::new);
-            
-            LOGGER.info("Registered all menu screen types");
+
+            // Ensure ModMenuTypes is initialized before registering screens
+            if (ModMenuTypes.TOWN_INTERFACE == null) {
+                LOGGER.error("ModMenuTypes.TOWN_INTERFACE is null! Menu type not initialized properly.");
+                return;
+            }
+
+            try {
+                // Register the TownInterfaceScreen for the TOWN_INTERFACE menu type
+                var townInterfaceMenuType = ModMenuTypes.TOWN_INTERFACE.get();
+                LOGGER.info("Registering TownInterfaceScreen for menu type: {}", townInterfaceMenuType);
+
+                net.minecraft.client.gui.screens.MenuScreens.register(
+                    townInterfaceMenuType,
+                    com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen::new
+                );
+                LOGGER.info("Successfully registered TownInterfaceScreen for menu type: {}", townInterfaceMenuType);
+
+                // Register other menu screens
+                if (ModMenuTypes.TRADE_MENU != null) {
+                    net.minecraft.client.gui.screens.MenuScreens.register(
+                        ModMenuTypes.TRADE_MENU.get(),
+                        com.quackers29.businesscraft.ui.screens.town.TradeScreen::new
+                    );
+                }
+                if (ModMenuTypes.STORAGE_MENU != null) {
+                    net.minecraft.client.gui.screens.MenuScreens.register(
+                        ModMenuTypes.STORAGE_MENU.get(),
+                        com.quackers29.businesscraft.ui.screens.town.StorageScreen::new
+                    );
+                }
+                if (ModMenuTypes.PAYMENT_BOARD_MENU != null) {
+                    net.minecraft.client.gui.screens.MenuScreens.register(
+                        ModMenuTypes.PAYMENT_BOARD_MENU.get(),
+                        com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen::new
+                    );
+                }
+
+                LOGGER.info("Registered all menu screen types successfully");
+            } catch (Exception e) {
+                LOGGER.error("Failed to register menu screens", e);
+            }
         });
-        
+
         LOGGER.info("BusinessCraft client setup complete");
     }
 

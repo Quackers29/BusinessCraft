@@ -115,8 +115,8 @@ public class TownInterfaceBlock extends BaseEntityBlock {
             
             // Generate a random town name
             String townName = generateRandomTownName();
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Generated town name: {}", townName);
-            
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Generated town name: '{}'", townName);
+
             // Create a new town at this position using correct API
             Town newTown = townManager.createTown(pos.getX(), pos.getY(), pos.getZ(), townName);
             if (newTown == null) {
@@ -125,7 +125,8 @@ public class TownInterfaceBlock extends BaseEntityBlock {
                 level.removeBlock(pos, false);
                 return;
             }
-            
+
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Successfully created town '{}' with ID {} at position {}", newTown.getName(), newTown.getId(), pos);
             UUID townId = newTown.getId();
             DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Created new town with ID: {}", townId);
             

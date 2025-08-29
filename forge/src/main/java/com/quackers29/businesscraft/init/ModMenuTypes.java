@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.init;
 
-import com.quackers29.businesscraft.menu.TownInterfaceMenu;
+// TownInterfaceMenu has been migrated to common module
+// import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import com.quackers29.businesscraft.menu.TradeMenu;
 import com.quackers29.businesscraft.menu.StorageMenu;
 import com.quackers29.businesscraft.menu.PaymentBoardMenu;
@@ -32,7 +33,7 @@ public class ModMenuTypes {
     private static RegistryHelper REGISTRY = null;
     
     // Platform-agnostic menu registrations
-    public static Supplier<MenuType<TownInterfaceMenu>> TOWN_INTERFACE;
+    public static Supplier<MenuType<com.quackers29.businesscraft.menu.TownInterfaceMenu>> TOWN_INTERFACE;
     public static Supplier<MenuType<TradeMenu>> TRADE_MENU;
     public static Supplier<MenuType<StorageMenu>> STORAGE_MENU;
     public static Supplier<MenuType<PaymentBoardMenu>> PAYMENT_BOARD_MENU;
@@ -57,7 +58,7 @@ public class ModMenuTypes {
                 DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "TOWN_INTERFACE supplier called - creating MenuType");
                 return IForgeMenuType.create((windowId, inv, data) -> {
                     BlockPos pos = data.readBlockPos();
-                    return new TownInterfaceMenu(windowId, inv, pos);
+                    return new com.quackers29.businesscraft.menu.TownInterfaceMenu(windowId, inv, pos);
                 });
             }
         );

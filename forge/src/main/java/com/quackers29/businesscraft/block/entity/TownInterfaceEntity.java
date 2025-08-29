@@ -289,7 +289,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     public AbstractContainerMenu createMenu(int id, Inventory inventory, Player player) {
         FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
         buffer.writeBlockPos(this.getBlockPos());
-        return new TownInterfaceMenu(id, inventory, this.getBlockPos());
+        return new com.quackers29.businesscraft.menu.TownInterfaceMenu(id, inventory, this.getBlockPos());
     }
 
     @Override

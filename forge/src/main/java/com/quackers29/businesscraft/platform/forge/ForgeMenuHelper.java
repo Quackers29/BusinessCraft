@@ -74,21 +74,56 @@ public class ForgeMenuHelper implements MenuHelper {
         }
     }
 
-    public Object createTownInterfaceMenuType(Object menuFactory) {
-        // TODO: Implement when TownInterfaceMenu is migrated
-        return null;
-    }
-
-    public Object createSimpleMenuType(Object menuFactory) {
+    @Override
+    public <T> Supplier<Object> createSimpleMenuType(Object menuFactory) {
         if (menuFactory instanceof SimpleMenuFactory<?> factory) {
-            return (Supplier<MenuType<?>>) () -> new MenuType<>((windowId, inv) -> factory.create(windowId, inv), null);
+            return () -> new MenuType<>((windowId, inv) -> factory.create(windowId, inv), null);
         }
         return null;
     }
 
-    public Object createDataDrivenMenuType(Object menuFactory) {
+    @Override
+    public <T> Supplier<Object> createDataDrivenMenuType(Object menuFactory) {
         if (menuFactory instanceof MenuFactory<?> factory) {
-            return (Supplier<MenuType<?>>) () -> IForgeMenuType.create((windowId, inv, data) -> factory.create(windowId, inv, data));
+            return () -> IForgeMenuType.create((windowId, inv, data) -> factory.create(windowId, inv, data));
+        }
+        return null;
+    }
+
+    @Override
+    public Supplier<Object> registerMenuType(String name, Supplier<Object> menuTypeSupplier) {
+        // TODO: Implement menu type registration
+        // This will integrate with the existing ModMenuTypes system
+        LOGGER.debug("Menu type registration requested for '{}', but not yet implemented", name);
+        return null;
+    }
+
+    @Override
+    public boolean isMenuTypeRegistered(String name) {
+        // TODO: Check if menu type is registered
+        // This will integrate with the existing ModMenuTypes system
+        LOGGER.debug("Menu type registration check requested for '{}', but not yet implemented", name);
+        return false;
+    }
+
+    @Override
+    public Object getMenuType(String name) {
+        try {
+            // Access the registered MenuType from ModMenuTypes
+            if ("town_interface".equals(name)) {
+                var menuTypeSupplier = com.quackers29.businesscraft.init.ModMenuTypes.TOWN_INTERFACE;
+                if (menuTypeSupplier != null) {
+                    MenuType<?> menuType = menuTypeSupplier.get();
+                    LOGGER.debug("Retrieved MenuType '{}' from ModMenuTypes: {}", name, menuType);
+                    return menuType;
+                } else {
+                    LOGGER.warn("MenuType supplier '{}' is null in ModMenuTypes", name);
+                }
+            } else {
+                LOGGER.warn("MenuType '{}' not supported for retrieval", name);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to retrieve MenuType '{}' from ModMenuTypes", name, e);
         }
         return null;
     }
@@ -102,16 +137,5 @@ public class ForgeMenuHelper implements MenuHelper {
     @FunctionalInterface
     public interface MenuFactory<T extends AbstractContainerMenu> {
         T create(int containerId, Inventory playerInventory, FriendlyByteBuf data);
-    }
-
-    public Object registerMenuType(String name, Object menuType) {
-        // TODO: Implement menu type registration
-        // This will integrate with the existing ModMenuTypes system
-        return null;
-    }
-
-    public boolean isMenuTypeRegistered(String name) {
-        // TODO: Check if menu type is registered
-        return false;
     }
 }

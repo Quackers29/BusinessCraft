@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.ui.screens.town;
 
-import com.quackers29.businesscraft.menu.TownInterfaceMenu;
+// TownInterfaceMenu has been migrated to common module
+// import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.ui.managers.*;
 import com.quackers29.businesscraft.ui.screens.BaseTownScreen;
@@ -22,7 +23,7 @@ import com.quackers29.businesscraft.debug.DebugConfig;
  * This screen demonstrates various UI components and layouts using the enhanced BCTabPanel.
  * Refactored to use dependency injection and extracted managers for better separation of concerns.
  */
-public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu> 
+public class TownInterfaceScreen extends BaseTownScreen<com.quackers29.businesscraft.menu.TownInterfaceMenu> 
         implements BottomButtonManager.ButtonActionHandler {
 
     // Manager instances specific to this screen
@@ -34,7 +35,7 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     // Cache the current search radius for UI updates
     private int currentSearchRadius;
 
-    public TownInterfaceScreen(TownInterfaceMenu menu, Inventory inventory, Component title) {
+    public TownInterfaceScreen(com.quackers29.businesscraft.menu.TownInterfaceMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         
         // Initialize cached values from the menu

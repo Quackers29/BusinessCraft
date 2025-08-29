@@ -1,7 +1,8 @@
 package com.quackers29.businesscraft.ui.managers;
 
 import com.quackers29.businesscraft.debug.DebugConfig;
-import com.quackers29.businesscraft.menu.TownInterfaceMenu;
+// TownInterfaceMenu has been migrated to common module
+// import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import com.quackers29.businesscraft.network.ModMessages;
 import com.quackers29.businesscraft.network.packets.platform.SetSearchRadiusPacket;
 import net.minecraft.core.BlockPos;
@@ -21,7 +22,7 @@ public class SearchRadiusManager {
     private static final int LARGE_INCREMENT = 10;
     
     private int currentRadius;
-    private final TownInterfaceMenu menu;
+    private final com.quackers29.businesscraft.menu.TownInterfaceMenu menu;
     private final BlockPos blockPos;
     private final TownDataCacheManager cacheManager;
     
@@ -32,7 +33,7 @@ public class SearchRadiusManager {
      * @param blockPos The block position for network packets
      * @param cacheManager The cache manager for immediate UI updates
      */
-    public SearchRadiusManager(TownInterfaceMenu menu, BlockPos blockPos, TownDataCacheManager cacheManager) {
+    public SearchRadiusManager(com.quackers29.businesscraft.menu.TownInterfaceMenu menu, BlockPos blockPos, TownDataCacheManager cacheManager) {
         this.menu = menu;
         this.blockPos = blockPos;
         this.cacheManager = cacheManager;
@@ -129,8 +130,8 @@ public class SearchRadiusManager {
      * Updates the menu's cached radius value if possible.
      */
     private void updateMenuRadius(int newRadius) {
-        if (menu instanceof TownInterfaceMenu) {
-            ((TownInterfaceMenu) menu).setClientSearchRadius(newRadius);
+        if (menu instanceof com.quackers29.businesscraft.menu.TownInterfaceMenu) {
+            ((com.quackers29.businesscraft.menu.TownInterfaceMenu) menu).setClientSearchRadius(newRadius);
         }
     }
     

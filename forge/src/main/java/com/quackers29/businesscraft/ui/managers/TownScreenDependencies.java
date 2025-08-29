@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.ui.managers;
 
-import com.quackers29.businesscraft.menu.TownInterfaceMenu;
+// TownInterfaceMenu has been migrated to common module
+// import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import com.quackers29.businesscraft.ui.screens.BaseTownScreen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,7 @@ public class TownScreenDependencies {
      * @return A new TownScreenDependencies container
      * @throws IllegalArgumentException if any required parameter is null
      */
-    public static TownScreenDependencies create(TownInterfaceMenu menu, 
+    public static TownScreenDependencies create(com.quackers29.businesscraft.menu.TownInterfaceMenu menu,
                                               BaseTownScreen<?> screen,
                                               TownDataCacheManager cacheManager) {
         validateInputs(menu, screen, cacheManager);
@@ -86,7 +87,7 @@ public class TownScreenDependencies {
     /**
      * Validates input parameters for dependency creation.
      */
-    private static void validateInputs(TownInterfaceMenu menu, 
+    private static void validateInputs(com.quackers29.businesscraft.menu.TownInterfaceMenu menu, 
                                      BaseTownScreen<?> screen, 
                                      TownDataCacheManager cacheManager) {
         if (menu == null) {
