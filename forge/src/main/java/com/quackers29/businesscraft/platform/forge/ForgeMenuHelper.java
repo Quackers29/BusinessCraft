@@ -1,63 +1,117 @@
 package com.quackers29.businesscraft.platform.forge;
 
+import com.quackers29.businesscraft.platform.MenuHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraftforge.common.extensions.IForgeMenuType;
+import net.minecraftforge.network.NetworkHooks;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
 
 import java.util.function.Supplier;
 
 /**
- * Forge implementation of the MenuHelper interface using IForgeMenuType.
- * This class provides cross-platform menu registration with complex data transfer support
- * essential for BusinessCraft's sophisticated UI framework.
+ * Enhanced Forge implementation of MenuHelper for TownInterfaceEntity migration.
+ * Supports complex menu operations and menu type creation.
  */
-public class ForgeMenuHelper implements com.quackers29.businesscraft.platform.ForgeMenuHelper {
-    
-    @Override
-    public <T extends AbstractContainerMenu> Supplier<MenuType<T>> createDataDrivenMenuType(MenuFactory<T> factory) {
-        return () -> IForgeMenuType.create((containerId, playerInventory, data) -> 
-            factory.create(containerId, playerInventory, data));
-    }
-    
-    @Override
-    public <T extends AbstractContainerMenu> Supplier<MenuType<T>> createSimpleMenuType(SimpleMenuFactory<T> factory) {
-        return () -> new MenuType<T>((containerId, playerInventory) -> 
-            factory.create(containerId, playerInventory), null);
-    }
-    
+public class ForgeMenuHelper implements MenuHelper {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ForgeMenuHelper.class);
+
     @Override
     public void refreshActiveMenu(Object player, String refreshType) {
         // TODO: Implement menu refresh logic for Forge
         // This method will be used to update active menus with new data
     }
-    
+
     @Override
     public boolean openTownInterfaceMenu(Object player, int[] blockPos, String displayName) {
-        if (!(player instanceof net.minecraft.server.level.ServerPlayer serverPlayer)) {
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            LOGGER.warn("Cannot open town interface menu: player is not a ServerPlayer");
             return false;
         }
-        
-        net.minecraft.core.BlockPos pos = new net.minecraft.core.BlockPos(blockPos[0], blockPos[1], blockPos[2]);
-        
+
+        BlockPos pos = new BlockPos(blockPos[0], blockPos[1], blockPos[2]);
+        LOGGER.info("Opening Town Interface menu for player {} at position {} with display name '{}'",
+                   serverPlayer.getName().getString(), pos, displayName);
+
         try {
             // Use NetworkHooks to open the town interface menu (Forge-specific)
-            net.minecraftforge.network.NetworkHooks.openScreen(serverPlayer, new net.minecraft.world.MenuProvider() {
+            NetworkHooks.openScreen(serverPlayer, new net.minecraft.world.MenuProvider() {
                 @Override
-                public net.minecraft.network.chat.Component getDisplayName() {
-                    return net.minecraft.network.chat.Component.literal(displayName);
+                public Component getDisplayName() {
+                    LOGGER.debug("MenuProvider.getDisplayName() called, returning '{}'", displayName);
+                    return Component.literal(displayName);
                 }
 
                 @Override
-                public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int windowId, 
-                        net.minecraft.world.entity.player.Inventory inventory, 
-                        net.minecraft.world.entity.player.Player player) {
-                    // Create the TownInterfaceMenu using the town's position
-                    return new com.quackers29.businesscraft.menu.TownInterfaceMenu(windowId, inventory, pos);
+                public AbstractContainerMenu createMenu(int windowId,
+                        Inventory inventory, Player player) {
+                    LOGGER.debug("MenuProvider.createMenu() called with windowId={}, player={}", windowId, player.getName().getString());
+                    try {
+                        // Create the TownInterfaceMenu with the correct constructor
+                        com.quackers29.businesscraft.menu.TownInterfaceMenu menu =
+                            new com.quackers29.businesscraft.menu.TownInterfaceMenu(windowId, inventory, pos);
+                        LOGGER.info("Successfully created TownInterfaceMenu with windowId {} for player {}", windowId, player.getName().getString());
+                        return menu;
+                    } catch (Exception e) {
+                        LOGGER.error("Failed to create TownInterfaceMenu", e);
+                        return null;
+                    }
                 }
             }, pos);
+            LOGGER.info("NetworkHooks.openScreen() completed successfully for player {} at position {}", serverPlayer.getName().getString(), pos);
             return true;
         } catch (Exception e) {
+            LOGGER.error("Failed to open town interface menu", e);
             return false;
         }
+    }
+
+    public Object createTownInterfaceMenuType(Object menuFactory) {
+        // TODO: Implement when TownInterfaceMenu is migrated
+        return null;
+    }
+
+    public Object createSimpleMenuType(Object menuFactory) {
+        if (menuFactory instanceof SimpleMenuFactory<?> factory) {
+            return (Supplier<MenuType<?>>) () -> new MenuType<>((windowId, inv) -> factory.create(windowId, inv), null);
+        }
+        return null;
+    }
+
+    public Object createDataDrivenMenuType(Object menuFactory) {
+        if (menuFactory instanceof MenuFactory<?> factory) {
+            return (Supplier<MenuType<?>>) () -> IForgeMenuType.create((windowId, inv, data) -> factory.create(windowId, inv, data));
+        }
+        return null;
+    }
+
+    // Functional interfaces for menu factories
+    @FunctionalInterface
+    public interface SimpleMenuFactory<T extends AbstractContainerMenu> {
+        T create(int containerId, Inventory playerInventory);
+    }
+
+    @FunctionalInterface
+    public interface MenuFactory<T extends AbstractContainerMenu> {
+        T create(int containerId, Inventory playerInventory, FriendlyByteBuf data);
+    }
+
+    public Object registerMenuType(String name, Object menuType) {
+        // TODO: Implement menu type registration
+        // This will integrate with the existing ModMenuTypes system
+        return null;
+    }
+
+    public boolean isMenuTypeRegistered(String name) {
+        // TODO: Check if menu type is registered
+        return false;
     }
 }

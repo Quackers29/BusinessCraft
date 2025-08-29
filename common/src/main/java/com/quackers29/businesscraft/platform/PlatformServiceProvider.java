@@ -15,18 +15,20 @@ public class PlatformServiceProvider {
     private static Object eventHelper;
     private static Object inventoryHelper;
     private static Object menuHelper;
+    private static Object businessCraftMenuProvider;
     private static Object blockEntityHelper;
     
     /**
      * Set platform services from platform-specific implementations.
      * Called by platform modules during initialization.
-     * 
+     *
      * @param platformHelper Platform helper implementation
      * @param registryHelper Registry helper implementation
      * @param networkHelper Network helper implementation
      * @param eventHelper Event helper implementation
      * @param inventoryHelper Inventory helper implementation
      * @param menuHelper Menu helper implementation
+     * @param businessCraftMenuProvider Menu provider implementation
      * @param blockEntityHelper Block entity helper implementation
      */
     public static void setPlatform(Object platformHelper,
@@ -35,6 +37,7 @@ public class PlatformServiceProvider {
                                  Object eventHelper,
                                  Object inventoryHelper,
                                  Object menuHelper,
+                                 Object businessCraftMenuProvider,
                                  Object blockEntityHelper) {
         PlatformServiceProvider.platformHelper = platformHelper;
         PlatformServiceProvider.registryHelper = registryHelper;
@@ -42,6 +45,7 @@ public class PlatformServiceProvider {
         PlatformServiceProvider.eventHelper = eventHelper;
         PlatformServiceProvider.inventoryHelper = inventoryHelper;
         PlatformServiceProvider.menuHelper = menuHelper;
+        PlatformServiceProvider.businessCraftMenuProvider = businessCraftMenuProvider;
         PlatformServiceProvider.blockEntityHelper = blockEntityHelper;
     }
     
@@ -86,7 +90,14 @@ public class PlatformServiceProvider {
     public static Object getMenuHelper() {
         return menuHelper;
     }
-    
+
+    /**
+     * Get the menu provider instance (cast to platform-specific type in platform modules).
+     */
+    public static Object getBusinessCraftMenuProvider() {
+        return businessCraftMenuProvider;
+    }
+
     /**
      * Get the block entity helper instance (cast to platform-specific type in platform modules).
      */

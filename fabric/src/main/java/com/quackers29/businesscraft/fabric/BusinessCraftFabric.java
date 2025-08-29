@@ -31,6 +31,7 @@ public class BusinessCraftFabric implements ModInitializer {
             fabricServices.getEventHelper(),
             fabricServices.getInventoryHelper(),
             fabricServices.getMenuHelper(),
+            fabricServices.getMenuProvider(),
             fabricServices.getBlockEntityHelper()
         );
         
@@ -49,6 +50,7 @@ public class BusinessCraftFabric implements ModInitializer {
             fabricServices.getEventHelper(),
             fabricServices.getInventoryHelper(),
             fabricServices.getMenuHelper(),
+            fabricServices.getMenuProvider(),
             fabricServices.getBlockEntityHelper()
         );
         

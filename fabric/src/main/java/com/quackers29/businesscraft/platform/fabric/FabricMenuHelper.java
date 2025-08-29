@@ -30,9 +30,9 @@ public class FabricMenuHelper implements MenuHelper {
         if (!(player instanceof ServerPlayerEntity serverPlayer)) {
             return false;
         }
-        
+
         BlockPos pos = new BlockPos(blockPos[0], blockPos[1], blockPos[2]);
-        
+
         try {
             // Use Fabric's ExtendedScreenHandlerFactory for menu opening (Yarn mappings)
             serverPlayer.openHandledScreen(new ExtendedScreenHandlerFactory() {
@@ -60,5 +60,40 @@ public class FabricMenuHelper implements MenuHelper {
             LOGGER.error("Failed to open town interface menu for Fabric player", e);
             return false;
         }
+    }
+
+    @Override
+    public Object createTownInterfaceMenuType(Object menuFactory) {
+        // TODO: Implement when TownInterfaceMenu is migrated
+        LOGGER.debug("createTownInterfaceMenuType not yet implemented");
+        return null;
+    }
+
+    @Override
+    public Object createSimpleMenuType(Object menuFactory) {
+        // TODO: Implement when menus are migrated
+        LOGGER.debug("createSimpleMenuType not yet implemented");
+        return null;
+    }
+
+    @Override
+    public Object createDataDrivenMenuType(Object menuFactory) {
+        // TODO: Implement when menus are migrated
+        LOGGER.debug("createDataDrivenMenuType not yet implemented");
+        return null;
+    }
+
+    @Override
+    public Object registerMenuType(String name, Object menuType) {
+        // TODO: Implement menu type registration for Fabric
+        LOGGER.debug("registerMenuType not yet implemented for: {}", name);
+        return null;
+    }
+
+    @Override
+    public boolean isMenuTypeRegistered(String name) {
+        // TODO: Check if menu type is registered in Fabric
+        LOGGER.debug("isMenuTypeRegistered not yet implemented for: {}", name);
+        return false;
     }
 }

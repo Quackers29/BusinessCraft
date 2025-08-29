@@ -165,14 +165,20 @@ public class TownInterfaceBlock extends BaseEntityBlock {
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player,
                                 InteractionHand hand, BlockHitResult hit) {
         if (!level.isClientSide) {
+            DebugConfig.debug(LOGGER, DebugConfig.UI_EVENTS, "Player {} right-clicked TownInterfaceBlock at {}", player.getName().getString(), pos);
+
             // UNIFIED ARCHITECTURE: Use platform services for menu opening
-            boolean success = PlatformServices.getMenuHelper().openTownInterfaceMenu(player, 
+            boolean success = PlatformServices.getMenuHelper().openTownInterfaceMenu(player,
                 new int[]{pos.getX(), pos.getY(), pos.getZ()}, "Town Interface");
-                
-            if (!success) {
-                LOGGER.error("Failed to open Town Interface menu at position: {}", pos);
+
+            if (success) {
+                DebugConfig.debug(LOGGER, DebugConfig.UI_EVENTS, "Successfully initiated Town Interface menu opening for player {} at {}", player.getName().getString(), pos);
+            } else {
+                DebugConfig.debug(LOGGER, DebugConfig.UI_EVENTS, "FAILED to open Town Interface menu for player {} at {}", player.getName().getString(), pos);
                 return InteractionResult.FAIL;
             }
+        } else {
+            DebugConfig.debug(LOGGER, DebugConfig.UI_EVENTS, "Client-side interaction detected for TownInterfaceBlock at {}", pos);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

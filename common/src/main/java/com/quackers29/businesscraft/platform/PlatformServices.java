@@ -15,9 +15,11 @@ public class PlatformServices {
     private static EventHelper eventHelper;
     private static InventoryHelper inventoryHelper;
     private static MenuHelper menuHelper;
+    private static BusinessCraftMenuProvider menuProvider;
     private static BlockEntityHelper blockEntityHelper;
     private static ITownManagerService townManagerService;
     private static DataStorageHelper dataStorageHelper;
+    private static TownInterfaceEntityService townInterfaceEntityService;
     
     // Static initialization is handled by platform-specific modules
     // Each platform (Forge/Fabric) calls setPlatform or initialize during mod loading
@@ -69,7 +71,15 @@ public class PlatformServices {
     public static MenuHelper getMenuHelper() {
         return menuHelper;
     }
-    
+
+    /**
+     * Get the menu provider instance.
+     * @return The menu provider
+     */
+    public static BusinessCraftMenuProvider getMenuProvider() {
+        return menuProvider;
+    }
+
     /**
      * Get the block entity helper instance.
      * @return The block entity helper
@@ -93,6 +103,14 @@ public class PlatformServices {
     public static DataStorageHelper getDataStorageHelper() {
         return dataStorageHelper;
     }
+
+    /**
+     * Get the town interface entity service instance.
+     * @return The town interface entity service
+     */
+    public static TownInterfaceEntityService getTownInterfaceEntityService() {
+        return townInterfaceEntityService;
+    }
     
     /**
      * Initialize platform services with custom implementations.
@@ -113,24 +131,26 @@ public class PlatformServices {
         PlatformServices.eventHelper = eventHelper;
     }
     
-    /**
+        /**
      * Initialize platform services with all implementations.
      * This is for complete platform service initialization.
-     * 
+     *
      * @param platformHelper The platform helper implementation
      * @param registryHelper The registry helper implementation
      * @param networkHelper The network helper implementation
      * @param eventHelper The event helper implementation
      * @param inventoryHelper The inventory helper implementation
      * @param menuHelper The menu helper implementation
+     * @param menuProvider The menu provider implementation
      * @param blockEntityHelper The block entity helper implementation
      */
-    public static void initialize(PlatformHelper platformHelper, 
+    public static void initialize(PlatformHelper platformHelper,
                                 RegistryHelper registryHelper,
                                 NetworkHelper networkHelper,
                                 EventHelper eventHelper,
                                 InventoryHelper inventoryHelper,
                                 MenuHelper menuHelper,
+                                BusinessCraftMenuProvider menuProvider,
                                 BlockEntityHelper blockEntityHelper) {
         PlatformServices.platformHelper = platformHelper;
         PlatformServices.registryHelper = registryHelper;
@@ -138,19 +158,21 @@ public class PlatformServices {
         PlatformServices.eventHelper = eventHelper;
         PlatformServices.inventoryHelper = inventoryHelper;
         PlatformServices.menuHelper = menuHelper;
+        PlatformServices.menuProvider = menuProvider;
         PlatformServices.blockEntityHelper = blockEntityHelper;
     }
     
     /**
      * Set platform services from individual service implementations.
      * This provides maximum flexibility for platform initialization.
-     * 
+     *
      * @param platformHelper Platform helper implementation
      * @param registryHelper Registry helper implementation
      * @param networkHelper Network helper implementation
      * @param eventHelper Event helper implementation
      * @param inventoryHelper Inventory helper implementation
      * @param menuHelper Menu helper implementation
+     * @param menuProvider Menu provider implementation
      * @param blockEntityHelper Block entity helper implementation
      */
     public static void setPlatform(PlatformHelper platformHelper,
@@ -159,6 +181,7 @@ public class PlatformServices {
                                  EventHelper eventHelper,
                                  InventoryHelper inventoryHelper,
                                  MenuHelper menuHelper,
+                                 BusinessCraftMenuProvider menuProvider,
                                  BlockEntityHelper blockEntityHelper) {
         PlatformServices.platformHelper = platformHelper;
         PlatformServices.registryHelper = registryHelper;
@@ -166,22 +189,25 @@ public class PlatformServices {
         PlatformServices.eventHelper = eventHelper;
         PlatformServices.inventoryHelper = inventoryHelper;
         PlatformServices.menuHelper = menuHelper;
+        PlatformServices.menuProvider = menuProvider;
         PlatformServices.blockEntityHelper = blockEntityHelper;
     }
     
     /**
      * Set platform services including town management and data storage.
      * Complete platform service initialization for full functionality.
-     * 
+     *
      * @param platformHelper Platform helper implementation
      * @param registryHelper Registry helper implementation
      * @param networkHelper Network helper implementation
      * @param eventHelper Event helper implementation
      * @param inventoryHelper Inventory helper implementation
      * @param menuHelper Menu helper implementation
+     * @param menuProvider Menu provider implementation
      * @param blockEntityHelper Block entity helper implementation
      * @param townManagerService Town manager service implementation
      * @param dataStorageHelper Data storage helper implementation
+     * @param townInterfaceEntityService Town interface entity service implementation
      */
     public static void setPlatformComplete(PlatformHelper platformHelper,
                                          RegistryHelper registryHelper,
@@ -189,17 +215,21 @@ public class PlatformServices {
                                          EventHelper eventHelper,
                                          InventoryHelper inventoryHelper,
                                          MenuHelper menuHelper,
+                                         BusinessCraftMenuProvider menuProvider,
                                          BlockEntityHelper blockEntityHelper,
                                          ITownManagerService townManagerService,
-                                         DataStorageHelper dataStorageHelper) {
+                                         DataStorageHelper dataStorageHelper,
+                                         TownInterfaceEntityService townInterfaceEntityService) {
         PlatformServices.platformHelper = platformHelper;
         PlatformServices.registryHelper = registryHelper;
         PlatformServices.networkHelper = networkHelper;
         PlatformServices.eventHelper = eventHelper;
         PlatformServices.inventoryHelper = inventoryHelper;
         PlatformServices.menuHelper = menuHelper;
+        PlatformServices.menuProvider = menuProvider;
         PlatformServices.blockEntityHelper = blockEntityHelper;
         PlatformServices.townManagerService = townManagerService;
         PlatformServices.dataStorageHelper = dataStorageHelper;
+        PlatformServices.townInterfaceEntityService = townInterfaceEntityService;
     }
 }

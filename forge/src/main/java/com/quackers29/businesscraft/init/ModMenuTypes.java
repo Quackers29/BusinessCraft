@@ -17,6 +17,10 @@ import java.util.function.Supplier;
 // Forge-specific imports for inventory handling
 import net.minecraftforge.items.ItemStackHandler;
 
+// Functional interface imports for menu factories
+import com.quackers29.businesscraft.platform.forge.ForgeMenuHelper.SimpleMenuFactory;
+import com.quackers29.businesscraft.platform.forge.ForgeMenuHelper.MenuFactory;
+
 /**
  * Platform-agnostic menu registration using the RegistryHelper abstraction.
  * This system works across different mod loaders (Forge, Fabric, etc.).
@@ -44,8 +48,8 @@ public class ModMenuTypes {
                 REGISTRY = PlatformServices.getRegistryHelper();
             }
             
-            // Get platform-specific menu helper
-            var menuHelper = (com.quackers29.businesscraft.platform.ForgeMenuHelper) PlatformServices.getMenuHelper();
+            // Get menu helper from platform services
+            var menuHelper = PlatformServices.getMenuHelper();
         
         // Register menus using platform abstraction
         TOWN_INTERFACE = REGISTRY.registerMenu("town_interface", 
@@ -58,23 +62,26 @@ public class ModMenuTypes {
             }
         );
         
-        TRADE_MENU = REGISTRY.registerMenu("trade_menu",
-            menuHelper.createSimpleMenuType((windowId, inv) -> 
-                new TradeMenu(windowId, inv, new ItemStackHandler(2))
-            )
-        );
-        
-        STORAGE_MENU = REGISTRY.registerMenu("storage_menu",
-            menuHelper.createSimpleMenuType((windowId, inv) -> 
-                new StorageMenu(windowId, inv, new ItemStackHandler(18))
-            )
-        );
-        
-        PAYMENT_BOARD_MENU = REGISTRY.registerMenu("payment_board_menu",
-            menuHelper.createDataDrivenMenuType((windowId, inv, data) -> 
-                new PaymentBoardMenu(windowId, inv, data)
-            )
-        );
+        // Create functional interfaces for menu factories
+        var tradeFactory = (SimpleMenuFactory<TradeMenu>)
+            (windowId, inv) -> new TradeMenu(windowId, inv, new ItemStackHandler(2));
+
+        var storageFactory = (SimpleMenuFactory<StorageMenu>)
+            (windowId, inv) -> new StorageMenu(windowId, inv, new ItemStackHandler(18));
+
+        var paymentFactory = (MenuFactory<PaymentBoardMenu>)
+            (windowId, inv, data) -> new PaymentBoardMenu(windowId, inv, data);
+
+        // Use direct menu type creation for now (Phase 3A approach)
+        Supplier<MenuType<TradeMenu>> tradeMenuSupplier = () -> new MenuType<>((windowId, inv) -> new TradeMenu(windowId, inv, new ItemStackHandler(2)), null);
+
+        Supplier<MenuType<StorageMenu>> storageMenuSupplier = () -> new MenuType<>((windowId, inv) -> new StorageMenu(windowId, inv, new ItemStackHandler(18)), null);
+
+        Supplier<MenuType<PaymentBoardMenu>> paymentMenuSupplier = () -> IForgeMenuType.create((windowId, inv, data) -> new PaymentBoardMenu(windowId, inv, data));
+
+        TRADE_MENU = REGISTRY.registerMenu("trade_menu", tradeMenuSupplier);
+        STORAGE_MENU = REGISTRY.registerMenu("storage_menu", storageMenuSupplier);
+        PAYMENT_BOARD_MENU = REGISTRY.registerMenu("payment_board_menu", paymentMenuSupplier);
         
         // Verify registrations were successful 
         if (TOWN_INTERFACE == null || TRADE_MENU == null || STORAGE_MENU == null || PAYMENT_BOARD_MENU == null) {

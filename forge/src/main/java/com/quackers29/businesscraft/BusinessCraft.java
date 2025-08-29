@@ -67,26 +67,26 @@ public class BusinessCraft {
         // Initialize Forge platform services using Enhanced MultiLoader approach
         ForgePlatformServices forgeServices = new ForgePlatformServices();
         
-        // Initialize the core platform services first
-        PlatformServices.setPlatform(
+        // Initialize complete platform services including new TownInterfaceEntityService
+        PlatformServices.setPlatformComplete(
             forgeServices.getPlatformHelper(),
             forgeServices.getRegistryHelper(),
             forgeServices.getNetworkHelper(),
             forgeServices.getEventHelper(),
             forgeServices.getInventoryHelper(),
             forgeServices.getMenuHelper(),
-            forgeServices.getBlockEntityHelper()
+            forgeServices.getMenuProvider(),
+            forgeServices.getBlockEntityHelper(),
+            forgeServices.getTownManagerService(),
+            forgeServices.getDataStorageHelper(),
+            forgeServices.getTownInterfaceEntityService()
         );
-        
-        // TODO: Initialize town management services manually until classpath issue is resolved
-        // This should be replaced with setPlatformComplete once compilation issue is fixed
-        initializeTownServices(forgeServices);
         
         // Phase 9.9.1: Runtime service verification
         LOGGER.info("=== BUSINESSCRAFT FORGE PLATFORM LOADING ===");
         verifyPlatformServices();
         
-        // Register with common module service provider
+        // Register with common module service provider (keeping existing for compatibility)
         PlatformServiceProvider.setPlatform(
             forgeServices.getPlatformHelper(),
             forgeServices.getRegistryHelper(),
@@ -94,6 +94,7 @@ public class BusinessCraft {
             forgeServices.getEventHelper(),
             forgeServices.getInventoryHelper(),
             forgeServices.getMenuHelper(),
+            forgeServices.getMenuProvider(),
             forgeServices.getBlockEntityHelper()
         );
         
@@ -237,33 +238,7 @@ public class BusinessCraft {
             TOURIST_VEHICLE_MANAGER.clearTrackedVehicles();
         }
     }
-    
-    /**
-     * Initialize town management services manually.
-     * This is a workaround for the setPlatformComplete method compilation issue.
-     */
-    private void initializeTownServices(ForgePlatformServices forgeServices) {
-        try {
-            DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "initializeTownServices() starting");
-            // Use reflection to access private fields and set the town services
-            java.lang.reflect.Field townManagerField = PlatformServices.class.getDeclaredField("townManagerService");
-            townManagerField.setAccessible(true);
-            townManagerField.set(null, forgeServices.getTownManagerService());
-            
-            java.lang.reflect.Field dataStorageField = PlatformServices.class.getDeclaredField("dataStorageHelper");
-            dataStorageField.setAccessible(true);
-            dataStorageField.set(null, forgeServices.getDataStorageHelper());
-            
-            LOGGER.info("Initialized town management services via reflection");
-            DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "initializeTownServices() completed successfully");
-        } catch (Exception e) {
-            DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "initializeTownServices() FAILED: {}: {}", 
-                e.getClass().getSimpleName(), e.getMessage());
-            LOGGER.error("Failed to initialize town management services: " + e.getMessage(), e);
-            // Re-throw the exception to see if this is blocking registration
-            throw new RuntimeException("Town services initialization failed", e);
-        }
-    }
+
     
     /**
      * Phase 9.9.1: Verify platform services are working correctly.

@@ -2,7 +2,7 @@ package com.quackers29.businesscraft.town.service;
 
 import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.util.Result;
-import com.quackers29.businesscraft.error.BCError;
+import com.quackers29.businesscraft.util.BCError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +47,7 @@ public class TownBusinessLogic {
     /**
      * Process a tourist visit and determine rewards
      */
-    public Result<TouristVisitResult, BCError> processTouristVisit(
+    public Result<TouristVisitResult, BCError.TownError> processTouristVisit(
             ITownDataProvider destinationTown, 
             UUID originTownId, 
             ITownDataProvider.Position originPosition,
@@ -67,7 +67,7 @@ public class TownBusinessLogic {
             
         } catch (Exception e) {
             LOGGER.error("Failed to process tourist visit", e);
-            return Result.failure(BCError.TOWN_OPERATION_FAILED);
+            return Result.failure(new BCError.TownError("TOWN_OPERATION_FAILED", "Town operation failed"));
         }
     }
     
@@ -92,24 +92,24 @@ public class TownBusinessLogic {
     /**
      * Validate if a town name is acceptable
      */
-    public Result<String, BCError> validateTownName(String name) {
+    public Result<String, BCError.ValidationError> validateTownName(String name) {
         if (name == null || name.trim().isEmpty()) {
-            return Result.failure(BCError.INVALID_TOWN_NAME);
+            return Result.failure(new BCError.ValidationError("INVALID_TOWN_NAME", "Town name cannot be null or empty"));
         }
         
         String trimmedName = name.trim();
         
         if (trimmedName.length() > 32) {
-            return Result.failure(BCError.TOWN_NAME_TOO_LONG);
+            return Result.failure(new BCError.ValidationError("TOWN_NAME_TOO_LONG", "Town name cannot exceed 32 characters"));
         }
         
         if (trimmedName.length() < 2) {
-            return Result.failure(BCError.TOWN_NAME_TOO_SHORT);
+            return Result.failure(new BCError.ValidationError("TOWN_NAME_TOO_SHORT", "Town name must be at least 2 characters"));
         }
         
         // Check for invalid characters
         if (!trimmedName.matches("^[a-zA-Z0-9\\s_-]+$")) {
-            return Result.failure(BCError.INVALID_TOWN_NAME_CHARACTERS);
+            return Result.failure(new BCError.ValidationError("INVALID_TOWN_NAME_CHARACTERS", "Town name contains invalid characters"));
         }
         
         return Result.success(trimmedName);

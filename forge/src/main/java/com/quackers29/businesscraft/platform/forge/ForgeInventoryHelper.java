@@ -1,64 +1,60 @@
 package com.quackers29.businesscraft.platform.forge;
 
-import com.quackers29.businesscraft.platform.InventoryHelper;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
+import java.util.function.Consumer;
 
 /**
- * Forge implementation of the InventoryHelper interface using ItemStackHandler and capabilities.
- * This class provides all the functionality needed to abstract Forge's inventory system
- * for cross-platform compatibility.
+ * Enhanced Forge implementation of InventoryHelper for TownInterfaceEntity migration.
+ * Implements the existing forge InventoryHelper interface with full capability support.
  */
-public class ForgeInventoryHelper implements InventoryHelper {
-    
-    public boolean isItemStackValid(Object itemStack) {
-        if (itemStack instanceof ItemStack stack) {
-            return !stack.isEmpty();
-        }
-        return false;
-    }
-    
-    public PlatformInventory createInventory(int slots, Runnable changeCallback) {
+public class ForgeInventoryHelper implements com.quackers29.businesscraft.platform.InventoryHelper {
+
+    @Override
+    public com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory createInventory(int slots, Runnable changeCallback) {
         return new ForgeInventoryWrapper(slots, changeCallback, null);
     }
-    
-    public PlatformInventory createInventory(int slots, Runnable changeCallback, ItemValidator itemValidator) {
+
+    @Override
+    public com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory createInventory(int slots, Runnable changeCallback, com.quackers29.businesscraft.platform.InventoryHelper.ItemValidator itemValidator) {
         return new ForgeInventoryWrapper(slots, changeCallback, itemValidator);
     }
-    
-    public Object createInventoryCapability(PlatformInventory inventory) {
+
+    @Override
+    public Object createInventoryCapability(com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory inventory) {
         if (inventory instanceof ForgeInventoryWrapper wrapper) {
             return LazyOptional.of(() -> wrapper.getItemStackHandler());
         }
         throw new IllegalArgumentException("PlatformInventory must be a ForgeInventoryWrapper for Forge platform");
     }
-    
+
+    @Override
     public void invalidateCapability(Object capability) {
         if (capability instanceof LazyOptional<?> lazyOptional) {
             lazyOptional.invalidate();
         }
     }
-    
-    public PlatformInventory createCombinedInventory(PlatformInventory... inventories) {
+
+    @Override
+    public com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory createCombinedInventory(com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory... inventories) {
         return new CombinedForgeInventory(inventories);
     }
-    
+
     /**
      * Forge-specific implementation of PlatformInventory using ItemStackHandler.
      */
-    private static class ForgeInventoryWrapper implements PlatformInventory {
+    private static class ForgeInventoryWrapper implements com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory {
         private final ItemStackHandler itemHandler;
         private Runnable changeCallback;
-        private ItemValidator itemValidator;
-        
-        public ForgeInventoryWrapper(int slots, Runnable changeCallback, ItemValidator itemValidator) {
+        private com.quackers29.businesscraft.platform.InventoryHelper.ItemValidator itemValidator;
+
+        public ForgeInventoryWrapper(int slots, Runnable changeCallback, com.quackers29.businesscraft.platform.InventoryHelper.ItemValidator itemValidator) {
             this.changeCallback = changeCallback;
             this.itemValidator = itemValidator;
-            
+
             // Create ItemStackHandler with custom behavior
             this.itemHandler = new ItemStackHandler(slots) {
                 @Override
@@ -67,7 +63,7 @@ public class ForgeInventoryHelper implements InventoryHelper {
                         ForgeInventoryWrapper.this.changeCallback.run();
                     }
                 }
-                
+
                 @Override
                 public boolean isItemValid(int slot, @NotNull ItemStack stack) {
                     if (ForgeInventoryWrapper.this.itemValidator != null) {
@@ -77,72 +73,72 @@ public class ForgeInventoryHelper implements InventoryHelper {
                 }
             };
         }
-        
+
         @Override
         public int getSlots() {
             return itemHandler.getSlots();
         }
-        
+
         @Override
         public @NotNull ItemStack getStackInSlot(int slot) {
             return itemHandler.getStackInSlot(slot);
         }
-        
+
         @Override
         public void setStackInSlot(int slot, @NotNull ItemStack stack) {
             itemHandler.setStackInSlot(slot, stack);
         }
-        
+
         @Override
         public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
             return itemHandler.insertItem(slot, stack, simulate);
         }
-        
+
         @Override
         public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
             return itemHandler.extractItem(slot, amount, simulate);
         }
-        
+
         @Override
         public int getSlotLimit(int slot) {
             return itemHandler.getSlotLimit(slot);
         }
-        
+
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
             return itemHandler.isItemValid(slot, stack);
         }
-        
+
         @Override
-        public CompoundTag serializeNBT() {
+        public net.minecraft.nbt.CompoundTag serializeNBT() {
             return itemHandler.serializeNBT();
         }
-        
+
         @Override
-        public void deserializeNBT(CompoundTag nbt) {
+        public void deserializeNBT(net.minecraft.nbt.CompoundTag nbt) {
             itemHandler.deserializeNBT(nbt);
         }
-        
+
         @Override
         public Object getPlatformInventory() {
             return itemHandler;
         }
-        
+
         @Override
         public void setChangeCallback(Runnable callback) {
             this.changeCallback = callback;
         }
-        
+
         @Override
-        public void setItemValidator(ItemValidator validator) {
+        public void setItemValidator(com.quackers29.businesscraft.platform.InventoryHelper.ItemValidator validator) {
             this.itemValidator = validator;
         }
-        
+
         @Override
-        public PlatformInventory createExtractionOnlyView() {
+        public com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory createExtractionOnlyView() {
             return new ExtractionOnlyForgeInventory(this);
         }
-        
+
         /**
          * Get the underlying ItemStackHandler for Forge-specific operations.
          * @return The ItemStackHandler instance
@@ -151,144 +147,144 @@ public class ForgeInventoryHelper implements InventoryHelper {
             return itemHandler;
         }
     }
-    
+
     /**
      * Extraction-only wrapper for buffer inventories.
      * Blocks insertion but allows extraction for hopper automation.
      */
-    private static class ExtractionOnlyForgeInventory implements PlatformInventory {
+    private static class ExtractionOnlyForgeInventory implements com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory {
         private final ForgeInventoryWrapper delegate;
-        
+
         public ExtractionOnlyForgeInventory(ForgeInventoryWrapper delegate) {
             this.delegate = delegate;
         }
-        
+
         @Override
         public int getSlots() {
             return delegate.getSlots();
         }
-        
+
         @Override
         public @NotNull ItemStack getStackInSlot(int slot) {
             return delegate.getStackInSlot(slot);
         }
-        
+
         @Override
         public void setStackInSlot(int slot, @NotNull ItemStack stack) {
             // Allow setting for internal operations
             delegate.setStackInSlot(slot, stack);
         }
-        
+
         @Override
         public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
             // Block all insertion
             return stack;
         }
-        
+
         @Override
         public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
             // Allow extraction
             return delegate.extractItem(slot, amount, simulate);
         }
-        
+
         @Override
         public int getSlotLimit(int slot) {
             return delegate.getSlotLimit(slot);
         }
-        
+
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
             // Block validation for insertion
             return false;
         }
-        
+
         @Override
-        public CompoundTag serializeNBT() {
+        public net.minecraft.nbt.CompoundTag serializeNBT() {
             return delegate.serializeNBT();
         }
-        
+
         @Override
-        public void deserializeNBT(CompoundTag nbt) {
+        public void deserializeNBT(net.minecraft.nbt.CompoundTag nbt) {
             delegate.deserializeNBT(nbt);
         }
-        
+
         @Override
         public Object getPlatformInventory() {
             // Return wrapper that blocks insertion
             return new ExtractionOnlyItemHandler(delegate.getItemStackHandler());
         }
-        
+
         @Override
         public void setChangeCallback(Runnable callback) {
             delegate.setChangeCallback(callback);
         }
-        
+
         @Override
-        public void setItemValidator(ItemValidator validator) {
+        public void setItemValidator(com.quackers29.businesscraft.platform.InventoryHelper.ItemValidator validator) {
             delegate.setItemValidator(validator);
         }
-        
+
         @Override
-        public PlatformInventory createExtractionOnlyView() {
+        public com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory createExtractionOnlyView() {
             return this; // Already extraction-only
         }
     }
-    
+
     /**
      * ItemStackHandler wrapper that blocks insertion for buffer inventories.
      */
     private static class ExtractionOnlyItemHandler implements IItemHandler {
         private final ItemStackHandler delegate;
-        
+
         public ExtractionOnlyItemHandler(ItemStackHandler delegate) {
             this.delegate = delegate;
         }
-        
+
         @Override
         public int getSlots() {
             return delegate.getSlots();
         }
-        
+
         @Override
         public @NotNull ItemStack getStackInSlot(int slot) {
             return delegate.getStackInSlot(slot);
         }
-        
+
         @Override
         public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
             // Block all insertion
             return stack;
         }
-        
+
         @Override
         public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
             return delegate.extractItem(slot, amount, simulate);
         }
-        
+
         @Override
         public int getSlotLimit(int slot) {
             return delegate.getSlotLimit(slot);
         }
-        
+
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
             return false; // Block insertion
         }
     }
-    
+
     /**
      * Combined inventory that presents multiple inventories as a single interface.
      * Used for menu systems that need unified inventory access.
      */
-    private static class CombinedForgeInventory implements PlatformInventory {
-        private final PlatformInventory[] inventories;
+    private static class CombinedForgeInventory implements com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory {
+        private final com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory[] inventories;
         private final int[] slotOffsets;
         private final int totalSlots;
-        
-        public CombinedForgeInventory(PlatformInventory[] inventories) {
+
+        public CombinedForgeInventory(com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory[] inventories) {
             this.inventories = inventories;
             this.slotOffsets = new int[inventories.length];
-            
+
             int offset = 0;
             for (int i = 0; i < inventories.length; i++) {
                 slotOffsets[i] = offset;
@@ -296,108 +292,105 @@ public class ForgeInventoryHelper implements InventoryHelper {
             }
             this.totalSlots = offset;
         }
-        
+
         private int[] getInventoryAndSlot(int slot) {
             for (int i = 0; i < inventories.length; i++) {
-                if (slot >= slotOffsets[i] && 
+                if (slot >= slotOffsets[i] &&
                     (i == inventories.length - 1 || slot < slotOffsets[i + 1])) {
                     return new int[]{i, slot - slotOffsets[i]};
                 }
             }
             throw new IndexOutOfBoundsException("Invalid slot: " + slot);
         }
-        
+
         @Override
         public int getSlots() {
             return totalSlots;
         }
-        
+
         @Override
         public @NotNull ItemStack getStackInSlot(int slot) {
             int[] pos = getInventoryAndSlot(slot);
             return inventories[pos[0]].getStackInSlot(pos[1]);
         }
-        
+
         @Override
         public void setStackInSlot(int slot, @NotNull ItemStack stack) {
             int[] pos = getInventoryAndSlot(slot);
             inventories[pos[0]].setStackInSlot(pos[1], stack);
         }
-        
+
         @Override
         public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
             int[] pos = getInventoryAndSlot(slot);
             return inventories[pos[0]].insertItem(pos[1], stack, simulate);
         }
-        
+
         @Override
         public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
             int[] pos = getInventoryAndSlot(slot);
             return inventories[pos[0]].extractItem(pos[1], amount, simulate);
         }
-        
+
         @Override
         public int getSlotLimit(int slot) {
             int[] pos = getInventoryAndSlot(slot);
             return inventories[pos[0]].getSlotLimit(pos[1]);
         }
-        
+
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
             int[] pos = getInventoryAndSlot(slot);
             return inventories[pos[0]].isItemValid(pos[1], stack);
         }
-        
+
         @Override
-        public CompoundTag serializeNBT() {
-            CompoundTag tag = new CompoundTag();
+        public net.minecraft.nbt.CompoundTag serializeNBT() {
+            net.minecraft.nbt.CompoundTag tag = new net.minecraft.nbt.CompoundTag();
             for (int i = 0; i < inventories.length; i++) {
                 tag.put("inventory_" + i, inventories[i].serializeNBT());
             }
             return tag;
         }
-        
+
         @Override
-        public void deserializeNBT(CompoundTag nbt) {
+        public void deserializeNBT(net.minecraft.nbt.CompoundTag nbt) {
             for (int i = 0; i < inventories.length; i++) {
                 if (nbt.contains("inventory_" + i)) {
                     inventories[i].deserializeNBT(nbt.getCompound("inventory_" + i));
                 }
             }
         }
-        
+
         @Override
         public Object getPlatformInventory() {
             // Return the first inventory's platform object as primary
             return inventories.length > 0 ? inventories[0].getPlatformInventory() : null;
         }
-        
+
         @Override
         public void setChangeCallback(Runnable callback) {
             // Set callback on all constituent inventories
-            for (PlatformInventory inventory : inventories) {
+            for (com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory inventory : inventories) {
                 inventory.setChangeCallback(callback);
             }
         }
-        
+
         @Override
-        public void setItemValidator(ItemValidator validator) {
+        public void setItemValidator(com.quackers29.businesscraft.platform.InventoryHelper.ItemValidator validator) {
             // Set validator on all constituent inventories
-            for (PlatformInventory inventory : inventories) {
+            for (com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory inventory : inventories) {
                 inventory.setItemValidator(validator);
             }
         }
-        
+
         @Override
-        public PlatformInventory createExtractionOnlyView() {
-            PlatformInventory[] extractionOnlyInventories = new PlatformInventory[inventories.length];
+        public com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory createExtractionOnlyView() {
+            com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory[] extractionOnlyInventories = new com.quackers29.businesscraft.platform.InventoryHelper.PlatformInventory[inventories.length];
             for (int i = 0; i < inventories.length; i++) {
                 extractionOnlyInventories[i] = inventories[i].createExtractionOnlyView();
             }
             return new CombinedForgeInventory(extractionOnlyInventories);
         }
     }
-    
-    // Note: Enhanced methods for town management will be added in Phase 10.2
-    // after resolving integration with existing sophisticated inventory abstractions
 }

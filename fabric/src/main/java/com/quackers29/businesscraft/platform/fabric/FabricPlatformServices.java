@@ -12,6 +12,7 @@ public class FabricPlatformServices {
     private final FabricEventHelper eventHelper;
     private final FabricInventoryHelper inventoryHelper;
     private final FabricMenuHelper menuHelper;
+    private final FabricMenuProvider menuProvider;
     private final FabricBlockEntityHelper blockEntityHelper;
     private final FabricTownManagerService townManagerService;
     private final FabricDataStorageHelper dataStorageHelper;
@@ -23,6 +24,7 @@ public class FabricPlatformServices {
         this.eventHelper = new FabricEventHelper();
         this.inventoryHelper = new FabricInventoryHelper();
         this.menuHelper = new FabricMenuHelper();
+        this.menuProvider = new FabricMenuProvider();
         this.blockEntityHelper = new FabricBlockEntityHelper();
         this.townManagerService = new FabricTownManagerService();
         this.dataStorageHelper = new FabricDataStorageHelper();
@@ -51,7 +53,11 @@ public class FabricPlatformServices {
     public FabricMenuHelper getMenuHelper() {
         return menuHelper;
     }
-    
+
+    public FabricMenuProvider getMenuProvider() {
+        return menuProvider;
+    }
+
     public FabricBlockEntityHelper getBlockEntityHelper() {
         return blockEntityHelper;
     }

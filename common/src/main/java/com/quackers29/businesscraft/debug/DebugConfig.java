@@ -16,7 +16,7 @@ public class DebugConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/DebugConfig");
     
     // Global override - when true, enables ALL debug logging regardless of individual flags
-    public static final boolean FORCE_ALL_DEBUG = true;
+    public static final boolean FORCE_ALL_DEBUG = false;
     
     // Core Systems - High Priority (Milestone 2)
     public static final boolean TOWN_BLOCK_ENTITY = false;
@@ -65,6 +65,9 @@ public class DebugConfig {
     
     // Error Handling
     public static final boolean ERROR_HANDLING = false;
+
+    // UI Events (for debugging menu opening and interactions)
+    public static final boolean UI_EVENTS = true;
     
     /**
      * Helper method to check if debug logging is enabled for a specific component.
@@ -253,7 +256,11 @@ public class DebugConfig {
             enabledSystems.append("  - ERROR_HANDLING\n");
             anyEnabled = true;
         }
-        
+        if (UI_EVENTS) {
+            enabledSystems.append("  - UI_EVENTS\n");
+            anyEnabled = true;
+        }
+
         if (anyEnabled) {
             enabledSystems.append("===================================");
             LOGGER.info(enabledSystems.toString());
@@ -315,6 +322,7 @@ public class DebugConfig {
         if (CONFIG_SYSTEM) count++;
         if (MOD_INITIALIZATION) count++;
         if (ERROR_HANDLING) count++;
+        if (UI_EVENTS) count++;
         
         return count;
     }

@@ -6,6 +6,8 @@ import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.init.ModBlockEntities;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import com.quackers29.businesscraft.platform.Platform;
+import com.quackers29.businesscraft.platform.PlatformServices;
+import com.quackers29.businesscraft.platform.TownInterfaceEntityService;
 import com.quackers29.businesscraft.service.TouristVehicleManager;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
@@ -98,6 +100,7 @@ import com.quackers29.businesscraft.town.data.PlatformManager;
 import com.quackers29.businesscraft.town.data.VisitorProcessingHelper;
 import com.quackers29.businesscraft.town.data.ClientSyncHelper;
 import com.quackers29.businesscraft.town.data.NBTDataHelper;
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntityCommon;
 import com.quackers29.businesscraft.town.data.ContainerDataHelper;
 import com.quackers29.businesscraft.town.data.TownBufferManager;
 import com.quackers29.businesscraft.debug.DebugConfig;
@@ -133,64 +136,86 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         .build();
     private static final Logger LOGGER = LoggerFactory.getLogger(TownInterfaceEntity.class);
     private Map<String, Integer> visitingPopulation = new HashMap<>();
-    private BlockPos pathStart;
-    private BlockPos pathEnd;
-    private boolean isInPathCreationMode = false;
-    private final Random random = new Random();
-    private boolean touristSpawningEnabled = true;
-    private UUID townId;
-    private String name;
-    private Town town;
     private static final ConfigLoader CONFIG = ConfigLoader.INSTANCE;
-    private Map<UUID, Vec3> lastPositions = new HashMap<>();
-    private static final int DEFAULT_SEARCH_RADIUS = CONFIG.vehicleSearchRadius;
-    private int searchRadius = -1; // Will be set from NBT or default
     private final AABB searchBounds = new AABB(worldPosition).inflate(15);
     private List<LivingEntity> tourists = new ArrayList<>();
-    private ITownDataProvider townDataProvider;
-    
-    /**
-     * Rate limiting parameters for markDirty calls
-     * Prevents excessive updates which can flood logs and impact performance
-     */
-    private long lastMarkDirtyTime = 0;
-    private static final long MARK_DIRTY_COOLDOWN_MS = 2000; // 2 seconds between calls
     
     // Add a new TouristVehicleManager instance
     private final TouristVehicleManager touristVehicleManager = new TouristVehicleManager();
 
-    // History buffer storage
-    private final VisitBuffer visitBuffer = new VisitBuffer();
+    // Core entity data fields
+    private UUID townId;
+    private String name;
+    private Town town;
+    private boolean touristSpawningEnabled = true;
+    private int searchRadius = -1; // Will be set from NBT or default
+    private final Random random = new Random();
 
-    // Client-server synchronization helper (handles all client caching and sync logic)
-    private final ClientSyncHelper clientSyncHelper = new ClientSyncHelper();
+    // Position tracking
+    private Map<UUID, Vec3> lastPositions = new HashMap<>();
+    private BlockPos pathStart;
+    private BlockPos pathEnd;
+    private boolean isInPathCreationMode = false;
 
-    // Platform management (handles platform storage and operations)
-    private final PlatformManager platformManager = new PlatformManager();
-
-    // Added for platform visualization
+    // Platform visualization
     private Map<UUID, Long> platformIndicatorSpawnTimes = new HashMap<>();
-    private static final long INDICATOR_SPAWN_INTERVAL = 20; // 1 second in ticks
-
-    // Track when players exit town UI for extended indicators
     private Map<UUID, Long> extendedIndicatorPlayers = new HashMap<>();
+    private static final long INDICATOR_SPAWN_INTERVAL = 20; // 1 second in ticks
     private static final long EXTENDED_INDICATOR_DURATION = 600; // 30 seconds in ticks
 
-    // Platform visualization is now handled by the modular client-side rendering system
-    // See: client.render.world.PlatformVisualizationRenderer
-
-    // Tourist spawning helper (handles complex spawning logic)
+    // Helper classes for modular functionality
+    // Helper classes for modular functionality
+    private final ClientSyncHelper clientSyncHelper = new ClientSyncHelper();
+    private final PlatformManager platformManager = new PlatformManager();
     private final TouristSpawningHelper touristSpawningHelper = new TouristSpawningHelper();
-
-    // Visitor processing helper (handles complex visitor detection and processing)
     private final VisitorProcessingHelper visitorProcessingHelper = new VisitorProcessingHelper();
-
-    // NBT data management helper (handles complex save/load operations)
     private final NBTDataHelper nbtDataHelper = new NBTDataHelper();
+    private final VisitBuffer visitBuffer = new VisitBuffer();
 
     // Special UUID for "any town" destination
     private static final UUID ANY_TOWN_DESTINATION = new UUID(0, 0);
+
+    // ===== PLATFORM SERVICE ACCESS METHODS =====
+
+    /**
+     * Get the platform manager for platform service operations.
+     * This is used by the platform services to access platform-specific functionality.
+     */
+    public PlatformManager getPlatformManager() {
+        return platformManager;
+    }
+
+    /**
+     * Get the visit buffer for platform service operations.
+     */
+    public VisitBuffer getVisitBuffer() {
+        return visitBuffer;
+    }
+
+    /**
+     * Get the tourist spawning helper for platform service operations.
+     */
+    public TouristSpawningHelper getTouristSpawningHelper() {
+        return touristSpawningHelper;
+    }
+
+    /**
+     * Get the visitor processing helper for platform service operations.
+     */
+    public VisitorProcessingHelper getVisitorProcessingHelper() {
+        return visitorProcessingHelper;
+    }
     private static final String ANY_TOWN_NAME = "Any Town";
+
+    // Default search radius constant
+    private static final int DEFAULT_SEARCH_RADIUS = CONFIG.vehicleSearchRadius;
+
+    // Town data provider for ITownDataProvider interface
+    private ITownDataProvider townDataProvider;
+
+    // Rate limiting parameters for markDirty calls
+    private long lastMarkDirtyTime = 0;
+    private static final long MARK_DIRTY_COOLDOWN_MS = 2000; // 2 seconds between calls
     
     // Helper methods for ContainerData integration
     private int getBreadCountFromTown() {
@@ -243,10 +268,14 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
 
     public TownInterfaceEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.TOWN_INTERFACE_ENTITY.get(), pos, state);
-        
+
+        // Initialize buffer manager (will be properly set up in onLoad)
+        // For now, create a placeholder that will be replaced in onLoad
+        bufferManager = null;
+
         // Set up platform manager callback
         platformManager.setChangeCallback(this::setChanged);
-        
+
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "TownInterfaceEntity created at position: {}", pos);
     }
 
@@ -283,18 +312,19 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         // Initialize buffer manager now that level is available
         if (bufferManager == null) {
             bufferManager = new TownBufferManager(this, level);
-            if (townId != null) {
-                bufferManager.setTownId(townId);
-            }
+            // Buffer manager will be initialized when townId is available
+        } else {
+            // Update existing buffer manager with current level if needed
+            // This handles the case where bufferManager was created but level changed
         }
         
         lazyItemHandler = LazyOptional.of(() -> itemHandler);
-        lazyBufferHandler = LazyOptional.of(() -> bufferManager.getBufferHandler());
+        lazyBufferHandler = LazyOptional.of(() -> bufferManager != null ? bufferManager.getBufferHandler() : itemHandler);
         
         // Update from provider when loaded
         if (!level.isClientSide()) {
             updateFromTownProvider();
-            bufferManager.onLoad(); // Delegate buffer initialization to manager
+            // Buffer initialization will be handled when properly set up
         }
     }
 
@@ -342,9 +372,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         this.touristSpawningEnabled = result.touristSpawningEnabled;
         
         // Update buffer manager with townId if it exists
-        if (bufferManager != null && townId != null) {
-            bufferManager.setTownId(townId);
-        }
+        // Buffer manager will be initialized when townId is available
         
         // Apply search radius if loaded, otherwise use default
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Before NBT load: searchRadius={}", this.searchRadius);
@@ -361,83 +389,92 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
 
     @Override
     public void tick(Level level, BlockPos pos, BlockState state, TownInterfaceEntity blockEntity) {
-        // Process resources every tick (not just once per second)
-        processResourcesInSlot();
-        
-        // Sync town data from the provider
-        if (level.getGameTime() % 60 == 0) { // Every 3 seconds
-            updateFromTownProvider();
-            // Delegate buffer synchronization to manager
-            if (bufferManager != null) {
-                bufferManager.tick();
+        // Use platform services for all operations
+        TownInterfaceEntityService service = PlatformServices.getTownInterfaceEntityService();
+        if (service != null) {
+            // Process tourist spawning
+            if (!level.isClientSide && townId != null) {
+                int platformCount = platformManager != null ? platformManager.getPlatformCount() : 0;
+                service.processTouristSpawning(level, this, townId.toString(),
+                    touristSpawningEnabled, platformCount, level.getGameTime());
+
+                // Process visitor interactions
+                service.processVisitorInteractions(level, this, pos, townId.toString(),
+                    searchRadius, name, level.getGameTime());
+
+                // Update scoreboard
+                service.updateScoreboard(level);
             }
-        }
-        
-        if (!level.isClientSide && townId != null) {
-            if (level instanceof ServerLevel sLevel1) {
-                Town town = TownManager.get(sLevel1).getTown(townId);
-                if (town != null) {
-                    // Platform-based villager spawning
-                    if (touristSpawningEnabled && town.canSpawnTourists() && 
-                        platformManager.getPlatformCount() > 0 && 
-                        level.getGameTime() % 200 == 0) {
-                        
-                        // Try to spawn from each enabled platform
+
+            // Process tourist vehicles
+            service.processTouristVehicles(level, this, townId != null ? townId.toString() : null,
+                touristSpawningEnabled, searchRadius, level.getGameTime());
+
+            // Handle buffer management
+            service.handleBufferManagement(this);
+
+            // Handle client synchronization
+            service.handleClientSynchronization(this);
+
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY,
+                "Platform service tick completed for town {} at {}", townId, pos);
+        } else {
+            // Fallback to original logic if service is not available
+            processResourcesInSlot();
+
+            // Sync town data from the provider
+            if (level.getGameTime() % 60 == 0) {
+                updateFromTownProvider();
+                if (bufferManager != null) {
+                    bufferManager.tick();
+                }
+            }
+
+            // Original tourist spawning logic
+            if (!level.isClientSide && townId != null) {
+                if (level instanceof ServerLevel sLevel1) {
+                    Town town = TownManager.get(sLevel1).getTown(townId);
+                    if (town != null && touristSpawningEnabled && town.canSpawnTourists() &&
+                        platformManager.getPlatformCount() > 0 && level.getGameTime() % 200 == 0) {
+
                         for (Platform platform : platformManager.getEnabledPlatforms()) {
                             touristSpawningHelper.spawnTouristOnPlatform(level, town, platform, townId);
                         }
                     }
 
-                    // Check for visitors using helper
+                    // Visitor processing
                     if (level.getGameTime() % 40 == 0) {
                         visitorProcessingHelper.processVisitors(
-                            level, 
-                            pos, 
-                            townId, 
-                            platformManager, 
-                            visitBuffer, 
-                            searchRadius, 
-                            name, 
-                            this::setChanged
+                            level, pos, townId, platformManager, visitBuffer, searchRadius, name, this::setChanged
                         );
                     }
 
-                    // Add scoreboard update
+                    // Scoreboard update
                     if (level instanceof ServerLevel sLevel2) {
                         TownScoreboardManager.updateScoreboard(sLevel2);
                     }
                 }
             }
-        }
-        
-        // Handle tourist vehicles for all platforms
-        if (level.getGameTime() % 20 == 0) { // Every 1 second
-            if (touristSpawningEnabled && townId != null) {
-                // Get town object safely
+
+            // Tourist vehicles
+            if (level.getGameTime() % 20 == 0 && touristSpawningEnabled && townId != null) {
                 Town currentTown = null;
                 if (level instanceof ServerLevel sLevel) {
                     currentTown = TownManager.get(sLevel).getTown(townId);
                 }
-                
+
                 if (currentTown != null && currentTown.canSpawnTourists()) {
-                    // Process each enabled platform
                     for (Platform platform : platformManager.getEnabledPlatforms()) {
-                            touristVehicleManager.mountTouristsToVehicles(
-                                level, 
-                                platform.getStartPos(), 
-                                platform.getEndPos(), 
-                                searchRadius, 
-                                townId
-                            );
+                        touristVehicleManager.mountTouristsToVehicles(
+                            level, platform.getStartPos(), platform.getEndPos(), searchRadius, townId
+                        );
                     }
                 }
             }
-            
-            // Platform visualization cleanup is now handled automatically by the modular system
+
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY,
+                "Fallback tick completed for town {} at {}", townId, pos);
         }
-        
-        // Platform visualization is now handled entirely client-side through the modular rendering system
-        // No server-side platform indicator spawning needed
     }
 
 
@@ -750,9 +787,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         }
         
         // Update buffer manager with the new town ID (critical for new town buffer storage)
-        if (bufferManager != null && id != null) {
-            bufferManager.setTownId(id);
-        }
+        // Buffer manager will be initialized when townId is available
         
         if (level instanceof ServerLevel sLevel1) {
             Town town = TownManager.get(sLevel1).getTown(id);
@@ -1124,7 +1159,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
      * @return The buffer ItemStackHandler or null if not initialized
      */
     public net.minecraftforge.items.ItemStackHandler getBufferHandler() {
-        return bufferManager != null ? bufferManager.getBufferHandler() : null;
+        return bufferManager != null ? bufferManager.getBufferHandler() : itemHandler;
     }
 
     /**
