@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.block.entity;
 
 import com.quackers29.businesscraft.init.ModBlockEntities;
+import com.quackers29.businesscraft.town.TownInterfaceData;
 import com.quackers29.businesscraft.town.data.PlatformManager;
 import com.quackers29.businesscraft.town.data.TouristSpawningHelper;
 import com.quackers29.businesscraft.town.data.VisitorProcessingHelper;
@@ -168,8 +169,34 @@ public class TownInterfaceEntity extends com.quackers29.businesscraft.block.enti
     // Additional platform-specific method implementations
     @Override
     public Object getTownInterfaceData() {
-        // Return this entity as the town interface data
-        return this;
+        // Create and return a TownInterfaceData instance for UI operations
+        TownInterfaceData data = new TownInterfaceData(
+            this.worldPosition.getX(),
+            this.worldPosition.getY(),
+            this.worldPosition.getZ()
+        );
+
+        // Copy relevant data from the entity to the TownInterfaceData
+        if (this.townId != null) {
+            data.setTownId(this.townId);
+        }
+        if (this.name != null) {
+            data.setTownName(this.name);
+        }
+        data.setTouristSpawningEnabled(this.touristSpawningEnabled);
+        data.setSearchRadius(this.searchRadius);
+
+        // Copy platforms if available
+        var platformManager = getPlatformManager();
+        if (platformManager != null) {
+            com.quackers29.businesscraft.town.data.PlatformManager pm =
+                (com.quackers29.businesscraft.town.data.PlatformManager) platformManager;
+            // Convert platform manager platforms to TownInterfaceData platforms
+            // Note: getPlatforms requires a boolean parameter (isClientSide)
+            // For now, we'll skip platform copying until proper mapping is implemented
+        }
+
+        return data;
     }
 
     @Override
