@@ -24,8 +24,7 @@ public class ModBlockEntities {
         public static void initialize() {
                 // Register block entities using platform abstraction
                 TOWN_INTERFACE_ENTITY = REGISTRY.registerBlockEntity("town_interface",
-                                () -> BlockEntityType.Builder.of(
-                                        (pos, state) -> new TownInterfaceEntity(pos, state),
-                                        ModBlocks.TOWN_INTERFACE.get()).build(null));
+                                () -> BlockEntityType.Builder.of(TownInterfaceEntity::new,
+                                                ModBlocks.TOWN_INTERFACE.get()).build(null));
         }
 } 
