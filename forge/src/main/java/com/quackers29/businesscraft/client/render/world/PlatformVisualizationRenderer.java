@@ -67,13 +67,7 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
                     // Check if this town has active platform visualization
                     if (manager.shouldShowVisualization(VisualizationManager.TYPE_PLATFORM, pos)) {
                         // Get platform data from the town interface entity
-                        List<Object> platformsObj = townInterfaceEntity.getPlatforms();
-                        List<Platform> platforms = new ArrayList<>();
-                        for (Object obj : platformsObj) {
-                            if (obj instanceof Platform platform) {
-                                platforms.add(platform);
-                            }
-                        }
+                        List<Platform> platforms = townInterfaceEntity.getPlatforms();
                         int searchRadius = townInterfaceEntity.getSearchRadius();
                         
                         if (!platforms.isEmpty()) {

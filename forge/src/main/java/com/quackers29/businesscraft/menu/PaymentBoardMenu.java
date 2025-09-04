@@ -226,9 +226,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
             
             if (blockEntity instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterfaceEntity) {
                 // Get the real buffer handler from the TownInterfaceEntity
-                Object bufferHandlerObj = townInterfaceEntity.getBufferHandler();
-                var bufferHandler = bufferHandlerObj instanceof net.minecraftforge.items.ItemStackHandler ?
-                    (net.minecraftforge.items.ItemStackHandler) bufferHandlerObj : null;
+                var bufferHandler = townInterfaceEntity.getBufferHandler();
                 DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Got buffer handler: {}", bufferHandler != null);
                 
                 if (bufferHandler != null) {
