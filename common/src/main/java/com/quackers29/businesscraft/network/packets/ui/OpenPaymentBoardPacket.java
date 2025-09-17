@@ -53,6 +53,7 @@ public class OpenPaymentBoardPacket extends BaseBlockEntityPacket {
                 DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Successfully opened Payment Board for player {}", player.getName().getString());
             });
         });
+        context.setPacketHandled(true);
         return true;
     }
 }

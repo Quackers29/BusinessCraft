@@ -4,8 +4,12 @@ import com.quackers29.businesscraft.api.NetworkHelper;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.MenuProvider;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.network.NetworkHooks;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
@@ -56,5 +60,44 @@ public class ForgeNetworkHelper implements NetworkHelper {
 
     public void sendToAllTrackingChunk(Object message, net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos) {
         channel.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(pos)), message);
+    }
+
+    @Override
+    public boolean isClientSide() {
+        return net.minecraftforge.fml.loading.FMLEnvironment.dist == net.minecraftforge.api.distmarker.Dist.CLIENT;
+    }
+
+    @Override
+    public Object getCurrentContext() {
+        // This method is not typically used in packet handling
+        // Each packet handles its own context
+        return null;
+    }
+
+    @Override
+    public void enqueueWork(Object context, Runnable work) {
+        if (context instanceof NetworkEvent.Context ctx) {
+            ctx.enqueueWork(work);
+        }
+    }
+
+    @Override
+    public ServerPlayer getSender(Object context) {
+        if (context instanceof NetworkEvent.Context ctx) {
+            return ctx.getSender();
+        }
+        return null;
+    }
+
+    @Override
+    public void setPacketHandled(Object context) {
+        if (context instanceof NetworkEvent.Context ctx) {
+            ctx.setPacketHandled(true);
+        }
+    }
+
+    @Override
+    public void openScreen(ServerPlayer player, MenuProvider menuProvider) {
+        NetworkHooks.openScreen(player, menuProvider);
     }
 }

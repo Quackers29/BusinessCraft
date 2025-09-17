@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -10,13 +11,12 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.NetworkHooks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
-
 import java.util.function.Supplier;
+import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.network.NetworkHooks;
 
 /**
  * Packet to request the server to open the TownInterface menu properly.
@@ -57,7 +57,7 @@ public class OpenTownInterfacePacket {
                 BlockEntity entity = player.level().getBlockEntity(blockPos);
                 if (entity instanceof TownInterfaceEntity townInterface) {
                     // Open the TownInterfaceScreen using NetworkHooks for proper sync
-                    NetworkHooks.openScreen(player, new MenuProvider() {
+                    net.minecraftforge.network.NetworkHooks.openScreen(player, new MenuProvider() {
                         @Override
                         public Component getDisplayName() {
                             return Component.translatable("block.businesscraft.town_interface");
@@ -74,7 +74,8 @@ public class OpenTownInterfacePacket {
                 }
             }
         });
-        
+        context.setPacketHandled(true);
+
         return true;
     }
 } 

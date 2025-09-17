@@ -8,13 +8,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.debug.DebugConfig;
+import net.minecraftforge.network.NetworkEvent;
 
 /**
  * Packet for requesting town map data from the server.
@@ -44,8 +44,8 @@ public class RequestTownMapDataPacket {
     /**
      * Handle the packet when received on the server
      */
-    public void handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
+    public void handle(Supplier<NetworkEvent.Context> ctx) {
+        NetworkEvent.Context context = ctx.get();
         context.enqueueWork(() -> {
             try {
                 ServerPlayer player = context.getSender();
@@ -53,18 +53,18 @@ public class RequestTownMapDataPacket {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Received RequestTownMapDataPacket from null player");
                     return;
                 }
-                
+
                 ServerLevel serverLevel = (ServerLevel) player.level();
                 TownManager townManager = TownManager.get(serverLevel);
-                
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                     "Processing town map data request for player: {}", player.getName().getString());
-                
+
                 // Get all towns data
                 Map<UUID, Town> allTowns = townManager.getAllTowns();
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                     "Server has {} towns to send", allTowns.size());
-                
+
                 // Create and send response packet (no boundary calculation - that's done per-town on click)
                 TownMapDataResponsePacket responsePacket = new TownMapDataResponsePacket();
                 for (Map.Entry<UUID, Town> entry : allTowns.entrySet()) {
@@ -77,13 +77,13 @@ public class RequestTownMapDataPacket {
                         town.getTouristCount()
                     );
                 }
-                
+
                 PlatformAccess.getNetworkMessages().sendToPlayer(responsePacket, player);
-                
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                    "Sent town map data response with {} towns to player: {}", 
+
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                    "Sent town map data response with {} towns to player: {}",
                     allTowns.size(), player.getName().getString());
-                
+
             } catch (Exception e) {
                 LOGGER.error("Error handling RequestTownMapDataPacket", e);
             }

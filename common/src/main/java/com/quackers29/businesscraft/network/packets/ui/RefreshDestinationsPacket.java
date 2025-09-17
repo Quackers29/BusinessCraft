@@ -126,7 +126,8 @@ public class RefreshDestinationsPacket {
                 }
             }
         });
-        
+        context.setPacketHandled(true);
+
         return true;
     }
 } 

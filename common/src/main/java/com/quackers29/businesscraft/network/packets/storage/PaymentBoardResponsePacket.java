@@ -1,15 +1,13 @@
 package com.quackers29.businesscraft.network.packets.storage;
 
 import net.minecraft.network.FriendlyByteBuf;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Supplier;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.town.data.RewardEntry;
 import com.quackers29.businesscraft.town.data.RewardSource;
@@ -38,7 +36,7 @@ public class PaymentBoardResponsePacket {
                 RewardSource source = RewardSource.valueOf(buf.readUtf());
                 ClaimStatus status = ClaimStatus.valueOf(buf.readUtf());
                 String eligibility = buf.readUtf();
-                
+
                 // Read rewards list
                 int rewardCount = buf.readInt();
                 List<ItemStack> rewardItems = new ArrayList<>();
@@ -46,7 +44,7 @@ public class PaymentBoardResponsePacket {
                     ItemStack stack = buf.readItem();
                     rewardItems.add(stack);
                 }
-                
+
                 // Read metadata map
                 java.util.Map<String, String> metadata = new java.util.HashMap<>();
                 int metadataCount = buf.readInt();
@@ -55,18 +53,16 @@ public class PaymentBoardResponsePacket {
                     String value = buf.readUtf();
                     metadata.put(key, value);
                 }
-                
+
                 // Create RewardEntry using the network factory method with metadata
-                RewardEntry entry = RewardEntry.fromNetworkWithMetadata(id, timestamp, expirationTime, 
+                RewardEntry entry = RewardEntry.fromNetworkWithMetadata(id, timestamp, expirationTime,
                                                           source, rewardItems, status, eligibility, metadata);
-                
                 rewards.add(entry);
             } catch (Exception e) {
                 LOGGER.error("Error decoding reward entry", e);
             }
         }
     }
-
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeInt(rewards.size());
         for (RewardEntry entry : rewards) {
@@ -78,14 +74,14 @@ public class PaymentBoardResponsePacket {
                 buf.writeUtf(entry.getSource().name());
                 buf.writeUtf(entry.getStatus().name());
                 buf.writeUtf(entry.getEligibility());
-                
+
                 // Write rewards list
                 List<ItemStack> rewardItems = entry.getRewards();
                 buf.writeInt(rewardItems.size());
                 for (ItemStack stack : rewardItems) {
                     buf.writeItem(stack);
                 }
-                
+
                 // Write metadata map
                 java.util.Map<String, String> metadata = entry.getMetadata();
                 buf.writeInt(metadata.size());
@@ -98,14 +94,14 @@ public class PaymentBoardResponsePacket {
             }
         }
     }
-    
+
     /**
      * Static encode method needed by ModMessages registration
      */
     public static void encode(PaymentBoardResponsePacket msg, FriendlyByteBuf buf) {
         msg.toBytes(buf);
     }
-    
+
     /**
      * Static decode method needed by ModMessages registration
      */
@@ -113,34 +109,32 @@ public class PaymentBoardResponsePacket {
         return new PaymentBoardResponsePacket(buf);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // Client-side handling
-            if (context.getDirection().getReceptionSide().isClient()) {
+            if (PlatformAccess.getNetwork().isClientSide()) {
                 handleClientSide();
             }
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
 
     private void handleClientSide() {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
             "Received payment board update with {} rewards", rewards.size());
-        
+
         // Get the current screen
         net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
-        
         client.execute(() -> {
             try {
                 // If the current screen is PaymentBoardScreen, update its data
                 if (client.screen instanceof com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen paymentScreen) {
-                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                         "Updating PaymentBoardScreen with reward data");
                     paymentScreen.updateRewardData(rewards);
-                    
+
                     // Also update the menu's cached data
-                    com.quackers29.businesscraft.menu.PaymentBoardMenu paymentMenu = 
+                    com.quackers29.businesscraft.menu.PaymentBoardMenu paymentMenu =
                         (com.quackers29.businesscraft.menu.PaymentBoardMenu) paymentScreen.getMenu();
                     paymentMenu.updateCachedRewards(rewards);
                 }
@@ -149,7 +143,7 @@ public class PaymentBoardResponsePacket {
             }
         });
     }
-    
+
     /**
      * Returns the rewards
      */
