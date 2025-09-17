@@ -1,0 +1,11 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+
+[[mods]]
+modId="businesscraft"
+version="1.0.0"
+displayName="BusinessCraft"
+description='''
+A Minecraft mod adding business and economy features to the game.
+''' 
