@@ -1,8 +1,6 @@
 !/.gitignore
 /.gradle
 /bin
-/build
-/run
 /TS-RTS-master
 /.claude
 /.cursor
@@ -13,8 +11,6 @@
 /common/run/crash-reports
 /forge/run/logs
 /forge/run/crash-reports
-/forge/build
 /common/build
 /forge/run/saves
 /forge/build
-/common/build
