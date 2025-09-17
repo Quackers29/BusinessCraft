@@ -2,8 +2,8 @@ package com.yourdomain.businesscraft.town.data;
 
 import com.yourdomain.businesscraft.config.ConfigLoader;
 import com.yourdomain.businesscraft.entity.TouristEntity;
-import com.yourdomain.businesscraft.init.ModEntityTypes;
 import com.yourdomain.businesscraft.platform.Platform;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
 import com.yourdomain.businesscraft.town.utils.TouristAllocationTracker;
@@ -205,7 +205,7 @@ public class TouristSpawningHelper {
         if (level.getBlockState(pos).isAir() && level.getBlockState(pos.above()).isAir()) {
             // Create our custom TouristEntity instead of a regular Villager
             TouristEntity tourist = new TouristEntity(
-                ModEntityTypes.TOURIST.get(),
+                PlatformAccess.getEntities().getTouristEntityType(),
                 level,
                 originTown,
                 platform,

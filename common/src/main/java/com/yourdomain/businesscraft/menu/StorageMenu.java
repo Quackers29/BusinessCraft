@@ -1,7 +1,7 @@
 package com.yourdomain.businesscraft.menu;
 
 import com.yourdomain.businesscraft.BusinessCraft;
-import com.yourdomain.businesscraft.init.ModMenuTypes;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -73,7 +73,7 @@ public class StorageMenu extends AbstractContainerMenu {
     
     // Main constructor
     public StorageMenu(int containerId, Inventory playerInventory, IItemHandler storageInventory) {
-        super(ModMenuTypes.STORAGE_MENU.get(), containerId);
+        super(PlatformAccess.getMenuTypes().getStorageMenuType(), containerId);
         
         // Create the storage inventory if it doesn't exist
         if (storageInventory instanceof ItemStackHandler) {

@@ -2,7 +2,7 @@ package com.yourdomain.businesscraft.menu;
 
 import com.yourdomain.businesscraft.api.ITownDataProvider;
 import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
-import com.yourdomain.businesscraft.init.ModMenuTypes;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
@@ -72,7 +72,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      * Constructor for server-side menu creation
      */
     public TownInterfaceMenu(int windowId, Inventory inv, BlockPos pos) {
-        super(ModMenuTypes.TOWN_INTERFACE.get(), windowId);
+        super(PlatformAccess.getMenuTypes().getTownInterfaceMenuType(), windowId);
         this.pos = pos;
         this.level = inv.player.level();
         

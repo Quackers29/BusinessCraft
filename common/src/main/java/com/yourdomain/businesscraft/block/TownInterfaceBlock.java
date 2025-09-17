@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.block;
 
-import com.yourdomain.businesscraft.init.ModBlockEntities;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.config.ConfigLoader;
 import com.yourdomain.businesscraft.town.TownManager;
@@ -131,7 +131,7 @@ public class TownInterfaceBlock extends BaseEntityBlock {
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
             BlockEntityType<T> type) {
         // First use the default ticker for the TownInterfaceEntity
-        BlockEntityTicker<T> baseTicker = createTickerHelper(type, ModBlockEntities.TOWN_INTERFACE_ENTITY.get(),
+        BlockEntityTicker<T> baseTicker = createTickerHelper(type, PlatformAccess.getBlockEntities().getTownInterfaceEntityType(),
                 (lvl, pos, blockState, blockEntity) -> ((TownInterfaceEntity) blockEntity).tick(lvl, pos, blockState,
                         (TownInterfaceEntity) blockEntity));
         

@@ -3,7 +3,7 @@ package com.yourdomain.businesscraft.block.entity;
 // import com.yourdomain.businesscraft.blocks.ModBlocks;
 // import com.yourdomain.businesscraft.capability.ItemHandlerCapability;
 import com.yourdomain.businesscraft.config.ConfigLoader;
-import com.yourdomain.businesscraft.init.ModBlockEntities;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.service.TouristVehicleManager;
@@ -242,7 +242,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     }
 
     public TownInterfaceEntity(BlockPos pos, BlockState state) {
-        super(ModBlockEntities.TOWN_INTERFACE_ENTITY.get(), pos, state);
+        super(PlatformAccess.getBlockEntities().getTownInterfaceEntityType(), pos, state);
         
         // Set up platform manager callback
         platformManager.setChangeCallback(this::setChanged);

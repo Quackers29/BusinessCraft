@@ -1,7 +1,7 @@
 package com.yourdomain.businesscraft.menu;
 
 import com.yourdomain.businesscraft.BusinessCraft;
-import com.yourdomain.businesscraft.init.ModMenuTypes;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.town.data.RewardEntry;
 import com.yourdomain.businesscraft.town.data.TownPaymentBoard;
 import net.minecraft.world.entity.player.Player;
@@ -10,9 +10,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.SlotItemHandler;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.core.BlockPos;
 import com.yourdomain.businesscraft.network.ModMessages;
@@ -86,7 +84,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
     
     // Main constructor
     public PaymentBoardMenu(int containerId, Inventory playerInventory, IItemHandler bufferInventory) {
-        super(ModMenuTypes.PAYMENT_BOARD_MENU.get(), containerId);
+        super(PlatformAccess.getMenuTypes().getPaymentBoardMenuType(), containerId);
         
         // Create the buffer inventory if it doesn't exist
         if (bufferInventory instanceof ItemStackHandler) {

@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
@@ -114,7 +114,7 @@ public class BufferStoragePacket extends BaseBlockEntityPacket {
                     "Received request for all buffer storage data from player {}", player.getName().getString());
                 
                 // Send a response with slot-based buffer storage data
-                ModMessages.sendToPlayer(new BufferSlotStorageResponsePacket(town.getPaymentBoard().getBufferStorageSlots()), player);
+                PlatformAccess.getNetworkMessages().sendToPlayer(new BufferSlotStorageResponsePacket(town.getPaymentBoard().getBufferStorageSlots()), player);
                 return;
             }
             
@@ -167,7 +167,7 @@ public class BufferStoragePacket extends BaseBlockEntityPacket {
                     Block.UPDATE_ALL);
                 
                 // Send a response to update the UI with slot-based data
-                ModMessages.sendToPlayer(new BufferSlotStorageResponsePacket(town.getPaymentBoard().getBufferStorageSlots()), player);
+                PlatformAccess.getNetworkMessages().sendToPlayer(new BufferSlotStorageResponsePacket(town.getPaymentBoard().getBufferStorageSlots()), player);
             }
         });
         

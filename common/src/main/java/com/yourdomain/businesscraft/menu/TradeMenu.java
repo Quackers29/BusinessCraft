@@ -1,7 +1,7 @@
 package com.yourdomain.businesscraft.menu;
 
 import com.yourdomain.businesscraft.BusinessCraft;
-import com.yourdomain.businesscraft.init.ModMenuTypes;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -56,7 +56,7 @@ public class TradeMenu extends AbstractContainerMenu {
     
     // Main constructor
     public TradeMenu(int containerId, Inventory playerInventory, IItemHandler tradeInventory) {
-        super(ModMenuTypes.TRADE_MENU.get(), containerId);
+        super(PlatformAccess.getMenuTypes().getTradeMenuType(), containerId);
         
         // Create the trade inventory if it doesn't exist
         if (tradeInventory instanceof ItemStackHandler) {

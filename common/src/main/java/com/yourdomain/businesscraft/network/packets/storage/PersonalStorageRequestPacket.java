@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageResponsePacket;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import net.minecraft.world.level.Level;
 
 import java.util.UUID;
@@ -111,7 +111,7 @@ public class PersonalStorageRequestPacket extends BaseBlockEntityPacket {
             // Send a response with the player's personal storage data
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                 "Sending personal storage data to player {} for town {}", player.getName().getString(), townId);
-            ModMessages.sendToPlayer(new PersonalStorageResponsePacket(town.getPersonalStorageItems(playerId)), player);
+            PlatformAccess.getNetworkMessages().sendToPlayer(new PersonalStorageResponsePacket(town.getPersonalStorageItems(playerId)), player);
         });
         
         ctx.get().setPacketHandled(true);

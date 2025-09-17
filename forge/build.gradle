@@ -1,0 +1,64 @@
+// Forge platform module - Minimal Forge-specific implementations
+// Depends on common module for all business logic
+
+plugins {
+    id 'java'
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
+}
+
+archivesBaseName = 'businesscraft-forge'
+
+minecraft {
+    mappings channel: 'parchment', version: '2023.06.26-1.20.1'
+
+    runs {
+        client {
+            workingDirectory project.file('../common/run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+
+            mods {
+                businesscraft {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('../common/run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+
+            mods {
+                businesscraft {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.20.1-47.1.0'
+
+    // Depend on the common module
+    implementation project(':common')
+
+    // JetBrains annotations for @NotNull/@Nullable
+    compileOnly 'org.jetbrains:annotations:23.0.0'
+}
+
+jar {
+    manifest {
+        attributes([
+            "Specification-Title": "businesscraft-forge",
+            "Specification-Vendor": "Quackers29",
+            "Specification-Version": "1",
+            "Implementation-Title": "BusinessCraft Forge",
+            "Implementation-Version": project.version,
+            "Implementation-Vendor": "Quackers29",
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
