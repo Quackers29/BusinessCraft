@@ -1,0 +1,14 @@
+accessWidener v2 named
+
+accessible class net/minecraft/client/gui/screens/Screen
+accessible method net/minecraft/client/gui/screens/Screen renderTooltip (Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/world/item/ItemStack;II)V
+accessible method net/minecraft/client/gui/screens/Screen renderTooltip (Lnet/minecraft/client/gui/GuiGraphics;Ljava/util/List;II)V
+
+accessible class net/minecraft/client/gui/components/Button
+accessible method net/minecraft/client/gui/components/Button onPress ()V
+
+accessible class net/minecraft/world/level/Level
+accessible method net/minecraft/world/level/Level getGameTime ()J
+
+accessible class net/minecraft/server/level/ServerLevel
+accessible method net/minecraft/server/level/ServerLevel getGameTime ()J

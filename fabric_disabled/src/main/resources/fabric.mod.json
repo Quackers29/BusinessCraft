@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "businesscraft",
+  "version": "${version}",
+  "name": "BusinessCraft",
+  "description": "A comprehensive business simulation mod with towns, tourism, and economic systems.",
+  "authors": [
+    "Quackers29"
+  ],
+  "contact": {
+    "homepage": "",
+    "sources": ""
+  },
+  "license": "MIT",
+  "icon": "assets/businesscraft/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.quackers29.businesscraft.fabric.BusinessCraftFabric"
+    ],
+    "client": [
+      "com.quackers29.businesscraft.fabric.client.FabricClientSetup"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.15.6",
+    "fabric": "*",
+    "minecraft": "1.20.1",
+    "java": ">=17"
+  },
+  "suggests": {
+    "fabric-api": "*"
+  },
+}
