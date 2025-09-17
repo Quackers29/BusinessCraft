@@ -1,12 +1,12 @@
 package com.quackers29.businesscraft.town.data;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.resources.ResourceLocation;
+// Platform-agnostic imports - Minecraft types abstracted through platform helpers
 import com.quackers29.businesscraft.api.PlatformAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 
 import java.util.*;
 import java.text.SimpleDateFormat;

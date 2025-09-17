@@ -24,10 +24,10 @@ public class ForgeClientModEvents {
 
         // Register menu screens
         event.enqueueWork(() -> {
-            MenuScreens.register(menuTypes.getTownInterfaceMenuType(), TownInterfaceScreen::new);
-            MenuScreens.register(menuTypes.getTradeMenuType(), TradeScreen::new);
-            MenuScreens.register(menuTypes.getStorageMenuType(), StorageScreen::new);
-            MenuScreens.register(menuTypes.getPaymentBoardMenuType(), PaymentBoardScreen::new);
+            MenuScreens.register((net.minecraft.world.inventory.MenuType<com.quackers29.businesscraft.menu.TownInterfaceMenu>) menuTypes.getTownInterfaceMenuType(), TownInterfaceScreen::new);
+            MenuScreens.register((net.minecraft.world.inventory.MenuType<com.quackers29.businesscraft.menu.TradeMenu>) menuTypes.getTradeMenuType(), TradeScreen::new);
+            MenuScreens.register((net.minecraft.world.inventory.MenuType<com.quackers29.businesscraft.menu.StorageMenu>) menuTypes.getStorageMenuType(), StorageScreen::new);
+            MenuScreens.register((net.minecraft.world.inventory.MenuType<com.quackers29.businesscraft.menu.PaymentBoardMenu>) menuTypes.getPaymentBoardMenuType(), PaymentBoardScreen::new);
         });
     }
 }

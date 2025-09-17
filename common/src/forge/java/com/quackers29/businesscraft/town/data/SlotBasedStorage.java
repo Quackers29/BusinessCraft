@@ -1,29 +1,27 @@
 package com.quackers29.businesscraft.town.data;
 
-// Platform-agnostic storage implementation
-// Minecraft types will be abstracted through platform helpers
-import org.jetbrains.annotations.NotNull;
-import com.quackers29.businesscraft.api.PlatformAccess;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Item;
-import net.minecraftforge.items.ItemStackHandler;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.items.ItemStackHandler;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Modular slot-based storage system for consistent UI chest behavior across all systems.
  * Replaces Map<Item, Integer> approach to preserve exact slot positions between UI sessions.
- *
+ * 
  * Features:
  * - Variable slot count (2 for trade, 18 for payment buffer, 27+ for future chests)
  * - Exact slot position preservation between UI opens/closes
  * - Hopper automation compatibility with partial extraction
  * - Smart item allocation for reward claiming
- * - Platform-agnostic design for cross-platform compatibility
+ * - NBT serialization for save/load persistence
+ * - ItemStackHandler integration for existing UI components
  */
 public class SlotBasedStorage {
-
+    
     private final ItemStack[] slots;
     private final int slotCount;
     

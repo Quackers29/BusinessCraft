@@ -72,7 +72,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      * Constructor for server-side menu creation
      */
     public TownInterfaceMenu(int windowId, Inventory inv, BlockPos pos) {
-        super(PlatformAccess.getMenuTypes().getTownInterfaceMenuType(), windowId);
+        super((net.minecraft.world.inventory.MenuType<TownInterfaceMenu>) PlatformAccess.getMenuTypes().getTownInterfaceMenuType(), windowId);
         this.pos = pos;
         this.level = inv.player.level();
         

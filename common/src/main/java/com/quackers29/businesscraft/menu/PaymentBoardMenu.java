@@ -8,7 +8,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.inventory.MenuType;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.core.BlockPos;
@@ -83,7 +82,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
     
     // Main constructor
     public PaymentBoardMenu(int containerId, Inventory playerInventory, Object bufferInventory) { // Using Object as abstraction
-        super(PlatformAccess.getMenuTypes().getPaymentBoardMenuType(), containerId);
+        super((net.minecraft.world.inventory.MenuType<PaymentBoardMenu>) PlatformAccess.getMenuTypes().getPaymentBoardMenuType(), containerId);
         
         // Create the buffer inventory if it doesn't exist
         if (bufferInventory instanceof Object) { // Using Object as abstraction

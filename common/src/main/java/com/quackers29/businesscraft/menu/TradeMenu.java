@@ -6,7 +6,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.inventory.MenuType;
 import net.minecraft.network.FriendlyByteBuf;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.network.packets.storage.TradeResourcePacket;
@@ -52,7 +51,7 @@ public class TradeMenu extends AbstractContainerMenu {
     
     // Main constructor
     public TradeMenu(int containerId, Inventory playerInventory, Object tradeInventory) {
-        super(PlatformAccess.getMenuTypes().getTradeMenuType(), containerId);
+        super((net.minecraft.world.inventory.MenuType<TradeMenu>) PlatformAccess.getMenuTypes().getTradeMenuType(), containerId);
 
         // Use the provided trade inventory or create a new one
         if (tradeInventory != null) {

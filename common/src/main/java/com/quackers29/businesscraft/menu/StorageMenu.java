@@ -6,7 +6,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.inventory.MenuType;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.core.BlockPos;
 // ModMessages replaced with PlatformAccess.getNetworkMessages()
@@ -69,7 +68,7 @@ public class StorageMenu extends AbstractContainerMenu {
 
     // Main constructor
     public StorageMenu(int containerId, Inventory playerInventory, Object storageInventory) {
-        super(PlatformAccess.getMenuTypes().getStorageMenuType(), containerId);
+        super((net.minecraft.world.inventory.MenuType<StorageMenu>) PlatformAccess.getMenuTypes().getStorageMenuType(), containerId);
 
         // Use the provided storage inventory or create a new one
         if (storageInventory != null) {

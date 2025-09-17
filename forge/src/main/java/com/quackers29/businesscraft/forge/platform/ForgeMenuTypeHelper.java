@@ -13,22 +13,22 @@ import net.minecraft.world.inventory.MenuType;
  */
 public class ForgeMenuTypeHelper implements MenuTypeHelper {
     @Override
-    public MenuType<TownInterfaceMenu> getTownInterfaceMenuType() {
+    public Object getTownInterfaceMenuType() {
         return ForgeModMenuTypes.TOWN_INTERFACE_MENU;
     }
 
     @Override
-    public MenuType<TradeMenu> getTradeMenuType() {
+    public Object getTradeMenuType() {
         return ForgeModMenuTypes.TRADE_MENU;
     }
 
     @Override
-    public MenuType<StorageMenu> getStorageMenuType() {
+    public Object getStorageMenuType() {
         return ForgeModMenuTypes.STORAGE_MENU;
     }
 
     @Override
-    public MenuType<PaymentBoardMenu> getPaymentBoardMenuType() {
+    public Object getPaymentBoardMenuType() {
         return ForgeModMenuTypes.PAYMENT_BOARD_MENU;
     }
 }
