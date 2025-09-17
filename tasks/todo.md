@@ -101,9 +101,83 @@
 
 ---
 
-## 🎯 **PHASE 4: FABRIC IMPLEMENTATION** (Current Priority)
+## 🚨 **CRITICAL BLOCKER: COMMON MODULE DECOUPLING REQUIRED** (Priority 1)
 
-### **4.1 Create Fabric Module Foundation**
+### **EVALUATION RESULTS: Common Module is HEAVILY Coupled to Forge**
+- **60+ files** contain direct Forge imports
+- **API interfaces** have Forge dependencies (NetworkHelper.java)
+- **Core systems** directly use Forge classes (TownInterfaceEntity, network packets)
+- **Configuration files** are Forge-specific
+- **Cannot proceed to Fabric** until properly abstracted
+
+---
+
+## 🎯 **PHASE 4: COMMON MODULE DECOUPLING** (BLOCKING FABRIC IMPLEMENTATION)
+
+### **4.0 Phase 0: Configuration Cleanup**
+- [ ] **Remove Forge config files** from `common/run/config/` (fml.toml, forge-client.toml)
+- [ ] **Audit all config files** for platform-specific content
+- [ ] **Move platform configs** to appropriate module directories
+
+### **4.1 Phase 1: API Interface Cleanup**
+- [ ] **Fix NetworkHelper.java** - remove `net.minecraftforge.network.NetworkEvent` import
+- [ ] **Audit all API interfaces** in `common/api/` for Forge dependencies
+- [ ] **Create platform-agnostic abstractions** for network, items, capabilities
+- [ ] **Update PlatformAccess** initialization patterns
+
+### **4.2 Phase 2: Core Item Handler Abstraction**
+- [ ] **TownInterfaceEntity.java** - replace `ItemStackHandler`, `IItemHandler`, `LazyOptional`
+- [ ] **Abstract capability system** - replace `ForgeCapabilities.ITEM_HANDLER`
+- [ ] **Update buffer management** to use PlatformAccess abstractions
+- [ ] **Test inventory operations** work through abstractions
+
+### **4.3 Phase 3: Network Packet System Abstraction**
+- [ ] **Replace NetworkEvent usage** in all 60+ packet files
+- [ ] **Abstract client/server distribution** (`@OnlyIn(Dist.CLIENT)`)
+- [ ] **Create network abstraction layer** in PlatformAccess
+- [ ] **Update packet registration** patterns
+
+### **4.4 Phase 4: Capability System Abstraction**
+- [ ] **Abstract ForgeCapabilities** usage throughout codebase
+- [ ] **Create capability helper** in PlatformAccess
+- [ ] **Update block entity capabilities** to be platform-agnostic
+- [ ] **Test capability interactions** work cross-platform
+
+### **4.5 Phase 5: Client-Side Abstraction**
+- [ ] **Abstract client rendering** code
+- [ ] **Abstract event handling** system
+- [ ] **Abstract client-side utilities** and helpers
+- [ ] **Update client-only features** to use PlatformAccess
+
+### **4.6 Phase 6: Menu & Screen Abstraction**
+- [ ] **Abstract menu registration** and creation
+- [ ] **Abstract screen registration** patterns
+- [ ] **Update menu type helpers** to be platform-agnostic
+- [ ] **Test UI functionality** through abstractions
+
+### **4.7 Phase 7: Comprehensive Audit**
+- [ ] **Search for remaining Forge dependencies** not yet identified
+- [ ] **Audit import statements** across entire common module
+- [ ] **Check for hardcoded platform assumptions**
+- [ ] **Document any additional dependencies found**
+
+### **4.8 Phase 8: Build Testing**
+- [ ] **Test common module** builds without platform dependencies
+- [ ] **Verify no Forge classes** are accessible at compile time
+- [ ] **Test abstraction interfaces** work correctly
+- [ ] **Document successful decoupling**
+
+### **4.9 Phase 9: Forge Validation**
+- [ ] **Test Forge module** still works after abstractions
+- [ ] **Verify all functionality** preserved
+- [ ] **Test client and server** operation
+- [ ] **Document any breaking changes**
+
+---
+
+## 🎯 **PHASE 5: FABRIC IMPLEMENTATION** (After Decoupling Complete)
+
+### **5.1 Create Fabric Module Foundation**
 - [ ] **Set up fabric module structure** matching forge module
 - [ ] **Implement Fabric platform services**:
   - `FabricPlatformHelper`, `FabricRegistryHelper`, etc.
@@ -111,20 +185,20 @@
 - [ ] **Create fabric.mod.json** with proper metadata
 - [ ] **Configure Fabric build system** and dependencies
 
-### **4.2 Port Platform-Specific Code**
+### **5.2 Port Platform-Specific Code**
 - [ ] **Migrate registration systems** to Fabric APIs
 - [ ] **Adapt event handling** to Fabric event system
 - [ ] **Convert network registration** to Fabric networking
 - [ ] **Port client-side rendering** to Fabric rendering APIs
 - [ ] **Update configuration loading** for Fabric
 
-### **4.3 Fabric-Specific Features**
+### **5.3 Fabric-Specific Features**
 - [ ] **Implement Fabric-exclusive features** if desired
 - [ ] **Test Fabric mod loading** and initialization
 - [ ] **Verify resource pack compatibility**
 - [ ] **Test Fabric server functionality**
 
-### **4.4 Cross-Platform Testing**
+### **5.4 Cross-Platform Testing**
 - [ ] **Test identical functionality** on both platforms
 - [ ] **Verify save/load compatibility** between platforms
 - [ ] **Test multiplayer functionality** on both loaders
@@ -196,16 +270,23 @@
 - ✅ Fix all network packet registration directions
 - ✅ Test and validate all UI functionality (screens, buttons, buffer storage)
 
-### **Phase 4: Fabric Implementation** 🔄 CURRENT PRIORITY
-- ⏳ Create Fabric module foundation
-- ⏳ Port platform-specific code
-- ⏳ Fabric-specific features and testing
+### **Phase 4: Common Module Decoupling** 🔄 CRITICAL BLOCKER
+- ⏳ Remove Forge config files from common module
+- ⏳ Abstract API interfaces (NetworkHelper, ItemHandler, etc.)
+- ⏳ Abstract core systems (TownInterfaceEntity, network packets)
+- ⏳ Abstract client-side rendering and events
+- ⏳ Comprehensive audit for remaining dependencies
 
-### **Success Metrics** ✅ ACHIEVED
-- **Platform Independence**: Common module builds without platform dependencies ✅
-- **Feature Parity**: Identical functionality on Forge ✅ (Fabric pending)
+### **Phase 5: Fabric Implementation** 🔄 BLOCKED
+- 🔒 Create Fabric module foundation (requires decoupling complete)
+- 🔒 Port platform-specific code (requires decoupling complete)
+- 🔒 Fabric-specific features and testing (requires decoupling complete)
+
+### **Success Metrics** 🔄 UPDATED
+- **Platform Independence**: Common module **HEAVILY COUPLED** to Forge - 60+ files need abstraction ❌
+- **Feature Parity**: Identical functionality on Forge ✅ (Fabric blocked by coupling)
 - **Build Performance**: Fast incremental builds across all modules ✅
-- **Developer Experience**: Clear separation of concerns and easy maintenance ✅
+- **Developer Experience**: Clear separation of concerns and easy maintenance (requires decoupling) ⚠️
 
 ## 🎯 **DEVELOPMENT PRINCIPLES**
 
