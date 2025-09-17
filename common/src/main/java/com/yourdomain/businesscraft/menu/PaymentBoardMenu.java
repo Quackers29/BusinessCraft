@@ -98,7 +98,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
                 int index = col + row * BUFFER_COLS;
                 int x = BUFFER_START_X + col * SLOT_SIZE;
                 int y = BUFFER_START_Y + row * SLOT_SIZE;
-                this.addSlot(new BufferSlot(this, this.bufferInventory, index, x, y)); // Using Object abstraction
+                this.addSlot((net.minecraft.world.inventory.Slot) PlatformAccess.getItemHandlers().createWithdrawalOnlySlot(this.bufferInventory, index, x, y));
             }
         }
         
@@ -159,41 +159,6 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
         return itemstack;
     }
     
-    // Custom slot implementation for buffer storage - WITHDRAWAL-ONLY for users
-    private class BufferSlot extends Slot {
-        private final PaymentBoardMenu menu;
-
-        public BufferSlot(PaymentBoardMenu menu, Object itemHandler, int index, int xPosition, int yPosition) {
-            super(null, index, xPosition, yPosition); // Simplified for abstraction
-            this.menu = menu;
-        }
-        
-        // BLOCK user placement of items - withdrawal-only buffer
-        // This prevents users from manually adding items while maintaining hopper automation
-        @Override
-        public boolean mayPlace(ItemStack stack) {
-            return false; // Users cannot place items in buffer slots
-        }
-        
-        // Allow taking items from buffer (for withdrawal functionality)
-        @Override
-        public boolean mayPickup(net.minecraft.world.entity.player.Player player) {
-            return true; // Users can always take items from buffer
-        }
-        
-        // Override onTake to sync with server-side buffer storage
-        @Override
-        public void onTake(net.minecraft.world.entity.player.Player player, ItemStack stack) {
-            super.onTake(player, stack);
-            
-            // Only sync if slots are NOT connected to real buffer handler
-            // If they are connected, the TownBufferManager.onContentsChanged will handle the sync
-            if (!player.level().isClientSide() && menu.townBlockPos != null && !menu.isConnectedToRealBufferHandler()) {
-                menu.processBufferStorageRemove(player, this.getSlotIndex(), stack);
-            }
-        }
-    }
-    
     /**
      * Get the position of the town block
      * @return The BlockPos of the town block
@@ -250,7 +215,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
         for (int i = 0; i < BUFFER_SIZE; i++) {
             if (i < this.slots.size()) {
                 // Remove old slot and add new one connected to real handler
-                this.slots.set(i, new BufferSlot(this, (Object)realBufferHandler, i, 
+                this.slots.set(i, (net.minecraft.world.inventory.Slot) PlatformAccess.getItemHandlers().createWithdrawalOnlySlot(realBufferHandler, i,
                     BUFFER_START_X + (i % BUFFER_COLS) * SLOT_SIZE,
                     BUFFER_START_Y + (i / BUFFER_COLS) * SLOT_SIZE));
             }
@@ -439,10 +404,9 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
             "Updating buffer storage inventory with {} items from server (legacy format)", items.size());
         
         // Clear current inventory
-        // Temporarily disabled - needs item handler abstraction
-        // for (int i = 0; i < bufferInventory.getSlots(); i++) {
-        //     bufferInventory.setStackInSlot(i, ItemStack.EMPTY);
-        // }
+        for (int i = 0; i < PlatformAccess.getItemHandlers().getSlots(bufferInventory); i++) {
+            PlatformAccess.getItemHandlers().setStackInSlot(bufferInventory, i, ItemStack.EMPTY);
+        }
         
         // Fill slots with items from the buffer storage
         int slotIndex = 0;
@@ -463,13 +427,13 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
             // Add full stacks
             for (int i = 0; i < fullStacks && slotIndex < BUFFER_SIZE; i++) {
                 ItemStack stack = new ItemStack(item, maxStackSize);
-                // Temporarily disabled - bufferInventory.setStackInSlot(slotIndex++, stack);
+                PlatformAccess.getItemHandlers().setStackInSlot(bufferInventory, slotIndex++, stack);
             }
-            
+
             // Add the remainder as a partial stack (if any)
             if (remainder > 0 && slotIndex < BUFFER_SIZE) {
                 ItemStack stack = new ItemStack(item, remainder);
-                // Temporarily disabled - bufferInventory.setStackInSlot(slotIndex++, stack);
+                PlatformAccess.getItemHandlers().setStackInSlot(bufferInventory, slotIndex++, stack);
             }
             
             // Break if we've filled all slots
@@ -489,16 +453,15 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
             "Updating buffer storage inventory with slot-based data from server");
         
         // Copy each slot directly from SlotBasedStorage to local inventory
-        int copySlots = Math.min(18, slotStorage.getSlotCount()); // Temporarily hardcoded
+        int copySlots = Math.min(PlatformAccess.getItemHandlers().getSlots(bufferInventory), slotStorage.getSlotCount());
         for (int i = 0; i < copySlots; i++) {
             ItemStack slotStack = slotStorage.getSlot(i);
-            // Temporarily disabled - bufferInventory.setStackInSlot(i, slotStack);
+            PlatformAccess.getItemHandlers().setStackInSlot(bufferInventory, i, slotStack);
         }
-        
+
         // Clear any remaining slots if local inventory is larger
-        // Temporarily disabled remaining bufferInventory calls
-        // for (int i = copySlots; i < bufferInventory.getSlots(); i++) {
-        //     bufferInventory.setStackInSlot(i, ItemStack.EMPTY);
-        // }
+        for (int i = copySlots; i < PlatformAccess.getItemHandlers().getSlots(bufferInventory); i++) {
+            PlatformAccess.getItemHandlers().setStackInSlot(bufferInventory, i, ItemStack.EMPTY);
+        }
     }
 }
