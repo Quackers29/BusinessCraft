@@ -59,13 +59,17 @@ public class SetPlatformDestinationPacket {
     public boolean handle(Supplier<NetworkEvent.Context> ctx) {
         NetworkEvent.Context context = ctx.get();
         context.enqueueWork(() -> {
-            ServerPlayer player = context.getSender();
-            if (player == null) return;
-            
-            Level level = player.level();
-            BlockEntity be = level.getBlockEntity(pos);
-            
-            if (be instanceof TownInterfaceEntity townInterface) {
+            try {
+                ServerPlayer player = context.getSender();
+                if (player == null) {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "SetPlatformDestinationPacket: No player sender");
+                    return;
+                }
+
+                Level level = player.level();
+                BlockEntity be = level.getBlockEntity(pos);
+
+                if (be instanceof TownInterfaceEntity townInterface) {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "Player {} is setting destination {} to {} for platform {} at {}", 
                     player.getName().getString(), townId, enabled, platformId, pos);
@@ -140,13 +144,23 @@ public class SetPlatformDestinationPacket {
                         PlatformAccess.getNetworkMessages().sendToPlayer(refreshPacket, player);
                     }
                     
-                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                        "Successfully set destination {} to {} for platform {} at {}", 
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                        "Successfully set destination {} to {} for platform {} at {}",
                         townId, enabled, platformId, pos);
+                } else {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                        "SetPlatformDestinationPacket: Platform {} not found at {}", platformId, pos);
                 }
+                } else {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                        "SetPlatformDestinationPacket: Block entity at {} is not a TownInterfaceEntity", pos);
+                }
+            } catch (Exception e) {
+                LOGGER.error("Error handling SetPlatformDestinationPacket", e);
+                // Don't crash the server, but log the error
             }
         });
-        
+
         return true;
     }
     

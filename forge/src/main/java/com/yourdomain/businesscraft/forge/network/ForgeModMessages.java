@@ -121,13 +121,19 @@ public class ForgeModMessages {
                 .consumerMainThread(ResetPlatformPathPacket::handle)
                 .add();
 
+        net.messageBuilder(SetPlatformPathCreationModePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(SetPlatformPathCreationModePacket::decode)
+                .encoder(SetPlatformPathCreationModePacket::encode)
+                .consumerMainThread(SetPlatformPathCreationModePacket::handle)
+                .add();
+
         net.messageBuilder(SetPathCreationModePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SetPathCreationModePacket::decode)
                 .encoder(SetPathCreationModePacket::encode)
                 .consumerMainThread(SetPathCreationModePacket::handle)
                 .add();
 
-        net.messageBuilder(RefreshPlatformsPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+        net.messageBuilder(RefreshPlatformsPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(RefreshPlatformsPacket::decode)
                 .encoder(RefreshPlatformsPacket::encode)
                 .consumerMainThread(RefreshPlatformsPacket::handle)
@@ -146,7 +152,7 @@ public class ForgeModMessages {
                 .consumerMainThread(OpenDestinationsUIPacket::handle)
                 .add();
 
-        net.messageBuilder(RefreshDestinationsPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+        net.messageBuilder(RefreshDestinationsPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(RefreshDestinationsPacket::decode)
                 .encoder(RefreshDestinationsPacket::encode)
                 .consumerMainThread(RefreshDestinationsPacket::handle)
@@ -176,13 +182,13 @@ public class ForgeModMessages {
                 .consumerMainThread(BoundarySyncResponsePacket::handle)
                 .add();
 
-        net.messageBuilder(OpenTownInterfacePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+        net.messageBuilder(OpenTownInterfacePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(OpenTownInterfacePacket::decode)
                 .encoder(OpenTownInterfacePacket::encode)
                 .consumerMainThread(OpenTownInterfacePacket::handle)
                 .add();
 
-        net.messageBuilder(OpenPaymentBoardPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+        net.messageBuilder(OpenPaymentBoardPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(OpenPaymentBoardPacket::decode)
                 .encoder(OpenPaymentBoardPacket::encode)
                 .consumerMainThread(OpenPaymentBoardPacket::handle)

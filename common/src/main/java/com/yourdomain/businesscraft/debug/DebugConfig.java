@@ -20,11 +20,11 @@ public class DebugConfig {
     
     // Core Systems - High Priority (Milestone 2)
     public static final boolean TOWN_BLOCK_ENTITY = false;
-    public static final boolean TOWN_INTERFACE_MENU = false;
-    public static final boolean NETWORK_PACKETS = false;
-    
+    public static final boolean TOWN_INTERFACE_MENU = true;
+    public static final boolean NETWORK_PACKETS = true;
+
     // UI Management Systems (Milestone 3)
-    public static final boolean UI_MANAGERS = false;
+    public static final boolean UI_MANAGERS = true;
     public static final boolean SEARCH_RADIUS_MANAGER = false;
     public static final boolean MODAL_MANAGERS = false;
     public static final boolean TOWN_SCREEN_DEPENDENCIES = false;
@@ -64,7 +64,7 @@ public class DebugConfig {
     public static final boolean MOD_INITIALIZATION = false;
     
     // Error Handling
-    public static final boolean ERROR_HANDLING = false;
+    public static final boolean ERROR_HANDLING = true;
     
     /**
      * Helper method to check if debug logging is enabled for a specific component.

@@ -27,12 +27,16 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Redesigned platform management screen using BC UI framework patterns
  * Following Payment Board UI implementation style and Settings tab patterns
  */
 public class PlatformManagementScreenV2 extends Screen {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlatformManagementScreenV2.class);
     // Reference to the block position being managed
     private final BlockPos townBlockPos;
     
@@ -441,10 +445,22 @@ public class PlatformManagementScreenV2 extends Screen {
     }
     
     private void addPlatform() {
-        PlatformAccess.getNetworkMessages().sendToServer(new AddPlatformPacket(townBlockPos));
-        
-        // Immediately refresh the UI (like PaymentBoardScreen does)
-        refreshPlatformDataFromServer();
+        try {
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Sending AddPlatformPacket for block at {}", townBlockPos);
+            PlatformAccess.getNetworkMessages().sendToServer(new AddPlatformPacket(townBlockPos));
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "AddPlatformPacket sent successfully");
+
+            // Immediately refresh the UI (like PaymentBoardScreen does)
+            refreshPlatformDataFromServer();
+        } catch (Exception e) {
+            LOGGER.error("Failed to send AddPlatformPacket", e);
+            // Show error message to player
+            if (minecraft.player != null) {
+                minecraft.player.sendSystemMessage(
+                    net.minecraft.network.chat.Component.literal("Failed to add platform: " + e.getMessage())
+                );
+            }
+        }
     }
     
     private void deleteLastPlatform() {
@@ -542,11 +558,18 @@ public class PlatformManagementScreenV2 extends Screen {
      * Refresh platform data with optional force flag
      */
     public void refreshPlatformData(boolean force) {
-        // Don't refresh if we just did a toggle action (prevents conflicts) unless forced
-        if (!force) {
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastToggleTime < TOGGLE_PROTECTION_MS) {
-                return; // Skip refresh to avoid overriding local toggle state
+        try {
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS,
+                "PlatformManagementScreenV2.refreshPlatformData called with force={}", force);
+
+            // Don't refresh if we just did a toggle action (prevents conflicts) unless forced
+            if (!force) {
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - lastToggleTime < TOGGLE_PROTECTION_MS) {
+                    DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS,
+                        "Skipping refresh due to toggle protection ({}ms < {}ms)",
+                        currentTime - lastToggleTime, TOGGLE_PROTECTION_MS);
+                    return; // Skip refresh to avoid overriding local toggle state
             }
         }
         
@@ -559,11 +582,18 @@ public class PlatformManagementScreenV2 extends Screen {
             if (be instanceof TownInterfaceEntity townInterface) {
                 // Update our platform list with fresh data from the server
                 this.platforms = new ArrayList<>(townInterface.getPlatforms());
-                
+
                 // Force UI update by clearing currentPlatforms to ensure refresh
                 currentPlatforms.clear();
                 updatePlatformListData();
             }
+        }
+
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS,
+            "PlatformManagementScreenV2.refreshPlatformData completed successfully");
+        } catch (Exception e) {
+            LOGGER.error("Error in PlatformManagementScreenV2.refreshPlatformData", e);
+            // Don't crash the client, but log the error
         }
     }
 }

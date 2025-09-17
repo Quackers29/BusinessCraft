@@ -40,6 +40,11 @@ public class SetPlatformPathCreationModePacket {
         buf.writeUUID(platformId);
         buf.writeBoolean(mode);
     }
+
+    // Static decode method for Forge network registration
+    public static SetPlatformPathCreationModePacket decode(FriendlyByteBuf buf) {
+        return new SetPlatformPathCreationModePacket(buf);
+    }
     
     public boolean handle(Supplier<NetworkEvent.Context> ctx) {
         NetworkEvent.Context context = ctx.get();

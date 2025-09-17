@@ -46,15 +46,19 @@ public class AddPlatformPacket {
     public boolean handle(Supplier<NetworkEvent.Context> ctx) {
         NetworkEvent.Context context = ctx.get();
         context.enqueueWork(() -> {
-            // Get player and world from context
-            ServerPlayer player = context.getSender();
-            if (player == null) return;
-            
-            Level level = player.level();
-            
-            // Check if the block entity is valid
-            BlockEntity be = level.getBlockEntity(blockPos);
-            if (be instanceof TownInterfaceEntity townInterface) {
+            try {
+                // Get player and world from context
+                ServerPlayer player = context.getSender();
+                if (player == null) {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "AddPlatformPacket: No player sender");
+                    return;
+                }
+
+                Level level = player.level();
+
+                // Check if the block entity is valid
+                BlockEntity be = level.getBlockEntity(blockPos);
+                if (be instanceof TownInterfaceEntity townInterface) {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "Player {} is adding a new platform to town block at {}", player.getName().getString(), blockPos);
                 
@@ -71,13 +75,20 @@ public class AddPlatformPacket {
                         // Notify client of the update
                         PlatformAccess.getNetworkMessages().sendToAllTrackingChunk(new RefreshPlatformsPacket(blockPos), level, blockPos);
                     } else {
-                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                         "Failed to add platform to town block at {} - already at max capacity", blockPos);
                     }
                 } else {
-                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                         "Failed to add platform to town block at {} - already at max capacity", blockPos);
                 }
+            } else {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                    "AddPlatformPacket: Block entity at {} is not a TownInterfaceEntity", blockPos);
+            }
+            } catch (Exception e) {
+                LOGGER.error("Error handling AddPlatformPacket", e);
+                // Don't crash the server, but log the error
             }
         });
         context.setPacketHandled(true);

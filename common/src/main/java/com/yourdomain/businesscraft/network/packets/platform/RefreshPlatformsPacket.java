@@ -1,5 +1,6 @@
 package com.yourdomain.businesscraft.network.packets.platform;
 
+import java.util.UUID;
 import java.util.function.Supplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -51,31 +52,56 @@ public class RefreshPlatformsPacket {
     
     @OnlyIn(Dist.CLIENT)
     private void handleClient() {
-        Minecraft minecraft = Minecraft.getInstance();
-        
-        // Get the block entity
-        if (minecraft.level != null) {
-            BlockEntity be = minecraft.level.getBlockEntity(pos);
-            
-            if (be instanceof TownInterfaceEntity townInterfaceEntity) {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                    "Received platform refresh packet for block at {}", pos);
-                
-                // Clear platform cache for this town to force fresh data on next map view
-                if (townInterfaceEntity.getTownId() != null) {
-                    ClientTownMapCache.getInstance().clearTownPlatformData(townInterfaceEntity.getTownId());
-                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                        "Cleared platform cache for town {}", townInterfaceEntity.getTownId());
+        try {
+            Minecraft minecraft = Minecraft.getInstance();
+
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                "Processing RefreshPlatformsPacket for pos {}", pos);
+
+            // Get the block entity
+            if (minecraft.level != null) {
+                BlockEntity be = minecraft.level.getBlockEntity(pos);
+
+                if (be instanceof TownInterfaceEntity townInterfaceEntity) {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                        "Found TownInterfaceEntity at {}", pos);
+
+                    // Clear platform cache for this town to force fresh data on next map view
+                    UUID townId = townInterfaceEntity.getTownId();
+                    if (townId != null) {
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                            "Clearing platform cache for town {}", townId);
+                        ClientTownMapCache.getInstance().clearTownPlatformData(townId);
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                            "Platform cache cleared successfully");
+                    } else {
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                            "Town ID is null, skipping cache clear");
+                    }
+
+                    // If the PlatformManagementScreenV2 is open, refresh data without reopening
+                    if (minecraft.screen instanceof PlatformManagementScreenV2 platformScreen) {
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                            "PlatformManagementScreenV2 is open, refreshing data");
+                        platformScreen.refreshPlatformData();
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                            "Platform screen data refreshed successfully");
+                    } else {
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                            "PlatformManagementScreenV2 is not open, skipping refresh");
+                    }
+                    // Additional handling for other screens can be added here if needed
+                } else {
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                        "Block entity at {} is not TownInterfaceEntity, is: {}", pos, be != null ? be.getClass().getSimpleName() : "null");
                 }
-                
-                // If the PlatformManagementScreenV2 is open, refresh data without reopening
-                if (minecraft.screen instanceof PlatformManagementScreenV2 platformScreen) {
-                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                        "Refreshing platform management screen data");
-                    platformScreen.refreshPlatformData();
-                }
-                // Additional handling for other screens can be added here if needed
+            } else {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                    "Minecraft level is null");
             }
+        } catch (Exception e) {
+            LOGGER.error("Error processing RefreshPlatformsPacket", e);
+            // Don't crash the client, but log the error
         }
     }
 } 

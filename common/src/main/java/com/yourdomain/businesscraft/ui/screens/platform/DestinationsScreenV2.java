@@ -16,12 +16,17 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
  * Redesigned destinations screen using BC UI framework patterns
  * Following Payment Board UI implementation style
  */
 public class DestinationsScreenV2 extends Screen {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DestinationsScreenV2.class);
+
     // Data
     private final BlockPos blockPos;
     private final UUID platformId;
@@ -318,16 +323,35 @@ public class DestinationsScreenV2 extends Screen {
     }
     
     private void toggleDestination(DestinationEntry destination) {
-        // Update local state
-        destination.enabled = !destination.enabled;
-        
-        // Send packet to server
-        PlatformAccess.getNetworkMessages().sendToServer(new SetPlatformDestinationPacket(
-            blockPos, platformId, destination.townId, destination.enabled));
-        
-        // Update the grid to reflect changes
-        destinationsGrid.clearElements();
-        populateGridWithDestinations();
+        try {
+            // Update local state
+            destination.enabled = !destination.enabled;
+
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS,
+                "Toggling destination {} for platform {} at {} to {}",
+                destination.townId, platformId, blockPos, destination.enabled);
+
+            // Send packet to server
+            PlatformAccess.getNetworkMessages().sendToServer(new SetPlatformDestinationPacket(
+                blockPos, platformId, destination.townId, destination.enabled));
+
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "SetPlatformDestinationPacket sent successfully");
+
+            // Update the grid to reflect changes
+            destinationsGrid.clearElements();
+            populateGridWithDestinations();
+        } catch (Exception e) {
+            LOGGER.error("Failed to toggle destination", e);
+            // Revert the local state change
+            destination.enabled = !destination.enabled;
+
+            // Show error message to player
+            if (minecraft != null && minecraft.player != null) {
+                minecraft.player.sendSystemMessage(
+                    net.minecraft.network.chat.Component.literal("Failed to update destination: " + e.getMessage())
+                );
+            }
+        }
     }
     
     private void onBackButtonClick() {
