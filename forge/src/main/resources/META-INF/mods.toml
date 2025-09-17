@@ -1,0 +1,27 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="All rights reserved"
+
+[[mods]]
+modId="businesscraft"
+version="${file.jarVersion}"
+displayName="BusinessCraft"
+description='''
+A Minecraft mod for town management and business simulation.
+'''
+authors="Quackers29"
+credits="Quackers29"
+
+[[dependencies.businesscraft]]
+    modId="forge"
+    mandatory=true
+    versionRange="[47.1.0,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.businesscraft]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.1,1.21)"
+    ordering="NONE"
+    side="BOTH"

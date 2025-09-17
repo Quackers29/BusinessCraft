@@ -7,6 +7,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -22,8 +23,23 @@ public class ForgeRegistryHelper implements RegistryHelper {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MOD_ID);
     public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(ForgeRegistries.MENU_TYPES, MOD_ID);
 
+    public static void register(IEventBus modEventBus) {
+        System.out.println("DEBUG: Registering BLOCKS DeferredRegister");
+        BLOCKS.register(modEventBus);
+        System.out.println("DEBUG: Registering ITEMS DeferredRegister");
+        ITEMS.register(modEventBus);
+        System.out.println("DEBUG: Registering ENTITY_TYPES DeferredRegister");
+        ENTITY_TYPES.register(modEventBus);
+        System.out.println("DEBUG: Registering BLOCK_ENTITY_TYPES DeferredRegister");
+        BLOCK_ENTITY_TYPES.register(modEventBus);
+        System.out.println("DEBUG: Registering MENU_TYPES DeferredRegister");
+        MENU_TYPES.register(modEventBus);
+        System.out.println("DEBUG: All DeferredRegisters registered");
+    }
+
     @Override
     public void registerBlock(String name, Block block) {
+        // Register the block
         BLOCKS.register(name, () -> block);
         // Also register the block item
         ITEMS.register(name, () -> new BlockItem(block, new Item.Properties()));

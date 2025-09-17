@@ -1,5 +1,9 @@
 package com.yourdomain.businesscraft.api;
 
+import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
+import com.yourdomain.businesscraft.menu.TradeMenu;
+import com.yourdomain.businesscraft.menu.StorageMenu;
+import com.yourdomain.businesscraft.menu.PaymentBoardMenu;
 import net.minecraft.world.inventory.MenuType;
 
 /**
@@ -10,20 +14,20 @@ public interface MenuTypeHelper {
     /**
      * Get the Town Interface menu type
      */
-    MenuType<?> getTownInterfaceMenuType();
+    MenuType<TownInterfaceMenu> getTownInterfaceMenuType();
 
     /**
      * Get the Trade menu type
      */
-    MenuType<?> getTradeMenuType();
+    MenuType<TradeMenu> getTradeMenuType();
 
     /**
      * Get the Storage menu type
      */
-    MenuType<?> getStorageMenuType();
+    MenuType<StorageMenu> getStorageMenuType();
 
     /**
      * Get the Payment Board menu type
      */
-    MenuType<?> getPaymentBoardMenuType();
+    MenuType<PaymentBoardMenu> getPaymentBoardMenuType();
 }

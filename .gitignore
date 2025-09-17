@@ -9,3 +9,8 @@
 .cursorignore
 /common/run/logs
 /common/run/saves
+/common/run/logs
+/common/run/crash-reports
+/forge/run/logs
+/forge/run/crash-reports
+/forge/build

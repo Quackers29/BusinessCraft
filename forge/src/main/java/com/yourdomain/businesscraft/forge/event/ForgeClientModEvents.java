@@ -6,6 +6,7 @@ import com.yourdomain.businesscraft.ui.screens.town.TradeScreen;
 import com.yourdomain.businesscraft.ui.screens.town.StorageScreen;
 import com.yourdomain.businesscraft.ui.screens.town.PaymentBoardScreen;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -18,15 +19,15 @@ public class ForgeClientModEvents {
 
     @SubscribeEvent
     public static void clientSetup(FMLClientSetupEvent event) {
-        // TODO: Fix screen registration - need to find correct MenuScreens package for Forge 1.20.1
-        // For now, screens will need to be registered manually or through another method
-
         com.yourdomain.businesscraft.forge.platform.ForgeMenuTypeHelper menuTypes =
             (com.yourdomain.businesscraft.forge.platform.ForgeMenuTypeHelper) com.yourdomain.businesscraft.forge.BusinessCraftForge.MENU_TYPES;
 
-        // Temporarily commented out - need correct API
-        // event.enqueueWork(() -> {
-        //     // Register menu screens here
-        // });
+        // Register menu screens
+        event.enqueueWork(() -> {
+            MenuScreens.register(menuTypes.getTownInterfaceMenuType(), TownInterfaceScreen::new);
+            MenuScreens.register(menuTypes.getTradeMenuType(), TradeScreen::new);
+            MenuScreens.register(menuTypes.getStorageMenuType(), StorageScreen::new);
+            MenuScreens.register(menuTypes.getPaymentBoardMenuType(), PaymentBoardScreen::new);
+        });
     }
 }

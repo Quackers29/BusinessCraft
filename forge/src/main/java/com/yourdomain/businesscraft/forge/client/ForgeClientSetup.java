@@ -26,6 +26,6 @@ public class ForgeClientSetup {
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         // Register the tourist renderer
-        event.registerEntityRenderer(ForgeModEntityTypes.TOURIST, TouristRenderer::new);
+        event.registerEntityRenderer(ForgeModEntityTypes.TOURIST.get(), TouristRenderer::new);
     }
 }

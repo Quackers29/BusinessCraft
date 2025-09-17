@@ -28,6 +28,7 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -70,6 +71,8 @@ public class BusinessCraftForge {
     public static final TouristVehicleManager TOURIST_VEHICLE_MANAGER = new TouristVehicleManager();
 
     public BusinessCraftForge() {
+        LOGGER.info("BusinessCraft Forge constructor called!");
+        System.out.println("DEBUG: BusinessCraft Forge mod starting up!");
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
         // Initialize platform abstractions for common code access
@@ -84,6 +87,11 @@ public class BusinessCraftForge {
         PlatformAccess.itemHandlers = ITEM_HANDLERS;
         PlatformAccess.networkMessages = NETWORK_MESSAGES;
 
+        // Register DeferredRegisters with the mod event bus
+        System.out.println("DEBUG: About to register DeferredRegisters with mod event bus");
+        ((ForgeRegistryHelper) REGISTRY).register(modEventBus);
+        System.out.println("DEBUG: DeferredRegisters registered with mod event bus");
+
         // Initialize Forge-specific registrations
         ForgeModBlocks.register();
         ForgeModEntityTypes.register();
@@ -91,8 +99,10 @@ public class BusinessCraftForge {
         ForgeModMenuTypes.register();
 
         // Register our mod's event handlers
+        System.out.println("DEBUG: Registering event listeners");
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::clientSetup);
+        System.out.println("DEBUG: Event listeners registered");
 
         // Initialize networking
         ForgeModMessages.register();
@@ -111,10 +121,16 @@ public class BusinessCraftForge {
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
+        System.out.println("DEBUG: commonSetup method called!");
+        LOGGER.info("BusinessCraft Forge common setup starting");
+
         ConfigLoader.loadConfig();
 
         // Report active debug logging configuration
         DebugConfig.logActiveDebuggers();
+
+        // Block items are now registered via RegistryObject
+        LOGGER.info("Block items registered via RegistryObject");
 
         LOGGER.info("BusinessCraft Forge common setup complete.");
     }
@@ -160,6 +176,14 @@ public class BusinessCraftForge {
                 LOGGER.info("Loaded {} towns for level: {}", townCount, level.dimension().location());
             }
         });
+    }
+
+    @SubscribeEvent
+    public void onCreativeModeTabBuildContents(BuildCreativeModeTabContentsEvent event) {
+        if (event.getTabKey() == net.minecraft.world.item.CreativeModeTabs.BUILDING_BLOCKS) {
+            // Add our Town Interface block item to the Building Blocks creative tab
+            ForgeModBlocks.TOWN_INTERFACE_BLOCK_ITEM.ifPresent(event::accept);
+        }
     }
 
     // Add a level unload event handler

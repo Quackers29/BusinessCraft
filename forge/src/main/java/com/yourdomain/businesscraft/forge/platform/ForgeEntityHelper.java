@@ -10,6 +10,6 @@ import net.minecraft.world.entity.EntityType;
 public class ForgeEntityHelper implements EntityHelper {
     @Override
     public EntityType<?> getTouristEntityType() {
-        return ForgeModEntityTypes.TOURIST;
+        return ForgeModEntityTypes.TOURIST.get();
     }
 }
