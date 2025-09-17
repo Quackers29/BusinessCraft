@@ -836,12 +836,16 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
      */
     public void updateRewardData(List<RewardEntry> rewards) {
         this.cachedRewards = new ArrayList<>(rewards);
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
             "PaymentBoardScreen.updateRewardData() - received {} rewards from server", rewards.size());
-        
+
         // Trigger a UI update
         updatePaymentBoardData();
-        
+
+        // Also request fresh buffer storage data to ensure proper synchronization
+        // This is especially important for new towns where buffer sync might be delayed
+        this.menu.requestBufferStorageData();
+
     }
     
 }

@@ -701,6 +701,10 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         if (level instanceof ServerLevel sLevel1) {
             Town town = TownManager.get(sLevel1).getTown(id);
             this.name = town != null ? town.getName() : "Unnamed";
+
+            // Initialize buffer manager with the new town ID
+            bufferManager.setTownId(id);
+
             syncTownData();
         }
     }
