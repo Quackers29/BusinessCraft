@@ -114,64 +114,74 @@
 
 ## 🎯 **PHASE 4: COMMON MODULE DECOUPLING** (BLOCKING FABRIC IMPLEMENTATION)
 
-### **4.0 Phase 0: Configuration Cleanup**
+### **4.0 Phase 0: Configuration Cleanup** ⚠️
 - [ ] **Remove Forge config files** from `common/run/config/` (fml.toml, forge-client.toml)
 - [ ] **Audit all config files** for platform-specific content
 - [ ] **Move platform configs** to appropriate module directories
+- [ ] **🧪 TEST MILESTONE**: Verify common module still builds after config cleanup
 
-### **4.1 Phase 1: API Interface Cleanup**
+### **4.1 Phase 1: API Interface Cleanup** ⚠️
 - [ ] **Fix NetworkHelper.java** - remove `net.minecraftforge.network.NetworkEvent` import
 - [ ] **Audit all API interfaces** in `common/api/` for Forge dependencies
 - [ ] **Create platform-agnostic abstractions** for network, items, capabilities
 - [ ] **Update PlatformAccess** initialization patterns
+- [ ] **🧪 TEST MILESTONE**: Test Forge module compilation and basic functionality preserved
 
-### **4.2 Phase 2: Core Item Handler Abstraction**
+### **4.2 Phase 2: Core Item Handler Abstraction** ⚠️
 - [ ] **TownInterfaceEntity.java** - replace `ItemStackHandler`, `IItemHandler`, `LazyOptional`
 - [ ] **Abstract capability system** - replace `ForgeCapabilities.ITEM_HANDLER`
 - [ ] **Update buffer management** to use PlatformAccess abstractions
 - [ ] **Test inventory operations** work through abstractions
+- [ ] **🧪 CRITICAL TEST MILESTONE**: Town Interface block functionality preserved, inventory operations work
 
-### **4.3 Phase 3: Network Packet System Abstraction**
+### **4.3 Phase 3: Network Packet System Abstraction** ⚠️
 - [ ] **Replace NetworkEvent usage** in all 60+ packet files
 - [ ] **Abstract client/server distribution** (`@OnlyIn(Dist.CLIENT)`)
 - [ ] **Create network abstraction layer** in PlatformAccess
 - [ ] **Update packet registration** patterns
+- [ ] **🧪 CRITICAL TEST MILESTONE**: All UI screens open correctly, network packets function properly
 
-### **4.4 Phase 4: Capability System Abstraction**
+### **4.4 Phase 4: Capability System Abstraction** ⚠️
 - [ ] **Abstract ForgeCapabilities** usage throughout codebase
 - [ ] **Create capability helper** in PlatformAccess
 - [ ] **Update block entity capabilities** to be platform-agnostic
 - [ ] **Test capability interactions** work cross-platform
+- [ ] **🧪 CRITICAL TEST MILESTONE**: Block entity interactions (right-click, capabilities) work properly
 
-### **4.5 Phase 5: Client-Side Abstraction**
+### **4.5 Phase 5: Client-Side Abstraction** ⚠️
 - [ ] **Abstract client rendering** code
 - [ ] **Abstract event handling** system
 - [ ] **Abstract client-side utilities** and helpers
 - [ ] **Update client-only features** to use PlatformAccess
+- [ ] **🧪 CRITICAL TEST MILESTONE**: Client rendering, world overlays, debug features work
 
-### **4.6 Phase 6: Menu & Screen Abstraction**
+### **4.6 Phase 6: Menu & Screen Abstraction** ⚠️
 - [ ] **Abstract menu registration** and creation
 - [ ] **Abstract screen registration** patterns
 - [ ] **Update menu type helpers** to be platform-agnostic
 - [ ] **Test UI functionality** through abstractions
+- [ ] **🧪 CRITICAL TEST MILESTONE**: All UI screens, buttons, menus work correctly
 
-### **4.7 Phase 7: Comprehensive Audit**
+### **4.7 Phase 7: Comprehensive Audit** ⚠️
 - [ ] **Search for remaining Forge dependencies** not yet identified
 - [ ] **Audit import statements** across entire common module
 - [ ] **Check for hardcoded platform assumptions**
 - [ ] **Document any additional dependencies found**
+- [ ] **🧪 AUDIT MILESTONE**: Complete inventory of all dependencies, no hidden Forge coupling
 
-### **4.8 Phase 8: Build Testing**
+### **4.8 Phase 8: Build Testing** ✅
 - [ ] **Test common module** builds without platform dependencies
 - [ ] **Verify no Forge classes** are accessible at compile time
 - [ ] **Test abstraction interfaces** work correctly
 - [ ] **Document successful decoupling**
+- [ ] **🧪 FINAL BUILD MILESTONE**: Common module compiles without Forge dependencies
 
-### **4.9 Phase 9: Forge Validation**
+### **4.9 Phase 9: Forge Validation** ✅
 - [ ] **Test Forge module** still works after abstractions
 - [ ] **Verify all functionality** preserved
 - [ ] **Test client and server** operation
 - [ ] **Document any breaking changes**
+- [ ] **🧪 FINAL FUNCTIONALITY MILESTONE**: All original Forge functionality preserved
 
 ---
 
@@ -243,6 +253,22 @@
 - [ ] **Performance monitoring**
 - [ ] **Regular updates and improvements**
 
+---
+
+## ⚠️ **CRITICAL TESTING REMINDER**
+
+**FUNCTIONALITY MUST BE MAINTAINED THROUGHOUT THE DECOUPLING PROCESS**
+
+- Each phase includes **🧪 TEST MILESTONES** that must pass before proceeding
+- **CRITICAL TEST MILESTONES** are marked with ⚠️ - these test core functionality
+- **Never proceed to next phase** until all test milestones in current phase pass
+- **Document any issues** found during testing and resolve them before continuing
+- **Regular testing prevents** the accumulation of breaking changes
+
+**If any test milestone fails, STOP and fix the issue before proceeding.**
+
+---
+
 ## 📊 **PROGRESS TRACKING**
 
 ### **Phase 1: Structure Setup** ✅ COMPLETE
@@ -278,9 +304,10 @@
 - ⏳ Comprehensive audit for remaining dependencies
 
 ### **Phase 5: Fabric Implementation** 🔄 BLOCKED
-- 🔒 Create Fabric module foundation (requires decoupling complete)
-- 🔒 Port platform-specific code (requires decoupling complete)
-- 🔒 Fabric-specific features and testing (requires decoupling complete)
+- 🔒 **Create Fabric module foundation** (requires decoupling complete)
+- 🔒 **Port platform-specific code** (requires decoupling complete)
+- 🔒 **Fabric-specific features and testing** (requires decoupling complete)
+- 🔒 **🧪 CROSS-PLATFORM VALIDATION**: Ensure identical functionality on both platforms
 
 ### **Success Metrics** 🔄 UPDATED
 - **Platform Independence**: Common module **HEAVILY COUPLED** to Forge - 60+ files need abstraction ❌
@@ -289,6 +316,13 @@
 - **Developer Experience**: Clear separation of concerns and easy maintenance (requires decoupling) ⚠️
 
 ## 🎯 **DEVELOPMENT PRINCIPLES**
+
+### **🔬 TESTING PHILOSOPHY** (CRITICAL FOR SUCCESS)
+- **Test Early, Test Often**: Each phase includes specific test milestones
+- **Functionality Preservation**: All existing features must work after each abstraction
+- **Incremental Validation**: Never proceed to next phase until current phase tests pass
+- **Regression Prevention**: Comprehensive testing prevents breaking existing functionality
+- **Cross-Platform Parity**: Forge functionality must be maintained during Fabric preparation
 
 ### **Architecture Guidelines**
 - **Common First**: All new features implemented in common module
