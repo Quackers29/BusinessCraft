@@ -18,7 +18,7 @@ public class ForgeEventHelper implements EventHelper {
     }
 
     @Override
-    public void registerForgeEvent(Object listener) {
+    public void registerPlatformEvent(Object listener) {
         MinecraftForge.EVENT_BUS.register(listener);
     }
 

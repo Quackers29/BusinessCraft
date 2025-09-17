@@ -13,9 +13,9 @@ public interface EventHelper {
     void registerModEvent(Object listener);
 
     /**
-     * Register a forge event bus listener
+     * Register a platform event bus listener
      */
-    void registerForgeEvent(Object listener);
+    void registerPlatformEvent(Object listener);
 
     /**
      * Add a server stopping event listener
