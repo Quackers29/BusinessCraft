@@ -1,31 +1,13 @@
+// Common module - Unified architecture for BusinessCraft
+// Contains all business logic, UI framework, and platform-agnostic code
+
 plugins {
-    id 'eclipse'
-    id 'idea'
+    id 'java-library'
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
     id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
 
-version = '1.0'
-group = 'com.quackers29.businesscraft'
 archivesBaseName = 'businesscraft'
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
-
-jar {
-    manifest {
-        attributes([
-            "Specification-Title": "businesscraft",
-            "Specification-Vendor": "Quackers29",
-            "Specification-Version": "1",
-            "Implementation-Title": project.name,
-            "Implementation-Version": project.jar.archiveVersion,
-            "Implementation-Vendor" :"Quackers29",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-        ])
-    }
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from sourceSets.main.resources
-}
 
 minecraft {
     mappings channel: 'parchment', version: '2023.06.26-1.20.1'
@@ -35,6 +17,8 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
+
+            // Clean launch configuration without mixin-related arguments
 
             mods {
                 businesscraft {
@@ -47,7 +31,9 @@ minecraft {
             workingDirectory project.file('run')
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
-            
+
+            // Clean launch configuration without mixin-related arguments
+
             mods {
                 businesscraft {
                     source sourceSets.main
@@ -59,5 +45,37 @@ minecraft {
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.20.1-47.1.0'
-    implementation 'com.moandjiezana.toml:toml4j:0.7.2'
-} 
+
+    // Common TOML library for configuration
+    api 'com.moandjiezana.toml:toml4j:0.7.2'
+
+    // SLF4J for logging (used by debug and configuration classes)
+    api 'org.slf4j:slf4j-api:1.7.36'
+
+    // Log4j for DebugConfig (commonly available in Minecraft environments)
+    compileOnly 'org.apache.logging.log4j:log4j-api:2.17.1'
+
+    // JetBrains annotations for @NotNull/@Nullable
+    api 'org.jetbrains:annotations:23.0.0'
+
+    // Temporarily removing Architectury to isolate mixin conflicts - using native Forge APIs
+    // implementation 'dev.architectury:architectury-forge:9.2.14'
+}
+
+jar {
+    manifest {
+        attributes([
+            "Specification-Title": "businesscraft",
+            "Specification-Vendor": "Quackers29",
+            "Specification-Version": "1",
+            "Implementation-Title": "BusinessCraft",
+            "Implementation-Version": project.version,
+            "Implementation-Vendor": "Quackers29",
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    // Include resources
+    from sourceSets.main.resources
+}

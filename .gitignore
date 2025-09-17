@@ -7,3 +7,5 @@
 /.claude
 /.cursor
 .cursorignore
+/common/run/logs
+/common/run/saves

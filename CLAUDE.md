@@ -32,14 +32,26 @@ Record everything in a .claude/tasks/[TASK_ID]/onboarding.md file. This file wil
 
 ## Project Overview
 
-BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete town management and tourism economy system. The codebase is production-ready with advanced architectural patterns and enterprise-grade implementation quality.
+BusinessCraft is a sophisticated Minecraft mod featuring a complete town management and tourism economy system. The codebase is production-ready with advanced architectural patterns and enterprise-grade implementation quality.
+
+### 🏗️ **Current Architecture: Multi-Platform Ready**
+- **Target Platforms**: Minecraft Forge 1.20.1 + Fabric 1.20.1 (full feature parity)
+- **Architecture**: Unified Codebase with platform-specific modules
+- **Status**: Common module complete, platform modules ready for implementation
+
+### 📁 **Module Structure**
+- **`common/`**: All business logic, UI framework, and platform-agnostic code
+- **`forge/`**: Forge-specific platform implementations (currently empty)
+- **`fabric/`**: Fabric-specific platform implementations (currently empty)
 
 ## Development Commands
 
 ### Build and Run
-- **Build the mod**: `./gradlew build`
-- **Run client**: `./gradlew runClient`
-- **Run server**: `./gradlew runServer`
+- **Build all modules**: `./gradlew build`
+- **Build specific module**: `./gradlew :common:build` or `./gradlew :forge:build`
+- **Run client (common)**: `./gradlew :common:runClient`
+- **Run server (common)**: `./gradlew :common:runServer`
+- **Run Fabric client**: `./gradlew :fabric:runClient`
 - **Clean build**: `./gradlew clean build`
 - **Notify User**: `powershell.exe -Command "[console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200)"`
 
@@ -69,12 +81,12 @@ BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete
 - **Add new improvement ideas here** when they come up
 
 ### Debug Configuration
-- **Debug Control File**: `src/main/java/com/yourdomain/businesscraft/debug/DebugConfig.java`
+- **Debug Control File**: `common/src/main/java/com/yourdomain/businesscraft/debug/DebugConfig.java`
 - **Toggle debug logging**: Edit boolean flags in DebugConfig.java (requires rebuild)
 - **Current debug status**: All systems disabled for clean production logs
 - **Clean Logs**: Excessive INFO logs converted to debug-controlled logging:
   - Payment Board UI operations (`UI_MANAGERS`)
-  - Storage operations (`STORAGE_OPERATIONS`) 
+  - Storage operations (`STORAGE_OPERATIONS`)
   - Tourist arrival processing (`VISITOR_PROCESSING`)
   - Milestone reward processing (`VISITOR_PROCESSING`)
 - **Global override**: Set `FORCE_ALL_DEBUG = true` to enable all debugging
@@ -178,14 +190,21 @@ BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete
 
 ## File Organization
 
-### Main Package Structure
+### Multi-Module Structure
+- **`common/`**: All shared business logic and platform-agnostic code
+  - `src/main/java/com/yourdomain/businesscraft/`: Complete implementation (200+ files)
+  - `src/main/resources/`: Shared assets and data files
+- **`forge/`**: Forge-specific platform implementations (currently minimal)
+- **`fabric/`**: Fabric-specific platform implementations (currently minimal)
+
+### Common Module Package Structure
 - `block/`: Block implementations and block entities
 - `entity/`: Tourist entity and rendering
 - `town/`: Core town logic, components, and data management
-- `platform/`: Platform system implementation
+- `platform/`: Platform abstraction interfaces (not implementations)
 - `ui/`: Complete UI framework (11 subdirectories)
 - `network/packets/`: Organized packet system (5 subdirectories)
-- `init/`: Forge registration classes
+- `init/`: Platform-agnostic registration interfaces
 - `config/`: Configuration loading
 - `command/`: Admin commands
 - `client/`: Client-side setup and key handlers
@@ -230,10 +249,33 @@ BusinessCraft is a sophisticated Minecraft Forge 1.20.1 mod featuring a complete
 - Proper resource cleanup on server stop/level unload
 
 ### Testing and Debugging
-- Use `./gradlew runClient` for development testing
+- Use `./gradlew :common:runClient` for development testing
 - F3+K toggles town debug overlay
 - Debug commands available through `/cleartowns`
 - Comprehensive logging throughout all systems
+- Test both platforms: `./gradlew :common:runClient` (Forge) and `./gradlew :fabric:runClient` (Fabric)
+
+## Multi-Platform Development Guidelines
+
+### Architecture Approach
+- **Common Module**: Contains all business logic, UI framework, and platform-agnostic code
+- **Platform Modules**: Only contain loader-specific implementations (Forge/Fabric)
+- **Zero Platform Dependencies**: Common module must compile without Forge or Fabric
+- **Feature Parity**: All functionality must work identically on both platforms
+
+### Development Workflow
+1. **Implement in Common**: Add new features to the common module first
+2. **Test on Forge**: Use `./gradlew :common:runClient` to verify functionality
+3. **Extract Platform Code**: Move loader-specific code to appropriate platform module
+4. **Test Both Platforms**: Ensure identical behavior on Forge and Fabric
+5. **Maintain Interfaces**: Use platform abstraction interfaces for loader differences
+
+### Platform Abstraction Rules
+- **Business Logic**: Always in common module
+- **UI Components**: Always in common module (already platform-agnostic)
+- **Network Packets**: Definitions in common, serialization through platform services
+- **Registration**: Platform-specific implementations of common interfaces
+- **Events**: Platform-agnostic event interfaces with platform-specific handlers
 
 ## Configuration
 - `ConfigLoader` handles TOML configuration files

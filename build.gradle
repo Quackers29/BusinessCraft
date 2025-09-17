@@ -1,0 +1,75 @@
+// Root project build configuration for BusinessCraft
+// Coordinates building of common, forge, and fabric modules
+
+plugins {
+    id 'eclipse'
+    id 'idea'
+}
+
+// Apply Java configuration to all subprojects
+subprojects {
+    apply plugin: 'java'
+
+    java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+    version = rootProject.version
+    group = rootProject.group
+
+    repositories {
+        mavenCentral()
+        maven {
+            name = 'MinecraftForge'
+            url = 'https://maven.minecraftforge.net/'
+        }
+        maven {
+            name = 'ParchmentMC'
+            url = 'https://maven.parchmentmc.org'
+        }
+        // Add Architectury repository
+        maven {
+            name = 'Architectury'
+            url = 'https://maven.architectury.dev/'
+        }
+        // Add Fabric repository
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+    }
+}
+
+// Task to build all modules
+task buildAll {
+    dependsOn ':common:build', ':forge:build', ':fabric:build'
+    description = 'Builds all modules (common, forge, fabric)'
+}
+
+// Task to run client (delegate to common module)
+task runClient {
+    dependsOn ':common:runClient'
+    description = 'Runs the development client'
+}
+
+// Task to run server (delegate to common module)
+task runServer {
+    dependsOn ':common:runServer'
+    description = 'Runs the development server'
+}
+
+// Task to run Fabric client (delegate to fabric module)
+task runFabricClient {
+    dependsOn ':fabric:runClient'
+    description = 'Runs the Fabric development client'
+}
+
+// Task to run Fabric server (delegate to fabric module)
+task runFabricServer {
+    dependsOn ':fabric:runServer'
+    description = 'Runs the Fabric development server'
+}
+
+// Clean all modules
+task cleanAll {
+    dependsOn ':common:clean', ':forge:clean', ':fabric:clean'
+    description = 'Cleans all modules'
+}
