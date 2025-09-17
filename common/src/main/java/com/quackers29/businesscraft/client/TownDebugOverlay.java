@@ -7,8 +7,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 import net.minecraftforge.event.TickEvent;
@@ -22,8 +20,6 @@ import java.util.*;
  * Renders debug information about towns on the screen
  * Can be toggled with F4
  */
-@OnlyIn(Dist.CLIENT)
-@Mod.EventBusSubscriber(modid = "businesscraft", value = Dist.CLIENT)
 public class TownDebugOverlay implements IGuiOverlay {
     private static boolean visible = false;
     private static final int BACKGROUND_COLOR = 0x80000000;

@@ -4,7 +4,6 @@ package com.quackers29.businesscraft.event;
 import com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer;
 import com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer;
 import com.quackers29.businesscraft.client.render.world.VisualizationManager;
-import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -14,7 +13,6 @@ import net.minecraftforge.fml.common.Mod;
  * Client-side rendering events for modular world visualization system.
  * Manages the new modular 3D line rendering framework for platform and other visualizations.
  */
-@Mod.EventBusSubscriber(modid = "businesscraft", bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientRenderEvents {
     
     // Platform visualization renderer using the new modular system

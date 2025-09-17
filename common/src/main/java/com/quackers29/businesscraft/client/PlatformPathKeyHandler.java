@@ -6,8 +6,6 @@ import com.quackers29.businesscraft.network.packets.platform.SetPlatformPathCrea
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -19,7 +17,6 @@ import java.util.UUID;
 /**
  * Handles key inputs for exiting platform path creation mode
  */
-@Mod.EventBusSubscriber(modid = "businesscraft", value = Dist.CLIENT)
 public class PlatformPathKeyHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     
@@ -53,7 +50,6 @@ public class PlatformPathKeyHandler {
      * Handle key press events
      */
     @SubscribeEvent
-    @OnlyIn(Dist.CLIENT)
     public static void onKeyPress(InputEvent.Key event) {
         if (!isActive) return;
         

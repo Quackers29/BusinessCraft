@@ -9,8 +9,6 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.NetworkRegistry;
@@ -62,7 +60,6 @@ public class TownDebugNetwork {
     /**
      * Client-side method to request town data from the server
      */
-    @OnlyIn(Dist.CLIENT)
     public static void requestTownData() {
         INSTANCE.sendToServer(new RequestTownDataPacket());
     }
@@ -169,7 +166,6 @@ public class TownDebugNetwork {
             }
         }
         
-        @OnlyIn(Dist.CLIENT)
         public void handle(Supplier<NetworkEvent.Context> ctx) {
             ctx.get().enqueueWork(() -> {
                 // Update the overlay with the received data

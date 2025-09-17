@@ -6,8 +6,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,7 +48,6 @@ public class RefreshPlatformsPacket {
         return true;
     }
     
-    @OnlyIn(Dist.CLIENT)
     private void handleClient() {
         try {
             Minecraft minecraft = Minecraft.getInstance();

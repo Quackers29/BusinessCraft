@@ -2,8 +2,6 @@ package com.quackers29.businesscraft.client;
 
 // BusinessCraft moved to platform-specific module
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -12,13 +10,11 @@ import org.lwjgl.glfw.GLFW;
 /**
  * Handles key inputs for toggling the Town Debug Overlay (F4)
  */
-@Mod.EventBusSubscriber(modid = "businesscraft", value = Dist.CLIENT)
 public class TownDebugKeyHandler {
     
     /**
      * Handles key presses to detect F4 key
      */
-    @OnlyIn(Dist.CLIENT)
     @SubscribeEvent
     public static void onKeyInput(InputEvent.Key event) {
         // Only handle key press events (not releases)

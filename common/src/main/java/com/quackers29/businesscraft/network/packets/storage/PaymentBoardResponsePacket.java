@@ -1,14 +1,15 @@
 package com.quackers29.businesscraft.network.packets.storage;
 
 import net.minecraft.network.FriendlyByteBuf;
-import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Supplier;
 import com.quackers29.businesscraft.debug.DebugConfig;
+import net.minecraftforge.network.NetworkEvent;
 import com.quackers29.businesscraft.town.data.RewardEntry;
 import com.quackers29.businesscraft.town.data.RewardSource;
 import com.quackers29.businesscraft.town.data.ClaimStatus;
@@ -109,14 +110,13 @@ public class PaymentBoardResponsePacket {
         return new PaymentBoardResponsePacket(buf);
     }
 
-    public void handle(Object context) {
-        PlatformAccess.getNetwork().enqueueWork(context, () -> {
+    public void handle(Supplier<NetworkEvent.Context> ctx) {
+        NetworkEvent.Context context = ctx.get();
+        context.enqueueWork(() -> {
             // Client-side handling
-            if (PlatformAccess.getNetwork().isClientSide()) {
-                handleClientSide();
-            }
+            handleClientSide();
         });
-        PlatformAccess.getNetwork().setPacketHandled(context);
+        context.setPacketHandled(true);
     }
 
     private void handleClientSide() {
