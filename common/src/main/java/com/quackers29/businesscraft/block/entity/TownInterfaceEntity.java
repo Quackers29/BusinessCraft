@@ -40,11 +40,11 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.entity.ExperienceOrb;
+// Item handler abstractions - platform agnostic
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -103,23 +103,12 @@ import com.quackers29.businesscraft.town.data.TownBufferManager;
 import com.quackers29.businesscraft.debug.DebugConfig;
 
 public class TownInterfaceEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownInterfaceEntity> {
-    private final ItemStackHandler itemHandler = new ItemStackHandler(1) {
-        @Override
-        protected void onContentsChanged(int slot) {
-            setChanged();
-        }
+    private final Object itemHandler = PlatformAccess.getItemHandlers().createItemStackHandler(1);
+    private Object lazyItemHandler = PlatformAccess.getItemHandlers().getEmptyLazyOptional();
 
-        @Override
-        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-            // Accept any item as a resource
-            return !stack.isEmpty();
-        }
-    };
-    private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
-    
-    // Buffer management - extracted to separate class for better organization  
+    // Buffer management - extracted to separate class for better organization
     private TownBufferManager bufferManager;
-    private LazyOptional<IItemHandler> lazyBufferHandler = LazyOptional.empty();
+    private Object lazyBufferHandler = PlatformAccess.getItemHandlers().getEmptyLazyOptional();
     
     // Modular ContainerData system - replaces hardcoded indices with named fields
     private final ContainerDataHelper containerData = ContainerDataHelper.builder("TownBlock")
@@ -265,13 +254,13 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
 
     @Override
     public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
-        if (cap == ForgeCapabilities.ITEM_HANDLER) {
+        if (PlatformAccess.getItemHandlers().isItemHandlerCapability(cap)) {
             // Return buffer handler for hopper extraction from below
             if (side == Direction.DOWN && bufferManager != null) {
-                return lazyBufferHandler.cast();
+                return (LazyOptional<T>) PlatformAccess.getItemHandlers().castLazyOptional(lazyBufferHandler, cap);
             }
             // Return regular resource input handler for other sides
-            return lazyItemHandler.cast();
+            return (LazyOptional<T>) PlatformAccess.getItemHandlers().castLazyOptional(lazyItemHandler, cap);
         }
         return super.getCapability(cap, side);
     }
@@ -288,8 +277,8 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
             }
         }
         
-        lazyItemHandler = LazyOptional.of(() -> itemHandler);
-        lazyBufferHandler = LazyOptional.of(() -> bufferManager.getBufferHandler());
+        lazyItemHandler = PlatformAccess.getItemHandlers().createLazyOptional(itemHandler);
+        lazyBufferHandler = PlatformAccess.getItemHandlers().createLazyOptional(bufferManager.getBufferHandler());
         
         // Update from provider when loaded
         if (!level.isClientSide()) {
@@ -301,8 +290,8 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     @Override
     public void invalidateCaps() {
         super.invalidateCaps();
-        lazyItemHandler.invalidate();
-        lazyBufferHandler.invalidate();
+        PlatformAccess.getItemHandlers().invalidateLazyOptional(lazyItemHandler);
+        PlatformAccess.getItemHandlers().invalidateLazyOptional(lazyBufferHandler);
     }
 
     @Override
@@ -848,7 +837,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     public void processResourcesInSlot() {
         if (level == null || level.isClientSide()) return;
         
-            ItemStack stack = itemHandler.getStackInSlot(0);
+            ItemStack stack = PlatformAccess.getItemHandlers().getStackInSlot(itemHandler, 0);
         if (!stack.isEmpty() && townId != null) {
             if (level instanceof ServerLevel sLevel) {
                 Town town = TownManager.get(sLevel).getTown(townId);
@@ -1047,9 +1036,9 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     
     /**
      * Get the buffer handler for direct access (used by PaymentBoardMenu)
-     * @return The buffer ItemStackHandler or null if not initialized
+     * @return The buffer handler or null if not initialized
      */
-    public net.minecraftforge.items.ItemStackHandler getBufferHandler() {
+    public Object getBufferHandler() {
         return bufferManager != null ? bufferManager.getBufferHandler() : null;
     }
 

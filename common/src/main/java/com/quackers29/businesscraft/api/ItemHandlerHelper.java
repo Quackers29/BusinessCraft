@@ -36,4 +36,44 @@ public interface ItemHandlerHelper {
      * Create a withdrawal-only slot for the item handler (for buffer storage)
      */
     Object createWithdrawalOnlySlot(Object itemHandler, int index, int x, int y);
+
+    /**
+     * Create a LazyOptional wrapper for the item handler
+     */
+    Object createLazyOptional(Object itemHandler);
+
+    /**
+     * Check if the given capability is an item handler capability
+     */
+    boolean isItemHandlerCapability(Object capability);
+
+    /**
+     * Get an empty LazyOptional
+     */
+    Object getEmptyLazyOptional();
+
+    /**
+     * Cast the LazyOptional to the appropriate type for the capability system
+     */
+    Object castLazyOptional(Object lazyOptional, Object capability);
+
+    /**
+     * Create a custom ItemStackHandler with callback for contents changes
+     */
+    Object createCustomItemStackHandler(int size, Runnable onContentsChanged);
+
+    /**
+     * Invalidate a LazyOptional
+     */
+    void invalidateLazyOptional(Object lazyOptional);
+
+    /**
+     * Serialize the item handler to NBT
+     */
+    Object serializeNBT(Object itemHandler);
+
+    /**
+     * Deserialize the item handler from NBT
+     */
+    void deserializeNBT(Object itemHandler, Object nbt);
 }

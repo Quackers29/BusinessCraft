@@ -210,7 +210,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
     /**
      * Reconnect buffer slots to use the real buffer handler
      */
-    private void reconnectBufferSlots(net.minecraftforge.items.ItemStackHandler realBufferHandler) {
+    private void reconnectBufferSlots(Object realBufferHandler) {
         // Replace the buffer slots (slots 0-17) with ones connected to the real handler
         for (int i = 0; i < BUFFER_SIZE; i++) {
             if (i < this.slots.size()) {

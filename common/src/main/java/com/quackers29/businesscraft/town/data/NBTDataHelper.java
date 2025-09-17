@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.town.data;
 
 import com.quackers29.businesscraft.api.ITownDataProvider;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
 import net.minecraft.core.BlockPos;
@@ -9,7 +10,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.items.ItemStackHandler;
+// import net.minecraftforge.items.ItemStackHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,11 +39,11 @@ public class NBTDataHelper {
      * @param platformManager The platform manager
      * @param searchRadius The search radius
      */
-    public void saveToNBT(CompoundTag tag, ItemStackHandler itemHandler, UUID townId, String name,
+    public void saveToNBT(CompoundTag tag, Object itemHandler, UUID townId, String name,
                          BlockPos pathStart, BlockPos pathEnd, PlatformManager platformManager, int searchRadius) {
         
         // Save inventory
-        tag.put("inventory", itemHandler.serializeNBT());
+        tag.put("inventory", (CompoundTag) com.quackers29.businesscraft.api.PlatformAccess.getItemHandlers().serializeNBT(itemHandler));
         
         // Save local data to tag
         if (townId != null) {
@@ -85,11 +86,11 @@ public class NBTDataHelper {
      * @param platformManager The platform manager
      * @return LoadResult containing the loaded data
      */
-    public LoadResult loadFromNBT(CompoundTag tag, ItemStackHandler itemHandler, Level level, PlatformManager platformManager) {
+    public LoadResult loadFromNBT(CompoundTag tag, Object itemHandler, Level level, PlatformManager platformManager) {
         LoadResult result = new LoadResult();
         
         // Load inventory
-        itemHandler.deserializeNBT(tag.getCompound("inventory"));
+        PlatformAccess.getItemHandlers().deserializeNBT(itemHandler, tag.getCompound("inventory"));
         
         // Load paths from the tag itself as a fallback
         if (tag.contains("PathStart")) {

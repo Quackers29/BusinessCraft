@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.town.data;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
@@ -7,7 +8,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.items.ItemStackHandler;
+// import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,55 +38,33 @@ public class TownBufferManager {
     private boolean suppressBufferCallbacks = false; // Prevents infinite sync loops
     
     // Payment Buffer ItemHandler - 18 slots (2x9) for hopper extraction
-    private final ItemStackHandler bufferHandler = new ItemStackHandler(BUFFER_SLOTS) {
-        @Override
-        protected void onContentsChanged(int slot) {
+    private final Object bufferHandler = createBufferHandler();
+    
+    public TownBufferManager(TownInterfaceEntity blockEntity, Level level) {
+        this.blockEntity = blockEntity;
+        this.level = level;
+    }
+
+    /**
+     * Create the buffer handler with custom behavior for town buffer synchronization
+     */
+    private Object createBufferHandler() {
+        return PlatformAccess.getItemHandlers().createCustomItemStackHandler(BUFFER_SLOTS, () -> {
             // Only sync if not suppressed (prevents infinite loops during our own syncing)
             if (!suppressBufferCallbacks) {
                 // Sync buffer changes back to town data and notify clients
                 syncBufferToTownData();
             }
             blockEntity.setChanged();
-        }
-
-        @Override
-        public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-            // Buffer is extraction-only for hoppers, no insertion allowed
-            return false;
-        }
-        
-        @Override
-        public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
-            // Allow extraction for hopper automation
-            ItemStack extracted = super.extractItem(slot, amount, simulate);
-            
-            // If not simulating and we actually extracted something, trigger sync
-            if (!simulate && !extracted.isEmpty() && !suppressBufferCallbacks) {
-                // Ensure sync happens after extraction
-                syncBufferToTownData();
-            }
-            
-            return extracted;
-        }
-        
-        @Override
-        public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
-            // Block insertion - buffer is managed internally
-            return stack;
-        }
-    };
-    
-    public TownBufferManager(TownInterfaceEntity blockEntity, Level level) {
-        this.blockEntity = blockEntity;
-        this.level = level;
+        });
     }
-    
+
     public void setTownId(UUID townId) {
         this.townId = townId;
         this.bufferNeedsSync = true; // Force sync when town changes
     }
     
-    public ItemStackHandler getBufferHandler() {
+    public Object getBufferHandler() {
         return bufferHandler;
     }
     
@@ -154,8 +133,8 @@ public class TownBufferManager {
      */
     private boolean isBufferMostlyEmpty() {
         int totalItems = 0;
-        for (int i = 0; i < bufferHandler.getSlots(); i++) {
-            ItemStack stack = bufferHandler.getStackInSlot(i);
+        for (int i = 0; i < PlatformAccess.getItemHandlers().getSlots(bufferHandler); i++) {
+            ItemStack stack = PlatformAccess.getItemHandlers().getStackInSlot(bufferHandler, i);
             if (!stack.isEmpty()) {
                 totalItems += stack.getCount();
             }
@@ -181,14 +160,14 @@ public class TownBufferManager {
                 
                 try {
                     // Copy each slot directly from SlotBasedStorage to ItemStackHandler
-                    for (int i = 0; i < bufferHandler.getSlots() && i < slotStorage.getSlotCount(); i++) {
+                    for (int i = 0; i < PlatformAccess.getItemHandlers().getSlots(bufferHandler) && i < slotStorage.getSlotCount(); i++) {
                         ItemStack slotStack = slotStorage.getSlot(i);
-                        bufferHandler.setStackInSlot(i, slotStack);
+                        PlatformAccess.getItemHandlers().setStackInSlot(bufferHandler, i, slotStack);
                     }
                     
                     // Clear any remaining slots if handler is larger
-                    for (int i = slotStorage.getSlotCount(); i < bufferHandler.getSlots(); i++) {
-                        bufferHandler.setStackInSlot(i, ItemStack.EMPTY);
+                    for (int i = slotStorage.getSlotCount(); i < PlatformAccess.getItemHandlers().getSlots(bufferHandler); i++) {
+                        PlatformAccess.getItemHandlers().setStackInSlot(bufferHandler, i, ItemStack.EMPTY);
                     }
                 } finally {
                     // Always re-enable callbacks
@@ -215,8 +194,8 @@ public class TownBufferManager {
                 boolean bufferChanged = false;
                 
                 // Copy each slot from ItemStackHandler to SlotBasedStorage
-                for (int i = 0; i < bufferHandler.getSlots() && i < slotStorage.getSlotCount(); i++) {
-                    ItemStack handlerStack = bufferHandler.getStackInSlot(i);
+                for (int i = 0; i < PlatformAccess.getItemHandlers().getSlots(bufferHandler) && i < slotStorage.getSlotCount(); i++) {
+                    ItemStack handlerStack = PlatformAccess.getItemHandlers().getStackInSlot(bufferHandler, i);
                     ItemStack storageStack = slotStorage.getSlot(i);
                     
                     // Check if slot contents changed
