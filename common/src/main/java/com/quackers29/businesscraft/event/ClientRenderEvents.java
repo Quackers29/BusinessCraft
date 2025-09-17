@@ -13,6 +13,7 @@ import net.minecraftforge.fml.common.Mod;
  * Client-side rendering events for modular world visualization system.
  * Manages the new modular 3D line rendering framework for platform and other visualizations.
  */
+@Mod.EventBusSubscriber(modid = "businesscraft", bus = Mod.EventBusSubscriber.Bus.FORGE, value = net.minecraftforge.api.distmarker.Dist.CLIENT)
 public class ClientRenderEvents {
     
     // Platform visualization renderer using the new modular system
