@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.data;
 
-import com.yourdomain.businesscraft.BusinessCraft;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.town.Town;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.saveddata.SavedData;
@@ -10,7 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TownSavedData extends SavedData {
-    public static final String NAME = BusinessCraft.MOD_ID + "_towns";
+    public static final String NAME = PlatformAccess.getPlatform().getModId() + "_towns";
     
     private final Map<UUID, Town> towns = new ConcurrentHashMap<>();
     

@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.ui.managers;
 
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.town.SetTownNamePacket;
 import com.yourdomain.businesscraft.ui.builders.BCComponentFactory;
 import com.yourdomain.businesscraft.ui.modal.core.BCPopupScreen;
@@ -62,7 +62,7 @@ public class TownNamePopupManager {
                         String newName = result.getStringValue().trim();
                         
                         // Send packet to update town name on the server
-                        ModMessages.sendToServer(
+                        PlatformAccess.getNetworkMessages().sendToServer(
                             new SetTownNamePacket(blockPos, newName)
                         );
                         
@@ -162,7 +162,7 @@ public class TownNamePopupManager {
                     String newName = result.getStringValue().trim();
                     
                     // Send packet to update town name on the server
-                    ModMessages.sendToServer(
+                    PlatformAccess.getNetworkMessages().sendToServer(
                         new SetTownNamePacket(blockPos, newName)
                     );
                     

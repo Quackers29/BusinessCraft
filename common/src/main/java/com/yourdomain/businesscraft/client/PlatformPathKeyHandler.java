@@ -1,7 +1,7 @@
 package com.yourdomain.businesscraft.client;
 
-import com.yourdomain.businesscraft.BusinessCraft;
-import com.yourdomain.businesscraft.network.ModMessages;
+// BusinessCraft moved to platform-specific module
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.platform.SetPlatformPathCreationModePacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -19,7 +19,7 @@ import java.util.UUID;
 /**
  * Handles key inputs for exiting platform path creation mode
  */
-@Mod.EventBusSubscriber(modid = BusinessCraft.MOD_ID, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = "businesscraft", value = Dist.CLIENT)
 public class PlatformPathKeyHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     
@@ -62,7 +62,7 @@ public class PlatformPathKeyHandler {
             LOGGER.debug("ESC key pressed, exiting platform path creation mode");
             
             // Send packet to exit path creation mode
-            ModMessages.sendToServer(new SetPlatformPathCreationModePacket(
+            PlatformAccess.getNetworkMessages().sendToServer(new SetPlatformPathCreationModePacket(
                 townPos,
                 platformId,
                 false

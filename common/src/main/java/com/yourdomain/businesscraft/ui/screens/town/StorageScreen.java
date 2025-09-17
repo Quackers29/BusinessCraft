@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.core.BlockPos;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.storage.CommunalStoragePacket;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStoragePacket;
 
@@ -377,9 +377,9 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                     BlockPos townPos = this.menu.getTownBlockPos();
                     if (townPos != null && this.minecraft != null && this.minecraft.player != null) {
                         if (isPersonalMode) {
-                            ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
+                            PlatformAccess.getNetworkMessages().sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
                         } else {
-                            ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                            PlatformAccess.getNetworkMessages().sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
                         }
                     }
                 }
@@ -414,7 +414,7 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                 if (townPos != null && this.minecraft != null && this.minecraft.player != null) {
                     if (isPersonalMode) {
                         // Request personal storage data refresh
-                        ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
+                        PlatformAccess.getNetworkMessages().sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
                     } else {
                         // Request communal storage data refresh
                         requestCommunalStorageData();
@@ -727,7 +727,7 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
             LOGGER.debug("Requesting communal storage refresh from server");
             try {
                 // Send the request packet with the special marker (-1)
-                ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                PlatformAccess.getNetworkMessages().sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
             } catch (Exception e) {
                 LOGGER.error("Error sending communal storage request", e);
             }
@@ -745,7 +745,7 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
             try {
                 // Send the request packet with the player UUID
                 UUID playerId = this.minecraft.player.getUUID();
-                ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
+                PlatformAccess.getNetworkMessages().sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
             } catch (Exception e) {
                 LOGGER.error("Error sending personal storage request", e);
             }
@@ -787,11 +787,11 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
                         // Use the proper constructor: BlockPos, ItemStack, slotId, isAddOperation, playerId
                         BlockPos townPosition = this.menu.getTownBlockPos();
                         if (townPosition != null) {
-                            ModMessages.sendToServer(new PersonalStoragePacket(
+                            PlatformAccess.getNetworkMessages().sendToServer(new PersonalStoragePacket(
                                 townPosition, stack, slotIndex, true, this.minecraft.player.getUUID()));
                         }
                     } else if (townPos != null) {
-                        ModMessages.sendToServer(new CommunalStoragePacket(townPos, stack, slotIndex, true));
+                        PlatformAccess.getNetworkMessages().sendToServer(new CommunalStoragePacket(townPos, stack, slotIndex, true));
                     }
                     
                     updateNeeded = true;

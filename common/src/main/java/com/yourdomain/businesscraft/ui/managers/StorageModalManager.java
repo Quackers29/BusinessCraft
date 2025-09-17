@@ -11,7 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.ui.OpenPaymentBoardPacket;
 import java.util.function.Consumer;
 
@@ -49,6 +49,6 @@ public class StorageModalManager extends BaseModalManager {
         
         // Send packet to server to open Payment Board using proper container system
         // This ensures proper server-client synchronization via NetworkHooks
-        ModMessages.sendToServer(new OpenPaymentBoardPacket(blockPos));
+        PlatformAccess.getNetworkMessages().sendToServer(new OpenPaymentBoardPacket(blockPos));
     }
 } 

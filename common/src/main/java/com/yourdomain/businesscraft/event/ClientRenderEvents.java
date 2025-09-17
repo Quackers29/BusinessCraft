@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.event;
 
-import com.yourdomain.businesscraft.BusinessCraft;
+// BusinessCraft moved to platform-specific module
 import com.yourdomain.businesscraft.client.render.world.PlatformVisualizationRenderer;
 import com.yourdomain.businesscraft.client.render.world.TownBoundaryVisualizationRenderer;
 import com.yourdomain.businesscraft.client.render.world.VisualizationManager;
@@ -14,7 +14,7 @@ import net.minecraftforge.fml.common.Mod;
  * Client-side rendering events for modular world visualization system.
  * Manages the new modular 3D line rendering framework for platform and other visualizations.
  */
-@Mod.EventBusSubscriber(modid = BusinessCraft.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = "businesscraft", bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class ClientRenderEvents {
     
     // Platform visualization renderer using the new modular system

@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.function.Supplier;
 import com.yourdomain.businesscraft.debug.DebugConfig;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
 import net.minecraft.server.level.ServerLevel;
@@ -90,7 +90,7 @@ public class PaymentBoardRequestPacket {
                             rewards.size(), player.getName().getString(), town.getName());
                         
                         // Send the rewards to the client
-                        ModMessages.sendToPlayer(new PaymentBoardResponsePacket(rewards), player);
+                        PlatformAccess.getNetworkMessages().sendToPlayer(new PaymentBoardResponsePacket(rewards), player);
                     } else {
                         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                             "No town found for ID: {}", townId);

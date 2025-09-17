@@ -1,7 +1,7 @@
 package com.yourdomain.businesscraft.ui.modal.specialized;
 
 import com.yourdomain.businesscraft.debug.DebugConfig;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.ui.RequestTownMapDataPacket;
 import com.yourdomain.businesscraft.network.packets.ui.RequestTownPlatformDataPacket;
 import com.yourdomain.businesscraft.network.packets.ui.ClientTownMapCache;
@@ -138,7 +138,7 @@ public class TownMapModal extends Screen {
         try {
             // Always request fresh data from server to ensure map shows current state
             this.allTowns = new java.util.HashMap<>();
-            ModMessages.sendToServer(new RequestTownMapDataPacket());
+            PlatformAccess.getNetworkMessages().sendToServer(new RequestTownMapDataPacket());
             
             DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
                 "Requested fresh town data from server (always fresh on map open)");
@@ -1371,7 +1371,7 @@ public class TownMapModal extends Screen {
         try {
             // Always request fresh data from server for live updates
             // This ensures population and other town data is always current
-            ModMessages.sendToServer(new RequestTownPlatformDataPacket(townId));
+            PlatformAccess.getNetworkMessages().sendToServer(new RequestTownPlatformDataPacket(townId));
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                 "Requesting fresh platform and town data for town {}", townId);
                 

@@ -1,9 +1,9 @@
 package com.yourdomain.businesscraft.ui.screens.platform;
 
-import com.yourdomain.businesscraft.BusinessCraft;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.platform.AddPlatformPacket;
 import com.yourdomain.businesscraft.network.packets.platform.DeletePlatformPacket;
-import com.yourdomain.businesscraft.network.ModMessages;
+// ModMessages replaced with PlatformAccess.getNetworkMessages()
 import com.yourdomain.businesscraft.network.packets.platform.SetPlatformEnabledPacket;
 import com.yourdomain.businesscraft.network.packets.ui.OpenDestinationsUIPacket;
 import com.yourdomain.businesscraft.network.packets.platform.SetPlatformPathCreationModePacket;
@@ -372,7 +372,7 @@ public class PlatformManagementScreenV2 extends Screen {
         // Record toggle time to prevent server refresh conflicts
         lastToggleTime = System.currentTimeMillis();
         
-        ModMessages.sendToServer(new SetPlatformEnabledPacket(
+        PlatformAccess.getNetworkMessages().sendToServer(new SetPlatformEnabledPacket(
             townBlockPos, platform.getId(), newState));
         
         // Update local state immediately for instant feedback
@@ -389,7 +389,7 @@ public class PlatformManagementScreenV2 extends Screen {
         if (index < 0 || index >= platforms.size()) return;
         
         Platform platform = platforms.get(index);
-        ModMessages.sendToServer(new OpenDestinationsUIPacket(
+        PlatformAccess.getNetworkMessages().sendToServer(new OpenDestinationsUIPacket(
             townBlockPos, platform.getId()));
     }
     
@@ -398,7 +398,7 @@ public class PlatformManagementScreenV2 extends Screen {
         
         Platform platform = platforms.get(index);
         // Send packet to enter platform path creation mode
-        ModMessages.sendToServer(new SetPlatformPathCreationModePacket(
+        PlatformAccess.getNetworkMessages().sendToServer(new SetPlatformPathCreationModePacket(
             townBlockPos, platform.getId(), true));
         
         // Register with key handler
@@ -419,7 +419,7 @@ public class PlatformManagementScreenV2 extends Screen {
         if (index < 0 || index >= platforms.size()) return;
         
         Platform platform = platforms.get(index);
-        ModMessages.sendToServer(new ResetPlatformPathPacket(
+        PlatformAccess.getNetworkMessages().sendToServer(new ResetPlatformPathPacket(
             townBlockPos, platform.getId()));
         
         // Update local state
@@ -441,7 +441,7 @@ public class PlatformManagementScreenV2 extends Screen {
     }
     
     private void addPlatform() {
-        ModMessages.sendToServer(new AddPlatformPacket(townBlockPos));
+        PlatformAccess.getNetworkMessages().sendToServer(new AddPlatformPacket(townBlockPos));
         
         // Immediately refresh the UI (like PaymentBoardScreen does)
         refreshPlatformDataFromServer();
@@ -455,7 +455,7 @@ public class PlatformManagementScreenV2 extends Screen {
         Platform lastPlatform = platforms.get(platforms.size() - 1);
         
         // Send delete platform packet
-        ModMessages.sendToServer(new DeletePlatformPacket(
+        PlatformAccess.getNetworkMessages().sendToServer(new DeletePlatformPacket(
             townBlockPos,
             lastPlatform.getId()
         ));

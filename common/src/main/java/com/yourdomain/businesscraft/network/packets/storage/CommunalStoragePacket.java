@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.yourdomain.businesscraft.network.packets.storage.CommunalStorageResponsePacket;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
@@ -118,7 +118,7 @@ public class CommunalStoragePacket extends BaseBlockEntityPacket {
                 var storageItems = town.getAllCommunalStorageItems();
                 
                 // Send a response with all communal storage items
-                ModMessages.sendToPlayer(new CommunalStorageResponsePacket(storageItems), player);
+                PlatformAccess.getNetworkMessages().sendToPlayer(new CommunalStorageResponsePacket(storageItems), player);
                 return;
             }
             
@@ -177,7 +177,7 @@ public class CommunalStoragePacket extends BaseBlockEntityPacket {
                 townManager.markDirty();
                 
                 // Send a response to update the UI
-                ModMessages.sendToPlayer(new CommunalStorageResponsePacket(town.getAllCommunalStorageItems()), player);
+                PlatformAccess.getNetworkMessages().sendToPlayer(new CommunalStorageResponsePacket(town.getAllCommunalStorageItems()), player);
             }
         });
         

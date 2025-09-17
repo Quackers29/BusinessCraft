@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.ui.util;
 
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.ui.OpenTownInterfacePacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
@@ -22,6 +22,6 @@ public class ScreenNavigationHelper {
     public static void returnToTownInterface(Minecraft minecraft, Player player, BlockPos townBlockPos) {
         // Send a packet to the server to open the TownInterface menu properly
         // This ensures proper ContainerData synchronization unlike direct client-side creation
-        ModMessages.sendToServer(new OpenTownInterfacePacket(townBlockPos));
+        PlatformAccess.getNetworkMessages().sendToServer(new OpenTownInterfacePacket(townBlockPos));
     }
 } 

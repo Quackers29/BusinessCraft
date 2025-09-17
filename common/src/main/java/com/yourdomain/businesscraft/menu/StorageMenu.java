@@ -1,6 +1,5 @@
 package com.yourdomain.businesscraft.menu;
 
-import com.yourdomain.businesscraft.BusinessCraft;
 import com.yourdomain.businesscraft.api.PlatformAccess;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
@@ -13,7 +12,7 @@ import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.core.BlockPos;
-import com.yourdomain.businesscraft.network.ModMessages;
+// ModMessages replaced with PlatformAccess.getNetworkMessages()
 import com.yourdomain.businesscraft.network.packets.storage.CommunalStoragePacket;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStoragePacket;
 import net.minecraft.world.item.Item;
@@ -230,7 +229,7 @@ public class StorageMenu extends AbstractContainerMenu {
         
         // Send a packet to the server to add the item to communal storage
         // We're copying the stack to ensure we don't modify it before the server responds
-        ModMessages.sendToServer(new CommunalStoragePacket(townBlockPos, itemStack.copy(), slotId, true));
+        PlatformAccess.getNetworkMessages().sendToServer(new CommunalStoragePacket(townBlockPos, itemStack.copy(), slotId, true));
         
         // Storage slot will be updated when server responds
         return true;
@@ -252,7 +251,7 @@ public class StorageMenu extends AbstractContainerMenu {
         }
         
         // Send a packet to the server to remove the item from communal storage
-        ModMessages.sendToServer(new CommunalStoragePacket(townBlockPos, itemStack.copy(), slotId, false));
+        PlatformAccess.getNetworkMessages().sendToServer(new CommunalStoragePacket(townBlockPos, itemStack.copy(), slotId, false));
         
         return true;
     }
@@ -274,7 +273,7 @@ public class StorageMenu extends AbstractContainerMenu {
         
         // Send a packet to the server to add the item to personal storage
         // We're copying the stack to ensure we don't modify it before the server responds
-        ModMessages.sendToServer(new PersonalStoragePacket(townBlockPos, itemStack.copy(), slotId, true, player.getUUID()));
+        PlatformAccess.getNetworkMessages().sendToServer(new PersonalStoragePacket(townBlockPos, itemStack.copy(), slotId, true, player.getUUID()));
         
         // Storage slot will be updated when server responds
         return true;
@@ -296,7 +295,7 @@ public class StorageMenu extends AbstractContainerMenu {
         }
         
         // Send a packet to the server to remove the item from personal storage
-        ModMessages.sendToServer(new PersonalStoragePacket(townBlockPos, itemStack.copy(), slotId, false, player.getUUID()));
+        PlatformAccess.getNetworkMessages().sendToServer(new PersonalStoragePacket(townBlockPos, itemStack.copy(), slotId, false, player.getUUID()));
         
         return true;
     }

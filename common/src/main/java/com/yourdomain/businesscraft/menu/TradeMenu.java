@@ -1,6 +1,5 @@
 package com.yourdomain.businesscraft.menu;
 
-import com.yourdomain.businesscraft.BusinessCraft;
 import com.yourdomain.businesscraft.api.PlatformAccess;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.player.Inventory;
@@ -12,7 +11,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 import net.minecraft.network.FriendlyByteBuf;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.storage.TradeResourcePacket;
 import net.minecraft.core.BlockPos;
 
@@ -135,7 +134,7 @@ public class TradeMenu extends AbstractContainerMenu {
         
         // Don't move the item directly - instead send it to the server for processing
         // The server will decide if the town accepts the trade and sends back emeralds
-        ModMessages.sendToServer(new TradeResourcePacket(townBlockPos, stack.copy(), SLOT_INPUT));
+        PlatformAccess.getNetworkMessages().sendToServer(new TradeResourcePacket(townBlockPos, stack.copy(), SLOT_INPUT));
         
         // Remove the input item now, payment will be handled by server response
         this.tradeInventory.extractItem(SLOT_INPUT, stack.getCount(), false);

@@ -2,7 +2,7 @@ package com.yourdomain.businesscraft.network.packets.ui;
 
 import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.debug.DebugConfig;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
@@ -75,7 +75,7 @@ public class BoundarySyncRequestPacket extends BaseBlockEntityPacket {
                         int currentBoundaryRadius = town.getBoundaryRadius();
                         
                         // Send boundary update back to client
-                        ModMessages.sendToPlayer(new BoundarySyncResponsePacket(pos, currentBoundaryRadius), player);
+                        PlatformAccess.getNetworkMessages().sendToPlayer(new BoundarySyncResponsePacket(pos, currentBoundaryRadius), player);
                         
                         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                             "Boundary sync request for town at {}: boundary radius={}", pos, currentBoundaryRadius);

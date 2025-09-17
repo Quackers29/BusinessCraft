@@ -121,10 +121,10 @@ public class ForgeModMessages {
                 .consumerMainThread(ResetPlatformPathPacket::handle)
                 .add();
 
-        net.messageBuilder(SetPlatformPathCreationModePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(SetPlatformPathCreationModePacket::decode)
-                .encoder(SetPlatformPathCreationModePacket::encode)
-                .consumerMainThread(SetPlatformPathCreationModePacket::handle)
+        net.messageBuilder(SetPathCreationModePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(SetPathCreationModePacket::decode)
+                .encoder(SetPathCreationModePacket::encode)
+                .consumerMainThread(SetPathCreationModePacket::handle)
                 .add();
 
         net.messageBuilder(RefreshPlatformsPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)

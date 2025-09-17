@@ -1,5 +1,6 @@
 package com.yourdomain.businesscraft.town.data;
 
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
@@ -388,7 +389,7 @@ public class ClientSyncHelper {
         // Send to all players within a reasonable distance of any town blocks
         level.players().forEach(player -> {
             // Send to all players - the client will filter based on which UI is open
-            com.yourdomain.businesscraft.network.ModMessages.sendToPlayer(packet, player);
+            PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
         });
         
         DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, 
@@ -410,7 +411,7 @@ public class ClientSyncHelper {
         // Send to all players within a reasonable distance of any town blocks
         level.players().forEach(player -> {
             // Send to all players - the client will filter based on which UI is open
-            com.yourdomain.businesscraft.network.ModMessages.sendToPlayer(packet, player);
+            PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
         });
         
         DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, 

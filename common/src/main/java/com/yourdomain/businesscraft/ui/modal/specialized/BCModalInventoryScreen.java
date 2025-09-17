@@ -4,7 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.yourdomain.businesscraft.menu.StorageMenu;
 import com.yourdomain.businesscraft.menu.TradeMenu;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
 import com.yourdomain.businesscraft.network.packets.storage.CommunalStoragePacket;
 import com.yourdomain.businesscraft.ui.util.InventoryRenderer;
@@ -779,7 +779,7 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                 if (townPos != null) {
                     // First, request personal storage data from the server
                     DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "Requesting personal storage data for player {} at position {}", playerId, townPos);
-                    ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
+                    PlatformAccess.getNetworkMessages().sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
                     
                     // Then try to fetch from local cache as a fallback
                     var townMenu = storageMenu.getTownInterfaceMenu();
@@ -862,10 +862,10 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                     UUID playerId = this.minecraft.player.getUUID();
                     if (isPersonalMode) {
                         // Request personal storage data refresh
-                        ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
+                        PlatformAccess.getNetworkMessages().sendToServer(new PersonalStorageRequestPacket(townPos, playerId));
                     } else {
                         // Request communal storage data refresh
-                        ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                        PlatformAccess.getNetworkMessages().sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
                     }
                 }
             }
@@ -930,10 +930,10 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                     if (!anySlotUpdated && !affectedDragSlots.isEmpty()) {
                         if (isPersonalMode) {
                             // Request personal storage data refresh
-                            ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
+                            PlatformAccess.getNetworkMessages().sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
                         } else {
                             // Request communal storage data refresh
-                            ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                            PlatformAccess.getNetworkMessages().sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
                         }
                     }
                     
@@ -1252,9 +1252,9 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                     BlockPos townPos = storageMenu.getTownBlockPos();
                     if (townPos != null && this.minecraft != null && this.minecraft.player != null) {
                         if (isPersonalMode) {
-                            ModMessages.sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
+                            PlatformAccess.getNetworkMessages().sendToServer(new PersonalStorageRequestPacket(townPos, this.minecraft.player.getUUID()));
                         } else {
-                            ModMessages.sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
+                            PlatformAccess.getNetworkMessages().sendToServer(new CommunalStoragePacket(townPos, ItemStack.EMPTY, -1, true));
                         }
                     }
                 }

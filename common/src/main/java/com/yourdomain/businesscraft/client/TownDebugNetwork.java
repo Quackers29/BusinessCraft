@@ -1,7 +1,7 @@
 package com.yourdomain.businesscraft.client;
 
-import com.yourdomain.businesscraft.BusinessCraft;
-import com.yourdomain.businesscraft.network.ModMessages;
+// BusinessCraft moved to platform-specific module
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
 import net.minecraft.client.Minecraft;
@@ -38,7 +38,7 @@ public class TownDebugNetwork {
     public static void register() {
         // Create a separate network channel for debug packets
         INSTANCE = NetworkRegistry.newSimpleChannel(
-                new ResourceLocation(BusinessCraft.MOD_ID, "town_debug"),
+                new ResourceLocation(PlatformAccess.getPlatform().getModId(), "town_debug"),
                 () -> PROTOCOL_VERSION,
                 PROTOCOL_VERSION::equals,
                 PROTOCOL_VERSION::equals

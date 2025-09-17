@@ -33,6 +33,15 @@ public class OpenPaymentBoardPacket extends BaseBlockEntityPacket {
         super.toBytes(buf);
     }
 
+    // Static methods for Forge network registration
+    public static void encode(OpenPaymentBoardPacket msg, FriendlyByteBuf buf) {
+        msg.toBytes(buf);
+    }
+
+    public static OpenPaymentBoardPacket decode(FriendlyByteBuf buf) {
+        return new OpenPaymentBoardPacket(buf);
+    }
+
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> {

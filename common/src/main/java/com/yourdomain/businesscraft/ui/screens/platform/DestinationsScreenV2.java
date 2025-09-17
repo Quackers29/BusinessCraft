@@ -1,7 +1,7 @@
 package com.yourdomain.businesscraft.ui.screens.platform;
 
-import com.yourdomain.businesscraft.BusinessCraft;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
+// ModMessages replaced with PlatformAccess.getNetworkMessages()
 import com.yourdomain.businesscraft.network.packets.platform.SetPlatformDestinationPacket;
 import com.yourdomain.businesscraft.ui.builders.UIGridBuilder;
 import com.yourdomain.businesscraft.ui.util.InventoryRenderer;
@@ -322,7 +322,7 @@ public class DestinationsScreenV2 extends Screen {
         destination.enabled = !destination.enabled;
         
         // Send packet to server
-        ModMessages.sendToServer(new SetPlatformDestinationPacket(
+        PlatformAccess.getNetworkMessages().sendToServer(new SetPlatformDestinationPacket(
             blockPos, platformId, destination.townId, destination.enabled));
         
         // Update the grid to reflect changes

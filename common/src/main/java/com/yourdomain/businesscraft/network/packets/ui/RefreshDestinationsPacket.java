@@ -70,6 +70,11 @@ public class RefreshDestinationsPacket {
             buf.writeUtf(townDirections.getOrDefault(townId, ""));
         }
     }
+
+    // Static decode method for Forge network registration
+    public static RefreshDestinationsPacket decode(FriendlyByteBuf buf) {
+        return new RefreshDestinationsPacket(buf);
+    }
     
     /**
      * Add town data to this packet

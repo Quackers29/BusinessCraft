@@ -31,4 +31,14 @@ public interface EventHelper {
      * Add a level unload event listener
      */
     void addLevelUnloadListener(Consumer<Void> listener);
+
+    /**
+     * Set the active town block for path creation mode
+     */
+    void setActiveTownBlock(net.minecraft.core.BlockPos pos);
+
+    /**
+     * Clear the active town block
+     */
+    void clearActiveTownBlock();
 }

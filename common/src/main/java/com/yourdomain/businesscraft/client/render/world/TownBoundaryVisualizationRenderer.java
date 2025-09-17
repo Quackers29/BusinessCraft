@@ -1,7 +1,7 @@
 package com.yourdomain.businesscraft.client.render.world;
 
 import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.ui.BoundarySyncRequestPacket;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 
@@ -175,7 +175,7 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
             
         for (VisualizationManager.VisualizationEntry entry : activeEntries) {
             BlockPos pos = entry.getPosition();
-            ModMessages.sendToServer(new BoundarySyncRequestPacket(pos));
+            PlatformAccess.getNetworkMessages().sendToServer(new BoundarySyncRequestPacket(pos));
             DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
                 "Requested boundary sync for active town at {}", pos);
         }

@@ -18,7 +18,7 @@ import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.yourdomain.businesscraft.network.packets.misc.PaymentResultPacket;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import com.yourdomain.businesscraft.menu.TradeMenu;
@@ -174,7 +174,7 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
             }
             
             // Send the payment result back to the client
-            ModMessages.sendToPlayer(new PaymentResultPacket(payment), player);
+            PlatformAccess.getNetworkMessages().sendToPlayer(new PaymentResultPacket(payment), player);
             
             // Sync the block entity to update client-side resource cache
             level.sendBlockUpdated(pos, townInterfaceEntity.getBlockState(), townInterfaceEntity.getBlockState(), 

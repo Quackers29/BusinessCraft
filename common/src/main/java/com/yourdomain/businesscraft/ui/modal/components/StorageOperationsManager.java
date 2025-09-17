@@ -1,7 +1,7 @@
 package com.yourdomain.businesscraft.ui.modal.components;
 
 import com.yourdomain.businesscraft.menu.StorageMenu;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
 import com.yourdomain.businesscraft.network.packets.storage.CommunalStoragePacket;
 import net.minecraft.client.gui.GuiGraphics;

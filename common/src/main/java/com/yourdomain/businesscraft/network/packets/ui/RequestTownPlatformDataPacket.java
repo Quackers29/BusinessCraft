@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.town.TownManager;
 import com.yourdomain.businesscraft.town.Town;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.platform.Platform;
 
@@ -98,7 +98,7 @@ public class RequestTownPlatformDataPacket {
                     }
                     
                     // Send response back to client
-                    ModMessages.sendToPlayer(response, player);
+                    PlatformAccess.getNetworkMessages().sendToPlayer(response, player);
                     
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                         "Sent platform data response for town {} with {} platforms", 

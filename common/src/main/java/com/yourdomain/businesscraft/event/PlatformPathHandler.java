@@ -2,7 +2,7 @@ package com.yourdomain.businesscraft.event;
 
 import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.platform.Platform;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
@@ -106,7 +106,7 @@ public class PlatformPathHandler {
                                        level.getBlockState(activeTownBlockPos), 3);
                 
                 // Notify clients of the update
-                ModMessages.sendToAllTrackingChunk(new RefreshPlatformsPacket(activeTownBlockPos), level, activeTownBlockPos);
+                PlatformAccess.getNetworkMessages().sendToAllTrackingChunk(new RefreshPlatformsPacket(activeTownBlockPos), level, activeTownBlockPos);
                 
                 // Reset state
                 awaitingSecondClick = false;

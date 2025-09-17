@@ -36,4 +36,14 @@ public class ForgeEventHelper implements EventHelper {
     public void addLevelUnloadListener(Consumer<Void> listener) {
         // This will be handled in the main mod class
     }
+
+    @Override
+    public void setActiveTownBlock(net.minecraft.core.BlockPos pos) {
+        com.yourdomain.businesscraft.forge.event.ForgeModEvents.setActiveTownBlock(pos);
+    }
+
+    @Override
+    public void clearActiveTownBlock() {
+        com.yourdomain.businesscraft.forge.event.ForgeModEvents.setActiveTownBlock(null);
+    }
 }

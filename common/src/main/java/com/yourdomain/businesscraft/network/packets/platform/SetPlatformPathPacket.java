@@ -11,7 +11,7 @@ import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import net.minecraft.world.level.Level;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.debug.DebugConfig;

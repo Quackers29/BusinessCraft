@@ -34,8 +34,9 @@ public class ForgeNetworkHelper implements NetworkHelper {
 
     @Override
     public <T> void registerMessage(int index, Class<T> messageType, FriendlyByteBuf.Writer<T> encoder,
-                                   FriendlyByteBuf.Reader<T> decoder, NetworkEvent.Context.Handler<T> handler) {
-        channel.registerMessage(index, messageType, encoder, decoder, handler);
+                                   FriendlyByteBuf.Reader<T> decoder) {
+        // Register without handler - packets will be handled by their own handle methods
+        // This is handled by ForgeModMessages directly
     }
 
     @Override
@@ -54,6 +55,6 @@ public class ForgeNetworkHelper implements NetworkHelper {
     }
 
     public void sendToAllTrackingChunk(Object message, net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos) {
-        PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(pos)).send(message);
+        channel.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(pos)), message);
     }
 }

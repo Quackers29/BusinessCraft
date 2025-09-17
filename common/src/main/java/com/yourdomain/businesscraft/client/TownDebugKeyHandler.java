@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.client;
 
-import com.yourdomain.businesscraft.BusinessCraft;
+// BusinessCraft moved to platform-specific module
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -12,7 +12,7 @@ import org.lwjgl.glfw.GLFW;
 /**
  * Handles key inputs for toggling the Town Debug Overlay (F4)
  */
-@Mod.EventBusSubscriber(modid = BusinessCraft.MOD_ID, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = "businesscraft", value = Dist.CLIENT)
 public class TownDebugKeyHandler {
     
     /**

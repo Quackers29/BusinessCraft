@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.UUID;
 import java.util.function.Supplier;
 import com.yourdomain.businesscraft.debug.DebugConfig;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
 import com.yourdomain.businesscraft.town.data.TownPaymentBoard;
@@ -128,11 +128,11 @@ public class PaymentBoardClaimPacket {
                             
                             // Send updated payment board data to client
                             var rewards = town.getPaymentBoard().getUnclaimedRewards();
-                            ModMessages.sendToPlayer(new PaymentBoardResponsePacket(rewards), player);
+                            PlatformAccess.getNetworkMessages().sendToPlayer(new PaymentBoardResponsePacket(rewards), player);
                             
                             // Send updated buffer storage data to client using new slot-based packet
                             var bufferSlots = town.getPaymentBoard().getBufferStorageSlots();
-                            ModMessages.sendToPlayer(new com.yourdomain.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket(bufferSlots), player);
+                            PlatformAccess.getNetworkMessages().sendToPlayer(new com.yourdomain.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket(bufferSlots), player);
                             
                             // Send success message to player
                             player.sendSystemMessage(net.minecraft.network.chat.Component.literal(

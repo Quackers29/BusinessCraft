@@ -90,7 +90,7 @@ import com.yourdomain.businesscraft.town.utils.TouristUtils;
 import com.yourdomain.businesscraft.town.utils.TouristUtils.TouristInfo;
 import com.yourdomain.businesscraft.town.utils.TouristAllocationTracker;
 import com.yourdomain.businesscraft.entity.TouristEntity;
-import com.yourdomain.businesscraft.init.ModEntityTypes;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.town.utils.TownNotificationUtils;
 import com.yourdomain.businesscraft.town.data.VisitBuffer;
 import com.yourdomain.businesscraft.town.data.TouristSpawningHelper;

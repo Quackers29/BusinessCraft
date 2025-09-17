@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.block.TownInterfaceBlock;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -69,7 +69,7 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
                 townInterface.registerPlayerExitUI(player.getUUID());
                 
                 // Send visualization enable packet to client
-                ModMessages.sendToPlayer(new PlatformVisualizationPacket(pos), player);
+                PlatformAccess.getNetworkMessages().sendToPlayer(new PlatformVisualizationPacket(pos), player);
             } 
             // Then check if it's a TownInterfaceBlock
             else {
@@ -80,7 +80,7 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
                     townInterfaceBlock.registerPlayerExitUI(player.getUUID(), level, pos);
                     
                     // Send visualization enable packet to client
-                    ModMessages.sendToPlayer(new PlatformVisualizationPacket(pos), player);
+                    PlatformAccess.getNetworkMessages().sendToPlayer(new PlatformVisualizationPacket(pos), player);
                 }
             }
         });

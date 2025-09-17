@@ -14,7 +14,7 @@ public interface NetworkHelper {
      * Register a network message/packet
      */
     <T> void registerMessage(int index, Class<T> messageType, FriendlyByteBuf.Writer<T> encoder,
-                           FriendlyByteBuf.Reader<T> decoder, NetworkEvent.Context.Handler<T> handler);
+                           FriendlyByteBuf.Reader<T> decoder);
 
     /**
      * Send a message to a specific player

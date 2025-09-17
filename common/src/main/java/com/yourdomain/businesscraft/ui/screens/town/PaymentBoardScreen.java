@@ -1,5 +1,6 @@
 package com.yourdomain.businesscraft.ui.screens.town;
 
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.menu.PaymentBoardMenu;
 import com.yourdomain.businesscraft.ui.util.InventoryRenderer;
 import com.yourdomain.businesscraft.ui.util.ScreenNavigationHelper;
@@ -124,7 +125,7 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                         "PaymentBoardScreen.requestPaymentBoardData() - Requesting data from server for town block at {}", 
                         townBlockPos);
-                    com.yourdomain.businesscraft.network.ModMessages.sendToServer(
+                    PlatformAccess.getNetworkMessages().sendToServer(
                         new com.yourdomain.businesscraft.network.packets.storage.PaymentBoardRequestPacket(townBlockPos));
                 } catch (Exception e) {
                     LOGGER.error("Error sending payment board data request", e);

@@ -205,7 +205,7 @@ public class TouristSpawningHelper {
         if (level.getBlockState(pos).isAir() && level.getBlockState(pos.above()).isAir()) {
             // Create our custom TouristEntity instead of a regular Villager
             TouristEntity tourist = new TouristEntity(
-                PlatformAccess.getEntities().getTouristEntityType(),
+                (net.minecraft.world.entity.EntityType<TouristEntity>) PlatformAccess.getEntities().getTouristEntityType(),
                 level,
                 originTown,
                 platform,

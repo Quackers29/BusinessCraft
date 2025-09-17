@@ -2,7 +2,7 @@ package com.yourdomain.businesscraft.ui.managers;
 
 import com.yourdomain.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
 import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.ui.PlayerExitUIPacket;
 import com.yourdomain.businesscraft.ui.modal.factories.BCModalGridFactory;
 import com.yourdomain.businesscraft.ui.modal.specialized.BCModalGridScreen;
@@ -84,7 +84,7 @@ public class VisitorHistoryManager extends BaseModalManager {
             BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(blockPos);
             if (blockEntity instanceof TownInterfaceEntity townInterface) {
                 // Request the town block entity to sync its town data with the server
-                ModMessages.sendToServer(new PlayerExitUIPacket(blockPos));
+                PlatformAccess.getNetworkMessages().sendToServer(new PlayerExitUIPacket(blockPos));
                 
                 // Get the visit history
                 visitHistory.addAll(townInterface.getVisitHistory());

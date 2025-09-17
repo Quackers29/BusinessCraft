@@ -16,7 +16,7 @@ import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.ui.RefreshDestinationsPacket;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 
@@ -49,6 +49,11 @@ public class SetPlatformDestinationPacket {
         buf.writeUUID(platformId);
         buf.writeUUID(townId);
         buf.writeBoolean(enabled);
+    }
+
+    // Static decode method for Forge network registration
+    public static SetPlatformDestinationPacket decode(FriendlyByteBuf buf) {
+        return new SetPlatformDestinationPacket(buf);
     }
     
     public boolean handle(Supplier<NetworkEvent.Context> ctx) {
@@ -132,7 +137,7 @@ public class SetPlatformDestinationPacket {
                         });
                         
                         // Send the refresh packet back to the client
-                        ModMessages.sendToPlayer(refreshPacket, player);
+                        PlatformAccess.getNetworkMessages().sendToPlayer(refreshPacket, player);
                     }
                     
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 

@@ -5,7 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import com.yourdomain.businesscraft.BusinessCraft;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 

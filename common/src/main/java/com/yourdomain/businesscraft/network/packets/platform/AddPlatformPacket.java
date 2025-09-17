@@ -11,7 +11,7 @@ import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 
@@ -69,7 +69,7 @@ public class AddPlatformPacket {
                         level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), level.getBlockState(blockPos), 3);
                         
                         // Notify client of the update
-                        ModMessages.sendToAllTrackingChunk(new RefreshPlatformsPacket(blockPos), level, blockPos);
+                        PlatformAccess.getNetworkMessages().sendToAllTrackingChunk(new RefreshPlatformsPacket(blockPos), level, blockPos);
                     } else {
                         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                         "Failed to add platform to town block at {} - already at max capacity", blockPos);

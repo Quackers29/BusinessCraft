@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.yourdomain.businesscraft.network.packets.storage.PersonalStorageResponsePacket;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
@@ -174,7 +174,7 @@ public class PersonalStoragePacket extends BaseBlockEntityPacket {
                 townManager.markDirty();
                 
                 // Send a response to update the UI
-                ModMessages.sendToPlayer(new PersonalStorageResponsePacket(town.getPersonalStorageItems(playerId)), player);
+                PlatformAccess.getNetworkMessages().sendToPlayer(new PersonalStorageResponsePacket(town.getPersonalStorageItems(playerId)), player);
             }
         });
         

@@ -1,7 +1,7 @@
 package com.yourdomain.businesscraft.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.yourdomain.businesscraft.BusinessCraft;
+// BusinessCraft moved to platform-specific module
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.Font;
@@ -23,7 +23,7 @@ import java.util.*;
  * Can be toggled with F4
  */
 @OnlyIn(Dist.CLIENT)
-@Mod.EventBusSubscriber(modid = BusinessCraft.MOD_ID, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = "businesscraft", value = Dist.CLIENT)
 public class TownDebugOverlay implements IGuiOverlay {
     private static boolean visible = false;
     private static final int BACKGROUND_COLOR = 0x80000000;

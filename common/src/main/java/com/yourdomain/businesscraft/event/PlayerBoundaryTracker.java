@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.event;
 
-import com.yourdomain.businesscraft.BusinessCraft;
+// BusinessCraft moved to platform-specific module
 import com.yourdomain.businesscraft.config.ConfigLoader;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Mod.EventBusSubscriber(modid = BusinessCraft.MOD_ID)
+@Mod.EventBusSubscriber(modid = "businesscraft")
 public class PlayerBoundaryTracker {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlayerBoundaryTracker.class);
     

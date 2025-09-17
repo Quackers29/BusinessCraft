@@ -38,6 +38,15 @@ public class OpenTownInterfacePacket {
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeBlockPos(blockPos);
     }
+
+    // Static methods for Forge network registration
+    public static void encode(OpenTownInterfacePacket msg, FriendlyByteBuf buf) {
+        msg.toBytes(buf);
+    }
+
+    public static OpenTownInterfacePacket decode(FriendlyByteBuf buf) {
+        return new OpenTownInterfacePacket(buf);
+    }
     
     public boolean handle(Supplier<NetworkEvent.Context> ctx) {
         NetworkEvent.Context context = ctx.get();

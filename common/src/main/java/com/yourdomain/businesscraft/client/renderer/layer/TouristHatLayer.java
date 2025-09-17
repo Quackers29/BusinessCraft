@@ -1,7 +1,7 @@
 package com.yourdomain.businesscraft.client.renderer.layer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.yourdomain.businesscraft.BusinessCraft;
+// BusinessCraft moved to platform-specific module
 import com.yourdomain.businesscraft.entity.TouristEntity;
 import net.minecraft.client.model.VillagerModel;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -13,10 +13,10 @@ import net.minecraft.resources.ResourceLocation;
 
 public class TouristHatLayer extends RenderLayer<TouristEntity, VillagerModel<TouristEntity>> {
     private static final ResourceLocation[] HAT_TEXTURES = {
-        new ResourceLocation(BusinessCraft.MOD_ID, "textures/entity/tourist_hat.png"),     // Default - black
-        new ResourceLocation(BusinessCraft.MOD_ID, "textures/entity/tourist_hat_red.png"),   // Red
-        new ResourceLocation(BusinessCraft.MOD_ID, "textures/entity/tourist_hat_blue.png"),  // Blue  
-        new ResourceLocation(BusinessCraft.MOD_ID, "textures/entity/tourist_hat_green.png")  // Green
+        new ResourceLocation("businesscraft", "textures/entity/tourist_hat.png"),     // Default - black
+        new ResourceLocation("businesscraft", "textures/entity/tourist_hat_red.png"),   // Red
+        new ResourceLocation("businesscraft", "textures/entity/tourist_hat_blue.png"),  // Blue  
+        new ResourceLocation("businesscraft", "textures/entity/tourist_hat_green.png")  // Green
     };
     
     private final VillagerModel<TouristEntity> model;

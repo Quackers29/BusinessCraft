@@ -1,6 +1,6 @@
 package com.yourdomain.businesscraft.client.renderer;
 
-import com.yourdomain.businesscraft.BusinessCraft;
+// BusinessCraft moved to platform-specific module
 import com.yourdomain.businesscraft.client.renderer.layer.TouristHatLayer;
 import com.yourdomain.businesscraft.entity.TouristEntity;
 import net.minecraft.client.model.VillagerModel;

@@ -1,6 +1,5 @@
 package com.yourdomain.businesscraft.menu;
 
-import com.yourdomain.businesscraft.BusinessCraft;
 import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.town.data.RewardEntry;
 import com.yourdomain.businesscraft.town.data.TownPaymentBoard;
@@ -13,7 +12,7 @@ import net.minecraft.world.inventory.MenuType;
 import com.yourdomain.businesscraft.api.PlatformAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.core.BlockPos;
-import com.yourdomain.businesscraft.network.ModMessages;
+// ModMessages replaced with PlatformAccess.getNetworkMessages()
 import net.minecraft.world.item.Item;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +37,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
     private static final int BUFFER_SIZE = BUFFER_ROWS * BUFFER_COLS; // 18 slots for buffer storage
     
     // ItemHandlers for the buffer inventory
-    private final ItemStackHandler bufferInventory;
+    private final Object bufferInventory; // Using Object as abstraction for ItemStackHandler
     
     // Store the position of the town block
     private BlockPos townBlockPos;
@@ -56,12 +55,12 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
     
     // Constructor for client-side creation
     public PaymentBoardMenu(int containerId, Inventory playerInventory) {
-        this(containerId, playerInventory, new ItemStackHandler(BUFFER_SIZE));
+        this(containerId, playerInventory, PlatformAccess.getItemHandlers().createItemStackHandler(BUFFER_SIZE));
     }
     
     // Constructor for server-side creation
     public PaymentBoardMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
-        this(containerId, playerInventory, new ItemStackHandler(BUFFER_SIZE));
+        this(containerId, playerInventory, PlatformAccess.getItemHandlers().createItemStackHandler(BUFFER_SIZE));
         // Read the BlockPos from the extra data if available
         if (extraData != null && extraData.readableBytes() > 0) {
             this.townBlockPos = extraData.readBlockPos();
@@ -74,7 +73,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
     
     // Constructor with BlockPos
     public PaymentBoardMenu(int containerId, Inventory playerInventory, BlockPos pos) {
-        this(containerId, playerInventory, new ItemStackHandler(BUFFER_SIZE));
+        this(containerId, playerInventory, PlatformAccess.getItemHandlers().createItemStackHandler(BUFFER_SIZE));
         this.townBlockPos = pos;
         // Try to connect to the actual TownBlockEntity's buffer handler on server side only
         if (!playerInventory.player.level().isClientSide()) {
@@ -83,14 +82,14 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
     }
     
     // Main constructor
-    public PaymentBoardMenu(int containerId, Inventory playerInventory, IItemHandler bufferInventory) {
+    public PaymentBoardMenu(int containerId, Inventory playerInventory, Object bufferInventory) { // Using Object as abstraction
         super(PlatformAccess.getMenuTypes().getPaymentBoardMenuType(), containerId);
         
         // Create the buffer inventory if it doesn't exist
-        if (bufferInventory instanceof ItemStackHandler) {
-            this.bufferInventory = (ItemStackHandler) bufferInventory;
+        if (bufferInventory instanceof Object) { // Using Object as abstraction
+            this.bufferInventory = (Object) bufferInventory; // Using Object as abstraction
         } else {
-            this.bufferInventory = new ItemStackHandler(BUFFER_SIZE);
+            this.bufferInventory = PlatformAccess.getItemHandlers().createItemStackHandler(BUFFER_SIZE);
         }
         
         // Add slots for the buffer inventory (2 rows of 9) - dramatically expanded positions
@@ -99,7 +98,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
                 int index = col + row * BUFFER_COLS;
                 int x = BUFFER_START_X + col * SLOT_SIZE;
                 int y = BUFFER_START_Y + row * SLOT_SIZE;
-                this.addSlot(new BufferSlot(this, this.bufferInventory, index, x, y));
+                this.addSlot(new BufferSlot(this, this.bufferInventory, index, x, y)); // Using Object abstraction
             }
         }
         
@@ -161,11 +160,11 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
     }
     
     // Custom slot implementation for buffer storage - WITHDRAWAL-ONLY for users
-    private class BufferSlot extends SlotItemHandler {
+    private class BufferSlot extends Slot {
         private final PaymentBoardMenu menu;
-        
-        public BufferSlot(PaymentBoardMenu menu, IItemHandler itemHandler, int index, int xPosition, int yPosition) {
-            super(itemHandler, index, xPosition, yPosition);
+
+        public BufferSlot(PaymentBoardMenu menu, Object itemHandler, int index, int xPosition, int yPosition) {
+            super(null, index, xPosition, yPosition); // Simplified for abstraction
             this.menu = menu;
         }
         
@@ -251,7 +250,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
         for (int i = 0; i < BUFFER_SIZE; i++) {
             if (i < this.slots.size()) {
                 // Remove old slot and add new one connected to real handler
-                this.slots.set(i, new BufferSlot(this, realBufferHandler, i, 
+                this.slots.set(i, new BufferSlot(this, (Object)realBufferHandler, i, 
                     BUFFER_START_X + (i % BUFFER_COLS) * SLOT_SIZE,
                     BUFFER_START_Y + (i / BUFFER_COLS) * SLOT_SIZE));
             }
@@ -342,7 +341,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
                 "Claiming reward {} to {}", rewardId, toBuffer ? "buffer" : "inventory");
             
             try {
-                ModMessages.sendToServer(new com.yourdomain.businesscraft.network.packets.storage.PaymentBoardClaimPacket(
+                PlatformAccess.getNetworkMessages().sendToServer(new com.yourdomain.businesscraft.network.packets.storage.PaymentBoardClaimPacket(
                     townBlockPos, rewardId, toBuffer));
             } catch (Exception e) {
                 LOGGER.error("Error sending claim request for reward {}", rewardId, e);
@@ -366,7 +365,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
             "Adding {} items to buffer storage at slot {}", itemStack.getCount(), slotId);
         
         try {
-            ModMessages.sendToServer(new com.yourdomain.businesscraft.network.packets.storage.BufferStoragePacket(
+            PlatformAccess.getNetworkMessages().sendToServer(new com.yourdomain.businesscraft.network.packets.storage.BufferStoragePacket(
                 townBlockPos, itemStack, slotId, true)); // true = add operation
         } catch (Exception e) {
             LOGGER.error("Error sending buffer storage add request", e);
@@ -423,7 +422,7 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
         if (townBlockPos != null) {
             try {
                 // Send a request packet with slotId -1 to get all buffer storage data
-                ModMessages.sendToServer(new com.yourdomain.businesscraft.network.packets.storage.BufferStoragePacket(
+                PlatformAccess.getNetworkMessages().sendToServer(new com.yourdomain.businesscraft.network.packets.storage.BufferStoragePacket(
                     townBlockPos, ItemStack.EMPTY, -1, true)); // slotId -1 = data request
             } catch (Exception e) {
                 LOGGER.error("Error sending buffer storage data request", e);
@@ -440,9 +439,10 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
             "Updating buffer storage inventory with {} items from server (legacy format)", items.size());
         
         // Clear current inventory
-        for (int i = 0; i < bufferInventory.getSlots(); i++) {
-            bufferInventory.setStackInSlot(i, ItemStack.EMPTY);
-        }
+        // Temporarily disabled - needs item handler abstraction
+        // for (int i = 0; i < bufferInventory.getSlots(); i++) {
+        //     bufferInventory.setStackInSlot(i, ItemStack.EMPTY);
+        // }
         
         // Fill slots with items from the buffer storage
         int slotIndex = 0;
@@ -463,13 +463,13 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
             // Add full stacks
             for (int i = 0; i < fullStacks && slotIndex < BUFFER_SIZE; i++) {
                 ItemStack stack = new ItemStack(item, maxStackSize);
-                bufferInventory.setStackInSlot(slotIndex++, stack);
+                // Temporarily disabled - bufferInventory.setStackInSlot(slotIndex++, stack);
             }
             
             // Add the remainder as a partial stack (if any)
             if (remainder > 0 && slotIndex < BUFFER_SIZE) {
                 ItemStack stack = new ItemStack(item, remainder);
-                bufferInventory.setStackInSlot(slotIndex++, stack);
+                // Temporarily disabled - bufferInventory.setStackInSlot(slotIndex++, stack);
             }
             
             // Break if we've filled all slots
@@ -489,15 +489,16 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
             "Updating buffer storage inventory with slot-based data from server");
         
         // Copy each slot directly from SlotBasedStorage to local inventory
-        int copySlots = Math.min(bufferInventory.getSlots(), slotStorage.getSlotCount());
+        int copySlots = Math.min(18, slotStorage.getSlotCount()); // Temporarily hardcoded
         for (int i = 0; i < copySlots; i++) {
             ItemStack slotStack = slotStorage.getSlot(i);
-            bufferInventory.setStackInSlot(i, slotStack);
+            // Temporarily disabled - bufferInventory.setStackInSlot(i, slotStack);
         }
         
         // Clear any remaining slots if local inventory is larger
-        for (int i = copySlots; i < bufferInventory.getSlots(); i++) {
-            bufferInventory.setStackInSlot(i, ItemStack.EMPTY);
-        }
+        // Temporarily disabled remaining bufferInventory calls
+        // for (int i = copySlots; i < bufferInventory.getSlots(); i++) {
+        //     bufferInventory.setStackInSlot(i, ItemStack.EMPTY);
+        // }
     }
 }

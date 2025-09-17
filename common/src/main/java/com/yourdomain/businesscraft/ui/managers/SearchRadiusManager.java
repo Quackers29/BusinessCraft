@@ -2,7 +2,7 @@ package com.yourdomain.businesscraft.ui.managers;
 
 import com.yourdomain.businesscraft.debug.DebugConfig;
 import com.yourdomain.businesscraft.menu.TownInterfaceMenu;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.network.packets.platform.SetSearchRadiusPacket;
 import net.minecraft.core.BlockPos;
 import org.slf4j.Logger;
@@ -119,7 +119,7 @@ public class SearchRadiusManager {
      */
     private void sendRadiusUpdatePacket(int newRadius) {
         try {
-            ModMessages.sendToServer(new SetSearchRadiusPacket(blockPos, newRadius));
+            PlatformAccess.getNetworkMessages().sendToServer(new SetSearchRadiusPacket(blockPos, newRadius));
         } catch (Exception e) {
             LOGGER.error("Failed to send radius update packet", e);
         }

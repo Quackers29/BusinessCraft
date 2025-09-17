@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
@@ -78,7 +78,7 @@ public class RequestTownMapDataPacket {
                     );
                 }
                 
-                ModMessages.sendToPlayer(responsePacket, player);
+                PlatformAccess.getNetworkMessages().sendToPlayer(responsePacket, player);
                 
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "Sent town map data response with {} towns to player: {}", 

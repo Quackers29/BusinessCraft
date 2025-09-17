@@ -7,7 +7,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
-import com.yourdomain.businesscraft.event.ModEvents;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.api.ITownDataProvider;
 import com.yourdomain.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import net.minecraft.network.chat.Component;
@@ -61,7 +61,7 @@ public class SetPathCreationModePacket extends BaseBlockEntityPacket {
                     player.getPersistentData().putUUID("CurrentTownBlock", 
                             townInterface.getTownId());
                     // Set the active town block in ModEvents
-                    ModEvents.setActiveTownBlock(pos);
+                    PlatformAccess.getEvents().setActiveTownBlock(pos);
                     // Enable path creation mode on the town block entity
                     townInterface.setPathCreationMode(true);
                     
@@ -84,7 +84,7 @@ public class SetPathCreationModePacket extends BaseBlockEntityPacket {
                     
                     // Disable path creation mode
                     townInterface.setPathCreationMode(false);
-                    ModEvents.setActiveTownBlock(null);
+                    PlatformAccess.getEvents().clearActiveTownBlock();
                 }
             });
         });

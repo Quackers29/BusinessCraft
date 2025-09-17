@@ -16,7 +16,7 @@ import com.yourdomain.businesscraft.block.entity.TownInterfaceEntity;
 import com.yourdomain.businesscraft.platform.Platform;
 import com.yourdomain.businesscraft.town.Town;
 import com.yourdomain.businesscraft.town.TownManager;
-import com.yourdomain.businesscraft.network.ModMessages;
+import com.yourdomain.businesscraft.api.PlatformAccess;
 import com.yourdomain.businesscraft.debug.DebugConfig;
 
 /**
@@ -121,7 +121,7 @@ public class OpenDestinationsUIPacket {
                     }
                     
                     // Send response packet to open UI on client
-                    ModMessages.sendToPlayer(responsePacket, player);
+                    PlatformAccess.getNetworkMessages().sendToPlayer(responsePacket, player);
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                         "Sent destinations data for {} towns to player {}", 
                         addedTowns, player.getName().getString());

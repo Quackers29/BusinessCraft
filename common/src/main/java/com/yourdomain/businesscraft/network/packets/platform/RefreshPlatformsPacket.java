@@ -33,6 +33,11 @@ public class RefreshPlatformsPacket {
     public void encode(FriendlyByteBuf buf) {
         buf.writeBlockPos(pos);
     }
+
+    // Static decode method for Forge network registration
+    public static RefreshPlatformsPacket decode(FriendlyByteBuf buf) {
+        return new RefreshPlatformsPacket(buf);
+    }
     
     public boolean handle(Supplier<NetworkEvent.Context> ctx) {
         NetworkEvent.Context context = ctx.get();
