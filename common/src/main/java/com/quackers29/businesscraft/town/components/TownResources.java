@@ -5,7 +5,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.registries.ForgeRegistries;
+import com.quackers29.businesscraft.api.PlatformAccess;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,7 +38,7 @@ public class TownResources {
         if (count > 0) {
             // Adding resources
             resources.merge(item, count, Integer::sum);
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Added {} of resource {}", count, ForgeRegistries.ITEMS.getKey(item));
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Added {} of resource {}", count, PlatformAccess.getRegistry().getItemKey(item));
         } else if (count < 0) {
             // Removing resources (count is negative)
             int currentAmount = resources.getOrDefault(item, 0);
@@ -53,7 +53,7 @@ public class TownResources {
                         currentAmount, newAmount, -count);
                 } else {
                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Removed {} of resource {} (new amount: {})", 
-                        -count, ForgeRegistries.ITEMS.getKey(item), newAmount);
+                        -count, PlatformAccess.getRegistry().getItemKey(item), newAmount);
                 }
                 
                 // Store the updated amount
@@ -111,7 +111,7 @@ public class TownResources {
         CompoundTag resourcesTag = new CompoundTag();
         
         for (Map.Entry<Item, Integer> entry : resources.entrySet()) {
-            ResourceLocation key = ForgeRegistries.ITEMS.getKey(entry.getKey());
+            ResourceLocation key = PlatformAccess.getRegistry().getItemKey(entry.getKey());
             if (key != null) {
                 resourcesTag.putInt(key.toString(), entry.getValue());
             }
@@ -133,7 +133,7 @@ public class TownResources {
             
             for (String key : resourcesTag.getAllKeys()) {
                 ResourceLocation resourceLocation = new ResourceLocation(key);
-                Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
+                Item item = PlatformAccess.getRegistry().getItem(resourceLocation);
                 
                 if (item != null && item != Items.AIR) {
                     resources.put(item, resourcesTag.getInt(key));

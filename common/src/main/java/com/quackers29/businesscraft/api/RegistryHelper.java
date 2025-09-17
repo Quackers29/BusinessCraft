@@ -5,6 +5,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * Platform-agnostic interface for registration operations.
@@ -35,4 +36,14 @@ public interface RegistryHelper {
      * Register a menu type with the given name
      */
     void registerMenuType(String name, MenuType<?> menuType);
+
+    /**
+     * Get an item by its ResourceLocation
+     */
+    Item getItem(ResourceLocation location);
+
+    /**
+     * Get the ResourceLocation for an item
+     */
+    ResourceLocation getItemKey(Item item);
 }

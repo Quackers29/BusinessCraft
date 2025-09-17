@@ -10,7 +10,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.registries.ForgeRegistries;
+import com.quackers29.businesscraft.api.PlatformAccess;
 
 import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.town.Town;
@@ -135,7 +135,7 @@ public class DistanceMilestoneHelper {
             ResourceLocation itemId = new ResourceLocation(namespace, itemName);
             
             // Get item from registry
-            Item item = ForgeRegistries.ITEMS.getValue(itemId);
+            Item item = PlatformAccess.getRegistry().getItem(itemId);
             if (item == null) {
                 LOGGER.warn("Unknown item in milestone reward: '{}'", itemId);
                 return ItemStack.EMPTY;

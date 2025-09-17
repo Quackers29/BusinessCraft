@@ -4,7 +4,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.registries.ForgeRegistries;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -13,7 +13,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.registries.ForgeRegistries;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
@@ -49,7 +49,7 @@ public class ClientSyncHelper {
         
         // Add all resources to the tag
         provider.getAllResources().forEach((item, count) -> {
-            String itemKey = ForgeRegistries.ITEMS.getKey(item).toString();
+            String itemKey = PlatformAccess.getRegistry().getItemKey(item).toString();
             resourcesTag.putInt(itemKey, count);
         });
         
@@ -59,7 +59,7 @@ public class ClientSyncHelper {
         // Add communal storage data
         CompoundTag communalTag = new CompoundTag();
         provider.getAllCommunalStorageItems().forEach((item, count) -> {
-            String itemKey = ForgeRegistries.ITEMS.getKey(item).toString();
+            String itemKey = PlatformAccess.getRegistry().getItemKey(item).toString();
             communalTag.putInt(itemKey, count);
         });
         tag.put("clientCommunalStorage", communalTag);
@@ -80,7 +80,7 @@ public class ClientSyncHelper {
             for (String key : resourcesTag.getAllKeys()) {
                 try {
                     ResourceLocation resourceLocation = new ResourceLocation(key);
-                    Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
+                    Item item = PlatformAccess.getRegistry().getItem(resourceLocation);
                     if (item != null && item != Items.AIR) {
                         int count = resourcesTag.getInt(key);
                         clientResources.put(item, count);
@@ -102,7 +102,7 @@ public class ClientSyncHelper {
             for (String key : communalTag.getAllKeys()) {
                 try {
                     ResourceLocation resourceLocation = new ResourceLocation(key);
-                    Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
+                    Item item = PlatformAccess.getRegistry().getItem(resourceLocation);
                     if (item != null && item != Items.AIR) {
                         int count = communalTag.getInt(key);
                         clientCommunalStorage.put(item, count);

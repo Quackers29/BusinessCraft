@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.town.components.TownEconomyComponent;
 import com.quackers29.businesscraft.api.ITownDataProvider;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.town.data.TownPaymentBoard;
 import net.minecraft.world.item.Item;
 import java.util.ArrayList;
@@ -309,7 +310,7 @@ public class Town implements ITownDataProvider {
                 
                 // Save each item
                 itemMap.forEach((item, count) -> {
-                    String itemKey = net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(item).toString();
+                    String itemKey = PlatformAccess.getRegistry().getItemKey(item).toString();
                     playerTag.putInt(itemKey, count);
                 });
                 
@@ -422,7 +423,7 @@ public class Town implements ITownDataProvider {
             storageTag.getAllKeys().forEach(key -> {
                 try {
                     net.minecraft.resources.ResourceLocation itemId = new net.minecraft.resources.ResourceLocation(key);
-                    Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(itemId);
+                    Item item = PlatformAccess.getRegistry().getItem(itemId);
                     if (item != null) {
                         int count = storageTag.getInt(key);
                         if (count > 0) {
@@ -454,7 +455,7 @@ public class Town implements ITownDataProvider {
                     playerTag.getAllKeys().forEach(itemKey -> {
                         try {
                             net.minecraft.resources.ResourceLocation itemId = new net.minecraft.resources.ResourceLocation(itemKey);
-                            Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(itemId);
+                            Item item = PlatformAccess.getRegistry().getItem(itemId);
                             if (item != null) {
                                 int count = playerTag.getInt(itemKey);
                                 if (count > 0) {

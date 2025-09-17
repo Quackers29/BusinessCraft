@@ -7,6 +7,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.inventory.MenuType;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -63,5 +64,15 @@ public class ForgeRegistryHelper implements RegistryHelper {
     @Override
     public void registerMenuType(String name, MenuType<?> menuType) {
         MENU_TYPES.register(name, () -> menuType);
+    }
+
+    @Override
+    public Item getItem(ResourceLocation location) {
+        return ForgeRegistries.ITEMS.getValue(location);
+    }
+
+    @Override
+    public ResourceLocation getItemKey(Item item) {
+        return ForgeRegistries.ITEMS.getKey(item);
     }
 }

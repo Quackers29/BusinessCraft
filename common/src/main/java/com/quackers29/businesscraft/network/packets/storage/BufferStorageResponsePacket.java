@@ -4,7 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.registries.ForgeRegistries;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
@@ -32,7 +32,7 @@ public class BufferStorageResponsePacket {
             int count = buf.readInt();
             
             // Get the item from the registry
-            Item item = ForgeRegistries.ITEMS.getValue(new net.minecraft.resources.ResourceLocation(itemName));
+                Item item = PlatformAccess.getRegistry().getItem(new net.minecraft.resources.ResourceLocation(itemName));
             if (item != null) {
                 bufferItems.put(item, count);
             } else {
@@ -44,7 +44,7 @@ public class BufferStorageResponsePacket {
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeInt(bufferItems.size());
         for (Map.Entry<Item, Integer> entry : bufferItems.entrySet()) {
-            buf.writeUtf(ForgeRegistries.ITEMS.getKey(entry.getKey()).toString());
+            buf.writeUtf(PlatformAccess.getRegistry().getItemKey(entry.getKey()).toString());
             buf.writeInt(entry.getValue());
         }
     }

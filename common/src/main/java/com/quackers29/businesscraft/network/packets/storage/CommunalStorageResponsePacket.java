@@ -5,7 +5,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.registries.ForgeRegistries;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,7 @@ public class CommunalStorageResponsePacket {
             int count = buf.readInt();
             try {
                 ResourceLocation resourceLocation = new ResourceLocation(itemId);
-                Item item = ForgeRegistries.ITEMS.getValue(resourceLocation);
+                Item item = PlatformAccess.getRegistry().getItem(resourceLocation);
                 if (item != null) {
                     storageItems.put(item, count);
                 }
@@ -46,7 +46,7 @@ public class CommunalStorageResponsePacket {
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeInt(storageItems.size());
         storageItems.forEach((item, count) -> {
-            ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(item);
+            ResourceLocation itemId = PlatformAccess.getRegistry().getItemKey(item);
             if (itemId != null) {
                 buf.writeUtf(itemId.toString());
                 buf.writeInt(count);

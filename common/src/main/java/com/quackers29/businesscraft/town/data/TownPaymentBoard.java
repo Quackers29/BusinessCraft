@@ -7,6 +7,7 @@ import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
+import com.quackers29.businesscraft.api.PlatformAccess;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -309,7 +310,7 @@ public class TownPaymentBoard {
         for (String key : bufferTag.getAllKeys()) {
             try {
                 net.minecraft.resources.ResourceLocation itemId = new net.minecraft.resources.ResourceLocation(key);
-                Item item = net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(itemId);
+                Item item = PlatformAccess.getRegistry().getItem(itemId);
                 if (item != null) {
                     int count = bufferTag.getInt(key);
                     if (count > 0) {
