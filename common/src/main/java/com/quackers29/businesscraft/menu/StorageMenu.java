@@ -7,9 +7,6 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.SlotItemHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.core.BlockPos;
 // ModMessages replaced with PlatformAccess.getNetworkMessages()
@@ -37,7 +34,7 @@ public class StorageMenu extends AbstractContainerMenu {
     private static final int INVENTORY_SIZE = STORAGE_ROWS * STORAGE_COLS; // 18 slots for storage
     
     // ItemHandlers for the storage inventory
-    private final ItemStackHandler storageInventory;
+    private final Object storageInventory;
     
     // Store the position of the town block
     private BlockPos townBlockPos;
@@ -52,33 +49,33 @@ public class StorageMenu extends AbstractContainerMenu {
     
     // Constructor for client-side creation
     public StorageMenu(int containerId, Inventory playerInventory) {
-        this(containerId, playerInventory, new ItemStackHandler(INVENTORY_SIZE));
+        this(containerId, playerInventory, PlatformAccess.getItemHandlers().createItemStackHandler(INVENTORY_SIZE));
     }
-    
+
     // Constructor for server-side creation
     public StorageMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
-        this(containerId, playerInventory, new ItemStackHandler(INVENTORY_SIZE));
+        this(containerId, playerInventory, PlatformAccess.getItemHandlers().createItemStackHandler(INVENTORY_SIZE));
         // Read the BlockPos from the extra data if available
         if (extraData != null && extraData.readableBytes() > 0) {
             this.townBlockPos = extraData.readBlockPos();
         }
     }
-    
+
     // Constructor with BlockPos
     public StorageMenu(int containerId, Inventory playerInventory, BlockPos pos) {
-        this(containerId, playerInventory, new ItemStackHandler(INVENTORY_SIZE));
+        this(containerId, playerInventory, PlatformAccess.getItemHandlers().createItemStackHandler(INVENTORY_SIZE));
         this.townBlockPos = pos;
     }
-    
+
     // Main constructor
-    public StorageMenu(int containerId, Inventory playerInventory, IItemHandler storageInventory) {
+    public StorageMenu(int containerId, Inventory playerInventory, Object storageInventory) {
         super(PlatformAccess.getMenuTypes().getStorageMenuType(), containerId);
-        
-        // Create the storage inventory if it doesn't exist
-        if (storageInventory instanceof ItemStackHandler) {
-            this.storageInventory = (ItemStackHandler) storageInventory;
+
+        // Use the provided storage inventory or create a new one
+        if (storageInventory != null) {
+            this.storageInventory = storageInventory;
         } else {
-            this.storageInventory = new ItemStackHandler(INVENTORY_SIZE);
+            this.storageInventory = PlatformAccess.getItemHandlers().createItemStackHandler(INVENTORY_SIZE);
         }
         
         // Add slots for the storage inventory (2 rows of 9)
@@ -87,7 +84,7 @@ public class StorageMenu extends AbstractContainerMenu {
                 int index = col + row * STORAGE_COLS;
                 int x = STORAGE_START_X + col * SLOT_SIZE;
                 int y = STORAGE_START_Y + row * SLOT_SIZE;
-                this.addSlot(new StorageSlot(this.storageInventory, index, x, y));
+                this.addSlot((Slot) PlatformAccess.getItemHandlers().createSlot(this.storageInventory, index, x, y));
             }
         }
         
@@ -148,18 +145,6 @@ public class StorageMenu extends AbstractContainerMenu {
         return itemstack;
     }
     
-    // Custom slot implementation for storage
-    private static class StorageSlot extends SlotItemHandler {
-        public StorageSlot(IItemHandler itemHandler, int index, int xPosition, int yPosition) {
-            super(itemHandler, index, xPosition, yPosition);
-        }
-        
-        // Allow any item to be placed in storage slots
-        @Override
-        public boolean mayPlace(ItemStack stack) {
-            return true;
-        }
-    }
     
     /**
      * Get the position of the town block
@@ -354,17 +339,17 @@ public class StorageMenu extends AbstractContainerMenu {
         
         // Log the current inventory state before clearing
         DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Current inventory state before clearing:");
-        for (int i = 0; i < storageInventory.getSlots(); i++) {
-            ItemStack stack = storageInventory.getStackInSlot(i);
+        for (int i = 0; i < PlatformAccess.getItemHandlers().getSlots(storageInventory); i++) {
+            ItemStack stack = PlatformAccess.getItemHandlers().getStackInSlot(storageInventory, i);
             if (!stack.isEmpty()) {
                 DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU:   Slot {}: {} x{}", i, stack.getHoverName().getString(), stack.getCount());
             }
         }
         
         // Clear current inventory
-        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Clearing all {} inventory slots", storageInventory.getSlots());
-        for (int i = 0; i < storageInventory.getSlots(); i++) {
-            storageInventory.setStackInSlot(i, ItemStack.EMPTY);
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Clearing all {} inventory slots", PlatformAccess.getItemHandlers().getSlots(storageInventory));
+        for (int i = 0; i < PlatformAccess.getItemHandlers().getSlots(storageInventory); i++) {
+            PlatformAccess.getItemHandlers().setStackInSlot(storageInventory, i, ItemStack.EMPTY);
         }
         
         // Fill slots with items from the storage
@@ -393,7 +378,7 @@ public class StorageMenu extends AbstractContainerMenu {
                 ItemStack stack = new ItemStack(item, maxStackSize);
                 DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU:     Adding full stack to slot {}: {} x{}", 
                     slotIndex, stack.getHoverName().getString(), stack.getCount());
-                storageInventory.setStackInSlot(slotIndex++, stack);
+                PlatformAccess.getItemHandlers().setStackInSlot(storageInventory, slotIndex++, stack);
             }
             
             // Add the remainder as a partial stack (if any)
@@ -401,7 +386,7 @@ public class StorageMenu extends AbstractContainerMenu {
                 ItemStack stack = new ItemStack(item, remainder);
                 DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU:     Adding remainder to slot {}: {} x{}", 
                     slotIndex, stack.getHoverName().getString(), stack.getCount());
-                storageInventory.setStackInSlot(slotIndex++, stack);
+                PlatformAccess.getItemHandlers().setStackInSlot(storageInventory, slotIndex++, stack);
             } else if (remainder > 0) {
                 LOGGER.warn("MENU:     Cannot add remainder (slot {} >= inventory size {})", 
                     slotIndex, INVENTORY_SIZE);
@@ -417,14 +402,14 @@ public class StorageMenu extends AbstractContainerMenu {
         // Log the final inventory state
         DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Final inventory state after updates:");
         int filledSlots = 0;
-        for (int i = 0; i < storageInventory.getSlots(); i++) {
-            ItemStack stack = storageInventory.getStackInSlot(i);
+        for (int i = 0; i < PlatformAccess.getItemHandlers().getSlots(storageInventory); i++) {
+            ItemStack stack = PlatformAccess.getItemHandlers().getStackInSlot(storageInventory, i);
             if (!stack.isEmpty()) {
                 DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU:   Slot {}: {} x{}", i, stack.getHoverName().getString(), stack.getCount());
                 filledSlots++;
             }
         }
-        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Update complete - {} out of {} slots filled", filledSlots, storageInventory.getSlots());
+        DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Update complete - {} out of {} slots filled", filledSlots, PlatformAccess.getItemHandlers().getSlots(storageInventory));
         
         // Notify clients of inventory changes (handled by container system)
     }
@@ -435,8 +420,8 @@ public class StorageMenu extends AbstractContainerMenu {
     public void debugLogStorageState(String context) {
         DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "STORAGE-DEBUG [{}]: Current storage state:", context);
         int filledSlots = 0;
-        for (int i = 0; i < storageInventory.getSlots(); i++) {
-            ItemStack stack = storageInventory.getStackInSlot(i);
+        for (int i = 0; i < PlatformAccess.getItemHandlers().getSlots(storageInventory); i++) {
+            ItemStack stack = PlatformAccess.getItemHandlers().getStackInSlot(storageInventory, i);
             if (!stack.isEmpty()) {
                 DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "STORAGE-DEBUG [{}]:   Slot {}: {} x{}", 
                     context, i, stack.getHoverName().getString(), stack.getCount());
@@ -444,7 +429,7 @@ public class StorageMenu extends AbstractContainerMenu {
             }
         }
         DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "STORAGE-DEBUG [{}]: {} out of {} slots filled. Storage mode: {}", 
-            context, filledSlots, storageInventory.getSlots(), 
+            context, filledSlots, PlatformAccess.getItemHandlers().getSlots(storageInventory), 
             isPersonalStorageMode ? "PERSONAL" : "COMMUNAL");
     }
 } 

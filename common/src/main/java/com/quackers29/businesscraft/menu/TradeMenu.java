@@ -7,9 +7,6 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemStackHandler;
-import net.minecraftforge.items.SlotItemHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.network.packets.storage.TradeResourcePacket;
@@ -22,7 +19,7 @@ public class TradeMenu extends AbstractContainerMenu {
     private static final int SLOT_OUTPUT = 1;
     
     // ItemHandlers for the trading inventory
-    private final ItemStackHandler tradeInventory;
+    private final Object tradeInventory;
     
     // Store the position of the town block
     private BlockPos townBlockPos;
@@ -35,38 +32,38 @@ public class TradeMenu extends AbstractContainerMenu {
     
     // Constructor for client-side creation
     public TradeMenu(int containerId, Inventory playerInventory) {
-        this(containerId, playerInventory, new ItemStackHandler(INVENTORY_SIZE));
+        this(containerId, playerInventory, PlatformAccess.getItemHandlers().createItemStackHandler(INVENTORY_SIZE));
     }
     
     // Constructor for server-side creation
     public TradeMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
-        this(containerId, playerInventory, new ItemStackHandler(INVENTORY_SIZE));
+        this(containerId, playerInventory, PlatformAccess.getItemHandlers().createItemStackHandler(INVENTORY_SIZE));
         // Read the BlockPos from the extra data if available
         if (extraData != null && extraData.readableBytes() > 0) {
             this.townBlockPos = extraData.readBlockPos();
         }
     }
     
-    // Constructor with BlockPos
-    public TradeMenu(int containerId, Inventory playerInventory, BlockPos pos) {
-        this(containerId, playerInventory, new ItemStackHandler(INVENTORY_SIZE));
-        this.townBlockPos = pos;
+    // Constructor with BlockPos for factory creation
+    public TradeMenu(int containerId, Inventory playerInventory, BlockPos townBlockPos) {
+        this(containerId, playerInventory, PlatformAccess.getItemHandlers().createItemStackHandler(INVENTORY_SIZE));
+        this.townBlockPos = townBlockPos;
     }
     
     // Main constructor
-    public TradeMenu(int containerId, Inventory playerInventory, IItemHandler tradeInventory) {
+    public TradeMenu(int containerId, Inventory playerInventory, Object tradeInventory) {
         super(PlatformAccess.getMenuTypes().getTradeMenuType(), containerId);
-        
-        // Create the trade inventory if it doesn't exist
-        if (tradeInventory instanceof ItemStackHandler) {
-            this.tradeInventory = (ItemStackHandler) tradeInventory;
+
+        // Use the provided trade inventory or create a new one
+        if (tradeInventory != null) {
+            this.tradeInventory = tradeInventory;
         } else {
-            this.tradeInventory = new ItemStackHandler(INVENTORY_SIZE);
+            this.tradeInventory = PlatformAccess.getItemHandlers().createItemStackHandler(INVENTORY_SIZE);
         }
-        
+
         // Add slots for the trade inventory
-        this.addSlot(new InputSlot(this.tradeInventory, SLOT_INPUT, SLOT_INPUT_X, SLOT_INPUT_Y));
-        this.addSlot(new OutputSlot(this.tradeInventory, SLOT_OUTPUT, SLOT_OUTPUT_X, SLOT_OUTPUT_Y));
+        this.addSlot((Slot) PlatformAccess.getItemHandlers().createSlot(this.tradeInventory, SLOT_INPUT, SLOT_INPUT_X, SLOT_INPUT_Y));
+        this.addSlot((Slot) PlatformAccess.getItemHandlers().createWithdrawalOnlySlot(this.tradeInventory, SLOT_OUTPUT, SLOT_OUTPUT_X, SLOT_OUTPUT_Y));
         
         // Add slots for player inventory (3 rows of 9)
         for (int row = 0; row < 3; row++) {
@@ -127,7 +124,7 @@ public class TradeMenu extends AbstractContainerMenu {
     
     // Process the trade when requested
     public boolean processTrade() {
-        ItemStack stack = this.tradeInventory.getStackInSlot(SLOT_INPUT);
+        ItemStack stack = PlatformAccess.getItemHandlers().getStackInSlot(this.tradeInventory, SLOT_INPUT);
         if (stack.isEmpty()) {
             return false;
         }
@@ -137,7 +134,7 @@ public class TradeMenu extends AbstractContainerMenu {
         PlatformAccess.getNetworkMessages().sendToServer(new TradeResourcePacket(townBlockPos, stack.copy(), SLOT_INPUT));
         
         // Remove the input item now, payment will be handled by server response
-        this.tradeInventory.extractItem(SLOT_INPUT, stack.getCount(), false);
+        PlatformAccess.getItemHandlers().extractItem(this.tradeInventory, SLOT_INPUT, stack.getCount(), false);
         
         return true;
     }
@@ -146,9 +143,9 @@ public class TradeMenu extends AbstractContainerMenu {
      * Sets an item in the output slot directly (used for server-side trade responses)
      */
     public void setOutputItem(ItemStack itemStack) {
-        if (!itemStack.isEmpty() && tradeInventory.getStackInSlot(SLOT_OUTPUT).isEmpty()) {
+        if (!itemStack.isEmpty() && PlatformAccess.getItemHandlers().getStackInSlot(tradeInventory, SLOT_OUTPUT).isEmpty()) {
             // Place the item in the output slot
-            tradeInventory.insertItem(SLOT_OUTPUT, itemStack, false);
+            PlatformAccess.getItemHandlers().insertItem(tradeInventory, SLOT_OUTPUT, itemStack, false);
         }
     }
     
@@ -160,29 +157,4 @@ public class TradeMenu extends AbstractContainerMenu {
         return this.townBlockPos;
     }
     
-    // Custom input slot that only accepts input items
-    private static class InputSlot extends SlotItemHandler {
-        public InputSlot(IItemHandler itemHandler, int index, int xPosition, int yPosition) {
-            super(itemHandler, index, xPosition, yPosition);
-        }
-        
-        // Allow any item to be placed in the input slot
-        @Override
-        public boolean mayPlace(ItemStack stack) {
-            return true;
-        }
-    }
-    
-    // Custom output slot that doesn't accept direct placement
-    private static class OutputSlot extends SlotItemHandler {
-        public OutputSlot(IItemHandler itemHandler, int index, int xPosition, int yPosition) {
-            super(itemHandler, index, xPosition, yPosition);
-        }
-        
-        // Don't allow items to be placed directly in the output slot
-        @Override
-        public boolean mayPlace(ItemStack stack) {
-            return false;
-        }
-    }
 } 

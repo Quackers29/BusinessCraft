@@ -76,4 +76,14 @@ public interface ItemHandlerHelper {
      * Deserialize the item handler from NBT
      */
     void deserializeNBT(Object itemHandler, Object nbt);
+
+    /**
+     * Extract an item from the specified slot
+     */
+    ItemStack extractItem(Object itemHandler, int slot, int amount, boolean simulate);
+
+    /**
+     * Insert an item into the specified slot
+     */
+    ItemStack insertItem(Object itemHandler, int slot, ItemStack stack, boolean simulate);
 }

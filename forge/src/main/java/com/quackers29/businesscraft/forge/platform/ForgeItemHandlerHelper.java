@@ -148,6 +148,22 @@ public class ForgeItemHandlerHelper implements ItemHandlerHelper {
         }
     }
 
+    @Override
+    public ItemStack extractItem(Object itemHandler, int slot, int amount, boolean simulate) {
+        if (itemHandler instanceof IItemHandler handler) {
+            return handler.extractItem(slot, amount, simulate);
+        }
+        return ItemStack.EMPTY;
+    }
+
+    @Override
+    public ItemStack insertItem(Object itemHandler, int slot, ItemStack stack, boolean simulate) {
+        if (itemHandler instanceof IItemHandler handler) {
+            return handler.insertItem(slot, stack, simulate);
+        }
+        return stack;
+    }
+
     /**
      * Custom slot that only allows withdrawal, not placement (for buffer storage)
      */
