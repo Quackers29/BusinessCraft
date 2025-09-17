@@ -5,7 +5,7 @@ autoSuggestions:true
 chatColors:true
 chatLinks:true
 chatLinksPrompt:true
-enableVsync:false
+enableVsync:true
 entityShadows:true
 forceUnicodeFont:false
 discrete_mouse_scroll:false
@@ -21,7 +21,7 @@ toggleCrouch:false
 toggleSprint:false
 darkMojangStudiosBackground:false
 hideLightningFlashes:false
-mouseSensitivity:0.1619718309859155
+mouseSensitivity:0.08450704225352113
 fov:0.0
 screenEffectScale:1.0
 fovEffectScale:1.0
@@ -34,10 +34,10 @@ gamma:0.5
 renderDistance:12
 simulationDistance:12
 entityDistanceScaling:1.0
-guiScale:3
+guiScale:0
 particles:0
 maxFps:120
-graphicsMode:0
+graphicsMode:1
 ao:true
 prioritizeChunkUpdates:0
 biomeBlendRadius:2

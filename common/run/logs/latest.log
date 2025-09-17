@@ -1,53 +1,56 @@
-[17Sep2025 21:44:18.480] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forgeclientuserdev, --version, MOD_DEV, --assetIndex, 5, --assetsDir, /home/az/.gradle/caches/forge_gradle/assets, --gameDir, ., --fml.forgeVersion, 47.1.0, --fml.mcVersion, 1.20.1, --fml.forgeGroup, net.minecraftforge, --fml.mcpVersion, 20230612.114412]
-[17Sep2025 21:44:18.482] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.0.9+10.0.9+main.dcd20f30 starting: java version 17.0.15 by Ubuntu; OS Linux arch amd64 version 6.6.87.1-microsoft-standard-WSL2
-[17Sep2025 21:44:18.544] [main/INFO] [net.minecraftforge.fml.loading.ImmediateWindowHandler/]: Loading ImmediateWindowProvider fmlearlywindow
-[17Sep2025 21:44:18.593] [main/INFO] [EARLYDISPLAY/]: Trying GL version 4.6
-[17Sep2025 21:44:18.771] [main/INFO] [EARLYDISPLAY/]: Requested GL version 4.6 got version 4.6
-[17Sep2025 21:44:18.820] [pool-2-thread-1/INFO] [EARLYDISPLAY/]: GL info: D3D12 (NVIDIA GeForce GTX 1080) GL version 4.6 (Core Profile) Mesa 24.2.8-1ubuntu1~24.04.1, Microsoft Corporation
-[17Sep2025 21:44:18.822] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.5 Source=union:/home/az/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.5/9d1c0c3a304ae6697ecd477218fa61b850bf57fc/mixin-0.8.5.jar%23117!/ Service=ModLauncher Env=CLIENT
-[17Sep2025 21:44:18.999] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file /home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/javafmllanguage/1.20.1-47.1.0/a2cd58d15791eaac9983e30be0995e66bd48633e/javafmllanguage-1.20.1-47.1.0.jar is missing mods.toml file
-[17Sep2025 21:44:19.001] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file /home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/lowcodelanguage/1.20.1-47.1.0/f1f11b7217b8320f1b3eb81c746b7b8a70a9ba06/lowcodelanguage-1.20.1-47.1.0.jar is missing mods.toml file
-[17Sep2025 21:44:19.001] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file /home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/mclanguage/1.20.1-47.1.0/ff1b8eeb1bd00dfb130263b8952b931f5369252e/mclanguage-1.20.1-47.1.0.jar is missing mods.toml file
-[17Sep2025 21:44:19.002] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file /home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/fmlcore/1.20.1-47.1.0/69ca36ae5b8d45c377a5485dc38a7343e5ebf33c/fmlcore-1.20.1-47.1.0.jar is missing mods.toml file
-[17Sep2025 21:44:19.060] [main/INFO] [net.minecraftforge.fml.loading.moddiscovery.JarInJarDependencyLocator/]: No dependencies to load found. Skipping!
-[17Sep2025 21:44:19.851] [main/INFO] [cpw.mods.modlauncher.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forgeclientuserdev' with arguments [--version, MOD_DEV, --gameDir, ., --assetsDir, /home/az/.gradle/caches/forge_gradle/assets, --assetIndex, 5]
-[17Sep2025 21:44:21.670] [Datafixer Bootstrap/INFO] [com.mojang.datafixers.DataFixerBuilder/]: 188 Datafixer optimizations took 65 milliseconds
-[17Sep2025 21:44:22.474] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/home/az/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1/forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar%23181!/assets/.mcassetsroot' uses unexpected schema
-[17Sep2025 21:44:22.474] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/home/az/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1/forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar%23181!/data/.mcassetsroot' uses unexpected schema
-[17Sep2025 21:44:22.483] [Render thread/INFO] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]: Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
-[17Sep2025 21:44:22.486] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Setting user: Dev
-[17Sep2025 21:44:22.540] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Backend library: LWJGL version 3.3.1 build 7
-[17Sep2025 21:44:22.758] [modloading-worker-0/INFO] [net.minecraftforge.common.ForgeMod/FORGEMOD]: Forge mod loading, version 47.1.0, for MC 1.20.1 with MCP 20230612.114412
-[17Sep2025 21:44:22.759] [modloading-worker-0/INFO] [net.minecraftforge.common.MinecraftForge/FORGE]: MinecraftForge v47.1.0 Initialized
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: MILESTONE CONFIG - Loaded milestone: 10m -> [minecraft:bread:1, minecraft:experience_bottle:2]
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Enable Create Trains: true
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Enable Minecarts: true
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Vehicle Search Radius: 3
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Bread Per Pop: 8
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Min Pop For Tourists: 5
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Min Distance Between Towns: 10
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Default Starting Population: 5
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Max Tourists Per Town: 100
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Population Per Tourist: 5
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Max Population-based Tourists: 20
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Town Names: [Riverside, Hillcrest, Meadowbrook, Oakville, Stonebridge, Willowglen, Sunnyvale, Cedarwood, Maplehaven, Brookside, Fairview, Pinehurst, Elmwood, Greystone]
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Tourist Expiry Minutes: 1.0
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Enable Tourist Expiry: true
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Notify On Tourist Departure: true
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Tourists Per Population Increase: 10
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Meters Per Emerald: 50
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Enable Milestones: true
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Milestone Rewards: 1 configured
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Player Tracking: true
-[17Sep2025 21:44:22.769] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Town Boundary Messages: true
-[17Sep2025 21:44:22.772] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigurationService/]: Started configuration file watching service
-[17Sep2025 21:44:22.772] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigurationService/]: Registered file watcher for directory: config
-[17Sep2025 21:44:22.772] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigurationService/]: Registered configuration 'businesscraft-main' for hot-reloading: config/businesscraft.properties
-[17Sep2025 21:44:22.773] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Registered BusinessCraft configuration for hot-reloading
-[17Sep2025 21:44:22.773] [modloading-worker-0/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: BusinessCraft Forge constructor called!
-[17Sep2025 21:44:22.817] [modloading-worker-0/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: BusinessCraft Forge initialized. Press F3+K in-game to toggle town debug overlay.
-[17Sep2025 21:44:23.194] [Render thread/INFO] [net.minecraftforge.gametest.ForgeGameTestHooks/]: Enabled Gametest Namespaces: []
-[17Sep2025 21:44:23.307] [Render thread/ERROR] [com.mojang.text2speech.Narrator/]: Error while loading the narrator
+[17Sep2025 22:03:37.839] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forgeclientuserdev, --version, MOD_DEV, --assetIndex, 5, --assetsDir, /home/az/.gradle/caches/forge_gradle/assets, --gameDir, ., --fml.forgeVersion, 47.1.0, --fml.mcVersion, 1.20.1, --fml.forgeGroup, net.minecraftforge, --fml.mcpVersion, 20230612.114412]
+[17Sep2025 22:03:37.841] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.0.9+10.0.9+main.dcd20f30 starting: java version 17.0.15 by Ubuntu; OS Linux arch amd64 version 6.6.87.1-microsoft-standard-WSL2
+[17Sep2025 22:03:37.888] [main/WARN] [net.minecraftforge.fml.loading.FMLConfig/CORE]: Configuration file /home/az/project/BusinessCraft/common/run/config/fml.toml is not correct. Correcting
+[17Sep2025 22:03:37.889] [main/INFO] [net.minecraftforge.fml.loading.FMLConfig/CORE]: Incorrect key [earlyWindowSkipGLVersions] was corrected from null to []
+[17Sep2025 22:03:37.889] [main/INFO] [net.minecraftforge.fml.loading.FMLConfig/CORE]: Incorrect key [earlyWindowSquir] was corrected from null to false
+[17Sep2025 22:03:37.898] [main/INFO] [net.minecraftforge.fml.loading.ImmediateWindowHandler/]: Loading ImmediateWindowProvider fmlearlywindow
+[17Sep2025 22:03:37.944] [main/INFO] [EARLYDISPLAY/]: Trying GL version 4.6
+[17Sep2025 22:03:38.118] [main/INFO] [EARLYDISPLAY/]: Requested GL version 4.6 got version 4.6
+[17Sep2025 22:03:38.163] [pool-2-thread-1/INFO] [EARLYDISPLAY/]: GL info: D3D12 (NVIDIA GeForce GTX 1080) GL version 4.6 (Core Profile) Mesa 24.2.8-1ubuntu1~24.04.1, Microsoft Corporation
+[17Sep2025 22:03:38.164] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.5 Source=union:/home/az/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.5/9d1c0c3a304ae6697ecd477218fa61b850bf57fc/mixin-0.8.5.jar%23117!/ Service=ModLauncher Env=CLIENT
+[17Sep2025 22:03:38.345] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file /home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/javafmllanguage/1.20.1-47.1.0/a2cd58d15791eaac9983e30be0995e66bd48633e/javafmllanguage-1.20.1-47.1.0.jar is missing mods.toml file
+[17Sep2025 22:03:38.346] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file /home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/lowcodelanguage/1.20.1-47.1.0/f1f11b7217b8320f1b3eb81c746b7b8a70a9ba06/lowcodelanguage-1.20.1-47.1.0.jar is missing mods.toml file
+[17Sep2025 22:03:38.348] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file /home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/mclanguage/1.20.1-47.1.0/ff1b8eeb1bd00dfb130263b8952b931f5369252e/mclanguage-1.20.1-47.1.0.jar is missing mods.toml file
+[17Sep2025 22:03:38.349] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file /home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/fmlcore/1.20.1-47.1.0/69ca36ae5b8d45c377a5485dc38a7343e5ebf33c/fmlcore-1.20.1-47.1.0.jar is missing mods.toml file
+[17Sep2025 22:03:38.396] [main/INFO] [net.minecraftforge.fml.loading.moddiscovery.JarInJarDependencyLocator/]: No dependencies to load found. Skipping!
+[17Sep2025 22:03:39.210] [main/INFO] [cpw.mods.modlauncher.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forgeclientuserdev' with arguments [--version, MOD_DEV, --gameDir, ., --assetsDir, /home/az/.gradle/caches/forge_gradle/assets, --assetIndex, 5]
+[17Sep2025 22:03:40.974] [Datafixer Bootstrap/INFO] [com.mojang.datafixers.DataFixerBuilder/]: 188 Datafixer optimizations took 58 milliseconds
+[17Sep2025 22:03:41.780] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/home/az/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1/forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar%23181!/assets/.mcassetsroot' uses unexpected schema
+[17Sep2025 22:03:41.781] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResourcesBuilder/]: Assets URL 'union:/home/az/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1/forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar%23181!/data/.mcassetsroot' uses unexpected schema
+[17Sep2025 22:03:41.788] [Render thread/INFO] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]: Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
+[17Sep2025 22:03:41.791] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Setting user: Dev
+[17Sep2025 22:03:41.824] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Backend library: LWJGL version 3.3.1 build 7
+[17Sep2025 22:03:42.045] [modloading-worker-0/INFO] [net.minecraftforge.common.ForgeMod/FORGEMOD]: Forge mod loading, version 47.1.0, for MC 1.20.1 with MCP 20230612.114412
+[17Sep2025 22:03:42.046] [modloading-worker-0/INFO] [net.minecraftforge.common.MinecraftForge/FORGE]: MinecraftForge v47.1.0 Initialized
+[17Sep2025 22:03:42.053] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: MILESTONE CONFIG - Loaded milestone: 10m -> [minecraft:bread:1, minecraft:experience_bottle:2]
+[17Sep2025 22:03:42.053] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Enable Create Trains: true
+[17Sep2025 22:03:42.054] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Enable Minecarts: true
+[17Sep2025 22:03:42.054] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Vehicle Search Radius: 3
+[17Sep2025 22:03:42.054] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Bread Per Pop: 8
+[17Sep2025 22:03:42.054] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Min Pop For Tourists: 5
+[17Sep2025 22:03:42.054] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Min Distance Between Towns: 10
+[17Sep2025 22:03:42.054] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Default Starting Population: 5
+[17Sep2025 22:03:42.054] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Max Tourists Per Town: 100
+[17Sep2025 22:03:42.054] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Population Per Tourist: 5
+[17Sep2025 22:03:42.054] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Max Population-based Tourists: 20
+[17Sep2025 22:03:42.054] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Town Names: [Riverside, Hillcrest, Meadowbrook, Oakville, Stonebridge, Willowglen, Sunnyvale, Cedarwood, Maplehaven, Brookside, Fairview, Pinehurst, Elmwood, Greystone]
+[17Sep2025 22:03:42.054] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Tourist Expiry Minutes: 1.0
+[17Sep2025 22:03:42.054] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Enable Tourist Expiry: true
+[17Sep2025 22:03:42.054] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Notify On Tourist Departure: true
+[17Sep2025 22:03:42.055] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Tourists Per Population Increase: 10
+[17Sep2025 22:03:42.055] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Meters Per Emerald: 50
+[17Sep2025 22:03:42.055] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Enable Milestones: true
+[17Sep2025 22:03:42.055] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Milestone Rewards: 1 configured
+[17Sep2025 22:03:42.055] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Player Tracking: true
+[17Sep2025 22:03:42.055] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Town Boundary Messages: true
+[17Sep2025 22:03:42.057] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigurationService/]: Started configuration file watching service
+[17Sep2025 22:03:42.057] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigurationService/]: Registered file watcher for directory: config
+[17Sep2025 22:03:42.058] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigurationService/]: Registered configuration 'businesscraft-main' for hot-reloading: config/businesscraft.properties
+[17Sep2025 22:03:42.058] [modloading-worker-0/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Registered BusinessCraft configuration for hot-reloading
+[17Sep2025 22:03:42.058] [modloading-worker-0/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: BusinessCraft Forge constructor called!
+[17Sep2025 22:03:42.086] [modloading-worker-0/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: BusinessCraft Forge initialized. Press F3+K in-game to toggle town debug overlay.
+[17Sep2025 22:03:42.440] [Render thread/INFO] [net.minecraftforge.gametest.ForgeGameTestHooks/]: Enabled Gametest Namespaces: []
+[17Sep2025 22:03:42.561] [Render thread/ERROR] [com.mojang.text2speech.Narrator/]: Error while loading the narrator
 com.mojang.text2speech.Narrator$InitializeException: Failed to load library flite
 	at com.mojang.text2speech.NarratorLinux$FliteLibrary.loadNative(NarratorLinux.java:69) ~[text2speech-1.17.9.jar:?]
 	at com.mojang.text2speech.NarratorLinux.<init>(NarratorLinux.java:18) ~[text2speech-1.17.9.jar:?]
@@ -161,46 +164,53 @@ Native library (linux-x86-64/libflite.so) not found in resource path (/home/az/p
 		at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:26) ~[modlauncher-10.0.9.jar:?]
 		at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:23) ~[modlauncher-10.0.9.jar:?]
 		at cpw.mods.bootstraplauncher.BootstrapLauncher.main(BootstrapLauncher.java:141) ~[bootstraplauncher-1.1.2.jar:?]
-[17Sep2025 21:44:23.323] [Render thread/INFO] [net.minecraft.server.packs.resources.ReloadableResourceManager/]: Reloading ResourceManager: vanilla, mod_resources
-[17Sep2025 21:44:23.339] [Worker-Main-11/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: BusinessCraft Forge common setup starting
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: MILESTONE CONFIG - Loaded milestone: 10m -> [minecraft:bread:1, minecraft:experience_bottle:2]
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Enable Create Trains: true
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Enable Minecarts: true
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Vehicle Search Radius: 3
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Bread Per Pop: 8
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Min Pop For Tourists: 5
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Min Distance Between Towns: 10
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Default Starting Population: 5
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Max Tourists Per Town: 100
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Population Per Tourist: 5
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Max Population-based Tourists: 20
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Town Names: [Riverside, Hillcrest, Meadowbrook, Oakville, Stonebridge, Willowglen, Sunnyvale, Cedarwood, Maplehaven, Brookside, Fairview, Pinehurst, Elmwood, Greystone]
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Tourist Expiry Minutes: 1.0
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Enable Tourist Expiry: true
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Notify On Tourist Departure: true
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Tourists Per Population Increase: 10
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Meters Per Emerald: 50
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Enable Milestones: true
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Milestone Rewards: 1 configured
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Player Tracking: true
-[17Sep2025 21:44:23.340] [Worker-Main-11/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Town Boundary Messages: true
-[17Sep2025 21:44:23.341] [Worker-Main-11/INFO] [BusinessCraft/DebugConfig/]: === BusinessCraft Debug Config ===
+[17Sep2025 22:03:42.575] [Render thread/INFO] [net.minecraft.server.packs.resources.ReloadableResourceManager/]: Reloading ResourceManager: vanilla, mod_resources
+[17Sep2025 22:03:42.585] [modloading-worker-0/WARN] [net.minecraftforge.common.ForgeConfigSpec/CORE]: Configuration file /home/az/project/BusinessCraft/common/run/config/forge-client.toml is not correct. Correcting
+[17Sep2025 22:03:42.586] [modloading-worker-0/WARN] [net.minecraftforge.common.ForgeConfigSpec/CORE]: Incorrect key client was corrected from null to its default, SimpleCommentedConfig:{}. 
+[17Sep2025 22:03:42.586] [modloading-worker-0/WARN] [net.minecraftforge.common.ForgeConfigSpec/CORE]: Incorrect key client.alwaysSetupTerrainOffThread was corrected from null to its default, false. 
+[17Sep2025 22:03:42.586] [modloading-worker-0/WARN] [net.minecraftforge.common.ForgeConfigSpec/CORE]: Incorrect key client.experimentalForgeLightPipelineEnabled was corrected from null to its default, false. 
+[17Sep2025 22:03:42.586] [modloading-worker-0/WARN] [net.minecraftforge.common.ForgeConfigSpec/CORE]: Incorrect key client.showLoadWarnings was corrected from null to its default, true. 
+[17Sep2025 22:03:42.586] [modloading-worker-0/WARN] [net.minecraftforge.common.ForgeConfigSpec/CORE]: Incorrect key client.useCombinedDepthStencilAttachment was corrected from null to its default, false. 
+[17Sep2025 22:03:42.586] [modloading-worker-0/WARN] [net.minecraftforge.common.ForgeConfigSpec/CORE]: Incorrect key client.compressLanIPv6Addresses was corrected from null to its default, true. 
+[17Sep2025 22:03:42.593] [Worker-Main-8/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: BusinessCraft Forge common setup starting
+[17Sep2025 22:03:42.594] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: MILESTONE CONFIG - Loaded milestone: 10m -> [minecraft:bread:1, minecraft:experience_bottle:2]
+[17Sep2025 22:03:42.594] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Enable Create Trains: true
+[17Sep2025 22:03:42.594] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Enable Minecarts: true
+[17Sep2025 22:03:42.594] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Vehicle Search Radius: 3
+[17Sep2025 22:03:42.594] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Bread Per Pop: 8
+[17Sep2025 22:03:42.594] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Min Pop For Tourists: 5
+[17Sep2025 22:03:42.594] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Min Distance Between Towns: 10
+[17Sep2025 22:03:42.594] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Default Starting Population: 5
+[17Sep2025 22:03:42.594] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Max Tourists Per Town: 100
+[17Sep2025 22:03:42.596] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Population Per Tourist: 5
+[17Sep2025 22:03:42.597] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Max Population-based Tourists: 20
+[17Sep2025 22:03:42.597] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Town Names: [Riverside, Hillcrest, Meadowbrook, Oakville, Stonebridge, Willowglen, Sunnyvale, Cedarwood, Maplehaven, Brookside, Fairview, Pinehurst, Elmwood, Greystone]
+[17Sep2025 22:03:42.597] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Tourist Expiry Minutes: 1.0
+[17Sep2025 22:03:42.597] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Enable Tourist Expiry: true
+[17Sep2025 22:03:42.597] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Notify On Tourist Departure: true
+[17Sep2025 22:03:42.597] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Tourists Per Population Increase: 10
+[17Sep2025 22:03:42.597] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Meters Per Emerald: 50
+[17Sep2025 22:03:42.597] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Enable Milestones: true
+[17Sep2025 22:03:42.597] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Milestone Rewards: 1 configured
+[17Sep2025 22:03:42.597] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Player Tracking: true
+[17Sep2025 22:03:42.597] [Worker-Main-8/INFO] [com.quackers29.businesscraft.config.ConfigLoader/]: Town Boundary Messages: true
+[17Sep2025 22:03:42.598] [Worker-Main-8/INFO] [BusinessCraft/DebugConfig/]: === BusinessCraft Debug Config ===
 Active debug logging for:
   - TOWN_INTERFACE_MENU
   - NETWORK_PACKETS
   - UI_MANAGERS
   - ERROR_HANDLING
 ===================================
-[17Sep2025 21:44:23.341] [Worker-Main-11/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: Block items registered via RegistryObject
-[17Sep2025 21:44:23.341] [Worker-Main-11/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: BusinessCraft Forge common setup complete.
-[17Sep2025 21:44:23.355] [Forge Version Check/INFO] [net.minecraftforge.fml.VersionChecker/]: [forge] Starting version check at https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json
-[17Sep2025 21:44:23.372] [Worker-Main-25/INFO] [net.minecraft.client.gui.font.providers.UnihexProvider/]: Found unifont_all_no_pua-15.0.06.hex, loading
-[17Sep2025 21:44:23.532] [Worker-Main-13/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: BusinessCraft Forge client setup starting
-[17Sep2025 21:44:23.532] [Worker-Main-13/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: BusinessCraft Forge client setup complete
-[17Sep2025 21:44:23.722] [Forge Version Check/INFO] [net.minecraftforge.fml.VersionChecker/]: [forge] Found status: OUTDATED Current: 47.1.0 Target: 47.4.0
-[17Sep2025 21:44:24.677] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.goat_horn.play
-[17Sep2025 21:44:24.677] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
-[17Sep2025 21:44:24.678] [Render thread/ERROR] [net.minecraft.client.sounds.SoundEngine/SOUNDS]: Error starting SoundSystem. Turning off sounds & music
+[17Sep2025 22:03:42.598] [Worker-Main-8/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: Block items registered via RegistryObject
+[17Sep2025 22:03:42.598] [Worker-Main-8/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: BusinessCraft Forge common setup complete.
+[17Sep2025 22:03:42.617] [Forge Version Check/INFO] [net.minecraftforge.fml.VersionChecker/]: [forge] Starting version check at https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json
+[17Sep2025 22:03:42.620] [Worker-Main-9/INFO] [net.minecraft.client.gui.font.providers.UnihexProvider/]: Found unifont_all_no_pua-15.0.06.hex, loading
+[17Sep2025 22:03:42.747] [Worker-Main-12/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: BusinessCraft Forge client setup starting
+[17Sep2025 22:03:42.748] [Worker-Main-12/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: BusinessCraft Forge client setup complete
+[17Sep2025 22:03:42.916] [Forge Version Check/INFO] [net.minecraftforge.fml.VersionChecker/]: [forge] Found status: OUTDATED Current: 47.1.0 Target: 47.4.0
+[17Sep2025 22:03:44.112] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.goat_horn.play
+[17Sep2025 22:03:44.112] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[17Sep2025 22:03:44.114] [Render thread/ERROR] [net.minecraft.client.sounds.SoundEngine/SOUNDS]: Error starting SoundSystem. Turning off sounds & music
 java.lang.IllegalStateException: Failed to open OpenAL device
 	at com.mojang.blaze3d.audio.Library.openDeviceOrFallback(Library.java:283) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
 	at com.mojang.blaze3d.audio.Library.init(Library.java:153) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
@@ -235,282 +245,533 @@ java.lang.IllegalStateException: Failed to open OpenAL device
 	at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:26) ~[modlauncher-10.0.9.jar:?]
 	at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:23) ~[modlauncher-10.0.9.jar:?]
 	at cpw.mods.bootstraplauncher.BootstrapLauncher.main(BootstrapLauncher.java:141) ~[bootstraplauncher-1.1.2.jar:?]
-[17Sep2025 21:44:24.732] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x512x4 minecraft:textures/atlas/blocks.png-atlas
-[17Sep2025 21:44:24.818] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x4 minecraft:textures/atlas/signs.png-atlas
-[17Sep2025 21:44:24.823] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/banner_patterns.png-atlas
-[17Sep2025 21:44:24.829] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/shield_patterns.png-atlas
-[17Sep2025 21:44:24.837] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x1024x4 minecraft:textures/atlas/armor_trims.png-atlas
-[17Sep2025 21:44:24.844] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
-[17Sep2025 21:44:24.845] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 128x64x4 minecraft:textures/atlas/decorated_pot.png-atlas
-[17Sep2025 21:44:24.845] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
-[17Sep2025 21:44:24.846] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
-[17Sep2025 21:44:24.943] [Render thread/WARN] [net.minecraft.client.renderer.ShaderInstance/]: Shader rendertype_entity_translucent_emissive could not find sampler named Sampler2 in the specified shader program.
-[17Sep2025 21:44:25.021] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x0 minecraft:textures/atlas/particles.png-atlas
-[17Sep2025 21:44:25.023] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x0 minecraft:textures/atlas/paintings.png-atlas
-[17Sep2025 21:44:25.024] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 128x128x0 minecraft:textures/atlas/mob_effects.png-atlas
-[17Sep2025 21:44:25.483] [Realms Notification Availability checker #1/INFO] [com.mojang.realmsclient.client.RealmsClient/]: Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: 0
-[17Sep2025 21:44:28.581] [Render thread/INFO] [net.minecraftforge.registries.GameData/REGISTRIES]: Injecting existing registry data into this CLIENT instance
-[17Sep2025 21:44:29.174] [Worker-Main-25/ERROR] [net.minecraft.tags.TagLoader/]: Couldn't load tag [businesscraft:town_block (from main)] as it is missing following references: businesscraft:town_block (from main)
-[17Sep2025 21:44:29.304] [Render thread/INFO] [net.minecraft.world.item.crafting.RecipeManager/]: Loaded 7 recipes
-[17Sep2025 21:44:29.354] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 1271 advancements
-[17Sep2025 21:44:29.565] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Starting integrated minecraft server version 1.20.1
-[17Sep2025 21:44:29.566] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Generating keypair
-[17Sep2025 21:44:29.708] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Preparing start region for dimension minecraft:overworld
-[17Sep2025 21:44:30.890] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[17Sep2025 21:44:30.891] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[17Sep2025 21:44:30.891] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[17Sep2025 21:44:31.259] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 8%
-[17Sep2025 21:44:31.604] [Server thread/INFO] [net.minecraftforge.server.permission.PermissionAPI/]: Successfully initialized permission handler forge:default_handler
-[17Sep2025 21:44:31.604] [Server thread/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: Server started, initializing town data...
-[17Sep2025 21:44:31.610] [Server thread/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: Loaded 2 towns for level: minecraft:overworld
-[17Sep2025 21:44:31.610] [Server thread/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: Loaded 0 towns for level: minecraft:the_nether
-[17Sep2025 21:44:31.610] [Server thread/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: Loaded 0 towns for level: minecraft:the_end
-[17Sep2025 21:44:31.620] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Time elapsed: 1906 ms
-[17Sep2025 21:44:31.681] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing view distance to 12, from 10
-[17Sep2025 21:44:31.682] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing simulation distance to 12, from 0
-[17Sep2025 21:44:31.723] [Render thread/WARN] [io.netty.util.internal.SystemPropertyUtil/]: Unable to parse the boolean system property 'java.net.preferIPv6Addresses':system - using the default value: false
-[17Sep2025 21:44:32.023] [Netty Local Client IO #0/INFO] [net.minecraftforge.network.NetworkHooks/]: Connected to a modded server.
-[17Sep2025 21:44:32.047] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Dev[local:E:2607b99e] logged in with entity id 15 at (6.027837177997112, -59.0, 3.085407085788984)
-[17Sep2025 21:44:32.080] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev joined the game
-[17Sep2025 21:44:32.506] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 3 advancements
-[17Sep2025 21:44:33.735] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] Found town with ID 6ff54e6c-b570-4598-99af-de94f753ad00 at position MutableBlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:44:33.735] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:44:33.735] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:44:33.735] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:44:33.757] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
-[17Sep2025 21:44:33.761] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
-[17Sep2025 21:44:33.764] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.TownNamePopupManager/]: [DEBUG] TownNamePopupManager instance created
-[17Sep2025 21:44:33.764] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] ButtonActionCoordinator initialized
-[17Sep2025 21:44:33.765] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
-[17Sep2025 21:44:34.714] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:44:35.715] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:44:35.982] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] Handling manage storage action
-[17Sep2025 21:44:35.985] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.OpenPaymentBoardPacket/]: [DEBUG] Opening Payment Board for player Dev at position BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:44:35.987] [Server thread/INFO] [com.quackers29.businesscraft.menu.PaymentBoardMenu/]: [DEBUG] connectToTownBlockEntity called on SERVER - townBlockPos: BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:44:35.987] [Server thread/INFO] [com.quackers29.businesscraft.menu.PaymentBoardMenu/]: [DEBUG] BlockEntity at BlockPos{x=6, y=-60, z=2}: com.quackers29.businesscraft.block.entity.TownInterfaceEntity@5bdeb072
-[17Sep2025 21:44:35.987] [Server thread/INFO] [com.quackers29.businesscraft.menu.PaymentBoardMenu/]: [DEBUG] Got buffer handler: true
-[17Sep2025 21:44:35.987] [Server thread/INFO] [com.quackers29.businesscraft.menu.PaymentBoardMenu/]: [DEBUG] Successfully reconnected buffer slots to real handler
-[17Sep2025 21:44:35.987] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.OpenPaymentBoardPacket/]: [DEBUG] Successfully opened Payment Board for player Dev
-[17Sep2025 21:44:36.016] [Render thread/INFO] [com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen/]: [DEBUG] PaymentBoardScreen.requestPaymentBoardData() - Requesting data from server for town block at BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:44:36.017] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardRequestPacket/]: [DEBUG] PaymentBoardRequestPacket.handle() - received packet from player: Dev, level: ServerLevel
-[17Sep2025 21:44:36.017] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardRequestPacket/]: [DEBUG] Received payment board data request from player Dev for town block at BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:44:36.018] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardRequestPacket/]: [DEBUG] Sending 6 rewards to player Dev for town Meadowbrook
-[17Sep2025 21:44:36.020] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferStoragePacket/]: [DEBUG] Received request for all buffer storage data from player Dev
-[17Sep2025 21:44:36.041] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket/]: [DEBUG] Received payment board update with 6 rewards
-[17Sep2025 21:44:36.042] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
-[17Sep2025 21:44:36.042] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with reward data
-[17Sep2025 21:44:36.042] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
-[17Sep2025 21:44:36.042] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferStoragePacket/]: [DEBUG] Received request for all buffer storage data from player Dev
-[17Sep2025 21:44:36.071] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
-[17Sep2025 21:44:36.071] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
-[17Sep2025 21:44:36.180] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 💰 Tourism Revenue | Meadowbrook → Maplehaven (10m) | +1 emeralds
-[17Sep2025 21:44:36.184] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 🏆 Distance Milestone | 10m journey | +1 Bread, 2 Bottle o' Enchanting
-[17Sep2025 21:44:37.014] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardClaimPacket/]: [DEBUG] PaymentBoardClaimPacket.handle() - received claim request from player: Dev, rewardId: 688927de-46cd-4de7-a438-d0a11d339bb9, toBuffer: true
-[17Sep2025 21:44:37.015] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardClaimPacket/]: [DEBUG] Processing claim request from player Dev for reward 688927de-46cd-4de7-a438-d0a11d339bb9 at BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:44:37.015] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardClaimPacket/]: [DEBUG] Successfully claimed reward 688927de-46cd-4de7-a438-d0a11d339bb9 for player Dev - Claimed to buffer storage
-[17Sep2025 21:44:37.045] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket/]: [DEBUG] Received payment board update with 5 rewards
-[17Sep2025 21:44:37.045] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
-[17Sep2025 21:44:37.045] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Claimed to buffer storage
-[17Sep2025 21:44:37.045] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with reward data
-[17Sep2025 21:44:37.045] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
-[17Sep2025 21:44:37.046] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferStoragePacket/]: [DEBUG] Received request for all buffer storage data from player Dev
-[17Sep2025 21:44:37.070] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
-[17Sep2025 21:44:37.072] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
-[17Sep2025 21:44:37.960] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
-[17Sep2025 21:44:37.960] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
-[17Sep2025 21:44:37.961] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
-[17Sep2025 21:44:37.961] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
-[17Sep2025 21:44:37.961] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
-[17Sep2025 21:44:37.961] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
-[17Sep2025 21:44:39.278] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
-[17Sep2025 21:44:39.278] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
-[17Sep2025 21:44:39.278] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
-[17Sep2025 21:44:39.279] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
-[17Sep2025 21:44:39.279] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
-[17Sep2025 21:44:39.279] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
-[17Sep2025 21:44:42.160] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
-[17Sep2025 21:44:42.165] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
-[17Sep2025 21:44:42.171] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
-[17Sep2025 21:44:42.171] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
-[17Sep2025 21:44:54.520] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 💰 Tourism Revenue | Maplehaven → Meadowbrook (10m) | +1 emeralds
-[17Sep2025 21:44:54.520] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 🏆 Distance Milestone | 10m journey | +1 Bread, 2 Bottle o' Enchanting
-[17Sep2025 21:44:54.521] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 💰 Tourism Revenue | Meadowbrook → Maplehaven (10m) | +1 emeralds
-[17Sep2025 21:44:54.521] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 🏆 Distance Milestone | 10m journey | +1 Bread, 2 Bottle o' Enchanting
-[17Sep2025 21:44:55.204] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] Found town with ID 6ff54e6c-b570-4598-99af-de94f753ad00 at position MutableBlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:44:55.204] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:44:55.204] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:44:55.204] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:44:55.225] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
-[17Sep2025 21:44:55.225] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
-[17Sep2025 21:44:55.225] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.TownNamePopupManager/]: [DEBUG] TownNamePopupManager instance created
-[17Sep2025 21:44:55.225] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] ButtonActionCoordinator initialized
-[17Sep2025 21:44:55.225] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
-[17Sep2025 21:44:56.164] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:44:57.163] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:44:57.822] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.OpenDestinationsUIPacket/]: [DEBUG] Sent destinations data for 1 towns to player Dev
-[17Sep2025 21:44:58.164] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:44:58.757] [Render thread/INFO] [com.quackers29.businesscraft.ui.screens.platform.DestinationsScreenV2/]: [DEBUG] Toggling destination ab0e5190-50ea-4f07-98fd-55286df9f6a1 for platform 15da51d2-792e-424f-9855-d53b4634f122 at BlockPos{x=6, y=-60, z=2} to true
-[17Sep2025 21:44:58.758] [Render thread/INFO] [com.quackers29.businesscraft.ui.screens.platform.DestinationsScreenV2/]: [DEBUG] SetPlatformDestinationPacket sent successfully
-[17Sep2025 21:44:58.758] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.platform.SetPlatformDestinationPacket/]: [DEBUG] Player Dev is setting destination ab0e5190-50ea-4f07-98fd-55286df9f6a1 to true for platform 15da51d2-792e-424f-9855-d53b4634f122 at BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:44:58.758] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:44:58.759] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.platform.SetPlatformDestinationPacket/]: [DEBUG] Successfully set destination ab0e5190-50ea-4f07-98fd-55286df9f6a1 to true for platform 15da51d2-792e-424f-9855-d53b4634f122 at BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:44:59.164] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:44:59.751] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] Found town with ID 6ff54e6c-b570-4598-99af-de94f753ad00 at position MutableBlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:44:59.751] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:44:59.751] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:44:59.751] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:44:59.766] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
-[17Sep2025 21:44:59.766] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
-[17Sep2025 21:44:59.766] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.TownNamePopupManager/]: [DEBUG] TownNamePopupManager instance created
-[17Sep2025 21:44:59.766] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] ButtonActionCoordinator initialized
-[17Sep2025 21:44:59.766] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
-[17Sep2025 21:45:00.713] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:01.700] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] Handling trade resources action
-[17Sep2025 21:45:01.701] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.BaseModalManager/]: [DEBUG] Saved active tab for parent screen: TownInterfaceScreen
-[17Sep2025 21:45:01.703] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.BaseModalManager/]: [DEBUG] Displayed modal screen: BCModalInventoryScreen
-[17Sep2025 21:45:01.714] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:02.514] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:02.714] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:03.713] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:03.752] [Server thread/WARN] [com.quackers29.businesscraft.network.packets.storage.TradeResourcePacket/]: Town Meadowbrook doesn't have enough emeralds for trade! Requested: 6, Available: 0
-[17Sep2025 21:45:03.754] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:03.764] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Traded 64 Bread to Meadowbrook but received no payment.
-[17Sep2025 21:45:03.765] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.misc.PaymentResultPacket/]: [DEBUG] Payment result received: 0 air
-[17Sep2025 21:45:03.766] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.misc.PaymentResultPacket/]: [DEBUG] Setting payment item in BCModalInventoryScreen: 0 air
-[17Sep2025 21:45:04.416] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] Modal closed - relying on normal data sync mechanisms
-[17Sep2025 21:45:04.416] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
-[17Sep2025 21:45:04.416] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.BaseModalManager/]: [DEBUG] Modal closed - relying on normal data sync instead of forced cache refresh
-[17Sep2025 21:45:04.514] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:04.523] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 💰 Tourism Revenue | Maplehaven → Meadowbrook (10m) | +1 emeralds
-[17Sep2025 21:45:04.524] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 🏆 Distance Milestone | 10m journey | +1 Bread, 2 Bottle o' Enchanting
-[17Sep2025 21:45:04.524] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 💰 Tourism Revenue | Meadowbrook → Maplehaven (10m) | +1 emeralds
-[17Sep2025 21:45:04.524] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 🏆 Distance Milestone | 10m journey | +1 Bread, 2 Bottle o' Enchanting
-[17Sep2025 21:45:04.714] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:04.792] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.TownNamePopupManager/]: [DEBUG] TownNamePopupManager cleanup completed
-[17Sep2025 21:45:04.792] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] ButtonActionCoordinator cleanup completed
-[17Sep2025 21:45:04.793] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket/]: [DEBUG] Player 380df991-f603-344c-a090-369bad2a924a exited TownInterfaceEntity UI at BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:45:04.795] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.PlatformVisualizationPacket/]: [DEBUG] Client received platform visualization enable for town at BlockPos{x=6, y=-60, z=2}, requested immediate boundary sync
-[17Sep2025 21:45:04.795] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=6, y=-60, z=2}: boundary radius=21
-[17Sep2025 21:45:04.819] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=6, y=-60, z=2}: updated to boundary radius=21
-[17Sep2025 21:45:04.859] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:45:04.859] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 1 boundary sync requests to server
-[17Sep2025 21:45:04.859] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=6, y=-60, z=2}: boundary radius=21
-[17Sep2025 21:45:04.876] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=6, y=-60, z=2}: updated to boundary radius=21
-[17Sep2025 21:45:05.158] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] Found town with ID 6ff54e6c-b570-4598-99af-de94f753ad00 at position MutableBlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:45:05.158] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:05.158] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:05.158] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:05.176] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
-[17Sep2025 21:45:05.176] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
-[17Sep2025 21:45:05.176] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.TownNamePopupManager/]: [DEBUG] TownNamePopupManager instance created
-[17Sep2025 21:45:05.176] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] ButtonActionCoordinator initialized
-[17Sep2025 21:45:05.177] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
-[17Sep2025 21:45:06.113] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:06.877] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:45:06.877] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 1 boundary sync requests to server
-[17Sep2025 21:45:06.877] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=6, y=-60, z=2}: boundary radius=21
-[17Sep2025 21:45:06.891] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=6, y=-60, z=2}: updated to boundary radius=21
-[17Sep2025 21:45:07.049] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] Handling map view action
-[17Sep2025 21:45:07.050] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] TownMapModal created with current town at: BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:45:07.051] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Town data set: 0 towns
-[17Sep2025 21:45:07.051] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] Town map modal opened from current position: BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:45:07.051] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Requested fresh town data from server (always fresh on map open)
-[17Sep2025 21:45:07.051] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Sending RequestTownMapDataPacket to server
-[17Sep2025 21:45:07.051] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map recentered on current town at: BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:45:07.051] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] TownMapModal initialized with 0 towns
-[17Sep2025 21:45:07.051] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.RequestTownMapDataPacket/]: [DEBUG] Processing town map data request for player: Dev
-[17Sep2025 21:45:07.051] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.RequestTownMapDataPacket/]: [DEBUG] Server has 2 towns to send
-[17Sep2025 21:45:07.052] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.RequestTownMapDataPacket/]: [DEBUG] Sent town map data response with 2 towns to player: Dev
-[17Sep2025 21:45:07.063] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket/]: [DEBUG] Received town map data response with 2 towns
-[17Sep2025 21:45:07.063] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache/]: [DEBUG] Town map cache updated: 0 -> 2 towns
-[17Sep2025 21:45:07.063] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket/]: [DEBUG] Updated client town map cache with 2 towns
-[17Sep2025 21:45:07.063] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Town data refreshed from cache: 2 towns
-[17Sep2025 21:45:07.063] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket/]: [DEBUG] Refreshed open town map modal with new data
-[17Sep2025 21:45:07.113] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:07.943] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 1.3
-[17Sep2025 21:45:07.964] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 1.6900000000000002
-[17Sep2025 21:45:07.964] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 2.1970000000000005
-[17Sep2025 21:45:07.981] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 2.856100000000001
-[17Sep2025 21:45:07.981] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 3.7129300000000014
-[17Sep2025 21:45:08.011] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 4.826809000000002
-[17Sep2025 21:45:08.114] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:08.249] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 6.274851700000003
-[17Sep2025 21:45:08.266] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 8.157307210000004
-[17Sep2025 21:45:08.284] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 10.604499373000007
-[17Sep2025 21:45:08.284] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 13.785849184900009
-[17Sep2025 21:45:08.302] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 17.921603940370012
-[17Sep2025 21:45:08.302] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 23.298085122481016
-[17Sep2025 21:45:08.343] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 30.287510659225322
-[17Sep2025 21:45:08.549] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 39.37376385699292
-[17Sep2025 21:45:08.569] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 51.1858930140908
-[17Sep2025 21:45:08.588] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 66.54166091831804
-[17Sep2025 21:45:08.609] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 86.50415919381346
-[17Sep2025 21:45:08.609] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 112.45540695195751
-[17Sep2025 21:45:08.647] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 146.19202903754478
-[17Sep2025 21:45:08.892] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:45:08.892] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 1 boundary sync requests to server
-[17Sep2025 21:45:08.892] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=6, y=-60, z=2}: boundary radius=21
-[17Sep2025 21:45:08.907] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=6, y=-60, z=2}: updated to boundary radius=21
-[17Sep2025 21:45:09.115] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:09.211] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Map zoom level: 112.45540695195751
-[17Sep2025 21:45:09.785] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Selected town: Maplehaven
-[17Sep2025 21:45:09.786] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Requesting fresh platform and town data for town ab0e5190-50ea-4f07-98fd-55286df9f6a1
-[17Sep2025 21:45:09.786] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.RequestTownPlatformDataPacket/]: [DEBUG] Processing platform data request for town: Maplehaven (ab0e5190-50ea-4f07-98fd-55286df9f6a1)
-[17Sep2025 21:45:09.787] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.RequestTownPlatformDataPacket/]: [DEBUG] Sent platform data response for town Maplehaven with 1 platforms
-[17Sep2025 21:45:09.799] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket/]: [DEBUG] Received platform data response for town ab0e5190-50ea-4f07-98fd-55286df9f6a1 with 1 platforms
-[17Sep2025 21:45:09.799] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache/]: [DEBUG] Platform data updated for town ab0e5190-50ea-4f07-98fd-55286df9f6a1: 1 platforms
-[17Sep2025 21:45:09.799] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache/]: [DEBUG] Town data updated for town ab0e5190-50ea-4f07-98fd-55286df9f6a1: pop=5, tourists=0
-[17Sep2025 21:45:09.799] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Refreshed platform data for selected town ab0e5190-50ea-4f07-98fd-55286df9f6a1: 1 platforms
-[17Sep2025 21:45:09.799] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Refreshed town data for selected town ab0e5190-50ea-4f07-98fd-55286df9f6a1: pop=5, tourists=0, boundary=5
-[17Sep2025 21:45:09.800] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket/]: [DEBUG] Refreshed open town map modal with platform and town data for town ab0e5190-50ea-4f07-98fd-55286df9f6a1
-[17Sep2025 21:45:10.113] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:10.632] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Selected town: Meadowbrook
-[17Sep2025 21:45:10.632] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Requesting fresh platform and town data for town 6ff54e6c-b570-4598-99af-de94f753ad00
-[17Sep2025 21:45:10.633] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.RequestTownPlatformDataPacket/]: [DEBUG] Processing platform data request for town: Meadowbrook (6ff54e6c-b570-4598-99af-de94f753ad00)
-[17Sep2025 21:45:10.633] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.RequestTownPlatformDataPacket/]: [DEBUG] Sent platform data response for town Meadowbrook with 2 platforms
-[17Sep2025 21:45:10.643] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket/]: [DEBUG] Received platform data response for town 6ff54e6c-b570-4598-99af-de94f753ad00 with 2 platforms
-[17Sep2025 21:45:10.644] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache/]: [DEBUG] Platform data updated for town 6ff54e6c-b570-4598-99af-de94f753ad00: 2 platforms
-[17Sep2025 21:45:10.644] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache/]: [DEBUG] Town data updated for town 6ff54e6c-b570-4598-99af-de94f753ad00: pop=21, tourists=3
-[17Sep2025 21:45:10.644] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Refreshed platform data for selected town 6ff54e6c-b570-4598-99af-de94f753ad00: 2 platforms
-[17Sep2025 21:45:10.644] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] Refreshed town data for selected town 6ff54e6c-b570-4598-99af-de94f753ad00: pop=21, tourists=3, boundary=21
-[17Sep2025 21:45:10.644] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket/]: [DEBUG] Refreshed open town map modal with platform and town data for town 6ff54e6c-b570-4598-99af-de94f753ad00
-[17Sep2025 21:45:10.914] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:45:10.914] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 1 boundary sync requests to server
-[17Sep2025 21:45:10.914] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=6, y=-60, z=2}: boundary radius=21
-[17Sep2025 21:45:10.929] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=6, y=-60, z=2}: updated to boundary radius=21
-[17Sep2025 21:45:11.113] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
-[17Sep2025 21:45:11.411] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache/]: [DEBUG] Town map cache cleared
-[17Sep2025 21:45:11.411] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] Modal closed - relying on normal data sync mechanisms
-[17Sep2025 21:45:11.411] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
-[17Sep2025 21:45:11.411] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] Town map modal closed
-[17Sep2025 21:45:11.411] [Render thread/INFO] [com.quackers29.businesscraft.ui.modal.specialized.TownMapModal/]: [DEBUG] TownMapModal closed and cache cleared
-[17Sep2025 21:45:11.655] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.TownNamePopupManager/]: [DEBUG] TownNamePopupManager cleanup completed
-[17Sep2025 21:45:11.655] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] ButtonActionCoordinator cleanup completed
-[17Sep2025 21:45:11.655] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket/]: [DEBUG] Player 380df991-f603-344c-a090-369bad2a924a exited TownInterfaceEntity UI at BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:45:11.659] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.PlatformVisualizationPacket/]: [DEBUG] Client received platform visualization enable for town at BlockPos{x=6, y=-60, z=2}, requested immediate boundary sync
-[17Sep2025 21:45:11.659] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=6, y=-60, z=2}: boundary radius=21
-[17Sep2025 21:45:11.680] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=6, y=-60, z=2}: updated to boundary radius=21
-[17Sep2025 21:45:12.460] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
-[17Sep2025 21:45:12.462] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
-[17Sep2025 21:45:12.466] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
-[17Sep2025 21:45:12.466] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
-[17Sep2025 21:45:12.931] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=6, y=-60, z=2}
-[17Sep2025 21:45:12.932] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 1 boundary sync requests to server
-[17Sep2025 21:45:12.932] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=6, y=-60, z=2}: boundary radius=21
-[17Sep2025 21:45:12.944] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=6, y=-60, z=2}: updated to boundary radius=21
-[17Sep2025 21:45:14.178] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Stopping!
-[17Sep2025 21:45:14.214] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Dev lost connection: Disconnected
-[17Sep2025 21:45:14.215] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev left the game
-[17Sep2025 21:45:14.217] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Stopping singleplayer server as player logged out
-[17Sep2025 21:45:14.267] [Server thread/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: Server stopping, saving town data...
-[17Sep2025 21:45:14.268] [Server thread/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: Clearing tracked vehicles on server stopping
-[17Sep2025 21:45:14.268] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Stopping server
-[17Sep2025 21:45:14.269] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving players
-[17Sep2025 21:45:14.269] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving worlds
-[17Sep2025 21:45:14.524] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
-[17Sep2025 21:45:14.563] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
-[17Sep2025 21:45:14.564] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
-[17Sep2025 21:45:14.570] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (New World): All chunks are saved
-[17Sep2025 21:45:14.571] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[17Sep2025 21:45:14.571] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[17Sep2025 21:45:14.571] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage: All dimensions are saved
+[17Sep2025 22:03:44.178] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x512x4 minecraft:textures/atlas/blocks.png-atlas
+[17Sep2025 22:03:44.265] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x4 minecraft:textures/atlas/signs.png-atlas
+[17Sep2025 22:03:44.269] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/shield_patterns.png-atlas
+[17Sep2025 22:03:44.277] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/banner_patterns.png-atlas
+[17Sep2025 22:03:44.284] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x1024x4 minecraft:textures/atlas/armor_trims.png-atlas
+[17Sep2025 22:03:44.291] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 128x64x4 minecraft:textures/atlas/decorated_pot.png-atlas
+[17Sep2025 22:03:44.292] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
+[17Sep2025 22:03:44.293] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
+[17Sep2025 22:03:44.293] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
+[17Sep2025 22:03:44.395] [Render thread/WARN] [net.minecraft.client.renderer.ShaderInstance/]: Shader rendertype_entity_translucent_emissive could not find sampler named Sampler2 in the specified shader program.
+[17Sep2025 22:03:44.473] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x0 minecraft:textures/atlas/particles.png-atlas
+[17Sep2025 22:03:44.475] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x0 minecraft:textures/atlas/paintings.png-atlas
+[17Sep2025 22:03:44.476] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 128x128x0 minecraft:textures/atlas/mob_effects.png-atlas
+[17Sep2025 22:03:47.590] [Render thread/ERROR] [com.mojang.text2speech.Narrator/]: Error while loading the narrator
+com.mojang.text2speech.Narrator$InitializeException: Failed to load library flite
+	at com.mojang.text2speech.NarratorLinux$FliteLibrary.loadNative(NarratorLinux.java:69) ~[text2speech-1.17.9.jar:?]
+	at com.mojang.text2speech.NarratorLinux.<init>(NarratorLinux.java:18) ~[text2speech-1.17.9.jar:?]
+	at com.mojang.text2speech.Narrator.getNarrator(Narrator.java:41) ~[text2speech-1.17.9.jar:?]
+	at net.minecraft.client.gui.screens.AccessibilityOnboardingScreen.closeAndSetScreen(AccessibilityOnboardingScreen.java:97) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at net.minecraft.client.gui.screens.AccessibilityOnboardingScreen.onClose(AccessibilityOnboardingScreen.java:90) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at net.minecraft.client.gui.screens.AccessibilityOnboardingScreen.lambda$init$2(AccessibilityOnboardingScreen.java:74) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at net.minecraft.client.gui.components.Button.onPress(Button.java:38) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at net.minecraft.client.gui.components.AbstractButton.onClick(AbstractButton.java:55) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at net.minecraft.client.gui.components.AbstractWidget.mouseClicked(AbstractWidget.java:175) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at net.minecraft.client.gui.components.events.ContainerEventHandler.mouseClicked(ContainerEventHandler.java:38) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at net.minecraft.client.MouseHandler.lambda$onPress$0(MouseHandler.java:92) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at net.minecraft.client.gui.screens.Screen.wrapScreenError(Screen.java:437) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at net.minecraft.client.MouseHandler.onPress(MouseHandler.java:89) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at net.minecraft.client.MouseHandler.lambda$setup$4(MouseHandler.java:189) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at net.minecraft.util.thread.BlockableEventLoop.execute(BlockableEventLoop.java:102) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at net.minecraft.client.MouseHandler.lambda$setup$5(MouseHandler.java:188) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at org.lwjgl.glfw.GLFWMouseButtonCallbackI.callback(GLFWMouseButtonCallbackI.java:43) ~[lwjgl-glfw-3.3.1.jar:build 7]
+	at org.lwjgl.system.JNI.invokeV(Native Method) ~[lwjgl-3.3.1.jar:build 7]
+	at org.lwjgl.glfw.GLFW.glfwWaitEventsTimeout(GLFW.java:3474) ~[lwjgl-glfw-3.3.1.jar:build 7]
+	at com.mojang.blaze3d.systems.RenderSystem.limitDisplayFPS(RenderSystem.java:237) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at net.minecraft.client.Minecraft.runTick(Minecraft.java:1173) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at net.minecraft.client.Minecraft.run(Minecraft.java:718) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at net.minecraft.client.main.Main.main(Main.java:218) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+	at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:?]
+	at jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[?:?]
+	at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[?:?]
+	at java.lang.reflect.Method.invoke(Method.java:569) ~[?:?]
+	at net.minecraftforge.fml.loading.targets.CommonLaunchHandler.runTarget(CommonLaunchHandler.java:111) ~[fmlloader-1.20.1-47.1.0.jar:?]
+	at net.minecraftforge.fml.loading.targets.CommonLaunchHandler.clientService(CommonLaunchHandler.java:99) ~[fmlloader-1.20.1-47.1.0.jar:?]
+	at net.minecraftforge.fml.loading.targets.ForgeClientUserdevLaunchHandler.devService(ForgeClientUserdevLaunchHandler.java:19) ~[fmlloader-1.20.1-47.1.0.jar:?]
+	at net.minecraftforge.fml.loading.targets.CommonDevLaunchHandler.lambda$makeService$7(CommonDevLaunchHandler.java:135) ~[fmlloader-1.20.1-47.1.0.jar:?]
+	at cpw.mods.modlauncher.LaunchServiceHandlerDecorator.launch(LaunchServiceHandlerDecorator.java:30) ~[modlauncher-10.0.9.jar:?]
+	at cpw.mods.modlauncher.LaunchServiceHandler.launch(LaunchServiceHandler.java:53) ~[modlauncher-10.0.9.jar:?]
+	at cpw.mods.modlauncher.LaunchServiceHandler.launch(LaunchServiceHandler.java:71) ~[modlauncher-10.0.9.jar:?]
+	at cpw.mods.modlauncher.Launcher.run(Launcher.java:108) ~[modlauncher-10.0.9.jar:?]
+	at cpw.mods.modlauncher.Launcher.main(Launcher.java:78) ~[modlauncher-10.0.9.jar:?]
+	at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:26) ~[modlauncher-10.0.9.jar:?]
+	at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:23) ~[modlauncher-10.0.9.jar:?]
+	at cpw.mods.bootstraplauncher.BootstrapLauncher.main(BootstrapLauncher.java:141) ~[bootstraplauncher-1.1.2.jar:?]
+Caused by: java.lang.UnsatisfiedLinkError: Unable to load library 'flite':
+libflite.so: cannot open shared object file: No such file or directory
+libflite.so: cannot open shared object file: No such file or directory
+Native library (linux-x86-64/libflite.so) not found in resource path (/home/az/project/BusinessCraft/forge/build/classes/java/main:/home/az/project/BusinessCraft/forge/build/resources/main:/home/az/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1/forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:/home/az/.gradle/caches/forge_gradle/minecraft_repo/versions/1.20.1/client-extra.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/fmlearlydisplay/1.20.1-47.1.0/faf61a8a8cc80e82a5691fac00149f06eeaf0438/fmlearlydisplay-1.20.1-47.1.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/javafmllanguage/1.20.1-47.1.0/a2cd58d15791eaac9983e30be0995e66bd48633e/javafmllanguage-1.20.1-47.1.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/lowcodelanguage/1.20.1-47.1.0/f1f11b7217b8320f1b3eb81c746b7b8a70a9ba06/lowcodelanguage-1.20.1-47.1.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/mclanguage/1.20.1-47.1.0/ff1b8eeb1bd00dfb130263b8952b931f5369252e/mclanguage-1.20.1-47.1.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/fmlcore/1.20.1-47.1.0/69ca36ae5b8d45c377a5485dc38a7343e5ebf33c/fmlcore-1.20.1-47.1.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/fmlloader/1.20.1-47.1.0/f7b5e4ef130d184e0ea48e6d8bf0a2d90757e8c6/fmlloader-1.20.1-47.1.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/JarJarSelector/0.3.19/376cc9c8ea60720cf027c01fc033de915699801c/JarJarSelector-0.3.19.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/JarJarMetadata/0.3.19/83feaa9b770e6ac0e96ee4fc23fa89325c5fe2/JarJarMetadata-0.3.19.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.mojang/datafixerupper/6.0.8/3ba4a30557a9b057760af4011f909ba619fc5125/datafixerupper-6.0.8.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.google.guava/guava/31.1-jre/60458f877d055d0c9114d9e1a2efb737b4bc282c/guava-31.1-jre.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.google.code.findbugs/jsr305/3.0.2/25ea2e8b0c338a877313bd4672d3fe056ea78f0d/jsr305-3.0.2.jar:/home/az/.gradle/caches/modules-2/files-2.1/ca.weblite/java-objc-bridge/1.1/1227f9e0666314f9de41477e3ec277e542ed7f7b/java-objc-bridge-1.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/coremods/5.0.1/386b00279628b105b2d507539c46e134e96f6237/coremods-5.0.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/forgespi/7.0.1/3b4972a0cdb135853dba219be61a79b22cff1309/forgespi-7.0.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/mergetool/1.1.5/f3da18e12c696d35a47c82cbb2cc8b5aa15e1154/mergetool-1.1.5-api.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.jetbrains/annotations/24.0.1/13c5c75c4206580aa4d683bffee658caae6c9f43/annotations-24.0.1.jar:/home/az/.gradle/caches/parchmentgradle/org/parchmentmc/data/parchment-1.20.1/2023.06.26/parchment-1.20.1-2023.06.26.zip:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/accesstransformers/8.0.4/272d240aa73f42195b2a68e2ebd8b701ecf41f63/accesstransformers-8.0.4.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/eventbus/6.0.5/699143dd438431d06b57416944f7cedbe52e1475/eventbus-6.0.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/cpw.mods/modlauncher/10.0.9/6d9443f56f50bb85cea383686ff9c867391458b/modlauncher-10.0.9.jar:/home/az/.gradle/caches/modules-2/files-2.1/cpw.mods/bootstraplauncher/1.1.2/c546e00443d8432cda6baa1c860346980742628/bootstraplauncher-1.1.2.jar:/home/az/.gradle/caches/modules-2/files-2.1/cpw.mods/securejarhandler/2.1.10/51e6a22c6c716beb11e244bf5b8be480f51dd6b5/securejarhandler-2.1.10.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.openjdk.nashorn/nashorn-core/15.3/43977e804697048fc8d81d333a36c17d07a5b3dd/nashorn-core-15.3.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-commons/9.5/19ab5b5800a3910d30d3a3e64fdb00fd0cb42de0/asm-commons-9.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-util/9.5/64b5a1fc8c1b15ed2efd6a063e976bc8d3dc5ffe/asm-util-9.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-analysis/9.5/490bacc77de7cbc0be1a30bb3471072d705be4a4/asm-analysis-9.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-tree/9.5/fd33c8b6373abaa675be407082fdfda35021254a/asm-tree-9.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm/9.5/dc6ea1875f4d64fbc85e1691c95b96a3d8569c90/asm-9.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.antlr/antlr4/4.9.1/e92af8ab33e428461927b484e90bb155a4f3a052/antlr4-4.9.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.antlr/antlr4-runtime/4.9.1/428664f05d2b7f7b7610204b5aa7c1763f62011a/antlr4-runtime-4.9.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/unsafe/0.2.0/54d7a0a5e8fdb71b973025caa46f341ae5904f39/unsafe-0.2.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.electronwill.night-config/toml/3.6.4/51d6cefb2b55ee55ee26b16391212fb2c7dfb4f4/toml-3.6.4.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.electronwill.night-config/core/3.6.4/510f174abbf1c947494db50ef2445683bd52c230/core-3.6.4.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.apache.maven/maven-artifact/3.8.5/4433f50c07debefaed0553bd0068f4f48d449313/maven-artifact-3.8.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.jodah/typetools/0.6.3/a01aaa6ddaea9ec07ec4f209487b7a46a526283a/typetools-0.6.3.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecrell/terminalconsoleappender/1.2.0/96d02cd3b384ff015a8fef4223bcb4ccf1717c95/terminalconsoleappender-1.2.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.jline/jline-reader/3.12.1/4382ab1382c7b6f379377ed5f665dc2f6e1218bc/jline-reader-3.12.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.jline/jline-terminal/3.12.1/c777448314e050d980a6b697c140f3bfe9eb7416/jline-terminal-3.12.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.5/9d1c0c3a304ae6697ecd477218fa61b850bf57fc/mixin-0.8.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/JarJarFileSystems/0.3.19/2464eb7d6b9ddb9db36a82cf8a95193e5c6fe020/JarJarFileSystems-0.3.19.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.github.oshi/oshi-core/6.2.2/54f5efc19bca95d709d9a37d19ffcbba3d21c1a6/oshi-core-6.2.2.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.10/dd9b193aef96e973d5a11ab13cd17430c2e4306b/gson-2.10.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.google.guava/failureaccess/1.0.1/1dcf1de382a0bf95a3d8b0849546c88bac1292c9/failureaccess-1.0.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.ibm.icu/icu4j/71.1/9e7d3304c23f9ba5cb71915f7cce23231a57a445/icu4j-71.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.mojang/authlib/4.0.43/2ff9d747a77570a07a60d32ac77eb6162ad2a2d9/authlib-4.0.43.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.mojang/blocklist/1.0.10/5c685c5ffa94c4cd39496c7184c1d122e515ecef/blocklist-1.0.10.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.mojang/brigadier/1.1.8/5244ce82c3337bba4a196a3ce858bfaecc74404a/brigadier-1.1.8.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.mojang/logging/1.1.1/832b8e6674a9b325a5175a3a6267dfaf34c85139/logging-1.1.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.mojang/patchy/2.2.10/da05971b07cbb379d002cf7eaec6a2048211fefc/patchy-2.2.10.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.mojang/text2speech/1.17.9/3cad216e3a7f0c19b4b394388bc9ffc446f13b14/text2speech-1.17.9.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpclient/4.5.13/e5f6cae5ca7ecaac1ec2827a9e2d65ae2869cada/httpclient-4.5.13.jar:/home/az/.gradle/caches/modules-2/files-2.1/commons-codec/commons-codec/1.15/49d94806b6e3dc933dacbd8acb0fdbab8ebd1e5d/commons-codec-1.15.jar:/home/az/.gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.11.0/a2503f302b11ebde7ebc3df41daebe0e4eea3689/commons-io-2.11.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/commons-logging/commons-logging/1.2/4bfc12adfe4842bf07b657f0369c4cb522955686/commons-logging-1.2.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-handler/4.1.82.Final/644041d1fa96a5d3130a29e8978630d716d76e38/netty-handler-4.1.82.Final.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-codec/4.1.82.Final/b77200379acb345a9ffdece1c605e591ac3e4e0a/netty-codec-4.1.82.Final.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport-native-epoll/4.1.82.Final/476409d6255001ca53a55f65b01c13822f8dc93a/netty-transport-native-epoll-4.1.82.Final-linux-aarch_64.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport-native-epoll/4.1.82.Final/c7350a71920f3ae9142945e25fed4846cce53374/netty-transport-native-epoll-4.1.82.Final-linux-x86_64.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport-classes-epoll/4.1.82.Final/e7c7dd18deac93105797f30057c912651ea76521/netty-transport-classes-epoll-4.1.82.Final.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport-native-unix-common/4.1.82.Final/3e895b35ca1b8a0eca56cacff4c2dde5d2c6abce/netty-transport-native-unix-common-4.1.82.Final.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport/4.1.82.Final/e431a218d91acb6476ccad5f5aafde50aa3945ca/netty-transport-4.1.82.Final.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-buffer/4.1.82.Final/a544270cf1ae8b8077082f5036436a9a9971ea71/netty-buffer-4.1.82.Final.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-resolver/4.1.82.Final/38f665ae8dcd29032eea31245ba7806bed2e0fa8/netty-resolver-4.1.82.Final.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-common/4.1.82.Final/22d148e85c3f5ebdacc0ce1f5aabb1d420f73f3/netty-common-4.1.82.Final.jar:/home/az/.gradle/caches/modules-2/files-2.1/it.unimi.dsi/fastutil/8.5.9/bb7ea75ecdb216654237830b3a96d87ad91f8cc5/fastutil-8.5.9.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.java.dev.jna/jna-platform/5.12.1/97406a297c852f4a41e688a176ec675f72e8329/jna-platform-5.12.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.java.dev.jna/jna/5.12.1/b1e93a735caea94f503e95e6fe79bf9cdc1e985d/jna-5.12.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.sf.jopt-simple/jopt-simple/5.0.4/4fdac2fbe92dfad86aa6e9301736f6b4342a3f5c/jopt-simple-5.0.4.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-compress/1.21/4ec95b60d4e86b5c95a0e919cb172a0af98011ef/commons-compress-1.21.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-lang3/3.12.0/c6842c86792ff03b9f1d1fe2aab8dc23aa6c6f0e/commons-lang3-3.12.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpcore/4.4.15/7f2e0c573eaa7a74bac2e89b359e1f73d92a0a1d/httpcore-4.4.15.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-core/2.19.0/3b6eeb4de4c49c0fe38a4ee27188ff5fee44d0bb/log4j-core-2.19.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-slf4j2-impl/2.19.0/5c04bfdd63ce9dceb2e284b81e96b6a70010ee10/log4j-slf4j2-impl-2.19.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.19.0/ea1b37f38c327596b216542bc636cfdc0b8036fa/log4j-api-2.19.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.joml/joml/1.10.5/22566d58af70ad3d72308bab63b8339906deb649/joml-1.10.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-glfw/3.3.1/cbac1b8d30cb4795149c1ef540f912671a8616d0/lwjgl-glfw-3.3.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-glfw/3.3.1/81716978214ecbda15050ca394b06ef61501a49e/lwjgl-glfw-3.3.1-natives-linux.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-jemalloc/3.3.1/a817bcf213db49f710603677457567c37d53e103/lwjgl-jemalloc-3.3.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-jemalloc/3.3.1/33dbb017b6ed6b25f993ad9d56741a49e7937718/lwjgl-jemalloc-3.3.1-natives-linux.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-openal/3.3.1/2623a6b8ae1dfcd880738656a9f0243d2e6840bd/lwjgl-openal-3.3.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-openal/3.3.1/f906b6439f6daa66001182ea7727e3467a93681b/lwjgl-openal-3.3.1-natives-linux.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-opengl/3.3.1/831a5533a21a5f4f81bbc51bb13e9899319b5411/lwjgl-opengl-3.3.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-opengl/3.3.1/ab9ab6fde3743e3550fa5d46d785ecb45b047d99/lwjgl-opengl-3.3.1-natives-linux.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-stb/3.3.1/b119297cf8ed01f247abe8685857f8e7fcf5980f/lwjgl-stb-3.3.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-stb/3.3.1/3ee7aec8686e52867677110415566a5342a80230/lwjgl-stb-3.3.1-natives-linux.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-tinyfd/3.3.1/ff1914111ef2e3e0110ef2dabc8d8cdaad82347/lwjgl-tinyfd-3.3.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-tinyfd/3.3.1/a35110b9471bea8cde826ab297550ee8c22f5035/lwjgl-tinyfd-3.3.1-natives-linux.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl/3.3.1/ae58664f88e18a9bb2c77b063833ca7aaec484cb/lwjgl-3.3.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl/3.3.1/1de885aba434f934201b99f2f1afb142036ac189/lwjgl-3.3.1-natives-linux.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.machinezoo.noexception/noexception/1.7.1/b65330c98e38a1f915fa54a6e5eca496505e3f0a/noexception-1.7.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-simple/1.7.30/e606eac955f55ecf1d8edcccba04eb8ac98088dd/slf4j-simple-1.7.30.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/2.0.1/f48d81adce2abf5ad3cfe463df517952749e03bc/slf4j-api-2.0.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/srgutils/0.4.11/fbad1341ffdb47d276bbdc40ecb06da49e053e74/srgutils-0.4.11.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.codehaus.plexus/plexus-utils/3.3.0/cf43b5391de623b36fe066a21127baef82c64022/plexus-utils-3.3.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.google.guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/b421526c5f297295adef1c886e5246c39d4ac629/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.checkerframework/checker-qual/3.12.0/d5692f0526415fcc6de94bb5bfbd3afd9dd3b3e5/checker-qual-3.12.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.google.errorprone/error_prone_annotations/2.11.0/c5a0ace696d3f8b1c1d8cc036d8c03cc0cbe6b69/error_prone_annotations-2.11.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.google.j2objc/j2objc-annotations/1.3/ba035118bc8bac37d7eff77700720999acd9986d/j2objc-annotations-1.3.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.antlr/ST4/4.3/92f2c1ad8d84abcbeead6cf7f2c53a04166293c2/ST4-4.3.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.antlr/antlr-runtime/3.5.2/cd9cd41361c155f3af0f653009dcecb08d8b4afd/antlr-runtime-3.5.2.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.abego.treelayout/org.abego.treelayout.core/1.0.3/457216e8e6578099ae63667bb1e4439235892028/org.abego.treelayout.core-1.0.3.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.glassfish/javax.json/1.0.4/3178f73569fd7a1e5ffc464e680f7a8cc784b85a/javax.json-1.0.4.jar)
+	at com.sun.jna.NativeLibrary.loadLibrary(NativeLibrary.java:307) ~[jna-5.12.1.jar:5.12.1 (b0)]
+	at com.sun.jna.NativeLibrary.getInstance(NativeLibrary.java:467) ~[jna-5.12.1.jar:5.12.1 (b0)]
+	at com.sun.jna.NativeLibrary.getInstance(NativeLibrary.java:409) ~[jna-5.12.1.jar:5.12.1 (b0)]
+	at com.mojang.text2speech.NarratorLinux$FliteLibrary.loadNative(NarratorLinux.java:67) ~[text2speech-1.17.9.jar:?]
+	... 38 more
+	Suppressed: java.lang.UnsatisfiedLinkError: libflite.so: cannot open shared object file: No such file or directory
+		at com.sun.jna.Native.open(Native Method) ~[jna-5.12.1.jar:5.12.1 (b0)]
+		at com.sun.jna.NativeLibrary.loadLibrary(NativeLibrary.java:197) ~[jna-5.12.1.jar:5.12.1 (b0)]
+		at com.sun.jna.NativeLibrary.getInstance(NativeLibrary.java:467) ~[jna-5.12.1.jar:5.12.1 (b0)]
+		at com.sun.jna.NativeLibrary.getInstance(NativeLibrary.java:409) ~[jna-5.12.1.jar:5.12.1 (b0)]
+		at com.mojang.text2speech.NarratorLinux$FliteLibrary.loadNative(NarratorLinux.java:67) ~[text2speech-1.17.9.jar:?]
+		at com.mojang.text2speech.NarratorLinux.<init>(NarratorLinux.java:18) ~[text2speech-1.17.9.jar:?]
+		at com.mojang.text2speech.Narrator.getNarrator(Narrator.java:41) ~[text2speech-1.17.9.jar:?]
+		at net.minecraft.client.gui.screens.AccessibilityOnboardingScreen.closeAndSetScreen(AccessibilityOnboardingScreen.java:97) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.screens.AccessibilityOnboardingScreen.onClose(AccessibilityOnboardingScreen.java:90) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.screens.AccessibilityOnboardingScreen.lambda$init$2(AccessibilityOnboardingScreen.java:74) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.components.Button.onPress(Button.java:38) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.components.AbstractButton.onClick(AbstractButton.java:55) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.components.AbstractWidget.mouseClicked(AbstractWidget.java:175) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.components.events.ContainerEventHandler.mouseClicked(ContainerEventHandler.java:38) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.MouseHandler.lambda$onPress$0(MouseHandler.java:92) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.screens.Screen.wrapScreenError(Screen.java:437) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.MouseHandler.onPress(MouseHandler.java:89) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.MouseHandler.lambda$setup$4(MouseHandler.java:189) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.util.thread.BlockableEventLoop.execute(BlockableEventLoop.java:102) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.MouseHandler.lambda$setup$5(MouseHandler.java:188) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at org.lwjgl.glfw.GLFWMouseButtonCallbackI.callback(GLFWMouseButtonCallbackI.java:43) ~[lwjgl-glfw-3.3.1.jar:build 7]
+		at org.lwjgl.system.JNI.invokeV(Native Method) ~[lwjgl-3.3.1.jar:build 7]
+		at org.lwjgl.glfw.GLFW.glfwWaitEventsTimeout(GLFW.java:3474) ~[lwjgl-glfw-3.3.1.jar:build 7]
+		at com.mojang.blaze3d.systems.RenderSystem.limitDisplayFPS(RenderSystem.java:237) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.Minecraft.runTick(Minecraft.java:1173) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.Minecraft.run(Minecraft.java:718) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.main.Main.main(Main.java:218) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:?]
+		at jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[?:?]
+		at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[?:?]
+		at java.lang.reflect.Method.invoke(Method.java:569) ~[?:?]
+		at net.minecraftforge.fml.loading.targets.CommonLaunchHandler.runTarget(CommonLaunchHandler.java:111) ~[fmlloader-1.20.1-47.1.0.jar:?]
+		at net.minecraftforge.fml.loading.targets.CommonLaunchHandler.clientService(CommonLaunchHandler.java:99) ~[fmlloader-1.20.1-47.1.0.jar:?]
+		at net.minecraftforge.fml.loading.targets.ForgeClientUserdevLaunchHandler.devService(ForgeClientUserdevLaunchHandler.java:19) ~[fmlloader-1.20.1-47.1.0.jar:?]
+		at net.minecraftforge.fml.loading.targets.CommonDevLaunchHandler.lambda$makeService$7(CommonDevLaunchHandler.java:135) ~[fmlloader-1.20.1-47.1.0.jar:?]
+		at cpw.mods.modlauncher.LaunchServiceHandlerDecorator.launch(LaunchServiceHandlerDecorator.java:30) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.LaunchServiceHandler.launch(LaunchServiceHandler.java:53) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.LaunchServiceHandler.launch(LaunchServiceHandler.java:71) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.Launcher.run(Launcher.java:108) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.Launcher.main(Launcher.java:78) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:26) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:23) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.bootstraplauncher.BootstrapLauncher.main(BootstrapLauncher.java:141) ~[bootstraplauncher-1.1.2.jar:?]
+	Suppressed: java.lang.UnsatisfiedLinkError: libflite.so: cannot open shared object file: No such file or directory
+		at com.sun.jna.Native.open(Native Method) ~[jna-5.12.1.jar:5.12.1 (b0)]
+		at com.sun.jna.NativeLibrary.loadLibrary(NativeLibrary.java:210) ~[jna-5.12.1.jar:5.12.1 (b0)]
+		at com.sun.jna.NativeLibrary.getInstance(NativeLibrary.java:467) ~[jna-5.12.1.jar:5.12.1 (b0)]
+		at com.sun.jna.NativeLibrary.getInstance(NativeLibrary.java:409) ~[jna-5.12.1.jar:5.12.1 (b0)]
+		at com.mojang.text2speech.NarratorLinux$FliteLibrary.loadNative(NarratorLinux.java:67) ~[text2speech-1.17.9.jar:?]
+		at com.mojang.text2speech.NarratorLinux.<init>(NarratorLinux.java:18) ~[text2speech-1.17.9.jar:?]
+		at com.mojang.text2speech.Narrator.getNarrator(Narrator.java:41) ~[text2speech-1.17.9.jar:?]
+		at net.minecraft.client.gui.screens.AccessibilityOnboardingScreen.closeAndSetScreen(AccessibilityOnboardingScreen.java:97) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.screens.AccessibilityOnboardingScreen.onClose(AccessibilityOnboardingScreen.java:90) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.screens.AccessibilityOnboardingScreen.lambda$init$2(AccessibilityOnboardingScreen.java:74) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.components.Button.onPress(Button.java:38) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.components.AbstractButton.onClick(AbstractButton.java:55) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.components.AbstractWidget.mouseClicked(AbstractWidget.java:175) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.components.events.ContainerEventHandler.mouseClicked(ContainerEventHandler.java:38) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.MouseHandler.lambda$onPress$0(MouseHandler.java:92) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.screens.Screen.wrapScreenError(Screen.java:437) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.MouseHandler.onPress(MouseHandler.java:89) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.MouseHandler.lambda$setup$4(MouseHandler.java:189) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.util.thread.BlockableEventLoop.execute(BlockableEventLoop.java:102) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.MouseHandler.lambda$setup$5(MouseHandler.java:188) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at org.lwjgl.glfw.GLFWMouseButtonCallbackI.callback(GLFWMouseButtonCallbackI.java:43) ~[lwjgl-glfw-3.3.1.jar:build 7]
+		at org.lwjgl.system.JNI.invokeV(Native Method) ~[lwjgl-3.3.1.jar:build 7]
+		at org.lwjgl.glfw.GLFW.glfwWaitEventsTimeout(GLFW.java:3474) ~[lwjgl-glfw-3.3.1.jar:build 7]
+		at com.mojang.blaze3d.systems.RenderSystem.limitDisplayFPS(RenderSystem.java:237) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.Minecraft.runTick(Minecraft.java:1173) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.Minecraft.run(Minecraft.java:718) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.main.Main.main(Main.java:218) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:?]
+		at jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[?:?]
+		at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[?:?]
+		at java.lang.reflect.Method.invoke(Method.java:569) ~[?:?]
+		at net.minecraftforge.fml.loading.targets.CommonLaunchHandler.runTarget(CommonLaunchHandler.java:111) ~[fmlloader-1.20.1-47.1.0.jar:?]
+		at net.minecraftforge.fml.loading.targets.CommonLaunchHandler.clientService(CommonLaunchHandler.java:99) ~[fmlloader-1.20.1-47.1.0.jar:?]
+		at net.minecraftforge.fml.loading.targets.ForgeClientUserdevLaunchHandler.devService(ForgeClientUserdevLaunchHandler.java:19) ~[fmlloader-1.20.1-47.1.0.jar:?]
+		at net.minecraftforge.fml.loading.targets.CommonDevLaunchHandler.lambda$makeService$7(CommonDevLaunchHandler.java:135) ~[fmlloader-1.20.1-47.1.0.jar:?]
+		at cpw.mods.modlauncher.LaunchServiceHandlerDecorator.launch(LaunchServiceHandlerDecorator.java:30) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.LaunchServiceHandler.launch(LaunchServiceHandler.java:53) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.LaunchServiceHandler.launch(LaunchServiceHandler.java:71) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.Launcher.run(Launcher.java:108) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.Launcher.main(Launcher.java:78) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:26) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:23) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.bootstraplauncher.BootstrapLauncher.main(BootstrapLauncher.java:141) ~[bootstraplauncher-1.1.2.jar:?]
+	Suppressed: java.io.IOException: Native library (linux-x86-64/libflite.so) not found in resource path (/home/az/project/BusinessCraft/forge/build/classes/java/main:/home/az/project/BusinessCraft/forge/build/resources/main:/home/az/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1/forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:/home/az/.gradle/caches/forge_gradle/minecraft_repo/versions/1.20.1/client-extra.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/fmlearlydisplay/1.20.1-47.1.0/faf61a8a8cc80e82a5691fac00149f06eeaf0438/fmlearlydisplay-1.20.1-47.1.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/javafmllanguage/1.20.1-47.1.0/a2cd58d15791eaac9983e30be0995e66bd48633e/javafmllanguage-1.20.1-47.1.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/lowcodelanguage/1.20.1-47.1.0/f1f11b7217b8320f1b3eb81c746b7b8a70a9ba06/lowcodelanguage-1.20.1-47.1.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/mclanguage/1.20.1-47.1.0/ff1b8eeb1bd00dfb130263b8952b931f5369252e/mclanguage-1.20.1-47.1.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/fmlcore/1.20.1-47.1.0/69ca36ae5b8d45c377a5485dc38a7343e5ebf33c/fmlcore-1.20.1-47.1.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/fmlloader/1.20.1-47.1.0/f7b5e4ef130d184e0ea48e6d8bf0a2d90757e8c6/fmlloader-1.20.1-47.1.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/JarJarSelector/0.3.19/376cc9c8ea60720cf027c01fc033de915699801c/JarJarSelector-0.3.19.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/JarJarMetadata/0.3.19/83feaa9b770e6ac0e96ee4fc23fa89325c5fe2/JarJarMetadata-0.3.19.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.mojang/datafixerupper/6.0.8/3ba4a30557a9b057760af4011f909ba619fc5125/datafixerupper-6.0.8.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.google.guava/guava/31.1-jre/60458f877d055d0c9114d9e1a2efb737b4bc282c/guava-31.1-jre.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.google.code.findbugs/jsr305/3.0.2/25ea2e8b0c338a877313bd4672d3fe056ea78f0d/jsr305-3.0.2.jar:/home/az/.gradle/caches/modules-2/files-2.1/ca.weblite/java-objc-bridge/1.1/1227f9e0666314f9de41477e3ec277e542ed7f7b/java-objc-bridge-1.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/coremods/5.0.1/386b00279628b105b2d507539c46e134e96f6237/coremods-5.0.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/forgespi/7.0.1/3b4972a0cdb135853dba219be61a79b22cff1309/forgespi-7.0.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/mergetool/1.1.5/f3da18e12c696d35a47c82cbb2cc8b5aa15e1154/mergetool-1.1.5-api.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.jetbrains/annotations/24.0.1/13c5c75c4206580aa4d683bffee658caae6c9f43/annotations-24.0.1.jar:/home/az/.gradle/caches/parchmentgradle/org/parchmentmc/data/parchment-1.20.1/2023.06.26/parchment-1.20.1-2023.06.26.zip:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/accesstransformers/8.0.4/272d240aa73f42195b2a68e2ebd8b701ecf41f63/accesstransformers-8.0.4.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/eventbus/6.0.5/699143dd438431d06b57416944f7cedbe52e1475/eventbus-6.0.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/cpw.mods/modlauncher/10.0.9/6d9443f56f50bb85cea383686ff9c867391458b/modlauncher-10.0.9.jar:/home/az/.gradle/caches/modules-2/files-2.1/cpw.mods/bootstraplauncher/1.1.2/c546e00443d8432cda6baa1c860346980742628/bootstraplauncher-1.1.2.jar:/home/az/.gradle/caches/modules-2/files-2.1/cpw.mods/securejarhandler/2.1.10/51e6a22c6c716beb11e244bf5b8be480f51dd6b5/securejarhandler-2.1.10.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.openjdk.nashorn/nashorn-core/15.3/43977e804697048fc8d81d333a36c17d07a5b3dd/nashorn-core-15.3.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-commons/9.5/19ab5b5800a3910d30d3a3e64fdb00fd0cb42de0/asm-commons-9.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-util/9.5/64b5a1fc8c1b15ed2efd6a063e976bc8d3dc5ffe/asm-util-9.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-analysis/9.5/490bacc77de7cbc0be1a30bb3471072d705be4a4/asm-analysis-9.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm-tree/9.5/fd33c8b6373abaa675be407082fdfda35021254a/asm-tree-9.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.ow2.asm/asm/9.5/dc6ea1875f4d64fbc85e1691c95b96a3d8569c90/asm-9.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.antlr/antlr4/4.9.1/e92af8ab33e428461927b484e90bb155a4f3a052/antlr4-4.9.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.antlr/antlr4-runtime/4.9.1/428664f05d2b7f7b7610204b5aa7c1763f62011a/antlr4-runtime-4.9.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/unsafe/0.2.0/54d7a0a5e8fdb71b973025caa46f341ae5904f39/unsafe-0.2.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.electronwill.night-config/toml/3.6.4/51d6cefb2b55ee55ee26b16391212fb2c7dfb4f4/toml-3.6.4.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.electronwill.night-config/core/3.6.4/510f174abbf1c947494db50ef2445683bd52c230/core-3.6.4.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.apache.maven/maven-artifact/3.8.5/4433f50c07debefaed0553bd0068f4f48d449313/maven-artifact-3.8.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.jodah/typetools/0.6.3/a01aaa6ddaea9ec07ec4f209487b7a46a526283a/typetools-0.6.3.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecrell/terminalconsoleappender/1.2.0/96d02cd3b384ff015a8fef4223bcb4ccf1717c95/terminalconsoleappender-1.2.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.jline/jline-reader/3.12.1/4382ab1382c7b6f379377ed5f665dc2f6e1218bc/jline-reader-3.12.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.jline/jline-terminal/3.12.1/c777448314e050d980a6b697c140f3bfe9eb7416/jline-terminal-3.12.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.5/9d1c0c3a304ae6697ecd477218fa61b850bf57fc/mixin-0.8.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/JarJarFileSystems/0.3.19/2464eb7d6b9ddb9db36a82cf8a95193e5c6fe020/JarJarFileSystems-0.3.19.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.github.oshi/oshi-core/6.2.2/54f5efc19bca95d709d9a37d19ffcbba3d21c1a6/oshi-core-6.2.2.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.10/dd9b193aef96e973d5a11ab13cd17430c2e4306b/gson-2.10.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.google.guava/failureaccess/1.0.1/1dcf1de382a0bf95a3d8b0849546c88bac1292c9/failureaccess-1.0.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.ibm.icu/icu4j/71.1/9e7d3304c23f9ba5cb71915f7cce23231a57a445/icu4j-71.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.mojang/authlib/4.0.43/2ff9d747a77570a07a60d32ac77eb6162ad2a2d9/authlib-4.0.43.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.mojang/blocklist/1.0.10/5c685c5ffa94c4cd39496c7184c1d122e515ecef/blocklist-1.0.10.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.mojang/brigadier/1.1.8/5244ce82c3337bba4a196a3ce858bfaecc74404a/brigadier-1.1.8.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.mojang/logging/1.1.1/832b8e6674a9b325a5175a3a6267dfaf34c85139/logging-1.1.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.mojang/patchy/2.2.10/da05971b07cbb379d002cf7eaec6a2048211fefc/patchy-2.2.10.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.mojang/text2speech/1.17.9/3cad216e3a7f0c19b4b394388bc9ffc446f13b14/text2speech-1.17.9.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpclient/4.5.13/e5f6cae5ca7ecaac1ec2827a9e2d65ae2869cada/httpclient-4.5.13.jar:/home/az/.gradle/caches/modules-2/files-2.1/commons-codec/commons-codec/1.15/49d94806b6e3dc933dacbd8acb0fdbab8ebd1e5d/commons-codec-1.15.jar:/home/az/.gradle/caches/modules-2/files-2.1/commons-io/commons-io/2.11.0/a2503f302b11ebde7ebc3df41daebe0e4eea3689/commons-io-2.11.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/commons-logging/commons-logging/1.2/4bfc12adfe4842bf07b657f0369c4cb522955686/commons-logging-1.2.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-handler/4.1.82.Final/644041d1fa96a5d3130a29e8978630d716d76e38/netty-handler-4.1.82.Final.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-codec/4.1.82.Final/b77200379acb345a9ffdece1c605e591ac3e4e0a/netty-codec-4.1.82.Final.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport-native-epoll/4.1.82.Final/476409d6255001ca53a55f65b01c13822f8dc93a/netty-transport-native-epoll-4.1.82.Final-linux-aarch_64.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport-native-epoll/4.1.82.Final/c7350a71920f3ae9142945e25fed4846cce53374/netty-transport-native-epoll-4.1.82.Final-linux-x86_64.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport-classes-epoll/4.1.82.Final/e7c7dd18deac93105797f30057c912651ea76521/netty-transport-classes-epoll-4.1.82.Final.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport-native-unix-common/4.1.82.Final/3e895b35ca1b8a0eca56cacff4c2dde5d2c6abce/netty-transport-native-unix-common-4.1.82.Final.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-transport/4.1.82.Final/e431a218d91acb6476ccad5f5aafde50aa3945ca/netty-transport-4.1.82.Final.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-buffer/4.1.82.Final/a544270cf1ae8b8077082f5036436a9a9971ea71/netty-buffer-4.1.82.Final.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-resolver/4.1.82.Final/38f665ae8dcd29032eea31245ba7806bed2e0fa8/netty-resolver-4.1.82.Final.jar:/home/az/.gradle/caches/modules-2/files-2.1/io.netty/netty-common/4.1.82.Final/22d148e85c3f5ebdacc0ce1f5aabb1d420f73f3/netty-common-4.1.82.Final.jar:/home/az/.gradle/caches/modules-2/files-2.1/it.unimi.dsi/fastutil/8.5.9/bb7ea75ecdb216654237830b3a96d87ad91f8cc5/fastutil-8.5.9.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.java.dev.jna/jna-platform/5.12.1/97406a297c852f4a41e688a176ec675f72e8329/jna-platform-5.12.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.java.dev.jna/jna/5.12.1/b1e93a735caea94f503e95e6fe79bf9cdc1e985d/jna-5.12.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.sf.jopt-simple/jopt-simple/5.0.4/4fdac2fbe92dfad86aa6e9301736f6b4342a3f5c/jopt-simple-5.0.4.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-compress/1.21/4ec95b60d4e86b5c95a0e919cb172a0af98011ef/commons-compress-1.21.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.apache.commons/commons-lang3/3.12.0/c6842c86792ff03b9f1d1fe2aab8dc23aa6c6f0e/commons-lang3-3.12.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.apache.httpcomponents/httpcore/4.4.15/7f2e0c573eaa7a74bac2e89b359e1f73d92a0a1d/httpcore-4.4.15.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-core/2.19.0/3b6eeb4de4c49c0fe38a4ee27188ff5fee44d0bb/log4j-core-2.19.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-slf4j2-impl/2.19.0/5c04bfdd63ce9dceb2e284b81e96b6a70010ee10/log4j-slf4j2-impl-2.19.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.apache.logging.log4j/log4j-api/2.19.0/ea1b37f38c327596b216542bc636cfdc0b8036fa/log4j-api-2.19.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.joml/joml/1.10.5/22566d58af70ad3d72308bab63b8339906deb649/joml-1.10.5.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-glfw/3.3.1/cbac1b8d30cb4795149c1ef540f912671a8616d0/lwjgl-glfw-3.3.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-glfw/3.3.1/81716978214ecbda15050ca394b06ef61501a49e/lwjgl-glfw-3.3.1-natives-linux.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-jemalloc/3.3.1/a817bcf213db49f710603677457567c37d53e103/lwjgl-jemalloc-3.3.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-jemalloc/3.3.1/33dbb017b6ed6b25f993ad9d56741a49e7937718/lwjgl-jemalloc-3.3.1-natives-linux.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-openal/3.3.1/2623a6b8ae1dfcd880738656a9f0243d2e6840bd/lwjgl-openal-3.3.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-openal/3.3.1/f906b6439f6daa66001182ea7727e3467a93681b/lwjgl-openal-3.3.1-natives-linux.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-opengl/3.3.1/831a5533a21a5f4f81bbc51bb13e9899319b5411/lwjgl-opengl-3.3.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-opengl/3.3.1/ab9ab6fde3743e3550fa5d46d785ecb45b047d99/lwjgl-opengl-3.3.1-natives-linux.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-stb/3.3.1/b119297cf8ed01f247abe8685857f8e7fcf5980f/lwjgl-stb-3.3.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-stb/3.3.1/3ee7aec8686e52867677110415566a5342a80230/lwjgl-stb-3.3.1-natives-linux.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-tinyfd/3.3.1/ff1914111ef2e3e0110ef2dabc8d8cdaad82347/lwjgl-tinyfd-3.3.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl-tinyfd/3.3.1/a35110b9471bea8cde826ab297550ee8c22f5035/lwjgl-tinyfd-3.3.1-natives-linux.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl/3.3.1/ae58664f88e18a9bb2c77b063833ca7aaec484cb/lwjgl-3.3.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.lwjgl/lwjgl/3.3.1/1de885aba434f934201b99f2f1afb142036ac189/lwjgl-3.3.1-natives-linux.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.machinezoo.noexception/noexception/1.7.1/b65330c98e38a1f915fa54a6e5eca496505e3f0a/noexception-1.7.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-simple/1.7.30/e606eac955f55ecf1d8edcccba04eb8ac98088dd/slf4j-simple-1.7.30.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.slf4j/slf4j-api/2.0.1/f48d81adce2abf5ad3cfe463df517952749e03bc/slf4j-api-2.0.1.jar:/home/az/.gradle/caches/modules-2/files-2.1/net.minecraftforge/srgutils/0.4.11/fbad1341ffdb47d276bbdc40ecb06da49e053e74/srgutils-0.4.11.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.codehaus.plexus/plexus-utils/3.3.0/cf43b5391de623b36fe066a21127baef82c64022/plexus-utils-3.3.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.google.guava/listenablefuture/9999.0-empty-to-avoid-conflict-with-guava/b421526c5f297295adef1c886e5246c39d4ac629/listenablefuture-9999.0-empty-to-avoid-conflict-with-guava.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.checkerframework/checker-qual/3.12.0/d5692f0526415fcc6de94bb5bfbd3afd9dd3b3e5/checker-qual-3.12.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.google.errorprone/error_prone_annotations/2.11.0/c5a0ace696d3f8b1c1d8cc036d8c03cc0cbe6b69/error_prone_annotations-2.11.0.jar:/home/az/.gradle/caches/modules-2/files-2.1/com.google.j2objc/j2objc-annotations/1.3/ba035118bc8bac37d7eff77700720999acd9986d/j2objc-annotations-1.3.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.antlr/ST4/4.3/92f2c1ad8d84abcbeead6cf7f2c53a04166293c2/ST4-4.3.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.antlr/antlr-runtime/3.5.2/cd9cd41361c155f3af0f653009dcecb08d8b4afd/antlr-runtime-3.5.2.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.abego.treelayout/org.abego.treelayout.core/1.0.3/457216e8e6578099ae63667bb1e4439235892028/org.abego.treelayout.core-1.0.3.jar:/home/az/.gradle/caches/modules-2/files-2.1/org.glassfish/javax.json/1.0.4/3178f73569fd7a1e5ffc464e680f7a8cc784b85a/javax.json-1.0.4.jar)
+		at com.sun.jna.Native.extractFromResourcePath(Native.java:1145) ~[jna-5.12.1.jar:5.12.1 (b0)]
+		at com.sun.jna.NativeLibrary.loadLibrary(NativeLibrary.java:281) ~[jna-5.12.1.jar:5.12.1 (b0)]
+		at com.sun.jna.NativeLibrary.getInstance(NativeLibrary.java:467) ~[jna-5.12.1.jar:5.12.1 (b0)]
+		at com.sun.jna.NativeLibrary.getInstance(NativeLibrary.java:409) ~[jna-5.12.1.jar:5.12.1 (b0)]
+		at com.mojang.text2speech.NarratorLinux$FliteLibrary.loadNative(NarratorLinux.java:67) ~[text2speech-1.17.9.jar:?]
+		at com.mojang.text2speech.NarratorLinux.<init>(NarratorLinux.java:18) ~[text2speech-1.17.9.jar:?]
+		at com.mojang.text2speech.Narrator.getNarrator(Narrator.java:41) ~[text2speech-1.17.9.jar:?]
+		at net.minecraft.client.gui.screens.AccessibilityOnboardingScreen.closeAndSetScreen(AccessibilityOnboardingScreen.java:97) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.screens.AccessibilityOnboardingScreen.onClose(AccessibilityOnboardingScreen.java:90) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.screens.AccessibilityOnboardingScreen.lambda$init$2(AccessibilityOnboardingScreen.java:74) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.components.Button.onPress(Button.java:38) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.components.AbstractButton.onClick(AbstractButton.java:55) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.components.AbstractWidget.mouseClicked(AbstractWidget.java:175) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.components.events.ContainerEventHandler.mouseClicked(ContainerEventHandler.java:38) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.MouseHandler.lambda$onPress$0(MouseHandler.java:92) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.gui.screens.Screen.wrapScreenError(Screen.java:437) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.MouseHandler.onPress(MouseHandler.java:89) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.MouseHandler.lambda$setup$4(MouseHandler.java:189) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.util.thread.BlockableEventLoop.execute(BlockableEventLoop.java:102) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.MouseHandler.lambda$setup$5(MouseHandler.java:188) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at org.lwjgl.glfw.GLFWMouseButtonCallbackI.callback(GLFWMouseButtonCallbackI.java:43) ~[lwjgl-glfw-3.3.1.jar:build 7]
+		at org.lwjgl.system.JNI.invokeV(Native Method) ~[lwjgl-3.3.1.jar:build 7]
+		at org.lwjgl.glfw.GLFW.glfwWaitEventsTimeout(GLFW.java:3474) ~[lwjgl-glfw-3.3.1.jar:build 7]
+		at com.mojang.blaze3d.systems.RenderSystem.limitDisplayFPS(RenderSystem.java:237) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.Minecraft.runTick(Minecraft.java:1173) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.Minecraft.run(Minecraft.java:718) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at net.minecraft.client.main.Main.main(Main.java:218) ~[forge-1.20.1-47.1.0_mapped_parchment_2023.06.26-1.20.1.jar:?]
+		at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:?]
+		at jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[?:?]
+		at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[?:?]
+		at java.lang.reflect.Method.invoke(Method.java:569) ~[?:?]
+		at net.minecraftforge.fml.loading.targets.CommonLaunchHandler.runTarget(CommonLaunchHandler.java:111) ~[fmlloader-1.20.1-47.1.0.jar:?]
+		at net.minecraftforge.fml.loading.targets.CommonLaunchHandler.clientService(CommonLaunchHandler.java:99) ~[fmlloader-1.20.1-47.1.0.jar:?]
+		at net.minecraftforge.fml.loading.targets.ForgeClientUserdevLaunchHandler.devService(ForgeClientUserdevLaunchHandler.java:19) ~[fmlloader-1.20.1-47.1.0.jar:?]
+		at net.minecraftforge.fml.loading.targets.CommonDevLaunchHandler.lambda$makeService$7(CommonDevLaunchHandler.java:135) ~[fmlloader-1.20.1-47.1.0.jar:?]
+		at cpw.mods.modlauncher.LaunchServiceHandlerDecorator.launch(LaunchServiceHandlerDecorator.java:30) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.LaunchServiceHandler.launch(LaunchServiceHandler.java:53) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.LaunchServiceHandler.launch(LaunchServiceHandler.java:71) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.Launcher.run(Launcher.java:108) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.Launcher.main(Launcher.java:78) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:26) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:23) ~[modlauncher-10.0.9.jar:?]
+		at cpw.mods.bootstraplauncher.BootstrapLauncher.main(BootstrapLauncher.java:141) ~[bootstraplauncher-1.1.2.jar:?]
+[17Sep2025 22:03:47.996] [Realms Notification Availability checker #1/INFO] [com.mojang.realmsclient.client.RealmsClient/]: Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: 0
+[17Sep2025 22:03:50.407] [Worker-Main-14/ERROR] [net.minecraft.tags.TagLoader/]: Couldn't load tag [businesscraft:town_block (from main)] as it is missing following references: businesscraft:town_block (from main)
+[17Sep2025 22:03:50.538] [Render thread/INFO] [net.minecraft.world.item.crafting.RecipeManager/]: Loaded 7 recipes
+[17Sep2025 22:03:50.585] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 1271 advancements
+[17Sep2025 22:05:53.965] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Starting integrated minecraft server version 1.20.1
+[17Sep2025 22:05:53.966] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Generating keypair
+[17Sep2025 22:05:54.004] [Server thread/WARN] [net.minecraftforge.common.ForgeConfigSpec/CORE]: Configuration file ./saves/New World/serverconfig/forge-server.toml is not correct. Correcting
+[17Sep2025 22:05:54.004] [Server thread/WARN] [net.minecraftforge.common.ForgeConfigSpec/CORE]: Incorrect key server was corrected from null to its default, SimpleCommentedConfig:{}. 
+[17Sep2025 22:05:54.004] [Server thread/WARN] [net.minecraftforge.common.ForgeConfigSpec/CORE]: Incorrect key server.removeErroringBlockEntities was corrected from null to its default, false. 
+[17Sep2025 22:05:54.004] [Server thread/WARN] [net.minecraftforge.common.ForgeConfigSpec/CORE]: Incorrect key server.removeErroringEntities was corrected from null to its default, false. 
+[17Sep2025 22:05:54.004] [Server thread/WARN] [net.minecraftforge.common.ForgeConfigSpec/CORE]: Incorrect key server.fullBoundingBoxLadders was corrected from null to its default, false. 
+[17Sep2025 22:05:54.005] [Server thread/WARN] [net.minecraftforge.common.ForgeConfigSpec/CORE]: Incorrect key server.zombieBaseSummonChance was corrected from null to its default, 0.1. 
+[17Sep2025 22:05:54.005] [Server thread/WARN] [net.minecraftforge.common.ForgeConfigSpec/CORE]: Incorrect key server.zombieBabyChance was corrected from null to its default, 0.05. 
+[17Sep2025 22:05:54.005] [Server thread/WARN] [net.minecraftforge.common.ForgeConfigSpec/CORE]: Incorrect key server.permissionHandler was corrected from null to its default, forge:default_handler. 
+[17Sep2025 22:05:54.395] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Preparing start region for dimension minecraft:overworld
+[17Sep2025 22:05:54.693] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[17Sep2025 22:05:54.912] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 2%
+[17Sep2025 22:05:55.421] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 75%
+[17Sep2025 22:05:55.710] [Server thread/INFO] [net.minecraftforge.server.permission.PermissionAPI/]: Successfully initialized permission handler forge:default_handler
+[17Sep2025 22:05:55.710] [Server thread/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: Server started, initializing town data...
+[17Sep2025 22:05:55.711] [Server thread/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: Loaded 0 towns for level: minecraft:overworld
+[17Sep2025 22:05:55.712] [Server thread/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: Loaded 0 towns for level: minecraft:the_end
+[17Sep2025 22:05:55.712] [Server thread/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: Loaded 0 towns for level: minecraft:the_nether
+[17Sep2025 22:05:55.723] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Time elapsed: 1314 ms
+[17Sep2025 22:05:55.759] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing view distance to 12, from 10
+[17Sep2025 22:05:55.760] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing simulation distance to 12, from 0
+[17Sep2025 22:05:55.811] [Render thread/WARN] [io.netty.util.internal.SystemPropertyUtil/]: Unable to parse the boolean system property 'java.net.preferIPv6Addresses':system - using the default value: false
+[17Sep2025 22:05:56.123] [Netty Local Client IO #0/INFO] [net.minecraftforge.network.NetworkHooks/]: Connected to a modded server.
+[17Sep2025 22:05:56.142] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Dev[local:E:6694cdc4] logged in with entity id 8 at (8.5, -60.0, -3.5)
+[17Sep2025 22:05:56.179] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev joined the game
+[17Sep2025 22:05:56.513] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 2 advancements
+[17Sep2025 22:06:02.511] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Dev: Gave 1 [Town Interface] to Dev]
+[17Sep2025 22:06:02.518] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Gave 1 [Town Interface] to Dev
+[17Sep2025 22:06:04.847] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] Found town with ID e24d1be5-319a-492c-b591-64c66361937e at position MutableBlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:06:04.847] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.847] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.847] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.852] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:06:04.855] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:06:04.856] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.TownNamePopupManager/]: [DEBUG] TownNamePopupManager instance created
+[17Sep2025 22:06:04.856] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] ButtonActionCoordinator initialized
+[17Sep2025 22:06:04.857] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:06:04.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.966] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.966] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.966] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.966] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.966] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.966] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:04.966] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:05.815] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:06.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:07.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:08.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:09.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:09.937] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:06:10.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:11.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:12.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:13.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:14.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:15.021] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:06:15.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:16.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:17.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:18.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:19.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:20.076] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:06:20.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:21.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:22.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:23.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:24.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:25.120] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:06:25.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:26.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:27.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:28.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:29.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:30.173] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:06:30.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:31.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:32.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:33.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:34.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:35.215] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:06:35.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:36.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:37.815] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:38.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:39.813] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:40.258] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:06:40.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:41.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:42.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:43.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:44.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:45.300] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:06:45.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:46.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:47.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:48.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:49.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:50.432] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:06:50.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:51.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:52.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:53.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:54.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:55.475] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:06:55.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:56.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:57.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:58.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:06:59.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:07:00.541] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:07:00.814] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:07:01.486] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.TownNamePopupManager/]: [DEBUG] TownNamePopupManager cleanup completed
+[17Sep2025 22:07:01.486] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] ButtonActionCoordinator cleanup completed
+[17Sep2025 22:07:01.487] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket/]: [DEBUG] Player 380df991-f603-344c-a090-369bad2a924a exited TownInterfaceEntity UI at BlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:07:01.489] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.PlatformVisualizationPacket/]: [DEBUG] Client received platform visualization enable for town at BlockPos{x=8, y=-60, z=-4}, requested immediate boundary sync
+[17Sep2025 22:07:01.490] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=-4}: boundary radius=5
+[17Sep2025 22:07:01.497] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=-4}: updated to boundary radius=5
+[17Sep2025 22:07:02.639] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:07:02.640] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 1 boundary sync requests to server
+[17Sep2025 22:07:02.640] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=-4}: boundary radius=5
+[17Sep2025 22:07:02.647] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=-4}: updated to boundary radius=5
+[17Sep2025 22:07:04.646] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:07:04.646] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 1 boundary sync requests to server
+[17Sep2025 22:07:04.646] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=-4}: boundary radius=5
+[17Sep2025 22:07:04.653] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=-4}: updated to boundary radius=5
+[17Sep2025 22:07:04.662] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
+[17Sep2025 22:07:04.666] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
+[17Sep2025 22:07:04.672] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
+[17Sep2025 22:07:04.672] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
+[17Sep2025 22:07:06.648] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:07:06.648] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 1 boundary sync requests to server
+[17Sep2025 22:07:06.648] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=-4}: boundary radius=5
+[17Sep2025 22:07:06.655] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=-4}: updated to boundary radius=5
+[17Sep2025 22:07:08.652] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:07:08.652] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 1 boundary sync requests to server
+[17Sep2025 22:07:08.652] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=-4}: boundary radius=5
+[17Sep2025 22:07:08.659] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=-4}: updated to boundary radius=5
+[17Sep2025 22:07:10.652] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:07:10.652] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 1 boundary sync requests to server
+[17Sep2025 22:07:10.652] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=-4}: boundary radius=5
+[17Sep2025 22:07:10.660] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=-4}: updated to boundary radius=5
+[17Sep2025 22:07:12.653] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:07:12.653] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 1 boundary sync requests to server
+[17Sep2025 22:07:12.653] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=-4}: boundary radius=5
+[17Sep2025 22:07:12.660] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=-4}: updated to boundary radius=5
+[17Sep2025 22:07:14.652] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:07:14.652] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 1 boundary sync requests to server
+[17Sep2025 22:07:14.652] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=-4}: boundary radius=5
+[17Sep2025 22:07:14.659] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=-4}: updated to boundary radius=5
+[17Sep2025 22:07:16.658] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:07:16.658] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 1 boundary sync requests to server
+[17Sep2025 22:07:16.659] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=-4}: boundary radius=5
+[17Sep2025 22:07:16.666] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=-4}: updated to boundary radius=5
+[17Sep2025 22:07:18.663] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:07:18.663] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 1 boundary sync requests to server
+[17Sep2025 22:07:18.665] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=-4}: boundary radius=5
+[17Sep2025 22:07:18.670] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=-4}: updated to boundary radius=5
+[17Sep2025 22:07:19.084] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Town cannot be placed here - Town too close to existing town 'Maplehaven' - distance: 9.0, required: 10.0 (your boundary: 5 + their boundary: 5)
+[17Sep2025 22:07:19.916] [Server thread/INFO] [com.quackers29.businesscraft.event.PlayerBoundaryTracker/]: Sent welcome message to Dev: 🏘️ Welcome to Pinehurst
+[17Sep2025 22:07:20.575] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] Found town with ID be99731c-23c9-4170-b3ba-1e1261d904de at position MutableBlockPos{x=8, y=-60, z=8}
+[17Sep2025 22:07:20.575] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:07:20.575] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:07:20.575] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:07:20.583] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:07:20.583] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:07:20.583] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.TownNamePopupManager/]: [DEBUG] TownNamePopupManager instance created
+[17Sep2025 22:07:20.583] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] ButtonActionCoordinator initialized
+[17Sep2025 22:07:20.583] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 10
+[17Sep2025 22:07:20.669] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:07:20.669] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 1 boundary sync requests to server
+[17Sep2025 22:07:20.669] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=-4}: boundary radius=5
+[17Sep2025 22:07:20.675] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=-4}: updated to boundary radius=5
+[17Sep2025 22:07:21.564] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 10
+[17Sep2025 22:07:21.896] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.896] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:21.965] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:22.471] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.TownNamePopupManager/]: [DEBUG] TownNamePopupManager cleanup completed
+[17Sep2025 22:07:22.471] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] ButtonActionCoordinator cleanup completed
+[17Sep2025 22:07:22.471] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket/]: [DEBUG] Player 380df991-f603-344c-a090-369bad2a924a exited TownInterfaceEntity UI at BlockPos{x=8, y=-60, z=8}
+[17Sep2025 22:07:22.472] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.PlatformVisualizationPacket/]: [DEBUG] Client received platform visualization enable for town at BlockPos{x=8, y=-60, z=8}, requested immediate boundary sync
+[17Sep2025 22:07:22.473] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=8}: boundary radius=5
+[17Sep2025 22:07:22.481] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=8}: updated to boundary radius=5
+[17Sep2025 22:07:22.669] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:07:22.669] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=8}
+[17Sep2025 22:07:22.669] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 2 boundary sync requests to server
+[17Sep2025 22:07:22.669] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=-4}: boundary radius=5
+[17Sep2025 22:07:22.669] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=8}: boundary radius=5
+[17Sep2025 22:07:22.675] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=-4}: updated to boundary radius=5
+[17Sep2025 22:07:22.675] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=8}: updated to boundary radius=5
+[17Sep2025 22:07:22.881] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] Found town with ID be99731c-23c9-4170-b3ba-1e1261d904de at position MutableBlockPos{x=8, y=-60, z=8}
+[17Sep2025 22:07:22.881] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:22.881] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:22.881] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:22.889] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
+[17Sep2025 22:07:22.889] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
+[17Sep2025 22:07:22.889] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.TownNamePopupManager/]: [DEBUG] TownNamePopupManager instance created
+[17Sep2025 22:07:22.889] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] ButtonActionCoordinator initialized
+[17Sep2025 22:07:22.889] [Render thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] getSearchRadius() returning entity value: 20
+[17Sep2025 22:07:22.966] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:23.864] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:24.668] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:07:24.669] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=-4}: boundary radius=5
+[17Sep2025 22:07:24.669] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=8}
+[17Sep2025 22:07:24.669] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 2 boundary sync requests to server
+[17Sep2025 22:07:24.669] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=8}: boundary radius=5
+[17Sep2025 22:07:24.675] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=-4}: updated to boundary radius=5
+[17Sep2025 22:07:24.675] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=8}: updated to boundary radius=5
+[17Sep2025 22:07:24.864] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:24.969] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:24.973] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 💰 Tourism Revenue | Maplehaven → Pinehurst (12m) | +1 emeralds
+[17Sep2025 22:07:24.973] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 🏆 Distance Milestone | 12m journey | +1 Bread, 2 Bottle o' Enchanting
+[17Sep2025 22:07:25.864] [Server thread/INFO] [BusinessCraft/TownInterfaceMenu/]: [DEBUG] updateDataSlots() setting town search radius: 20
+[17Sep2025 22:07:26.550] [Render thread/INFO] [com.quackers29.businesscraft.ui.managers.ButtonActionCoordinator/]: [DEBUG] Handling manage storage action
+[17Sep2025 22:07:26.552] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.OpenPaymentBoardPacket/]: [DEBUG] Opening Payment Board for player Dev at position BlockPos{x=8, y=-60, z=8}
+[17Sep2025 22:07:26.555] [Server thread/INFO] [com.quackers29.businesscraft.menu.PaymentBoardMenu/]: [DEBUG] connectToTownBlockEntity called on SERVER - townBlockPos: BlockPos{x=8, y=-60, z=8}
+[17Sep2025 22:07:26.555] [Server thread/INFO] [com.quackers29.businesscraft.menu.PaymentBoardMenu/]: [DEBUG] BlockEntity at BlockPos{x=8, y=-60, z=8}: com.quackers29.businesscraft.block.entity.TownInterfaceEntity@6a275c9f
+[17Sep2025 22:07:26.555] [Server thread/INFO] [com.quackers29.businesscraft.menu.PaymentBoardMenu/]: [DEBUG] Got buffer handler: true
+[17Sep2025 22:07:26.555] [Server thread/INFO] [com.quackers29.businesscraft.menu.PaymentBoardMenu/]: [DEBUG] Successfully reconnected buffer slots to real handler
+[17Sep2025 22:07:26.556] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.OpenPaymentBoardPacket/]: [DEBUG] Successfully opened Payment Board for player Dev
+[17Sep2025 22:07:26.556] [Render thread/INFO] [com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen/]: [DEBUG] PaymentBoardScreen.requestPaymentBoardData() - Requesting data from server for town block at BlockPos{x=8, y=-60, z=8}
+[17Sep2025 22:07:26.556] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardRequestPacket/]: [DEBUG] PaymentBoardRequestPacket.handle() - received packet from player: Dev, level: ServerLevel
+[17Sep2025 22:07:26.556] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardRequestPacket/]: [DEBUG] Received payment board data request from player Dev for town block at BlockPos{x=8, y=-60, z=8}
+[17Sep2025 22:07:26.557] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardRequestPacket/]: [DEBUG] Sending 1 rewards to player Dev for town Pinehurst
+[17Sep2025 22:07:26.557] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferStoragePacket/]: [DEBUG] Received request for all buffer storage data from player Dev
+[17Sep2025 22:07:26.565] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket/]: [DEBUG] Received payment board update with 1 rewards
+[17Sep2025 22:07:26.565] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
+[17Sep2025 22:07:26.565] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with reward data
+[17Sep2025 22:07:26.566] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
+[17Sep2025 22:07:26.566] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferStoragePacket/]: [DEBUG] Received request for all buffer storage data from player Dev
+[17Sep2025 22:07:26.620] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
+[17Sep2025 22:07:26.620] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
+[17Sep2025 22:07:26.673] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:07:26.674] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=8}
+[17Sep2025 22:07:26.674] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 2 boundary sync requests to server
+[17Sep2025 22:07:26.674] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=-4}: boundary radius=5
+[17Sep2025 22:07:26.674] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=8}: boundary radius=5
+[17Sep2025 22:07:26.681] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=-4}: updated to boundary radius=5
+[17Sep2025 22:07:26.681] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=8}: updated to boundary radius=5
+[17Sep2025 22:07:27.390] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardClaimPacket/]: [DEBUG] PaymentBoardClaimPacket.handle() - received claim request from player: Dev, rewardId: bbcdf5a7-09d3-465d-bdaa-6f8ff9c409fa, toBuffer: true
+[17Sep2025 22:07:27.390] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardClaimPacket/]: [DEBUG] Processing claim request from player Dev for reward bbcdf5a7-09d3-465d-bdaa-6f8ff9c409fa at BlockPos{x=8, y=-60, z=8}
+[17Sep2025 22:07:27.391] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardClaimPacket/]: [DEBUG] Successfully claimed reward bbcdf5a7-09d3-465d-bdaa-6f8ff9c409fa for player Dev - Claimed to buffer storage
+[17Sep2025 22:07:27.398] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket/]: [DEBUG] Received payment board update with 0 rewards
+[17Sep2025 22:07:27.398] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
+[17Sep2025 22:07:27.398] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Claimed to buffer storage
+[17Sep2025 22:07:27.399] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with reward data
+[17Sep2025 22:07:27.399] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
+[17Sep2025 22:07:27.399] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferStoragePacket/]: [DEBUG] Received request for all buffer storage data from player Dev
+[17Sep2025 22:07:27.407] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
+[17Sep2025 22:07:27.407] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
+[17Sep2025 22:07:28.163] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
+[17Sep2025 22:07:28.164] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
+[17Sep2025 22:07:28.164] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
+[17Sep2025 22:07:28.164] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
+[17Sep2025 22:07:28.164] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
+[17Sep2025 22:07:28.164] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
+[17Sep2025 22:07:28.682] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:07:28.682] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=8}
+[17Sep2025 22:07:28.682] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 2 boundary sync requests to server
+[17Sep2025 22:07:28.682] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=-4}: boundary radius=5
+[17Sep2025 22:07:28.682] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=8}: boundary radius=5
+[17Sep2025 22:07:28.688] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=-4}: updated to boundary radius=5
+[17Sep2025 22:07:28.688] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=8}: updated to boundary radius=5
+[17Sep2025 22:07:28.950] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
+[17Sep2025 22:07:28.950] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
+[17Sep2025 22:07:28.950] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
+[17Sep2025 22:07:28.950] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
+[17Sep2025 22:07:28.950] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
+[17Sep2025 22:07:28.950] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
+[17Sep2025 22:07:29.371] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 3 advancements
+[17Sep2025 22:07:29.673] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
+[17Sep2025 22:07:29.673] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
+[17Sep2025 22:07:29.673] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Received slot-based buffer storage update with 18 slots
+[17Sep2025 22:07:29.673] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
+[17Sep2025 22:07:29.673] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
+[17Sep2025 22:07:29.673] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket/]: [DEBUG] Updating PaymentBoardScreen with slot-based buffer storage data
+[17Sep2025 22:07:30.562] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
+[17Sep2025 22:07:30.563] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
+[17Sep2025 22:07:30.566] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
+[17Sep2025 22:07:30.567] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
+[17Sep2025 22:07:30.685] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=-4}
+[17Sep2025 22:07:30.685] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Requested boundary sync for active town at BlockPos{x=8, y=-60, z=8}
+[17Sep2025 22:07:30.686] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer/]: [DEBUG] Sent 2 boundary sync requests to server
+[17Sep2025 22:07:30.686] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=-4}: boundary radius=5
+[17Sep2025 22:07:30.686] [Server thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket/]: [DEBUG] Boundary sync request for town at BlockPos{x=8, y=-60, z=8}: boundary radius=5
+[17Sep2025 22:07:30.692] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=-4}: updated to boundary radius=5
+[17Sep2025 22:07:30.692] [Render thread/INFO] [com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket/]: [DEBUG] Boundary sync response for town at BlockPos{x=8, y=-60, z=8}: updated to boundary radius=5
+[17Sep2025 22:07:31.565] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Dev lost connection: Disconnected
+[17Sep2025 22:07:31.565] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev left the game
+[17Sep2025 22:07:31.567] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Stopping singleplayer server as player logged out
+[17Sep2025 22:07:31.612] [Server thread/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: Server stopping, saving town data...
+[17Sep2025 22:07:31.612] [Server thread/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: Clearing tracked vehicles on server stopping
+[17Sep2025 22:07:31.612] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Stopping server
+[17Sep2025 22:07:31.612] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving players
+[17Sep2025 22:07:31.612] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving worlds
+[17Sep2025 22:07:31.937] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
+[17Sep2025 22:07:31.982] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
+[17Sep2025 22:07:31.982] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
+[17Sep2025 22:07:31.988] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (New World): All chunks are saved
+[17Sep2025 22:07:31.988] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[17Sep2025 22:07:31.988] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[17Sep2025 22:07:31.989] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage: All dimensions are saved
+[17Sep2025 22:07:32.846] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Stopping!
