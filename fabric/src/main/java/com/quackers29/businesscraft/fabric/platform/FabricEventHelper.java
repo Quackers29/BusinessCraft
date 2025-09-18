@@ -19,17 +19,17 @@ public class FabricEventHelper implements EventHelper {
     }
 
     @Override
-    public void addServerStoppingListener(Object listener) {
+    public void addServerStoppingListener(java.util.function.Consumer<Void> listener) {
         // This will be handled in the main mod class
     }
 
     @Override
-    public void addServerStartedListener(Object listener) {
+    public void addServerStartedListener(java.util.function.Consumer<Void> listener) {
         // This will be handled in the main mod class
     }
 
     @Override
-    public void addLevelUnloadListener(Object listener) {
+    public void addLevelUnloadListener(java.util.function.Consumer<Void> listener) {
         // This will be handled in the main mod class
     }
 

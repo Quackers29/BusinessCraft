@@ -1,39 +1,47 @@
 package com.quackers29.businesscraft.fabric.network.packets.misc;
 
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Fabric implementation of BaseBlockEntityPacket using Fabric networking APIs.
+ * Base class for packets that interact with block entities.
  */
 public abstract class BaseBlockEntityPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseBlockEntityPacket.class);
 
-    protected final Object pos; // Will be BlockPos at runtime
+    protected final BlockPos pos;
 
-    public BaseBlockEntityPacket(Object pos) {
+    public BaseBlockEntityPacket(BlockPos pos) {
         this.pos = pos;
     }
 
-    public void toBytes(Object buf) {
-        // Fabric-specific serialization
-        // This would serialize the BlockPos using Fabric APIs
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeBlockPos(pos);
     }
 
-    public static BaseBlockEntityPacket fromBytes(Object buf) {
-        // Fabric-specific deserialization
-        return null; // Abstract method - subclasses implement this
+    public static BaseBlockEntityPacket fromBytes(FriendlyByteBuf buf) {
+        // This method should be overridden by subclasses
+        // For now, return null to indicate this is abstract
+        return null;
     }
 
-    protected void handlePacket(Object context, Object handler) {
-        // Fabric-specific packet handling
-        // This would handle the packet using Fabric networking context
-        LOGGER.info("BaseBlockEntityPacket handled at position: {}", pos);
+    public void handle(ServerPlayer player) {
+        // Handle the packet on the server side
+        LOGGER.info("BaseBlockEntityPacket handled at position: {} for player: {}",
+                   pos, player.getName().getString());
+
+        // TODO: Implement the actual packet handling logic
+        // This would typically involve:
+        // 1. Validating the player's access to the block entity
+        // 2. Getting the block entity at the position
+        // 3. Performing the requested operation
+        // 4. Sending appropriate response packets
     }
 
     // Getters
-    public Object getPos() { return pos; }
-
-    // Abstract methods that subclasses must implement
-    public abstract void handle(Object player);
+    public BlockPos getPos() { return pos; }
 }

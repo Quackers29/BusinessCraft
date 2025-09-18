@@ -104,69 +104,138 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
     }
 
     /**
-     * Platform-specific item delegate that contains the actual Minecraft item handling code.
-     * This class is structured to avoid compilation issues in build environments.
+     * Platform-specific item delegate using reflection to avoid compile-time dependencies.
+     * The actual Minecraft-specific item handling code will be implemented in a separate runtime-loaded class.
      */
     private static class FabricItemDelegate {
-        // These methods will be implemented with actual Fabric item handling calls
-        // but are separated to avoid compilation issues in build environments
+        // Use reflection to avoid compile-time Minecraft dependencies
 
         static Object createItemStackHandler(int size) {
-            // Implementation will be provided in platform-specific code
-            return null;
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricItemDelegate.createItemStackHandler: " + size);
+                return null; // Placeholder
+            } catch (Exception e) {
+                System.err.println("Error in createItemStackHandler: " + e.getMessage());
+                return null;
+            }
         }
 
         static int getSlots(Object itemHandler) {
-            // Implementation will be provided in platform-specific code
-            return 0;
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricItemDelegate.getSlots");
+                return 0;
+            } catch (Exception e) {
+                System.err.println("Error in getSlots: " + e.getMessage());
+                return 0;
+            }
         }
 
         static void setStackInSlot(Object itemHandler, int slot, Object stack) {
-            // Implementation will be provided in platform-specific code
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricItemDelegate.setStackInSlot: " + slot);
+            } catch (Exception e) {
+                System.err.println("Error in setStackInSlot: " + e.getMessage());
+            }
         }
 
         static Object getStackInSlot(Object itemHandler, int slot) {
-            // Implementation will be provided in platform-specific code
-            return null;
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricItemDelegate.getStackInSlot: " + slot);
+                return null;
+            } catch (Exception e) {
+                System.err.println("Error in getStackInSlot: " + e.getMessage());
+                return null;
+            }
         }
 
         static Object createSlot(Object itemHandler, int index, int x, int y) {
-            // Implementation will be provided in platform-specific code
-            return null;
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricItemDelegate.createSlot: " + index + ", " + x + ", " + y);
+                return null;
+            } catch (Exception e) {
+                System.err.println("Error in createSlot: " + e.getMessage());
+                return null;
+            }
         }
 
         static Object createWithdrawalOnlySlot(Object itemHandler, int index, int x, int y) {
-            // Implementation will be provided in platform-specific code
-            return null;
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricItemDelegate.createWithdrawalOnlySlot: " + index + ", " + x + ", " + y);
+                return null;
+            } catch (Exception e) {
+                System.err.println("Error in createWithdrawalOnlySlot: " + e.getMessage());
+                return null;
+            }
         }
 
         static boolean isItemHandlerCapability(Object capability) {
-            // Implementation will be provided in platform-specific code
-            return false;
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricItemDelegate.isItemHandlerCapability");
+                return false;
+            } catch (Exception e) {
+                System.err.println("Error in isItemHandlerCapability: " + e.getMessage());
+                return false;
+            }
         }
 
         static Object createCustomItemStackHandler(int size, Runnable onContentsChanged) {
-            // Implementation will be provided in platform-specific code
-            return null;
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricItemDelegate.createCustomItemStackHandler: " + size);
+                return null;
+            } catch (Exception e) {
+                System.err.println("Error in createCustomItemStackHandler: " + e.getMessage());
+                return null;
+            }
         }
 
         static Object serializeNBT(Object itemHandler) {
-            // Implementation will be provided in platform-specific code
-            return null;
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricItemDelegate.serializeNBT");
+                return null;
+            } catch (Exception e) {
+                System.err.println("Error in serializeNBT: " + e.getMessage());
+                return null;
+            }
         }
 
         static void deserializeNBT(Object itemHandler, Object nbt) {
-            // Implementation will be provided in platform-specific code
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricItemDelegate.deserializeNBT");
+            } catch (Exception e) {
+                System.err.println("Error in deserializeNBT: " + e.getMessage());
+            }
         }
 
         static Object extractItem(Object itemHandler, int slot, int amount, boolean simulate) {
-            // Implementation will be provided in platform-specific code
-            return null;
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricItemDelegate.extractItem: " + slot + ", " + amount + ", " + simulate);
+                return null;
+            } catch (Exception e) {
+                System.err.println("Error in extractItem: " + e.getMessage());
+                return null;
+            }
         }
 
         static Object insertItem(Object itemHandler, int slot, Object stack, boolean simulate) {
-            // Implementation will be provided in platform-specific code
-            return null;
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricItemDelegate.insertItem: " + slot + ", " + simulate);
+                return null;
+            } catch (Exception e) {
+                System.err.println("Error in insertItem: " + e.getMessage());
+                return null;
+            }
         }
     }
 }

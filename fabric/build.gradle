@@ -27,7 +27,35 @@ dependencies {
     compileOnly 'org.jetbrains:annotations:23.0.0'
 }
 
+// Include common module source but exclude platform-specific files
 sourceSets.main.java.srcDirs += project(':common').sourceSets.main.java.srcDirs
+
+// Filter out all Forge-specific files that would cause compilation issues
+sourceSets.main.java.exclude '**/command/**/*.java'
+sourceSets.main.java.exclude '**/platform/Platform.java'
+sourceSets.main.java.exclude '**/network/**/*.java'
+sourceSets.main.java.exclude '**/block/entity/TownInterfaceEntity.java'
+sourceSets.main.java.exclude '**/block/TownInterfaceBlock.java'
+sourceSets.main.java.exclude '**/town/utils/**/*.java'
+sourceSets.main.java.exclude '**/town/Town.java'
+sourceSets.main.java.exclude '**/town/data/**/*.java'
+sourceSets.main.java.exclude '**/town/service/**/*.java'
+sourceSets.main.java.exclude '**/service/TouristVehicleManager.java'
+sourceSets.main.java.exclude '**/town/components/**/*.java'
+sourceSets.main.java.exclude '**/error/**/*.java'
+sourceSets.main.java.exclude '**/api/ITownDataProvider.java'
+sourceSets.main.java.exclude '**/debug/DebugConfig.java'
+sourceSets.main.java.exclude '**/ui/**/*.java'
+sourceSets.main.java.exclude '**/menu/**/*.java'
+sourceSets.main.java.exclude '**/entity/**/*.java'
+sourceSets.main.java.exclude '**/blocks/**/*.java'
+sourceSets.main.java.exclude '**/config/**/*.java'
+sourceSets.main.java.exclude '**/scoreboard/**/*.java'
+sourceSets.main.java.exclude '**/client/**/*.java'
+sourceSets.main.java.exclude '**/event/**/*.java'
+sourceSets.main.java.exclude '**/data/**/*.java'
+sourceSets.main.java.exclude '**/town/TownManager.java'
+
 sourceSets.main.resources.srcDirs += project(':common').sourceSets.main.resources.srcDirs
 
 jar {

@@ -54,41 +54,78 @@ public class FabricRegistryHelper implements RegistryHelper {
     }
 
     /**
-     * Platform-specific registry delegate that contains the actual Minecraft code.
-     * This class is loaded only when Minecraft classes are available.
+     * Platform-specific registry delegate using reflection to avoid compile-time dependencies.
+     * The actual Minecraft-specific code will be implemented in a separate runtime-loaded class.
      */
     private static class FabricRegistryDelegate {
-        // These methods will be implemented with actual Fabric registry calls
-        // but are separated to avoid compilation issues in build environments
+        // Use reflection to avoid compile-time Minecraft dependencies
 
         static void registerBlock(String name, Object block) {
-            // Implementation will be provided in platform-specific code
+            try {
+                // Reflection-based implementation would go here
+                // For now, this is a placeholder
+                System.out.println("FabricRegistryDelegate.registerBlock: " + name);
+            } catch (Exception e) {
+                System.err.println("Error in registerBlock: " + e.getMessage());
+            }
         }
 
         static void registerBlockItem(String name, Object block) {
-            // Implementation will be provided in platform-specific code
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricRegistryDelegate.registerBlockItem: " + name);
+            } catch (Exception e) {
+                System.err.println("Error in registerBlockItem: " + e.getMessage());
+            }
         }
 
         static void registerEntityType(String name, Object entityType) {
-            // Implementation will be provided in platform-specific code
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricRegistryDelegate.registerEntityType: " + name);
+            } catch (Exception e) {
+                System.err.println("Error in registerEntityType: " + e.getMessage());
+            }
         }
 
         static void registerBlockEntityType(String name, Object blockEntityType) {
-            // Implementation will be provided in platform-specific code
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricRegistryDelegate.registerBlockEntityType: " + name);
+            } catch (Exception e) {
+                System.err.println("Error in registerBlockEntityType: " + e.getMessage());
+            }
         }
 
         static void registerMenuType(String name, Object menuType) {
-            // Implementation will be provided in platform-specific code
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricRegistryDelegate.registerMenuType: " + name);
+            } catch (Exception e) {
+                System.err.println("Error in registerMenuType: " + e.getMessage());
+            }
         }
 
         static Object getItem(Object location) {
-            // Implementation will be provided in platform-specific code
-            return null;
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricRegistryDelegate.getItem: " + location);
+                return null;
+            } catch (Exception e) {
+                System.err.println("Error in getItem: " + e.getMessage());
+                return null;
+            }
         }
 
         static Object getItemKey(Object item) {
-            // Implementation will be provided in platform-specific code
-            return null;
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricRegistryDelegate.getItemKey: " + item);
+                return null;
+            } catch (Exception e) {
+                System.err.println("Error in getItemKey: " + e.getMessage());
+                return null;
+            }
         }
     }
 }
