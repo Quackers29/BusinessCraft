@@ -40,29 +40,82 @@
 - [x] **🧪 TEST MILESTONE**: Fabric module configures and downloads dependencies successfully
 
 ### **5.1.1 Fix Remaining Compilation Issues** 🎯 **HIGH PRIORITY**
-- [x] **Resolve MenuType abstractions** - MenuType system now uses Object abstraction ✅
-- [x] **Update menu classes** - All menu constructors use PlatformAccess with proper casting ✅
-- [x] **Fix SlotBasedStorage imports** - Restored full functionality with proper Minecraft imports ✅
-- [x] **Fix RewardEntry imports** - Restored full functionality with proper Minecraft imports ✅
-- [x] **Create Fabric platform implementations** - Created platform-specific versions:
-  - `FabricPlatform.java` - Platform data structures with Object abstractions ✅
-  - `FabricClearTownsCommand.java` - Command system using Fabric APIs ✅
-  - `FabricBufferStoragePacket.java` - Network packet with Object types ✅
-  - `FabricBaseBlockEntityPacket.java` - Base packet class for block entities ✅
-  - `FabricITownDataProvider.java` - Town data interface with Object types ✅
-  - `FabricTouristUtils.java` - Tourist utilities with Fabric-specific logic ✅
-- [ ] **Make common module platform-agnostic** - Remove direct Minecraft imports from common files:
-  - `common/src/main/java/com/quackers29/businesscraft/platform/Platform.java`
-  - `common/src/main/java/com/quackers29/businesscraft/command/ClearTownsCommand.java`
-  - `common/src/main/java/com/quackers29/businesscraft/network/packets/BufferStoragePacket.java`
-  - `common/src/main/java/com/quackers29/businesscraft/network/packets/BaseBlockEntityPacket.java`
-  - `common/src/main/java/com/quackers29/businesscraft/api/ITownDataProvider.java`
-  - `common/src/main/java/com/quackers29/businesscraft/town/utils/TouristUtils.java`
-- [ ] **Complete API interface abstractions** - Abstract remaining Minecraft types in common module APIs
-- [ ] **Update Fabric platform helpers** - Fix Fabric implementations to use correct abstractions
-- [ ] **Resolve Fabric compilation errors** - Address remaining ~2300 compilation errors in Fabric module
-- [ ] **Test dual compilation** - Ensure both Forge and Fabric compile without errors
-- [ ] **🧪 TEST MILESTONE**: Both Forge and Fabric modules compile successfully
+
+#### **Phase 5.1.1.1: Abstract Common Module Files** 🔧 **CRITICAL**
+- [ ] **Abstract Platform.java (Lines 6-10)**:
+  - Replace `BlockPos`, `CompoundTag`, `ListTag` with Object types
+  - Update constructor signatures to use Object parameters
+  - Abstract `save()` method to return Object instead of CompoundTag
+  - Abstract `fromNBT()` static method to accept Object parameter
+- [ ] **Abstract ClearTownsCommand.java (Lines 3-8)**:
+  - Replace `CommandSourceStack`, `Commands`, `Component` with Object types
+  - Abstract `register()` method signature to accept Object dispatcher
+  - Abstract `execute()` method to accept Object context
+- [ ] **Abstract BufferStoragePacket.java (Lines 5-21)**:
+  - Replace all Minecraft imports with Object types
+  - Abstract constructor parameters (BlockPos→Object, ItemStack→Object, etc.)
+  - Abstract `toBytes()`, `fromBytes()` methods to use Object buf parameter
+  - Abstract `handle()` method to use Object context/player parameters
+  - Remove Forge-specific `NetworkEvent` import
+- [ ] **Abstract BaseBlockEntityPacket.java (Lines 3-9)**:
+  - Replace all Minecraft imports with Object types
+  - Abstract constructor and methods to use Object types
+  - Remove Forge-specific `NetworkEvent` import
+- [ ] **Abstract ITownDataProvider.java (Lines 3-4, 56)**:
+  - Replace `BlockPos`, `Item` with Object types
+  - Abstract all method signatures to use Object parameters
+  - Replace direct `Items.BREAD` reference with platform-agnostic constant
+- [ ] **Abstract TouristUtils.java (Line 5)**:
+  - Replace `Villager` import with Object type
+  - Abstract all method signatures to use Object villager/entity parameters
+
+#### **Phase 5.1.1.2: Implement Fabric Platform Helpers** 🔧 **CRITICAL**
+- [ ] **Implement FabricPlatform.java**:
+  - Complete `fromNBT()` and `save()` methods with actual Fabric serialization
+  - Implement proper Fabric BlockPos/CompoundTag handling
+  - Add Fabric-specific platform logic (currently placeholder)
+- [ ] **Implement FabricClearTownsCommand.java**:
+  - Complete `register()` method with actual Fabric command registration
+  - Implement `execute()` method with Fabric command context handling
+  - Add proper error handling and success feedback
+- [ ] **Implement FabricBufferStoragePacket.java**:
+  - Complete serialization/deserialization with Fabric networking APIs
+  - Implement packet handling with Fabric server player context
+  - Add proper Fabric-specific buffer storage operations
+- [ ] **Implement FabricBaseBlockEntityPacket.java**:
+  - Complete serialization with Fabric ByteBuf APIs
+  - Implement packet handling with Fabric networking context
+  - Add proper Fabric block entity lookup and validation
+- [ ] **Fix FabricITownDataProvider.java**:
+  - Align interface with common module ITownDataProvider
+  - Implement proper Fabric block position and item handling
+  - Add Fabric-specific town data operations
+- [ ] **Implement FabricTouristUtils.java**:
+  - Complete tourist validation with Fabric entity APIs
+  - Implement tourist creation with Fabric world/level APIs
+  - Add proper Fabric-specific tourist tagging and management
+
+#### **Phase 5.1.1.3: Network System Abstraction** 🔧 **HIGH PRIORITY**
+- [ ] **Create PlatformNetworkHelper Interface**:
+  - Define abstract network packet registration methods
+  - Abstract client/server message sending patterns
+  - Platform-agnostic packet serialization interfaces
+- [ ] **Implement FabricNetworkHelper**:
+  - Complete Fabric networking API integration
+  - Implement packet registration for all 22 packet types
+  - Add client-server synchronization methods
+
+#### **Phase 5.1.1.4: Test & Validate** ✅ **CRITICAL**
+- [ ] **Test Common Module Independence**: Verify common module compiles without any Minecraft dependencies
+- [ ] **Test Fabric Module Compilation**: Resolve all compilation errors and ensure clean build
+- [ ] **Test Forge Module Compatibility**: Ensure existing Forge functionality remains intact
+- [ ] **🧪 TEST MILESTONE**: Both Forge and Fabric modules compile successfully without errors
+
+#### **Success Metrics for Phase 5.1.1**
+- ✅ **Zero compilation errors** in both Forge and Fabric modules
+- ✅ **Zero direct Minecraft imports** in common module
+- ✅ **Complete platform abstraction** for all identified classes
+- ✅ **Functional Fabric implementations** for all platform helpers
 
 ### **5.2 Implement Core Fabric Services** 🎯 **HIGH PRIORITY**
 - [ ] **Registry Helper Implementation**:

@@ -46,18 +46,27 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 
 ## Development Commands
 
-### Build and Run
-- **Build all modules**: `./gradlew build`
-- **Build specific module**: `./gradlew :common:build` or `./gradlew :forge:build`
-- **Run client (common)**: `./gradlew :common:runClient`
-- **Run server (common)**: `./gradlew :common:runServer`
-- **Run Fabric client**: `./gradlew :fabric:runClient`
-- **Clean build**: `./gradlew clean build`
+### Build and Run (WSL Recommended)
+**⚠️ IMPORTANT**: Use WSL commands for all Gradle operations to avoid UNC path issues.
+
+- **Build all modules**: `wsl ./gradlew build` (**RECOMMENDED**)
+- **Build specific module**: `wsl ./gradlew :common:build` or `wsl ./gradlew :forge:build`
+- **Build Fabric module**: `wsl ./gradlew :fabric:build` (**REQUIRED** for proper compilation)
+- **Run client (common)**: `wsl ./gradlew :common:runClient`
+- **Run server (common)**: `wsl ./gradlew :common:runServer`
+- **Run Fabric client**: `wsl ./gradlew :fabric:runClient`
+- **Clean build**: `wsl ./gradlew clean build`
 - **Notify User**: `powershell.exe -Command "[console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200); Start-Sleep -Milliseconds 200; [console]::beep(800,200)"`
 
+### Development Environment Requirements
+**All Gradle commands must use WSL** due to UNC path compatibility issues:
+- ✅ **WSL Terminal**: Proper Unix-like environment for all Gradle operations
+- ❌ **Windows PowerShell**: Causes UNC path issues with Gradle builds
+- ❌ **Command Prompt**: May cause path resolution problems
+
 ### Testing
-- **Run all tests**: `./gradlew test`
-- **Run specific test**: `./gradlew test --tests "ClassName.methodName"`
+- **Run all tests**: `wsl ./gradlew test`
+- **Run specific test**: `wsl ./gradlew test --tests "ClassName.methodName"`
 
 ## Task Management Files
 
