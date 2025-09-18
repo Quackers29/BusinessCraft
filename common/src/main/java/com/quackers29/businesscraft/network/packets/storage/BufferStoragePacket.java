@@ -53,14 +53,15 @@ public class BufferStoragePacket extends BaseBlockEntityPacket {
         buf.writeInt(slotId);
         buf.writeBoolean(isAddOperation);
     }
-    
+
+
     /**
      * Static encode method needed by ModMessages registration
      */
     public static void encode(BufferStoragePacket msg, FriendlyByteBuf buf) {
         msg.toBytes(buf);
     }
-    
+
     /**
      * Static decode method needed by ModMessages registration
      */
@@ -73,104 +74,104 @@ public class BufferStoragePacket extends BaseBlockEntityPacket {
             // Get the player who sent the packet
             ServerPlayer player = ctx.get().getSender();
             if (player == null) return;
-            
+
             // If position is null, we can't process the operation
             if (pos == null) {
                 LOGGER.warn("Received null position in buffer storage packet from player {}", player.getName().getString());
                 return;
             }
-            
+
             // Get the level
             Level level = player.level();
             if (!(level instanceof ServerLevel serverLevel)) {
                 LOGGER.warn("Player level is not a ServerLevel");
                 return;
             }
-            
+
             // Get the town block entity at the position
             BlockEntity blockEntity = level.getBlockEntity(pos);
             if (!(blockEntity instanceof TownInterfaceEntity townInterfaceEntity)) {
                 LOGGER.warn("No town block entity found at position {} for player {}", pos, player.getName().getString());
                 return;
             }
-            
+
             // Get the town manager
             TownManager townManager = TownManager.get(serverLevel);
             if (townManager == null) {
                 LOGGER.error("Town manager is null");
                 return;
             }
-            
+
             // Get the town from the town manager
             Town town = townManager.getTown(townInterfaceEntity.getTownId());
             if (town == null) {
                 LOGGER.warn("No town found for town block at position {} for player {}", pos, player.getName().getString());
                 return;
             }
-            
+
             // Special case: If slotId is -1, this is a request for all buffer storage data
             if (slotId == -1) {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                     "Received request for all buffer storage data from player {}", player.getName().getString());
-                
+
                 // Send a response with slot-based buffer storage data
                 PlatformAccess.getNetworkMessages().sendToPlayer(new BufferSlotStorageResponsePacket(town.getPaymentBoard().getBufferStorageSlots()), player);
                 return;
             }
-            
+
             // Check if the item is empty (only do this check for regular operations, not for data requests)
             if (itemStack.isEmpty()) {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                    "Empty item in buffer storage packet from player {} for slot {} - this is normal for item removal", 
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                    "Empty item in buffer storage packet from player {} for slot {} - this is normal for item removal",
                     player.getName().getString(), slotId);
                 return;
             }
-            
+
             // Process the buffer storage operation
             int itemCount = itemStack.getCount();
             Item item = itemStack.getItem();
-            
+
             // Add to or remove from buffer storage
             boolean success;
             if (isAddOperation) {
                 // Add items to buffer storage
                 success = town.addToCommunalStorage(item, itemCount);
-                
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                    "Buffer storage ADD - Player {} {} {} {} to town {}", 
-                    player.getName().getString(), 
+
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                    "Buffer storage ADD - Player {} {} {} {} to town {}",
+                    player.getName().getString(),
                     success ? "successfully added" : "failed to add",
                     itemCount, item.getDescription().getString(), town.getName());
             } else {
                 // Remove items from buffer storage (negative count)
                 success = town.addToCommunalStorage(item, -itemCount);
-                
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                    "Buffer storage REMOVE - Player {} {} {} {} from town {}", 
-                    player.getName().getString(), 
+
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                    "Buffer storage REMOVE - Player {} {} {} {} from town {}",
+                    player.getName().getString(),
                     success ? "successfully removed" : "failed to remove",
                     itemCount, item.getDescription().getString(), town.getName());
             }
-            
+
             if (success) {
                 // Mark dirty after storage update
                 townManager.markDirty();
-                
+
                 // Force the townInterfaceEntity to update and sync
                 townInterfaceEntity.setChanged();
-                
+
                 // Ensure town data is properly synchronized
                 townInterfaceEntity.syncTownData();
-                
+
                 // Sync the block entity to update client-side resource cache
-                level.sendBlockUpdated(pos, townInterfaceEntity.getBlockState(), townInterfaceEntity.getBlockState(), 
+                level.sendBlockUpdated(pos, townInterfaceEntity.getBlockState(), townInterfaceEntity.getBlockState(),
                     Block.UPDATE_ALL);
-                
+
                 // Send a response to update the UI with slot-based data
                 PlatformAccess.getNetworkMessages().sendToPlayer(new BufferSlotStorageResponsePacket(town.getPaymentBoard().getBufferStorageSlots()), player);
             }
         });
-        
+
         ctx.get().setPacketHandled(true);
     }
 }

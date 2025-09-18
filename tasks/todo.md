@@ -1,8 +1,8 @@
 # BusinessCraft - Development Roadmap
 
-## 🎯 **CURRENT STATUS: LESSONS LEARNED - SIMPLIFIED APPROACH** ✅
+## 🎯 **CURRENT STATUS: CORRECTED APPROACH - DIRECT INTEGRATION** ✅
 
-**🏆 MAJOR LESSON:** Complex platform abstraction with reflection failed. Embracing **direct integration** approach based on alternate.md analysis.
+**🏆 MAJOR LESSON:** Complex platform abstraction failed. Following **alternate.md guidance** for direct integration approach.
 
 ### **✅ COMPLETED: Phase 4 - Initial Forge Implementation**
 - **✅ Forge Module Working**: All core BusinessCraft functionality implemented
@@ -36,24 +36,35 @@
 - [x] **Create fabric.mod.json** with proper metadata and dependencies
 - [x] **🧪 TEST MILESTONE**: Fabric module configures successfully
 
-### **5.2 Direct Fabric Integration** 🎯 **HIGH PRIORITY**
+### **5.2 Critical Common Module Cleanup** 🔴 **BLOCKING ISSUE**
 
-#### **Phase 5.2.1: Core Fabric Services** 🔧 **CRITICAL**
-- [ ] **Implement FabricRegistryHelper**:
+#### **Phase 5.2.1: Remove Minecraft Dependencies from Common** 🔧 **CRITICAL**
+- [ ] **Clean Platform.java**: Remove direct `BlockPos`, `CompoundTag`, `ListTag` imports
+- [ ] **Clean ClearTownsCommand.java**: Remove direct command system imports
+- [ ] **Clean Network Packets**: Remove Minecraft imports from BufferStoragePacket, BaseBlockEntityPacket
+- [ ] **Clean TownInterfaceEntity.java**: Move platform-specific code to Forge module
+- [ ] **Clean ITownDataProvider.java**: Abstract remaining direct imports
+- [ ] **🧪 VERIFICATION MILESTONE**: Common module compiles without Minecraft dependencies
+- [ ] **🧪 FORGE VERIFICATION**: Ensure Forge module still builds and runs correctly after cleanup
+
+#### **Phase 5.2.2: Direct Fabric Integration** 🎯 **HIGH PRIORITY**
+
+##### **Phase 5.2.2.1: Core Fabric Services** ✅ **COMPLETED**
+- [x] **Implement FabricRegistryHelper**:
   - Direct Fabric registry API integration
   - Block, item, entity, menu type registration
   - Simple registration methods without abstraction layers
-- [ ] **Implement FabricNetworkHelper**:
+- [x] **Implement FabricNetworkHelper**:
   - Direct Fabric networking API usage
   - Packet registration using Fabric's native system
   - Client/server message handling
-- [ ] **Implement FabricItemHandlerHelper**:
+- [x] **Implement FabricItemHandlerHelper**:
   - Direct Fabric inventory/capability system
   - Simple item handling operations
   - Slot creation and management
-- [ ] **🧪 TEST MILESTONE**: Core services compile and basic registration works
+- [x] **🧪 TEST MILESTONE**: Core services implemented with direct API integration
 
-#### **Phase 5.2.2: Block Entity Integration** 🔧 **CRITICAL**
+##### **Phase 5.2.2.2: Block Entity Integration** 🔧 **CRITICAL**
 - [ ] **Implement Fabric TownInterfaceEntity**:
   - Direct Fabric block entity implementation
   - Use Fabric's native capability system
@@ -63,8 +74,9 @@
   - Use common module block definitions
   - Simple registration without abstraction
 - [ ] **🧪 TEST MILESTONE**: Town interface block works on Fabric
+- [ ] **🧪 FORGE VERIFICATION**: Confirm Forge TownInterfaceEntity still functions correctly
 
-#### **Phase 5.2.3: Network Packet Porting** 🔧 **HIGH PRIORITY**
+##### **Phase 5.2.2.3: Network Packet Porting** 🔧 **HIGH PRIORITY**
 - [ ] **Port Core Packets (Priority 1)**:
   - Town management packets (5 packets)
   - Storage packets (5 packets)
@@ -74,8 +86,9 @@
   - Platform management packets
   - Misc utility packets
 - [ ] **🧪 TEST MILESTONE**: All 22 packets compile and register on Fabric
+- [ ] **🧪 FORGE VERIFICATION**: Verify all Forge network packets still work correctly
 
-#### **Phase 5.2.4: Entity & Rendering** 🔧 **MEDIUM PRIORITY**
+##### **Phase 5.2.2.4: Entity & Rendering** 🔧 **MEDIUM PRIORITY**
 - [ ] **Implement Fabric Tourist Entity**:
   - Direct Fabric entity registration
   - Use common tourist AI logic
@@ -85,8 +98,9 @@
   - World overlay systems
   - Particle effects
 - [ ] **🧪 TEST MILESTONE**: Tourist entities spawn and render on Fabric
+- [ ] **🧪 FORGE VERIFICATION**: Confirm Forge Tourist entities and rendering still work
 
-#### **Phase 5.2.5: UI & Menu System** 🔧 **MEDIUM PRIORITY**
+##### **Phase 5.2.2.5: UI & Menu System** 🔧 **MEDIUM PRIORITY**
 - [ ] **Implement Fabric Menu Types**:
   - Direct Fabric menu registration
   - Use common UI framework
@@ -96,8 +110,9 @@
   - Common UI component integration
   - Modal dialog support
 - [ ] **🧪 TEST MILESTONE**: All UI screens open correctly on Fabric
+- [ ] **🧪 FORGE VERIFICATION**: Verify all Forge UI screens and menus still function
 
-#### **Phase 5.2.6: Commands & Events** 🔧 **LOW PRIORITY**
+##### **Phase 5.2.2.6: Commands & Events** 🔧 **LOW PRIORITY**
 - [ ] **Implement Fabric Commands**:
   - Direct Fabric command registration
   - Use common command logic
@@ -107,6 +122,7 @@
   - Lifecycle event handling
   - Client/server event registration
 - [ ] **🧪 TEST MILESTONE**: Commands and events work on Fabric
+- [ ] **🧪 FORGE VERIFICATION**: Confirm Forge commands and events still work
 
 ### **5.3 Cross-Platform Validation** 🎯 **HIGH PRIORITY**
 - [ ] **Functionality Parity Testing**:
@@ -198,16 +214,16 @@
 | Phase | Status | Priority | Completion |
 |-------|--------|----------|------------|
 | **Phase 1-4: Architecture** | ✅ **COMPLETE** | N/A | 100% |
-| **Phase 5: Fabric Core** | 🎯 **IN PROGRESS** | HIGH | 20% |
+| **Phase 5: Fabric Core** | 🎯 **IN PROGRESS** | HIGH | 15% |
 | **Phase 6: Integration** | 🔄 **PENDING** | MEDIUM | 0% |
 | **Phase 7: Advanced** | 🚀 **FUTURE** | LOW | 0% |
 
 ### **🎯 IMMEDIATE NEXT ACTIONS**
-1. **🔧 Implement FabricRegistryHelper** (1 hour) - Direct Fabric registry API integration
-2. **Implement FabricNetworkHelper** (1 hour) - Direct Fabric networking API usage
-3. **Implement FabricItemHandlerHelper** (1 hour) - Direct Fabric inventory system
-4. **🧪 Test core services compilation** (30 minutes) - Verify services compile without errors
-5. **Implement Fabric TownInterfaceEntity** (2 hours) - Direct Fabric block entity implementation
+1. **✅ LESSONS LEARNED** - Keep common module with Forge dependencies (working approach)
+2. **🔧 Implement Fabric TownInterfaceEntity** (2 hours) - Direct Fabric block entity implementation
+3. **🧪 Forge Verification Milestone** (30 minutes) - Confirm current Forge functionality works
+4. **🧪 Fabric Block Entity Test** (30 minutes) - Verify Fabric TownInterfaceEntity works
+5. **🔄 Next: Port remaining Fabric components** - Using direct integration approach
 
 ---
 
@@ -232,6 +248,14 @@
 - **✅ Stability**: Zero crashes or compatibility issues
 - **✅ User Experience**: Consistent behavior regardless of platform
 - **✅ Maintainability**: Code is simple, direct, and debuggable
+- **🛡️ FORGE PROTECTION**: Every milestone includes Forge verification - NO EXCEPTIONS
+
+### **🛡️ FORGE VERIFICATION REQUIREMENTS**
+- **MANDATORY**: Before/after every major change, verify Forge builds and runs
+- **MANDATORY**: Test core features: town interface, tourist spawning, UI screens
+- **MANDATORY**: Check debug overlay (F3+K), network packets, storage operations
+- **MANDATORY**: Document any Forge regressions immediately
+- **MANDATORY**: No proceeding to next phase until Forge verification passes
 
 ---
 

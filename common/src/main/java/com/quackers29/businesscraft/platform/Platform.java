@@ -48,7 +48,7 @@ public class Platform {
         this.startPos = startPos;
         this.endPos = endPos;
     }
-    
+
     /**
      * Create a platform from NBT data
      */
@@ -56,7 +56,7 @@ public class Platform {
         this.id = tag.getUUID("Id");
         this.name = tag.getString("Name");
         this.enabled = tag.getBoolean("Enabled");
-        
+
         if (tag.contains("StartX")) {
             this.startPos = new BlockPos(
                 tag.getInt("StartX"),
@@ -64,7 +64,7 @@ public class Platform {
                 tag.getInt("StartZ")
             );
         }
-        
+
         if (tag.contains("EndX")) {
             this.endPos = new BlockPos(
                 tag.getInt("EndX"),
@@ -72,7 +72,7 @@ public class Platform {
                 tag.getInt("EndZ")
             );
         }
-        
+
         // Load enabled destinations
         if (tag.contains("Destinations")) {
             CompoundTag destTag = tag.getCompound("Destinations");
@@ -84,7 +84,7 @@ public class Platform {
             }
         }
     }
-    
+
     /**
      * Save this platform to NBT
      */
@@ -93,19 +93,19 @@ public class Platform {
         tag.putUUID("Id", id);
         tag.putString("Name", name);
         tag.putBoolean("Enabled", enabled);
-        
+
         if (startPos != null) {
             tag.putInt("StartX", startPos.getX());
             tag.putInt("StartY", startPos.getY());
             tag.putInt("StartZ", startPos.getZ());
         }
-        
+
         if (endPos != null) {
             tag.putInt("EndX", endPos.getX());
             tag.putInt("EndY", endPos.getY());
             tag.putInt("EndZ", endPos.getZ());
         }
-        
+
         // Save enabled destinations
         CompoundTag destTag = new CompoundTag();
         destTag.putInt("Count", enabledDestinations.size());
@@ -115,7 +115,7 @@ public class Platform {
             i++;
         }
         tag.put("Destinations", destTag);
-        
+
         return tag;
     }
     
@@ -160,21 +160,21 @@ public class Platform {
     public BlockPos getStartPos() {
         return startPos;
     }
-    
+
     /**
      * Set the start position of this platform
      */
     public void setStartPos(BlockPos startPos) {
         this.startPos = startPos;
     }
-    
+
     /**
      * Get the end position of this platform
      */
     public BlockPos getEndPos() {
         return endPos;
     }
-    
+
     /**
      * Set the end position of this platform
      */
@@ -263,7 +263,7 @@ public class Platform {
     public CompoundTag toNBT() {
         return save();
     }
-    
+
     /**
      * Create a platform from an NBT tag
      * @param tag The NBT tag

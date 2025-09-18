@@ -42,7 +42,7 @@ public abstract class BaseBlockEntityPacket {
         ServerPlayer player = context.getSender();
         if (player != null) {
             Level level = player.level();
-            
+
             // First check if there's a TownInterfaceEntity at this position
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof TownInterfaceEntity) {
@@ -50,7 +50,7 @@ public abstract class BaseBlockEntityPacket {
                 handler.accept(player, townInterface);
                 return;
             }
-            
+
             // If not, check if there's a TownInterfaceBlock at this position
             // In this case, we need to find the TownInterfaceEntity associated with it
             BlockState blockState = level.getBlockState(pos);
@@ -63,12 +63,12 @@ public abstract class BaseBlockEntityPacket {
                     return;
                 }
             }
-            
+
             // If we get here, we couldn't find a suitable block entity
             LOGGER.warn("Received packet for position {} but no TownInterfaceEntity or TownInterfaceBlock found", pos);
         }
     }
-    
+
     public BlockPos getPos() {
         return pos;
     }
