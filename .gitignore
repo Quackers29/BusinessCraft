@@ -15,3 +15,7 @@
 /forge/run/saves
 /forge/build
 /fabric/build
+/fabric/run/logs
+/fabric/run/data
+/fabric/run/crash-reports
+/fabric/run/saves

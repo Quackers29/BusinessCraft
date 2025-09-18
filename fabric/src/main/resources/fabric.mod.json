@@ -19,7 +19,7 @@
       "com.quackers29.businesscraft.fabric.BusinessCraftFabric"
     ],
     "client": [
-      "com.quackers29.businesscraft.fabric.client.FabricClientSetup"
+      "com.quackers29.businesscraft.fabric.FabricClientSetup"
     ]
   },
   "depends": {
