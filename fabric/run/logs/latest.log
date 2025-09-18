@@ -1,6 +1,6 @@
-[16:06:36] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.20.1 with Fabric Loader 0.15.6
-[16:06:36] [ForkJoinPool-1-worker-1/WARN] (FabricLoader/Metadata) Mod businesscraft uses the version ${version} which isn't compatible with Loader's extended semantic version format (Could not parse version number component '${version}'!), SemVer is recommended for reliably evaluating dependencies and prioritizing newer version
-[16:06:36] [main/INFO] (FabricLoader) Loading 58 mods:
+[16:11:06] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.20.1 with Fabric Loader 0.15.6
+[16:11:06] [ForkJoinPool-1-worker-1/WARN] (FabricLoader/Metadata) Mod businesscraft uses the version ${version} which isn't compatible with Loader's extended semantic version format (Could not parse version number component '${version}'!), SemVer is recommended for reliably evaluating dependencies and prioritizing newer version
+[16:11:06] [main/INFO] (FabricLoader) Loading 58 mods:
 	- businesscraft ${version}
 	- fabric-api 0.91.0+1.20.1
 	- fabric-api-base 0.4.30+7abfd51577
@@ -59,14 +59,14 @@
 	- java 17
 	- minecraft 1.20.1
 	- mixinextras 0.3.2
-[16:06:37] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.5 Source=file:/home/az/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.12.5+mixin.0.8.5/8d31fb97c3e0cd7c8dad3441851c523bcfae6d8e/sponge-mixin-0.12.5+mixin.0.8.5.jar Service=Knot/Fabric Env=CLIENT
-[16:06:37] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
-[16:06:37] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_16
-[16:06:37] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_17
-[16:06:37] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.3.2).
-[16:06:39] [Datafixer Bootstrap/INFO] (Minecraft) 188 Datafixer optimizations took 63 milliseconds
-[16:06:40] [Render thread/INFO] (Minecraft) Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
-[16:06:40] [Render thread/ERROR] (Minecraft) Failed to verify authentication
+[16:11:06] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.5 Source=file:/home/az/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.12.5+mixin.0.8.5/8d31fb97c3e0cd7c8dad3441851c523bcfae6d8e/sponge-mixin-0.12.5+mixin.0.8.5.jar Service=Knot/Fabric Env=CLIENT
+[16:11:06] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
+[16:11:07] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_16
+[16:11:07] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_17
+[16:11:07] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.3.2).
+[16:11:09] [Datafixer Bootstrap/INFO] (Minecraft) 188 Datafixer optimizations took 67 milliseconds
+[16:11:10] [Render thread/INFO] (Minecraft) Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
+[16:11:10] [Render thread/ERROR] (Minecraft) Failed to verify authentication
 com.mojang.authlib.exceptions.InvalidCredentialsException: Status: 401
 	at com.mojang.authlib.exceptions.MinecraftClientHttpException.toAuthenticationException(MinecraftClientHttpException.java:56) ~[authlib-4.0.43.jar:?]
 	at com.mojang.authlib.yggdrasil.YggdrasilUserApiService.fetchProperties(YggdrasilUserApiService.java:156) ~[authlib-4.0.43.jar:?]
@@ -84,8 +84,9 @@ Caused by: com.mojang.authlib.exceptions.MinecraftClientHttpException: Status: 4
 	at com.mojang.authlib.minecraft.client.MinecraftClient.get(MinecraftClient.java:48) ~[authlib-4.0.43.jar:?]
 	at com.mojang.authlib.yggdrasil.YggdrasilUserApiService.fetchProperties(YggdrasilUserApiService.java:129) ~[authlib-4.0.43.jar:?]
 	... 9 more
-[16:06:40] [Render thread/INFO] (Minecraft) Setting user: Player659
-[16:06:40] [Render thread/INFO] (BusinessCraft Fabric) BusinessCraft Fabric constructor called!
-[16:06:40] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: BusinessCraft Fabric mod starting up!
-[16:06:40] [Render thread/INFO] (BusinessCraft Fabric) BusinessCraft Fabric initialized successfully!
-[16:06:40] [Render thread/INFO] (Indigo) [Indigo] Registering Indigo renderer!
+[16:11:10] [Render thread/INFO] (Minecraft) Setting user: Player409
+[16:11:10] [Render thread/INFO] (BusinessCraft Fabric) BusinessCraft Fabric constructor called!
+[16:11:10] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: BusinessCraft Fabric mod starting up!
+[16:11:10] [Render thread/INFO] (Minecraft) [STDOUT]: FabricModMessages registered!
+[16:11:10] [Render thread/INFO] (BusinessCraft Fabric) BusinessCraft Fabric initialized successfully!
+[16:11:10] [Render thread/INFO] (Indigo) [Indigo] Registering Indigo renderer!

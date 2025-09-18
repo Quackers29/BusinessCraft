@@ -16,9 +16,8 @@ import com.quackers29.businesscraft.fabric.init.FabricModBlocks;
 import com.quackers29.businesscraft.fabric.init.FabricModEntityTypes;
 import com.quackers29.businesscraft.fabric.init.FabricModBlockEntities;
 import com.quackers29.businesscraft.fabric.init.FabricModMenuTypes;
-// Using simple test version for now
-// import com.quackers29.businesscraft.fabric.network.FabricModMessages;
-// import com.quackers29.businesscraft.fabric.event.FabricModEvents; // TODO: Implement
+import com.quackers29.businesscraft.fabric.FabricModMessages;
+import com.quackers29.businesscraft.fabric.FabricModEvents;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +69,7 @@ public class BusinessCraftFabric implements ModInitializer {
         FabricModMessages.register();
 
         // Register events
-        // FabricModEvents.register(); // TODO: Implement
+        FabricModEvents.register();
 
         LOGGER.info("BusinessCraft Fabric initialized successfully!");
     }

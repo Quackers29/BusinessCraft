@@ -1,4 +1,4 @@
-package com.quackers29.businesscraft.fabric.event;
+package com.quackers29.businesscraft.fabric;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
