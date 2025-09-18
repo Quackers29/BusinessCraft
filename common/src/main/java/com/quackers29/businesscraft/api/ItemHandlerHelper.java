@@ -1,7 +1,5 @@
 package com.quackers29.businesscraft.api;
 
-import net.minecraft.world.item.ItemStack;
-
 /**
  * Platform-agnostic interface for item handler operations.
  * Implementations will provide access to platform-specific item handler classes.
@@ -20,12 +18,12 @@ public interface ItemHandlerHelper {
     /**
      * Set the ItemStack in the specified slot
      */
-    void setStackInSlot(Object itemHandler, int slot, ItemStack stack);
+    void setStackInSlot(Object itemHandler, int slot, Object stack);
 
     /**
      * Get the ItemStack in the specified slot
      */
-    ItemStack getStackInSlot(Object itemHandler, int slot);
+    Object getStackInSlot(Object itemHandler, int slot);
 
     /**
      * Create a slot for the item handler at the given position
@@ -80,10 +78,10 @@ public interface ItemHandlerHelper {
     /**
      * Extract an item from the specified slot
      */
-    ItemStack extractItem(Object itemHandler, int slot, int amount, boolean simulate);
+    Object extractItem(Object itemHandler, int slot, int amount, boolean simulate);
 
     /**
      * Insert an item into the specified slot
      */
-    ItemStack insertItem(Object itemHandler, int slot, ItemStack stack, boolean simulate);
+    Object insertItem(Object itemHandler, int slot, Object stack, boolean simulate);
 }

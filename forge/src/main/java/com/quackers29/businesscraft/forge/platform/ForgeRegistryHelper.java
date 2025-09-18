@@ -39,40 +39,56 @@ public class ForgeRegistryHelper implements RegistryHelper {
     }
 
     @Override
-    public void registerBlock(String name, Block block) {
-        // Register the block
-        BLOCKS.register(name, () -> block);
-        // Also register the block item
-        ITEMS.register(name, () -> new BlockItem(block, new Item.Properties()));
+    public void registerBlock(String name, Object block) {
+        if (block instanceof net.minecraft.world.level.block.Block mcBlock) {
+            // Register the block
+            BLOCKS.register(name, () -> mcBlock);
+            // Also register the block item
+            ITEMS.register(name, () -> new net.minecraft.world.item.BlockItem(mcBlock, new net.minecraft.world.item.Item.Properties()));
+        }
     }
 
     @Override
-    public void registerBlockItem(String name, Block block) {
-        ITEMS.register(name, () -> new BlockItem(block, new Item.Properties()));
+    public void registerBlockItem(String name, Object block) {
+        if (block instanceof net.minecraft.world.level.block.Block mcBlock) {
+            ITEMS.register(name, () -> new net.minecraft.world.item.BlockItem(mcBlock, new net.minecraft.world.item.Item.Properties()));
+        }
     }
 
     @Override
-    public void registerEntityType(String name, EntityType<?> entityType) {
-        ENTITY_TYPES.register(name, () -> entityType);
+    public void registerEntityType(String name, Object entityType) {
+        if (entityType instanceof net.minecraft.world.entity.EntityType<?> mcEntityType) {
+            ENTITY_TYPES.register(name, () -> mcEntityType);
+        }
     }
 
     @Override
-    public void registerBlockEntityType(String name, BlockEntityType<?> blockEntityType) {
-        BLOCK_ENTITY_TYPES.register(name, () -> blockEntityType);
+    public void registerBlockEntityType(String name, Object blockEntityType) {
+        if (blockEntityType instanceof net.minecraft.world.level.block.entity.BlockEntityType<?> mcBlockEntityType) {
+            BLOCK_ENTITY_TYPES.register(name, () -> mcBlockEntityType);
+        }
     }
 
     @Override
-    public void registerMenuType(String name, MenuType<?> menuType) {
-        MENU_TYPES.register(name, () -> menuType);
+    public void registerMenuType(String name, Object menuType) {
+        if (menuType instanceof net.minecraft.world.inventory.MenuType<?> mcMenuType) {
+            MENU_TYPES.register(name, () -> mcMenuType);
+        }
     }
 
     @Override
-    public Item getItem(ResourceLocation location) {
-        return ForgeRegistries.ITEMS.getValue(location);
+    public Object getItem(Object location) {
+        if (location instanceof net.minecraft.resources.ResourceLocation mcLocation) {
+            return net.minecraftforge.registries.ForgeRegistries.ITEMS.getValue(mcLocation);
+        }
+        return null;
     }
 
     @Override
-    public ResourceLocation getItemKey(Item item) {
-        return ForgeRegistries.ITEMS.getKey(item);
+    public Object getItemKey(Object item) {
+        if (item instanceof net.minecraft.world.item.Item mcItem) {
+            return net.minecraftforge.registries.ForgeRegistries.ITEMS.getKey(mcItem);
+        }
+        return null;
     }
 }

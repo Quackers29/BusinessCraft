@@ -111,9 +111,11 @@ public class TownResources {
         CompoundTag resourcesTag = new CompoundTag();
         
         for (Map.Entry<Item, Integer> entry : resources.entrySet()) {
-            ResourceLocation key = PlatformAccess.getRegistry().getItemKey(entry.getKey());
-            if (key != null) {
-                resourcesTag.putInt(key.toString(), entry.getValue());
+            Object keyObj = PlatformAccess.getRegistry().getItemKey(entry.getKey());
+            if (keyObj instanceof net.minecraft.resources.ResourceLocation key) {
+                if (key != null) {
+                    resourcesTag.putInt(key.toString(), entry.getValue());
+                }
             }
         }
         
@@ -133,10 +135,12 @@ public class TownResources {
             
             for (String key : resourcesTag.getAllKeys()) {
                 ResourceLocation resourceLocation = new ResourceLocation(key);
-                Item item = PlatformAccess.getRegistry().getItem(resourceLocation);
-                
-                if (item != null && item != Items.AIR) {
-                    resources.put(item, resourcesTag.getInt(key));
+                Object itemObj = PlatformAccess.getRegistry().getItem(resourceLocation);
+                if (itemObj instanceof net.minecraft.world.item.Item item) {
+
+                    if (item != null && item != Items.AIR) {
+                        resources.put(item, resourcesTag.getInt(key));
+                    }
                 }
             }
         }

@@ -1,7 +1,5 @@
 package com.quackers29.businesscraft.api;
 
-import net.minecraft.server.level.ServerPlayer;
-
 /**
  * Platform-agnostic interface for network message sending.
  * Implementations will handle platform-specific message sending.
@@ -10,7 +8,7 @@ public interface NetworkMessages {
     /**
      * Send a message to a specific player
      */
-    void sendToPlayer(Object message, ServerPlayer player);
+    void sendToPlayer(Object message, Object player);
 
     /**
      * Send a message to all players
@@ -20,7 +18,7 @@ public interface NetworkMessages {
     /**
      * Send a message to all players tracking a chunk
      */
-    void sendToAllTrackingChunk(Object message, net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos);
+    void sendToAllTrackingChunk(Object message, Object level, Object pos);
 
     /**
      * Send a message to the server

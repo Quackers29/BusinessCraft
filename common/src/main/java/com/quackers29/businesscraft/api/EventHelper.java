@@ -35,7 +35,7 @@ public interface EventHelper {
     /**
      * Set the active town block for path creation mode
      */
-    void setActiveTownBlock(net.minecraft.core.BlockPos pos);
+    void setActiveTownBlock(Object pos);
 
     /**
      * Clear the active town block

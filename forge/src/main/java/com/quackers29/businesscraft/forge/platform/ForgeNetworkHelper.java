@@ -37,15 +37,16 @@ public class ForgeNetworkHelper implements NetworkHelper {
     }
 
     @Override
-    public <T> void registerMessage(int index, Class<T> messageType, FriendlyByteBuf.Writer<T> encoder,
-                                   FriendlyByteBuf.Reader<T> decoder) {
+    public <T> void registerMessage(int index, Class<T> messageType, Object encoder, Object decoder) {
         // Register without handler - packets will be handled by their own handle methods
         // This is handled by ForgeModMessages directly
     }
 
     @Override
-    public void sendToPlayer(Object message, ServerPlayer player) {
-        channel.send(PacketDistributor.PLAYER.with(() -> player), message);
+    public void sendToPlayer(Object message, Object player) {
+        if (player instanceof ServerPlayer serverPlayer) {
+            channel.send(PacketDistributor.PLAYER.with(() -> serverPlayer), message);
+        }
     }
 
     @Override
@@ -58,8 +59,12 @@ public class ForgeNetworkHelper implements NetworkHelper {
         channel.sendToServer(message);
     }
 
-    public void sendToAllTrackingChunk(Object message, net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos) {
-        channel.send(PacketDistributor.TRACKING_CHUNK.with(() -> level.getChunkAt(pos)), message);
+    @Override
+    public void sendToAllTrackingChunk(Object message, Object level, Object pos) {
+        if (level instanceof net.minecraft.world.level.Level mcLevel &&
+            pos instanceof net.minecraft.core.BlockPos mcPos) {
+            channel.send(PacketDistributor.TRACKING_CHUNK.with(() -> mcLevel.getChunkAt(mcPos)), message);
+        }
     }
 
     @Override
@@ -78,11 +83,13 @@ public class ForgeNetworkHelper implements NetworkHelper {
     public void enqueueWork(Object context, Runnable work) {
         if (context instanceof NetworkEvent.Context ctx) {
             ctx.enqueueWork(work);
+        } else {
+            work.run();
         }
     }
 
     @Override
-    public ServerPlayer getSender(Object context) {
+    public Object getSender(Object context) {
         if (context instanceof NetworkEvent.Context ctx) {
             return ctx.getSender();
         }
@@ -97,7 +104,10 @@ public class ForgeNetworkHelper implements NetworkHelper {
     }
 
     @Override
-    public void openScreen(ServerPlayer player, MenuProvider menuProvider) {
-        NetworkHooks.openScreen(player, menuProvider);
+    public void openScreen(Object player, Object menuProvider) {
+        if (player instanceof ServerPlayer serverPlayer &&
+            menuProvider instanceof MenuProvider menuProv) {
+            NetworkHooks.openScreen(serverPlayer, menuProv);
+        }
     }
 }

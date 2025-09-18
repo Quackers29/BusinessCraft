@@ -32,11 +32,17 @@ public class BufferStorageResponsePacket {
             int count = buf.readInt();
             
             // Get the item from the registry
-                Item item = PlatformAccess.getRegistry().getItem(new net.minecraft.resources.ResourceLocation(itemName));
-            if (item != null) {
-                bufferItems.put(item, count);
-            } else {
-                LOGGER.warn("Failed to find item {} in registry", itemName);
+            try {
+                Object itemObj = PlatformAccess.getRegistry().getItem(new net.minecraft.resources.ResourceLocation(itemName));
+                if (itemObj instanceof net.minecraft.world.item.Item item) {
+                    if (item != null) {
+                        bufferItems.put(item, count);
+                    } else {
+                        LOGGER.warn("Failed to find item {} in registry", itemName);
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.error("Error decoding item: {}", itemName, e);
             }
         }
     }
@@ -44,7 +50,10 @@ public class BufferStorageResponsePacket {
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeInt(bufferItems.size());
         for (Map.Entry<Item, Integer> entry : bufferItems.entrySet()) {
-            buf.writeUtf(PlatformAccess.getRegistry().getItemKey(entry.getKey()).toString());
+            Object itemIdObj = PlatformAccess.getRegistry().getItemKey(entry.getKey());
+            if (itemIdObj instanceof net.minecraft.resources.ResourceLocation itemId) {
+                buf.writeUtf(itemId.toString());
+            }
             buf.writeInt(entry.getValue());
         }
     }

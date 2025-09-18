@@ -339,9 +339,11 @@ public class StorageMenu extends AbstractContainerMenu {
         // Log the current inventory state before clearing
         DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Current inventory state before clearing:");
         for (int i = 0; i < PlatformAccess.getItemHandlers().getSlots(storageInventory); i++) {
-            ItemStack stack = PlatformAccess.getItemHandlers().getStackInSlot(storageInventory, i);
-            if (!stack.isEmpty()) {
-                DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU:   Slot {}: {} x{}", i, stack.getHoverName().getString(), stack.getCount());
+            Object stackObj = PlatformAccess.getItemHandlers().getStackInSlot(storageInventory, i);
+            if (stackObj instanceof net.minecraft.world.item.ItemStack stack) {
+                if (!stack.isEmpty()) {
+                    DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU:   Slot {}: {} x{}", i, stack.getHoverName().getString(), stack.getCount());
+                }
             }
         }
         
@@ -402,10 +404,12 @@ public class StorageMenu extends AbstractContainerMenu {
         DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Final inventory state after updates:");
         int filledSlots = 0;
         for (int i = 0; i < PlatformAccess.getItemHandlers().getSlots(storageInventory); i++) {
-            ItemStack stack = PlatformAccess.getItemHandlers().getStackInSlot(storageInventory, i);
-            if (!stack.isEmpty()) {
-                DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU:   Slot {}: {} x{}", i, stack.getHoverName().getString(), stack.getCount());
-                filledSlots++;
+            Object stackObj = PlatformAccess.getItemHandlers().getStackInSlot(storageInventory, i);
+            if (stackObj instanceof net.minecraft.world.item.ItemStack stack) {
+                if (!stack.isEmpty()) {
+                    DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU:   Slot {}: {} x{}", i, stack.getHoverName().getString(), stack.getCount());
+                    filledSlots++;
+                }
             }
         }
         DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Update complete - {} out of {} slots filled", filledSlots, PlatformAccess.getItemHandlers().getSlots(storageInventory));
@@ -420,11 +424,13 @@ public class StorageMenu extends AbstractContainerMenu {
         DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "STORAGE-DEBUG [{}]: Current storage state:", context);
         int filledSlots = 0;
         for (int i = 0; i < PlatformAccess.getItemHandlers().getSlots(storageInventory); i++) {
-            ItemStack stack = PlatformAccess.getItemHandlers().getStackInSlot(storageInventory, i);
-            if (!stack.isEmpty()) {
-                DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "STORAGE-DEBUG [{}]:   Slot {}: {} x{}", 
-                    context, i, stack.getHoverName().getString(), stack.getCount());
-                filledSlots++;
+            Object stackObj = PlatformAccess.getItemHandlers().getStackInSlot(storageInventory, i);
+            if (stackObj instanceof net.minecraft.world.item.ItemStack stack) {
+                if (!stack.isEmpty()) {
+                    DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "STORAGE-DEBUG [{}]:   Slot {}: {} x{}",
+                        context, i, stack.getHoverName().getString(), stack.getCount());
+                    filledSlots++;
+                }
             }
         }
         DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "STORAGE-DEBUG [{}]: {} out of {} slots filled. Storage mode: {}", 

@@ -1,10 +1,5 @@
 package com.quackers29.businesscraft.api;
 
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.MenuProvider;
-
 /**
  * Platform-agnostic interface for network operations.
  * Implementations will handle platform-specific networking.
@@ -13,13 +8,12 @@ public interface NetworkHelper {
     /**
      * Register a network message/packet
      */
-    <T> void registerMessage(int index, Class<T> messageType, FriendlyByteBuf.Writer<T> encoder,
-                           FriendlyByteBuf.Reader<T> decoder);
+    <T> void registerMessage(int index, Class<T> messageType, Object encoder, Object decoder);
 
     /**
      * Send a message to a specific player
      */
-    void sendToPlayer(Object message, ServerPlayer player);
+    void sendToPlayer(Object message, Object player);
 
     /**
      * Send a message to all players
@@ -30,6 +24,11 @@ public interface NetworkHelper {
      * Send a message to the server
      */
     void sendToServer(Object message);
+
+    /**
+     * Send a message to all players tracking a chunk
+     */
+    void sendToAllTrackingChunk(Object message, Object level, Object pos);
 
     /**
      * Check if we're running on the client side
@@ -49,7 +48,7 @@ public interface NetworkHelper {
     /**
      * Get the sender player from the context
      */
-    ServerPlayer getSender(Object context);
+    Object getSender(Object context);
 
     /**
      * Mark the packet as handled
@@ -59,5 +58,5 @@ public interface NetworkHelper {
     /**
      * Open a screen using platform-specific hooks
      */
-    void openScreen(ServerPlayer player, MenuProvider menuProvider);
+    void openScreen(Object player, Object menuProvider);
 }

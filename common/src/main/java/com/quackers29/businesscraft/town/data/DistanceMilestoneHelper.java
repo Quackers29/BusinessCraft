@@ -135,17 +135,18 @@ public class DistanceMilestoneHelper {
             ResourceLocation itemId = new ResourceLocation(namespace, itemName);
             
             // Get item from registry
-            Item item = PlatformAccess.getRegistry().getItem(itemId);
-            if (item == null) {
-                LOGGER.warn("Unknown item in milestone reward: '{}'", itemId);
-                return ItemStack.EMPTY;
-            }
-            
-            // Parse count (defaults to 1)
-            int count = 1;
-            if (parts.length >= 3) {
-                try {
-                    count = Integer.parseInt(parts[2]);
+            Object itemObj = PlatformAccess.getRegistry().getItem(itemId);
+            if (itemObj instanceof net.minecraft.world.item.Item item) {
+                if (item == null) {
+                    LOGGER.warn("Unknown item in milestone reward: '{}'", itemId);
+                    return ItemStack.EMPTY;
+                }
+
+                // Parse count (defaults to 1)
+                int count = 1;
+                if (parts.length >= 3) {
+                    try {
+                        count = Integer.parseInt(parts[2]);
                     if (count <= 0) {
                         LOGGER.warn("Invalid reward count '{}' in '{}' - using count 1", parts[2], rewardStr);
                         count = 1;
@@ -154,12 +155,15 @@ public class DistanceMilestoneHelper {
                     LOGGER.warn("Invalid reward count '{}' in '{}' - using count 1", parts[2], rewardStr);
                 }
             }
-            
+
             ItemStack reward = new ItemStack(item, count);
             DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING, "Parsed reward: {} x{}", itemId, count);
-            
+
             return reward;
-            
+            } else {
+                LOGGER.warn("Failed to cast item from registry: '{}'", itemId);
+                return ItemStack.EMPTY;
+            }
         } catch (Exception e) {
             LOGGER.warn("Failed to parse reward string '{}': {}", rewardStr, e.getMessage());
             return ItemStack.EMPTY;

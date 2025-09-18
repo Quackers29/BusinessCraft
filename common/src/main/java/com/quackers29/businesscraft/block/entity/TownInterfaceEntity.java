@@ -231,7 +231,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     }
 
     public TownInterfaceEntity(BlockPos pos, BlockState state) {
-        super(PlatformAccess.getBlockEntities().getTownInterfaceEntityType(), pos, state);
+        super((net.minecraft.world.level.block.entity.BlockEntityType<TownInterfaceEntity>) PlatformAccess.getBlockEntities().getTownInterfaceEntityType(), pos, state);
         
         // Set up platform manager callback
         platformManager.setChangeCallback(this::setChanged);
@@ -837,22 +837,24 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     public void processResourcesInSlot() {
         if (level == null || level.isClientSide()) return;
         
-            ItemStack stack = PlatformAccess.getItemHandlers().getStackInSlot(itemHandler, 0);
-        if (!stack.isEmpty() && townId != null) {
-            if (level instanceof ServerLevel sLevel) {
-                Town town = TownManager.get(sLevel).getTown(townId);
-                if (town != null) {
-                    Item item = stack.getItem();
-                    // Process just 1 item per tick
-                    stack.shrink(1);
-                    town.addResource(item, 1);
-                    setChanged();
-                    
-                    // Send update to clients when resources change
-                    level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
+            Object stackObj = PlatformAccess.getItemHandlers().getStackInSlot(itemHandler, 0);
+            if (stackObj instanceof net.minecraft.world.item.ItemStack stack) {
+                if (!stack.isEmpty() && townId != null) {
+                    if (level instanceof ServerLevel sLevel) {
+                        Town town = TownManager.get(sLevel).getTown(townId);
+                        if (town != null) {
+                            Item item = stack.getItem();
+                            // Process just 1 item per tick
+                            stack.shrink(1);
+                            town.addResource(item, 1);
+                            setChanged();
+
+                            // Send update to clients when resources change
+                            level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
+                        }
+                    }
                 }
             }
-        }
     }
 
     // Ensure we clean up resources when the block entity is removed

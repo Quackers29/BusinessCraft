@@ -80,10 +80,12 @@ public class ClientSyncHelper {
             for (String key : resourcesTag.getAllKeys()) {
                 try {
                     ResourceLocation resourceLocation = new ResourceLocation(key);
-                    Item item = PlatformAccess.getRegistry().getItem(resourceLocation);
-                    if (item != null && item != Items.AIR) {
-                        int count = resourcesTag.getInt(key);
-                        clientResources.put(item, count);
+                    Object itemObj = PlatformAccess.getRegistry().getItem(resourceLocation);
+                    if (itemObj instanceof net.minecraft.world.item.Item item) {
+                        if (item != null && item != Items.AIR) {
+                            int count = resourcesTag.getInt(key);
+                            clientResources.put(item, count);
+                        }
                     }
                 } catch (Exception e) {
                     LOGGER.error("Error loading client resource: {}", key, e);
@@ -102,10 +104,12 @@ public class ClientSyncHelper {
             for (String key : communalTag.getAllKeys()) {
                 try {
                     ResourceLocation resourceLocation = new ResourceLocation(key);
-                    Item item = PlatformAccess.getRegistry().getItem(resourceLocation);
-                    if (item != null && item != Items.AIR) {
-                        int count = communalTag.getInt(key);
-                        clientCommunalStorage.put(item, count);
+                    Object itemObj = PlatformAccess.getRegistry().getItem(resourceLocation);
+                    if (itemObj instanceof net.minecraft.world.item.Item item) {
+                        if (item != null && item != Items.AIR) {
+                            int count = communalTag.getInt(key);
+                            clientCommunalStorage.put(item, count);
+                        }
                     }
                 } catch (Exception e) {
                     LOGGER.error("Error loading client communal storage item: {}", key, e);

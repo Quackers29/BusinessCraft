@@ -123,26 +123,30 @@ public class TradeMenu extends AbstractContainerMenu {
     
     // Process the trade when requested
     public boolean processTrade() {
-        ItemStack stack = PlatformAccess.getItemHandlers().getStackInSlot(this.tradeInventory, SLOT_INPUT);
-        if (stack.isEmpty()) {
-            return false;
+        Object stackObj = PlatformAccess.getItemHandlers().getStackInSlot(this.tradeInventory, SLOT_INPUT);
+        if (stackObj instanceof net.minecraft.world.item.ItemStack stack) {
+            if (stack.isEmpty()) {
+                return false;
+            }
+
+            // Don't move the item directly - instead send it to the server for processing
+            // The server will decide if the town accepts the trade and sends back emeralds
+            PlatformAccess.getNetworkMessages().sendToServer(new TradeResourcePacket(townBlockPos, stack.copy(), SLOT_INPUT));
+
+            // Remove the input item now, payment will be handled by server response
+            PlatformAccess.getItemHandlers().extractItem(this.tradeInventory, SLOT_INPUT, stack.getCount(), false);
+
+            return true;
         }
-        
-        // Don't move the item directly - instead send it to the server for processing
-        // The server will decide if the town accepts the trade and sends back emeralds
-        PlatformAccess.getNetworkMessages().sendToServer(new TradeResourcePacket(townBlockPos, stack.copy(), SLOT_INPUT));
-        
-        // Remove the input item now, payment will be handled by server response
-        PlatformAccess.getItemHandlers().extractItem(this.tradeInventory, SLOT_INPUT, stack.getCount(), false);
-        
-        return true;
+        return false;
     }
     
     /**
      * Sets an item in the output slot directly (used for server-side trade responses)
      */
     public void setOutputItem(ItemStack itemStack) {
-        if (!itemStack.isEmpty() && PlatformAccess.getItemHandlers().getStackInSlot(tradeInventory, SLOT_OUTPUT).isEmpty()) {
+        Object outputStackObj = PlatformAccess.getItemHandlers().getStackInSlot(tradeInventory, SLOT_OUTPUT);
+        if (!itemStack.isEmpty() && outputStackObj instanceof net.minecraft.world.item.ItemStack outputStack && outputStack.isEmpty()) {
             // Place the item in the output slot
             PlatformAccess.getItemHandlers().insertItem(tradeInventory, SLOT_OUTPUT, itemStack, false);
         }

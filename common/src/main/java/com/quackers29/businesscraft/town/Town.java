@@ -423,12 +423,14 @@ public class Town implements ITownDataProvider {
             storageTag.getAllKeys().forEach(key -> {
                 try {
                     net.minecraft.resources.ResourceLocation itemId = new net.minecraft.resources.ResourceLocation(key);
-                    Item item = PlatformAccess.getRegistry().getItem(itemId);
-                    if (item != null) {
-                        int count = storageTag.getInt(key);
-                        if (count > 0) {
-                            town.paymentBoard.addToBuffer(item, count);
-                            LOGGER.info("Migrated {} {} from old communal storage to payment buffer", count, item.getDescription().getString());
+                    Object itemObj = PlatformAccess.getRegistry().getItem(itemId);
+                    if (itemObj instanceof net.minecraft.world.item.Item item) {
+                        if (item != null) {
+                            int count = storageTag.getInt(key);
+                            if (count > 0) {
+                                town.paymentBoard.addToBuffer(item, count);
+                                LOGGER.info("Migrated {} {} from old communal storage to payment buffer", count, item.getDescription().getString());
+                            }
                         }
                     }
                 } catch (Exception e) {
@@ -455,11 +457,13 @@ public class Town implements ITownDataProvider {
                     playerTag.getAllKeys().forEach(itemKey -> {
                         try {
                             net.minecraft.resources.ResourceLocation itemId = new net.minecraft.resources.ResourceLocation(itemKey);
-                            Item item = PlatformAccess.getRegistry().getItem(itemId);
-                            if (item != null) {
-                                int count = playerTag.getInt(itemKey);
-                                if (count > 0) {
-                                    playerItems.put(item, count);
+                            Object itemObj = PlatformAccess.getRegistry().getItem(itemId);
+                            if (itemObj instanceof net.minecraft.world.item.Item item) {
+                                if (item != null) {
+                                    int count = playerTag.getInt(itemKey);
+                                    if (count > 0) {
+                                        playerItems.put(item, count);
+                                    }
                                 }
                             }
                         } catch (Exception e) {

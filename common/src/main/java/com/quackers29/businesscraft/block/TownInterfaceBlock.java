@@ -131,7 +131,7 @@ public class TownInterfaceBlock extends BaseEntityBlock {
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state,
             BlockEntityType<T> type) {
         // First use the default ticker for the TownInterfaceEntity
-        BlockEntityTicker<T> baseTicker = createTickerHelper(type, PlatformAccess.getBlockEntities().getTownInterfaceEntityType(),
+        BlockEntityTicker<T> baseTicker = createTickerHelper(type, (net.minecraft.world.level.block.entity.BlockEntityType<TownInterfaceEntity>) PlatformAccess.getBlockEntities().getTownInterfaceEntityType(),
                 (lvl, pos, blockState, blockEntity) -> ((TownInterfaceEntity) blockEntity).tick(lvl, pos, blockState,
                         (TownInterfaceEntity) blockEntity));
         

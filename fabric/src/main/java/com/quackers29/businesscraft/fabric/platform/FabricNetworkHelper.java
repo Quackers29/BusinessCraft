@@ -1,12 +1,6 @@
 package com.quackers29.businesscraft.fabric.platform;
 
 import com.quackers29.businesscraft.api.NetworkHelper;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.MenuProvider;
 
 /**
  * Fabric implementation of NetworkHelper using Fabric Networking API
@@ -16,24 +10,27 @@ public class FabricNetworkHelper implements NetworkHelper {
     private static final String MOD_ID = "businesscraft";
 
     @Override
-    public <T> void registerMessage(int index, Class<T> messageType, FriendlyByteBuf.Writer<T> encoder,
-                                   FriendlyByteBuf.Reader<T> decoder) {
+    public <T> void registerMessage(int index, Class<T> messageType, Object encoder, Object decoder) {
         // Fabric networking registration is handled differently
         // Messages are registered through Fabric API event handlers
     }
 
     @Override
-    public void sendToPlayer(Object message, ServerPlayer player) {
-        if (message instanceof FriendlyByteBuf) {
-            // Send the buffer directly
-            // This is a simplified implementation - would need proper message type handling
-        }
+    public void sendToPlayer(Object message, Object player) {
+        // TODO: Implement Fabric networking for sending to specific player
+        // This would use Fabric's ServerPlayNetworking.send() method
     }
 
     @Override
     public void sendToAllPlayers(Object message) {
         // Fabric way of sending to all players
         // This would need to be implemented with proper Fabric networking
+    }
+
+    @Override
+    public void sendToAllTrackingChunk(Object message, Object level, Object pos) {
+        // TODO: Implement Fabric networking for sending to players tracking a chunk
+        // This would use Fabric's chunk tracking APIs
     }
 
     @Override
@@ -44,7 +41,8 @@ public class FabricNetworkHelper implements NetworkHelper {
 
     @Override
     public boolean isClientSide() {
-        return net.fabricmc.api.EnvType.CLIENT.equals(net.fabricmc.loader.api.FabricLoader.getInstance().getEnvironmentType());
+        // TODO: Implement Fabric environment detection
+        return false; // Default to server-side for now
     }
 
     @Override
@@ -60,7 +58,7 @@ public class FabricNetworkHelper implements NetworkHelper {
     }
 
     @Override
-    public ServerPlayer getSender(Object context) {
+    public Object getSender(Object context) {
         // This would need to be implemented based on Fabric's networking context
         return null;
     }
@@ -71,8 +69,8 @@ public class FabricNetworkHelper implements NetworkHelper {
     }
 
     @Override
-    public void openScreen(ServerPlayer player, MenuProvider menuProvider) {
-        // Use Fabric's screen opening mechanism
-        player.openMenu(menuProvider);
+    public void openScreen(Object player, Object menuProvider) {
+        // TODO: Implement Fabric screen opening
+        // This would use Fabric's screen APIs
     }
 }

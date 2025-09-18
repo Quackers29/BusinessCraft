@@ -6,5 +6,9 @@ import com.quackers29.businesscraft.api.MenuHelper;
  * Fabric implementation of MenuHelper
  */
 public class FabricMenuHelper implements MenuHelper {
-    // TODO: Implement Fabric menu helper methods
+    @Override
+    public <M, U> void registerScreenFactory(Object menuType, MenuHelper.ScreenFactory<M, U> screenFactory) {
+        // This will be called during client setup
+        // For now, we'll store the factories and register them later
+    }
 }

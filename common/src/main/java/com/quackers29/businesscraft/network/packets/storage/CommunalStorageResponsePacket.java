@@ -33,9 +33,11 @@ public class CommunalStorageResponsePacket {
             int count = buf.readInt();
             try {
                 ResourceLocation resourceLocation = new ResourceLocation(itemId);
-                Item item = PlatformAccess.getRegistry().getItem(resourceLocation);
-                if (item != null) {
-                    storageItems.put(item, count);
+                Object itemObj = PlatformAccess.getRegistry().getItem(resourceLocation);
+                if (itemObj instanceof net.minecraft.world.item.Item item) {
+                    if (item != null) {
+                        storageItems.put(item, count);
+                    }
                 }
             } catch (Exception e) {
                 LOGGER.error("Error decoding item: {}", itemId, e);
@@ -46,10 +48,12 @@ public class CommunalStorageResponsePacket {
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeInt(storageItems.size());
         storageItems.forEach((item, count) -> {
-            ResourceLocation itemId = PlatformAccess.getRegistry().getItemKey(item);
-            if (itemId != null) {
-                buf.writeUtf(itemId.toString());
-                buf.writeInt(count);
+            Object itemIdObj = PlatformAccess.getRegistry().getItemKey(item);
+            if (itemIdObj instanceof net.minecraft.resources.ResourceLocation itemId) {
+                if (itemId != null) {
+                    buf.writeUtf(itemId.toString());
+                    buf.writeInt(count);
+                }
             }
         });
     }

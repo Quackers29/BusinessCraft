@@ -1,7 +1,6 @@
 package com.quackers29.businesscraft.fabric.network;
 
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.server.level.ServerPlayer;
+// TODO: Add Fabric networking imports when implementing
 
 /**
  * Fabric networking setup
@@ -11,7 +10,7 @@ public class FabricModMessages {
         // TODO: Register network messages using Fabric networking API
     }
 
-    public static void sendToPlayer(Object message, ServerPlayer player) {
+    public static void sendToPlayer(Object message, Object player) {
         // TODO: Implement sending messages to specific player
     }
 
@@ -19,7 +18,7 @@ public class FabricModMessages {
         // TODO: Implement sending messages to all players
     }
 
-    public static void sendToAllTrackingChunk(Object message, net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos) {
+    public static void sendToAllTrackingChunk(Object message, Object level, Object pos) {
         // TODO: Implement sending messages to players tracking a chunk
     }
 

@@ -29,16 +29,17 @@ public class ForgeItemHandlerHelper implements ItemHandlerHelper {
     }
 
     @Override
-    public void setStackInSlot(Object itemHandler, int slot, ItemStack stack) {
-        if (itemHandler instanceof ItemStackHandler handler) {
-            handler.setStackInSlot(slot, stack);
+    public void setStackInSlot(Object itemHandler, int slot, Object stack) {
+        if (itemHandler instanceof ItemStackHandler handler &&
+            stack instanceof net.minecraft.world.item.ItemStack itemStack) {
+            handler.setStackInSlot(slot, itemStack);
         } else {
-            throw new IllegalArgumentException("Invalid item handler type");
+            throw new IllegalArgumentException("Invalid item handler or stack type");
         }
     }
 
     @Override
-    public ItemStack getStackInSlot(Object itemHandler, int slot) {
+    public Object getStackInSlot(Object itemHandler, int slot) {
         if (itemHandler instanceof ItemStackHandler handler) {
             return handler.getStackInSlot(slot);
         }
@@ -149,17 +150,18 @@ public class ForgeItemHandlerHelper implements ItemHandlerHelper {
     }
 
     @Override
-    public ItemStack extractItem(Object itemHandler, int slot, int amount, boolean simulate) {
-        if (itemHandler instanceof IItemHandler handler) {
+    public Object extractItem(Object itemHandler, int slot, int amount, boolean simulate) {
+        if (itemHandler instanceof net.minecraftforge.items.IItemHandler handler) {
             return handler.extractItem(slot, amount, simulate);
         }
-        return ItemStack.EMPTY;
+        return net.minecraft.world.item.ItemStack.EMPTY;
     }
 
     @Override
-    public ItemStack insertItem(Object itemHandler, int slot, ItemStack stack, boolean simulate) {
-        if (itemHandler instanceof IItemHandler handler) {
-            return handler.insertItem(slot, stack, simulate);
+    public Object insertItem(Object itemHandler, int slot, Object stack, boolean simulate) {
+        if (itemHandler instanceof net.minecraftforge.items.IItemHandler handler &&
+            stack instanceof net.minecraft.world.item.ItemStack itemStack) {
+            return handler.insertItem(slot, itemStack, simulate);
         }
         return stack;
     }

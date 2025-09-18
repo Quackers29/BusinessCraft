@@ -134,9 +134,11 @@ public class TownBufferManager {
     private boolean isBufferMostlyEmpty() {
         int totalItems = 0;
         for (int i = 0; i < PlatformAccess.getItemHandlers().getSlots(bufferHandler); i++) {
-            ItemStack stack = PlatformAccess.getItemHandlers().getStackInSlot(bufferHandler, i);
-            if (!stack.isEmpty()) {
-                totalItems += stack.getCount();
+            Object stackObj = PlatformAccess.getItemHandlers().getStackInSlot(bufferHandler, i);
+            if (stackObj instanceof net.minecraft.world.item.ItemStack stack) {
+                if (!stack.isEmpty()) {
+                    totalItems += stack.getCount();
+                }
             }
         }
         return totalItems < 3; // Consider mostly empty if less than 3 items
@@ -195,15 +197,17 @@ public class TownBufferManager {
                 
                 // Copy each slot from ItemStackHandler to SlotBasedStorage
                 for (int i = 0; i < PlatformAccess.getItemHandlers().getSlots(bufferHandler) && i < slotStorage.getSlotCount(); i++) {
-                    ItemStack handlerStack = PlatformAccess.getItemHandlers().getStackInSlot(bufferHandler, i);
-                    ItemStack storageStack = slotStorage.getSlot(i);
-                    
-                    // Check if slot contents changed
-                    if (!ItemStack.isSameItemSameTags(handlerStack, storageStack) || 
-                        handlerStack.getCount() != storageStack.getCount()) {
-                        
-                        slotStorage.setSlot(i, handlerStack);
-                        bufferChanged = true;
+                    Object stackObj = PlatformAccess.getItemHandlers().getStackInSlot(bufferHandler, i);
+                    if (stackObj instanceof net.minecraft.world.item.ItemStack handlerStack) {
+                        ItemStack storageStack = slotStorage.getSlot(i);
+
+                        // Check if slot contents changed
+                        if (!ItemStack.isSameItemSameTags(handlerStack, storageStack) ||
+                            handlerStack.getCount() != storageStack.getCount()) {
+
+                            slotStorage.setSlot(i, handlerStack);
+                            bufferChanged = true;
+                        }
                     }
                 }
                 

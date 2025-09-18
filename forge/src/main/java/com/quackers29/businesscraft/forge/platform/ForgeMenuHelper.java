@@ -14,8 +14,8 @@ import net.minecraftforge.registries.RegistryObject;
  */
 public class ForgeMenuHelper implements MenuHelper {
     @Override
-    public <M extends AbstractContainerMenu, U extends Screen & MenuAccess<M>> void registerScreenFactory(
-        MenuType<? extends M> menuType,
+    public <M, U> void registerScreenFactory(
+        Object menuType,
         MenuHelper.ScreenFactory<M, U> screenFactory
     ) {
         // This will be called during client setup

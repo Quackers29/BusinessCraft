@@ -6,5 +6,9 @@ import com.quackers29.businesscraft.api.EntityHelper;
  * Fabric implementation of EntityHelper
  */
 public class FabricEntityHelper implements EntityHelper {
-    // TODO: Implement Fabric entity helper methods
+    @Override
+    public Object getTouristEntityType() {
+        // TODO: Implement Fabric entity type lookup
+        return null;
+    }
 }

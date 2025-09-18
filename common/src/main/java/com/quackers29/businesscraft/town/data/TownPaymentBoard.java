@@ -310,12 +310,14 @@ public class TownPaymentBoard {
         for (String key : bufferTag.getAllKeys()) {
             try {
                 net.minecraft.resources.ResourceLocation itemId = new net.minecraft.resources.ResourceLocation(key);
-                Item item = PlatformAccess.getRegistry().getItem(itemId);
-                if (item != null) {
-                    int count = bufferTag.getInt(key);
-                    if (count > 0) {
-                        ItemStack stackToMigrate = new ItemStack(item, count);
-                        bufferStorage.addItem(stackToMigrate);
+                Object itemObj = PlatformAccess.getRegistry().getItem(itemId);
+                if (itemObj instanceof net.minecraft.world.item.Item item) {
+                    if (item != null) {
+                        int count = bufferTag.getInt(key);
+                        if (count > 0) {
+                            ItemStack stackToMigrate = new ItemStack(item, count);
+                            bufferStorage.addItem(stackToMigrate);
+                        }
                     }
                 }
             } catch (Exception e) {

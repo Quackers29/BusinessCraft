@@ -8,8 +8,10 @@ import net.minecraft.server.level.ServerPlayer;
  */
 public class ForgeNetworkMessages implements NetworkMessages {
     @Override
-    public void sendToPlayer(Object message, ServerPlayer player) {
-        com.quackers29.businesscraft.forge.network.ForgeModMessages.sendToPlayer(message, player);
+    public void sendToPlayer(Object message, Object player) {
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            com.quackers29.businesscraft.forge.network.ForgeModMessages.sendToPlayer(message, serverPlayer);
+        }
     }
 
     @Override
@@ -18,8 +20,11 @@ public class ForgeNetworkMessages implements NetworkMessages {
     }
 
     @Override
-    public void sendToAllTrackingChunk(Object message, net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos) {
-        com.quackers29.businesscraft.forge.network.ForgeModMessages.sendToAllTrackingChunk(message, level, pos);
+    public void sendToAllTrackingChunk(Object message, Object level, Object pos) {
+        if (level instanceof net.minecraft.world.level.Level mcLevel &&
+            pos instanceof net.minecraft.core.BlockPos mcPos) {
+            com.quackers29.businesscraft.forge.network.ForgeModMessages.sendToAllTrackingChunk(message, mcLevel, mcPos);
+        }
     }
 
     @Override
