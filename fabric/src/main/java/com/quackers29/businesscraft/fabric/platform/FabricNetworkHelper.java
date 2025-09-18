@@ -1,9 +1,23 @@
 package com.quackers29.businesscraft.fabric.platform;
 
 import com.quackers29.businesscraft.api.NetworkHelper;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.fabricmc.api.Environment;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Player;
 
 /**
- * Fabric implementation of NetworkHelper using Fabric Networking API
+ * Fabric implementation of NetworkHelper using direct Fabric Networking API
  */
 public class FabricNetworkHelper implements NetworkHelper {
 
@@ -11,66 +25,86 @@ public class FabricNetworkHelper implements NetworkHelper {
 
     @Override
     public <T> void registerMessage(int index, Class<T> messageType, Object encoder, Object decoder) {
-        // Fabric networking registration is handled differently
-        // Messages are registered through Fabric API event handlers
+        // In Fabric, packet registration is typically handled through event registration
+        // The actual registration happens in FabricModMessages
     }
 
     @Override
     public void sendToPlayer(Object message, Object player) {
-        // TODO: Implement Fabric networking for sending to specific player
-        // This would use Fabric's ServerPlayNetworking.send() method
+        if (player instanceof ServerPlayer serverPlayer && message instanceof FriendlyByteBuf buf) {
+            // Direct Fabric networking call
+            ServerPlayNetworking.send(serverPlayer, new ResourceLocation(MOD_ID, "packet"), buf);
+        }
     }
 
     @Override
     public void sendToAllPlayers(Object message) {
-        // Fabric way of sending to all players
-        // This would need to be implemented with proper Fabric networking
+        // Direct Fabric networking call using PlayerLookup
+        if (message instanceof FriendlyByteBuf buf) {
+            for (ServerPlayer player : PlayerLookup.all(net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.getServer())) {
+                ServerPlayNetworking.send(player, new ResourceLocation(MOD_ID, "packet"), buf);
+            }
+        }
     }
 
     @Override
     public void sendToAllTrackingChunk(Object message, Object level, Object pos) {
-        // TODO: Implement Fabric networking for sending to players tracking a chunk
-        // This would use Fabric's chunk tracking APIs
+        if (level instanceof ServerLevel serverLevel &&
+            pos instanceof BlockPos blockPos &&
+            message instanceof FriendlyByteBuf buf) {
+            // Direct Fabric networking call using PlayerLookup for chunk tracking
+            for (ServerPlayer player : PlayerLookup.tracking(serverLevel, blockPos)) {
+                ServerPlayNetworking.send(player, new ResourceLocation(MOD_ID, "packet"), buf);
+            }
+        }
     }
 
     @Override
     public void sendToServer(Object message) {
-        // Client to server communication in Fabric
-        // This would need to be implemented with proper Fabric networking
+        if (message instanceof FriendlyByteBuf buf) {
+            // Direct Fabric client networking call
+            ClientPlayNetworking.send(new ResourceLocation(MOD_ID, "packet"), buf);
+        }
     }
 
     @Override
     public boolean isClientSide() {
-        // TODO: Implement Fabric environment detection
-        return false; // Default to server-side for now
+        // Direct Fabric environment detection
+        return net.fabricmc.api.EnvType.CLIENT.equals(net.fabricmc.loader.api.FabricLoader.getInstance().getEnvironmentType());
     }
 
     @Override
     public Object getCurrentContext() {
-        // Fabric doesn't have the same context system as Forge
+        // Fabric doesn't use the same context system as Forge
+        // Packets handle their own context through the networking events
         return null;
     }
 
     @Override
     public void enqueueWork(Object context, Runnable work) {
-        // In Fabric, we can execute directly or use server task queue
+        // In Fabric, we can run directly since Fabric handles threading differently
         work.run();
     }
 
     @Override
     public Object getSender(Object context) {
-        // This would need to be implemented based on Fabric's networking context
+        // Fabric's networking system provides the sender directly in the packet handler
+        // This is typically handled by the individual packet classes
         return null;
     }
 
     @Override
     public void setPacketHandled(Object context) {
-        // Fabric handles this differently
+        // Fabric doesn't require explicit "packet handled" marking
+        // The networking system handles this automatically
     }
 
     @Override
     public void openScreen(Object player, Object menuProvider) {
-        // TODO: Implement Fabric screen opening
-        // This would use Fabric's screen APIs
+        if (player instanceof ServerPlayer serverPlayer &&
+            menuProvider instanceof MenuProvider menuProv) {
+            // Direct Fabric networking call for opening screens
+            serverPlayer.openMenu(menuProv);
+        }
     }
 }
