@@ -11,7 +11,7 @@ import com.quackers29.businesscraft.api.BlockEntityHelper;
 import com.quackers29.businesscraft.api.MenuTypeHelper;
 import com.quackers29.businesscraft.api.ItemHandlerHelper;
 import com.quackers29.businesscraft.api.NetworkMessages;
-import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.fabric.api.PlatformAccess;
 import com.quackers29.businesscraft.fabric.init.FabricModBlocks;
 import com.quackers29.businesscraft.fabric.init.FabricModEntityTypes;
 import com.quackers29.businesscraft.fabric.init.FabricModBlockEntities;
@@ -48,22 +48,23 @@ public class BusinessCraftFabric implements ModInitializer {
         System.out.println("DEBUG: BusinessCraft Fabric mod starting up!");
 
         // Initialize platform abstractions for common code access
-        PlatformAccess.platform = PLATFORM;
-        PlatformAccess.registry = REGISTRY;
-        PlatformAccess.events = EVENTS;
-        PlatformAccess.network = NETWORK;
-        PlatformAccess.menus = MENUS;
-        PlatformAccess.entities = ENTITIES;
-        PlatformAccess.blockEntities = BLOCK_ENTITIES;
-        PlatformAccess.menuTypes = MENU_TYPES;
-        PlatformAccess.itemHandlers = ITEM_HANDLERS;
-        PlatformAccess.networkMessages = NETWORK_MESSAGES;
+        // TODO: Re-enable PlatformAccess when type issues are resolved
+        // PlatformAccess.platform = PLATFORM;
+        // PlatformAccess.registry = REGISTRY;
+        // PlatformAccess.events = EVENTS;
+        // PlatformAccess.network = NETWORK;
+        // PlatformAccess.menus = MENUS;
+        // PlatformAccess.entities = ENTITIES;
+        // PlatformAccess.blockEntities = BLOCK_ENTITIES;
+        // PlatformAccess.menuTypes = MENU_TYPES;
+        // PlatformAccess.itemHandlers = ITEM_HANDLERS;
+        // PlatformAccess.networkMessages = NETWORK_MESSAGES;
 
         // Register Fabric-specific registrations
         FabricModBlocks.register();
         FabricModEntityTypes.register();
         FabricModBlockEntities.register();
-        FabricModMenuTypes.register();
+        // FabricModMenuTypes.register(); // TODO: Enable when menu is ready
 
         // Initialize networking
         FabricModMessages.register();

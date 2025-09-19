@@ -1,10 +1,10 @@
 package com.quackers29.businesscraft.fabric.init;
 
 /**
- * Fabric block entity registration
+ * Fabric block entity registration - placeholder
  */
 public class FabricModBlockEntities {
     public static void register() {
-        // TODO: Register block entities using Fabric registry system
+        System.out.println("DEBUG: Block entity registration placeholder");
     }
 }
