@@ -33,8 +33,10 @@ dependencies {
 // Filter out all Forge-specific files that would cause compilation issues
 // Exclude specific common module files that conflict with Fabric implementations
 sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/menu/TownInterfaceMenu.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/block/TownInterfaceBlock.java'
 sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/block/entity/TownInterfaceEntity.java'
+
+// Allow TownInterfaceBlock to be included for runtime access
+// sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/block/TownInterfaceBlock.java'
 sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/entity/TouristEntity.java'
 sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/platform/Platform.java'
 sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/network/**/*.java'

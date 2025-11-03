@@ -1,5 +1,6 @@
 // Common module - Platform-agnostic business logic for BusinessCraft
 // Contains all business logic, UI framework, and platform-agnostic code
+// TEMPORARILY has Forge dependencies until decoupling is complete
 
 plugins {
     id 'java-library'

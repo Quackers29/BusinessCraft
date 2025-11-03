@@ -9,7 +9,7 @@ pluginManagement {
 
 rootProject.name = 'businesscraft'
 
-// Include submodules
+// Include all modules - common still needed until decoupling is complete
 include 'common'
 include 'forge'
 include 'fabric' 
