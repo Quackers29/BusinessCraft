@@ -21,8 +21,9 @@ public class ForgeRenderHelper implements RenderHelper {
     private final Map<String, OverlayRenderer> registeredOverlays = new ConcurrentHashMap<>();
     
     @Override
-    public void renderOverlay(GuiGraphics guiGraphics, float partialTick, int screenWidth, int screenHeight) {
+    public void renderOverlay(Object guiGraphics, float partialTick, int screenWidth, int screenHeight) {
         // This method is not used directly - overlays are registered with ForgeGui
+        // Cast handled by Forge implementation
     }
     
     @Override

@@ -1,7 +1,5 @@
 package com.quackers29.businesscraft.api;
 
-import net.minecraft.client.gui.GuiGraphics;
-
 /**
  * Platform-agnostic interface for rendering operations.
  * Provides abstractions for overlay rendering and world rendering stages.
@@ -9,12 +7,12 @@ import net.minecraft.client.gui.GuiGraphics;
 public interface RenderHelper {
     /**
      * Render overlay on the screen (platform-agnostic version of IGuiOverlay)
-     * @param guiGraphics The GUI graphics context
+     * @param guiGraphics The GUI graphics context (Object to avoid compile-time dependency on GuiGraphics)
      * @param partialTick Partial tick for interpolation
      * @param screenWidth Screen width in pixels
      * @param screenHeight Screen height in pixels
      */
-    void renderOverlay(GuiGraphics guiGraphics, float partialTick, int screenWidth, int screenHeight);
+    void renderOverlay(Object guiGraphics, float partialTick, int screenWidth, int screenHeight);
     
     /**
      * Register an overlay renderer
@@ -77,7 +75,14 @@ public interface RenderHelper {
      */
     @FunctionalInterface
     interface OverlayRenderer {
-        void render(GuiGraphics guiGraphics, float partialTick, int screenWidth, int screenHeight);
+        /**
+         * Render the overlay
+         * @param guiGraphics The GUI graphics context (Object to avoid compile-time dependency)
+         * @param partialTick Partial tick for interpolation
+         * @param screenWidth Screen width in pixels
+         * @param screenHeight Screen height in pixels
+         */
+        void render(Object guiGraphics, float partialTick, int screenWidth, int screenHeight);
     }
     
     /**

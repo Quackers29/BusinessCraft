@@ -71,12 +71,11 @@ public class FabricClientSetup implements ClientModInitializer {
             platformPathInitMethod.invoke(null);
             LOGGER.info("Platform path key handler initialized");
             
-            // Initialize TownDebugOverlay (note: overlay registration requires RenderHelper, which is currently null)
-            // The overlay will still work for key/mouse handling, but rendering is disabled until RenderHelper is fixed
+            // Initialize TownDebugOverlay (overlay registration will work now that RenderHelper is enabled)
             Class<?> townDebugOverlayClass = Class.forName("com.quackers29.businesscraft.client.TownDebugOverlay");
             java.lang.reflect.Method overlayInitMethod = townDebugOverlayClass.getMethod("initialize");
             overlayInitMethod.invoke(null);
-            LOGGER.info("Town debug overlay initialized (overlay rendering disabled until RenderHelper is fixed)");
+            LOGGER.info("Town debug overlay initialized");
         } catch (Exception e) {
             LOGGER.warn("Could not initialize key handlers", e);
         }

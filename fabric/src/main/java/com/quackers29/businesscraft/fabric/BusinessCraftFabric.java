@@ -45,11 +45,8 @@ public class BusinessCraftFabric implements ModInitializer {
     public static final NetworkMessages NETWORK_MESSAGES = new FabricNetworkMessages();
     // Client-side only helpers - initialized in client setup
     public static final ClientHelper CLIENT = new FabricClientHelper();
-    // TODO: RenderHelper temporarily disabled due to GuiGraphics compilation issue
-    // Fabric Loom doesn't include client classes in main source set by default
-    // Will be enabled once we configure Loom or implement a workaround
-    // public static final RenderHelper RENDER = new FabricRenderHelper();
-    public static final RenderHelper RENDER = null; // Placeholder until GuiGraphics issue is resolved
+    // RenderHelper uses reflection to avoid compile-time GuiGraphics dependency
+    public static final RenderHelper RENDER = new FabricRenderHelper();
 
     @Override
     public void onInitialize() {

@@ -77,7 +77,11 @@ public class TownDebugOverlay {
         // Register overlay with RenderHelper
         RenderHelper renderHelper = PlatformAccess.getRender();
         if (renderHelper != null) {
-            renderHelper.registerOverlay("town_debug", TownDebugOverlay::renderOverlay);
+            renderHelper.registerOverlay("town_debug", (guiGraphics, partialTick, screenWidth, screenHeight) -> {
+                if (guiGraphics instanceof net.minecraft.client.gui.GuiGraphics gfx) {
+                    renderOverlay(gfx, partialTick, screenWidth, screenHeight);
+                }
+            });
         }
     }
     
