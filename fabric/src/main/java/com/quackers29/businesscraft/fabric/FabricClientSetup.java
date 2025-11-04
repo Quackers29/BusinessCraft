@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.fabric;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.fabric.event.FabricEventCallbackHandler;
 import net.fabricmc.api.ClientModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +20,11 @@ public class FabricClientSetup implements ClientModInitializer {
         PlatformAccess.client = BusinessCraftFabric.CLIENT;
         PlatformAccess.render = BusinessCraftFabric.RENDER;
         
-        // TODO: Register client-side components (screens, renderers, key bindings)
-        // This will be implemented in Phase 5
+        // Register client-side events
+        FabricEventCallbackHandler.registerClientEvents();
+        
+        // Register client-side packet handlers
+        // TODO: Implement client packet registration in Phase 5
         
         LOGGER.info("BusinessCraft Fabric client setup complete");
     }
