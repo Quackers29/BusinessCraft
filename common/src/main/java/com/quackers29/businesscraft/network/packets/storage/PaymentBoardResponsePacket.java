@@ -121,12 +121,18 @@ public class PaymentBoardResponsePacket {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
             "Received payment board update with {} rewards", rewards.size());
 
-        // Get the current screen
-        net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
-        client.execute(() -> {
+        // Get the client helper
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) {
+            LOGGER.warn("ClientHelper not available (server side?)");
+            return;
+        }
+
+        clientHelper.executeOnClientThread(() -> {
             try {
+                Object currentScreen = clientHelper.getCurrentScreen();
                 // If the current screen is PaymentBoardScreen, update its data
-                if (client.screen instanceof com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen paymentScreen) {
+                if (currentScreen instanceof com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen paymentScreen) {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                         "Updating PaymentBoardScreen with reward data");
                     paymentScreen.updateRewardData(rewards);

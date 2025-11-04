@@ -153,17 +153,20 @@ public class TownPlatformDataResponsePacket {
                 }
                 
                 // Try to refresh any open town map modals
-                var currentScreen = net.minecraft.client.Minecraft.getInstance().screen;
-                if (currentScreen instanceof com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal) {
-                    mapModal.refreshPlatformData(townId, platforms);
-                    
-                    // Also update town info if available
-                    if (townInfo != null) {
-                        mapModal.refreshTownData(townId, townInfo);
+                com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+                if (clientHelper != null) {
+                    Object currentScreen = clientHelper.getCurrentScreen();
+                    if (currentScreen instanceof com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal) {
+                        mapModal.refreshPlatformData(townId, platforms);
+                        
+                        // Also update town info if available
+                        if (townInfo != null) {
+                            mapModal.refreshTownData(townId, townInfo);
+                        }
+                        
+                        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
+                            "Refreshed open town map modal with platform and town data for town {}", townId);
                     }
-                    
-                    DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
-                        "Refreshed open town map modal with platform and town data for town {}", townId);
                 }
                 
             } catch (Exception e) {

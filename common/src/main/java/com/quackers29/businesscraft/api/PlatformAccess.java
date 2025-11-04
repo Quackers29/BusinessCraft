@@ -16,6 +16,7 @@ public class PlatformAccess {
     public static MenuTypeHelper menuTypes;
     public static ItemHandlerHelper itemHandlers;
     public static NetworkMessages networkMessages;
+    public static ClientHelper client; // Client-side only - may be null on server
 
     public static PlatformHelper getPlatform() {
         if (platform == null) {
@@ -85,5 +86,10 @@ public class PlatformAccess {
             throw new IllegalStateException("NetworkMessages not initialized yet");
         }
         return networkMessages;
+    }
+
+    public static ClientHelper getClient() {
+        // ClientHelper may be null on server side, so we don't throw an exception
+        return client;
     }
 }

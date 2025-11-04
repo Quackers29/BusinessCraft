@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.HashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.client.Minecraft;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.api.PlatformAccess;
@@ -90,11 +89,14 @@ public class TownMapDataResponsePacket {
                     "Updated client town map cache with {} towns", townData.size());
                 
                 // Try to refresh any open town map modals
-                var currentScreen = net.minecraft.client.Minecraft.getInstance().screen;
-                if (currentScreen instanceof com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal) {
-                    mapModal.refreshFromCache();
-                    DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
-                        "Refreshed open town map modal with new data");
+                com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+                if (clientHelper != null) {
+                    Object currentScreen = clientHelper.getCurrentScreen();
+                    if (currentScreen instanceof com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal) {
+                        mapModal.refreshFromCache();
+                        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
+                            "Refreshed open town map modal with new data");
+                    }
                 }
                 
             } catch (Exception e) {

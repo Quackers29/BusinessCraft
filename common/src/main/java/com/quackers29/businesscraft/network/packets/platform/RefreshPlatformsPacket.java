@@ -1,7 +1,6 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
 import java.util.UUID;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -48,14 +47,20 @@ public class RefreshPlatformsPacket {
     
     private void handleClient() {
         try {
-            Minecraft minecraft = Minecraft.getInstance();
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper == null) {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                    "ClientHelper not available (server side?)");
+                return;
+            }
 
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                 "Processing RefreshPlatformsPacket for pos {}", pos);
 
             // Get the block entity
-            if (minecraft.level != null) {
-                BlockEntity be = minecraft.level.getBlockEntity(pos);
+            Object levelObj = clientHelper.getClientLevel();
+            if (levelObj instanceof net.minecraft.world.level.Level level) {
+                BlockEntity be = level.getBlockEntity(pos);
 
                 if (be instanceof TownInterfaceEntity townInterfaceEntity) {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
@@ -75,7 +80,8 @@ public class RefreshPlatformsPacket {
                     }
 
                     // If the PlatformManagementScreenV2 is open, refresh data without reopening
-                    if (minecraft.screen instanceof PlatformManagementScreenV2 platformScreen) {
+                    Object currentScreen = clientHelper.getCurrentScreen();
+                    if (currentScreen instanceof PlatformManagementScreenV2 platformScreen) {
                         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                             "PlatformManagementScreenV2 is open, refreshing data");
                         platformScreen.refreshPlatformData();
@@ -92,7 +98,7 @@ public class RefreshPlatformsPacket {
                 }
             } else {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                    "Minecraft level is null");
+                    "Client level is null");
             }
         } catch (Exception e) {
             LOGGER.error("Error processing RefreshPlatformsPacket", e);

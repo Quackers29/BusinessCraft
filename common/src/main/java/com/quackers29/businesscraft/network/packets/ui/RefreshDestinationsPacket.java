@@ -3,7 +3,6 @@ package com.quackers29.businesscraft.network.packets.ui;
 import java.util.UUID;
 import java.util.Map;
 import java.util.HashMap;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
@@ -93,10 +92,14 @@ public class RefreshDestinationsPacket {
     public boolean handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // This runs on the client side
-            Minecraft minecraft = Minecraft.getInstance();
-            Level level = minecraft.level;
-            
-            if (level != null) {
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper == null) {
+                LOGGER.warn("ClientHelper not available (server side?)");
+                return;
+            }
+
+            Object levelObj = clientHelper.getClientLevel();
+            if (levelObj instanceof Level level) {
                 BlockEntity be = level.getBlockEntity(pos);
                 
                 if (be instanceof TownInterfaceEntity townInterface) {
@@ -110,16 +113,19 @@ public class RefreshDestinationsPacket {
                     }
                     
                     if (platform != null) {
-                        // Open destinations screen V2 (using BC UI framework)
-                        minecraft.setScreen(new DestinationsScreenV2(
-                            pos, 
-                            platformId, 
-                            platform.getName(),
-                            townNames,
-                            enabledState,
-                            townDistances,
-                            townDirections
-                        ));
+                        Object minecraft = clientHelper.getMinecraft();
+                        if (minecraft instanceof net.minecraft.client.Minecraft mc) {
+                            // Open destinations screen V2 (using BC UI framework)
+                            mc.setScreen(new DestinationsScreenV2(
+                                pos, 
+                                platformId, 
+                                platform.getName(),
+                                townNames,
+                                enabledState,
+                                townDistances,
+                                townDirections
+                            ));
+                        }
                     }
                 }
             }

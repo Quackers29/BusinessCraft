@@ -1,6 +1,6 @@
 package com.quackers29.businesscraft.ui.components.basic;
 
-import net.minecraft.client.Minecraft;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
@@ -112,14 +112,25 @@ public class BCLabel extends BCComponent {
         // Apply alpha to text color
         int finalTextColor = applyAlpha(textColor);
         
+        // Get font from ClientHelper
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) {
+            return; // Can't render without client helper
+        }
+        
+        Object fontObj = clientHelper.getFont();
+        if (!(fontObj instanceof net.minecraft.client.gui.Font font)) {
+            return; // Invalid font object
+        }
+        
         // Calculate text position based on alignment
         int textX = x;
         switch (alignment) {
             case CENTER:
-                textX = x + (width / 2) - (Minecraft.getInstance().font.width(textToRender) / 2);
+                textX = x + (width / 2) - (font.width(textToRender) / 2);
                 break;
             case RIGHT:
-                textX = x + width - Minecraft.getInstance().font.width(textToRender);
+                textX = x + width - font.width(textToRender);
                 break;
             case LEFT:
             default:
@@ -129,9 +140,9 @@ public class BCLabel extends BCComponent {
         
         // Draw text
         if (shadow) {
-            guiGraphics.drawString(Minecraft.getInstance().font, textToRender, textX, y, finalTextColor, true);
+            guiGraphics.drawString(font, textToRender, textX, y, finalTextColor, true);
         } else {
-            guiGraphics.drawString(Minecraft.getInstance().font, textToRender, textX, y, finalTextColor, false);
+            guiGraphics.drawString(font, textToRender, textX, y, finalTextColor, false);
         }
     }
     

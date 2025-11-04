@@ -81,16 +81,21 @@ public class PersonalStorageResponsePacket {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
             "Received personal storage update with {} items", storageItems.size());
         
-        // Get the current screen
-        net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
-        
-        client.execute(() -> {
+        // Get the client helper
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) {
+            LOGGER.warn("ClientHelper not available (server side?)");
+            return;
+        }
+
+        clientHelper.executeOnClientThread(() -> {
+            Object currentScreen = clientHelper.getCurrentScreen();
             // If the current screen is StorageScreen, update its inventory
-            if (client.screen instanceof com.quackers29.businesscraft.ui.screens.town.StorageScreen storageScreen) {
+            if (currentScreen instanceof com.quackers29.businesscraft.ui.screens.town.StorageScreen storageScreen) {
                 storageScreen.updatePersonalStorageItems(storageItems);
             }
             // Also check for our modal inventory screen
-            else if (client.screen instanceof com.quackers29.businesscraft.ui.modal.specialized.BCModalInventoryScreen<?> modalScreen) {
+            else if (currentScreen instanceof com.quackers29.businesscraft.ui.modal.specialized.BCModalInventoryScreen<?> modalScreen) {
                 // Check if the container is a StorageMenu
                 if (modalScreen.getMenu() instanceof com.quackers29.businesscraft.menu.StorageMenu storageMenu) {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 

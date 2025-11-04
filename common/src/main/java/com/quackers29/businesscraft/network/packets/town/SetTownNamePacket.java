@@ -15,7 +15,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
-import net.minecraft.client.Minecraft;
 
 public class SetTownNamePacket extends BaseBlockEntityPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(SetTownNamePacket.class);
@@ -95,9 +94,13 @@ public class SetTownNamePacket extends BaseBlockEntityPacket {
                     
                     // Invalidate TownDataCache in the current screen to refresh the overview tab
                     try {
-                        if (Minecraft.getInstance().screen instanceof TownInterfaceScreen townScreen) {
-                            townScreen.invalidateCache();
-                            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Invalidated TownDataCache for immediate UI refresh");
+                        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+                        if (clientHelper != null) {
+                            Object currentScreen = clientHelper.getCurrentScreen();
+                            if (currentScreen instanceof TownInterfaceScreen townScreen) {
+                                townScreen.invalidateCache();
+                                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Invalidated TownDataCache for immediate UI refresh");
+                            }
                         }
                     } catch (Exception e) {
                         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Could not invalidate screen cache: {}", e.getMessage());

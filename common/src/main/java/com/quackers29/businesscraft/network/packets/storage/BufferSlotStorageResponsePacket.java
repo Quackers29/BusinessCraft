@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.network.packets.storage;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import org.slf4j.Logger;
@@ -67,13 +66,18 @@ public class BufferSlotStorageResponsePacket {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
             "Received slot-based buffer storage update with {} slots", slotStorage.getSlotCount());
         
-        // Get the current screen
-        Minecraft client = Minecraft.getInstance();
-        
-        client.execute(() -> {
+        // Get the client helper
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) {
+            LOGGER.warn("ClientHelper not available (server side?)");
+            return;
+        }
+
+        clientHelper.executeOnClientThread(() -> {
             try {
+                Object currentScreen = clientHelper.getCurrentScreen();
                 // Update both PaymentBoardScreen and PaymentBoardMenu
-                if (client.screen instanceof com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen paymentScreen) {
+                if (currentScreen instanceof com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen paymentScreen) {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                         "Updating PaymentBoardScreen with slot-based buffer storage data");
                     

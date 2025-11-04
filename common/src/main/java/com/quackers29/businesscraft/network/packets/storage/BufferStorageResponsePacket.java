@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.network.packets.storage;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.Item;
 import com.quackers29.businesscraft.api.PlatformAccess;
@@ -82,13 +81,18 @@ public class BufferStorageResponsePacket {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
             "Received buffer storage update with {} items", bufferItems.size());
         
-        // Get the current screen
-        Minecraft client = Minecraft.getInstance();
-        
-        client.execute(() -> {
+        // Get the client helper
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) {
+            LOGGER.warn("ClientHelper not available (server side?)");
+            return;
+        }
+
+        clientHelper.executeOnClientThread(() -> {
             try {
+                Object currentScreen = clientHelper.getCurrentScreen();
                 // If the current screen is PaymentBoardScreen, update its buffer storage data
-                if (client.screen instanceof com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen paymentScreen) {
+                if (currentScreen instanceof com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen paymentScreen) {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                         "Updating PaymentBoardScreen with buffer storage data");
                     paymentScreen.updateBufferStorageItems(bufferItems);

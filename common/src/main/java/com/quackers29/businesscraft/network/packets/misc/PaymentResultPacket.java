@@ -54,16 +54,21 @@ public class PaymentResultPacket {
         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
             "Payment result received: {}", paymentItem);
         
-        // Get the current screen and update the output slot on either TradeScreen or BCModalInventoryScreen
-        net.minecraft.client.Minecraft client = net.minecraft.client.Minecraft.getInstance();
-        
-        client.execute(() -> {
+        // Get the client helper
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) {
+            LOGGER.warn("ClientHelper not available (server side?)");
+            return;
+        }
+
+        clientHelper.executeOnClientThread(() -> {
+            Object currentScreen = clientHelper.getCurrentScreen();
             // Handle traditional TradeScreen first
-            if (client.screen instanceof com.quackers29.businesscraft.ui.screens.town.TradeScreen tradeScreen) {
+            if (currentScreen instanceof com.quackers29.businesscraft.ui.screens.town.TradeScreen tradeScreen) {
                 tradeScreen.setOutputItem(paymentItem);
             } 
             // Also check for our new modal inventory screen
-            else if (client.screen instanceof BCModalInventoryScreen<?> modalScreen) {
+            else if (currentScreen instanceof BCModalInventoryScreen<?> modalScreen) {
                 // Check if the container is a TradeMenu
                 if (modalScreen.getMenu() instanceof TradeMenu tradeMenu) {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
