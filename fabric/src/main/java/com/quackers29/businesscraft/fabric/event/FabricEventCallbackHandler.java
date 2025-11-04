@@ -59,6 +59,13 @@ public class FabricEventCallbackHandler {
             Class<?> serverPlayerEventsClass = classLoader.loadClass("net.fabricmc.fabric.api.event.lifecycle.v1.ServerPlayerEvents");
             Class<?> serverWorldEventsClass = classLoader.loadClass("net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents");
             
+            // Load Minecraft classes for type checking (but not for compile-time use)
+            Class<?> serverPlayerClass = classLoader.loadClass("net.minecraft.server.level.ServerPlayer");
+            Class<?> serverLevelClass = classLoader.loadClass("net.minecraft.server.level.ServerLevel");
+            Class<?> levelClass = classLoader.loadClass("net.minecraft.world.level.Level");
+            Class<?> playerClass = classLoader.loadClass("net.minecraft.world.entity.player.Player");
+            Class<?> blockPosClass = classLoader.loadClass("net.minecraft.core.BlockPos");
+            
             // Register player tick callback - END_SERVER_TICK is a static field
             java.lang.reflect.Field endTickField = serverTickEventsClass.getField("END_SERVER_TICK");
             Object endTickEvent = endTickField.get(null);
@@ -73,17 +80,36 @@ public class FabricEventCallbackHandler {
                     java.util.List<Object> players = (java.util.List<Object>) getPlayersMethod.invoke(playerList);
                     
                     for (Object player : players) {
-                        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-                            net.minecraft.server.level.ServerLevel serverLevel = serverPlayer.serverLevel();
-                            net.minecraft.core.BlockPos position = serverPlayer.blockPosition();
-                            
-                            for (EventCallbacks.PlayerTickCallback callback : playerTickCallbacks) {
-                                callback.onPlayerTick(serverPlayer, serverLevel, position);
+                        // Use reflection to check if player is ServerPlayer and extract data
+                        try {
+                            if (serverPlayerClass.isInstance(player)) {
+                                // Use reflection to get serverLevel and blockPosition
+                                java.lang.reflect.Method getServerLevelMethod = serverPlayerClass.getMethod("serverLevel");
+                                Object serverLevel = getServerLevelMethod.invoke(player);
+                                
+                                java.lang.reflect.Method getBlockPositionMethod = serverPlayerClass.getMethod("blockPosition");
+                                Object position = getBlockPositionMethod.invoke(player);
+                                
+                                for (EventCallbacks.PlayerTickCallback callback : playerTickCallbacks) {
+                                    // Use unchecked cast - objects are actually correct types from common module
+                                    @SuppressWarnings("unchecked")
+                                    com.quackers29.businesscraft.api.EventCallbacks.PlayerTickCallback cb = callback;
+                                    // Cast Objects to expected types - they are actually ServerPlayer, ServerLevel, BlockPos
+                                    Object castPlayer = serverPlayerClass.cast(player);
+                                    Object castLevel = serverLevelClass.cast(serverLevel);
+                                    Object castPos = blockPosClass.cast(position);
+                                    // Invoke using reflection since we can't use types directly
+                                    java.lang.reflect.Method method = callback.getClass().getMethod("onPlayerTick", 
+                                        serverPlayerClass, serverLevelClass, blockPosClass);
+                                    method.invoke(callback, castPlayer, castLevel, castPos);
+                                }
                             }
+                        } catch (Exception ex) {
+                            LOGGER.error("Error in player tick handler", ex);
                         }
                     }
-                } catch (Exception e) {
-                    LOGGER.error("Error in player tick handler", e);
+                } catch (Exception ex) {
+                    LOGGER.error("Error in player tick handler", ex);
                 }
             });
             
@@ -94,13 +120,26 @@ public class FabricEventCallbackHandler {
                 Object joinEvent = joinField.get(null);
                 java.lang.reflect.Method registerLoginMethod = joinEvent.getClass().getMethod("register", java.util.function.Consumer.class);
                 registerLoginMethod.invoke(joinEvent, (java.util.function.Consumer<Object>) (player) -> {
-                    if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-                        net.minecraft.server.level.ServerLevel serverLevel = serverPlayer.serverLevel();
-                        net.minecraft.core.BlockPos position = serverPlayer.blockPosition();
-                        
-                        for (EventCallbacks.PlayerLoginCallback callback : playerLoginCallbacks) {
-                            callback.onPlayerLogin(serverPlayer, serverLevel, position);
+                    try {
+                        if (serverPlayerClass.isInstance(player)) {
+                            java.lang.reflect.Method getServerLevelMethod = serverPlayerClass.getMethod("serverLevel");
+                            Object serverLevel = getServerLevelMethod.invoke(player);
+                            
+                            java.lang.reflect.Method getBlockPositionMethod = serverPlayerClass.getMethod("blockPosition");
+                            Object position = getBlockPositionMethod.invoke(player);
+                            
+                            for (EventCallbacks.PlayerLoginCallback callback : playerLoginCallbacks) {
+                                // Use reflection to invoke callback - cast Objects to expected types
+                                Object castPlayer = serverPlayerClass.cast(player);
+                                Object castLevel = serverLevelClass.cast(serverLevel);
+                                Object castPos = blockPosClass.cast(position);
+                                java.lang.reflect.Method method = callback.getClass().getMethod("onPlayerLogin", 
+                                    serverPlayerClass, serverLevelClass, blockPosClass);
+                                method.invoke(callback, castPlayer, castLevel, castPos);
+                            }
                         }
+                    } catch (Exception ex) {
+                        LOGGER.error("Error in player login handler", ex);
                     }
                 });
             } catch (Exception e) {
@@ -111,13 +150,26 @@ public class FabricEventCallbackHandler {
                     Object respawnEvent = respawnField.get(null);
                     java.lang.reflect.Method registerRespawnMethod = respawnEvent.getClass().getMethod("register", java.util.function.BiConsumer.class);
                     registerRespawnMethod.invoke(respawnEvent, (java.util.function.BiConsumer<Object, Object>) (oldPlayer, newPlayer) -> {
-                        if (newPlayer instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-                            net.minecraft.server.level.ServerLevel serverLevel = serverPlayer.serverLevel();
-                            net.minecraft.core.BlockPos position = serverPlayer.blockPosition();
-                            
-                            for (EventCallbacks.PlayerLoginCallback callback : playerLoginCallbacks) {
-                                callback.onPlayerLogin(serverPlayer, serverLevel, position);
+                        try {
+                            if (serverPlayerClass.isInstance(newPlayer)) {
+                                java.lang.reflect.Method getServerLevelMethod = serverPlayerClass.getMethod("serverLevel");
+                                Object serverLevel = getServerLevelMethod.invoke(newPlayer);
+                                
+                                java.lang.reflect.Method getBlockPositionMethod = serverPlayerClass.getMethod("blockPosition");
+                                Object position = getBlockPositionMethod.invoke(newPlayer);
+                                
+                                for (EventCallbacks.PlayerLoginCallback callback : playerLoginCallbacks) {
+                                    // Use reflection to invoke callback - cast Objects to expected types
+                                    Object castPlayer = serverPlayerClass.cast(newPlayer);
+                                    Object castLevel = serverLevelClass.cast(serverLevel);
+                                    Object castPos = blockPosClass.cast(position);
+                                    java.lang.reflect.Method method = callback.getClass().getMethod("onPlayerLogin", 
+                                        serverPlayerClass, serverLevelClass, blockPosClass);
+                                    method.invoke(callback, castPlayer, castLevel, castPos);
+                                }
                             }
+                        } catch (Exception ex) {
+                            LOGGER.error("Error in player respawn handler", ex);
                         }
                     });
                 } catch (Exception e2) {
@@ -131,10 +183,17 @@ public class FabricEventCallbackHandler {
                 Object disconnectEvent = disconnectField.get(null);
                 java.lang.reflect.Method registerDisconnectMethod = disconnectEvent.getClass().getMethod("register", java.util.function.Consumer.class);
                 registerDisconnectMethod.invoke(disconnectEvent, (java.util.function.Consumer<Object>) (player) -> {
-                    if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-                        for (EventCallbacks.PlayerLogoutCallback callback : playerLogoutCallbacks) {
-                            callback.onPlayerLogout(serverPlayer);
+                    try {
+                        if (serverPlayerClass.isInstance(player)) {
+                            for (EventCallbacks.PlayerLogoutCallback callback : playerLogoutCallbacks) {
+                                // Use reflection to invoke callback - cast Object to expected type
+                                Object castPlayer = serverPlayerClass.cast(player);
+                                java.lang.reflect.Method method = callback.getClass().getMethod("onPlayerLogout", serverPlayerClass);
+                                method.invoke(callback, castPlayer);
+                            }
                         }
+                    } catch (Exception ex) {
+                        LOGGER.error("Error in player logout handler", ex);
                     }
                 });
             } catch (Exception e) {
@@ -147,10 +206,17 @@ public class FabricEventCallbackHandler {
                 Object unloadEvent = unloadField.get(null);
                 java.lang.reflect.Method registerUnloadMethod = unloadEvent.getClass().getMethod("register", java.util.function.Consumer.class);
                 registerUnloadMethod.invoke(unloadEvent, (java.util.function.Consumer<Object>) (world) -> {
-                    if (world instanceof net.minecraft.world.level.Level level) {
-                        for (EventCallbacks.LevelUnloadCallback callback : levelUnloadCallbacks) {
-                            callback.onLevelUnload(level);
+                    try {
+                        if (levelClass.isInstance(world)) {
+                            for (EventCallbacks.LevelUnloadCallback callback : levelUnloadCallbacks) {
+                                // Use reflection to invoke callback - cast Object to expected type
+                                Object castWorld = levelClass.cast(world);
+                                java.lang.reflect.Method method = callback.getClass().getMethod("onLevelUnload", levelClass);
+                                method.invoke(callback, castWorld);
+                            }
                         }
+                    } catch (Exception ex) {
+                        LOGGER.error("Error in level unload handler", ex);
                     }
                 });
             } catch (Exception e) {
@@ -168,39 +234,58 @@ public class FabricEventCallbackHandler {
                 Object callback = java.lang.reflect.Proxy.newProxyInstance(
                     classLoader,
                     new Class[]{useBlockCallbackClass},
-                    (proxy, method, args) -> {
-                        if (method.getName().equals("interact")) {
+                    (proxy, proxyMethod, args) -> {
+                        if (proxyMethod.getName().equals("interact")) {
                             Object player = args[0];
                             Object world = args[1];
                             Object hand = args[2];
                             Object hitResult = args[3];
                             
-                            if (world instanceof net.minecraft.world.level.Level level && 
-                                player instanceof net.minecraft.world.entity.player.Player mcPlayer) {
-                                
-                                // Extract BlockPos from hit result
-                                net.minecraft.core.BlockPos clickedPos = null;
-                                try {
-                                    java.lang.reflect.Method getBlockPosMethod = hitResult.getClass().getMethod("getBlockPos");
-                                    clickedPos = (net.minecraft.core.BlockPos) getBlockPosMethod.invoke(hitResult);
-                                } catch (Exception e) {
-                                    LOGGER.error("Error extracting BlockPos from hit result", e);
-                                }
-                                
-                                if (clickedPos != null && !level.isClientSide()) {
-                                    for (EventCallbacks.RightClickBlockCallback cb : rightClickBlockCallbacks) {
-                                        if (cb.onRightClickBlock(mcPlayer, level, clickedPos)) {
-                                            // Return ActionResult.FAIL to cancel
-                                            try {
-                                                Class<?> actionResultClass = classLoader.loadClass("net.minecraft.world.InteractionResult");
-                                                java.lang.reflect.Field failField = actionResultClass.getField("FAIL");
-                                                return failField.get(null);
-                                            } catch (Exception e) {
-                                                return null; // Can't cancel, return null
+                            try {
+                                // Use the levelClass and playerClass already declared at method level
+                                if (levelClass.isInstance(world) && playerClass.isInstance(player)) {
+                                    // Extract BlockPos from hit result
+                                    Object clickedPos = null;
+                                    try {
+                                        java.lang.reflect.Method getBlockPosMethod = hitResult.getClass().getMethod("getBlockPos");
+                                        clickedPos = getBlockPosMethod.invoke(hitResult);
+                                    } catch (Exception e) {
+                                        LOGGER.error("Error extracting BlockPos from hit result", e);
+                                    }
+                                    
+                                    // Check if server-side using reflection
+                                    boolean isClientSide = false;
+                                    try {
+                                        java.lang.reflect.Method isClientSideMethod = levelClass.getMethod("isClientSide");
+                                        isClientSide = (Boolean) isClientSideMethod.invoke(world);
+                                    } catch (Exception e) {
+                                        LOGGER.error("Error checking if client side", e);
+                                    }
+                                    
+                                    if (clickedPos != null && !isClientSide) {
+                                        for (EventCallbacks.RightClickBlockCallback cb : rightClickBlockCallbacks) {
+                                            // Use reflection to invoke callback - cast Objects to expected types
+                                            Object castPlayer = playerClass.cast(player);
+                                            Object castWorld = levelClass.cast(world);
+                                            Object castPos = blockPosClass.cast(clickedPos);
+                                            java.lang.reflect.Method callbackMethod = cb.getClass().getMethod("onRightClickBlock", 
+                                                playerClass, levelClass, blockPosClass);
+                                            boolean cancel = (Boolean) callbackMethod.invoke(cb, castPlayer, castWorld, castPos);
+                                            if (cancel) {
+                                                // Return ActionResult.FAIL to cancel
+                                                try {
+                                                    Class<?> actionResultClass = classLoader.loadClass("net.minecraft.world.InteractionResult");
+                                                    java.lang.reflect.Field failField = actionResultClass.getField("FAIL");
+                                                    return failField.get(null);
+                                                } catch (Exception e) {
+                                                    return null; // Can't cancel, return null
+                                                }
                                             }
                                         }
                                     }
                                 }
+                            } catch (Exception e) {
+                                LOGGER.error("Error in right-click block handler", e);
                             }
                             
                             // Continue with normal interaction
@@ -239,6 +324,9 @@ public class FabricEventCallbackHandler {
             Class<?> clientTickEventsClass = classLoader.loadClass("net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents");
             Class<?> clientWorldEventsClass = classLoader.loadClass("net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents");
             
+            // Load Minecraft Level class for type checking (client-side)
+            Class<?> clientLevelClass = classLoader.loadClass("net.minecraft.world.level.Level");
+            
             // Register client tick callback - END_CLIENT_TICK is a static field
             try {
                 java.lang.reflect.Field endTickField = clientTickEventsClass.getField("END_CLIENT_TICK");
@@ -259,10 +347,17 @@ public class FabricEventCallbackHandler {
                 Object unloadEvent = unloadField.get(null);
                 java.lang.reflect.Method registerUnloadMethod = unloadEvent.getClass().getMethod("register", java.util.function.Consumer.class);
                 registerUnloadMethod.invoke(unloadEvent, (java.util.function.Consumer<Object>) (world) -> {
-                    if (world instanceof net.minecraft.world.level.Level level) {
-                        for (EventCallbacks.LevelUnloadCallback callback : levelUnloadCallbacks) {
-                            callback.onLevelUnload(level);
+                    try {
+                        if (clientLevelClass.isInstance(world)) {
+                            for (EventCallbacks.LevelUnloadCallback callback : levelUnloadCallbacks) {
+                                // Use reflection to invoke callback - cast Object to expected type
+                                Object castWorld = clientLevelClass.cast(world);
+                                java.lang.reflect.Method method = callback.getClass().getMethod("onLevelUnload", clientLevelClass);
+                                method.invoke(callback, castWorld);
+                            }
                         }
+                    } catch (Exception ex) {
+                        LOGGER.error("Error in client level unload handler", ex);
                     }
                 });
             } catch (Exception e) {

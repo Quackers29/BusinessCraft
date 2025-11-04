@@ -8,7 +8,8 @@ plugins {
 
 archivesBaseName = 'businesscraft-fabric'
 
-// Ensure common module jar is built before fabric module compiles
+// Ensure common module is compiled before fabric module compiles
+tasks.compileJava.dependsOn(':common:compileJava')
 tasks.compileJava.dependsOn(':common:jar')
 
 loom {
@@ -23,9 +24,13 @@ dependencies {
     // Fabric API
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    // Include common module - standard dependency should work
+    // Include common module - use api to expose common module's classes
     // Ensure common module jar is built first (see task dependency above)
     // Exclude Forge dependency since Fabric doesn't need it
+    api(project(':common')) {
+        exclude group: 'net.minecraftforge', module: 'forge'
+    }
+    // Also add as compileOnly and implementation to ensure classes are available
     compileOnly(project(':common')) {
         exclude group: 'net.minecraftforge', module: 'forge'
     }
@@ -65,7 +70,8 @@ sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/
 sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/client/**/*.java'
 sourceSets.main.java.exclude '**/client/render/**/*.java'
 sourceSets.main.java.exclude '**/client/renderer/**/*.java'
-sourceSets.main.java.exclude '**/event/**/*.java'
+// Only exclude common module event files, not fabric-specific ones
+sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/**/event/**/*.java'
 sourceSets.main.java.exclude '**/data/**/*.java'
 sourceSets.main.java.exclude '**/town/TownManager.java'
 
