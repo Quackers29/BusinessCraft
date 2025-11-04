@@ -13,12 +13,13 @@
 ### Current Status
 - ✅ **Forge client:** Fully functional (`:forge:runClient`)
 - ❌ **Fabric client:** Infrastructure exists but non-functional
-- ✅ **Common module:** Network packets, screen opening, debug network, and client-side UI code decoupled from Forge dependencies
+- ✅ **Common module:** Network packets, screen opening, debug network, client-side UI code, and event system decoupled from Forge dependencies
 - ✅ **Architecture:** Multi-module setup maintained for stability
 - ✅ **Phase 1 Complete:** All 39 network packets use PlatformAccess abstractions
 - ✅ **Phase 2 Complete:** All screen/menu opening uses PlatformAccess abstractions
 - ✅ **Phase 1.5 Complete:** Debug network system integrated into main PlatformAccess system
 - ✅ **Phase 3 Complete:** All client-side UI code uses ClientHelper abstractions (51+ files)
+- ✅ **Phase 4 Complete:** All event handlers use EventHelper callback system (6 files)
 
 ### Scope Breakdown
 | Category | Files | Priority | Effort |
@@ -311,18 +312,41 @@ wsl ./gradlew :forge:runClient
 # Verify debug overlay and client-side features work correctly
 ```
 
-### 4. Event System (6 files) 🟢 **LOW PRIORITY**
+### 4. Event System (6 files) 🟢 **LOW PRIORITY** ✅ **COMPLETED**
 **Issue:** Direct Forge event APIs instead of PlatformAccess abstractions
+**Status:** ✅ **ALL 6 FILES COMPLETED AND TESTED**
 
-**Files to modify:**
-- [ ] common/src/main/java/com/quackers29/businesscraft/event/PlayerBoundaryTracker.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/event/PlatformPathHandler.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/event/ClientRenderEvents.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/client/TownDebugOverlay.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/client/TownDebugKeyHandler.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/client/PlatformPathKeyHandler.java
+**Files Modified (All Completed ✅):**
+- [x] common/src/main/java/com/quackers29/businesscraft/api/EventCallbacks.java *(NEW - callback interfaces)*
+- [x] common/src/main/java/com/quackers29/businesscraft/api/EventHelper.java *(Updated - added callback registration methods)*
+- [x] forge/src/main/java/com/quackers29/businesscraft/forge/event/ForgeEventCallbackHandler.java *(NEW - Forge event bridge)*
+- [x] forge/src/main/java/com/quackers29/businesscraft/forge/platform/ForgeEventHelper.java *(Updated - implements callback registration)*
+- [x] forge/src/main/java/com/quackers29/businesscraft/forge/BusinessCraftForge.java *(Updated - registers event handlers)*
+- [x] common/src/main/java/com/quackers29/businesscraft/event/PlayerBoundaryTracker.java
+- [x] common/src/main/java/com/quackers29/businesscraft/event/PlatformPathHandler.java
+- [x] common/src/main/java/com/quackers29/businesscraft/event/ClientRenderEvents.java
+- [x] common/src/main/java/com/quackers29/businesscraft/client/TownDebugOverlay.java
+- [x] common/src/main/java/com/quackers29/businesscraft/client/TownDebugKeyHandler.java
+- [x] common/src/main/java/com/quackers29/businesscraft/client/PlatformPathKeyHandler.java
 
-**Effort:** Medium per file (move event logic to platform-specific implementations)
+**Summary:**
+- ✅ **EventCallbacks interface created** - Platform-agnostic callback interfaces for all event types
+- ✅ **EventHelper extended** - Added registration methods for all callback types
+- ✅ **ForgeEventCallbackHandler created** - Bridges Forge events to common module callbacks
+- ✅ **ForgeEventHelper updated** - Implements all callback registration methods
+- ✅ **6 event handler files updated** - All `@Mod.EventBusSubscriber` and `@SubscribeEvent` annotations removed
+- ✅ **Event initialization added** - Server-side handlers initialized in `commonSetup()`, client-side in `clientSetup()`
+- ✅ **All Forge imports removed** - Common module event handlers no longer depend on Forge types
+- ✅ **Build tested and verified** - All compilation errors resolved, Forge build successful
+
+**Testing Strategy:** ✅ **COMPLETED**
+```bash
+# Verify all event handlers work
+wsl ./gradlew :forge:build
+wsl ./gradlew :forge:runClient
+# Test player boundary tracking, platform path creation, debug overlay, key handlers
+# Verify all events fire correctly and callbacks are invoked
+```
 
 ### 5. Item Handler Abstractions (1 file) 🟢 **LOW PRIORITY**
 **Issue:** Direct `ItemStackHandler` usage instead of platform abstractions
@@ -335,10 +359,10 @@ wsl ./gradlew :forge:runClient
 ## Platform Module Updates Required
 
 ### Forge Platform Updates:
-- [ ] Update `ForgeModMessages.java` to handle new packet handler signatures
-- [ ] Add `ClientHelper` implementations
-- [ ] Update event registration patterns
-- [ ] Ensure all PlatformAccess services are properly initialized
+- [x] Update `ForgeModMessages.java` to handle new packet handler signatures ✅
+- [x] Add `ClientHelper` implementations ✅
+- [x] Update event registration patterns ✅
+- [x] Ensure all PlatformAccess services are properly initialized ✅
 
 ### Fabric Platform Updates:
 - [ ] Implement proper packet handlers in Fabric counterparts

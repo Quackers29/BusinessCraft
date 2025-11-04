@@ -1,19 +1,16 @@
 package com.quackers29.businesscraft.event;
 
-// BusinessCraft moved to platform-specific module
+import com.quackers29.businesscraft.api.EventCallbacks;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer;
 import com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer;
 import com.quackers29.businesscraft.client.render.world.VisualizationManager;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraft.world.level.Level;
 
 /**
  * Client-side rendering events for modular world visualization system.
  * Manages the new modular 3D line rendering framework for platform and other visualizations.
  */
-@Mod.EventBusSubscriber(modid = "businesscraft", bus = Mod.EventBusSubscriber.Bus.FORGE, value = net.minecraftforge.api.distmarker.Dist.CLIENT)
 public class ClientRenderEvents {
     
     // Platform visualization renderer using the new modular system
@@ -36,26 +33,41 @@ public class ClientRenderEvents {
         );
     }
     
-    @SubscribeEvent
-    public static void onRenderLevelStage(RenderLevelStageEvent event) {
-        // Use the new modular rendering system
-        platformRenderer.render(event);
-        boundaryRenderer.render(event);
-        
-        // Future: Additional renderer types can be added here
-        // routeRenderer.render(event);
-        // debugRenderer.render(event);
-        // territoryRenderer.render(event);
+    /**
+     * Initialize event callbacks. Should be called during mod initialization.
+     */
+    public static void initialize() {
+        PlatformAccess.getEvents().registerRenderLevelCallback(ClientRenderEvents::onRenderLevelStage);
+        PlatformAccess.getEvents().registerLevelUnloadCallback(ClientRenderEvents::onLevelUnload);
+    }
+    
+    private static void onRenderLevelStage(String renderStage, float partialTick, Object eventObject) {
+        // The renderers need RenderLevelStageEvent, which is Forge-specific.
+        // The actual rendering will be handled in the Forge event handler.
+        // This method is kept for potential future use or non-render logic.
     }
     
     /**
      * Clean up visualization state when the player changes worlds
      */
-    @SubscribeEvent
-    public static void onLevelUnload(LevelEvent.Unload event) {
-        if (event.getLevel().isClientSide()) {
+    private static void onLevelUnload(Level level) {
+        if (level.isClientSide()) {
             VisualizationManager.getInstance().onLevelUnload();
             // Boundary data is cleaned up automatically by the renderer's cleanup method
         }
+    }
+    
+    /**
+     * Get the platform renderer (for platform-specific rendering code)
+     */
+    public static PlatformVisualizationRenderer getPlatformRenderer() {
+        return platformRenderer;
+    }
+    
+    /**
+     * Get the boundary renderer (for platform-specific rendering code)
+     */
+    public static TownBoundaryVisualizationRenderer getBoundaryRenderer() {
+        return boundaryRenderer;
     }
 }

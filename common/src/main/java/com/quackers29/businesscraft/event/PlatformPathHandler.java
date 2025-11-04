@@ -1,8 +1,9 @@
 package com.quackers29.businesscraft.event;
 
+import com.quackers29.businesscraft.api.EventCallbacks;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.platform.Platform;
-import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
@@ -12,14 +13,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraft.world.entity.player.Player;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.util.UUID;
 
-@Mod.EventBusSubscriber
 public class PlatformPathHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private static BlockPos activeTownBlockPos = null;
@@ -41,27 +39,31 @@ public class PlatformPathHandler {
         LOGGER.debug("Cleared active platform");
     }
 
-    @SubscribeEvent
-    public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
-        if (activeTownBlockPos == null || activePlatformId == null) return;
+    /**
+     * Initialize event callbacks. Should be called during mod initialization.
+     */
+    public static void initialize() {
+        PlatformAccess.getEvents().registerRightClickBlockCallback(PlatformPathHandler::onRightClickBlock);
+    }
+    
+    private static boolean onRightClickBlock(Player player, Level level, BlockPos clickedPos) {
+        if (activeTownBlockPos == null || activePlatformId == null) return false;
         
         // Skip if on client side - only process on server
-        if (event.getLevel().isClientSide()) return;
+        if (level.isClientSide()) return false;
         
         // Debounce clicks - prevent multiple rapid clicks
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastClickTime < 500) {
             LOGGER.debug("Ignoring click due to debounce (time since last: {}ms)", currentTime - lastClickTime);
-            return;
+            return false;
         }
         lastClickTime = currentTime;
         
-        Level level = event.getLevel();
         BlockEntity be = level.getBlockEntity(activeTownBlockPos);
         LOGGER.debug("Right click event with active platform {} at {}", activePlatformId, activeTownBlockPos);
         
         if (be instanceof TownInterfaceEntity townInterface && townInterface.isInPlatformCreationMode()) {
-            BlockPos clickedPos = event.getPos();
             LOGGER.debug("Platform path creation mode active, clicked: {}, awaitingSecondClick: {}", clickedPos, awaitingSecondClick);
             
             // Check if the platform exists
@@ -69,22 +71,20 @@ public class PlatformPathHandler {
             if (platform == null) {
                 LOGGER.error("Platform {} not found in town block at {}", activePlatformId, activeTownBlockPos);
                 clearActivePlatform();
-                event.setCanceled(true);
-                return;
+                return true; // Cancel event
             }
             
             // Check if the clicked position is within town boundary
             String validationError = validatePositionWithinBoundary(clickedPos, townInterface, level);
             if (validationError != null) {
-                event.getEntity().sendSystemMessage(Component.literal(validationError));
-                event.setCanceled(true);
-                return;
+                player.sendSystemMessage(Component.literal(validationError));
+                return true; // Cancel event
             }
             
             // First click - set start point
             if (!awaitingSecondClick) {
                 townInterface.setPlatformPathStart(activePlatformId, clickedPos);
-                event.getEntity().sendSystemMessage(
+                player.sendSystemMessage(
                     Component.literal("Platform start point set! Now click to set the end point.")
                         .withStyle(ChatFormatting.YELLOW)
                 );
@@ -96,7 +96,7 @@ public class PlatformPathHandler {
                 townInterface.setPlatformPathEnd(activePlatformId, clickedPos);
                 townInterface.setPlatformCreationMode(false, null);
                 
-                event.getEntity().sendSystemMessage(
+                player.sendSystemMessage(
                     Component.literal("Platform path created!")
                         .withStyle(ChatFormatting.GREEN)
                 );
@@ -114,8 +114,10 @@ public class PlatformPathHandler {
                 LOGGER.debug("Set platform path end to {} and completed path creation", clickedPos);
             }
             
-            event.setCanceled(true);
+            return true; // Cancel event
         }
+        
+        return false; // Don't cancel event
     }
     
     /**

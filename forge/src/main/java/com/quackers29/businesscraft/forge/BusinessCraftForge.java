@@ -135,6 +135,10 @@ public class BusinessCraftForge {
 
         // Block items are now registered via RegistryObject
         LOGGER.info("Block items registered via RegistryObject");
+        
+        // Initialize server-side event handlers
+        com.quackers29.businesscraft.event.PlayerBoundaryTracker.initialize();
+        com.quackers29.businesscraft.event.PlatformPathHandler.initialize();
 
         LOGGER.info("BusinessCraft Forge common setup complete.");
     }
@@ -147,6 +151,12 @@ public class BusinessCraftForge {
 
         // Client-side setup handled by ForgeClientSetup
         ForgeClientSetup.init();
+        
+        // Initialize client-side event handlers
+        com.quackers29.businesscraft.event.ClientRenderEvents.initialize();
+        com.quackers29.businesscraft.client.TownDebugOverlay.initialize();
+        com.quackers29.businesscraft.client.TownDebugKeyHandler.initialize();
+        com.quackers29.businesscraft.client.PlatformPathKeyHandler.initialize();
 
         LOGGER.info("BusinessCraft Forge client setup complete");
     }

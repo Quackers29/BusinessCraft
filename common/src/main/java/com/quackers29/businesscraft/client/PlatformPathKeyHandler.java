@@ -1,14 +1,10 @@
 package com.quackers29.businesscraft.client;
 
-// BusinessCraft moved to platform-specific module
+import com.quackers29.businesscraft.api.EventCallbacks;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.network.packets.platform.SetPlatformPathCreationModePacket;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,6 +19,13 @@ public class PlatformPathKeyHandler {
     private static boolean isActive = false;
     private static BlockPos townPos;
     private static UUID platformId;
+    
+    /**
+     * Initialize event callbacks. Should be called during mod initialization.
+     */
+    public static void initialize() {
+        PlatformAccess.getEvents().registerKeyInputCallback(PlatformPathKeyHandler::onKeyPress);
+    }
     
     /**
      * Set the active platform for path creation
@@ -49,12 +52,11 @@ public class PlatformPathKeyHandler {
     /**
      * Handle key press events
      */
-    @SubscribeEvent
-    public static void onKeyPress(InputEvent.Key event) {
-        if (!isActive) return;
+    private static boolean onKeyPress(int keyCode, int action) {
+        if (!isActive) return false;
         
         // Check for ESC key
-        if (event.getKey() == GLFW.GLFW_KEY_ESCAPE && event.getAction() == GLFW.GLFW_PRESS) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE && action == GLFW.GLFW_PRESS) {
             LOGGER.debug("ESC key pressed, exiting platform path creation mode");
             
             // Send packet to exit path creation mode
@@ -78,6 +80,9 @@ public class PlatformPathKeyHandler {
             
             // Clear active platform
             clearActivePlatform();
+            return false; // Don't cancel the event
         }
+        
+        return false;
     }
 } 

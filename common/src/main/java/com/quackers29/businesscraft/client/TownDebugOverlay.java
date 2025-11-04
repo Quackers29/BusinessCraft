@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.client;
 
+import com.quackers29.businesscraft.api.EventCallbacks;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.mojang.blaze3d.systems.RenderSystem;
 // BusinessCraft moved to platform-specific module
@@ -9,10 +10,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 
 import java.util.*;
 
@@ -72,28 +69,35 @@ public class TownDebugOverlay implements IGuiOverlay {
     }
     
     /**
+     * Initialize event callbacks. Should be called during mod initialization.
+     */
+    public static void initialize() {
+        PlatformAccess.getEvents().registerMouseScrollCallback(TownDebugOverlay::onMouseScroll);
+        PlatformAccess.getEvents().registerClientTickCallback(TownDebugOverlay::onClientTick);
+    }
+    
+    /**
      * Handles mouse scroll events when the overlay is visible
      */
-    @SubscribeEvent
-    public static void onMouseScroll(InputEvent.MouseScrollingEvent event) {
+    private static boolean onMouseScroll(double scrollDelta) {
         if (visible) {
             // Adjust scroll offset based on mouse wheel direction
-            scrollOffset -= (int)(event.getScrollDelta() * SCROLL_AMOUNT);
+            scrollOffset -= (int)(scrollDelta * SCROLL_AMOUNT);
             // Ensure we don't scroll past the top
             if (scrollOffset < 0) {
                 scrollOffset = 0;
             }
             // We handled this scroll event
-            event.setCanceled(true);
+            return true; // Cancel event
         }
+        return false;
     }
     
     /**
      * Tick handler for periodic updates
      */
-    @SubscribeEvent
-    public static void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && visible) {
+    private static void onClientTick() {
+        if (visible) {
             com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
             if (clientHelper != null) {
                 Object levelObj = clientHelper.getClientLevel();

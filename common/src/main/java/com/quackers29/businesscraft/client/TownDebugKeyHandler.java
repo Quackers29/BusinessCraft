@@ -1,10 +1,7 @@
 package com.quackers29.businesscraft.client;
 
-// BusinessCraft moved to platform-specific module
-import net.minecraft.client.Minecraft;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import com.quackers29.businesscraft.api.EventCallbacks;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import org.lwjgl.glfw.GLFW;
 
 /**
@@ -13,19 +10,28 @@ import org.lwjgl.glfw.GLFW;
 public class TownDebugKeyHandler {
     
     /**
+     * Initialize event callbacks. Should be called during mod initialization.
+     */
+    public static void initialize() {
+        PlatformAccess.getEvents().registerKeyInputCallback(TownDebugKeyHandler::onKeyInput);
+    }
+    
+    /**
      * Handles key presses to detect F4 key
      */
-    @SubscribeEvent
-    public static void onKeyInput(InputEvent.Key event) {
+    private static boolean onKeyInput(int keyCode, int action) {
         // Only handle key press events (not releases)
-        if (event.getAction() != GLFW.GLFW_PRESS) {
-            return;
+        if (action != GLFW.GLFW_PRESS) {
+            return false;
         }
         
         // Handle F4 key
-        if (event.getKey() == GLFW.GLFW_KEY_F4) {
+        if (keyCode == GLFW.GLFW_KEY_F4) {
             // Toggle the debug overlay visibility
             TownDebugOverlay.toggleVisibility();
+            return false; // Don't cancel the event
         }
+        
+        return false;
     }
 } 

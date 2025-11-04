@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.event;
 
-// BusinessCraft moved to platform-specific module
+import com.quackers29.businesscraft.api.EventCallbacks;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
@@ -9,10 +10,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +17,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Mod.EventBusSubscriber(modid = "businesscraft")
 public class PlayerBoundaryTracker {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlayerBoundaryTracker.class);
     
@@ -53,15 +49,18 @@ public class PlayerBoundaryTracker {
         }
     }
     
-    @SubscribeEvent
-    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+    /**
+     * Initialize event callbacks. Should be called during mod initialization.
+     */
+    public static void initialize() {
+        PlatformAccess.getEvents().registerPlayerTickCallback(PlayerBoundaryTracker::onPlayerTick);
+        PlatformAccess.getEvents().registerPlayerLoginCallback(PlayerBoundaryTracker::onPlayerLogin);
+        PlatformAccess.getEvents().registerPlayerLogoutCallback(PlayerBoundaryTracker::onPlayerLogout);
+    }
+    
+    private static void onPlayerTick(ServerPlayer player, ServerLevel level, BlockPos position) {
         // Early return if player tracking is disabled
         if (!ConfigLoader.playerTracking || !ConfigLoader.townBoundaryMessages) {
-            return;
-        }
-        
-        // Only process on server side and end phase
-        if (event.side.isClient() || event.phase != TickEvent.Phase.END) {
             return;
         }
         
@@ -70,10 +69,8 @@ public class PlayerBoundaryTracker {
             return;
         }
         
-        ServerPlayer player = (ServerPlayer) event.player;
-        ServerLevel level = player.serverLevel();
         UUID playerId = player.getUUID();
-        BlockPos currentPos = player.blockPosition();
+        BlockPos currentPos = position;
         
         // Get or create player state
         PlayerBoundaryState state = playerStates.computeIfAbsent(playerId, 
@@ -185,24 +182,20 @@ public class PlayerBoundaryTracker {
     /**
      * Clean up player data when they leave the server
      */
-    @SubscribeEvent
-    public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        UUID playerId = event.getEntity().getUUID();
+    private static void onPlayerLogout(ServerPlayer player) {
+        UUID playerId = player.getUUID();
         playerStates.remove(playerId);
-        LOGGER.debug("Cleaned up boundary tracking data for player: {}", event.getEntity().getName().getString());
+        LOGGER.debug("Cleaned up boundary tracking data for player: {}", player.getName().getString());
     }
     
     /**
      * Initialize player data when they join the server
      */
-    @SubscribeEvent
-    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) {
-            UUID playerId = player.getUUID();
-            BlockPos initialPos = player.blockPosition();
-            playerStates.put(playerId, new PlayerBoundaryState(initialPos));
-            LOGGER.debug("Initialized boundary tracking for player: {}", player.getName().getString());
-        }
+    private static void onPlayerLogin(ServerPlayer player, ServerLevel level, BlockPos position) {
+        UUID playerId = player.getUUID();
+        BlockPos initialPos = position;
+        playerStates.put(playerId, new PlayerBoundaryState(initialPos));
+        LOGGER.debug("Initialized boundary tracking for player: {}", player.getName().getString());
     }
     
     /**
