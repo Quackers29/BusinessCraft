@@ -49,6 +49,8 @@ import com.quackers29.businesscraft.network.packets.storage.PersonalStorageReque
 import com.quackers29.businesscraft.network.packets.storage.PersonalStorageResponsePacket;
 import com.quackers29.businesscraft.network.packets.misc.PaymentResultPacket;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
+import com.quackers29.businesscraft.network.packets.debug.RequestTownDataPacket;
+import com.quackers29.businesscraft.network.packets.debug.TownDataResponsePacket;
 
 /**
  * Forge-specific network message registration and handling
@@ -369,6 +371,23 @@ public class ForgeModMessages {
         net.messageBuilder(PaymentResultPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(PaymentResultPacket::decode)
                 .encoder(PaymentResultPacket::encode)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
+                .add();
+
+        // Debug packets
+        net.messageBuilder(RequestTownDataPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(RequestTownDataPacket::decode)
+                .encoder(RequestTownDataPacket::encode)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
+                .add();
+
+        net.messageBuilder(TownDataResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(TownDataResponsePacket::decode)
+                .encoder(TownDataResponsePacket::encode)
                 .consumerMainThread((msg, ctxSupplier) -> {
                     msg.handle(ctxSupplier.get());
                 })
