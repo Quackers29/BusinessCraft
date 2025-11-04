@@ -84,4 +84,11 @@ public interface ItemHandlerHelper {
      * Insert an item into the specified slot
      */
     Object insertItem(Object itemHandler, int slot, Object stack, boolean simulate);
+    
+    /**
+     * Create an item handler wrapper for SlotBasedStorage
+     * @param storage The storage access interface
+     * @return Platform-specific item handler that wraps the storage
+     */
+    Object createStorageWrapper(SlotBasedStorageAccess storage);
 }
