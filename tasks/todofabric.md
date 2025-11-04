@@ -11,7 +11,7 @@
 ### Current Status
 - ✅ **Common module:** Fully platform-agnostic (~95% complete)
 - ✅ **Forge module:** Fully functional (~100% complete)
-- ⚠️ **Fabric module:** Infrastructure complete, build working (~90% complete)
+- ⚠️ **Fabric module:** Infrastructure complete, build working (~95% complete)
   - ✅ Platform helpers implemented (some with reflection due to mapping differences)
   - ✅ PlatformAccess initialization complete
   - ✅ Event handlers implemented using reflection
@@ -388,7 +388,9 @@
 9. ✅ **Block Entity:** `FabricTownInterfaceEntity` created and registered (using common class via reflection)
 10. ✅ **Item Handlers:** `FabricItemHandlerHelper` implementation complete
 11. ✅ **Client Initialization:** Key handlers, rendering events, and debug overlay initialized
-12. **Test Thoroughly:** Run comprehensive feature parity tests
+12. ✅ **Vec3i/BlockPos Fix:** Fixed ClassNotFoundException by implementing lazy initialization in ClientRenderEvents
+13. ✅ **Menu Opening:** Implemented Fabric screen opening using `ServerPlayerEntity.openHandledScreen()` via reflection
+14. **Test Thoroughly:** Run comprehensive feature parity tests
 
 ## Notes
 
@@ -397,7 +399,7 @@
 - **Event System:** Fabric's event system is callback-based rather than annotation-based - ✅ Implemented using reflection
 - **Networking:** Fabric uses `ServerPlayNetworking` and `ClientPlayNetworking` instead of `SimpleChannel` - ✅ Implemented using reflection
 - **Rendering:** Fabric uses `WorldRenderEvents` and `HudRenderCallback` instead of `RenderLevelStageEvent` and `IGuiOverlay` - ✅ Implemented using reflection, GuiGraphics compilation issue resolved by using Object in interface
-- **Menu Opening:** Fabric uses different screen opening mechanism than Forge's `NetworkHooks.openScreen()` - ⚠️ Still needs implementation
+- **Menu Opening:** Fabric uses `ServerPlayerEntity.openHandledScreen()` instead of `NetworkHooks.openScreen()` - ✅ Implemented using reflection
 - **Reflection Usage:** Extensive use of reflection to avoid compile-time dependencies on Fabric-specific classes, maintaining common module's platform-agnostic nature
 - **Build Configuration:** Fixed dependency ordering to ensure common module compiles before Fabric module
 - **Override Annotations:** Temporarily removed @Override annotations due to classpath issue - methods are correct and will work correctly

@@ -144,20 +144,42 @@ public class FabricNetworkHelper implements NetworkHelper {
         }
 
         static void openScreen(Object player, Object menuProvider) {
-            try {
-                // Reflection-based implementation would go here
-                System.out.println("FabricNetworkDelegate.openScreen");
-            } catch (Exception e) {
-                System.err.println("Error in openScreen: " + e.getMessage());
-            }
+            openScreen(player, menuProvider, null);
         }
 
         static void openScreen(Object player, Object menuProvider, Object blockPos) {
             try {
-                // Reflection-based implementation would go here
-                System.out.println("FabricNetworkDelegate.openScreen with BlockPos");
+                if (player == null || menuProvider == null) {
+                    return;
+                }
+                
+                ClassLoader classLoader = FabricNetworkDelegate.class.getClassLoader();
+                
+                // Load Minecraft classes
+                Class<?> serverPlayerEntityClass = classLoader.loadClass("net.minecraft.server.level.ServerPlayer");
+                Class<?> menuProviderClass = classLoader.loadClass("net.minecraft.world.MenuProvider");
+                Class<?> namedScreenHandlerFactoryClass = classLoader.loadClass("net.minecraft.screen.NamedScreenHandlerFactory");
+                
+                // Check if player is ServerPlayer
+                if (!serverPlayerEntityClass.isInstance(player)) {
+                    return;
+                }
+                
+                // MenuProvider is compatible with Fabric's NamedScreenHandlerFactory
+                // Fabric's ServerPlayerEntity.openHandledScreen() accepts NamedScreenHandlerFactory
+                // which has the same interface as MenuProvider (getDisplayName() and createMenu())
+                if (menuProviderClass.isInstance(menuProvider) || namedScreenHandlerFactoryClass.isInstance(menuProvider)) {
+                    // Call ServerPlayerEntity.openHandledScreen(NamedScreenHandlerFactory)
+                    java.lang.reflect.Method openHandledScreenMethod = serverPlayerEntityClass.getMethod(
+                        "openHandledScreen", namedScreenHandlerFactoryClass
+                    );
+                    openHandledScreenMethod.invoke(player, menuProvider);
+                } else {
+                    System.err.println("FabricNetworkDelegate.openScreen: menuProvider is not MenuProvider or NamedScreenHandlerFactory");
+                }
             } catch (Exception e) {
-                System.err.println("Error in openScreen: " + e.getMessage());
+                System.err.println("Error in FabricNetworkDelegate.openScreen: " + e.getMessage());
+                e.printStackTrace();
             }
         }
     }
