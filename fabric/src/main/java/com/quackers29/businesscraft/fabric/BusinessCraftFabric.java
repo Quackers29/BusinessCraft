@@ -73,7 +73,7 @@ public class BusinessCraftFabric implements ModInitializer {
         FabricModBlocks.register();
         FabricModEntityTypes.register();
         FabricModBlockEntities.register();
-        // FabricModMenuTypes.register(); // TODO: Enable when menu is ready
+        FabricModMenuTypes.register(); // Menu types registration
 
         // Initialize networking
         FabricModMessages.register();
