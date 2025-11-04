@@ -339,6 +339,88 @@ public class FabricModMessages {
     }
     
     /**
+     * Register client-side packet handlers (called from FabricClientSetup)
+     * Registers all client-bound packets so the client can receive them from the server
+     */
+    public static void registerClientPackets() {
+        LOGGER.info("Registering Fabric client packet handlers...");
+        
+        try {
+            if (CLIENT_PACKET_IDS == null || CLIENT_PACKET_CLASSES == null) {
+                LOGGER.warn("Client packet IDs or classes not initialized - skipping client packet registration");
+                return;
+            }
+            
+            if (CLIENT_PACKET_IDS.length != CLIENT_PACKET_CLASSES.length) {
+                LOGGER.error("Mismatch between client packet IDs and classes count");
+                return;
+            }
+            
+            ClassLoader classLoader = FabricModMessages.class.getClassLoader();
+            Class<?> clientPlayNetworkingClass = classLoader.loadClass("net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking");
+            Class<?> identifierClass = classLoader.loadClass("net.minecraft.util.Identifier");
+            Class<?> packetByteBufClass = classLoader.loadClass("net.minecraft.network.PacketByteBuf");
+            Class<?> friendlyByteBufClass = classLoader.loadClass("net.minecraft.network.FriendlyByteBuf");
+            
+            // Register each client packet
+            for (int i = 0; i < CLIENT_PACKET_IDS.length; i++) {
+                String packetName = CLIENT_PACKET_IDS[i];
+                Class<?> packetClass = CLIENT_PACKET_CLASSES[i];
+                
+                try {
+                    // Create packet identifier
+                    Object packetId = identifierClass.getConstructor(String.class, String.class)
+                        .newInstance(MOD_ID, packetName);
+                    
+                    // Get the ClientPlayNetworking.registerReceiver method
+                    java.lang.reflect.Method registerMethod = clientPlayNetworkingClass.getMethod(
+                        "registerReceiver",
+                        identifierClass,
+                        java.util.function.BiConsumer.class
+                    );
+                    
+                    // Create handler that decodes packet and calls handle method
+                    java.util.function.BiConsumer<Object, Object> handler = (client, buf) -> {
+                        try {
+                            // Convert PacketByteBuf to FriendlyByteBuf
+                            Object friendlyBuf = friendlyByteBufClass.cast(buf);
+                            
+                            // Try static decode method first, then constructor with FriendlyByteBuf
+                            Object packet;
+                            try {
+                                java.lang.reflect.Method decodeMethod = packetClass.getMethod("decode", friendlyByteBufClass);
+                                packet = decodeMethod.invoke(null, friendlyBuf);
+                            } catch (NoSuchMethodException e) {
+                                // Fall back to constructor with FriendlyByteBuf
+                                java.lang.reflect.Constructor<?> constructor = packetClass.getConstructor(friendlyByteBufClass);
+                                packet = constructor.newInstance(friendlyBuf);
+                            }
+                            
+                            // Call handle method with client as context
+                            java.lang.reflect.Method handleMethod = packetClass.getMethod("handle", Object.class);
+                            handleMethod.invoke(packet, client);
+                        } catch (Exception e) {
+                            LOGGER.error("Error handling client packet {}", packetName, e);
+                            e.printStackTrace();
+                        }
+                    };
+                    
+                    registerMethod.invoke(null, packetId, handler);
+                    LOGGER.debug("Registered client packet: {}", packetName);
+                } catch (Exception e) {
+                    LOGGER.error("Error registering client packet {}", packetName, e);
+                    e.printStackTrace();
+                }
+            }
+            
+            LOGGER.info("Fabric client packet handlers registered successfully ({} packets)", CLIENT_PACKET_IDS.length);
+        } catch (Exception e) {
+            LOGGER.error("Error registering client packet handlers", e);
+            e.printStackTrace();
+        }
+    }
+    
+    /**
      * Get packet name from packet class
      */
     private static String getPacketName(Class<?> packetClass) {

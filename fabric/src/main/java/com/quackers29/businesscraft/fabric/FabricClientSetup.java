@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.fabric;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.fabric.event.FabricEventCallbackHandler;
+import com.quackers29.businesscraft.fabric.platform.FabricMenuTypeHelper;
 import net.fabricmc.api.ClientModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +25,39 @@ public class FabricClientSetup implements ClientModInitializer {
         FabricEventCallbackHandler.registerClientEvents();
         
         // Register client-side packet handlers
-        // TODO: Implement client packet registration in Phase 5
+        registerClientPackets();
+        
+        // Register screens for menu types
+        registerScreens();
         
         LOGGER.info("BusinessCraft Fabric client setup complete");
+    }
+    
+    /**
+     * Register client-side packet handlers
+     */
+    private void registerClientPackets() {
+        try {
+            // Register client packets from FabricModMessages
+            Class<?> fabricModMessagesClass = Class.forName("com.quackers29.businesscraft.fabric.FabricModMessages");
+            java.lang.reflect.Method registerClientPacketsMethod = fabricModMessagesClass.getMethod("registerClientPackets");
+            registerClientPacketsMethod.invoke(null);
+            LOGGER.info("Client packet handlers registered");
+        } catch (Exception e) {
+            LOGGER.warn("Could not register client packet handlers", e);
+        }
+    }
+    
+    /**
+     * Register screens for menu types using Fabric's ScreenRegistry API
+     * NOTE: Screens are excluded from Fabric build, so this will use reflection at runtime
+     * TODO: Implement proper screen registration once menu types are fully registered
+     */
+    private void registerScreens() {
+        // TODO: Implement screen registration
+        // Screens are in common module's ui package which is excluded from Fabric build
+        // Need to use reflection to access screen classes at runtime
+        // Fabric uses ScreenRegistry.register() similar to Forge's MenuScreens.register()
+        LOGGER.info("Screen registration placeholder - screens will be registered when menu types are fully implemented");
     }
 }
