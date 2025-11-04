@@ -12,12 +12,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
-import java.util.function.Supplier;
 
 /**
  * Packet sent from client to server to request current boundary data
@@ -53,12 +51,11 @@ public class BoundarySyncRequestPacket extends BaseBlockEntityPacket {
         return new BoundarySyncRequestPacket(buf);
     }
 
-    public boolean handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public boolean handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // Server-side handling
-            ServerPlayer player = context.getSender();
-            if (player == null) return;
+            Object senderObj = PlatformAccess.getNetwork().getSender(context);
+            if (!(senderObj instanceof ServerPlayer player)) return;
             
             Level level = player.level();
             if (!(level instanceof ServerLevel serverLevel)) return;
@@ -83,7 +80,7 @@ public class BoundarySyncRequestPacket extends BaseBlockEntityPacket {
                 }
             }
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
         return true;
     }
 }

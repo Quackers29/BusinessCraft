@@ -106,19 +106,25 @@ public class ForgeModMessages {
         net.messageBuilder(AddPlatformPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(AddPlatformPacket::decode)
                 .encoder(AddPlatformPacket::encode)
-                .consumerMainThread(AddPlatformPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(DeletePlatformPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(DeletePlatformPacket::decode)
                 .encoder(DeletePlatformPacket::encode)
-                .consumerMainThread(DeletePlatformPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(SetPlatformEnabledPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SetPlatformEnabledPacket::decode)
                 .encoder(SetPlatformEnabledPacket::encode)
-                .consumerMainThread(SetPlatformEnabledPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(SetPlatformPathPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
@@ -181,19 +187,25 @@ public class ForgeModMessages {
         net.messageBuilder(PlatformVisualizationPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(PlatformVisualizationPacket::decode)
                 .encoder(PlatformVisualizationPacket::encode)
-                .consumerMainThread(PlatformVisualizationPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(BoundarySyncRequestPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(BoundarySyncRequestPacket::decode)
                 .encoder(BoundarySyncRequestPacket::encode)
-                .consumerMainThread(BoundarySyncRequestPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(BoundarySyncResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(BoundarySyncResponsePacket::decode)
                 .encoder(BoundarySyncResponsePacket::encode)
-                .consumerMainThread(BoundarySyncResponsePacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(OpenTownInterfacePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)

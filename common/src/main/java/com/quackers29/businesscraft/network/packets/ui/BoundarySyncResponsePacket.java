@@ -2,14 +2,12 @@ package com.quackers29.businesscraft.network.packets.ui;
 
 import com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer;
 import com.quackers29.businesscraft.debug.DebugConfig;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.function.Supplier;
 
 /**
  * Packet sent from server to client with updated boundary data
@@ -49,16 +47,15 @@ public class BoundarySyncResponsePacket extends BaseBlockEntityPacket {
         return new BoundarySyncResponsePacket(buf);
     }
 
-    public boolean handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public boolean handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // Client-side handling - update the boundary visualization directly
             TownBoundaryVisualizationRenderer.updateBoundaryRadius(pos, boundaryRadius);
             
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                 "Boundary sync response for town at {}: updated to boundary radius={}", pos, boundaryRadius);
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
         return true;
     }
 }

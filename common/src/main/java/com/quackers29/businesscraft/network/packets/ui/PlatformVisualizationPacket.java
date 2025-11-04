@@ -10,11 +10,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.function.Supplier;
 
 /**
  * Packet sent from server to client to enable platform visualization
@@ -50,9 +47,8 @@ public class PlatformVisualizationPacket extends BaseBlockEntityPacket {
         return new PlatformVisualizationPacket(buf);
     }
 
-    public boolean handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public boolean handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // Client-side handling
             Level level = Minecraft.getInstance().level;
             if (level == null) return;
@@ -69,7 +65,7 @@ public class PlatformVisualizationPacket extends BaseBlockEntityPacket {
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                 "Client received platform visualization enable for town at {}, requested immediate boundary sync", pos);
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
         return true;
     }
 }
