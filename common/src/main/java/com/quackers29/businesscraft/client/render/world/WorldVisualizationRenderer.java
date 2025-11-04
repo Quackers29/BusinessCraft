@@ -1,10 +1,10 @@
 package com.quackers29.businesscraft.client.render.world;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.api.RenderHelper;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ import java.util.List;
  * - Common setup and cleanup operations
  * - Render state management
  * - Distance-based culling
- * - Integration with the Forge rendering pipeline
+ * - Platform-agnostic rendering pipeline integration
  * 
  * Implementations should extend this class and provide specific visualization logic.
  */
@@ -29,7 +29,7 @@ public abstract class WorldVisualizationRenderer {
         private int chunkRadius = 8;
         private boolean enableDistanceCulling = true;
         private boolean enableChunkCulling = true;
-        private RenderLevelStageEvent.Stage renderStage = RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS;
+        private String renderStage = RenderHelper.RenderStage.AFTER_TRANSLUCENT_BLOCKS;
         
         public RenderConfig maxRenderDistance(int distance) {
             this.maxRenderDistance = distance;
@@ -51,7 +51,7 @@ public abstract class WorldVisualizationRenderer {
             return this;
         }
         
-        public RenderConfig renderStage(RenderLevelStageEvent.Stage stage) {
+        public RenderConfig renderStage(String stage) {
             this.renderStage = stage;
             return this;
         }
@@ -61,7 +61,7 @@ public abstract class WorldVisualizationRenderer {
         public int getChunkRadius() { return chunkRadius; }
         public boolean isDistanceCullingEnabled() { return enableDistanceCulling; }
         public boolean isChunkCullingEnabled() { return enableChunkCulling; }
-        public RenderLevelStageEvent.Stage getRenderStage() { return renderStage; }
+        public String getRenderStage() { return renderStage; }
     }
     
     /**
@@ -104,11 +104,16 @@ public abstract class WorldVisualizationRenderer {
     /**
      * Main render method called by the event system
      * 
-     * @param event The render level stage event
+     * @param renderStage The render stage name
+     * @param partialTick Partial tick for interpolation
+     * @param renderEvent The platform-specific render event object
      */
-    public final void render(RenderLevelStageEvent event) {
+    public final void render(String renderStage, float partialTick, Object renderEvent) {
+        RenderHelper renderHelper = PlatformAccess.getRender();
+        if (renderHelper == null) return;
+        
         // Check if we should render at this stage
-        if (event.getStage() != config.getRenderStage()) {
+        if (!renderHelper.isRenderStage(renderEvent, config.getRenderStage())) {
             return;
         }
         
@@ -132,13 +137,13 @@ public abstract class WorldVisualizationRenderer {
             return;
         }
         
-        onPreRender(event, level);
+        onPreRender(renderEvent, level);
         
         // Get visualizations to render
         List<VisualizationData> visualizations = getVisualizations(level, player.blockPosition());
         
         if (visualizations.isEmpty()) {
-            onPostRender(event, level);
+            onPostRender(renderEvent, level);
             return;
         }
         
@@ -162,11 +167,11 @@ public abstract class WorldVisualizationRenderer {
             }
             
             // Render this visualization
-            renderVisualization(event, visualization);
+            renderVisualization(renderEvent, visualization);
         }
         
         // Post-render cleanup
-        onPostRender(event, level);
+        onPostRender(renderEvent, level);
     }
     
     /**
@@ -184,10 +189,10 @@ public abstract class WorldVisualizationRenderer {
      * Called before any visualizations are rendered
      * Use this for global render state setup
      * 
-     * @param event The render event
+     * @param renderEvent The platform-specific render event object
      * @param level The current level
      */
-    protected void onPreRender(RenderLevelStageEvent event, Level level) {
+    protected void onPreRender(Object renderEvent, Level level) {
         // Default: no pre-render setup
     }
     
@@ -195,10 +200,10 @@ public abstract class WorldVisualizationRenderer {
      * Called after all visualizations are rendered
      * Use this for global render state cleanup
      * 
-     * @param event The render event
+     * @param renderEvent The platform-specific render event object
      * @param level The current level
      */
-    protected void onPostRender(RenderLevelStageEvent event, Level level) {
+    protected void onPostRender(Object renderEvent, Level level) {
         // Default: no post-render cleanup
     }
     
@@ -214,10 +219,10 @@ public abstract class WorldVisualizationRenderer {
     /**
      * Renders a single visualization
      * 
-     * @param event The render event
+     * @param renderEvent The platform-specific render event object
      * @param visualization The visualization to render
      */
-    protected abstract void renderVisualization(RenderLevelStageEvent event, VisualizationData visualization);
+    protected abstract void renderVisualization(Object renderEvent, VisualizationData visualization);
     
     /**
      * Called when the level is unloaded to clean up any resources

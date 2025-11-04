@@ -143,13 +143,10 @@ public class ForgeEventCallbackHandler {
             String stageName = event.getStage().toString();
             float partialTick = event.getPartialTick();
             
+            // Invoke all registered callbacks for this stage
             for (EventCallbacks.RenderLevelCallback callback : renderLevelCallbacks) {
                 callback.onRenderLevel(stageName, partialTick, event);
             }
-            
-            // Also call the renderers directly here since they need the full event
-            com.quackers29.businesscraft.event.ClientRenderEvents.getPlatformRenderer().render(event);
-            com.quackers29.businesscraft.event.ClientRenderEvents.getBoundaryRenderer().render(event);
         }
     }
     

@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.client.render.world;
 
+import com.quackers29.businesscraft.api.RenderHelper;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket;
@@ -10,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.client.event.RenderLevelStageEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +72,7 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
         super(new RenderConfig()
             .maxRenderDistance(256) // Larger than platforms to show boundaries at distance
             .chunkRadius(16)        // Wider search for town boundaries
-            .renderStage(RenderLevelStageEvent.Stage.AFTER_TRANSLUCENT_BLOCKS));
+            .renderStage(RenderHelper.RenderStage.AFTER_TRANSLUCENT_BLOCKS));
     }
     
     @Override
@@ -111,7 +111,7 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
     }
     
     @Override
-    protected void renderVisualization(RenderLevelStageEvent event, VisualizationData visualization) {
+    protected void renderVisualization(Object renderEvent, VisualizationData visualization) {
         if (!(visualization.getData() instanceof TownBoundaryVisualizationData boundaryData)) {
             return;
         }
@@ -119,6 +119,14 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
         // Only render if we have received server data and boundary > 0
         if (!boundaryData.shouldRender()) {
             return; // Don't render anything until server responds with real data
+        }
+        
+        RenderHelper renderHelper = PlatformAccess.getRender();
+        if (renderHelper == null) return;
+        
+        Object poseStackObj = renderHelper.getPoseStack(renderEvent);
+        if (!(poseStackObj instanceof com.mojang.blaze3d.vertex.PoseStack poseStack)) {
+            return;
         }
         
         // Simple green circle - no color coding
@@ -134,7 +142,7 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
         
         // Render circular boundary around the town center
         BoundaryRenderer3D.renderCircularBoundaryFromCenter(
-            event.getPoseStack(),
+            poseStack,
             visualization.getPosition(),
             boundaryData.getBoundaryRadius(),
             boundaryColor,
@@ -144,7 +152,7 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
     
     
     @Override
-    protected void onPreRender(RenderLevelStageEvent event, Level level) {
+    protected void onPreRender(Object renderEvent, Level level) {
         // Clean up boundary data for positions that no longer have active visualizations
         VisualizationManager manager = VisualizationManager.getInstance();
         List<BlockPos> activePositions = manager.getActiveVisualizations(VisualizationManager.TYPE_TOWN_BOUNDARY)

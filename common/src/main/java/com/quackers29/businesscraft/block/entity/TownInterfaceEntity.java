@@ -40,11 +40,6 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.entity.ExperienceOrb;
-// Item handler abstractions - platform agnostic
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -252,17 +247,19 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         return new TownInterfaceMenu(id, inventory, this.getBlockPos());
     }
 
-    @Override
-    public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
+    // Platform-agnostic capability access method
+    // Note: Platform-specific implementations should bridge this to Forge's getCapability or Fabric's equivalent
+    public @NotNull <T> Object getCapability(@NotNull Object cap, @Nullable Direction side) {
         if (PlatformAccess.getItemHandlers().isItemHandlerCapability(cap)) {
             // Return buffer handler for hopper extraction from below
             if (side == Direction.DOWN && bufferManager != null) {
-                return (LazyOptional<T>) PlatformAccess.getItemHandlers().castLazyOptional(lazyBufferHandler, cap);
+                return PlatformAccess.getItemHandlers().castLazyOptional(lazyBufferHandler, cap);
             }
             // Return regular resource input handler for other sides
-            return (LazyOptional<T>) PlatformAccess.getItemHandlers().castLazyOptional(lazyItemHandler, cap);
+            return PlatformAccess.getItemHandlers().castLazyOptional(lazyItemHandler, cap);
         }
-        return super.getCapability(cap, side);
+        // Platform-specific implementations should handle other capabilities
+        return PlatformAccess.getItemHandlers().getEmptyLazyOptional();
     }
 
     @Override

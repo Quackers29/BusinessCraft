@@ -42,9 +42,9 @@ public class ClientRenderEvents {
     }
     
     private static void onRenderLevelStage(String renderStage, float partialTick, Object eventObject) {
-        // The renderers need RenderLevelStageEvent, which is Forge-specific.
-        // The actual rendering will be handled in the Forge event handler.
-        // This method is kept for potential future use or non-render logic.
+        // Render all registered renderers using the platform-agnostic render method
+        platformRenderer.render(renderStage, partialTick, eventObject);
+        boundaryRenderer.render(renderStage, partialTick, eventObject);
     }
     
     /**
