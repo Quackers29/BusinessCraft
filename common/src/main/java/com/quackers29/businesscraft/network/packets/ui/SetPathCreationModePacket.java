@@ -5,15 +5,12 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.network.NetworkEvent;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
-
-import java.util.function.Supplier;
 
 public class SetPathCreationModePacket extends BaseBlockEntityPacket {
     private final boolean mode;
@@ -52,9 +49,8 @@ public class SetPathCreationModePacket extends BaseBlockEntityPacket {
         return new SetPathCreationModePacket(buf);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             handlePacket(context, (player, townInterface) -> {
                 if (mode) {
                     // Start path creation mode
@@ -88,6 +84,6 @@ public class SetPathCreationModePacket extends BaseBlockEntityPacket {
                 }
             });
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
 } 

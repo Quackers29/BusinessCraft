@@ -2,14 +2,12 @@ package com.quackers29.businesscraft.network.packets.platform;
 
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.api.ITownDataProvider;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
 
 public class SetSearchRadiusPacket extends BaseBlockEntityPacket {
     private final int radius;
@@ -30,9 +28,8 @@ public class SetSearchRadiusPacket extends BaseBlockEntityPacket {
         buf.writeInt(radius);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             handlePacket(context, (player, townInterface) -> {
                 ITownDataProvider provider = townInterface.getTownDataProvider();
                 if (provider != null) {
@@ -53,6 +50,6 @@ public class SetSearchRadiusPacket extends BaseBlockEntityPacket {
                 }
             });
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
 } 

@@ -10,7 +10,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
@@ -19,7 +18,6 @@ import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
-import java.util.function.Supplier;
 import com.quackers29.businesscraft.debug.DebugConfig;
 
 /**
@@ -69,11 +67,11 @@ public class BufferStoragePacket extends BaseBlockEntityPacket {
         return new BufferStoragePacket(buf);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // Get the player who sent the packet
-            ServerPlayer player = ctx.get().getSender();
-            if (player == null) return;
+            Object senderObj = PlatformAccess.getNetwork().getSender(context);
+            if (!(senderObj instanceof ServerPlayer player)) return;
 
             // If position is null, we can't process the operation
             if (pos == null) {
@@ -171,7 +169,6 @@ public class BufferStoragePacket extends BaseBlockEntityPacket {
                 PlatformAccess.getNetworkMessages().sendToPlayer(new BufferSlotStorageResponsePacket(town.getPaymentBoard().getBufferStorageSlots()), player);
             }
         });
-
-        ctx.get().setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
 }

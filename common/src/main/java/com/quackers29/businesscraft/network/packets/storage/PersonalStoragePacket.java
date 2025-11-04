@@ -10,7 +10,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
@@ -21,7 +20,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 
 import java.util.UUID;
-import java.util.function.Supplier;
 
 /**
  * Packet for interacting with a player's personal storage in a town.
@@ -73,11 +71,11 @@ public class PersonalStoragePacket extends BaseBlockEntityPacket {
         return new PersonalStoragePacket(buf);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // Get the player who sent the packet
-            ServerPlayer player = ctx.get().getSender();
-            if (player == null) return;
+            Object senderObj = PlatformAccess.getNetwork().getSender(context);
+            if (!(senderObj instanceof ServerPlayer player)) return;
             
             // Verify player ID matches sender (security check)
             if (!player.getUUID().equals(playerId)) {
@@ -177,7 +175,6 @@ public class PersonalStoragePacket extends BaseBlockEntityPacket {
                 PlatformAccess.getNetworkMessages().sendToPlayer(new PersonalStorageResponsePacket(town.getPersonalStorageItems(playerId)), player);
             }
         });
-        
-        ctx.get().setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
 } 

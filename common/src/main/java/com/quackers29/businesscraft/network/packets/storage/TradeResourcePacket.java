@@ -11,7 +11,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
@@ -22,8 +21,6 @@ import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import com.quackers29.businesscraft.menu.TradeMenu;
-
-import java.util.function.Supplier;
 
 /**
  * Packet for trading resources with towns.
@@ -70,11 +67,11 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
         return new TradeResourcePacket(buf);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // Get the player who sent the packet
-            ServerPlayer player = ctx.get().getSender();
-            if (player == null) return;
+            Object senderObj = PlatformAccess.getNetwork().getSender(context);
+            if (!(senderObj instanceof ServerPlayer player)) return;
             
             // Check if the item to trade is empty
             if (itemToTrade.isEmpty()) {
@@ -186,8 +183,7 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
             // Force the TownManager to save changes
             townManager.markDirty();
         });
-        
-        ctx.get().setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
     
     /**

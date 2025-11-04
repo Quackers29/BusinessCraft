@@ -6,13 +6,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.network.NetworkEvent;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.block.TownInterfaceBlock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.function.Supplier;
 import java.util.function.BiConsumer;
 
 /**
@@ -37,10 +36,11 @@ public abstract class BaseBlockEntityPacket {
 
     /**
      * Handle the packet by finding the block entity and applying an action
+     * Platform-agnostic: uses PlatformAccess to get sender from context
      */
-    protected void handlePacket(NetworkEvent.Context context, BiConsumer<ServerPlayer, TownInterfaceEntity> handler) {
-        ServerPlayer player = context.getSender();
-        if (player != null) {
+    protected void handlePacket(Object context, BiConsumer<ServerPlayer, TownInterfaceEntity> handler) {
+        Object senderObj = PlatformAccess.getNetwork().getSender(context);
+        if (senderObj instanceof ServerPlayer player) {
             Level level = player.level();
 
             // First check if there's a TownInterfaceEntity at this position

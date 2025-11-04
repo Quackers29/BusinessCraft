@@ -1,15 +1,13 @@
 package com.quackers29.businesscraft.network.packets.town;
 
 import com.quackers29.businesscraft.api.ITownDataProvider;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.function.Supplier;
 
 public class ToggleTouristSpawningPacket extends BaseBlockEntityPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(ToggleTouristSpawningPacket.class);
@@ -27,9 +25,8 @@ public class ToggleTouristSpawningPacket extends BaseBlockEntityPacket {
         super.toBytes(buf);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             handlePacket(context, (player, townBlock) -> {
                 ITownDataProvider provider = townBlock.getTownDataProvider();
                 if (provider != null) {
@@ -45,6 +42,6 @@ public class ToggleTouristSpawningPacket extends BaseBlockEntityPacket {
                 }
             });
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
 } 

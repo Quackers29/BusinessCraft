@@ -64,30 +64,42 @@ public class ForgeModMessages {
         SimpleChannel net = networkHelper.getChannel();
 
         // Register all packets using a consistent pattern
+        // Platform-agnostic: wrap handler to convert Supplier<NetworkEvent.Context> to Object
         net.messageBuilder(ToggleTouristSpawningPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(ToggleTouristSpawningPacket::new)
                 .encoder(ToggleTouristSpawningPacket::toBytes)
-                .consumerMainThread(ToggleTouristSpawningPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get()); // Pass NetworkEvent.Context as Object
+                    // Packet already calls setPacketHandled internally via PlatformAccess
+                })
                 .add();
 
         net.messageBuilder(SetSearchRadiusPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SetSearchRadiusPacket::new)
                 .encoder(SetSearchRadiusPacket::toBytes)
-                .consumerMainThread(SetSearchRadiusPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get()); // Pass NetworkEvent.Context as Object
+                    // Packet already calls setPacketHandled internally via PlatformAccess
+                })
                 .add();
 
         // Register the path creation packet
         net.messageBuilder(SetPathCreationModePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SetPathCreationModePacket::decode)
                 .encoder(SetPathCreationModePacket::encode)
-                .consumerMainThread(SetPathCreationModePacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         // Register the town name change packet
         net.messageBuilder(SetTownNamePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SetTownNamePacket::decode)
                 .encoder(SetTownNamePacket::encode)
-                .consumerMainThread(SetTownNamePacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get()); // Pass NetworkEvent.Context as Object
+                    // Packet already calls setPacketHandled internally via PlatformAccess
+                })
                 .add();
 
         // Register platform-related packets
@@ -161,7 +173,9 @@ public class ForgeModMessages {
         net.messageBuilder(PlayerExitUIPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PlayerExitUIPacket::decode)
                 .encoder(PlayerExitUIPacket::encode)
-                .consumerMainThread(PlayerExitUIPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(PlatformVisualizationPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
@@ -191,7 +205,9 @@ public class ForgeModMessages {
         net.messageBuilder(OpenPaymentBoardPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(OpenPaymentBoardPacket::decode)
                 .encoder(OpenPaymentBoardPacket::encode)
-                .consumerMainThread(OpenPaymentBoardPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(RequestTownMapDataPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
@@ -222,13 +238,17 @@ public class ForgeModMessages {
         net.messageBuilder(TradeResourcePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(TradeResourcePacket::decode)
                 .encoder(TradeResourcePacket::encode)
-                .consumerMainThread(TradeResourcePacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(CommunalStoragePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(CommunalStoragePacket::decode)
                 .encoder(CommunalStoragePacket::encode)
-                .consumerMainThread(CommunalStoragePacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(CommunalStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
@@ -258,7 +278,9 @@ public class ForgeModMessages {
         net.messageBuilder(BufferStoragePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(BufferStoragePacket::decode)
                 .encoder(BufferStoragePacket::encode)
-                .consumerMainThread(BufferStoragePacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(BufferStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
@@ -276,13 +298,17 @@ public class ForgeModMessages {
         net.messageBuilder(PersonalStoragePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PersonalStoragePacket::decode)
                 .encoder(PersonalStoragePacket::encode)
-                .consumerMainThread(PersonalStoragePacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(PersonalStorageRequestPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PersonalStorageRequestPacket::decode)
                 .encoder(PersonalStorageRequestPacket::encode)
-                .consumerMainThread(PersonalStorageRequestPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(PersonalStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)

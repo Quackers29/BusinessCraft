@@ -6,12 +6,10 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkHooks;
-import net.minecraftforge.network.NetworkEvent;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
-
-import java.util.function.Supplier;
 
 /**
  * Packet to request opening the Payment Board UI using proper Minecraft container system.
@@ -42,9 +40,8 @@ public class OpenPaymentBoardPacket extends BaseBlockEntityPacket {
         return new OpenPaymentBoardPacket(buf);
     }
 
-    public boolean handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public boolean handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             handlePacket(context, (player, townBlockEntity) -> {
                 DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Opening Payment Board for player {} at position {}", player.getName().getString(), pos);
                 
@@ -53,7 +50,7 @@ public class OpenPaymentBoardPacket extends BaseBlockEntityPacket {
                 DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Successfully opened Payment Board for player {}", player.getName().getString());
             });
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
         return true;
     }
 }

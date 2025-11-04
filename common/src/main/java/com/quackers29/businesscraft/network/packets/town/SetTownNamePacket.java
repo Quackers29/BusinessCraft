@@ -1,13 +1,13 @@
 package com.quackers29.businesscraft.network.packets.town;
 
 import com.quackers29.businesscraft.api.ITownDataProvider;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.town.Town;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
-import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.world.level.block.Block;
@@ -16,8 +16,6 @@ import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
 import net.minecraft.client.Minecraft;
-
-import java.util.function.Supplier;
 
 public class SetTownNamePacket extends BaseBlockEntityPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(SetTownNamePacket.class);
@@ -53,9 +51,8 @@ public class SetTownNamePacket extends BaseBlockEntityPacket {
         return new SetTownNamePacket(buf);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             handlePacket(context, (player, townBlock) -> {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Processing SetTownNamePacket for position {} with new name: '{}'", 
                     pos, newName);
@@ -112,6 +109,6 @@ public class SetTownNamePacket extends BaseBlockEntityPacket {
                 }
             });
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
 }
