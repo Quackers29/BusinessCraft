@@ -1317,10 +1317,16 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
      * Play a button click sound for feedback
      */
     private void playClickSound() {
-        Minecraft.getInstance().getSoundManager().play(
-            net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
-                net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F)
-        );
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object soundManagerObj = clientHelper.getSoundManager();
+            if (soundManagerObj instanceof net.minecraft.client.sounds.SoundManager soundManager) {
+                soundManager.play(
+                    net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
+                        net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F)
+                );
+            }
+        }
     }
     
     /**

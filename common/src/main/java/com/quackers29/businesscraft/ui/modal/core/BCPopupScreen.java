@@ -1,12 +1,11 @@
 package com.quackers29.businesscraft.ui.modal.core;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import com.quackers29.businesscraft.ui.builders.BCComponentFactory;
-import com.quackers29.businesscraft.ui.components.basic.BCLabel;
-
 import com.quackers29.businesscraft.ui.components.basic.BCPanel;
 import com.quackers29.businesscraft.ui.components.basic.BCButton;
-import net.minecraft.client.Minecraft;
+import com.quackers29.businesscraft.ui.components.basic.BCLabel;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -107,8 +106,13 @@ public class BCPopupScreen extends BCPanel {
         createContent();
         
         // Center in screen by default
-        Minecraft minecraft = Minecraft.getInstance();
-        setParentBounds(0, 0, minecraft.getWindow().getGuiScaledWidth(), minecraft.getWindow().getGuiScaledHeight());
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object minecraftObj = clientHelper.getMinecraft();
+            if (minecraftObj instanceof net.minecraft.client.Minecraft minecraft) {
+                setParentBounds(0, 0, minecraft.getWindow().getGuiScaledWidth(), minecraft.getWindow().getGuiScaledHeight());
+            }
+        }
     }
     
     /**
@@ -154,9 +158,16 @@ public class BCPopupScreen extends BCPanel {
         
         // Create the input field for input popups
         if (type == PopupType.STRING_INPUT || type == PopupType.NUMERIC_INPUT) {
+            // Get font from ClientHelper
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper == null) return;
+            
+            Object fontObj = clientHelper.getFont();
+            if (!(fontObj instanceof net.minecraft.client.gui.Font font)) return;
+            
             // Create vanilla EditBox with proper dimensions
             vanillaEditBox = new EditBox(
-                Minecraft.getInstance().font,
+                font,
                 contentPadding,  // initial x position 
                 contentPadding + titleHeight + 40, // initial y position
                 contentWidth, // full content width
@@ -309,8 +320,14 @@ public class BCPopupScreen extends BCPanel {
     @Override
     public void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
         // Calculate screen and popup dimensions
-        int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-        int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) return;
+        
+        Object minecraftObj = clientHelper.getMinecraft();
+        if (!(minecraftObj instanceof net.minecraft.client.Minecraft minecraft)) return;
+        
+        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
+        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
         int popupX = (screenWidth - this.width) / 2;
         int popupY = (screenHeight - this.height) / 2;
         
@@ -334,23 +351,65 @@ public class BCPopupScreen extends BCPanel {
         final int padding = 20;
         final int titleHeight = 30;
         
-        // Draw title - centered at top
-        guiGraphics.drawCenteredString(
-            Minecraft.getInstance().font,
-            Component.literal(this.title),
-            popupX + this.width / 2,
-            popupY + padding,
-            0xFFFFFFFF
-        );
+        // Render buttons
+        int buttonY = popupY + this.height - padding - 20;
+        int buttonSpacing = 10;
+        int buttonWidth = 100;
+        int totalButtonWidth = (buttonWidth * 2) + buttonSpacing;
+        int buttonStartX = popupX + (this.width - totalButtonWidth) / 2;
         
-        // Draw instruction text if this is an input popup
-        if (type == PopupType.STRING_INPUT || type == PopupType.NUMERIC_INPUT) {
-            String instruction = "Enter " + (type == PopupType.NUMERIC_INPUT ? "value:" : "text:");
-            guiGraphics.drawString(
-                Minecraft.getInstance().font,
-                instruction,
-                popupX + padding,
-                popupY + padding + titleHeight,
+        // Draw title - centered at top
+        Object fontObj = clientHelper.getFont();
+        if (fontObj instanceof net.minecraft.client.gui.Font font) {
+            guiGraphics.drawCenteredString(
+                font,
+                Component.literal(this.title),
+                popupX + this.width / 2,
+                popupY + padding,
+                0xFFFFFFFF
+            );
+            
+            // Draw instruction text if this is an input popup
+            if (type == PopupType.STRING_INPUT || type == PopupType.NUMERIC_INPUT) {
+                String instruction = "Enter " + (type == PopupType.NUMERIC_INPUT ? "value:" : "text:");
+                guiGraphics.drawString(
+                    font,
+                    instruction,
+                    popupX + padding,
+                    popupY + padding + titleHeight,
+                    0xFFFFFFFF
+                );
+            }
+            
+            // Cancel button (blue)
+            guiGraphics.fill(
+                buttonStartX, 
+                buttonY, 
+                buttonStartX + buttonWidth, 
+                buttonY + 20, 
+                0xFF5555AA // Blue shade matching your UI
+            );
+            guiGraphics.drawCenteredString(
+                font,
+                Component.literal("Cancel"),
+                buttonStartX + buttonWidth / 2,
+                buttonY + 6,
+                0xFFFFFFFF
+            );
+            
+            // OK button (green)
+            guiGraphics.fill(
+                buttonStartX + buttonWidth + buttonSpacing, 
+                buttonY, 
+                buttonStartX + buttonWidth * 2 + buttonSpacing, 
+                buttonY + 20, 
+                0xFF55AA55 // Green shade matching your UI
+            );
+            guiGraphics.drawCenteredString(
+                font,
+                Component.literal("OK"),
+                buttonStartX + buttonWidth + buttonSpacing + buttonWidth / 2,
+                buttonY + 6,
                 0xFFFFFFFF
             );
         }
@@ -376,45 +435,6 @@ public class BCPopupScreen extends BCPanel {
             // Render the EditBox
             vanillaEditBox.render(guiGraphics, mouseX, mouseY, 0);
         }
-        
-        // Render buttons
-        int buttonY = popupY + this.height - padding - 20;
-        int buttonSpacing = 10;
-        int buttonWidth = 100;
-        int totalButtonWidth = (buttonWidth * 2) + buttonSpacing;
-        int buttonStartX = popupX + (this.width - totalButtonWidth) / 2;
-        
-        // Cancel button (blue)
-        guiGraphics.fill(
-            buttonStartX, 
-            buttonY, 
-            buttonStartX + buttonWidth, 
-            buttonY + 20, 
-            0xFF5555AA // Blue shade matching your UI
-        );
-        guiGraphics.drawCenteredString(
-            Minecraft.getInstance().font,
-            Component.literal("Cancel"),
-            buttonStartX + buttonWidth / 2,
-            buttonY + 6,
-            0xFFFFFFFF
-        );
-        
-        // OK button (green)
-        guiGraphics.fill(
-            buttonStartX + buttonWidth + buttonSpacing, 
-            buttonY, 
-            buttonStartX + buttonWidth * 2 + buttonSpacing, 
-            buttonY + 20, 
-            0xFF55AA55 // Green shade matching your UI
-        );
-        guiGraphics.drawCenteredString(
-            Minecraft.getInstance().font,
-            Component.literal("OK"),
-            buttonStartX + buttonWidth + buttonSpacing + buttonWidth / 2,
-            buttonY + 6,
-            0xFFFFFFFF
-        );
         
         // Restore the pose
         guiGraphics.pose().popPose();
@@ -447,8 +467,14 @@ public class BCPopupScreen extends BCPanel {
         }
         
         // Calculate positions
-        int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-        int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) return false;
+        
+        Object minecraftObj = clientHelper.getMinecraft();
+        if (!(minecraftObj instanceof net.minecraft.client.Minecraft minecraft)) return false;
+        
+        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
+        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
         int popupX = (screenWidth - this.width) / 2;
         int popupY = (screenHeight - this.height) / 2;
         

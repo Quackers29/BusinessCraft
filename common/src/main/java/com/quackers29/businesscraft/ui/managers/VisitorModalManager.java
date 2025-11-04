@@ -1,8 +1,8 @@
 package com.quackers29.businesscraft.ui.managers;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.ui.modal.core.BCModalScreen;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,9 +66,12 @@ public class VisitorModalManager {
      * @param message The message to send
      */
     private static void sendChatMessage(String message) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player != null) {
-            player.displayClientMessage(Component.literal(message), false);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object playerObj = clientHelper.getClientPlayer();
+            if (playerObj instanceof LocalPlayer player) {
+                player.displayClientMessage(Component.literal(message), false);
+            }
         }
     }
 } 

@@ -1,13 +1,11 @@
 package com.quackers29.businesscraft.ui.managers;
 
 import com.quackers29.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket;
 import com.quackers29.businesscraft.ui.modal.factories.BCModalGridFactory;
 import com.quackers29.businesscraft.ui.modal.specialized.BCModalGridScreen;
-import com.quackers29.businesscraft.ui.components.containers.BCTabPanel;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -80,14 +78,18 @@ public class VisitorHistoryManager extends BaseModalManager {
     private static List<VisitHistoryRecord> getVisitHistoryFromBlockEntity(BlockPos blockPos) {
         List<VisitHistoryRecord> visitHistory = new ArrayList<>();
         
-        if (Minecraft.getInstance() != null && Minecraft.getInstance().level != null) {
-            BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(blockPos);
-            if (blockEntity instanceof TownInterfaceEntity townInterface) {
-                // Request the town block entity to sync its town data with the server
-                PlatformAccess.getNetworkMessages().sendToServer(new PlayerExitUIPacket(blockPos));
-                
-                // Get the visit history
-                visitHistory.addAll(townInterface.getVisitHistory());
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object levelObj = clientHelper.getClientLevel();
+            if (levelObj instanceof net.minecraft.world.level.Level level) {
+                BlockEntity blockEntity = level.getBlockEntity(blockPos);
+                if (blockEntity instanceof TownInterfaceEntity townInterface) {
+                    // Request the town block entity to sync its town data with the server
+                    PlatformAccess.getNetworkMessages().sendToServer(new PlayerExitUIPacket(blockPos));
+                    
+                    // Get the visit history
+                    visitHistory.addAll(townInterface.getVisitHistory());
+                }
             }
         }
         
@@ -106,15 +108,19 @@ public class VisitorHistoryManager extends BaseModalManager {
             
             try {
                 // On the client side, we need to rely on the TownInterfaceEntity to get the town name
-                if (Minecraft.getInstance() != null && Minecraft.getInstance().level != null) {
-                    BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(blockPos);
-                    if (blockEntity instanceof TownInterfaceEntity townInterface) {
-                        // Use the getTownNameFromId method to look up the town name
-                        String townName = townInterface.getTownNameFromId(townId);
-                        
-                        // If we got a name, return it
-                        if (townName != null) {
-                            return townName;
+                com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+                if (clientHelper != null) {
+                    Object levelObj = clientHelper.getClientLevel();
+                    if (levelObj instanceof net.minecraft.world.level.Level level) {
+                        BlockEntity blockEntity = level.getBlockEntity(blockPos);
+                        if (blockEntity instanceof TownInterfaceEntity townInterface) {
+                            // Use the getTownNameFromId method to look up the town name
+                            String townName = townInterface.getTownNameFromId(townId);
+                            
+                            // If we got a name, return it
+                            if (townName != null) {
+                                return townName;
+                            }
                         }
                     }
                 }

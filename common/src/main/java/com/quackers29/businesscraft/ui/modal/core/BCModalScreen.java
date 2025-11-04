@@ -1,13 +1,10 @@
 package com.quackers29.businesscraft.ui.modal.core;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import com.quackers29.businesscraft.ui.builders.BCComponentFactory;
-import com.quackers29.businesscraft.ui.components.basic.BCLabel;
-
 import com.quackers29.businesscraft.ui.components.basic.BCPanel;
 import com.quackers29.businesscraft.ui.components.basic.BCButton;
-import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
@@ -121,7 +118,16 @@ public class BCModalScreen extends BCPanel {
      */
     private static int calculateAppropriateWidth(int columns) {
         // Base width plus column-dependent width
-        Minecraft minecraft = Minecraft.getInstance();
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) {
+            return 400; // Default fallback width
+        }
+        
+        Object minecraftObj = clientHelper.getMinecraft();
+        if (!(minecraftObj instanceof net.minecraft.client.Minecraft minecraft)) {
+            return 400; // Default fallback width
+        }
+        
         int screenWidth = minecraft.getWindow().getGuiScaledWidth();
         
         // Ensure columns is at least 1
@@ -145,7 +151,16 @@ public class BCModalScreen extends BCPanel {
      */
     private static int calculateAppropriateHeight(int rowCount) {
         // Base height calculation
-        Minecraft minecraft = Minecraft.getInstance();
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) {
+            return 300; // Default fallback height
+        }
+        
+        Object minecraftObj = clientHelper.getMinecraft();
+        if (!(minecraftObj instanceof net.minecraft.client.Minecraft minecraft)) {
+            return 300; // Default fallback height
+        }
+        
         int screenHeight = minecraft.getWindow().getGuiScaledHeight();
         
         // Fixed components heights
@@ -166,17 +181,22 @@ public class BCModalScreen extends BCPanel {
      * Center the modal on the screen
      */
     private void centerOnScreen() {
-        Minecraft minecraft = Minecraft.getInstance();
-        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
-        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
-        int x = (screenWidth - this.width) / 2;
-        int y = (screenHeight - this.height) / 2;
-        
-        // Set position with child updates
-        this.positionWithChildren(x, y);
-        
-        // Ensure buttons are properly positioned
-        ensureButtonsPositioned();
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object minecraftObj = clientHelper.getMinecraft();
+            if (minecraftObj instanceof net.minecraft.client.Minecraft minecraft) {
+                int screenWidth = minecraft.getWindow().getGuiScaledWidth();
+                int screenHeight = minecraft.getWindow().getGuiScaledHeight();
+                int x = (screenWidth - this.width) / 2;
+                int y = (screenHeight - this.height) / 2;
+                
+                // Set position with child updates
+                this.positionWithChildren(x, y);
+                
+                // Ensure buttons are properly positioned
+                ensureButtonsPositioned();
+            }
+        }
     }
     
     /**
@@ -433,8 +453,14 @@ public class BCModalScreen extends BCPanel {
     @Override
     public void render(GuiGraphics guiGraphics, int x, int y, int mouseX, int mouseY) {
         // Draw semi-transparent overlay for the entire screen
-        int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-        int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) return;
+        
+        Object minecraftObj = clientHelper.getMinecraft();
+        if (!(minecraftObj instanceof net.minecraft.client.Minecraft minecraft)) return;
+        
+        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
+        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
         
         // First, push the matrix to ensure proper Z-ordering
         guiGraphics.pose().pushPose();
@@ -468,13 +494,16 @@ public class BCModalScreen extends BCPanel {
         );
         
         // Draw title with explicit positioning
-        guiGraphics.drawCenteredString(
-            Minecraft.getInstance().font,
-            Component.literal(title),
-            this.x + this.width / 2,
-            this.y + 20,
-            0xFFFFFFFF
-        );
+        Object fontObj = clientHelper.getFont();
+        if (fontObj instanceof net.minecraft.client.gui.Font font) {
+            guiGraphics.drawCenteredString(
+                font,
+                Component.literal(title),
+                this.x + this.width / 2,
+                this.y + 20,
+                0xFFFFFFFF
+            );
+        }
         
         // Render content grid
         if (contentGrid != null) {

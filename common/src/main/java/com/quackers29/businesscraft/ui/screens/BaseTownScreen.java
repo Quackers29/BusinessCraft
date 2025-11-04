@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.ui.screens;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.ui.templates.TownInterfaceTheme;
 import com.quackers29.businesscraft.ui.templates.BCTheme;
 import com.quackers29.businesscraft.ui.interfaces.ScreenRenderingCapabilities;
@@ -172,10 +173,16 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
     // SoundHandler implementation
     @Override
     public void playButtonClickSound() {
-        Minecraft.getInstance().getSoundManager().play(
-            net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
-                net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F)
-        );
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object soundManagerObj = clientHelper.getSoundManager();
+            if (soundManagerObj instanceof net.minecraft.client.sounds.SoundManager soundManager) {
+                soundManager.play(
+                    net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
+                        net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F)
+                );
+            }
+        }
     }
     
     // ModalStateProvider implementation
@@ -354,9 +361,12 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
      * This method is used by tab implementations and subclasses.
      */
     public void sendChatMessage(String message) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player != null) {
-            player.displayClientMessage(Component.literal(message), false);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object playerObj = clientHelper.getClientPlayer();
+            if (playerObj instanceof net.minecraft.client.player.LocalPlayer player) {
+                player.displayClientMessage(Component.literal(message), false);
+            }
         }
     }
     

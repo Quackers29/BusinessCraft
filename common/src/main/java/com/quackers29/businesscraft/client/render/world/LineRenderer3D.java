@@ -1,9 +1,9 @@
 package com.quackers29.businesscraft.client.render.world;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Camera;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
@@ -126,7 +126,13 @@ public class LineRenderer3D {
      * @param config Line configuration
      */
     public static void renderLine(PoseStack poseStack, Vec3 startWorld, Vec3 endWorld, Color color, LineConfig config) {
-        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) return;
+        
+        Object minecraftObj = clientHelper.getMinecraft();
+        if (!(minecraftObj instanceof net.minecraft.client.Minecraft minecraft)) return;
+        
+        Camera camera = minecraft.gameRenderer.getMainCamera();
         Vec3 cameraPos = camera.getPosition();
         
         // Apply camera offset and Y positioning
@@ -150,7 +156,13 @@ public class LineRenderer3D {
      * @param config Line configuration
      */
     public static void renderLine(PoseStack poseStack, BlockPos startPos, BlockPos endPos, Color color, LineConfig config) {
-        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) return;
+        
+        Object minecraftObj = clientHelper.getMinecraft();
+        if (!(minecraftObj instanceof net.minecraft.client.Minecraft minecraft)) return;
+        
+        Camera camera = minecraft.gameRenderer.getMainCamera();
         Vec3 cameraPos = camera.getPosition();
         
         // Convert block positions to world coordinates, offset by camera position

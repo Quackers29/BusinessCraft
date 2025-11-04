@@ -1,7 +1,7 @@
 package com.quackers29.businesscraft.client.render.world;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
@@ -112,25 +112,30 @@ public abstract class WorldVisualizationRenderer {
             return;
         }
         
-        Level level = Minecraft.getInstance().level;
-        if (level == null || !level.isClientSide) {
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) return;
+        
+        Object levelObj = clientHelper.getClientLevel();
+        if (!(levelObj instanceof Level level) || !level.isClientSide) {
             return;
         }
         
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null) {
+        Object playerObj = clientHelper.getClientPlayer();
+        if (playerObj == null) {
             return;
         }
+        
+        net.minecraft.world.entity.player.Player player = (net.minecraft.world.entity.player.Player) playerObj;
         
         // Pre-render setup
-        if (!shouldRender(level, mc.player.blockPosition())) {
+        if (!shouldRender(level, player.blockPosition())) {
             return;
         }
         
         onPreRender(event, level);
         
         // Get visualizations to render
-        List<VisualizationData> visualizations = getVisualizations(level, mc.player.blockPosition());
+        List<VisualizationData> visualizations = getVisualizations(level, player.blockPosition());
         
         if (visualizations.isEmpty()) {
             onPostRender(event, level);
@@ -138,7 +143,7 @@ public abstract class WorldVisualizationRenderer {
         }
         
         // Render each visualization with distance culling
-        BlockPos playerPos = mc.player.blockPosition();
+        BlockPos playerPos = player.blockPosition();
         int maxDistanceSquared = config.getMaxRenderDistance() * config.getMaxRenderDistance();
         
         for (VisualizationData visualization : visualizations) {

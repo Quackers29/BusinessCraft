@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.ui.screens.demo;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.ui.components.basic.*;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
@@ -9,7 +10,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.Minecraft;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -388,11 +388,17 @@ public class BCScreenTemplateDemo {
             
             // Draw text
             Component text = toggled ? enabledText : disabledText;
-            int textWidth = Minecraft.getInstance().font.width(text.getString());
-            int textX = offsetX + (width - textWidth) / 2;
-            int textY = offsetY + (height - 8) / 2;
-            
-            graphics.drawString(Minecraft.getInstance().font, text, textX, textY, 0xFFFFFFFF);
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper != null) {
+                Object fontObj = clientHelper.getFont();
+                if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                    int textWidth = font.width(text.getString());
+                    int textX = offsetX + (width - textWidth) / 2;
+                    int textY = offsetY + (height - 8) / 2;
+                    
+                    graphics.drawString(font, text, textX, textY, 0xFFFFFFFF);
+                }
+            }
         }
         
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
@@ -491,7 +497,13 @@ public class BCScreenTemplateDemo {
             // Draw text
             String textToShow = value.isEmpty() ? placeholder.getString() : value;
             int textColor = value.isEmpty() ? 0xFF888888 : 0xFF000000;
-            graphics.drawString(Minecraft.getInstance().font, textToShow, offsetX + 4, offsetY + 6, textColor);
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper != null) {
+                Object fontObj = clientHelper.getFont();
+                if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                    graphics.drawString(font, textToShow, offsetX + 4, offsetY + 6, textColor);
+                }
+            }
         }
         
         public boolean mouseClicked(double mouseX, double mouseY, int button) {

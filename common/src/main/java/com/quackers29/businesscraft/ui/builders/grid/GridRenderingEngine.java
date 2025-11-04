@@ -239,10 +239,15 @@ public class GridRenderingEngine {
         
         // Draw toggle text
         if (element.getValue() instanceof String text) {
-            Font font = Minecraft.getInstance().font;
-            int textX = cellPos.getX() + (cellPos.getWidth() - font.width(text)) / 2;
-            int textY = cellPos.getY() + (cellPos.getHeight() - font.lineHeight) / 2;
-            graphics.drawString(font, text, textX, textY, element.getTextColor());
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper != null) {
+                Object fontObj = clientHelper.getFont();
+                if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                    int textX = cellPos.getX() + (cellPos.getWidth() - font.width(text)) / 2;
+                    int textY = cellPos.getY() + (cellPos.getHeight() - font.lineHeight) / 2;
+                    graphics.drawString(font, text, textX, textY, element.getTextColor());
+                }
+            }
         }
     }
     

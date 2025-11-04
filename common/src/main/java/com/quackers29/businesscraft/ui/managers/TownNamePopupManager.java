@@ -6,7 +6,6 @@ import com.quackers29.businesscraft.ui.builders.BCComponentFactory;
 import com.quackers29.businesscraft.ui.modal.core.BCPopupScreen;
 import com.quackers29.businesscraft.ui.screens.BaseTownScreen;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.client.player.LocalPlayer;
@@ -192,18 +191,23 @@ public class TownNamePopupManager {
      */
     private static void positionPopupAtCenter(BCPopupScreen popup) {
         // Get screen dimensions
-        Minecraft minecraft = Minecraft.getInstance();
-        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
-        int screenHeight = minecraft.getWindow().getGuiScaledHeight();
-        
-        // Calculate exact center position
-        int popupWidth = 300; // Same as in createStringInputPopup
-        int popupHeight = 150; // Same as in createStringInputPopup
-        int centerX = screenWidth / 2 - popupWidth / 2;
-        int centerY = screenHeight / 2 - popupHeight / 2;
-        
-        // Directly position the popup at the center of the screen
-        popup.position(centerX, centerY);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object minecraftObj = clientHelper.getMinecraft();
+            if (minecraftObj instanceof net.minecraft.client.Minecraft minecraft) {
+                int screenWidth = minecraft.getWindow().getGuiScaledWidth();
+                int screenHeight = minecraft.getWindow().getGuiScaledHeight();
+                
+                // Calculate exact center position
+                int popupWidth = 300; // Same as in createStringInputPopup
+                int popupHeight = 150; // Same as in createStringInputPopup
+                int centerX = screenWidth / 2 - popupWidth / 2;
+                int centerY = screenHeight / 2 - popupHeight / 2;
+                
+                // Directly position the popup at the center of the screen
+                popup.position(centerX, centerY);
+            }
+        }
     }
     
     /**
@@ -212,9 +216,12 @@ public class TownNamePopupManager {
      * @param message The message to send
      */
     private static void sendChatMessage(String message) {
-        LocalPlayer player = Minecraft.getInstance().player;
-        if (player != null) {
-            player.displayClientMessage(Component.literal(message), false);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object playerObj = clientHelper.getClientPlayer();
+            if (playerObj instanceof LocalPlayer player) {
+                player.displayClientMessage(Component.literal(message), false);
+            }
         }
     }
     

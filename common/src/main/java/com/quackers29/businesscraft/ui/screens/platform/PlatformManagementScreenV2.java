@@ -409,10 +409,13 @@ public class PlatformManagementScreenV2 extends Screen {
         PlatformPathKeyHandler.setActivePlatform(townBlockPos, platform.getId());
         
         // Show instructions
-        Player player = Minecraft.getInstance().player;
-        if (player != null) {
-            player.displayClientMessage(
-                Component.translatable("businesscraft.platform_path_instructions"), false);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object playerObj = clientHelper.getClientPlayer();
+            if (playerObj instanceof Player player) {
+                player.displayClientMessage(
+                    Component.translatable("businesscraft.platform_path_instructions"), false);
+            }
         }
         
         // Close UI
@@ -431,10 +434,13 @@ public class PlatformManagementScreenV2 extends Screen {
         platform.setEndPos(null);
         
         // Show feedback
-        Player player = Minecraft.getInstance().player;
-        if (player != null) {
-            player.displayClientMessage(
-                Component.translatable("businesscraft.platform_path_reset"), false);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object playerObj = clientHelper.getClientPlayer();
+            if (playerObj instanceof Player player) {
+                player.displayClientMessage(
+                    Component.translatable("businesscraft.platform_path_reset"), false);
+            }
         }
         
         // Force the grid to refresh immediately by clearing and repopulating
@@ -484,25 +490,26 @@ public class PlatformManagementScreenV2 extends Screen {
      * Immediately refresh platform data from server (like PaymentBoardScreen pattern)
      */
     private void refreshPlatformDataFromServer() {
-        Minecraft minecraft = Minecraft.getInstance();
-        Level level = minecraft.level;
-        
-        if (level != null) {
-            BlockEntity be = level.getBlockEntity(townBlockPos);
-            
-            if (be instanceof TownInterfaceEntity townInterface) {
-                // Get fresh platform data from server
-                List<Platform> freshPlatforms = townInterface.getPlatforms();
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object levelObj = clientHelper.getClientLevel();
+            if (levelObj instanceof Level level) {
+                BlockEntity be = level.getBlockEntity(townBlockPos);
                 
-                // Always update platforms and force grid refresh (simplified logic)
-                this.platforms = new ArrayList<>(freshPlatforms);
-                currentPlatforms.clear(); // Force refresh by clearing cache
-                
-                // Force grid update
-                if (platformListGrid != null) {
-                    updatePlatformListGridData();
-                } else {
-                    initializePlatformListGrid();
+                if (be instanceof TownInterfaceEntity townInterface) {
+                    // Get fresh platform data from server
+                    List<Platform> freshPlatforms = townInterface.getPlatforms();
+                    
+                    // Always update platforms and force grid refresh (simplified logic)
+                    this.platforms = new ArrayList<>(freshPlatforms);
+                    currentPlatforms.clear(); // Force refresh by clearing cache
+                    
+                    // Force grid update
+                    if (platformListGrid != null) {
+                        updatePlatformListGridData();
+                    } else {
+                        initializePlatformListGrid();
+                    }
                 }
             }
         }
@@ -529,16 +536,18 @@ public class PlatformManagementScreenV2 extends Screen {
      * Static factory method to open the platform management screen
      */
     public static void open(BlockPos blockPos) {
-        Minecraft minecraft = Minecraft.getInstance();
-        Level level = minecraft.level;
-        
-        if (level != null) {
-            BlockEntity be = level.getBlockEntity(blockPos);
-            
-            if (be instanceof TownInterfaceEntity townInterface) {
-                List<Platform> platforms = townInterface.getPlatforms();
-                PlatformManagementScreenV2 screen = new PlatformManagementScreenV2(blockPos, platforms);
-                minecraft.setScreen(screen);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object levelObj = clientHelper.getClientLevel();
+            Object minecraftObj = clientHelper.getMinecraft();
+            if (levelObj instanceof Level level && minecraftObj instanceof net.minecraft.client.Minecraft minecraft) {
+                BlockEntity be = level.getBlockEntity(blockPos);
+                
+                if (be instanceof TownInterfaceEntity townInterface) {
+                    List<Platform> platforms = townInterface.getPlatforms();
+                    PlatformManagementScreenV2 screen = new PlatformManagementScreenV2(blockPos, platforms);
+                    minecraft.setScreen(screen);
+                }
             }
         }
     }
@@ -573,19 +582,20 @@ public class PlatformManagementScreenV2 extends Screen {
             }
         }
         
-        Minecraft minecraft = Minecraft.getInstance();
-        Level level = minecraft.level;
-        
-        if (level != null) {
-            BlockEntity be = level.getBlockEntity(townBlockPos);
-            
-            if (be instanceof TownInterfaceEntity townInterface) {
-                // Update our platform list with fresh data from the server
-                this.platforms = new ArrayList<>(townInterface.getPlatforms());
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object levelObj = clientHelper.getClientLevel();
+            if (levelObj instanceof Level level) {
+                BlockEntity be = level.getBlockEntity(townBlockPos);
+                
+                if (be instanceof TownInterfaceEntity townInterface) {
+                    // Update our platform list with fresh data from the server
+                    this.platforms = new ArrayList<>(townInterface.getPlatforms());
 
-                // Force UI update by clearing currentPlatforms to ensure refresh
-                currentPlatforms.clear();
-                updatePlatformListData();
+                    // Force UI update by clearing currentPlatforms to ensure refresh
+                    currentPlatforms.clear();
+                    updatePlatformListData();
+                }
             }
         }
 

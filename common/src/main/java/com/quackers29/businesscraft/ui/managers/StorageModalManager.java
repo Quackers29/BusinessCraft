@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.ui.managers;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.menu.StorageMenu;
 import com.quackers29.businesscraft.menu.PaymentBoardMenu;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
@@ -7,11 +8,9 @@ import com.quackers29.businesscraft.ui.modal.factories.BCModalInventoryFactory;
 import com.quackers29.businesscraft.ui.modal.specialized.BCModalInventoryScreen;
 import com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
-import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.network.packets.ui.OpenPaymentBoardPacket;
 import java.util.function.Consumer;
 
@@ -42,8 +41,13 @@ public class StorageModalManager extends BaseModalManager {
         validateParentScreen(parentScreen, "parentScreen");
         
         // Get the player
-        Player player = Minecraft.getInstance().player;
-        if (player == null) {
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) {
+            throw new IllegalStateException("ClientHelper not available when creating payment board screen");
+        }
+        
+        Object playerObj = clientHelper.getClientPlayer();
+        if (!(playerObj instanceof Player player)) {
             throw new IllegalStateException("Player cannot be null when creating payment board screen");
         }
         

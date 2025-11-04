@@ -1,8 +1,8 @@
 package com.quackers29.businesscraft.ui.modal.factories;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.ui.modal.specialized.BCModalGridScreen;
 import com.quackers29.businesscraft.ui.modal.specialized.BCModalInventoryScreen;
-
 import com.quackers29.businesscraft.menu.StorageMenu;
 import com.quackers29.businesscraft.menu.TradeMenu;
 import net.minecraft.client.gui.screens.Screen;
@@ -10,7 +10,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.core.BlockPos;
-import net.minecraft.client.Minecraft;
 
 import java.util.function.Consumer;
 
@@ -37,8 +36,13 @@ public class BCModalInventoryFactory {
             Consumer<BCModalInventoryScreen<TradeMenu>> onCloseCallback) {
         
         // Get the player
-        Player player = Minecraft.getInstance().player;
-        if (player == null) {
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) {
+            throw new IllegalStateException("ClientHelper not available when creating trade screen");
+        }
+        
+        Object playerObj = clientHelper.getClientPlayer();
+        if (!(playerObj instanceof Player player)) {
             throw new IllegalStateException("Player cannot be null when creating trade screen");
         }
         
@@ -76,8 +80,13 @@ public class BCModalInventoryFactory {
             Consumer<BCModalInventoryScreen<StorageMenu>> onCloseCallback) {
         
         // Get the player
-        Player player = Minecraft.getInstance().player;
-        if (player == null) {
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) {
+            throw new IllegalStateException("ClientHelper not available when creating storage screen");
+        }
+        
+        Object playerObj = clientHelper.getClientPlayer();
+        if (!(playerObj instanceof Player player)) {
             throw new IllegalStateException("Player cannot be null when creating storage screen");
         }
         

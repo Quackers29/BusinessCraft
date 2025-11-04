@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.ui.screens.demo;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
 import com.quackers29.businesscraft.ui.modal.specialized.BCModalGridScreen;
 import com.quackers29.businesscraft.ui.modal.factories.BCModalGridFactory;
@@ -59,16 +60,28 @@ public class BCModalGridExample {
             items,
             selectedItem -> {
                 // Handle item selection
-                Minecraft.getInstance().player.displayClientMessage(
-                    Component.literal("Selected: " + selectedItem), 
-                    false
-                );
+                com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+                if (clientHelper != null) {
+                    Object playerObj = clientHelper.getClientPlayer();
+                    if (playerObj instanceof net.minecraft.world.entity.player.Player player) {
+                        player.displayClientMessage(
+                            Component.literal("Selected: " + selectedItem), 
+                            false
+                        );
+                    }
+                }
             },
             BCModalGridFactory.Themes.BC_DEFAULT
         );
         
         // Show the screen
-        Minecraft.getInstance().setScreen(screen);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object minecraftObj = clientHelper.getMinecraft();
+            if (minecraftObj instanceof net.minecraft.client.Minecraft minecraft) {
+                minecraft.setScreen(screen);
+            }
+        }
     }
     
     /**
@@ -111,14 +124,26 @@ public class BCModalGridExample {
               .withScrollbarColors(0x40FFFFFF, 0xA088CCFF, 0xFF88CCFF)
               .withRowClickHandler(person -> {
                   // Handle row click
-                  Minecraft.getInstance().player.displayClientMessage(
-                      Component.literal("Selected person: " + person.name),
-                      false
-                  );
+                  com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+                  if (clientHelper != null) {
+                      Object playerObj = clientHelper.getClientPlayer();
+                      if (playerObj instanceof net.minecraft.world.entity.player.Player player) {
+                          player.displayClientMessage(
+                              Component.literal("Selected person: " + person.name),
+                              false
+                          );
+                      }
+                  }
               });
         
         // Show the screen
-        Minecraft.getInstance().setScreen(screen);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper2 = PlatformAccess.getClient();
+        if (clientHelper2 != null) {
+            Object minecraftObj = clientHelper2.getMinecraft();
+            if (minecraftObj instanceof net.minecraft.client.Minecraft minecraft) {
+                minecraft.setScreen(screen);
+            }
+        }
     }
     
     /**
@@ -157,7 +182,13 @@ public class BCModalGridExample {
               );
         
         // Show the screen
-        Minecraft.getInstance().setScreen(screen);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object minecraftObj = clientHelper.getMinecraft();
+            if (minecraftObj instanceof net.minecraft.client.Minecraft minecraft) {
+                minecraft.setScreen(screen);
+            }
+        }
     }
     
     /**
@@ -173,9 +204,15 @@ public class BCModalGridExample {
                 .withContentStyle(0x80222222, 0xA0AAAAAA);
         
         // Position the tab panel
-        int screenWidth = Minecraft.getInstance().getWindow().getGuiScaledWidth();
-        int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
-        tabPanel.position((screenWidth - 400) / 2, (screenHeight - 300) / 2);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object minecraftObj = clientHelper.getMinecraft();
+            if (minecraftObj instanceof net.minecraft.client.Minecraft minecraft) {
+                int screenWidth = minecraft.getWindow().getGuiScaledWidth();
+                int screenHeight = minecraft.getWindow().getGuiScaledHeight();
+                tabPanel.position((screenWidth - 400) / 2, (screenHeight - 300) / 2);
+            }
+        }
         
         // Create a screen that hosts the tab panel
         Screen hostScreen = new Screen(Component.literal("Tabbed Grids")) {
@@ -260,12 +297,24 @@ public class BCModalGridExample {
             @Override
             public void onClose() {
                 // Return to parent screen
-                Minecraft.getInstance().setScreen(parentScreen);
+                com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+                if (clientHelper != null) {
+                    Object minecraftObj = clientHelper.getMinecraft();
+                    if (minecraftObj instanceof net.minecraft.client.Minecraft minecraft) {
+                        minecraft.setScreen(parentScreen);
+                    }
+                }
             }
         };
         
         // Show the tabbed screen
-        Minecraft.getInstance().setScreen(hostScreen);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper2 = PlatformAccess.getClient();
+        if (clientHelper2 != null) {
+            Object minecraftObj = clientHelper2.getMinecraft();
+            if (minecraftObj instanceof net.minecraft.client.Minecraft minecraft) {
+                minecraft.setScreen(hostScreen);
+            }
+        }
     }
     
     /**

@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.client.render.world;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
@@ -388,8 +389,14 @@ public class VisualizationManager {
      * Can be overridden for testing or different timing sources
      */
     protected long getCurrentTime() {
-        Level level = net.minecraft.client.Minecraft.getInstance().level;
-        return level != null ? level.getGameTime() : System.currentTimeMillis() / 50; // Fallback to system time in ticks
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object levelObj = clientHelper.getClientLevel();
+            if (levelObj instanceof Level level) {
+                return level.getGameTime();
+            }
+        }
+        return System.currentTimeMillis() / 50; // Fallback to system time in ticks
     }
     
     /**

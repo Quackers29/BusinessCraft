@@ -1,8 +1,8 @@
 package com.quackers29.businesscraft.client;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.mojang.blaze3d.systems.RenderSystem;
 // BusinessCraft moved to platform-specific module
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
@@ -54,8 +54,17 @@ public class TownDebugOverlay implements IGuiOverlay {
     
     public static void setTownData(List<TownDebugData> data) {
         townData = data;
-        lastUpdateTick = Minecraft.getInstance().level != null ? 
-            Minecraft.getInstance().level.getGameTime() : 0;
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object levelObj = clientHelper.getClientLevel();
+            if (levelObj instanceof net.minecraft.world.level.Level level) {
+                lastUpdateTick = level.getGameTime();
+            } else {
+                lastUpdateTick = 0;
+            }
+        } else {
+            lastUpdateTick = 0;
+        }
     }
     
     public static boolean isVisible() {
@@ -85,12 +94,16 @@ public class TownDebugOverlay implements IGuiOverlay {
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END && visible) {
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.level != null && mc.player != null) {
-                // Check if it's time for a refresh
-                long currentTick = mc.level.getGameTime();
-                if (currentTick - lastUpdateTick > REFRESH_INTERVAL_TICKS) {
-                    refreshData();
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper != null) {
+                Object levelObj = clientHelper.getClientLevel();
+                Object playerObj = clientHelper.getClientPlayer();
+                if (levelObj instanceof net.minecraft.world.level.Level level && playerObj != null) {
+                    // Check if it's time for a refresh
+                    long currentTick = level.getGameTime();
+                    if (currentTick - lastUpdateTick > REFRESH_INTERVAL_TICKS) {
+                        refreshData();
+                    }
                 }
             }
         }
@@ -98,11 +111,19 @@ public class TownDebugOverlay implements IGuiOverlay {
     
     @Override
     public void render(ForgeGui gui, GuiGraphics guiGraphics, float partialTick, int screenWidth, int screenHeight) {
-        if (!visible || Minecraft.getInstance().options.hideGui) {
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) return;
+        
+        Object minecraftObj = clientHelper.getMinecraft();
+        if (!(minecraftObj instanceof net.minecraft.client.Minecraft minecraft)) return;
+        
+        if (!visible || minecraft.options.hideGui) {
             return;
         }
         
-        Font font = Minecraft.getInstance().font;
+        Object fontObj = clientHelper.getFont();
+        if (!(fontObj instanceof Font font)) return;
+        
         int lineHeight = font.lineHeight + 1;
         int y = 5 - scrollOffset; // Apply scroll offset to starting position
         int leftMargin = 5;

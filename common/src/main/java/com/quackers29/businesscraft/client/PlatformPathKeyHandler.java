@@ -65,10 +65,16 @@ public class PlatformPathKeyHandler {
             ));
             
             // Display message to player
-            Minecraft.getInstance().player.displayClientMessage(
-                Component.translatable("businesscraft.platform_path_cancelled"),
-                false
-            );
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper != null) {
+                Object playerObj = clientHelper.getClientPlayer();
+                if (playerObj instanceof net.minecraft.world.entity.player.Player player) {
+                    player.displayClientMessage(
+                        Component.translatable("businesscraft.platform_path_cancelled"),
+                        false
+                    );
+                }
+            }
             
             // Clear active platform
             clearActivePlatform();
