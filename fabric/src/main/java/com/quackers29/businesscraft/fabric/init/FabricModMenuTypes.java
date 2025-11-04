@@ -2,6 +2,8 @@ package com.quackers29.businesscraft.fabric.init;
 
 import com.quackers29.businesscraft.fabric.platform.FabricMenuTypeHelper;
 import com.quackers29.businesscraft.fabric.platform.FabricRegistryHelper;
+import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
+import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -109,9 +111,10 @@ public class FabricModMenuTypes {
      */
     private static void registerMenuTypes() {
         try {
-            // For now, skip menu type registration to focus on basic block registration
-            // The complex menu types require many dependencies
-            System.out.println("DEBUG: Skipping menu type registration for now - focusing on basic blocks");
+            // Skip menu type registration for now - the common module TownInterfaceMenu
+            // likely uses Forge-specific classes that don't exist in Fabric
+            // The basic block works without the menu for now
+            System.out.println("DEBUG: Skipping TownInterfaceMenu registration - may use Forge-specific classes");
         } catch (Exception e) {
             System.err.println("ERROR: Failed to register menu types: " + e.getMessage());
             e.printStackTrace();

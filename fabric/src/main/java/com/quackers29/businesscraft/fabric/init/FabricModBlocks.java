@@ -179,31 +179,26 @@ public class FabricModBlocks {
 
 
     /**
-     * Actual block registration logic - simplified test version
+     * Actual block registration logic - simple working block
      */
     private static void registerBlocks() {
         try {
-            // For now, create a simple test block instead of the complex TownInterfaceBlock
-            // This will help us verify that registration works before trying the complex block
-            Block testBlock = new Block(FabricBlockSettings.create()
+            // Create a simple working block using Fabric APIs
+            // This avoids the complex TownInterfaceBlock that uses Forge-specific classes
+            Block townInterfaceBlock = new Block(FabricBlockSettings.create()
                 .strength(3.0f, 3.0f)
                 .requiresTool());
 
-            // Register the test block
-            Registry.register(Registries.BLOCK,
-                new Identifier("businesscraft", "town_interface"),
-                testBlock);
+            // Register the block using proper Fabric Registry.register method
+            Registry.register(Registries.BLOCK, new Identifier("businesscraft", "town_interface"), townInterfaceBlock);
 
-            // Register block item
-            BlockItem testBlockItem = new BlockItem(testBlock, new FabricItemSettings());
+            // Create and register block item
+            BlockItem townInterfaceBlockItem = new BlockItem(townInterfaceBlock, new FabricItemSettings());
+            Registry.register(Registries.ITEM, new Identifier("businesscraft", "town_interface"), townInterfaceBlockItem);
 
-            Registry.register(Registries.ITEM,
-                new Identifier("businesscraft", "town_interface"),
-                testBlockItem);
-
-            System.out.println("DEBUG: Simple test block registration completed successfully!");
+            System.out.println("DEBUG: Simple Town Interface Block registration completed successfully!");
         } catch (Exception e) {
-            System.err.println("ERROR: Failed to register test blocks: " + e.getMessage());
+            System.err.println("ERROR: Failed to register simple block: " + e.getMessage());
             e.printStackTrace();
         }
     }

@@ -1,5 +1,8 @@
 package com.quackers29.businesscraft.fabric.init;
 
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
+
 /**
  * Fabric block entity registration using direct API calls.
  * Simplified approach that uses direct Minecraft classes.
@@ -150,9 +153,10 @@ public class FabricModBlockEntities {
      */
     private static void registerBlockEntities() {
         try {
-            // For now, skip block entity registration to focus on basic block registration
-            // The complex TownInterfaceEntity requires many dependencies
-            System.out.println("DEBUG: Skipping block entity registration for now - focusing on basic blocks");
+            // Skip block entity registration for now - the common module TownInterfaceEntity
+            // uses Forge-specific classes (MenuProvider) that don't exist in Fabric
+            // The basic block works without the block entity for now
+            System.out.println("DEBUG: Skipping TownInterfaceEntity registration - uses Forge-specific MenuProvider class");
         } catch (Exception e) {
             System.err.println("ERROR: Failed to register block entities: " + e.getMessage());
             e.printStackTrace();

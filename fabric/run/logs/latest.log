@@ -1,5 +1,5 @@
-[21:38:42] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.20.1 with Fabric Loader 0.15.6
-[21:38:42] [main/INFO] (FabricLoader) Loading 58 mods:
+[23:29:16] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.20.1 with Fabric Loader 0.15.6
+[23:29:17] [main/INFO] (FabricLoader) Loading 58 mods:
 	- businesscraft 1.0.0
 	- fabric-api 0.91.0+1.20.1
 	- fabric-api-base 0.4.30+7abfd51577
@@ -58,13 +58,14 @@
 	- java 17
 	- minecraft 1.20.1
 	- mixinextras 0.3.2
-[21:38:42] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.5 Source=file:/home/az/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.12.5+mixin.0.8.5/8d31fb97c3e0cd7c8dad3441851c523bcfae6d8e/sponge-mixin-0.12.5+mixin.0.8.5.jar Service=Knot/Fabric Env=CLIENT
-[21:38:42] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
-[21:38:42] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_17
-[21:38:43] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.3.2).
-[21:38:45] [Datafixer Bootstrap/INFO] (Minecraft) 188 Datafixer optimizations took 72 milliseconds
-[21:38:46] [Render thread/INFO] (Minecraft) Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
-[21:38:46] [Render thread/ERROR] (Minecraft) Failed to verify authentication
+[23:29:17] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.5 Source=file:/home/az/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.12.5+mixin.0.8.5/8d31fb97c3e0cd7c8dad3441851c523bcfae6d8e/sponge-mixin-0.12.5+mixin.0.8.5.jar Service=Knot/Fabric Env=CLIENT
+[23:29:17] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
+[23:29:17] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_16
+[23:29:17] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_17
+[23:29:17] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.3.2).
+[23:29:19] [Datafixer Bootstrap/INFO] (Minecraft) 188 Datafixer optimizations took 65 milliseconds
+[23:29:20] [Render thread/INFO] (Minecraft) Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
+[23:29:21] [Render thread/ERROR] (Minecraft) Failed to verify authentication
 com.mojang.authlib.exceptions.InvalidCredentialsException: Status: 401
 	at com.mojang.authlib.exceptions.MinecraftClientHttpException.toAuthenticationException(MinecraftClientHttpException.java:56) ~[authlib-4.0.43.jar:?]
 	at com.mojang.authlib.yggdrasil.YggdrasilUserApiService.fetchProperties(YggdrasilUserApiService.java:156) ~[authlib-4.0.43.jar:?]
@@ -82,47 +83,47 @@ Caused by: com.mojang.authlib.exceptions.MinecraftClientHttpException: Status: 4
 	at com.mojang.authlib.minecraft.client.MinecraftClient.get(MinecraftClient.java:48) ~[authlib-4.0.43.jar:?]
 	at com.mojang.authlib.yggdrasil.YggdrasilUserApiService.fetchProperties(YggdrasilUserApiService.java:129) ~[authlib-4.0.43.jar:?]
 	... 9 more
-[21:38:46] [Render thread/INFO] (Minecraft) Setting user: Player418
-[21:38:46] [Render thread/INFO] (BusinessCraft Fabric) BusinessCraft Fabric constructor called!
-[21:38:46] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: BusinessCraft Fabric mod starting up!
-[21:38:46] [Render thread/INFO] (BusinessCraft Fabric) Registering blocks and items...
-[21:38:46] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModBlocks.register() called
-[21:38:46] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModBlocks.register() - Attempting block registration
-[21:38:46] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Simple test block registration completed successfully!
-[21:38:46] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Block registration completed successfully!
-[21:38:46] [Render thread/INFO] (BusinessCraft Fabric) Blocks registered successfully
-[21:38:46] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Entity registration placeholder
-[21:38:46] [Render thread/INFO] (BusinessCraft Fabric) Entity types registered successfully
-[21:38:46] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModBlockEntities.register() called
-[21:38:46] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModBlockEntities.register() - Attempting block entity registration
-[21:38:46] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Skipping block entity registration for now - focusing on basic blocks
-[21:38:46] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Block entity registration completed successfully!
-[21:38:46] [Render thread/INFO] (BusinessCraft Fabric) Block entities registered successfully
-[21:38:46] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModMenuTypes.register() called
-[21:38:46] [Render thread/INFO] (FabricModMenuTypes) Registering Fabric menu types...
-[21:38:46] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Skipping menu type registration for now - focusing on basic blocks
-[21:38:46] [Render thread/INFO] (FabricModMenuTypes) Fabric menu types registered successfully
-[21:38:46] [Render thread/INFO] (BusinessCraft Fabric) Menu types registered successfully
-[21:38:46] [Render thread/INFO] (FabricModMessages) Registering Fabric network messages...
-[21:38:46] [Render thread/WARN] (FabricModMessages) Fabric API classes not available during initialization. Network message registration will be skipped.
-[21:38:46] [Render thread/WARN] (FabricModMessages) Missing class: Could not load net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking from any classloader
-[21:38:46] [Render thread/WARN] (FabricModMessages) Network messages will be registered when classes become available.
-[21:38:46] [Render thread/INFO] (FabricModEvents) Registering Fabric events...
-[21:38:46] [Render thread/INFO] (FabricEventCallbackHandler) Initializing Fabric event callback handlers...
-[21:38:46] [Render thread/INFO] (FabricEventCallbackHandler) Skipping server event registration - running on client
-[21:38:46] [Render thread/INFO] (FabricEventCallbackHandler) Fabric event callback handlers initialized successfully
-[21:38:46] [Render thread/INFO] (FabricModEvents) Fabric events registered successfully
-[21:38:46] [Render thread/INFO] (BusinessCraft Fabric) BusinessCraft Fabric initialized successfully!
-[21:38:46] [Render thread/INFO] (Indigo) [Indigo] Registering Indigo renderer!
-[21:38:47] [Render thread/INFO] (BusinessCraft Fabric Client) BusinessCraft Fabric client setup starting
-[21:38:47] [Render thread/WARN] (FabricEventCallbackHandler) Fabric API client event classes not available. Client events will not be registered.
-[21:38:47] [Render thread/WARN] (FabricEventCallbackHandler) This may indicate a timing issue - client events will be registered when classes become available.
-[21:38:47] [Render thread/INFO] (FabricModMessages) Registering Fabric client packet handlers...
-[21:38:47] [Render thread/WARN] (FabricModMessages) Client packet IDs or classes not initialized - skipping client packet registration
-[21:38:47] [Render thread/INFO] (BusinessCraft Fabric Client) Client packet handlers registered
-[21:38:47] [Render thread/INFO] (BusinessCraft Fabric Client) BusinessCraft Fabric client setup complete
-[21:38:47] [Render thread/INFO] (Minecraft) Backend library: LWJGL version 3.3.1 SNAPSHOT
-[21:38:47] [Render thread/ERROR] (Minecraft) Error while loading the narrator
+[23:29:21] [Render thread/INFO] (Minecraft) Setting user: Player916
+[23:29:21] [Render thread/INFO] (BusinessCraft Fabric) BusinessCraft Fabric constructor called!
+[23:29:21] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: BusinessCraft Fabric mod starting up!
+[23:29:21] [Render thread/INFO] (BusinessCraft Fabric) Registering blocks and items...
+[23:29:21] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModBlocks.register() called
+[23:29:21] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModBlocks.register() - Attempting block registration
+[23:29:21] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Simple Town Interface Block registration completed successfully!
+[23:29:21] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Block registration completed successfully!
+[23:29:21] [Render thread/INFO] (BusinessCraft Fabric) Blocks registered successfully
+[23:29:21] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Entity registration placeholder
+[23:29:21] [Render thread/INFO] (BusinessCraft Fabric) Entity types registered successfully
+[23:29:21] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModBlockEntities.register() called
+[23:29:21] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModBlockEntities.register() - Attempting block entity registration
+[23:29:21] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Skipping TownInterfaceEntity registration - uses Forge-specific MenuProvider class
+[23:29:21] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Block entity registration completed successfully!
+[23:29:21] [Render thread/INFO] (BusinessCraft Fabric) Block entities registered successfully
+[23:29:21] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModMenuTypes.register() called
+[23:29:21] [Render thread/INFO] (FabricModMenuTypes) Registering Fabric menu types...
+[23:29:21] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Skipping TownInterfaceMenu registration - may use Forge-specific classes
+[23:29:21] [Render thread/INFO] (FabricModMenuTypes) Fabric menu types registered successfully
+[23:29:21] [Render thread/INFO] (BusinessCraft Fabric) Menu types registered successfully
+[23:29:21] [Render thread/INFO] (FabricModMessages) Registering Fabric network messages...
+[23:29:21] [Render thread/WARN] (FabricModMessages) Fabric API classes not available during initialization. Network message registration will be skipped.
+[23:29:21] [Render thread/WARN] (FabricModMessages) Missing class: Could not load net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking from any classloader
+[23:29:21] [Render thread/WARN] (FabricModMessages) Network messages will be registered when classes become available.
+[23:29:21] [Render thread/INFO] (FabricModEvents) Registering Fabric events...
+[23:29:21] [Render thread/INFO] (FabricEventCallbackHandler) Initializing Fabric event callback handlers...
+[23:29:21] [Render thread/INFO] (FabricEventCallbackHandler) Skipping server event registration - running on client
+[23:29:21] [Render thread/INFO] (FabricEventCallbackHandler) Fabric event callback handlers initialized successfully
+[23:29:21] [Render thread/INFO] (FabricModEvents) Fabric events registered successfully
+[23:29:21] [Render thread/INFO] (BusinessCraft Fabric) BusinessCraft Fabric initialized successfully!
+[23:29:21] [Render thread/INFO] (Indigo) [Indigo] Registering Indigo renderer!
+[23:29:21] [Render thread/INFO] (BusinessCraft Fabric Client) BusinessCraft Fabric client setup starting
+[23:29:21] [Render thread/WARN] (FabricEventCallbackHandler) Fabric API client event classes not available. Client events will not be registered.
+[23:29:21] [Render thread/WARN] (FabricEventCallbackHandler) This may indicate a timing issue - client events will be registered when classes become available.
+[23:29:21] [Render thread/INFO] (FabricModMessages) Registering Fabric client packet handlers...
+[23:29:21] [Render thread/WARN] (FabricModMessages) Client packet IDs or classes not initialized - skipping client packet registration
+[23:29:21] [Render thread/INFO] (BusinessCraft Fabric Client) Client packet handlers registered
+[23:29:21] [Render thread/INFO] (BusinessCraft Fabric Client) BusinessCraft Fabric client setup complete
+[23:29:21] [Render thread/INFO] (Minecraft) Backend library: LWJGL version 3.3.1 SNAPSHOT
+[23:29:22] [Render thread/ERROR] (Minecraft) Error while loading the narrator
 com.mojang.text2speech.Narrator$InitializeException: Failed to load library flite
 	at com.mojang.text2speech.NarratorLinux$FliteLibrary.loadNative(NarratorLinux.java:69) ~[text2speech-1.17.9.jar:?]
 	at com.mojang.text2speech.NarratorLinux.<init>(NarratorLinux.java:18) ~[text2speech-1.17.9.jar:?]
@@ -188,11 +189,12 @@ Native library (linux-x86-64/libflite.so) not found in resource path (/home/az/p
 		at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74) ~[fabric-loader-0.15.6.jar:?]
 		at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) ~[fabric-loader-0.15.6.jar:?]
 		at net.fabricmc.devlaunchinjector.Main.main(Main.java:86) ~[dev-launch-injector-0.2.1+build.8.jar:?]
-[21:38:47] [Render thread/INFO] (Minecraft) Reloading ResourceManager: vanilla, fabric (fabric-rendering-data-attachment-v1, fabric-key-binding-api-v1, fabric-commands-v0, fabric-rendering-fluids-v1, fabric-loot-api-v2, fabric-renderer-indigo, fabric-api, fabric-events-lifecycle-v0, fabric-object-builder-api-v1, fabric-containers-v0, fabric-biome-api-v1, fabric-renderer-api-v1, fabric-particles-v1, fabric-transfer-api-v1, fabric-renderer-registries-v1, fabric-blockrenderlayer-v1, fabric-entity-events-v1, fabric-rendering-v0, fabric-convention-tags-v1, fabric-block-api-v1, fabric-lifecycle-events-v1, fabric-gametest-api-v1, fabric-mining-level-api-v1, fabric-models-v0, fabric-registry-sync-v0, fabric-keybindings-v0, fabric-client-tags-api-v1, fabric-transitive-access-wideners-v1, fabric-item-group-api-v1, fabric-item-api-v1, fabric-loot-tables-v1, fabric-model-loading-api-v1, fabric-api-lookup-api-v1, fabric-recipe-api-v1, fabric-game-rule-api-v1, fabric-dimensions-v1, fabric-events-interaction-v0, fabric-data-generation-api-v1, fabric-screen-api-v1, fabric-api-base, fabric-block-view-api-v2, fabric-sound-api-v1, fabric-networking-api-v1, fabric-command-api-v2, fabric-crash-report-info-v1, fabric-rendering-v1, fabric-screen-handler-api-v1, fabric-content-registries-v0, businesscraft, fabric-command-api-v1, fabric-networking-v0, fabric-resource-loader-v0, fabric-message-api-v1, fabric-resource-conditions-api-v1, fabricloader)
-[21:38:47] [Worker-Main-13/INFO] (Minecraft) Found unifont_all_no_pua-15.0.06.hex, loading
-[21:38:48] [Render thread/WARN] (Minecraft) Missing sound for event: minecraft:item.goat_horn.play
-[21:38:48] [Render thread/WARN] (Minecraft) Missing sound for event: minecraft:entity.goat.screaming.horn_break
-[21:38:48] [Render thread/ERROR] (Minecraft) Error starting SoundSystem. Turning off sounds & music
+[23:29:22] [Render thread/INFO] (Minecraft) Reloading ResourceManager: vanilla, fabric (fabric-client-tags-api-v1, fabric-networking-api-v1, fabric-sound-api-v1, fabric-convention-tags-v1, fabric-screen-api-v1, fabric-data-generation-api-v1, fabric-lifecycle-events-v1, fabric-loot-tables-v1, fabric-transfer-api-v1, fabric-command-api-v1, fabric-screen-handler-api-v1, fabric-object-builder-api-v1, fabric-registry-sync-v0, fabric-message-api-v1, fabric-renderer-indigo, fabric-command-api-v2, fabric-api, fabric-key-binding-api-v1, fabric-entity-events-v1, fabric-rendering-v0, fabric-renderer-api-v1, fabric-biome-api-v1, fabric-model-loading-api-v1, fabric-renderer-registries-v1, fabric-item-api-v1, fabric-dimensions-v1, fabric-rendering-v1, fabric-keybindings-v0, fabric-item-group-api-v1, fabric-loot-api-v2, fabric-api-base, fabric-content-registries-v0, fabric-recipe-api-v1, fabric-commands-v0, fabric-models-v0, fabric-resource-loader-v0, fabric-gametest-api-v1, fabric-events-lifecycle-v0, fabric-rendering-data-attachment-v1, fabric-transitive-access-wideners-v1, fabric-block-api-v1, fabric-block-view-api-v2, fabric-events-interaction-v0, fabric-rendering-fluids-v1, fabric-api-lookup-api-v1, fabric-blockrenderlayer-v1, fabricloader, fabric-networking-v0, fabric-particles-v1, businesscraft, fabric-crash-report-info-v1, fabric-containers-v0, fabric-game-rule-api-v1, fabric-mining-level-api-v1, fabric-resource-conditions-api-v1)
+[23:29:22] [Worker-Main-12/INFO] (Minecraft) Found unifont_all_no_pua-15.0.06.hex, loading
+[23:29:23] [Realms Notification Availability checker #1/INFO] (Minecraft) Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: FabricMC
+[23:29:23] [Render thread/WARN] (Minecraft) Missing sound for event: minecraft:item.goat_horn.play
+[23:29:23] [Render thread/WARN] (Minecraft) Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[23:29:23] [Render thread/ERROR] (Minecraft) Error starting SoundSystem. Turning off sounds & music
 java.lang.IllegalStateException: Failed to open OpenAL device
 	at net.minecraft.client.sound.SoundEngine.openDeviceOrFallback(SoundEngine.java:283) ~[minecraft-merged-51c0cfe141-1.20.1-net.fabricmc.yarn.1_20_1.1.20.1+build.10-v2.jar:?]
 	at net.minecraft.client.sound.SoundEngine.init(SoundEngine.java:153) ~[minecraft-merged-51c0cfe141-1.20.1-net.fabricmc.yarn.1_20_1.1.20.1+build.10-v2.jar:?]
@@ -215,58 +217,56 @@ java.lang.IllegalStateException: Failed to open OpenAL device
 	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74) ~[fabric-loader-0.15.6.jar:?]
 	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) ~[fabric-loader-0.15.6.jar:?]
 	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86) ~[dev-launch-injector-0.2.1+build.8.jar:?]
-[21:38:48] [Realms Notification Availability checker #1/INFO] (Minecraft) Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: FabricMC
-[21:38:48] [Render thread/INFO] (Minecraft) Created: 1024x512x4 minecraft:textures/atlas/blocks.png-atlas
-[21:38:48] [Render thread/INFO] (Minecraft) Created: 256x256x4 minecraft:textures/atlas/signs.png-atlas
-[21:38:48] [Render thread/INFO] (Minecraft) Created: 512x512x4 minecraft:textures/atlas/banner_patterns.png-atlas
-[21:38:48] [Render thread/INFO] (Minecraft) Created: 512x512x4 minecraft:textures/atlas/shield_patterns.png-atlas
-[21:38:48] [Render thread/INFO] (Minecraft) Created: 1024x1024x4 minecraft:textures/atlas/armor_trims.png-atlas
-[21:38:48] [Render thread/INFO] (Minecraft) Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
-[21:38:48] [Render thread/INFO] (Minecraft) Created: 128x64x4 minecraft:textures/atlas/decorated_pot.png-atlas
-[21:38:48] [Render thread/INFO] (Minecraft) Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
-[21:38:48] [Render thread/INFO] (Minecraft) Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
-[21:38:49] [Render thread/WARN] (Minecraft) Shader rendertype_entity_translucent_emissive could not find sampler named Sampler2 in the specified shader program.
-[21:38:49] [Render thread/INFO] (Minecraft) Created: 256x256x0 minecraft:textures/atlas/particles.png-atlas
-[21:38:49] [Render thread/INFO] (Minecraft) Created: 256x256x0 minecraft:textures/atlas/paintings.png-atlas
-[21:38:49] [Render thread/INFO] (Minecraft) Created: 128x128x0 minecraft:textures/atlas/mob_effects.png-atlas
-[21:38:52] [Thread-5/ERROR] (BusinessCraft Fabric Client) Key handler initialization failed after 10 retries.
-[21:38:52] [Thread-3/ERROR] (BusinessCraft Fabric Client) Screen registration failed after 10 retries.
-[21:38:52] [Thread-4/ERROR] (BusinessCraft Fabric Client) Rendering initialization failed after 10 retries.
-[21:39:19] [Worker-Main-23/ERROR] (Minecraft) Couldn't load tag minecraft:mineable/pickaxe as it is missing following references: businesscraft:town_block (from fabric)
-[21:39:20] [Render thread/INFO] (Minecraft) Loaded 7 recipes
-[21:39:20] [Render thread/INFO] (Minecraft) Loaded 1271 advancements
-[21:39:20] [Render thread/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 64 new biomes in 1.186 ms
-[21:39:20] [Server thread/INFO] (Minecraft) Starting integrated minecraft server version 1.20.1
-[21:39:20] [Server thread/INFO] (Minecraft) Generating keypair
-[21:39:20] [Server thread/INFO] (Minecraft) Preparing start region for dimension minecraft:overworld
-[21:39:21] [Render thread/INFO] (Minecraft) Preparing spawn area: 0%
-[21:39:21] [Render thread/INFO] (Minecraft) Preparing spawn area: 0%
-[21:39:21] [Render thread/INFO] (Minecraft) Preparing spawn area: 0%
-[21:39:22] [Render thread/INFO] (Minecraft) Preparing spawn area: 67%
-[21:39:22] [Render thread/INFO] (Minecraft) Time elapsed: 1619 ms
-[21:39:22] [Server thread/INFO] (Minecraft) Changing view distance to 12, from 10
-[21:39:22] [Server thread/INFO] (Minecraft) Changing simulation distance to 12, from 0
-[21:39:22] [Server thread/INFO] (Minecraft) Player418[local:E:26571472] logged in with entity id 16 at (-1.5, -60.0, -3.5)
-[21:39:22] [Server thread/INFO] (Minecraft) Player418 joined the game
-[21:39:22] [Render thread/INFO] (Minecraft) Loaded 11 advancements
-[21:39:24] [Thread-2/WARN] (FabricEventCallbackHandler) Client event registration failed after 10 retries.
-[21:39:28] [Server thread/INFO] (Minecraft) [Player418: Gave 1 [Town Interface] to Player418]
-[21:39:28] [Render thread/INFO] (Minecraft) [System] [CHAT] Gave 1 [Town Interface] to Player418
-[21:39:42] [Server thread/INFO] (Minecraft) Saving and pausing game...
-[21:39:42] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
-[21:39:42] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
-[21:39:42] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
-[21:39:43] [Server thread/INFO] (Minecraft) Player418 lost connection: Disconnected
-[21:39:43] [Server thread/INFO] (Minecraft) Player418 left the game
-[21:39:43] [Server thread/INFO] (Minecraft) Stopping singleplayer server as player logged out
-[21:39:44] [Server thread/INFO] (Minecraft) Stopping server
-[21:39:44] [Server thread/INFO] (Minecraft) Saving players
-[21:39:44] [Server thread/INFO] (Minecraft) Saving worlds
-[21:39:44] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
-[21:39:44] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
-[21:39:44] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
-[21:39:44] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (New World (1)): All chunks are saved
-[21:39:44] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[21:39:44] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[21:39:44] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-[21:40:41] [Render thread/INFO] (Minecraft) Stopping!
+[23:29:23] [Render thread/INFO] (Minecraft) Created: 1024x512x4 minecraft:textures/atlas/blocks.png-atlas
+[23:29:23] [Render thread/INFO] (Minecraft) Created: 256x256x4 minecraft:textures/atlas/signs.png-atlas
+[23:29:23] [Render thread/INFO] (Minecraft) Created: 512x512x4 minecraft:textures/atlas/shield_patterns.png-atlas
+[23:29:23] [Render thread/INFO] (Minecraft) Created: 512x512x4 minecraft:textures/atlas/banner_patterns.png-atlas
+[23:29:23] [Render thread/INFO] (Minecraft) Created: 1024x1024x4 minecraft:textures/atlas/armor_trims.png-atlas
+[23:29:23] [Render thread/INFO] (Minecraft) Created: 128x64x4 minecraft:textures/atlas/decorated_pot.png-atlas
+[23:29:23] [Render thread/INFO] (Minecraft) Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
+[23:29:23] [Render thread/INFO] (Minecraft) Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
+[23:29:23] [Render thread/INFO] (Minecraft) Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
+[23:29:24] [Render thread/WARN] (Minecraft) Shader rendertype_entity_translucent_emissive could not find sampler named Sampler2 in the specified shader program.
+[23:29:24] [Render thread/INFO] (Minecraft) Created: 256x256x0 minecraft:textures/atlas/particles.png-atlas
+[23:29:24] [Render thread/INFO] (Minecraft) Created: 256x256x0 minecraft:textures/atlas/paintings.png-atlas
+[23:29:24] [Render thread/INFO] (Minecraft) Created: 128x128x0 minecraft:textures/atlas/mob_effects.png-atlas
+[23:29:26] [Thread-3/ERROR] (BusinessCraft Fabric Client) Screen registration failed after 10 retries.
+[23:29:26] [Thread-5/ERROR] (BusinessCraft Fabric Client) Key handler initialization failed after 10 retries.
+[23:29:26] [Thread-4/ERROR] (BusinessCraft Fabric Client) Rendering initialization failed after 10 retries.
+[23:29:33] [Worker-Main-19/ERROR] (Minecraft) Couldn't load tag minecraft:mineable/pickaxe as it is missing following references: businesscraft:town_block (from fabric)
+[23:29:34] [Render thread/INFO] (Minecraft) Loaded 7 recipes
+[23:29:34] [Render thread/INFO] (Minecraft) Loaded 1271 advancements
+[23:29:34] [Render thread/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 64 new biomes in 1.580 ms
+[23:29:34] [Server thread/INFO] (Minecraft) Starting integrated minecraft server version 1.20.1
+[23:29:34] [Server thread/INFO] (Minecraft) Generating keypair
+[23:29:34] [Server thread/INFO] (Minecraft) Preparing start region for dimension minecraft:overworld
+[23:29:35] [Render thread/INFO] (Minecraft) Preparing spawn area: 0%
+[23:29:35] [Render thread/INFO] (Minecraft) Preparing spawn area: 0%
+[23:29:35] [Render thread/INFO] (Minecraft) Preparing spawn area: 0%
+[23:29:35] [Render thread/INFO] (Minecraft) Preparing spawn area: 37%
+[23:29:36] [Render thread/INFO] (Minecraft) Time elapsed: 1809 ms
+[23:29:36] [Server thread/INFO] (Minecraft) Changing view distance to 12, from 10
+[23:29:36] [Server thread/INFO] (Minecraft) Changing simulation distance to 12, from 0
+[23:29:36] [Server thread/INFO] (Minecraft) Player916[local:E:e32962d7] logged in with entity id 16 at (-1.4549360181040978, -60.0, -2.8434450388343766)
+[23:29:36] [Server thread/INFO] (Minecraft) Player916 joined the game
+[23:29:36] [Render thread/INFO] (Minecraft) Loaded 11 advancements
+[23:29:46] [Server thread/INFO] (Minecraft) [Player916: Gave 1 [Town Interface] to Player916]
+[23:29:46] [Render thread/INFO] (Minecraft) [System] [CHAT] Gave 1 [Town Interface] to Player916
+[23:29:50] [Server thread/INFO] (Minecraft) Saving and pausing game...
+[23:29:50] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
+[23:29:50] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
+[23:29:50] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
+[23:29:52] [Render thread/INFO] (Minecraft) Stopping!
+[23:29:52] [Server thread/INFO] (Minecraft) Player916 lost connection: Disconnected
+[23:29:52] [Server thread/INFO] (Minecraft) Player916 left the game
+[23:29:52] [Server thread/INFO] (Minecraft) Stopping singleplayer server as player logged out
+[23:29:52] [Server thread/INFO] (Minecraft) Stopping server
+[23:29:52] [Server thread/INFO] (Minecraft) Saving players
+[23:29:52] [Server thread/INFO] (Minecraft) Saving worlds
+[23:29:52] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
+[23:29:52] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
+[23:29:52] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
+[23:29:52] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (New World (1)): All chunks are saved
+[23:29:52] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[23:29:52] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[23:29:52] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
