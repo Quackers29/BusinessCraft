@@ -46,7 +46,8 @@ public class FabricModBlockEntities {
             System.out.println("DEBUG: Found TownInterfaceBlock in registry");
 
             // Create BlockEntityType using Builder pattern
-            Class<?> townInterfaceEntityClass = classLoader.loadClass("com.quackers29.businesscraft.fabric.block.entity.TownInterfaceEntity");
+            // Use the common TownInterfaceEntity class via reflection (it's excluded from Fabric source sets but available at runtime)
+            Class<?> townInterfaceEntityClass = classLoader.loadClass("com.quackers29.businesscraft.block.entity.TownInterfaceEntity");
 
             Object blockEntityTypeBuilder = blockEntityTypeClass.getMethod("Builder", Class.class)
                 .invoke(null, townInterfaceEntityClass);
@@ -93,9 +94,14 @@ public class FabricModBlockEntities {
     private static Object createEntitySupplier(ClassLoader classLoader) throws Exception {
         return (java.util.function.BiFunction<Object, Object, Object>) (blockPos, blockState) -> {
             try {
-                Class<?> townInterfaceEntityClass = classLoader.loadClass("com.quackers29.businesscraft.fabric.block.entity.TownInterfaceEntity");
+                // Use the common TownInterfaceEntity class via reflection
+                // It's excluded from Fabric source sets but available at runtime via common module JAR
+                Class<?> townInterfaceEntityClass = classLoader.loadClass("com.quackers29.businesscraft.block.entity.TownInterfaceEntity");
                 Class<?> blockPosClass = classLoader.loadClass("net.minecraft.core.BlockPos");
                 Class<?> blockStateClass = classLoader.loadClass("net.minecraft.world.level.block.state.BlockState");
+                
+                // Create TownInterfaceEntity instance using constructor that takes BlockPos and BlockState
+                // The constructor internally calls PlatformAccess.getBlockEntities().getTownInterfaceEntityType()
                 return townInterfaceEntityClass.getConstructor(
                     blockPosClass,
                     blockStateClass

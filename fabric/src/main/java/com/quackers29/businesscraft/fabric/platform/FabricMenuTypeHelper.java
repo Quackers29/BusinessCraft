@@ -15,22 +15,22 @@ public class FabricMenuTypeHelper implements MenuTypeHelper {
 
     @Override
     public Object getTownInterfaceMenuType() {
-        return townInterfaceMenuType;
+        return getTownInterfaceMenuTypeStatic();
     }
 
     @Override
     public Object getTradeMenuType() {
-        return tradeMenuType;
+        return getTradeMenuTypeStatic();
     }
 
     @Override
     public Object getStorageMenuType() {
-        return storageMenuType;
+        return getStorageMenuTypeStatic();
     }
 
     @Override
     public Object getPaymentBoardMenuType() {
-        return paymentBoardMenuType;
+        return getPaymentBoardMenuTypeStatic();
     }
     
     /**
@@ -50,5 +50,24 @@ public class FabricMenuTypeHelper implements MenuTypeHelper {
 
     public static void setPaymentBoardMenuType(Object menuType) {
         paymentBoardMenuType = menuType;
+    }
+    
+    /**
+     * Static getters for menu types - for use in client setup
+     */
+    public static Object getTownInterfaceMenuTypeStatic() {
+        return townInterfaceMenuType;
+    }
+
+    public static Object getTradeMenuTypeStatic() {
+        return tradeMenuType;
+    }
+
+    public static Object getStorageMenuTypeStatic() {
+        return storageMenuType;
+    }
+
+    public static Object getPaymentBoardMenuTypeStatic() {
+        return paymentBoardMenuType;
     }
 }
