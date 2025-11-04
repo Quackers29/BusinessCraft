@@ -291,16 +291,18 @@ public class FabricEventCallbackHandler {
                                                         boolean inPathMode = (Boolean) isInPathCreationModeMethod.invoke(blockEntity);
                                                         
                                                         if (inPathMode) {
+                                                            // Load Component class and methods for messages (used multiple times)
+                                                            Class<?> componentClass = classLoader.loadClass("net.minecraft.network.chat.Component");
+                                                            java.lang.reflect.Method literalMethod = componentClass.getMethod("literal", String.class);
+                                                            java.lang.reflect.Method sendSystemMessageMethod = playerClass.getMethod("sendSystemMessage", componentClass);
+                                                            
                                                             // Check valid distance
                                                             java.lang.reflect.Method isValidPathDistanceMethod = townInterfaceEntityClass.getMethod("isValidPathDistance", blockPosClass);
                                                             boolean validDistance = (Boolean) isValidPathDistanceMethod.invoke(blockEntity, clickedPos);
                                                             
                                                             if (!validDistance) {
                                                                 // Send message to player
-                                                                Class<?> componentClass = classLoader.loadClass("net.minecraft.network.chat.Component");
-                                                                java.lang.reflect.Method literalMethod = componentClass.getMethod("literal", String.class);
                                                                 Object message = literalMethod.invoke(null, "Point too far from town!");
-                                                                java.lang.reflect.Method sendSystemMessageMethod = playerClass.getMethod("sendSystemMessage", componentClass);
                                                                 sendSystemMessageMethod.invoke(player, message);
                                                                 
                                                                 // Cancel event
@@ -470,8 +472,7 @@ public class FabricEventCallbackHandler {
             
             // Register key input callback - Fabric uses ClientTickEvents to check key states
             try {
-                ClassLoader classLoader = FabricEventCallbackHandler.class.getClassLoader();
-                Class<?> clientTickEventsClass = classLoader.loadClass("net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents");
+                // Reuse classLoader and clientTickEventsClass from above
                 Class<?> keyBindingClass = classLoader.loadClass("net.minecraft.client.KeyMapping");
                 
                 // Get END_CLIENT_TICK event
@@ -525,20 +526,9 @@ public class FabricEventCallbackHandler {
                 LOGGER.warn("Could not register key input event", e);
             }
             
-            // Register mouse scroll callback - Fabric uses MouseEvents
-            try {
-                ClassLoader classLoader = FabricEventCallbackHandler.class.getClassLoader();
-                Class<?> mouseEventsClass = classLoader.loadClass("net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents");
-                
-                // Use client tick to check mouse scroll state
-                // Actually, Fabric doesn't have a direct mouse scroll event, so we'll use a different approach
-                // We'll register a screen-level handler or use a mixin
-                // For now, mouse scroll is handled at the screen level in common module screens
-                // This is a placeholder - mouse scroll is typically handled in Screen classes
-                LOGGER.info("Mouse scroll callback registration - handled at screen level");
-            } catch (Exception e) {
-                LOGGER.warn("Could not register mouse scroll event", e);
-            }
+            // Register mouse scroll callback - Mouse scroll is handled at screen level in common module screens
+            // This is a placeholder - mouse scroll is typically handled in Screen classes
+            LOGGER.info("Mouse scroll callback registration - handled at screen level");
             
             // Register render level callback - Fabric uses WorldRenderEvents (handled by RenderHelper)
             // Render level callbacks are already handled by FabricRenderHelper.registerWorldRenderCallback()
