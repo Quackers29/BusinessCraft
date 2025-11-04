@@ -59,12 +59,13 @@ public class FabricModMessages {
 
         try {
             // Use reflection to access Fabric's networking APIs
+            // Classes are loaded lazily when actually needed
             ClassLoader classLoader = FabricModMessages.class.getClassLoader();
             
-            // Load Fabric networking classes
-            Class<?> serverPlayNetworkingClass = classLoader.loadClass("net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking");
-            Class<?> clientPlayNetworkingClass = classLoader.loadClass("net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking");
-            Class<?> identifierClass = classLoader.loadClass("net.minecraft.util.Identifier");
+            // Load Fabric networking classes with fallback
+            Class<?> serverPlayNetworkingClass = loadClassWithFallback(classLoader, "net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking");
+            Class<?> clientPlayNetworkingClass = loadClassWithFallback(classLoader, "net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking");
+            Class<?> identifierClass = loadClassWithFallback(classLoader, "net.minecraft.util.Identifier");
             Class<?> packetByteBufClass = classLoader.loadClass("net.minecraft.network.PacketByteBuf");
             Class<?> friendlyByteBufClass = classLoader.loadClass("net.minecraft.network.FriendlyByteBuf");
             
@@ -135,6 +136,11 @@ public class FabricModMessages {
             
             LOGGER.info("Fabric network messages registered successfully ({} server packets, {} client packets)", 
                 24, CLIENT_PACKET_IDS.length);
+        } catch (ClassNotFoundException e) {
+            LOGGER.warn("Fabric API classes not available during initialization. Network message registration will be skipped.");
+            LOGGER.warn("Missing class: " + e.getMessage());
+            LOGGER.warn("Network messages will be registered when classes become available.");
+            // Don't fail the mod initialization - network can be registered later if needed
         } catch (Exception e) {
             LOGGER.error("Error registering network messages", e);
             e.printStackTrace();
@@ -427,5 +433,24 @@ public class FabricModMessages {
         String simpleName = packetClass.getSimpleName();
         // Convert CamelCase to snake_case
         return simpleName.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase();
+    }
+    
+    /**
+     * Load class with fallback classloaders
+     */
+    private static Class<?> loadClassWithFallback(ClassLoader classLoader, String className) throws ClassNotFoundException {
+        try {
+            return classLoader.loadClass(className);
+        } catch (ClassNotFoundException e1) {
+            try {
+                ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+                if (contextClassLoader != null) {
+                    return contextClassLoader.loadClass(className);
+                }
+            } catch (ClassNotFoundException e2) {
+                // Fall through
+            }
+            throw new ClassNotFoundException("Could not load " + className + " from any classloader", e1);
+        }
     }
 }

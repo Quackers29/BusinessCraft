@@ -77,6 +77,20 @@ sourceSets.main.java.exclude '**/town/TownManager.java'
 
 sourceSets.main.resources.srcDirs += project(':common').sourceSets.main.resources.srcDirs
 
+// Exclude loot tables from Fabric (they reference items that may not be registered yet)
+// We can add Fabric-specific loot tables later if needed
+sourceSets.main.resources.exclude '**/loot_tables/**/*.json'
+
+// Process resources to replace version placeholder
+processResources {
+    inputs.property "version", project.version
+    inputs.property "mod_version", project.findProperty('mod_version') ?: project.version
+
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
 jar {
     from("LICENSE") {
         rename { "${it}_${project.base.archivesBaseName}" }

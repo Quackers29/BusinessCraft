@@ -67,10 +67,35 @@ public class BusinessCraftFabric implements ModInitializer {
         // ClientHelper and RenderHelper will be initialized in clientSetup() - only available on client side
 
         // Register Fabric-specific registrations
-        FabricModBlocks.register();
-        FabricModEntityTypes.register();
-        FabricModBlockEntities.register();
-        FabricModMenuTypes.register(); // Menu types registration
+        // Register blocks and items during mod initialization
+        LOGGER.info("Registering blocks and items...");
+        try {
+            FabricModBlocks.register();
+            LOGGER.info("Blocks registered successfully");
+        } catch (Exception e) {
+            LOGGER.error("Failed to register blocks", e);
+        }
+
+        try {
+            FabricModEntityTypes.register();
+            LOGGER.info("Entity types registered successfully");
+        } catch (Exception e) {
+            LOGGER.error("Failed to register entity types", e);
+        }
+
+        try {
+            FabricModBlockEntities.register();
+            LOGGER.info("Block entities registered successfully");
+        } catch (Exception e) {
+            LOGGER.error("Failed to register block entities", e);
+        }
+
+        try {
+            FabricModMenuTypes.register();
+            LOGGER.info("Menu types registered successfully");
+        } catch (Exception e) {
+            LOGGER.error("Failed to register menu types", e);
+        }
 
         // Initialize networking
         FabricModMessages.register();

@@ -20,11 +20,16 @@ public class FabricRenderHelper implements RenderHelper {
     private final Map<String, OverlayRenderer> registeredOverlays = new ConcurrentHashMap<>();
     private final Map<String, WorldRenderCallback> worldRenderCallbacks = new ConcurrentHashMap<>();
     
-    // Cache reflected classes for performance
+    // Cache reflected classes for performance - lazy initialization
     private static Class<?> guiGraphicsClass;
     private static boolean initialized = false;
     
-    static {
+    /**
+     * Lazy initialization of reflection classes
+     */
+    private static synchronized void ensureInitialized() {
+        if (initialized) return;
+        
         try {
             ClassLoader classLoader = FabricRenderHelper.class.getClassLoader();
             guiGraphicsClass = classLoader.loadClass("net.minecraft.client.gui.GuiGraphics");
@@ -44,6 +49,7 @@ public class FabricRenderHelper implements RenderHelper {
     
     @Override
     public void registerOverlay(String overlayId, OverlayRenderer overlay) {
+        ensureInitialized();
         registeredOverlays.put(overlayId, overlay);
         // Register with Fabric's InGameHud using reflection
         registerOverlayWithFabric(overlayId, overlay);

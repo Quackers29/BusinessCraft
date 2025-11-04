@@ -6,6 +6,10 @@ plugins {
     id 'idea'
 }
 
+// Set version and group from gradle.properties
+version = project.findProperty('mod_version') ?: '1.0.0'
+group = project.findProperty('mod_group') ?: 'com.quackers29.businesscraft'
+
 // Apply Java configuration to all subprojects
 subprojects {
     apply plugin: 'java'

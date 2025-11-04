@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 public class FabricItemHandlerHelper implements ItemHandlerHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(FabricItemHandlerHelper.class);
     
-    // Cache reflected classes for performance
+    // Cache reflected classes for performance - lazy initialization
     private static Class<?> itemStackHandlerClass;
     private static Class<?> lazyOptionalClass;
     private static Class<?> slotItemHandlerClass;
@@ -21,8 +21,14 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
     private static Class<?> itemStackClass;
     private static Class<?> compoundTagClass;
     private static Object emptyItemStack;
+    private static boolean initialized = false;
     
-    static {
+    /**
+     * Lazy initialization of reflection classes
+     */
+    private static synchronized void ensureInitialized() {
+        if (initialized) return;
+        
         try {
             ClassLoader classLoader = FabricItemHandlerHelper.class.getClassLoader();
             itemStackHandlerClass = classLoader.loadClass("net.minecraftforge.items.ItemStackHandler");
@@ -35,13 +41,20 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
             // Get empty ItemStack
             java.lang.reflect.Field emptyField = itemStackClass.getField("EMPTY");
             emptyItemStack = emptyField.get(null);
+            
+            initialized = true;
         } catch (Exception e) {
             LOGGER.error("Error initializing FabricItemHandlerHelper reflection classes", e);
+            initialized = false;
         }
     }
     
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public Object createItemStackHandler(int size) {
+        ensureInitialized();
+        if (!initialized) {
+            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
+        }
         try {
             java.lang.reflect.Constructor<?> constructor = itemStackHandlerClass.getConstructor(int.class);
             return constructor.newInstance(size);
@@ -53,6 +66,10 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
 
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public int getSlots(Object itemHandler) {
+        ensureInitialized();
+        if (!initialized) {
+            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
+        }
         try {
             if (itemStackHandlerClass.isInstance(itemHandler)) {
                 java.lang.reflect.Method method = itemStackHandlerClass.getMethod("getSlots");
@@ -67,6 +84,10 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
 
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public void setStackInSlot(Object itemHandler, int slot, Object stack) {
+        ensureInitialized();
+        if (!initialized) {
+            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
+        }
         try {
             if (itemStackHandlerClass.isInstance(itemHandler) && itemStackClass.isInstance(stack)) {
                 java.lang.reflect.Method method = itemStackHandlerClass.getMethod("setStackInSlot", int.class, itemStackClass);
@@ -82,6 +103,10 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
 
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public Object getStackInSlot(Object itemHandler, int slot) {
+        ensureInitialized();
+        if (!initialized) {
+            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
+        }
         try {
             if (itemStackHandlerClass.isInstance(itemHandler)) {
                 java.lang.reflect.Method method = itemStackHandlerClass.getMethod("getStackInSlot", int.class);
@@ -96,6 +121,10 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
 
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public Object createSlot(Object itemHandler, int index, int x, int y) {
+        ensureInitialized();
+        if (!initialized) {
+            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
+        }
         try {
             if (itemStackHandlerClass.isInstance(itemHandler)) {
                 java.lang.reflect.Constructor<?> constructor = slotItemHandlerClass.getConstructor(
@@ -119,6 +148,10 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
 
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public Object createLazyOptional(Object itemHandler) {
+        ensureInitialized();
+        if (!initialized) {
+            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
+        }
         try {
             if (iItemHandlerClass.isInstance(itemHandler)) {
                 java.lang.reflect.Method ofMethod = lazyOptionalClass.getMethod("of", java.util.function.Supplier.class);
@@ -134,6 +167,8 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
 
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public boolean isItemHandlerCapability(Object capability) {
+        ensureInitialized();
+        if (!initialized) return false;
         try {
             // Check if capability is ForgeCapabilities.ITEM_HANDLER
             Class<?> forgeCapabilitiesClass = Class.forName("net.minecraftforge.common.capabilities.ForgeCapabilities");
@@ -148,6 +183,10 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
 
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public Object getEmptyLazyOptional() {
+        ensureInitialized();
+        if (!initialized) {
+            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
+        }
         try {
             java.lang.reflect.Method emptyMethod = lazyOptionalClass.getMethod("empty");
             return emptyMethod.invoke(null);
@@ -159,6 +198,8 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
 
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public Object castLazyOptional(Object lazyOptional, Object capability) {
+        ensureInitialized();
+        if (!initialized) return lazyOptional;
         try {
             if (lazyOptionalClass.isInstance(lazyOptional)) {
                 java.lang.reflect.Method castMethod = lazyOptionalClass.getMethod("cast");
@@ -173,6 +214,10 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
 
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public Object createCustomItemStackHandler(int size, Runnable onContentsChanged) {
+        ensureInitialized();
+        if (!initialized) {
+            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
+        }
         try {
             // Create a regular ItemStackHandler
             // Note: Callback functionality would require subclassing, which is complex with reflection
@@ -191,6 +236,8 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
 
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public void invalidateLazyOptional(Object lazyOptional) {
+        ensureInitialized();
+        if (!initialized) return;
         try {
             if (lazyOptionalClass.isInstance(lazyOptional)) {
                 java.lang.reflect.Method invalidateMethod = lazyOptionalClass.getMethod("invalidate");
@@ -203,6 +250,10 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
 
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public Object serializeNBT(Object itemHandler) {
+        ensureInitialized();
+        if (!initialized) {
+            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
+        }
         try {
             if (itemStackHandlerClass.isInstance(itemHandler)) {
                 java.lang.reflect.Method method = itemStackHandlerClass.getMethod("serializeNBT");
@@ -217,6 +268,10 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
 
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public void deserializeNBT(Object itemHandler, Object nbt) {
+        ensureInitialized();
+        if (!initialized) {
+            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
+        }
         try {
             if (itemStackHandlerClass.isInstance(itemHandler) && compoundTagClass.isInstance(nbt)) {
                 java.lang.reflect.Method method = itemStackHandlerClass.getMethod("deserializeNBT", compoundTagClass);
@@ -232,6 +287,8 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
 
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public Object extractItem(Object itemHandler, int slot, int amount, boolean simulate) {
+        ensureInitialized();
+        if (!initialized) return emptyItemStack;
         try {
             if (iItemHandlerClass.isInstance(itemHandler)) {
                 java.lang.reflect.Method method = iItemHandlerClass.getMethod("extractItem", int.class, int.class, boolean.class);
@@ -247,6 +304,8 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
 
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public Object insertItem(Object itemHandler, int slot, Object stack, boolean simulate) {
+        ensureInitialized();
+        if (!initialized) return stack;
         try {
             if (iItemHandlerClass.isInstance(itemHandler) && itemStackClass.isInstance(stack)) {
                 java.lang.reflect.Method method = iItemHandlerClass.getMethod("insertItem", int.class, itemStackClass, boolean.class);
@@ -262,6 +321,10 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
     
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public Object createStorageWrapper(SlotBasedStorageAccess storage) {
+        ensureInitialized();
+        if (!initialized) {
+            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
+        }
         try {
             // Create a wrapper class that extends ItemStackHandler and delegates to SlotBasedStorage
             return new SlotBasedItemStackHandlerWrapper(storage);
@@ -281,6 +344,10 @@ public class FabricItemHandlerHelper implements ItemHandlerHelper {
         
         public SlotBasedItemStackHandlerWrapper(SlotBasedStorageAccess storage) {
             this.storage = storage;
+            ensureInitialized();
+            if (!initialized) {
+                throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
+            }
             try {
                 java.lang.reflect.Constructor<?> constructor = itemStackHandlerClass.getConstructor(int.class);
                 this.itemStackHandler = constructor.newInstance(storage.getSlotCount());

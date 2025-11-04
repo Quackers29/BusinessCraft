@@ -3,7 +3,7 @@ Specification-Title: businesscraft
 Specification-Vendor: Quackers29
 Specification-Version: 1
 Implementation-Title: BusinessCraft
-Implementation-Version: unspecified
+Implementation-Version: 1.0.0
 Implementation-Vendor: Quackers29
-Implementation-Timestamp: 2025-11-04T15:58:19+0000
+Implementation-Timestamp: 2025-11-04T21:38:41+0000
 

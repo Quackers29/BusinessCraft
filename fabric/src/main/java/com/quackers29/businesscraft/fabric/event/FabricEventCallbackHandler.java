@@ -28,22 +28,44 @@ public class FabricEventCallbackHandler {
     private static final List<EventCallbacks.LevelUnloadCallback> levelUnloadCallbacks = new ArrayList<>();
     
     /**
+     * Check if we're running on a server (as opposed to client-only)
+     */
+    private static boolean isServerSide() {
+        try {
+            ClassLoader classLoader = FabricEventCallbackHandler.class.getClassLoader();
+            // Try to load server-only classes
+            classLoader.loadClass("net.minecraft.server.level.ServerPlayer");
+            classLoader.loadClass("net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    /**
      * Initialize Fabric event handlers
      */
     public static void initialize() {
         LOGGER.info("Initializing Fabric event callback handlers...");
         
         try {
-            // Register server-side events
-            registerServerEvents();
+            // Only register server-side events if we're on a server
+            if (isServerSide()) {
+                registerServerEvents();
+            } else {
+                LOGGER.info("Skipping server event registration - running on client");
+            }
             
             // Register client-side events (will be called from FabricClientSetup)
             // Client events are registered separately in FabricClientSetup
             
             LOGGER.info("Fabric event callback handlers initialized successfully");
         } catch (Exception e) {
-            LOGGER.error("Error initializing Fabric event callback handlers", e);
-            e.printStackTrace();
+            LOGGER.warn("Error initializing Fabric event callback handlers (non-fatal)", e);
+            // Don't print stack trace for expected errors on client
+            if (isServerSide()) {
+                e.printStackTrace();
+            }
         }
     }
     
@@ -51,13 +73,19 @@ public class FabricEventCallbackHandler {
      * Register server-side events using Fabric's event API
      */
     private static void registerServerEvents() {
+        // Double-check we're on server side
+        if (!isServerSide()) {
+            LOGGER.debug("Skipping server event registration - not on server");
+            return;
+        }
+        
         try {
             ClassLoader classLoader = FabricEventCallbackHandler.class.getClassLoader();
             
-            // Load Fabric event classes
-            Class<?> serverTickEventsClass = classLoader.loadClass("net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents");
-            Class<?> serverPlayerEventsClass = classLoader.loadClass("net.fabricmc.fabric.api.event.lifecycle.v1.ServerPlayerEvents");
-            Class<?> serverWorldEventsClass = classLoader.loadClass("net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents");
+            // Load Fabric event classes with fallback
+            Class<?> serverTickEventsClass = loadClassWithFallback(classLoader, "net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents");
+            Class<?> serverPlayerEventsClass = loadClassWithFallback(classLoader, "net.fabricmc.fabric.api.event.lifecycle.v1.ServerPlayerEvents");
+            Class<?> serverWorldEventsClass = loadClassWithFallback(classLoader, "net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents");
             
             // Load Minecraft classes for type checking (but not for compile-time use)
             Class<?> serverPlayerClass = classLoader.loadClass("net.minecraft.server.level.ServerPlayer");
@@ -413,9 +441,13 @@ public class FabricEventCallbackHandler {
             }
             
             LOGGER.info("Server-side Fabric events registered successfully");
+        } catch (ClassNotFoundException e) {
+            LOGGER.warn("Fabric API server event classes not available. Server events will not be registered.");
+            LOGGER.warn("This is expected on client-side - server events will be registered when running on a server.");
+            // Don't fail - this is expected on client
         } catch (Exception e) {
             LOGGER.error("Error registering server events", e);
-            e.printStackTrace();
+            // Don't fail initialization - events can be registered later if needed
         }
     }
     
@@ -426,9 +458,9 @@ public class FabricEventCallbackHandler {
         try {
             ClassLoader classLoader = FabricEventCallbackHandler.class.getClassLoader();
             
-            // Load Fabric client event classes
-            Class<?> clientTickEventsClass = classLoader.loadClass("net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents");
-            Class<?> clientWorldEventsClass = classLoader.loadClass("net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents");
+            // Load Fabric client event classes with fallback
+            Class<?> clientTickEventsClass = loadClassWithFallback(classLoader, "net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents");
+            Class<?> clientWorldEventsClass = loadClassWithFallback(classLoader, "net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents");
             
             // Load Minecraft Level class for type checking (client-side)
             Class<?> clientLevelClass = classLoader.loadClass("net.minecraft.world.level.Level");
@@ -538,9 +570,127 @@ public class FabricEventCallbackHandler {
             LOGGER.info("Render level callbacks handled via RenderHelper");
             
             LOGGER.info("Client-side Fabric events registered successfully");
+        } catch (ClassNotFoundException e) {
+            LOGGER.warn("Fabric API client event classes not available. Client events will not be registered.");
+            LOGGER.warn("This may indicate a timing issue - client events will be registered when classes become available.");
+            // Schedule retry
+            scheduleDelayedClientEvents();
         } catch (Exception e) {
             LOGGER.error("Error registering client events", e);
-            e.printStackTrace();
+            // Schedule retry
+            scheduleDelayedClientEvents();
+        }
+    }
+    
+    /**
+     * Schedule delayed client events registration
+     */
+    private static void scheduleDelayedClientEvents() {
+        new Thread(() -> {
+            int maxRetries = 10;
+            int retryCount = 0;
+            int delayMs = 500;
+            
+            while (retryCount < maxRetries) {
+                try {
+                    Thread.sleep(delayMs);
+                    retryCount++;
+                    
+                    try {
+                        ClassLoader classLoader = FabricEventCallbackHandler.class.getClassLoader();
+                        classLoader.loadClass("net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents");
+                        classLoader.loadClass("net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents");
+                        
+                        LOGGER.info("Retrying client event registration (attempt {})...", retryCount);
+                        // Retry registration - but avoid infinite recursion by calling internal method
+                        registerClientEventsInternal();
+                        LOGGER.info("Client events registered successfully on retry!");
+                        return;
+                    } catch (ClassNotFoundException e) {
+                        delayMs = Math.min(delayMs * 2, 5000);
+                        continue;
+                    } catch (Exception e) {
+                        LOGGER.warn("Client event registration failed on retry {}: {}", retryCount, e.getMessage());
+                        delayMs = Math.min(delayMs * 2, 5000);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+            
+            LOGGER.warn("Client event registration failed after {} retries.", maxRetries);
+        }).start();
+    }
+    
+    /**
+     * Internal method to register client events (used by retry mechanism)
+     */
+    private static void registerClientEventsInternal() {
+        // Same logic as registerClientEvents but without retry scheduling
+        try {
+            ClassLoader classLoader = FabricEventCallbackHandler.class.getClassLoader();
+            
+            // Load Fabric client event classes with fallback
+            Class<?> clientTickEventsClass = loadClassWithFallback(classLoader, "net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents");
+            Class<?> clientWorldEventsClass = loadClassWithFallback(classLoader, "net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents");
+            
+            // Load Minecraft Level class for type checking (client-side)
+            Class<?> clientLevelClass = classLoader.loadClass("net.minecraft.world.level.Level");
+            
+            // Register client tick callback - END_CLIENT_TICK is a static field
+            try {
+                java.lang.reflect.Field endTickField = clientTickEventsClass.getField("END_CLIENT_TICK");
+                Object endTickEvent = endTickField.get(null);
+                java.lang.reflect.Method registerTickMethod = endTickEvent.getClass().getMethod("register", java.util.function.Consumer.class);
+                registerTickMethod.invoke(endTickEvent, (java.util.function.Consumer<Object>) (client) -> {
+                    for (EventCallbacks.ClientTickCallback callback : clientTickCallbacks) {
+                        callback.onClientTick();
+                    }
+                });
+            } catch (Exception e) {
+                LOGGER.warn("Could not register client tick event", e);
+            }
+            
+            // Register world unload callback (client-side) - UNLOAD is a static field
+            try {
+                java.lang.reflect.Field unloadField = clientWorldEventsClass.getField("UNLOAD");
+                Object unloadEvent = unloadField.get(null);
+                java.lang.reflect.Method registerUnloadMethod = unloadEvent.getClass().getMethod("register", java.util.function.Consumer.class);
+                registerUnloadMethod.invoke(unloadEvent, (java.util.function.Consumer<Object>) (world) -> {
+                    try {
+                        if (clientLevelClass.isInstance(world)) {
+                            for (EventCallbacks.LevelUnloadCallback callback : levelUnloadCallbacks) {
+                                // Use reflection to invoke callback - cast Object to expected type
+                                Object castWorld = clientLevelClass.cast(world);
+                                java.lang.reflect.Method method = callback.getClass().getMethod("onLevelUnload", clientLevelClass);
+                                method.invoke(callback, castWorld);
+                            }
+                        }
+                    } catch (Exception ex) {
+                        LOGGER.error("Error in client level unload handler", ex);
+                    }
+                });
+            } catch (Exception e) {
+                LOGGER.warn("Could not register client world unload event", e);
+            }
+            
+            // Register key input callback - Fabric uses ClientTickEvents to check key states
+            try {
+                // Key input is handled via registerKeyInputCallback and tracked in client tick
+                // This is implemented in registerKeyInputCallback method
+                LOGGER.info("Key input callbacks registered via registerKeyInputCallback");
+            } catch (Exception e) {
+                LOGGER.warn("Could not register key input callback", e);
+            }
+            
+            // Render level callbacks are handled via RenderHelper.registerRenderLevelCallback
+            // So no additional registration needed here
+            LOGGER.info("Render level callbacks handled via RenderHelper");
+            
+            LOGGER.info("Client-side Fabric events registered successfully");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to register client events", e);
         }
     }
     
@@ -582,6 +732,25 @@ public class FabricEventCallbackHandler {
     
     public static void registerLevelUnloadCallback(EventCallbacks.LevelUnloadCallback callback) {
         levelUnloadCallbacks.add(callback);
+    }
+    
+    /**
+     * Load class with fallback classloaders
+     */
+    private static Class<?> loadClassWithFallback(ClassLoader classLoader, String className) throws ClassNotFoundException {
+        try {
+            return classLoader.loadClass(className);
+        } catch (ClassNotFoundException e1) {
+            try {
+                ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+                if (contextClassLoader != null) {
+                    return contextClassLoader.loadClass(className);
+                }
+            } catch (ClassNotFoundException e2) {
+                // Fall through
+            }
+            throw new ClassNotFoundException("Could not load " + className + " from any classloader", e1);
+        }
     }
 }
 

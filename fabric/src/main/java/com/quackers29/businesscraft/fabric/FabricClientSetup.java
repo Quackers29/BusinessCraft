@@ -12,6 +12,9 @@ import org.slf4j.LoggerFactory;
  */
 public class FabricClientSetup implements ClientModInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft Fabric Client");
+    private static boolean screensRegistered = false;
+    private static boolean renderingInitialized = false;
+    private static boolean keyHandlersInitialized = false;
     
     @Override
     public void onInitializeClient() {
@@ -21,22 +24,188 @@ public class FabricClientSetup implements ClientModInitializer {
         PlatformAccess.client = BusinessCraftFabric.CLIENT;
         PlatformAccess.render = BusinessCraftFabric.RENDER;
         
-        // Register client-side events
-        FabricEventCallbackHandler.registerClientEvents();
+        // Register client-side events (with retry if classes not available)
+        try {
+            FabricEventCallbackHandler.registerClientEvents();
+        } catch (Exception e) {
+            LOGGER.warn("Could not register client events immediately, will retry", e);
+            scheduleDelayedClientEvents();
+        }
         
         // Register client-side packet handlers
         registerClientPackets();
         
-        // Register screens for menu types
-        registerScreens();
+        // Register screens for menu types (with delayed retry)
+        scheduleDelayedScreenRegistration();
         
-        // Initialize client-side rendering events
-        initializeClientRendering();
+        // Initialize client-side rendering events (with delayed retry)
+        scheduleDelayedRenderingInitialization();
         
-        // Initialize key handlers
-        initializeKeyHandlers();
+        // Initialize key handlers (with delayed retry)
+        scheduleDelayedKeyHandlerInitialization();
         
         LOGGER.info("BusinessCraft Fabric client setup complete");
+    }
+    
+    /**
+     * Schedule delayed screen registration
+     */
+    private void scheduleDelayedScreenRegistration() {
+        new Thread(() -> {
+            int maxRetries = 10;
+            int retryCount = 0;
+            int delayMs = 500;
+            
+            while (retryCount < maxRetries && !screensRegistered) {
+                try {
+                    Thread.sleep(delayMs);
+                    retryCount++;
+                    
+                    if (areClientClassesAvailable()) {
+                        LOGGER.info("Retrying screen registration (attempt {})...", retryCount);
+                        try {
+                            registerScreens();
+                            screensRegistered = true;
+                            LOGGER.info("Screen registration successful on retry!");
+                            return;
+                        } catch (Exception e) {
+                            LOGGER.warn("Screen registration failed on retry {}: {}", retryCount, e.getMessage());
+                            delayMs = Math.min(delayMs * 2, 5000);
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+            
+            if (!screensRegistered) {
+                LOGGER.error("Screen registration failed after {} retries.", maxRetries);
+            }
+        }).start();
+    }
+    
+    /**
+     * Schedule delayed rendering initialization
+     */
+    private void scheduleDelayedRenderingInitialization() {
+        new Thread(() -> {
+            int maxRetries = 10;
+            int retryCount = 0;
+            int delayMs = 500;
+            
+            while (retryCount < maxRetries && !renderingInitialized) {
+                try {
+                    Thread.sleep(delayMs);
+                    retryCount++;
+                    
+                    if (areMinecraftClassesAvailable()) {
+                        LOGGER.info("Retrying rendering initialization (attempt {})...", retryCount);
+                        try {
+                            initializeClientRendering();
+                            renderingInitialized = true;
+                            LOGGER.info("Rendering initialization successful on retry!");
+                            return;
+                        } catch (Exception e) {
+                            LOGGER.warn("Rendering initialization failed on retry {}: {}", retryCount, e.getMessage());
+                            delayMs = Math.min(delayMs * 2, 5000);
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+            
+            if (!renderingInitialized) {
+                LOGGER.error("Rendering initialization failed after {} retries.", maxRetries);
+            }
+        }).start();
+    }
+    
+    /**
+     * Schedule delayed key handler initialization
+     */
+    private void scheduleDelayedKeyHandlerInitialization() {
+        new Thread(() -> {
+            int maxRetries = 10;
+            int retryCount = 0;
+            int delayMs = 500;
+            
+            while (retryCount < maxRetries && !keyHandlersInitialized) {
+                try {
+                    Thread.sleep(delayMs);
+                    retryCount++;
+                    
+                    if (areMinecraftClassesAvailable()) {
+                        LOGGER.info("Retrying key handler initialization (attempt {})...", retryCount);
+                        try {
+                            initializeKeyHandlers();
+                            keyHandlersInitialized = true;
+                            LOGGER.info("Key handler initialization successful on retry!");
+                            return;
+                        } catch (Exception e) {
+                            LOGGER.warn("Key handler initialization failed on retry {}: {}", retryCount, e.getMessage());
+                            delayMs = Math.min(delayMs * 2, 5000);
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+            
+            if (!keyHandlersInitialized) {
+                LOGGER.error("Key handler initialization failed after {} retries.", maxRetries);
+            }
+        }).start();
+    }
+    
+    /**
+     * Schedule delayed client events registration
+     */
+    private void scheduleDelayedClientEvents() {
+        new Thread(() -> {
+            try {
+                Thread.sleep(2000);
+                try {
+                    FabricEventCallbackHandler.registerClientEvents();
+                    LOGGER.info("Client events registered successfully on retry!");
+                } catch (Exception e) {
+                    LOGGER.warn("Client events registration still failed on retry: {}", e.getMessage());
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+    }
+    
+    /**
+     * Check if client classes are available
+     */
+    private boolean areClientClassesAvailable() {
+        try {
+            ClassLoader classLoader = FabricClientSetup.class.getClassLoader();
+            classLoader.loadClass("net.minecraft.world.inventory.MenuType");
+            classLoader.loadClass("net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Check if Minecraft classes are available
+     */
+    private boolean areMinecraftClassesAvailable() {
+        try {
+            ClassLoader classLoader = FabricClientSetup.class.getClassLoader();
+            classLoader.loadClass("net.minecraft.core.Vec3i");
+            classLoader.loadClass("net.minecraft.core.BlockPos");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
     
     /**
@@ -51,6 +220,7 @@ public class FabricClientSetup implements ClientModInitializer {
             LOGGER.info("Client rendering events initialized");
         } catch (Exception e) {
             LOGGER.warn("Could not initialize client rendering events", e);
+            throw new RuntimeException("Failed to initialize client rendering", e);
         }
     }
     
@@ -78,6 +248,7 @@ public class FabricClientSetup implements ClientModInitializer {
             LOGGER.info("Town debug overlay initialized");
         } catch (Exception e) {
             LOGGER.warn("Could not initialize key handlers", e);
+            throw new RuntimeException("Failed to initialize key handlers", e);
         }
     }
     
@@ -109,6 +280,12 @@ public class FabricClientSetup implements ClientModInitializer {
             // Load Fabric's ScreenRegistry class
             Class<?> screenRegistryClass = classLoader.loadClass("net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry");
             Class<?> menuTypeClass = classLoader.loadClass("net.minecraft.world.inventory.MenuType");
+            
+            // Check if menu types are registered yet
+            Object townInterfaceMenuType = FabricMenuTypeHelper.getTownInterfaceMenuTypeStatic();
+            if (townInterfaceMenuType == null) {
+                throw new IllegalStateException("Menu types not registered yet - screens will be registered when menu types become available");
+            }
             Class<?> screenProviderClass = screenRegistryClass.getClasses()[0]; // ScreenProvider interface
             
             // Get ScreenRegistry.register method
@@ -116,7 +293,6 @@ public class FabricClientSetup implements ClientModInitializer {
                 menuTypeClass, screenProviderClass);
             
             // Get menu types from FabricMenuTypeHelper
-            Object townInterfaceMenuType = FabricMenuTypeHelper.getTownInterfaceMenuTypeStatic();
             Object tradeMenuType = FabricMenuTypeHelper.getTradeMenuTypeStatic();
             Object storageMenuType = FabricMenuTypeHelper.getStorageMenuTypeStatic();
             Object paymentBoardMenuType = FabricMenuTypeHelper.getPaymentBoardMenuTypeStatic();
