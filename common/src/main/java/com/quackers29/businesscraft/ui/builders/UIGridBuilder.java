@@ -1,13 +1,12 @@
 package com.quackers29.businesscraft.ui.builders;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import java.util.Map;
+import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
@@ -893,9 +892,14 @@ public class UIGridBuilder {
         for (UIGridElement element : elements) {
             if (element.isHovered && element.tooltip != null && !element.tooltip.isEmpty()) {
                 // Use Minecraft's tooltip rendering (converted to Component)
-                Minecraft mc = Minecraft.getInstance();
-                graphics.renderTooltip(mc.font, Component.literal(element.tooltip), mouseX, mouseY);
-                break; // Only show one tooltip at a time
+                com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+                if (clientHelper != null) {
+                    Object fontObj = clientHelper.getFont();
+                    if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                        graphics.renderTooltip(font, Component.literal(element.tooltip), mouseX, mouseY);
+                        break; // Only show one tooltip at a time
+                    }
+                }
             }
         }
     }
@@ -924,10 +928,15 @@ public class UIGridBuilder {
         graphics.vLine(x + width - 1, y, y + height - 1, borderColor);
         
         // Draw centered text - center vertically in the whole button area
-        Font font = Minecraft.getInstance().font;
-        int textX = x + width / 2 - font.width(element.text) / 2;
-        int textY = y + (height - font.lineHeight) / 2; // Centered within the actual height
-        graphics.drawString(font, element.text, textX, textY, 0xFFFFFFFF);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object fontObj = clientHelper.getFont();
+            if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                int textX = x + width / 2 - font.width(element.text) / 2;
+                int textY = y + (height - font.lineHeight) / 2; // Centered within the actual height
+                graphics.drawString(font, element.text, textX, textY, 0xFFFFFFFF);
+            }
+        }
     }
     
     /**
@@ -935,7 +944,11 @@ public class UIGridBuilder {
      */
     private void renderLabel(GuiGraphics graphics, UIGridElement element, 
                             int x, int y, int width, int height) {
-        Font font = Minecraft.getInstance().font;
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) return;
+        
+        Object fontObj = clientHelper.getFont();
+        if (!(fontObj instanceof net.minecraft.client.gui.Font font)) return;
         
         // Use the text as provided (truncation should be done before adding to grid)
         String displayText = element.text;
@@ -1046,9 +1059,15 @@ public class UIGridBuilder {
         graphics.fill(indicatorX, indicatorY, indicatorX + indicatorSize, indicatorY + indicatorSize, 0xFFFFFFFF);
         
         // Draw centered text
-        int textX = x + width / 2 - Minecraft.getInstance().font.width(element.text) / 2;
-        int textY = y + (height - 8) / 2;
-        graphics.drawString(Minecraft.getInstance().font, element.text, textX, textY, 0xFFFFFFFF);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object fontObj = clientHelper.getFont();
+            if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                int textX = x + width / 2 - font.width(element.text) / 2;
+                int textY = y + (height - 8) / 2;
+                graphics.drawString(font, element.text, textX, textY, 0xFFFFFFFF);
+            }
+        }
     }
     
     /**
@@ -1088,7 +1107,11 @@ public class UIGridBuilder {
         graphics.fill(x, y, x + width, y + height, bgColor);
         
         if (element.item != null) {
-            Font font = Minecraft.getInstance().font;
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper == null) return;
+            
+            Object fontObj = clientHelper.getFont();
+            if (!(fontObj instanceof net.minecraft.client.gui.Font font)) return;
             
             // Calculate the item position - align to the left with some padding
             int itemSize = 16; // Standard Minecraft item size
@@ -1179,13 +1202,18 @@ public class UIGridBuilder {
         
         // If we have more than 4 items, show a "+" indicator
         if (element.multiItems.size() > 4) {
-            Font font = Minecraft.getInstance().font;
-            String plusText = "+" + (element.multiItems.size() - 4);
-            int textWidth = font.width(plusText);
-            int textX = x + width - textWidth - 5;
-            int textY = y + (height - font.lineHeight) / 2;
-            
-            graphics.drawString(font, plusText, textX, textY, 0xFFFFFFFF);
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper != null) {
+                Object fontObj = clientHelper.getFont();
+                if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                    String plusText = "+" + (element.multiItems.size() - 4);
+                    int textWidth = font.width(plusText);
+                    int textX = x + width - textWidth - 5;
+                    int textY = y + (height - font.lineHeight) / 2;
+                    
+                    graphics.drawString(font, plusText, textX, textY, 0xFFFFFFFF);
+                }
+            }
         }
     }
     

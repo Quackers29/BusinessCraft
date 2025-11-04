@@ -1,6 +1,6 @@
 package com.quackers29.businesscraft.ui.components.input;
 
-import net.minecraft.client.Minecraft;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
@@ -30,9 +30,19 @@ public class BCEditBoxComponent extends BCComponent {
         super(width, height);
         this.onTextChanged = onTextChanged;
         
+        // Get font from ClientHelper
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) {
+            throw new IllegalStateException("ClientHelper not available");
+        }
+        Object fontObj = clientHelper.getFont();
+        if (!(fontObj instanceof net.minecraft.client.gui.Font font)) {
+            throw new IllegalStateException("Font not available");
+        }
+        
         // Create a standard vanilla EditBox
         this.editBox = new EditBox(
-            Minecraft.getInstance().font,
+            font,
             0, 0,          
             width,         
             height,        

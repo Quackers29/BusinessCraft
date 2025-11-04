@@ -1,6 +1,6 @@
 package com.quackers29.businesscraft.ui.util;
 
-import net.minecraft.client.Minecraft;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
@@ -47,10 +47,16 @@ public class UIDirectRenderer {
         guiGraphics.vLine(x + width - 1, y, y + height - 1, borderColor);
         
         // Draw button text
-        int textWidth = Minecraft.getInstance().font.width(text);
-        int textX = x + (width - textWidth) / 2;
-        int textY = y + (height - 8) / 2;
-        guiGraphics.drawString(Minecraft.getInstance().font, text, textX, textY, 0xFFFFFFFF);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object fontObj = clientHelper.getFont();
+            if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                int textWidth = font.width(text);
+                int textX = x + (width - textWidth) / 2;
+                int textY = y + (height - 8) / 2;
+                guiGraphics.drawString(font, text, textX, textY, 0xFFFFFFFF);
+            }
+        }
         
         return hovered;
     }
@@ -78,12 +84,18 @@ public class UIDirectRenderer {
         guiGraphics.vLine(x + width - 1, y, y + height - 1, borderColor);
         
         // Text
-        guiGraphics.drawString(Minecraft.getInstance().font, value, x + 5, y + 6, 0xFFFFFFFF);
-        
-        // Cursor
-        if (focused && (System.currentTimeMillis() / 500) % 2 == 0) {
-            int cursorX = x + 5 + Minecraft.getInstance().font.width(value);
-            guiGraphics.fill(cursorX, y + 5, cursorX + 1, y + height - 5, 0xFFFFFFFF);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object fontObj = clientHelper.getFont();
+            if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                guiGraphics.drawString(font, value, x + 5, y + 6, 0xFFFFFFFF);
+                
+                // Cursor
+                if (focused && (System.currentTimeMillis() / 500) % 2 == 0) {
+                    int cursorX = x + 5 + font.width(value);
+                    guiGraphics.fill(cursorX, y + 5, cursorX + 1, y + height - 5, 0xFFFFFFFF);
+                }
+            }
         }
     }
     

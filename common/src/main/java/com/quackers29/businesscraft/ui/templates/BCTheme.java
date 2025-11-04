@@ -1,7 +1,7 @@
 package com.quackers29.businesscraft.ui.templates;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.Minecraft;
 
 /**
  * Theme class for BusinessCraft UI components.
@@ -152,11 +152,20 @@ public class BCTheme {
     
     // Font helpers
     public Font getFont() {
-        return Minecraft.getInstance().font;
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object fontObj = clientHelper.getFont();
+            if (fontObj instanceof Font font) {
+                return font;
+            }
+        }
+        // Fallback - this shouldn't happen but provides a safety net
+        return null;
     }
     
     public int getLineHeight() {
-        return getFont().lineHeight;
+        Font font = getFont();
+        return font != null ? font.lineHeight : 9;
     }
     
     /**

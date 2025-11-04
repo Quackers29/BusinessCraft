@@ -18,7 +18,6 @@ import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.client.Minecraft;
 
 import java.util.Map;
 import java.util.UUID;
@@ -161,14 +160,17 @@ public class StorageMenu extends AbstractContainerMenu {
     public com.quackers29.businesscraft.menu.TownInterfaceMenu getTownInterfaceMenu() {
         if (townBlockPos != null) {
             // Get the current player's inventory and minecraft instance
-            Player player = Minecraft.getInstance().player;
-            if (player != null) {
-                Level level = player.level();
-                if (level != null) {
-                    BlockEntity blockEntity = level.getBlockEntity(townBlockPos);
-                    if (blockEntity != null) {
-                        // Create a menu with containerId 0 (temporary menu just for data access)
-                        return new com.quackers29.businesscraft.menu.TownInterfaceMenu(0, player.getInventory(), townBlockPos);
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper != null) {
+                Object playerObj = clientHelper.getClientPlayer();
+                if (playerObj instanceof Player player) {
+                    Level level = player.level();
+                    if (level != null) {
+                        BlockEntity blockEntity = level.getBlockEntity(townBlockPos);
+                        if (blockEntity != null) {
+                            // Create a menu with containerId 0 (temporary menu just for data access)
+                            return new com.quackers29.businesscraft.menu.TownInterfaceMenu(0, player.getInventory(), townBlockPos);
+                        }
                     }
                 }
             }

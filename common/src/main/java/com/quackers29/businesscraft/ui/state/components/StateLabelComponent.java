@@ -1,7 +1,7 @@
 package com.quackers29.businesscraft.ui.state.components;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.ui.state.TownInterfaceState;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -78,26 +78,32 @@ public class StateLabelComponent<T> extends StateBindableComponent<T> {
     protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         String text = formatValue();
         
-        if (centered) {
-            int textWidth = Minecraft.getInstance().font.width(text);
-            int xPos = x + (width - textWidth) / 2;
-            guiGraphics.drawString(
-                Minecraft.getInstance().font,
-                text,
-                xPos,
-                y + (height - 8) / 2,
-                textColor,
-                withShadow
-            );
-        } else {
-            guiGraphics.drawString(
-                Minecraft.getInstance().font,
-                text,
-                x,
-                y + (height - 8) / 2,
-                textColor,
-                withShadow
-            );
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object fontObj = clientHelper.getFont();
+            if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                if (centered) {
+                    int textWidth = font.width(text);
+                    int xPos = x + (width - textWidth) / 2;
+                    guiGraphics.drawString(
+                        font,
+                        text,
+                        xPos,
+                        y + (height - 8) / 2,
+                        textColor,
+                        withShadow
+                    );
+                } else {
+                    guiGraphics.drawString(
+                        font,
+                        text,
+                        x,
+                        y + (height - 8) / 2,
+                        textColor,
+                        withShadow
+                    );
+                }
+            }
         }
     }
     

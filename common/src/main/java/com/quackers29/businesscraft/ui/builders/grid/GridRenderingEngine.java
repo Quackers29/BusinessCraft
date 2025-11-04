@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.ui.builders.grid;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.ui.builders.grid.GridElementManager.GridElement;
 import com.quackers29.businesscraft.ui.builders.grid.GridElementManager.GridContentType;
 import com.quackers29.businesscraft.ui.builders.grid.GridLayoutManager.GridPosition;
@@ -147,13 +148,17 @@ public class GridRenderingEngine {
      */
     private void renderText(GuiGraphics graphics, GridElement element, GridPosition cellPos) {
         if (element.getValue() instanceof String text) {
-            Font font = Minecraft.getInstance().font;
-            
-            // Center the text in the cell
-            int textX = cellPos.getX() + (cellPos.getWidth() - font.width(text)) / 2;
-            int textY = cellPos.getY() + (cellPos.getHeight() - font.lineHeight) / 2;
-            
-            graphics.drawString(font, text, textX, textY, element.getTextColor());
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper != null) {
+                Object fontObj = clientHelper.getFont();
+                if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                    // Center the text in the cell
+                    int textX = cellPos.getX() + (cellPos.getWidth() - font.width(text)) / 2;
+                    int textY = cellPos.getY() + (cellPos.getHeight() - font.lineHeight) / 2;
+                    
+                    graphics.drawString(font, text, textX, textY, element.getTextColor());
+                }
+            }
         }
     }
     
@@ -170,10 +175,15 @@ public class GridRenderingEngine {
         
         // Draw button text
         if (element.getValue() instanceof String text) {
-            Font font = Minecraft.getInstance().font;
-            int textX = cellPos.getX() + (cellPos.getWidth() - font.width(text)) / 2;
-            int textY = cellPos.getY() + (cellPos.getHeight() - font.lineHeight) / 2;
-            graphics.drawString(font, text, textX, textY, element.getTextColor());
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper != null) {
+                Object fontObj = clientHelper.getFont();
+                if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                    int textX = cellPos.getX() + (cellPos.getWidth() - font.width(text)) / 2;
+                    int textY = cellPos.getY() + (cellPos.getHeight() - font.lineHeight) / 2;
+                    graphics.drawString(font, text, textX, textY, element.getTextColor());
+                }
+            }
         }
     }
     
@@ -203,10 +213,15 @@ public class GridRenderingEngine {
             
             // Draw quantity overlay
             String quantityText = String.valueOf(element.getQuantity());
-            Font font = Minecraft.getInstance().font;
-            int textX = itemX + 16 - font.width(quantityText);
-            int textY = itemY + 16 - font.lineHeight;
-            graphics.drawString(font, quantityText, textX, textY, 0xFFFFFF);
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper != null) {
+                Object fontObj = clientHelper.getFont();
+                if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                    int textX = itemX + 16 - font.width(quantityText);
+                    int textY = itemY + 16 - font.lineHeight;
+                    graphics.drawString(font, quantityText, textX, textY, 0xFFFFFF);
+                }
+            }
         }
     }
     

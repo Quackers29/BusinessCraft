@@ -1,6 +1,6 @@
 package com.quackers29.businesscraft.ui.components.display;
 
-import net.minecraft.client.Minecraft;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.client.gui.GuiGraphics;
 import java.util.function.Consumer;
 import com.quackers29.businesscraft.ui.components.basic.UIComponent;
@@ -31,7 +31,13 @@ public class DataLabelComponent implements UIComponent {
         
         this.x = x;
         this.y = y;
-        guiGraphics.drawString(Minecraft.getInstance().font, textSupplier.get(), x, y, color);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object fontObj = clientHelper.getFont();
+            if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                guiGraphics.drawString(font, textSupplier.get(), x, y, color);
+            }
+        }
     }
 
     @Override public void tick() {}

@@ -1,6 +1,6 @@
 package com.quackers29.businesscraft.ui.components.display;
 
-import net.minecraft.client.Minecraft;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
@@ -46,7 +46,13 @@ public class VisitHistoryComponent extends BCScrollableListComponent<VisitHistor
     @Override
     protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         // Draw the title with a divider
-        guiGraphics.drawString(Minecraft.getInstance().font, "Tourist Visits", x + 5, y + 5, 0xFFFFFF);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object fontObj = clientHelper.getFont();
+            if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                guiGraphics.drawString(font, "Tourist Visits", x + 5, y + 5, 0xFFFFFF);
+            }
+        }
         guiGraphics.fill(x + 5, y + 18, x + width - 5, y + 19, 0x80FFFFFF); // Divider line
         
         // Update the history list

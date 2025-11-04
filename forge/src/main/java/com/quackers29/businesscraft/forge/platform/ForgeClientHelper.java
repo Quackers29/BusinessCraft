@@ -42,5 +42,17 @@ public class ForgeClientHelper implements ClientHelper {
     public boolean isOnClientThread() {
         return Minecraft.getInstance().isSameThread();
     }
+
+    @Override
+    public Object getSoundManager() {
+        Minecraft mc = Minecraft.getInstance();
+        return mc.getSoundManager();
+    }
+
+    @Override
+    public Object getClientPlayer() {
+        Minecraft mc = Minecraft.getInstance();
+        return mc.player;
+    }
 }
 

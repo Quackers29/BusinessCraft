@@ -1,9 +1,9 @@
 package com.quackers29.businesscraft.ui.components.input;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
-import net.minecraft.client.Minecraft;
 import java.util.ArrayList;
 import com.quackers29.businesscraft.ui.components.basic.UIComponent;
 import java.util.List;
@@ -166,36 +166,44 @@ public class TownNameEditorComponent implements UIComponent {
         this.x = x;
         this.y = y;
         // Draw title
-        guiGraphics.drawString(
-            Minecraft.getInstance().font, 
-            Component.translatable("gui.businesscraft.edit_town_name"), 
-            x, y, 0xFFFFFF
-        );
-        
-        // Draw edit box with label
-        int editBoxY = y + LABEL_HEIGHT + 8;
-        guiGraphics.drawString(
-            Minecraft.getInstance().font, 
-            Component.translatable("gui.businesscraft.town_name"), 
-            x, editBoxY - 10, 0xFFFFFF
-        );
-        editBox.render(guiGraphics, x, editBoxY, mouseX, mouseY);
-        
-        // Draw buttons below - OK on right, Cancel on left
-        int buttonY = editBoxY + 30;
-        int buttonWidth = buttonWidth();
-        
-        // Position cancel button (left)
-        cancelButton.setX(x);
-        cancelButton.setY(buttonY);
-        
-        // Position confirm button (right)
-        confirmButton.setX(x + buttonWidth + SPACING);
-        confirmButton.setY(buttonY);
-        
-        // Render buttons
-        cancelButton.render(guiGraphics, mouseX, mouseY, 0);
-        confirmButton.render(guiGraphics, mouseX, mouseY, 0);
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object fontObj = clientHelper.getFont();
+            if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                guiGraphics.drawString(
+                    font, 
+                    Component.translatable("gui.businesscraft.edit_town_name"), 
+                    x, y, 0xFFFFFF
+                );
+                
+                // Draw edit box with label
+                int editBoxY = y + LABEL_HEIGHT + 8;
+                guiGraphics.drawString(
+                    font, 
+                    Component.translatable("gui.businesscraft.town_name"), 
+                    x, editBoxY - 10, 0xFFFFFF
+                );
+                
+                // Draw edit box
+                editBox.render(guiGraphics, x, editBoxY, mouseX, mouseY);
+                
+                // Draw buttons below - OK on right, Cancel on left
+                int buttonY = editBoxY + 30;
+                int buttonWidth = buttonWidth();
+                
+                // Position cancel button (left)
+                cancelButton.setX(x);
+                cancelButton.setY(buttonY);
+                
+                // Position confirm button (right)
+                confirmButton.setX(x + buttonWidth + SPACING);
+                confirmButton.setY(buttonY);
+                
+                // Render buttons
+                cancelButton.render(guiGraphics, mouseX, mouseY, 0);
+                confirmButton.render(guiGraphics, mouseX, mouseY, 0);
+            }
+        }
     }
     
     private int buttonWidth() {

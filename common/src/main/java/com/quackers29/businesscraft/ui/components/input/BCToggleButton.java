@@ -1,6 +1,6 @@
 package com.quackers29.businesscraft.ui.components.input;
 
-import net.minecraft.client.Minecraft;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
@@ -120,9 +120,13 @@ public class BCToggleButton extends BCButton {
      * Play the button click sound
      */
     private void playButtonSound() {
-        Minecraft.getInstance().getSoundManager().play(
-            SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F)
-        );
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object soundManagerObj = clientHelper.getSoundManager();
+            if (soundManagerObj instanceof net.minecraft.client.sounds.SoundManager soundManager) {
+                soundManager.play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+            }
+        }
     }
     
     /**
@@ -173,10 +177,16 @@ public class BCToggleButton extends BCButton {
         
         // Draw text label if provided
         if (getText() != null && !getText().getString().isEmpty()) {
-            int textColor = toggled ? 0xFFFFFFFF : 0xFFAAAAAA;
-            int textX = x + width / 2 - Minecraft.getInstance().font.width(getText()) / 2;
-            int textY = y + (height - 8) / 2;
-            guiGraphics.drawString(Minecraft.getInstance().font, getText(), textX, textY, textColor);
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper != null) {
+                Object fontObj = clientHelper.getFont();
+                if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                    int textColor = toggled ? 0xFFFFFFFF : 0xFFAAAAAA;
+                    int textX = x + width / 2 - font.width(getText()) / 2;
+                    int textY = y + (height - 8) / 2;
+                    guiGraphics.drawString(font, getText(), textX, textY, textColor);
+                }
+            }
         }
     }
     

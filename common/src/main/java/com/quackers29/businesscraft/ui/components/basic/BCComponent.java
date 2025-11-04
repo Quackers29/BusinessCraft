@@ -4,6 +4,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -327,11 +328,13 @@ public abstract class BCComponent implements UIComponent {
      */
     protected void renderTooltipIfNeeded(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (tooltip != null && isMouseOver(mouseX, mouseY)) {
-            guiGraphics.renderTooltip(
-                net.minecraft.client.Minecraft.getInstance().font,
-                tooltip,
-                mouseX, mouseY
-            );
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper != null) {
+                Object fontObj = clientHelper.getFont();
+                if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                    guiGraphics.renderTooltip(font, tooltip, mouseX, mouseY);
+                }
+            }
         }
     }
     

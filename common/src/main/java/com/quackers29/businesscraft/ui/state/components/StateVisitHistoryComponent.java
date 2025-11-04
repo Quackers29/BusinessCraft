@@ -1,10 +1,9 @@
 package com.quackers29.businesscraft.ui.state.components;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.ui.state.TownInterfaceState;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.network.chat.Component;
-import net.minecraft.client.Minecraft;
 import java.util.List;
 import java.util.function.Consumer;
 import java.text.SimpleDateFormat;
@@ -66,24 +65,30 @@ public class StateVisitHistoryComponent extends BCStateComponent {
     private void renderHistoryItem(GuiGraphics guiGraphics, int x, int y, TownInterfaceState.VisitHistoryEntry entry) {
         // Render town name and direction
         String townInfo = entry.getTownName() + " (" + entry.getDirection() + ")";
-        guiGraphics.drawString(
-            Minecraft.getInstance().font,
-            townInfo,
-            x,
-            y + 4,
-            0xFFFFFF
-        );
-        
-        // Render timestamp and count
-        String timestamp = dateFormat.format(new Date(entry.getTimestamp()));
-        String countInfo = timestamp + " - " + entry.getCount() + " visitors";
-        guiGraphics.drawString(
-            Minecraft.getInstance().font,
-            countInfo,
-            x,
-            y + 14,
-            0x808080
-        );
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object fontObj = clientHelper.getFont();
+            if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                guiGraphics.drawString(
+                    font,
+                    townInfo,
+                    x,
+                    y + 4,
+                    0xFFFFFF
+                );
+                
+                // Render timestamp and count
+                String timestamp = dateFormat.format(new Date(entry.getTimestamp()));
+                String countInfo = timestamp + " - " + entry.getCount() + " visitors";
+                guiGraphics.drawString(
+                    font,
+                    countInfo,
+                    x,
+                    y + 14,
+                    0x808080
+                );
+            }
+        }
     }
     
     private boolean canScrollDown() {

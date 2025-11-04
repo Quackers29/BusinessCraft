@@ -1,8 +1,8 @@
 package com.quackers29.businesscraft.ui.managers;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.ui.screens.BaseTownScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -197,9 +197,15 @@ public class ButtonActionCoordinator {
         }
         
         // Create and show the town map modal
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) {
+            throw new IllegalStateException("ClientHelper not available");
+        }
+        
+        Object currentScreen = clientHelper.getCurrentScreen();
         com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal = 
             new com.quackers29.businesscraft.ui.modal.specialized.TownMapModal(
-                Minecraft.getInstance().screen,
+                currentScreen instanceof net.minecraft.client.gui.screens.Screen screen ? screen : null,
                 currentTownPos,
                 closedModal -> {
                     // Callback when modal closes - refresh data if needed
@@ -215,7 +221,10 @@ public class ButtonActionCoordinator {
         
         DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town map modal opened from current position: {}", currentTownPos);
         
-        Minecraft.getInstance().setScreen(mapModal);
+        Object minecraft = clientHelper.getMinecraft();
+        if (minecraft instanceof net.minecraft.client.Minecraft mc) {
+            mc.setScreen(mapModal);
+        }
     }
     
     /**

@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.ui.managers;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.ui.screens.BaseTownScreen;
 import com.quackers29.businesscraft.util.Result;
@@ -80,8 +81,14 @@ public abstract class BaseModalManager {
      * @param <T> The type of modal screen
      */
     protected static <T extends Screen> void displayModal(T modalScreen) {
-        Minecraft.getInstance().setScreen(modalScreen);
-        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Displayed modal screen: {}", modalScreen.getClass().getSimpleName());
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object minecraft = clientHelper.getMinecraft();
+            if (minecraft instanceof net.minecraft.client.Minecraft mc) {
+                mc.setScreen(modalScreen);
+                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Displayed modal screen: {}", modalScreen.getClass().getSimpleName());
+            }
+        }
     }
     
     /**

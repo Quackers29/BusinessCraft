@@ -55,5 +55,21 @@ public class FabricClientHelper implements ClientHelper {
         // Fabric thread check
         return true; // Placeholder
     }
+
+    @Override
+    public Object getSoundManager() {
+        Object mc = getMinecraft();
+        if (mc == null) return null;
+        // Reflection-based access to sound manager
+        return null; // Placeholder
+    }
+
+    @Override
+    public Object getClientPlayer() {
+        Object mc = getMinecraft();
+        if (mc == null) return null;
+        // Reflection-based access to player
+        return null; // Placeholder
+    }
 }
 

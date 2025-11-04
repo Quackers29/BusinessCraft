@@ -40,5 +40,17 @@ public interface ClientHelper {
      * @return true if on client thread
      */
     boolean isOnClientThread();
+
+    /**
+     * Get the sound manager
+     * @return The sound manager instance, or null if not available
+     */
+    Object getSoundManager();
+
+    /**
+     * Get the client player
+     * @return The client player, or null if not in a world
+     */
+    Object getClientPlayer();
 }
 

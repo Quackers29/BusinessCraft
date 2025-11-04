@@ -1,7 +1,7 @@
 package com.quackers29.businesscraft.ui.components.display;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.Minecraft;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -90,13 +90,19 @@ public class BCScrollableListComponent<T> extends BCScrollableComponent {
     protected void renderScrollContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (items.isEmpty()) {
             // Render empty message
-            guiGraphics.drawString(
-                Minecraft.getInstance().font,
-                "No items",
-                x + 5,
-                y + 5,
-                0x808080
-            );
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper != null) {
+                Object fontObj = clientHelper.getFont();
+                if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                    guiGraphics.drawString(
+                        font,
+                        "No items",
+                        x + 5,
+                        y + 5,
+                        0x808080
+                    );
+                }
+            }
             return;
         }
         
@@ -150,13 +156,19 @@ public class BCScrollableListComponent<T> extends BCScrollableComponent {
             String text = itemTextProvider.apply(item);
             int color = itemColorProvider.apply(item);
             
-            guiGraphics.drawString(
-                Minecraft.getInstance().font,
-                text,
-                x + 5,
-                itemY + (itemHeight - 8) / 2,
-                color
-            );
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper != null) {
+                Object fontObj = clientHelper.getFont();
+                if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                    guiGraphics.drawString(
+                        font,
+                        text,
+                        x + 5,
+                        itemY + (itemHeight - 8) / 2,
+                        color
+                    );
+                }
+            }
         }
     }
     

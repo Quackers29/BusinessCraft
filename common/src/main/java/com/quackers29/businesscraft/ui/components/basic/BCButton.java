@@ -1,11 +1,10 @@
 package com.quackers29.businesscraft.ui.components.basic;
 
-import net.minecraft.client.Minecraft;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import com.quackers29.businesscraft.api.PlatformAccess;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -169,13 +168,20 @@ public class BCButton extends BCComponent {
             }
         }
         
+        // Get font from ClientHelper
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) return;
+        
+        Object fontObj = clientHelper.getFont();
+        if (!(fontObj instanceof net.minecraft.client.gui.Font font)) return;
+        
         // Calculate text position
-        int textX = x + (getWidth() - Minecraft.getInstance().font.width(text)) / 2;
+        int textX = x + (getWidth() - font.width(text)) / 2;
         int textY = y + (getHeight() - 8) / 2;
         
         // Adjust for icon if present
         if (iconTexture != null && iconWidth > 0 && iconHeight > 0) {
-            int totalWidth = iconWidth + iconPadding + Minecraft.getInstance().font.width(text);
+            int totalWidth = iconWidth + iconPadding + font.width(text);
             textX = x + (getWidth() - totalWidth) / 2 + iconWidth + iconPadding;
             
             // Draw icon
@@ -186,9 +192,9 @@ public class BCButton extends BCComponent {
         
         // Draw text with shadow if enabled
         if (shadow) {
-            guiGraphics.drawString(Minecraft.getInstance().font, text, textX, textY, textColor);
+            guiGraphics.drawString(font, text, textX, textY, textColor);
         } else {
-            guiGraphics.drawString(Minecraft.getInstance().font, text, textX, textY, textColor, false);
+            guiGraphics.drawString(font, text, textX, textY, textColor, false);
         }
     }
     

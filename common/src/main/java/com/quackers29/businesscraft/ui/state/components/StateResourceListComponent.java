@@ -1,10 +1,9 @@
 package com.quackers29.businesscraft.ui.state.components;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.ui.state.TownInterfaceState;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.network.chat.Component;
-import net.minecraft.client.Minecraft;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -65,13 +64,19 @@ public class StateResourceListComponent extends BCStateComponent {
     
     private void renderResourceItem(GuiGraphics guiGraphics, int x, int y, Map.Entry<String, Integer> resource) {
         // Render resource name and amount
-        guiGraphics.drawString(
-            Minecraft.getInstance().font,
-            resource.getKey() + ": " + resource.getValue(),
-            x,
-            y + 4,
-            0xFFFFFF
-        );
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper != null) {
+            Object fontObj = clientHelper.getFont();
+            if (fontObj instanceof net.minecraft.client.gui.Font font) {
+                guiGraphics.drawString(
+                    font,
+                    resource.getKey() + ": " + resource.getValue(),
+                    x,
+                    y + 4,
+                    0xFFFFFF
+                );
+            }
+        }
     }
     
     private boolean canScrollDown() {
