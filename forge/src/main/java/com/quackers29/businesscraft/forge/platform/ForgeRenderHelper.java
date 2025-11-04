@@ -70,7 +70,15 @@ public class ForgeRenderHelper implements RenderHelper {
     @Override
     public String getRenderStage(Object renderEvent) {
         if (renderEvent instanceof RenderLevelStageEvent event) {
-            return event.getStage().toString();
+            // Convert Forge's Stage enum to our platform-agnostic string constant
+            // Forge returns "minecraft:after_translucent_blocks", we need "AFTER_TRANSLUCENT_BLOCKS"
+            String stageStr = event.getStage().toString();
+            // Remove "minecraft:" prefix if present and convert to uppercase
+            if (stageStr.startsWith("minecraft:")) {
+                stageStr = stageStr.substring("minecraft:".length());
+            }
+            // Convert to uppercase and replace underscores to match our constants
+            return stageStr.toUpperCase().replace("_", "_");
         }
         return "";
     }
@@ -78,7 +86,15 @@ public class ForgeRenderHelper implements RenderHelper {
     @Override
     public boolean isRenderStage(Object renderEvent, String stageName) {
         if (renderEvent instanceof RenderLevelStageEvent event) {
-            return event.getStage().toString().equals(stageName);
+            // Normalize both stage names for comparison
+            String eventStage = event.getStage().toString();
+            if (eventStage.startsWith("minecraft:")) {
+                eventStage = eventStage.substring("minecraft:".length());
+            }
+            eventStage = eventStage.toUpperCase();
+            
+            // Compare with normalized stage name
+            return eventStage.equals(stageName.toUpperCase());
         }
         return false;
     }

@@ -110,10 +110,15 @@ public abstract class WorldVisualizationRenderer {
      */
     public final void render(String renderStage, float partialTick, Object renderEvent) {
         RenderHelper renderHelper = PlatformAccess.getRender();
-        if (renderHelper == null) return;
+        if (renderHelper == null) {
+            return;
+        }
         
         // Check if we should render at this stage
-        if (!renderHelper.isRenderStage(renderEvent, config.getRenderStage())) {
+        String expectedStage = config.getRenderStage();
+        boolean stageMatches = renderHelper.isRenderStage(renderEvent, expectedStage);
+        
+        if (!stageMatches) {
             return;
         }
         

@@ -140,7 +140,12 @@ public class ForgeEventCallbackHandler {
         
         @SubscribeEvent
         public static void onRenderLevelStage(RenderLevelStageEvent event) {
-            String stageName = event.getStage().toString();
+            // Normalize stage name: remove "minecraft:" prefix and convert to uppercase
+            String stageStr = event.getStage().toString();
+            if (stageStr.startsWith("minecraft:")) {
+                stageStr = stageStr.substring("minecraft:".length());
+            }
+            String stageName = stageStr.toUpperCase();
             float partialTick = event.getPartialTick();
             
             // Invoke all registered callbacks for this stage
