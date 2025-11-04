@@ -39,13 +39,12 @@ public class FabricEventHelper implements EventHelper {
 
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public void setActiveTownBlock(Object pos) {
-        // Implementation would go here
-        // This is used for path creation mode tracking
+        com.quackers29.businesscraft.fabric.event.FabricModEvents.setActiveTownBlock(pos);
     }
 
     // @Override - temporarily removed due to classpath issue with common module interfaces
     public void clearActiveTownBlock() {
-        // Implementation would go here
+        com.quackers29.businesscraft.fabric.event.FabricModEvents.clearActiveTownBlock();
     }
     
     // @Override - temporarily removed due to classpath issue with common module interfaces

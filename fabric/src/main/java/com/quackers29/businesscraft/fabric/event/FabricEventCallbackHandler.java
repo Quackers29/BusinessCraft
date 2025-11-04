@@ -263,6 +263,110 @@ public class FabricEventCallbackHandler {
                                     }
                                     
                                     if (clickedPos != null && !isClientSide) {
+                                        // Check if path creation mode is active
+                                        Object activePos = com.quackers29.businesscraft.fabric.event.FabricModEvents.getActiveTownBlockPos();
+                                        if (activePos != null) {
+                                            // Handle path creation mode (similar to ForgeModEvents)
+                                            try {
+                                                long currentTime = System.currentTimeMillis();
+                                                long lastClickTime = com.quackers29.businesscraft.fabric.event.FabricModEvents.getLastClickTime();
+                                                
+                                                // Debounce clicks
+                                                if (currentTime - lastClickTime < 500) {
+                                                    LOGGER.debug("Ignoring click due to debounce");
+                                                    return null;
+                                                }
+                                                com.quackers29.businesscraft.fabric.event.FabricModEvents.setLastClickTime(currentTime);
+                                                
+                                                // Get the town interface entity
+                                                Class<?> blockEntityClass = classLoader.loadClass("net.minecraft.world.level.block.entity.BlockEntity");
+                                                java.lang.reflect.Method getBlockEntityMethod = levelClass.getMethod("getBlockEntity", blockPosClass);
+                                                Object blockEntity = getBlockEntityMethod.invoke(world, activePos);
+                                                
+                                                if (blockEntity != null) {
+                                                    Class<?> townInterfaceEntityClass = classLoader.loadClass("com.quackers29.businesscraft.block.entity.TownInterfaceEntity");
+                                                    if (townInterfaceEntityClass.isInstance(blockEntity)) {
+                                                        // Check if in path creation mode
+                                                        java.lang.reflect.Method isInPathCreationModeMethod = townInterfaceEntityClass.getMethod("isInPathCreationMode");
+                                                        boolean inPathMode = (Boolean) isInPathCreationModeMethod.invoke(blockEntity);
+                                                        
+                                                        if (inPathMode) {
+                                                            // Check valid distance
+                                                            java.lang.reflect.Method isValidPathDistanceMethod = townInterfaceEntityClass.getMethod("isValidPathDistance", blockPosClass);
+                                                            boolean validDistance = (Boolean) isValidPathDistanceMethod.invoke(blockEntity, clickedPos);
+                                                            
+                                                            if (!validDistance) {
+                                                                // Send message to player
+                                                                Class<?> componentClass = classLoader.loadClass("net.minecraft.network.chat.Component");
+                                                                java.lang.reflect.Method literalMethod = componentClass.getMethod("literal", String.class);
+                                                                Object message = literalMethod.invoke(null, "Point too far from town!");
+                                                                java.lang.reflect.Method sendSystemMessageMethod = playerClass.getMethod("sendSystemMessage", componentClass);
+                                                                sendSystemMessageMethod.invoke(player, message);
+                                                                
+                                                                // Cancel event
+                                                                Class<?> actionResultClass = classLoader.loadClass("net.minecraft.world.InteractionResult");
+                                                                java.lang.reflect.Field failField = actionResultClass.getField("FAIL");
+                                                                return failField.get(null);
+                                                            }
+                                                            
+                                                            boolean awaitingSecondClick = com.quackers29.businesscraft.fabric.event.FabricModEvents.isAwaitingSecondClick();
+                                                            
+                                                            if (!awaitingSecondClick) {
+                                                                // First click - set start point
+                                                                java.lang.reflect.Method setPathStartMethod = townInterfaceEntityClass.getMethod("setPathStart", blockPosClass);
+                                                                setPathStartMethod.invoke(blockEntity, clickedPos);
+                                                                com.quackers29.businesscraft.fabric.event.FabricModEvents.setAwaitingSecondClick(true);
+                                                                
+                                                                // Send message
+                                                                Object yellowMessage = literalMethod.invoke(null, "First point set! Now click to set the end point.");
+                                                                sendSystemMessageMethod.invoke(player, yellowMessage);
+                                                            } else {
+                                                                // Second click - set end point
+                                                                java.lang.reflect.Method setPathEndMethod = townInterfaceEntityClass.getMethod("setPathEnd", blockPosClass);
+                                                                setPathEndMethod.invoke(blockEntity, clickedPos);
+                                                                java.lang.reflect.Method setPathCreationModeMethod = townInterfaceEntityClass.getMethod("setPathCreationMode", boolean.class);
+                                                                setPathCreationModeMethod.invoke(blockEntity, false);
+                                                                
+                                                                // Get path start for provider update
+                                                                java.lang.reflect.Method getPathStartMethod = townInterfaceEntityClass.getMethod("getPathStart");
+                                                                Object pathStart = getPathStartMethod.invoke(blockEntity);
+                                                                
+                                                                // Update provider
+                                                                java.lang.reflect.Method getTownDataProviderMethod = townInterfaceEntityClass.getMethod("getTownDataProvider");
+                                                                Object provider = getTownDataProviderMethod.invoke(blockEntity);
+                                                                if (provider != null) {
+                                                                    Class<?> providerClass = classLoader.loadClass("com.quackers29.businesscraft.api.ITownDataProvider");
+                                                                    java.lang.reflect.Method setPathStartProviderMethod = providerClass.getMethod("setPathStart", blockPosClass);
+                                                                    java.lang.reflect.Method setPathEndProviderMethod = providerClass.getMethod("setPathEnd", blockPosClass);
+                                                                    java.lang.reflect.Method markDirtyMethod = providerClass.getMethod("markDirty");
+                                                                    
+                                                                    setPathStartProviderMethod.invoke(provider, pathStart);
+                                                                    setPathEndProviderMethod.invoke(provider, clickedPos);
+                                                                    markDirtyMethod.invoke(provider);
+                                                                }
+                                                                
+                                                                // Send success message
+                                                                Object greenMessage = literalMethod.invoke(null, "Path created!");
+                                                                sendSystemMessageMethod.invoke(player, greenMessage);
+                                                                
+                                                                // Reset state
+                                                                com.quackers29.businesscraft.fabric.event.FabricModEvents.setAwaitingSecondClick(false);
+                                                                com.quackers29.businesscraft.fabric.event.FabricModEvents.clearActiveTownBlock();
+                                                            }
+                                                            
+                                                            // Cancel event
+                                                            Class<?> actionResultClass = classLoader.loadClass("net.minecraft.world.InteractionResult");
+                                                            java.lang.reflect.Field failField = actionResultClass.getField("FAIL");
+                                                            return failField.get(null);
+                                                        }
+                                                    }
+                                                }
+                                            } catch (Exception ex) {
+                                                LOGGER.error("Error handling path creation mode", ex);
+                                            }
+                                        }
+                                        
+                                        // Call registered callbacks
                                         for (EventCallbacks.RightClickBlockCallback cb : rightClickBlockCallbacks) {
                                             // Use reflection to invoke callback - cast Objects to expected types
                                             Object castPlayer = playerClass.cast(player);
@@ -364,14 +468,84 @@ public class FabricEventCallbackHandler {
                 LOGGER.warn("Could not register client world unload event", e);
             }
             
-            // Register key input callback - Fabric uses KeyBinding callbacks
-            // This will be handled in FabricClientSetup with key binding registration
+            // Register key input callback - Fabric uses ClientTickEvents to check key states
+            try {
+                ClassLoader classLoader = FabricEventCallbackHandler.class.getClassLoader();
+                Class<?> clientTickEventsClass = classLoader.loadClass("net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents");
+                Class<?> keyBindingClass = classLoader.loadClass("net.minecraft.client.KeyMapping");
+                
+                // Get END_CLIENT_TICK event
+                java.lang.reflect.Field endTickField = clientTickEventsClass.getField("END_CLIENT_TICK");
+                Object endTickEvent = endTickField.get(null);
+                java.lang.reflect.Method registerTickMethod = endTickEvent.getClass().getMethod("register", java.util.function.Consumer.class);
+                
+                // Register a tick callback that checks key states
+                registerTickMethod.invoke(endTickEvent, (java.util.function.Consumer<Object>) (minecraftClient) -> {
+                    try {
+                        if (!keyInputCallbacks.isEmpty()) {
+                            // Get GLFW window handle
+                            java.lang.reflect.Method getWindowMethod = minecraftClient.getClass().getMethod("getWindow");
+                            Object window = getWindowMethod.invoke(minecraftClient);
+                            java.lang.reflect.Method getWindowMethod2 = window.getClass().getMethod("getWindow");
+                            long windowHandle = ((Number) getWindowMethod2.invoke(window)).longValue();
+                            
+                            // Check for key presses using GLFW (via reflection)
+                            Class<?> glfwClass = classLoader.loadClass("org.lwjgl.glfw.GLFW");
+                            java.lang.reflect.Method glfwGetKeyMethod = glfwClass.getMethod("glfwGetKey", long.class, int.class);
+                            
+                            // Check keys that are registered (F4 is the main one)
+                            int[] keysToCheck = {293}; // GLFW_KEY_F4
+                            
+                            for (int keyCode : keysToCheck) {
+                                int currentState = ((Number) glfwGetKeyMethod.invoke(null, windowHandle, keyCode)).intValue();
+                                Boolean previousState = previousKeyStates.getOrDefault(keyCode, false);
+                                
+                                // Detect key press (transition from not pressed to pressed)
+                                if (currentState == 1 && !previousState) {
+                                    // Key was just pressed
+                                    for (EventCallbacks.KeyInputCallback callback : keyInputCallbacks) {
+                                        boolean handled = callback.onKeyInput(keyCode, 1); // GLFW_PRESS
+                                        if (handled) {
+                                            break; // Stop if handled
+                                        }
+                                    }
+                                }
+                                
+                                // Update previous state
+                                previousKeyStates.put(keyCode, currentState == 1);
+                            }
+                        }
+                    } catch (Exception ex) {
+                        LOGGER.error("Error in key input handler", ex);
+                    }
+                });
+                
+                LOGGER.info("Key input callback registered");
+            } catch (Exception e) {
+                LOGGER.warn("Could not register key input event", e);
+            }
             
-            // Register mouse scroll callback - Fabric uses mouse callback events
-            // This will be handled in FabricClientSetup
+            // Register mouse scroll callback - Fabric uses MouseEvents
+            try {
+                ClassLoader classLoader = FabricEventCallbackHandler.class.getClassLoader();
+                Class<?> mouseEventsClass = classLoader.loadClass("net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents");
+                
+                // Use client tick to check mouse scroll state
+                // Actually, Fabric doesn't have a direct mouse scroll event, so we'll use a different approach
+                // We'll register a screen-level handler or use a mixin
+                // For now, mouse scroll is handled at the screen level in common module screens
+                // This is a placeholder - mouse scroll is typically handled in Screen classes
+                LOGGER.info("Mouse scroll callback registration - handled at screen level");
+            } catch (Exception e) {
+                LOGGER.warn("Could not register mouse scroll event", e);
+            }
             
-            // Register render level callback - Fabric uses world render events
-            // This will be handled in FabricClientSetup or FabricRenderHelper
+            // Register render level callback - Fabric uses WorldRenderEvents (handled by RenderHelper)
+            // Render level callbacks are already handled by FabricRenderHelper.registerWorldRenderCallback()
+            // ClientRenderEvents registers its callback via PlatformAccess.getEvents().registerRenderLevelCallback()
+            // which calls FabricRenderHelper.registerWorldRenderCallback()
+            // So no additional registration needed here
+            LOGGER.info("Render level callbacks handled via RenderHelper");
             
             LOGGER.info("Client-side Fabric events registered successfully");
         } catch (Exception e) {
@@ -379,6 +553,9 @@ public class FabricEventCallbackHandler {
             e.printStackTrace();
         }
     }
+    
+    // Key state tracking for key input callbacks
+    private static final java.util.Map<Integer, Boolean> previousKeyStates = new java.util.HashMap<>();
     
     // Registration methods (called by FabricEventHelper)
     public static void registerPlayerTickCallback(EventCallbacks.PlayerTickCallback callback) {
