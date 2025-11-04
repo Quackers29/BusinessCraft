@@ -75,6 +75,12 @@ public class FabricNetworkHelper implements NetworkHelper {
         FabricNetworkDelegate.openScreen(player, menuProvider);
     }
 
+    @Override
+    public void openScreen(Object player, Object menuProvider, Object blockPos) {
+        // Platform-specific screen opening with BlockPos context
+        FabricNetworkDelegate.openScreen(player, menuProvider, blockPos);
+    }
+
     /**
      * Platform-specific network delegate using reflection to avoid compile-time dependencies.
      * The actual Minecraft-specific networking code will be implemented in a separate runtime-loaded class.
@@ -141,6 +147,15 @@ public class FabricNetworkHelper implements NetworkHelper {
             try {
                 // Reflection-based implementation would go here
                 System.out.println("FabricNetworkDelegate.openScreen");
+            } catch (Exception e) {
+                System.err.println("Error in openScreen: " + e.getMessage());
+            }
+        }
+
+        static void openScreen(Object player, Object menuProvider, Object blockPos) {
+            try {
+                // Reflection-based implementation would go here
+                System.out.println("FabricNetworkDelegate.openScreen with BlockPos");
             } catch (Exception e) {
                 System.err.println("Error in openScreen: " + e.getMessage());
             }

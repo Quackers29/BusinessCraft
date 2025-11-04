@@ -34,7 +34,6 @@ import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,19 +100,21 @@ public class TownInterfaceBlock extends BaseEntityBlock {
             // Get the block entity to ensure all town data is accessible
             BlockEntity entity = level.getBlockEntity(pos);
             if (entity instanceof TownInterfaceEntity townInterface) {
-                // Open the TownInterfaceScreen instead of TownBlockScreen
-                NetworkHooks.openScreen((ServerPlayer) player, new MenuProvider() {
-                    @Override
-                    public Component getDisplayName() {
-                        return Component.translatable("block.businesscraft.town_interface");
-                    }
+                // Open the TownInterfaceScreen using PlatformAccess for platform-agnostic screen opening
+                if (player instanceof ServerPlayer serverPlayer) {
+                    PlatformAccess.getNetwork().openScreen(serverPlayer, new MenuProvider() {
+                        @Override
+                        public Component getDisplayName() {
+                            return Component.translatable("block.businesscraft.town_interface");
+                        }
 
-                    @Override
-                    public AbstractContainerMenu createMenu(int windowId, Inventory inventory, Player player) {
-                        // Create the TownInterfaceMenu using the town's position
-                        return new TownInterfaceMenu(windowId, inventory, pos);
-                    }
-                }, pos);
+                        @Override
+                        public AbstractContainerMenu createMenu(int windowId, Inventory inventory, Player player) {
+                            // Create the TownInterfaceMenu using the town's position
+                            return new TownInterfaceMenu(windowId, inventory, pos);
+                        }
+                    }, pos);
+                }
             } else {
                 LOGGER.error("Failed to get TownInterfaceEntity at position: {}", pos);
             }

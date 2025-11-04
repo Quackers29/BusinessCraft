@@ -59,4 +59,9 @@ public interface NetworkHelper {
      * Open a screen using platform-specific hooks
      */
     void openScreen(Object player, Object menuProvider);
+
+    /**
+     * Open a screen using platform-specific hooks with a BlockPos context
+     */
+    void openScreen(Object player, Object menuProvider, Object blockPos);
 }

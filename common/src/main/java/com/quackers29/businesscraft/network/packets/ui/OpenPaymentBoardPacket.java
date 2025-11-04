@@ -5,7 +5,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.network.NetworkHooks;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,8 +44,8 @@ public class OpenPaymentBoardPacket extends BaseBlockEntityPacket {
             handlePacket(context, (player, townBlockEntity) -> {
                 DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Opening Payment Board for player {} at position {}", player.getName().getString(), pos);
                 
-                // Use NetworkHooks to properly open the container with server-client sync
-                NetworkHooks.openScreen(player, townBlockEntity.createPaymentBoardMenuProvider(), pos);
+                // Use PlatformAccess to properly open the container with server-client sync
+                PlatformAccess.getNetwork().openScreen(player, townBlockEntity.createPaymentBoardMenuProvider(), pos);
                 DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Successfully opened Payment Board for player {}", player.getName().getString());
             });
         });

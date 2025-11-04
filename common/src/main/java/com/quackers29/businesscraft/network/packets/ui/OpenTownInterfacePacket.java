@@ -14,7 +14,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
-import net.minecraftforge.network.NetworkHooks;
 
 /**
  * Packet to request the server to open the TownInterface menu properly.
@@ -53,8 +52,8 @@ public class OpenTownInterfacePacket {
                 // Get the block entity to ensure all town data is accessible
                 BlockEntity entity = player.level().getBlockEntity(blockPos);
                 if (entity instanceof TownInterfaceEntity townInterface) {
-                    // Open the TownInterfaceScreen using NetworkHooks for proper sync
-                    net.minecraftforge.network.NetworkHooks.openScreen(player, new MenuProvider() {
+                    // Open the TownInterfaceScreen using PlatformAccess for platform-agnostic screen opening
+                    PlatformAccess.getNetwork().openScreen(player, new MenuProvider() {
                         @Override
                         public Component getDisplayName() {
                             return Component.translatable("block.businesscraft.town_interface");

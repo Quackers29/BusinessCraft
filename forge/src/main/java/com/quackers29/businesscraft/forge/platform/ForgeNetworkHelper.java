@@ -110,4 +110,17 @@ public class ForgeNetworkHelper implements NetworkHelper {
             NetworkHooks.openScreen(serverPlayer, menuProv);
         }
     }
+
+    @Override
+    public void openScreen(Object player, Object menuProvider, Object blockPos) {
+        if (player instanceof ServerPlayer serverPlayer &&
+            menuProvider instanceof MenuProvider menuProv &&
+            blockPos instanceof net.minecraft.core.BlockPos pos) {
+            NetworkHooks.openScreen(serverPlayer, menuProv, pos);
+        } else if (player instanceof ServerPlayer serverPlayer &&
+                   menuProvider instanceof MenuProvider menuProv) {
+            // Fallback to two-parameter version if blockPos is null or invalid
+            NetworkHooks.openScreen(serverPlayer, menuProv);
+        }
+    }
 }
