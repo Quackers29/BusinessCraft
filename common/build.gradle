@@ -29,7 +29,10 @@ dependencies {
     // Minecraft API (platform-agnostic - same Minecraft regardless of loader)
     // Using Forge's Minecraft dependency for compilation only
     // Platform modules will provide the actual runtime
-    minecraft 'net.minecraftforge:forge:1.20.1-47.1.0'
+    // Mark as non-transitive so it doesn't leak to Fabric
+    minecraft('net.minecraftforge:forge:1.20.1-47.1.0') {
+        transitive = false
+    }
 
     // Common TOML library for configuration
     api 'com.moandjiezana.toml:toml4j:0.7.2'

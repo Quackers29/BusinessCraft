@@ -8,6 +8,9 @@ plugins {
 
 archivesBaseName = 'businesscraft-fabric'
 
+// Ensure common module jar is built before fabric module compiles
+tasks.compileJava.dependsOn(':common:jar')
+
 loom {
     // accessWidenerPath = file("src/main/resources/businesscraft.accesswidener")
 }
@@ -20,8 +23,15 @@ dependencies {
     // Fabric API
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    // Include common module source directly
-    compileOnly project(':common')
+    // Include common module - standard dependency should work
+    // Ensure common module jar is built first (see task dependency above)
+    // Exclude Forge dependency since Fabric doesn't need it
+    compileOnly(project(':common')) {
+        exclude group: 'net.minecraftforge', module: 'forge'
+    }
+    implementation(project(':common')) {
+        exclude group: 'net.minecraftforge', module: 'forge'
+    }
 
     // JetBrains annotations for @NotNull/@Nullable
     compileOnly 'org.jetbrains:annotations:23.0.0'

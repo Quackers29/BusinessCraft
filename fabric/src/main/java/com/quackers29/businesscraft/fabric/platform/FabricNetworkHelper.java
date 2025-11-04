@@ -75,7 +75,7 @@ public class FabricNetworkHelper implements NetworkHelper {
         FabricNetworkDelegate.openScreen(player, menuProvider);
     }
 
-    @Override
+    // TODO: @Override - temporarily removed due to classpath issue with common module
     public void openScreen(Object player, Object menuProvider, Object blockPos) {
         // Platform-specific screen opening with BlockPos context
         FabricNetworkDelegate.openScreen(player, menuProvider, blockPos);
