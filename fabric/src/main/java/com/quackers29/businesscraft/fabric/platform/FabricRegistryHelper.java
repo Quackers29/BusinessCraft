@@ -108,9 +108,14 @@ public class FabricRegistryHelper implements RegistryHelper {
 
         static Object getItem(Object location) {
             try {
-                // Reflection-based implementation would go here
-                System.out.println("FabricRegistryDelegate.getItem: " + location);
-                return null;
+                // Use Fabric's registry system
+                ClassLoader classLoader = FabricRegistryDelegate.class.getClassLoader();
+                Class<?> registryClass = classLoader.loadClass("net.minecraft.core.Registry");
+                Class<?> builtInRegistriesClass = classLoader.loadClass("net.minecraft.core.registries.BuiltInRegistries");
+                
+                Object itemRegistry = builtInRegistriesClass.getField("ITEM").get(null);
+                return registryClass.getMethod("get", Object.class, Object.class)
+                    .invoke(null, itemRegistry, location);
             } catch (Exception e) {
                 System.err.println("Error in getItem: " + e.getMessage());
                 return null;
@@ -119,9 +124,14 @@ public class FabricRegistryHelper implements RegistryHelper {
 
         static Object getItemKey(Object item) {
             try {
-                // Reflection-based implementation would go here
-                System.out.println("FabricRegistryDelegate.getItemKey: " + item);
-                return null;
+                // Use Fabric's registry system
+                ClassLoader classLoader = FabricRegistryDelegate.class.getClassLoader();
+                Class<?> registryClass = classLoader.loadClass("net.minecraft.core.Registry");
+                Class<?> builtInRegistriesClass = classLoader.loadClass("net.minecraft.core.registries.BuiltInRegistries");
+                
+                Object itemRegistry = builtInRegistriesClass.getField("ITEM").get(null);
+                return registryClass.getMethod("getKey", Object.class, Object.class)
+                    .invoke(null, itemRegistry, item);
             } catch (Exception e) {
                 System.err.println("Error in getItemKey: " + e.getMessage());
                 return null;

@@ -7,6 +7,13 @@ package com.quackers29.businesscraft.fabric.init;
 public class FabricModBlockEntities {
 
     private static final String MOD_ID = "businesscraft";
+    
+    // Store the registered block entity type for later retrieval
+    private static Object TOWN_INTERFACE_ENTITY_TYPE;
+
+    public static Object getTownInterfaceEntityType() {
+        return TOWN_INTERFACE_ENTITY_TYPE;
+    }
 
     public static void register() {
         System.out.println("DEBUG: FabricModBlockEntities.register() called");
@@ -70,6 +77,9 @@ public class FabricModBlockEntities {
                 .newInstance(MOD_ID, "town_interface");
             registryClass.getMethod("register", Object.class, Object.class, Object.class)
                 .invoke(null, blockEntityRegistry, entityResourceLocation, townInterfaceEntityType);
+            
+            // Store for later retrieval
+            TOWN_INTERFACE_ENTITY_TYPE = townInterfaceEntityType;
 
             System.out.println("DEBUG: Town Interface Entity BlockEntityType registered successfully");
 

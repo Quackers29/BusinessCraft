@@ -4,14 +4,15 @@ import com.quackers29.businesscraft.api.ClientHelper;
 
 /**
  * Fabric implementation of ClientHelper
+ * Uses Fabric's MinecraftClient.getInstance() for client access
  */
 public class FabricClientHelper implements ClientHelper {
     @Override
     public Object getMinecraft() {
-        // Fabric implementation would use reflection or Fabric-specific APIs
         try {
-            // This would be implemented using Fabric's client accessor
-            return null; // Placeholder - actual implementation needed
+            // Fabric uses MinecraftClient instead of Minecraft
+            Class<?> minecraftClientClass = Class.forName("net.minecraft.client.MinecraftClient");
+            return minecraftClientClass.getMethod("getInstance").invoke(null);
         } catch (Exception e) {
             return null;
         }
@@ -19,57 +20,83 @@ public class FabricClientHelper implements ClientHelper {
 
     @Override
     public Object getClientLevel() {
-        Object mc = getMinecraft();
-        if (mc == null) return null;
-        // Reflection-based access to level
-        return null; // Placeholder
+        try {
+            Object mc = getMinecraft();
+            if (mc == null) return null;
+            return mc.getClass().getField("world").get(mc);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
     public Object getCurrentScreen() {
-        Object mc = getMinecraft();
-        if (mc == null) return null;
-        // Reflection-based access to screen
-        return null; // Placeholder
+        try {
+            Object mc = getMinecraft();
+            if (mc == null) return null;
+            return mc.getClass().getField("currentScreen").get(mc);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
     public Object getFont() {
-        Object mc = getMinecraft();
-        if (mc == null) return null;
-        // Reflection-based access to font
-        return null; // Placeholder
+        try {
+            Object mc = getMinecraft();
+            if (mc == null) return null;
+            return mc.getClass().getField("textRenderer").get(mc);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
     public void executeOnClientThread(Runnable runnable) {
-        Object mc = getMinecraft();
-        if (mc != null) {
-            // Execute on client thread using Fabric APIs
+        try {
+            Object mc = getMinecraft();
+            if (mc != null) {
+                // Fabric's execute method
+                mc.getClass().getMethod("execute", Runnable.class).invoke(mc, runnable);
+            } else {
+                runnable.run();
+            }
+        } catch (Exception e) {
             runnable.run();
         }
     }
 
     @Override
     public boolean isOnClientThread() {
-        // Fabric thread check
-        return true; // Placeholder
+        try {
+            Object mc = getMinecraft();
+            if (mc == null) return false;
+            return (Boolean) mc.getClass().getMethod("isOnThread").invoke(mc);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
     public Object getSoundManager() {
-        Object mc = getMinecraft();
-        if (mc == null) return null;
-        // Reflection-based access to sound manager
-        return null; // Placeholder
+        try {
+            Object mc = getMinecraft();
+            if (mc == null) return null;
+            return mc.getClass().getMethod("getSoundManager").invoke(mc);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Override
     public Object getClientPlayer() {
-        Object mc = getMinecraft();
-        if (mc == null) return null;
-        // Reflection-based access to player
-        return null; // Placeholder
+        try {
+            Object mc = getMinecraft();
+            if (mc == null) return null;
+            return mc.getClass().getField("player").get(mc);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
 
