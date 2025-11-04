@@ -2,14 +2,12 @@ package com.quackers29.businesscraft.network.packets.ui;
 
 import java.util.UUID;
 import java.util.Map;
-import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
@@ -50,12 +48,11 @@ public class OpenDestinationsUIPacket {
     /**
      * Handle the packet on the receiving side
      */
-    public boolean handle(Supplier<NetworkEvent.Context> ctx) {
-        NetworkEvent.Context context = ctx.get();
-        context.enqueueWork(() -> {
+    public boolean handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // Get player and world from context
-            ServerPlayer player = context.getSender();
-            if (player == null) return;
+            Object senderObj = PlatformAccess.getNetwork().getSender(context);
+            if (!(senderObj instanceof ServerPlayer player)) return;
             
             Level level = player.level();
             
@@ -128,7 +125,7 @@ public class OpenDestinationsUIPacket {
                 }
             }
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
         return true;
     }
     

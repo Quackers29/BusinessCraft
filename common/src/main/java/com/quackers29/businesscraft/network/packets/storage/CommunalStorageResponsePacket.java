@@ -4,15 +4,13 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.network.NetworkEvent;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.quackers29.businesscraft.debug.DebugConfig;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
-import com.quackers29.businesscraft.debug.DebugConfig;
 
 /**
  * Client-bound packet that sends the current state of communal storage to the client.
@@ -72,15 +70,12 @@ public class CommunalStorageResponsePacket {
         return new CommunalStorageResponsePacket(buf);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // Client-side handling
-            if (context.getDirection().getReceptionSide().isClient()) {
-                handleClientSide();
-            }
+            handleClientSide();
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
 
     private void handleClientSide() {

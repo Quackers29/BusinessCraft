@@ -2,13 +2,11 @@ package com.quackers29.businesscraft.network.packets.misc;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.ui.modal.specialized.BCModalInventoryScreen;
 import com.quackers29.businesscraft.menu.TradeMenu;
-
-import java.util.function.Supplier;
 import com.quackers29.businesscraft.debug.DebugConfig;
 
 /**
@@ -44,15 +42,12 @@ public class PaymentResultPacket {
         return new PaymentResultPacket(buf);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // Client-side handling
-            if (context.getDirection().getReceptionSide().isClient()) {
-                handleClientSide();
-            }
+            handleClientSide();
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
 
     private void handleClientSide() {

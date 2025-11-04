@@ -3,7 +3,6 @@ package com.quackers29.businesscraft.network.packets.ui;
 import java.util.UUID;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,7 +13,6 @@ import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.debug.DebugConfig;
-import net.minecraftforge.network.NetworkEvent;
 
 /**
  * Packet for requesting town map data from the server.
@@ -44,12 +42,11 @@ public class RequestTownMapDataPacket {
     /**
      * Handle the packet when received on the server
      */
-    public void handle(Supplier<NetworkEvent.Context> ctx) {
-        NetworkEvent.Context context = ctx.get();
-        context.enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             try {
-                ServerPlayer player = context.getSender();
-                if (player == null) {
+                Object senderObj = PlatformAccess.getNetwork().getSender(context);
+                if (!(senderObj instanceof ServerPlayer player)) {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Received RequestTownMapDataPacket from null player");
                     return;
                 }
@@ -88,6 +85,6 @@ public class RequestTownMapDataPacket {
                 LOGGER.error("Error handling RequestTownMapDataPacket", e);
             }
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
 }

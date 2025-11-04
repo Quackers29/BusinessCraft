@@ -4,18 +4,16 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.UUID;
-import java.util.function.Supplier;
-import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
 import com.quackers29.businesscraft.town.data.TownPaymentBoard;
 import net.minecraft.server.level.ServerLevel;
+
+import java.util.UUID;
 
 /**
  * Server-bound packet for claiming rewards from the payment board
@@ -59,23 +57,22 @@ public class PaymentBoardClaimPacket {
         return new PaymentBoardClaimPacket(buf);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // Server-side handling
-            ServerPlayer player = context.getSender();
+            Object senderObj = PlatformAccess.getNetwork().getSender(context);
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                 "PaymentBoardClaimPacket.handle() - received claim request from player: {}, rewardId: {}, toBuffer: {}", 
-                player != null ? player.getName().getString() : "null", rewardId, toBuffer);
+                senderObj != null ? ((ServerPlayer)senderObj).getName().getString() : "null", rewardId, toBuffer);
                 
-            if (player != null && player.level() instanceof ServerLevel serverLevel) {
+            if (senderObj instanceof ServerPlayer player && player.level() instanceof ServerLevel serverLevel) {
                 handleServerSide(player, serverLevel);
             } else {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "PaymentBoardClaimPacket.handle() - Invalid player or level state");
             }
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
 
     private void handleServerSide(ServerPlayer player, ServerLevel serverLevel) {

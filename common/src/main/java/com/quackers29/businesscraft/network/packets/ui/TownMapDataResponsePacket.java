@@ -3,13 +3,12 @@ package com.quackers29.businesscraft.network.packets.ui;
 import java.util.UUID;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.debug.DebugConfig;
 
 /**
@@ -78,9 +77,8 @@ public class TownMapDataResponsePacket {
     /**
      * Handle the packet when received on the client
      */
-    public void handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             try {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "Received town map data response with {} towns", townData.size());
@@ -103,7 +101,7 @@ public class TownMapDataResponsePacket {
                 LOGGER.error("Error handling TownMapDataResponsePacket", e);
             }
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
     
     /**

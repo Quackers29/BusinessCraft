@@ -1,7 +1,6 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
 import java.util.UUID;
-import java.util.function.Supplier;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -9,7 +8,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
@@ -56,12 +54,11 @@ public class SetPlatformDestinationPacket {
         return new SetPlatformDestinationPacket(buf);
     }
     
-    public boolean handle(Supplier<NetworkEvent.Context> ctx) {
-        NetworkEvent.Context context = ctx.get();
-        context.enqueueWork(() -> {
+    public boolean handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             try {
-                ServerPlayer player = context.getSender();
-                if (player == null) {
+                Object senderObj = PlatformAccess.getNetwork().getSender(context);
+                if (!(senderObj instanceof ServerPlayer player)) {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "SetPlatformDestinationPacket: No player sender");
                     return;
                 }
@@ -160,7 +157,7 @@ public class SetPlatformDestinationPacket {
                 // Don't crash the server, but log the error
             }
         });
-
+        PlatformAccess.getNetwork().setPacketHandled(context);
         return true;
     }
     

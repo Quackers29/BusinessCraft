@@ -3,13 +3,11 @@ package com.quackers29.businesscraft.network.packets.storage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.town.data.SlotBasedStorage;
-
-import java.util.function.Supplier;
 
 /**
  * Client-bound packet that sends slot-based storage data to preserve exact slot positions.
@@ -57,15 +55,12 @@ public class BufferSlotStorageResponsePacket {
         return new BufferSlotStorageResponsePacket(buf);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // Client-side handling
-            if (context.getDirection().getReceptionSide().isClient()) {
-                handleClientSide();
-            }
+            handleClientSide();
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
 
     private void handleClientSide() {

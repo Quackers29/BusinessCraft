@@ -3,19 +3,17 @@ package com.quackers29.businesscraft.network.packets.ui;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.town.TownManager;
 import com.quackers29.businesscraft.town.Town;
-import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.platform.Platform;
 
 import java.util.UUID;
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * Packet sent from client to server to request detailed platform data for a specific town.
@@ -48,12 +46,11 @@ public class RequestTownPlatformDataPacket {
     /**
      * Handle the packet when received on the server
      */
-    public void handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             try {
-                ServerPlayer player = context.getSender();
-                if (player == null) {
+                Object senderObj = PlatformAccess.getNetwork().getSender(context);
+                if (!(senderObj instanceof ServerPlayer player)) {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Received RequestTownPlatformDataPacket with null sender");
                     return;
                 }
@@ -113,6 +110,6 @@ public class RequestTownPlatformDataPacket {
                 LOGGER.error("Error handling RequestTownPlatformDataPacket", e);
             }
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
 } 

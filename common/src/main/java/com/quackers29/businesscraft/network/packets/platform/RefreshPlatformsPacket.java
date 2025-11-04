@@ -1,14 +1,13 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
 import java.util.UUID;
-import java.util.function.Supplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.ui.screens.platform.PlatformManagementScreenV2;
 import com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache;
@@ -38,13 +37,12 @@ public class RefreshPlatformsPacket {
         return new RefreshPlatformsPacket(buf);
     }
     
-    public boolean handle(Supplier<NetworkEvent.Context> ctx) {
-        NetworkEvent.Context context = ctx.get();
-        context.enqueueWork(() -> {
+    public boolean handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // This code runs on the client
             handleClient();
         });
-        
+        PlatformAccess.getNetwork().setPacketHandled(context);
         return true;
     }
     

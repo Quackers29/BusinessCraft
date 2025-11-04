@@ -130,7 +130,9 @@ public class ForgeModMessages {
         net.messageBuilder(SetPlatformPathPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SetPlatformPathPacket::decode)
                 .encoder(SetPlatformPathPacket::encode)
-                .consumerMainThread(SetPlatformPathPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(ResetPlatformPathPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
@@ -142,7 +144,9 @@ public class ForgeModMessages {
         net.messageBuilder(SetPlatformPathCreationModePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SetPlatformPathCreationModePacket::decode)
                 .encoder(SetPlatformPathCreationModePacket::encode)
-                .consumerMainThread(SetPlatformPathCreationModePacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(SetPathCreationModePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
@@ -154,26 +158,34 @@ public class ForgeModMessages {
         net.messageBuilder(RefreshPlatformsPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(RefreshPlatformsPacket::decode)
                 .encoder(RefreshPlatformsPacket::encode)
-                .consumerMainThread(RefreshPlatformsPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(SetPlatformDestinationPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SetPlatformDestinationPacket::decode)
                 .encoder(SetPlatformDestinationPacket::encode)
-                .consumerMainThread(SetPlatformDestinationPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         // UI-related packets
         net.messageBuilder(OpenDestinationsUIPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(OpenDestinationsUIPacket::decode)
                 .encoder(OpenDestinationsUIPacket::encode)
-                .consumerMainThread(OpenDestinationsUIPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(RefreshDestinationsPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(RefreshDestinationsPacket::decode)
                 .encoder(RefreshDestinationsPacket::encode)
-                .consumerMainThread(RefreshDestinationsPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(PlayerExitUIPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
@@ -211,7 +223,9 @@ public class ForgeModMessages {
         net.messageBuilder(OpenTownInterfacePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(OpenTownInterfacePacket::decode)
                 .encoder(OpenTownInterfacePacket::encode)
-                .consumerMainThread(OpenTownInterfacePacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(OpenPaymentBoardPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
@@ -225,25 +239,33 @@ public class ForgeModMessages {
         net.messageBuilder(RequestTownMapDataPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(RequestTownMapDataPacket::decode)
                 .encoder(RequestTownMapDataPacket::encode)
-                .consumerMainThread(RequestTownMapDataPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(TownMapDataResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(TownMapDataResponsePacket::decode)
                 .encoder(TownMapDataResponsePacket::encode)
-                .consumerMainThread(TownMapDataResponsePacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(RequestTownPlatformDataPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(RequestTownPlatformDataPacket::decode)
                 .encoder(RequestTownPlatformDataPacket::encode)
-                .consumerMainThread(RequestTownPlatformDataPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(TownPlatformDataResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(TownPlatformDataResponsePacket::decode)
                 .encoder(TownPlatformDataResponsePacket::encode)
-                .consumerMainThread(TownPlatformDataResponsePacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         // Storage-related packets
@@ -266,25 +288,33 @@ public class ForgeModMessages {
         net.messageBuilder(CommunalStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(CommunalStorageResponsePacket::decode)
                 .encoder(CommunalStorageResponsePacket::encode)
-                .consumerMainThread(CommunalStorageResponsePacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(PaymentBoardResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(PaymentBoardResponsePacket::decode)
                 .encoder(PaymentBoardResponsePacket::encode)
-                .consumerMainThread(PaymentBoardResponsePacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(PaymentBoardRequestPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PaymentBoardRequestPacket::decode)
                 .encoder(PaymentBoardRequestPacket::encode)
-                .consumerMainThread(PaymentBoardRequestPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(PaymentBoardClaimPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(PaymentBoardClaimPacket::decode)
                 .encoder(PaymentBoardClaimPacket::encode)
-                .consumerMainThread(PaymentBoardClaimPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(BufferStoragePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
@@ -298,13 +328,17 @@ public class ForgeModMessages {
         net.messageBuilder(BufferStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(BufferStorageResponsePacket::decode)
                 .encoder(BufferStorageResponsePacket::encode)
-                .consumerMainThread(BufferStorageResponsePacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(BufferSlotStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(BufferSlotStorageResponsePacket::decode)
                 .encoder(BufferSlotStorageResponsePacket::encode)
-                .consumerMainThread(BufferSlotStorageResponsePacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         net.messageBuilder(PersonalStoragePacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
@@ -326,14 +360,18 @@ public class ForgeModMessages {
         net.messageBuilder(PersonalStorageResponsePacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(PersonalStorageResponsePacket::decode)
                 .encoder(PersonalStorageResponsePacket::encode)
-                .consumerMainThread(PersonalStorageResponsePacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
 
         // Misc packets
         net.messageBuilder(PaymentResultPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(PaymentResultPacket::decode)
                 .encoder(PaymentResultPacket::encode)
-                .consumerMainThread(PaymentResultPacket::handle)
+                .consumerMainThread((msg, ctxSupplier) -> {
+                    msg.handle(ctxSupplier.get());
+                })
                 .add();
     }
 

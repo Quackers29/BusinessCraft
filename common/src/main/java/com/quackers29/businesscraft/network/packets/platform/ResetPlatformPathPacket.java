@@ -1,18 +1,16 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.platform.Platform;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.network.NetworkEvent;
 
 import java.util.UUID;
-import java.util.function.Supplier;
 
 /**
  * Packet to reset the path of a platform
@@ -38,10 +36,10 @@ public class ResetPlatformPathPacket {
         );
     }
     
-    public static void handle(ResetPlatformPathPacket msg, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().enqueueWork(() -> {
-            ServerPlayer player = ctx.get().getSender();
-            if (player == null) return;
+    public static void handle(ResetPlatformPathPacket msg, Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
+            Object senderObj = PlatformAccess.getNetwork().getSender(context);
+            if (!(senderObj instanceof ServerPlayer player)) return;
             
             ServerLevel level = player.serverLevel();
             BlockEntity be = level.getBlockEntity(msg.townInterfacePos);
@@ -61,6 +59,6 @@ public class ResetPlatformPathPacket {
                 }
             }
         });
-        ctx.get().setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
 } 

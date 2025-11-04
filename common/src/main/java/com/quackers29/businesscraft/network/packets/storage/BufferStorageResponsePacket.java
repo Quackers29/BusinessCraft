@@ -3,7 +3,6 @@ package com.quackers29.businesscraft.network.packets.storage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.Item;
-import net.minecraftforge.network.NetworkEvent;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +10,6 @@ import com.quackers29.businesscraft.debug.DebugConfig;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 /**
  * Client-bound packet that sends the current state of buffer storage to the client.
@@ -72,15 +70,12 @@ public class BufferStorageResponsePacket {
         return new BufferStorageResponsePacket(buf);
     }
 
-    public void handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // Client-side handling
-            if (context.getDirection().getReceptionSide().isClient()) {
-                handleClientSide();
-            }
+            handleClientSide();
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
 
     private void handleClientSide() {

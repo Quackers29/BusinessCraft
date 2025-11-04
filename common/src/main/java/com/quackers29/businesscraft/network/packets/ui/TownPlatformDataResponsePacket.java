@@ -2,16 +2,15 @@ package com.quackers29.businesscraft.network.packets.ui;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.debug.DebugConfig;
 
 import java.util.UUID;
 import java.util.Set;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.function.Supplier;
 
 /**
  * Packet sent from server to client containing detailed platform data for a specific town.
@@ -138,9 +137,8 @@ public class TownPlatformDataResponsePacket {
     /**
      * Handle the packet when received on the client
      */
-    public void handle(Supplier<NetworkEvent.Context> supplier) {
-        NetworkEvent.Context context = supplier.get();
-        context.enqueueWork(() -> {
+    public void handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             try {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                     "Received platform data response for town {} with {} platforms", 
@@ -172,7 +170,7 @@ public class TownPlatformDataResponsePacket {
                 LOGGER.error("Error handling TownPlatformDataResponsePacket", e);
             }
         });
-        context.setPacketHandled(true);
+        PlatformAccess.getNetwork().setPacketHandled(context);
     }
     
     /**

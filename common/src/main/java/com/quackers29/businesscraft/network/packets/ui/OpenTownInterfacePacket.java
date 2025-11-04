@@ -14,8 +14,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
-import java.util.function.Supplier;
-import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.NetworkHooks;
 
 /**
@@ -48,11 +46,10 @@ public class OpenTownInterfacePacket {
         return new OpenTownInterfacePacket(buf);
     }
     
-    public boolean handle(Supplier<NetworkEvent.Context> ctx) {
-        NetworkEvent.Context context = ctx.get();
-        context.enqueueWork(() -> {
-            ServerPlayer player = context.getSender();
-            if (player != null) {
+    public boolean handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
+            Object senderObj = PlatformAccess.getNetwork().getSender(context);
+            if (senderObj instanceof ServerPlayer player) {
                 // Get the block entity to ensure all town data is accessible
                 BlockEntity entity = player.level().getBlockEntity(blockPos);
                 if (entity instanceof TownInterfaceEntity townInterface) {
@@ -74,8 +71,7 @@ public class OpenTownInterfacePacket {
                 }
             }
         });
-        context.setPacketHandled(true);
-
+        PlatformAccess.getNetwork().setPacketHandled(context);
         return true;
     }
 } 

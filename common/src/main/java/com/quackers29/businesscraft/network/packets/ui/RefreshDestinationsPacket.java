@@ -3,16 +3,15 @@ package com.quackers29.businesscraft.network.packets.ui;
 import java.util.UUID;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.function.Supplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.network.NetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.town.Town;
@@ -91,9 +90,8 @@ public class RefreshDestinationsPacket {
         townDirections.put(townId, direction);
     }
     
-    public boolean handle(Supplier<NetworkEvent.Context> ctx) {
-        NetworkEvent.Context context = ctx.get();
-        context.enqueueWork(() -> {
+    public boolean handle(Object context) {
+        PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // This runs on the client side
             Minecraft minecraft = Minecraft.getInstance();
             Level level = minecraft.level;
@@ -126,8 +124,7 @@ public class RefreshDestinationsPacket {
                 }
             }
         });
-        context.setPacketHandled(true);
-
+        PlatformAccess.getNetwork().setPacketHandled(context);
         return true;
     }
 } 
