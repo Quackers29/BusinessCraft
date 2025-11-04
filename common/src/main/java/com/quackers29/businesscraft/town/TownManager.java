@@ -50,6 +50,15 @@ public class TownManager {
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Clearing {} TownManager instances", INSTANCES.size());
         INSTANCES.clear();
     }
+    
+    /**
+     * Get all active TownManager instances across all loaded levels.
+     * Platform-agnostic method to iterate through all managers.
+     * @return An unmodifiable collection of all TownManager instances
+     */
+    public static java.util.Collection<TownManager> getAllInstances() {
+        return Collections.unmodifiableCollection(INSTANCES.values());
+    }
 
     public UUID registerTown(BlockPos pos, String name) {
         // Check minimum distance between towns

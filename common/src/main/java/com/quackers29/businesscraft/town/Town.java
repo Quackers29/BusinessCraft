@@ -578,28 +578,19 @@ public class Town implements ITownDataProvider {
     @Override
     public void markDirty() {
         // Find the TownManager for all loaded levels and mark the town data as dirty
-        net.minecraft.server.MinecraftServer server = net.minecraftforge.server.ServerLifecycleHooks.getCurrentServer();
-        if (server != null) {
-            boolean foundInAnyLevel = false;
-            for (net.minecraft.world.level.Level level : server.getAllLevels()) {
-                if (level instanceof net.minecraft.server.level.ServerLevel) {
-                    net.minecraft.server.level.ServerLevel serverLevel = (net.minecraft.server.level.ServerLevel) level;
-                    TownManager manager = TownManager.get(serverLevel);
-                    if (manager.getTown(id) == this) {
-                        manager.markDirty();
-                        foundInAnyLevel = true;
-                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Successfully marked town '{}' (id: {}) as dirty in level {}", 
-                            this.name, this.id, serverLevel.dimension().location());
-                    }
-                }
-            }
-            
-            if (!foundInAnyLevel) {
-                LOGGER.warn("Failed to mark town '{}' (id: {}) as dirty - not found in any loaded level", 
+        // Platform-agnostic: iterate through all TownManager instances
+        boolean foundInAnyLevel = false;
+        for (TownManager manager : TownManager.getAllInstances()) {
+            if (manager.getTown(id) == this) {
+                manager.markDirty();
+                foundInAnyLevel = true;
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Successfully marked town '{}' (id: {}) as dirty", 
                     this.name, this.id);
             }
-        } else {
-            LOGGER.warn("Failed to mark town '{}' (id: {}) as dirty - server is null", 
+        }
+        
+        if (!foundInAnyLevel) {
+            LOGGER.warn("Failed to mark town '{}' (id: {}) as dirty - not found in any loaded level", 
                 this.name, this.id);
         }
     }
