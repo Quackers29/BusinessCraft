@@ -2,14 +2,13 @@ package com.quackers29.businesscraft.client;
 
 import com.quackers29.businesscraft.api.EventCallbacks;
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.api.RenderHelper;
 import com.mojang.blaze3d.systems.RenderSystem;
 // BusinessCraft moved to platform-specific module
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
-import net.minecraftforge.client.gui.overlay.ForgeGui;
-import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 
 import java.util.*;
 
@@ -17,7 +16,7 @@ import java.util.*;
  * Renders debug information about towns on the screen
  * Can be toggled with F4
  */
-public class TownDebugOverlay implements IGuiOverlay {
+public class TownDebugOverlay {
     private static boolean visible = false;
     private static final int BACKGROUND_COLOR = 0x80000000;
     private static final int HEADER_COLOR = 0xFFFFAA00;
@@ -69,52 +68,23 @@ public class TownDebugOverlay implements IGuiOverlay {
     }
     
     /**
-     * Initialize event callbacks. Should be called during mod initialization.
+     * Initialize event callbacks and register overlay. Should be called during mod initialization.
      */
     public static void initialize() {
         PlatformAccess.getEvents().registerMouseScrollCallback(TownDebugOverlay::onMouseScroll);
         PlatformAccess.getEvents().registerClientTickCallback(TownDebugOverlay::onClientTick);
-    }
-    
-    /**
-     * Handles mouse scroll events when the overlay is visible
-     */
-    private static boolean onMouseScroll(double scrollDelta) {
-        if (visible) {
-            // Adjust scroll offset based on mouse wheel direction
-            scrollOffset -= (int)(scrollDelta * SCROLL_AMOUNT);
-            // Ensure we don't scroll past the top
-            if (scrollOffset < 0) {
-                scrollOffset = 0;
-            }
-            // We handled this scroll event
-            return true; // Cancel event
-        }
-        return false;
-    }
-    
-    /**
-     * Tick handler for periodic updates
-     */
-    private static void onClientTick() {
-        if (visible) {
-            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
-            if (clientHelper != null) {
-                Object levelObj = clientHelper.getClientLevel();
-                Object playerObj = clientHelper.getClientPlayer();
-                if (levelObj instanceof net.minecraft.world.level.Level level && playerObj != null) {
-                    // Check if it's time for a refresh
-                    long currentTick = level.getGameTime();
-                    if (currentTick - lastUpdateTick > REFRESH_INTERVAL_TICKS) {
-                        refreshData();
-                    }
-                }
-            }
+        
+        // Register overlay with RenderHelper
+        RenderHelper renderHelper = PlatformAccess.getRender();
+        if (renderHelper != null) {
+            renderHelper.registerOverlay("town_debug", TownDebugOverlay::renderOverlay);
         }
     }
     
-    @Override
-    public void render(ForgeGui gui, GuiGraphics guiGraphics, float partialTick, int screenWidth, int screenHeight) {
+    /**
+     * Render overlay (platform-agnostic version)
+     */
+    private static void renderOverlay(GuiGraphics guiGraphics, float partialTick, int screenWidth, int screenHeight) {
         com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
         if (clientHelper == null) return;
         
@@ -200,6 +170,43 @@ public class TownDebugOverlay implements IGuiOverlay {
         // Show scroll indicator if we're not at the top
         if (scrollOffset > 0) {
             guiGraphics.fill(screenWidth - 20, 2 + lineHeight + 3, screenWidth - 5, 2 + lineHeight + 10, 0xAAFFFFFF);
+        }
+    }
+    
+    /**
+     * Handles mouse scroll events when the overlay is visible
+     */
+    private static boolean onMouseScroll(double scrollDelta) {
+        if (visible) {
+            // Adjust scroll offset based on mouse wheel direction
+            scrollOffset -= (int)(scrollDelta * SCROLL_AMOUNT);
+            // Ensure we don't scroll past the top
+            if (scrollOffset < 0) {
+                scrollOffset = 0;
+            }
+            // We handled this scroll event
+            return true; // Cancel event
+        }
+        return false;
+    }
+    
+    /**
+     * Tick handler for periodic updates
+     */
+    private static void onClientTick() {
+        if (visible) {
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper != null) {
+                Object levelObj = clientHelper.getClientLevel();
+                Object playerObj = clientHelper.getClientPlayer();
+                if (levelObj instanceof net.minecraft.world.level.Level level && playerObj != null) {
+                    // Check if it's time for a refresh
+                    long currentTick = level.getGameTime();
+                    if (currentTick - lastUpdateTick > REFRESH_INTERVAL_TICKS) {
+                        refreshData();
+                    }
+                }
+            }
         }
     }
     

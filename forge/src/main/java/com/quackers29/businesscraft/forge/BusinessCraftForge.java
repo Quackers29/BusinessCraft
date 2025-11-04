@@ -11,6 +11,7 @@ import com.quackers29.businesscraft.forge.platform.ForgeMenuTypeHelper;
 import com.quackers29.businesscraft.forge.platform.ForgeItemHandlerHelper;
 import com.quackers29.businesscraft.forge.platform.ForgeNetworkMessages;
 import com.quackers29.businesscraft.forge.platform.ForgeClientHelper;
+import com.quackers29.businesscraft.forge.platform.ForgeRenderHelper;
 import com.quackers29.businesscraft.forge.init.ForgeModBlocks;
 import com.quackers29.businesscraft.forge.init.ForgeModEntityTypes;
 import com.quackers29.businesscraft.forge.init.ForgeModBlockEntities;
@@ -25,6 +26,7 @@ import com.quackers29.businesscraft.api.NetworkHelper;
 import com.quackers29.businesscraft.api.MenuHelper;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.api.ClientHelper;
+import com.quackers29.businesscraft.api.RenderHelper;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
@@ -69,6 +71,7 @@ public class BusinessCraftForge {
     public static final com.quackers29.businesscraft.api.ItemHandlerHelper ITEM_HANDLERS = new ForgeItemHandlerHelper();
     public static final com.quackers29.businesscraft.api.NetworkMessages NETWORK_MESSAGES = new ForgeNetworkMessages();
     public static final ClientHelper CLIENT = new ForgeClientHelper(); // Client-side only
+    public static final RenderHelper RENDER = new ForgeRenderHelper(); // Client-side only
 
     // Add a static reference to the manager to use in event handlers
     public static final TouristVehicleManager TOURIST_VEHICLE_MANAGER = new TouristVehicleManager();
@@ -89,7 +92,9 @@ public class BusinessCraftForge {
         PlatformAccess.menuTypes = MENU_TYPES;
         PlatformAccess.itemHandlers = ITEM_HANDLERS;
         PlatformAccess.networkMessages = NETWORK_MESSAGES;
-        // ClientHelper will be initialized in clientSetup() - only available on client side
+        // ClientHelper and RenderHelper will be initialized in clientSetup() - only available on client side
+        // But we need to set the renderHelper reference early for overlay registration
+        ForgeRenderHelper.ForgeOverlayRegistry.setRenderHelper((ForgeRenderHelper) RENDER);
 
         // Register DeferredRegisters with the mod event bus
         System.out.println("DEBUG: About to register DeferredRegisters with mod event bus");
@@ -148,6 +153,9 @@ public class BusinessCraftForge {
 
         // Initialize client helper only on client side
         PlatformAccess.client = CLIENT;
+        PlatformAccess.render = RENDER;
+        
+        // RenderHelper reference already set in constructor for overlay registration
 
         // Client-side setup handled by ForgeClientSetup
         ForgeClientSetup.init();

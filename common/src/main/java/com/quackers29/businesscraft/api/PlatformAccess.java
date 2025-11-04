@@ -17,6 +17,7 @@ public class PlatformAccess {
     public static ItemHandlerHelper itemHandlers;
     public static NetworkMessages networkMessages;
     public static ClientHelper client; // Client-side only - may be null on server
+    public static RenderHelper render; // Client-side only - may be null on server
 
     public static PlatformHelper getPlatform() {
         if (platform == null) {
@@ -91,5 +92,10 @@ public class PlatformAccess {
     public static ClientHelper getClient() {
         // ClientHelper may be null on server side, so we don't throw an exception
         return client;
+    }
+    
+    public static RenderHelper getRender() {
+        // RenderHelper may be null on server side, so we don't throw an exception
+        return render;
     }
 }
