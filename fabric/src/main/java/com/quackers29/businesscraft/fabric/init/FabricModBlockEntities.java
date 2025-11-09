@@ -1,17 +1,20 @@
 package com.quackers29.businesscraft.fabric.init;
 
+import com.quackers29.businesscraft.fabric.block.entity.FabricTownInterfaceEntity;
+import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
 
 /**
- * Fabric block entity registration using direct API calls.
- * Simplified approach that uses direct Minecraft classes.
+ * Fabric block entity registration using direct Fabric API calls.
  */
 public class FabricModBlockEntities {
     private static final String MOD_ID = "businesscraft";
-    
+
     // Store the registered block entity type for later retrieval
-    private static Object TOWN_INTERFACE_ENTITY_TYPE;
+    public static BlockEntityType<FabricTownInterfaceEntity> TOWN_INTERFACE_ENTITY_TYPE;
     private static boolean registrationAttempted = false;
     private static boolean registrationSuccessful = false;
 
@@ -19,99 +22,6 @@ public class FabricModBlockEntities {
         return TOWN_INTERFACE_ENTITY_TYPE;
     }
 
-    /**
-     * Helper method to load classes with fallback classloaders
-     */
-    private static Class<?> loadClass(String className) throws ClassNotFoundException {
-        // First, try to get a Minecraft class that's definitely loaded
-        ClassLoader mcClassLoader = null;
-        
-        String[] knownMcClasses = {
-            "net.minecraft.world.level.block.Block",
-            "net.minecraft.world.item.Item", 
-            "net.minecraft.util.Identifier",
-            "net.minecraft.resources.ResourceLocation"
-        };
-        
-        ClassLoader threadClassLoader = Thread.currentThread().getContextClassLoader();
-        ClassLoader[] classLoaders = {
-            threadClassLoader,
-            FabricModBlockEntities.class.getClassLoader(),
-            ClassLoader.getSystemClassLoader()
-        };
-        
-        for (ClassLoader loader : classLoaders) {
-            if (loader == null) continue;
-            for (String knownClass : knownMcClasses) {
-                try {
-                    Class<?> testClass = Class.forName(knownClass, true, loader);
-                    mcClassLoader = testClass.getClassLoader();
-                    break;
-                } catch (ClassNotFoundException e) {
-                    continue;
-                }
-            }
-            if (mcClassLoader != null) break;
-        }
-        
-        if (mcClassLoader == null) {
-            throw new ClassNotFoundException("Could not find Minecraft classloader");
-        }
-        
-        return Class.forName(className, true, mcClassLoader);
-    }
-
-    /**
-     * Check if Minecraft classes are available
-     * In Fabric, we need Registry and the registry objects
-     */
-    private static boolean areMinecraftClassesAvailable() {
-        try {
-            // Load Registry class
-            Class<?> registryClass = loadClass("net.minecraft.core.Registry");
-            
-            // Try to find where BLOCK_ENTITY_TYPE registry is defined
-            String[] possibleRegistryLocations = {
-                "net.minecraft.core.registries.Registries",
-                "net.minecraft.core.registries.BuiltInRegistries",
-                "net.minecraft.registry.Registries"
-            };
-            
-            boolean foundRegistries = false;
-            for (String location : possibleRegistryLocations) {
-                try {
-                    Class<?> registriesClass = loadClass(location);
-                    // Check if it has BLOCK_ENTITY_TYPE field
-                    try {
-                        registriesClass.getField("BLOCK_ENTITY_TYPE");
-                        foundRegistries = true;
-                        break;
-                    } catch (NoSuchFieldException e) {
-                        continue;
-                    }
-                } catch (ClassNotFoundException e) {
-                    continue;
-                }
-            }
-            
-            // Also check Registry class itself
-            if (!foundRegistries) {
-                try {
-                    registryClass.getField("BLOCK_ENTITY_TYPE");
-                    foundRegistries = true;
-                } catch (NoSuchFieldException e) {
-                    // Not found
-                }
-            }
-            
-            loadClass("net.minecraft.util.Identifier"); // In Fabric, ResourceLocation is Identifier
-            return foundRegistries;
-        } catch (ClassNotFoundException e) {
-            return false;
-        } catch (Exception e) {
-            return false;
-        }
-    }
 
     public static void register() {
         System.out.println("DEBUG: FabricModBlockEntities.register() called");
@@ -122,6 +32,15 @@ public class FabricModBlockEntities {
 
         registrationAttempted = true;
         System.out.println("DEBUG: FabricModBlockEntities.register() - Attempting block entity registration");
+
+        // Check if blocks are registered first
+        net.minecraft.block.Block townInterfaceBlock = Registries.BLOCK.get(new Identifier("businesscraft", "town_interface"));
+        if (townInterfaceBlock == null) {
+            System.out.println("DEBUG: Town interface block not found in registry - blocks may not be registered yet");
+            // Try to register anyway with a placeholder or skip for now
+        } else {
+            System.out.println("DEBUG: Found town interface block in registry: " + townInterfaceBlock);
+        }
 
         // In Fabric, register block entities directly during mod initialization
         try {
@@ -149,38 +68,52 @@ public class FabricModBlockEntities {
 
 
     /**
-     * Actual block entity registration logic - simplified test version
+     * Register block entities using direct Fabric API calls
      */
     private static void registerBlockEntities() {
         try {
-            // Skip block entity registration for now - the common module TownInterfaceEntity
-            // uses Forge-specific classes (MenuProvider) that don't exist in Fabric
-            // The basic block works without the block entity for now
-            System.out.println("DEBUG: Skipping TownInterfaceEntity registration - uses Forge-specific MenuProvider class");
+            System.out.println("DEBUG: Registering FabricTownInterfaceEntity");
+
+            // Get the town interface block from the registry (registered in FabricModBlocks)
+            net.minecraft.block.Block townInterfaceBlock = Registries.BLOCK.get(new Identifier("businesscraft", "town_interface"));
+
+            if (townInterfaceBlock != null) {
+                // Create and register the block entity type using Fabric API
+                System.out.println("DEBUG: Creating block entity type for town interface block");
+                
+                // Fabric's factory is called when entities are actually created (not during build)
+                // So we can safely reference TOWN_INTERFACE_ENTITY_TYPE in the factory
+                // by the time it's called, the type will be set
+                TOWN_INTERFACE_ENTITY_TYPE = FabricBlockEntityTypeBuilder.create(
+                    (pos, state) -> {
+                        // By the time this factory is called, TOWN_INTERFACE_ENTITY_TYPE should be set
+                        // But to be safe, we'll use the type parameter if Fabric provides it
+                        // For now, use the static field which should be set by the time entities are created
+                        return new FabricTownInterfaceEntity(TOWN_INTERFACE_ENTITY_TYPE, pos, state);
+                    },
+                    townInterfaceBlock
+                ).build();
+
+                // Register it in the registry
+                Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("businesscraft", "town_interface_entity"), TOWN_INTERFACE_ENTITY_TYPE);
+
+                System.out.println("DEBUG: Successfully registered FabricTownInterfaceEntity: " + TOWN_INTERFACE_ENTITY_TYPE);
+            } else {
+                System.out.println("DEBUG: Skipping block entity type registration - town interface block not found");
+                // Try to create without specifying the block
+                TOWN_INTERFACE_ENTITY_TYPE = FabricBlockEntityTypeBuilder.create(
+                    FabricTownInterfaceEntity::new
+                    // No blocks specified - this might work for dynamic association
+                ).build();
+
+                Registry.register(Registries.BLOCK_ENTITY_TYPE, new Identifier("businesscraft", "town_interface_entity"), TOWN_INTERFACE_ENTITY_TYPE);
+                System.out.println("DEBUG: Registered block entity type without block association: " + TOWN_INTERFACE_ENTITY_TYPE);
+            }
+
         } catch (Exception e) {
             System.err.println("ERROR: Failed to register block entities: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private static Object createEntitySupplier(ClassLoader classLoader) throws Exception {
-        return (java.util.function.BiFunction<Object, Object, Object>) (blockPos, blockState) -> {
-            try {
-                // Use the common TownInterfaceEntity class via reflection
-                // It's excluded from Fabric source sets but available at runtime via common module JAR
-                Class<?> townInterfaceEntityClass = classLoader.loadClass("com.quackers29.businesscraft.block.entity.TownInterfaceEntity");
-                Class<?> blockPosClass = classLoader.loadClass("net.minecraft.core.BlockPos");
-                Class<?> blockStateClass = classLoader.loadClass("net.minecraft.world.level.block.state.BlockState");
-                
-                // Create TownInterfaceEntity instance using constructor that takes BlockPos and BlockState
-                // The constructor internally calls PlatformAccess.getBlockEntities().getTownInterfaceEntityType()
-                return townInterfaceEntityClass.getConstructor(
-                    blockPosClass,
-                    blockStateClass
-                ).newInstance(blockPos, blockState);
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to create TownInterfaceEntity instance", e);
-            }
-        };
-    }
 }

@@ -155,12 +155,19 @@ public class FabricNetworkHelper implements NetworkHelper {
                 
                 ClassLoader classLoader = FabricNetworkDelegate.class.getClassLoader();
                 
-                // Load Minecraft classes
-                Class<?> serverPlayerEntityClass = classLoader.loadClass("net.minecraft.server.level.ServerPlayer");
-                Class<?> menuProviderClass = classLoader.loadClass("net.minecraft.world.MenuProvider");
+                // Load Minecraft classes - use Fabric's class names
+                Class<?> serverPlayerEntityClass = classLoader.loadClass("net.minecraft.server.network.ServerPlayerEntity");
                 Class<?> namedScreenHandlerFactoryClass = classLoader.loadClass("net.minecraft.screen.NamedScreenHandlerFactory");
                 
-                // Check if player is ServerPlayer
+                // Try to load MenuProvider (Forge) - it might not exist in Fabric
+                Class<?> menuProviderClass = null;
+                try {
+                    menuProviderClass = classLoader.loadClass("net.minecraft.world.MenuProvider");
+                } catch (ClassNotFoundException e) {
+                    // MenuProvider doesn't exist in Fabric - that's okay, we'll use NamedScreenHandlerFactory
+                }
+                
+                // Check if player is ServerPlayerEntity
                 if (!serverPlayerEntityClass.isInstance(player)) {
                     return;
                 }
@@ -168,7 +175,12 @@ public class FabricNetworkHelper implements NetworkHelper {
                 // MenuProvider is compatible with Fabric's NamedScreenHandlerFactory
                 // Fabric's ServerPlayerEntity.openHandledScreen() accepts NamedScreenHandlerFactory
                 // which has the same interface as MenuProvider (getDisplayName() and createMenu())
-                if (menuProviderClass.isInstance(menuProvider) || namedScreenHandlerFactoryClass.isInstance(menuProvider)) {
+                boolean isCompatible = namedScreenHandlerFactoryClass.isInstance(menuProvider);
+                if (menuProviderClass != null) {
+                    isCompatible = isCompatible || menuProviderClass.isInstance(menuProvider);
+                }
+                
+                if (isCompatible) {
                     // Call ServerPlayerEntity.openHandledScreen(NamedScreenHandlerFactory)
                     java.lang.reflect.Method openHandledScreenMethod = serverPlayerEntityClass.getMethod(
                         "openHandledScreen", namedScreenHandlerFactoryClass

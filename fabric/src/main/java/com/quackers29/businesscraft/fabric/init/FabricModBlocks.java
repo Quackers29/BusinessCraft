@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.fabric.init;
 
+import com.quackers29.businesscraft.fabric.block.entity.FabricTownInterfaceEntity;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
@@ -179,13 +180,117 @@ public class FabricModBlocks {
 
 
     /**
-     * Actual block registration logic - simple working block
+     * Actual block registration logic - block with block entity
      */
     private static void registerBlocks() {
         try {
-            // Create a simple working block using Fabric APIs
-            // This avoids the complex TownInterfaceBlock that uses Forge-specific classes
-            Block townInterfaceBlock = new Block(FabricBlockSettings.create()
+            // Create a block that implements BlockEntityProvider to indicate it has a block entity
+            // In Fabric, blocks with block entities must implement BlockEntityProvider
+            class TownInterfaceBlock extends Block implements net.minecraft.block.BlockEntityProvider {
+                public TownInterfaceBlock(Settings settings) {
+                    super(settings);
+                }
+                
+                @Override
+                public net.minecraft.block.entity.BlockEntity createBlockEntity(net.minecraft.util.math.BlockPos pos, net.minecraft.block.BlockState state) {
+                    System.out.println("DEBUG: createBlockEntity called for block at " + pos);
+                    if (FabricModBlockEntities.TOWN_INTERFACE_ENTITY_TYPE != null) {
+                        return new FabricTownInterfaceEntity(pos, state);
+                    } else {
+                        System.err.println("ERROR: Block entity type is null when creating block entity");
+                        return null;
+                    }
+                }
+
+                @Override
+                public net.minecraft.util.ActionResult onUse(net.minecraft.block.BlockState state, net.minecraft.world.World world,
+                        net.minecraft.util.math.BlockPos pos, net.minecraft.entity.player.PlayerEntity player,
+                        net.minecraft.util.Hand hand, net.minecraft.util.hit.BlockHitResult hit) {
+
+                    if (world.isClient) {
+                        // On client side, just return success to indicate interaction was handled
+                        return net.minecraft.util.ActionResult.SUCCESS;
+                    }
+
+                    // On server side, try to open the menu
+                    try {
+                        // Get the block entity
+                        net.minecraft.block.entity.BlockEntity blockEntity = world.getBlockEntity(pos);
+                        if (blockEntity != null) {
+                            System.out.println("DEBUG: Found block entity at " + pos + ": " + blockEntity.getClass().getName());
+
+                            // Open the menu directly using PlatformAccess.openScreen() instead of using packets
+                            // This avoids the Forge/Fabric mapping issues with packet classes
+                            // This matches the pattern used in TownInterfaceBlock.use() in the common module
+                            try {
+                                Class<?> platformAccessClass = Class.forName("com.quackers29.businesscraft.api.PlatformAccess");
+                                Object network = platformAccessClass.getMethod("getNetwork").invoke(null);
+                                
+                                // Create a NamedScreenHandlerFactory (Fabric) or MenuProvider (Forge) to open the menu
+                                // PlatformAccess handles both, but we'll use Fabric's NamedScreenHandlerFactory
+                                Class<?> namedScreenHandlerFactoryClass = Class.forName("net.minecraft.screen.NamedScreenHandlerFactory");
+                                Object menuProvider = java.lang.reflect.Proxy.newProxyInstance(
+                                    namedScreenHandlerFactoryClass.getClassLoader(),
+                                    new Class<?>[] { namedScreenHandlerFactoryClass },
+                                    new java.lang.reflect.InvocationHandler() {
+                                        @Override
+                                        public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) throws Throwable {
+                                            String methodName = method.getName();
+                                            if ("getDisplayName".equals(methodName)) {
+                                                // Return translated component
+                                                Class<?> componentClass = Class.forName("net.minecraft.network.chat.Component");
+                                                java.lang.reflect.Method translatableMethod = componentClass.getMethod("translatable", String.class);
+                                                return translatableMethod.invoke(null, "block.businesscraft.town_interface");
+                                            } else if ("createMenu".equals(methodName)) {
+                                                // Create TownInterfaceMenu
+                                                // NOTE: TownInterfaceMenu extends AbstractContainerMenu (Forge) which doesn't exist in Fabric
+                                                // This will fail, but we'll catch it and provide a helpful error message
+                                                try {
+                                                    int windowId = (Integer) args[0];
+                                                    Object inventory = args[1];
+                                                    Class<?> menuClass = Class.forName("com.quackers29.businesscraft.menu.TownInterfaceMenu");
+                                                    java.lang.reflect.Constructor<?> constructor = menuClass.getConstructor(int.class, 
+                                                        Class.forName("net.minecraft.world.entity.player.Inventory"),
+                                                        Class.forName("net.minecraft.util.math.BlockPos"));
+                                                    return constructor.newInstance(windowId, inventory, pos);
+                                                } catch (NoClassDefFoundError | ClassNotFoundException e) {
+                                                    // TownInterfaceMenu extends AbstractContainerMenu (Forge) which doesn't exist in Fabric
+                                                    // We need Fabric-specific menu implementations
+                                                    System.err.println("ERROR: Cannot create TownInterfaceMenu - it extends AbstractContainerMenu (Forge-specific)");
+                                                    System.err.println("Fabric requires ScreenHandler instead. Fabric-specific menu classes are needed.");
+                                                    throw new RuntimeException("TownInterfaceMenu is Forge-specific and cannot be used on Fabric. Fabric-specific menu implementation required.", e);
+                                                }
+                                            }
+                                            return null;
+                                        }
+                                    }
+                                );
+                                
+                                // Call PlatformAccess.getNetwork().openScreen(player, menuProvider, blockPos)
+                                java.lang.reflect.Method openScreenMethod = network.getClass().getMethod("openScreen", 
+                                    Object.class, Object.class, Object.class);
+                                openScreenMethod.invoke(network, player, menuProvider, pos);
+                                
+                                System.out.println("DEBUG: Opened town interface menu directly via PlatformAccess");
+                            } catch (Exception e) {
+                                System.err.println("ERROR: Could not open menu via PlatformAccess: " + e.getMessage());
+                                e.printStackTrace();
+                            }
+                        } else {
+                            System.out.println("DEBUG: No block entity found at " + pos);
+                        }
+
+                        return net.minecraft.util.ActionResult.SUCCESS;
+                    } catch (Exception e) {
+                        System.err.println("Error in block onUse: " + e.getMessage());
+                        e.printStackTrace();
+                        return net.minecraft.util.ActionResult.FAIL;
+                    }
+                }
+            }
+            
+            // Instantiate the block
+            Block townInterfaceBlock = new TownInterfaceBlock(FabricBlockSettings.create()
                 .strength(3.0f, 3.0f)
                 .requiresTool());
 
@@ -196,9 +301,9 @@ public class FabricModBlocks {
             BlockItem townInterfaceBlockItem = new BlockItem(townInterfaceBlock, new FabricItemSettings());
             Registry.register(Registries.ITEM, new Identifier("businesscraft", "town_interface"), townInterfaceBlockItem);
 
-            System.out.println("DEBUG: Simple Town Interface Block registration completed successfully!");
+            System.out.println("DEBUG: Town Interface Block with BlockEntity registration completed successfully!");
         } catch (Exception e) {
-            System.err.println("ERROR: Failed to register simple block: " + e.getMessage());
+            System.err.println("ERROR: Failed to register block with block entity: " + e.getMessage());
             e.printStackTrace();
         }
     }

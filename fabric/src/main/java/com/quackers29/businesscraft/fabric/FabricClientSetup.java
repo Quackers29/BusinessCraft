@@ -35,15 +35,19 @@ public class FabricClientSetup implements ClientModInitializer {
         // Register client-side packet handlers
         registerClientPackets();
         
-        // Register screens for menu types (with delayed retry)
-        scheduleDelayedScreenRegistration();
+        // Skip screen registration - menu types cannot be registered on Fabric
+        // Menu opening will be handled through event callbacks instead
+        LOGGER.info("Skipping screen registration - menu types not available on Fabric");
         
         // Initialize client-side rendering events (with delayed retry)
         scheduleDelayedRenderingInitialization();
         
         // Initialize key handlers (with delayed retry)
         scheduleDelayedKeyHandlerInitialization();
-        
+
+        // Register block interaction callback directly (simpler approach)
+        registerBlockInteractionCallback();
+
         LOGGER.info("BusinessCraft Fabric client setup complete");
     }
     
@@ -108,6 +112,7 @@ public class FabricClientSetup implements ClientModInitializer {
                             return;
                         } catch (Exception e) {
                             LOGGER.warn("Rendering initialization failed on retry {}: {}", retryCount, e.getMessage());
+                            LOGGER.warn("Full exception details:", e);
                             delayMs = Math.min(delayMs * 2, 5000);
                         }
                     }
@@ -146,6 +151,7 @@ public class FabricClientSetup implements ClientModInitializer {
                             return;
                         } catch (Exception e) {
                             LOGGER.warn("Key handler initialization failed on retry {}: {}", retryCount, e.getMessage());
+                            LOGGER.warn("Full exception details:", e);
                             delayMs = Math.min(delayMs * 2, 5000);
                         }
                     }
@@ -267,6 +273,14 @@ public class FabricClientSetup implements ClientModInitializer {
         }
     }
     
+    /**
+     * Block interactions are now handled directly in the block's onUse method
+     * No need for additional callback registration
+     */
+    private void registerBlockInteractionCallback() {
+        LOGGER.info("Block interactions handled by block's onUse method - no additional callback needed");
+    }
+
     /**
      * Register screens for menu types using Fabric's ScreenRegistry API
      * Uses reflection to access screen classes (excluded from Fabric build)

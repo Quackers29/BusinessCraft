@@ -457,11 +457,12 @@ public class FabricEventCallbackHandler {
     public static void registerClientEvents() {
         try {
             ClassLoader classLoader = FabricEventCallbackHandler.class.getClassLoader();
-            
+
             // Load Fabric client event classes with fallback
             Class<?> clientTickEventsClass = loadClassWithFallback(classLoader, "net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents");
             Class<?> clientWorldEventsClass = loadClassWithFallback(classLoader, "net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents");
-            
+            Class<?> useBlockCallbackClass = loadClassWithFallback(classLoader, "net.fabricmc.fabric.api.event.player.UseBlockCallback");
+
             // Load Minecraft Level class for type checking (client-side)
             Class<?> clientLevelClass = classLoader.loadClass("net.minecraft.world.level.Level");
             
@@ -561,14 +562,73 @@ public class FabricEventCallbackHandler {
             // Register mouse scroll callback - Mouse scroll is handled at screen level in common module screens
             // This is a placeholder - mouse scroll is typically handled in Screen classes
             LOGGER.info("Mouse scroll callback registration - handled at screen level");
-            
+
+            // Register block interaction callback for menu opening (Fabric equivalent of right-click)
+            try {
+                // UseBlockCallback has an EVENT field, not a register method
+                java.lang.reflect.Field eventField = useBlockCallbackClass.getField("EVENT");
+                Object eventObj = eventField.get(null);
+
+                // Register the callback using the EVENT.register() method
+                java.lang.reflect.Method registerMethod = eventObj.getClass().getMethod("register", java.util.function.Function.class);
+                registerMethod.invoke(eventObj, (java.util.function.Function<Object, Object>) (interactionEvent) -> {
+                    try {
+                        // interactionEvent is a UseBlockCallback.ItemUsageContext
+                        // Check if this is a town interface block
+                        Object world = interactionEvent.getClass().getMethod("getWorld").invoke(interactionEvent);
+                        Object blockPos = interactionEvent.getClass().getMethod("getBlockPos").invoke(interactionEvent);
+                        Object blockState = interactionEvent.getClass().getMethod("getBlockState").invoke(interactionEvent);
+                        Object player = interactionEvent.getClass().getMethod("getPlayer").invoke(interactionEvent);
+
+                        // Check if this is our town interface block
+                        Object block = blockState.getClass().getMethod("getBlock").invoke(blockState);
+                        String blockId = block.getClass().getMethod("toString").invoke(block).toString();
+
+                        if (blockId.contains("businesscraft:town_interface")) {
+                            // This is a town interface block - open the menu
+                            LOGGER.info("Right-clicked on town interface block - opening menu");
+
+                            // Send packet to server to open menu
+                            // Use the PlatformAccess network helper
+                            try {
+                                Class<?> platformAccessClass = classLoader.loadClass("com.quackers29.businesscraft.api.PlatformAccess");
+                                Object network = platformAccessClass.getMethod("getNetwork").invoke(null);
+                                java.lang.reflect.Method sendToServerMethod = network.getClass().getMethod("sendToServer", Object.class);
+
+                                // Create OpenTownInterfacePacket
+                                Class<?> packetClass = classLoader.loadClass("com.quackers29.businesscraft.network.packets.ui.OpenTownInterfacePacket");
+                                Object packet = packetClass.getConstructor(blockPos.getClass()).newInstance(blockPos);
+
+                                sendToServerMethod.invoke(network, packet);
+                                LOGGER.info("Sent OpenTownInterfacePacket to server");
+                            } catch (Exception packetEx) {
+                                LOGGER.error("Error sending menu open packet", packetEx);
+                            }
+
+                            // Return PASS to allow normal interaction
+                            Class<?> actionResultClass = classLoader.loadClass("net.minecraft.util.ActionResult");
+                            return actionResultClass.getField("PASS").get(null);
+                        }
+
+                        // Not our block, continue with normal interaction
+                        return null;
+                    } catch (Exception ex) {
+                        LOGGER.error("Error in block interaction callback", ex);
+                        return null;
+                    }
+                });
+                LOGGER.info("Registered UseBlockCallback for menu opening");
+            } catch (Exception e) {
+                LOGGER.warn("Could not register UseBlockCallback", e);
+            }
+
             // Register render level callback - Fabric uses WorldRenderEvents (handled by RenderHelper)
             // Render level callbacks are already handled by FabricRenderHelper.registerWorldRenderCallback()
             // ClientRenderEvents registers its callback via PlatformAccess.getEvents().registerRenderLevelCallback()
             // which calls FabricRenderHelper.registerWorldRenderCallback()
             // So no additional registration needed here
             LOGGER.info("Render level callbacks handled via RenderHelper");
-            
+
             LOGGER.info("Client-side Fabric events registered successfully");
         } catch (ClassNotFoundException e) {
             LOGGER.warn("Fabric API client event classes not available. Client events will not be registered.");
@@ -634,7 +694,8 @@ public class FabricEventCallbackHandler {
             // Load Fabric client event classes with fallback
             Class<?> clientTickEventsClass = loadClassWithFallback(classLoader, "net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents");
             Class<?> clientWorldEventsClass = loadClassWithFallback(classLoader, "net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientWorldEvents");
-            
+            Class<?> useBlockCallbackClass = loadClassWithFallback(classLoader, "net.fabricmc.fabric.api.event.player.UseBlockCallback");
+
             // Load Minecraft Level class for type checking (client-side)
             Class<?> clientLevelClass = classLoader.loadClass("net.minecraft.world.level.Level");
             
@@ -684,10 +745,66 @@ public class FabricEventCallbackHandler {
                 LOGGER.warn("Could not register key input callback", e);
             }
             
+            // Register block interaction callback for menu opening (Fabric equivalent of right-click)
+            try {
+                // Register UseBlockCallback for handling right-click on blocks
+                java.lang.reflect.Method registerMethod = useBlockCallbackClass.getMethod("register",
+                    java.util.function.Function.class);
+                registerMethod.invoke(null, (java.util.function.Function<Object, Object>) (event) -> {
+                    try {
+                        // event is a UseBlockCallback.ItemUsageContext
+                        // Check if this is a town interface block
+                        Object world = event.getClass().getMethod("getWorld").invoke(event);
+                        Object blockPos = event.getClass().getMethod("getBlockPos").invoke(event);
+                        Object blockState = event.getClass().getMethod("getBlockState").invoke(event);
+                        Object player = event.getClass().getMethod("getPlayer").invoke(event);
+
+                        // Check if this is our town interface block
+                        Object block = blockState.getClass().getMethod("getBlock").invoke(blockState);
+                        String blockId = block.getClass().getMethod("toString").invoke(block).toString();
+
+                        if (blockId.contains("businesscraft:town_interface")) {
+                            // This is a town interface block - open the menu
+                            LOGGER.info("Right-clicked on town interface block - opening menu");
+
+                            // Send packet to server to open menu
+                            // Use the PlatformAccess network helper
+                            try {
+                                Class<?> platformAccessClass = classLoader.loadClass("com.quackers29.businesscraft.api.PlatformAccess");
+                                Object network = platformAccessClass.getMethod("getNetwork").invoke(null);
+                                java.lang.reflect.Method sendToServerMethod = network.getClass().getMethod("sendToServer", Object.class);
+
+                                // Create OpenTownInterfacePacket
+                                Class<?> packetClass = classLoader.loadClass("com.quackers29.businesscraft.network.packets.ui.OpenTownInterfacePacket");
+                                Object packet = packetClass.getConstructor(blockPos.getClass()).newInstance(blockPos);
+
+                                sendToServerMethod.invoke(network, packet);
+                                LOGGER.info("Sent OpenTownInterfacePacket to server");
+                            } catch (Exception packetEx) {
+                                LOGGER.error("Error sending menu open packet", packetEx);
+                            }
+
+                            // Return PASS to allow normal interaction
+                            Class<?> actionResultClass = classLoader.loadClass("net.minecraft.util.ActionResult");
+                            return actionResultClass.getField("PASS").get(null);
+                        }
+
+                        // Not our block, continue with normal interaction
+                        return null;
+                    } catch (Exception ex) {
+                        LOGGER.error("Error in block interaction callback", ex);
+                        return null;
+                    }
+                });
+                LOGGER.info("Registered UseBlockCallback for menu opening");
+            } catch (Exception e) {
+                LOGGER.warn("Could not register UseBlockCallback", e);
+            }
+
             // Render level callbacks are handled via RenderHelper.registerRenderLevelCallback
             // So no additional registration needed here
             LOGGER.info("Render level callbacks handled via RenderHelper");
-            
+
             LOGGER.info("Client-side Fabric events registered successfully");
         } catch (Exception e) {
             throw new RuntimeException("Failed to register client events", e);

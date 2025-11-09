@@ -11,16 +11,18 @@
 ### Current Status
 - ✅ **Common module:** Fully platform-agnostic (~95% complete)
 - ✅ **Forge module:** Fully functional (~100% complete)
-- ⚠️ **Fabric module:** Basic functionality working (~85% complete)
+- ⚠️ **Fabric module:** Infrastructure complete, UI blocked (~90% complete)
   - ✅ Platform helpers implemented (some with reflection due to mapping differences)
   - ✅ PlatformAccess initialization complete
   - ✅ Event handlers implemented using reflection
   - ✅ Network registration complete (all 39+ packets registered)
   - ✅ Client helpers implemented using reflection
   - ✅ Render helper implemented using reflection
-  - ✅ Basic block registration working (can place blocks)
-  - ⚠️ Block entity registration needs Fabric-compatible implementation
-  - ⚠️ Menu/screen registration needs completion
+  - ✅ Block registration working (can place blocks)
+  - ✅ Block entity registration complete (Fabric-specific implementation)
+  - ✅ Block interaction working (right-click detection, block entity finding)
+  - ✅ Menu opening attempted via `PlatformAccess.openScreen()`
+  - ⚠️ **CRITICAL BLOCKER:** Menu classes extend Forge's `AbstractContainerMenu` - need Fabric menu classes
   - ⚠️ Key handlers and rendering events partially working
 
 ## Implementation Phases
@@ -52,6 +54,10 @@
 - **Forge Reference:** `forge/src/main/java/com/quackers29/businesscraft/forge/platform/ForgeNetworkHelper.java`
 - **Fabric API:** Uses Fabric's `ServerPlayNetworking` and `ClientPlayNetworking`
 - **Actions Required:** ✅ Complete - all networking methods implemented
+- **Recent Fixes:**
+  - ✅ Updated `openScreen()` to use Fabric's `ServerPlayerEntity` class name (not Forge's `ServerPlayer`)
+  - ✅ Made `MenuProvider` loading optional (doesn't exist in Fabric)
+  - ✅ Uses `NamedScreenHandlerFactory` for Fabric compatibility
 
 #### 1.4: EventHelper ✅ **COMPLETE**
 - **File:** `fabric/src/main/java/com/quackers29/businesscraft/fabric/platform/FabricEventHelper.java`
@@ -142,13 +148,16 @@
 
 #### 2.2: Block Registration ✅ **COMPLETE**
 - **File:** `fabric/src/main/java/com/quackers29/businesscraft/fabric/init/FabricModBlocks.java`
-- **Status:** ✅ Complete - basic block registration working
+- **Status:** ✅ Complete - block registration and interaction working
 - **Forge Reference:** `forge/src/main/java/com/quackers29/businesscraft/forge/init/ForgeModBlocks.java`
 - **Actions Required:** ✅ Complete
-  - ✅ Simple block registration using Fabric APIs (can place blocks)
+  - ✅ Block registration using Fabric APIs (can place blocks)
   - ✅ Block properties configured (stone, strength 3.0f, sound, requires tool)
-  - ⚠️ Using simplified block instead of full TownInterfaceBlock (Forge-specific classes cause issues)
-  - ⚠️ Need to implement Fabric-compatible TownInterfaceBlock with UI functionality
+  - ✅ Block implements `BlockEntityProvider` interface
+  - ✅ Block implements `onUse` method for right-click interaction
+  - ✅ Block entity creation working (entities created when blocks placed)
+  - ✅ Block entity found correctly when right-clicking
+  - ⚠️ Menu opening blocked by Forge-specific menu classes (see Menu System below)
 
 #### 2.3: Entity Registration ⚠️ **NEEDS VERIFICATION**
 - **File:** `fabric/src/main/java/com/quackers29/businesscraft/fabric/init/FabricModEntityTypes.java`
@@ -158,26 +167,32 @@
   - [ ] Verify `TOURIST_ENTITY` registration
   - [ ] Ensure entity spawn egg registration works
 
-#### 2.4: Block Entity Registration ⚠️ **NEEDS FABRIC IMPLEMENTATION**
+#### 2.4: Block Entity Registration ✅ **COMPLETE**
 - **File:** `fabric/src/main/java/com/quackers29/businesscraft/fabric/init/FabricModBlockEntities.java`
-- **Status:** ⚠️ Temporarily disabled - common TownInterfaceEntity uses Forge-specific classes
+- **Status:** ✅ Complete - Fabric-specific block entity created and registered
 - **Forge Reference:** `forge/src/main/java/com/quackers29/businesscraft/forge/init/ForgeModBlockEntities.java`
-- **Actions Required:**
-  - ⚠️ Common `TownInterfaceEntity` uses `MenuProvider` (Forge-only class)
-  - ⚠️ Need to create Fabric-compatible block entity implementation
-  - ⚠️ Temporarily skipped to avoid crashes - blocks work but have no UI
+- **Actions Required:** ✅ Complete
+  - ✅ Created `FabricTownInterfaceEntity` extending `BlockEntity` directly (avoids `MenuProvider` dependency)
+  - ✅ Block entity type registered using `FabricBlockEntityTypeBuilder`
+  - ✅ Block implements `BlockEntityProvider` interface
+  - ✅ Block entities are created automatically when blocks are placed
+  - ✅ Block entity found correctly when right-clicking blocks
 
-#### 2.5: Menu Type Registration ✅ **COMPLETE**
+#### 2.5: Menu Type Registration ⚠️ **BLOCKED BY FORGE DEPENDENCIES**
 - **File:** `fabric/src/main/java/com/quackers29/businesscraft/fabric/init/FabricModMenuTypes.java`
-- **Status:** ✅ Complete - all menu types registered using Fabric's ScreenHandlerRegistry
+- **Status:** ⚠️ Registration skipped - common menu classes extend Forge-specific `AbstractContainerMenu`
 - **Forge Reference:** `forge/src/main/java/com/quackers29/businesscraft/forge/init/ForgeModMenuTypes.java`
-- **Actions Required:** ✅ Complete - all 4 menu types registered:
-  - ✅ `TOWN_INTERFACE_MENU` registered
-  - ✅ `TRADE_MENU` registered
-  - ✅ `STORAGE_MENU` registered
-  - ✅ `PAYMENT_BOARD_MENU` registered
-  - ✅ Menu types stored in FabricMenuTypeHelper
-  - ✅ Uses reflection to access menu classes (excluded from Fabric build)
+- **Actions Required:** ⚠️ **CRITICAL BLOCKER**
+  - ⚠️ Common module menu classes (`TownInterfaceMenu`, `TradeMenu`, `StorageMenu`, `PaymentBoardMenu`) extend `AbstractContainerMenu` (Forge-specific)
+  - ⚠️ Fabric uses `net.minecraft.screen.ScreenHandler` instead of `AbstractContainerMenu`
+  - ⚠️ Cannot instantiate Forge menu classes on Fabric (causes `NoClassDefFoundError`)
+  - ⚠️ Menu opening attempted via `PlatformAccess.openScreen()` but fails when creating menu instance
+  - ⚠️ **Solution Required:** Create Fabric-specific menu classes extending `ScreenHandler`
+    - Need `FabricTownInterfaceMenu` extending `ScreenHandler`
+    - Need `FabricTradeMenu` extending `ScreenHandler`
+    - Need `FabricStorageMenu` extending `ScreenHandler`
+    - Need `FabricPaymentBoardMenu` extending `ScreenHandler`
+  - ⚠️ Menu types cannot be registered until Fabric menu classes exist
 
 ### Phase 3: Network System ✅ **PLANNED**
 **Status:** ⚠️ **INFRASTRUCTURE EXISTS, NEEDS COMPLETION**
@@ -255,15 +270,17 @@
 
 #### 6.1: Fabric Town Interface Entity ✅ **COMPLETE**
 - **File:** `fabric/src/main/java/com/quackers29/businesscraft/fabric/block/entity/FabricTownInterfaceEntity.java`
-- **Status:** ✅ **CREATED** - extends common `TownInterfaceEntity`
+- **Status:** ✅ **COMPLETE** - Fabric-specific implementation created
 - **Forge Reference:** `forge/src/main/java/com/quackers29/businesscraft/forge/block/entity/ForgeTownInterfaceEntity.java`
-- **Fabric API:** Fabric doesn't have `getCapability()` on BlockEntity (that's Forge-specific)
+- **Fabric API:** Extends `BlockEntity` directly (not common `TownInterfaceEntity` which uses `MenuProvider`)
 - **Implementation Notes:**
-  - ✅ Created `FabricTownInterfaceEntity` extending `TownInterfaceEntity`
-  - ✅ No need to override `getCapability()` - Fabric's BlockEntity doesn't have this method
-  - ✅ Common module's `getCapability()` uses Object types and PlatformAccess, so it works fine
-  - ✅ `FabricModBlockEntities` updated to register `FabricTownInterfaceEntity` instead of `TownInterfaceEntity`
-  - ⚠️ **Note:** Since `TownInterfaceEntity` is excluded from Fabric source sets, extending it relies on the compiled JAR from common module
+  - ✅ Created `FabricTownInterfaceEntity` extending `net.minecraft.block.entity.BlockEntity` directly
+  - ✅ Constructor takes `BlockPos` and `BlockState` (gets `BlockEntityType` from `FabricModBlockEntities`)
+  - ✅ Block entity type registered using `FabricBlockEntityTypeBuilder.create()`
+  - ✅ Block implements `BlockEntityProvider` interface with `createBlockEntity()` method
+  - ✅ Block entities are created automatically when blocks are placed
+  - ✅ Block entity found correctly when right-clicking blocks
+  - ⚠️ **Note:** This is a minimal implementation - full functionality from common `TownInterfaceEntity` not yet ported
   - ⚠️ Hopper extraction will work through PlatformAccess's item handler system (uses Forge's ItemStackHandler via reflection)
 
 ### Phase 7: Testing & Validation ✅ **PLANNED**
@@ -279,8 +296,12 @@
 
 #### 7.2: Runtime Testing
 - ✅ Mod loads without critical errors
-- ✅ Town Interface block places correctly (basic block)
-- ⚠️ Right-click does not open town interface screen (block entity disabled)
+- ✅ Town Interface block places correctly
+- ✅ Block entities created automatically when blocks placed
+- ✅ Block entity found correctly when right-clicking blocks
+- ✅ Block interaction (`onUse`) method working
+- ✅ `PlatformAccess.openScreen()` called successfully
+- ⚠️ **CRITICAL:** Menu opening fails - `TownInterfaceMenu` extends `AbstractContainerMenu` (Forge) which doesn't exist in Fabric
 - ⚠️ Packet communication not tested (needs UI)
 - ⚠️ Debug overlay partially working
 - ⚠️ Tourist spawning and platform system not tested
@@ -317,10 +338,10 @@
 
 ### Initialization & Registration (5 files)
 - [x] BusinessCraftFabric ✅ PlatformAccess initialized, all helpers connected
-- [x] FabricModBlocks ✅ Complete - basic block registration working
+- [x] FabricModBlocks ✅ Complete - block registration and interaction working
 - [ ] FabricModEntityTypes ⚠️ Needs verification
-- [ ] FabricModBlockEntities ⚠️ Disabled - uses Forge-specific classes, needs Fabric implementation
-- [ ] FabricModMenuTypes ⚠️ Disabled - may use Forge-specific classes, needs verification
+- [x] FabricModBlockEntities ✅ Complete - Fabric-specific block entity created and registered
+- [ ] FabricModMenuTypes ⚠️ **BLOCKED** - common menu classes extend Forge's `AbstractContainerMenu`, need Fabric menu classes
 
 ### Network System (1 file)
 - [x] FabricModMessages ✅ Complete - all 39+ packets registered
@@ -390,25 +411,41 @@
 5. **Event System:** Basic event handlers registered
 
 ### ⚠️ **Known Issues:**
-1. **Block Entity Registration:** Disabled due to Forge-specific `MenuProvider` class usage
-2. **Menu/Screen Registration:** Failing due to timing issues (retry timeouts)
-3. **Client-Side Features:** Screen registration, key handlers, rendering all timing out
-4. **No UI:** Cannot right-click blocks to open town interface (block entity disabled)
+1. **Menu System:** ⚠️ **CRITICAL BLOCKER** - Common module menu classes extend `AbstractContainerMenu` (Forge-specific)
+   - `TownInterfaceMenu`, `TradeMenu`, `StorageMenu`, `PaymentBoardMenu` all extend Forge's `AbstractContainerMenu`
+   - Fabric uses `net.minecraft.screen.ScreenHandler` instead
+   - Cannot instantiate Forge menu classes on Fabric (causes `NoClassDefFoundError`)
+   - **Solution:** Create Fabric-specific menu classes extending `ScreenHandler`
+2. **Block Entity:** ✅ **RESOLVED** - Fabric-specific `FabricTownInterfaceEntity` created and working
+3. **Block Interaction:** ✅ **WORKING** - Block entities found, `onUse` method working, `PlatformAccess.openScreen()` called
+4. **Menu Opening:** ⚠️ **BLOCKED** - Menu creation fails due to Forge menu class dependencies
+5. **Client-Side Features:** Screen registration, key handlers, rendering all timing out
+6. **No UI:** Cannot open town interface screen (menu creation fails)
 
 ## Next Steps
 
-1. ✅ **Basic Block Working:** Simple block placement functional
-2. ⚠️ **Block Entity Implementation:** Create Fabric-compatible `TownInterfaceEntity` without Forge dependencies
-3. ⚠️ **Menu System Fix:** Resolve client-side registration timing issues
-4. ⚠️ **UI Integration:** Re-enable block right-click functionality
-5. ⚠️ **Client Features:** Fix screen, key handler, and rendering registration
-6. **Comprehensive Testing:** Verify all features work with proper UI
+1. ✅ **Basic Block Working:** Block placement functional
+2. ✅ **Block Entity Implementation:** Fabric-specific `FabricTownInterfaceEntity` created and working
+3. ✅ **Block Interaction:** Right-click detection and block entity finding working
+4. ⚠️ **CRITICAL PRIORITY:** **Create Fabric-Specific Menu Classes** - The main blocker for UI functionality
+   - Common module menu classes extend `AbstractContainerMenu` (Forge-specific)
+   - Need to create Fabric menu classes extending `ScreenHandler`:
+     - `FabricTownInterfaceMenu` extending `ScreenHandler`
+     - `FabricTradeMenu` extending `ScreenHandler`
+     - `FabricStorageMenu` extending `ScreenHandler`
+     - `FabricPaymentBoardMenu` extending `ScreenHandler`
+   - These classes should replicate the functionality of the Forge menu classes
+   - Register menu types using Fabric's `ScreenHandlerRegistry`
+5. ⚠️ **Menu System Integration:** Update `FabricModBlocks` to use Fabric menu classes
+6. ⚠️ **Client Features:** Fix screen, key handler, and rendering registration
+7. **Comprehensive Testing:** Verify all features work with proper UI
 
 ### Immediate Priority:
-**Create Fabric-compatible TownInterfaceEntity** - The main blocker for UI functionality is that the common module's entity uses Forge-specific classes. Need to either:
-- Create a Fabric-specific entity implementation
-- Modify the common module to be more platform-agnostic
-- Use reflection to work around the Forge dependencies
+**Create Fabric-Specific Menu Classes** - The UI cannot open because menu classes extend Forge's `AbstractContainerMenu`. Need to:
+- Create `FabricTownInterfaceMenu` extending `net.minecraft.screen.ScreenHandler`
+- Port all menu functionality from common module's `TownInterfaceMenu`
+- Register menu types with Fabric's `ScreenHandlerRegistry`
+- Update menu opening code to use Fabric menu classes
 
 ## Notes
 
