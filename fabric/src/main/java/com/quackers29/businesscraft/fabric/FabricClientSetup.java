@@ -35,9 +35,17 @@ public class FabricClientSetup implements ClientModInitializer {
         // Register client-side packet handlers
         registerClientPackets();
         
-        // Skip screen registration - menu types cannot be registered on Fabric
-        // Menu opening will be handled through event callbacks instead
-        LOGGER.info("Skipping screen registration - menu types not available on Fabric");
+        // Register screens for menu types
+        // Try to register immediately, schedule retry if menu types not ready yet
+        LOGGER.info("Attempting initial screen registration...");
+        try {
+            registerScreens();
+            screensRegistered = true;
+            LOGGER.info("Screen registration completed successfully on first attempt");
+        } catch (Exception e) {
+            LOGGER.warn("Screen registration failed on first attempt: " + e.getMessage(), e);
+            scheduleDelayedScreenRegistration();
+        }
         
         // Initialize client-side rendering events (with delayed retry)
         scheduleDelayedRenderingInitialization();
@@ -66,15 +74,21 @@ public class FabricClientSetup implements ClientModInitializer {
                     retryCount++;
                     
                     if (areClientClassesAvailable()) {
-                        LOGGER.info("Retrying screen registration (attempt {})...", retryCount);
-                        try {
-                            registerScreens();
-                            screensRegistered = true;
-                            LOGGER.info("Screen registration successful on retry!");
-                            return;
-                        } catch (Exception e) {
-                            LOGGER.warn("Screen registration failed on retry {}: {}", retryCount, e.getMessage());
-                            delayMs = Math.min(delayMs * 2, 5000);
+                        // Check if menu type is available before retrying
+                        Object menuType = FabricMenuTypeHelper.getTownInterfaceMenuTypeStatic();
+                        LOGGER.info("Retrying screen registration (attempt {})... Menu type available: {}", retryCount, menuType != null);
+                        if (menuType != null) {
+                            try {
+                                registerScreens();
+                                screensRegistered = true;
+                                LOGGER.info("Screen registration successful on retry!");
+                                return;
+                            } catch (Exception e) {
+                                LOGGER.warn("Screen registration failed on retry {}: {}", retryCount, e.getMessage(), e);
+                                delayMs = Math.min(delayMs * 2, 5000);
+                            }
+                        } else {
+                            LOGGER.debug("Menu type not available yet, will retry...");
                         }
                     }
                 } catch (InterruptedException e) {
@@ -282,8 +296,7 @@ public class FabricClientSetup implements ClientModInitializer {
     }
 
     /**
-     * Register screens for menu types using Fabric's ScreenRegistry API
-     * Uses reflection to access screen classes (excluded from Fabric build)
+     * Register screens for menu types using Fabric's HandledScreens API
      */
     private void registerScreens() {
         try {
@@ -291,48 +304,54 @@ public class FabricClientSetup implements ClientModInitializer {
             
             ClassLoader classLoader = FabricClientSetup.class.getClassLoader();
             
-            // Load Fabric's ScreenRegistry class
-            Class<?> screenRegistryClass = classLoader.loadClass("net.fabricmc.fabric.api.client.screenhandler.v1.ScreenRegistry");
-            Class<?> menuTypeClass = classLoader.loadClass("net.minecraft.world.inventory.MenuType");
+            // Load Fabric's HandledScreens class
+            Class<?> handledScreensClass = classLoader.loadClass("net.minecraft.client.gui.screen.ingame.HandledScreens");
+            Class<?> screenHandlerTypeClass = classLoader.loadClass("net.minecraft.screen.ScreenHandlerType");
+            LOGGER.info("Loaded HandledScreens class: {}", handledScreensClass.getName());
             
             // Check if menu types are registered yet
             Object townInterfaceMenuType = FabricMenuTypeHelper.getTownInterfaceMenuTypeStatic();
+            LOGGER.info("Retrieved townInterfaceMenuType: {}", townInterfaceMenuType != null ? townInterfaceMenuType.getClass().getName() : "null");
             if (townInterfaceMenuType == null) {
+                LOGGER.warn("Menu types not registered yet - screens will be registered when menu types become available");
                 throw new IllegalStateException("Menu types not registered yet - screens will be registered when menu types become available");
             }
-            Class<?> screenProviderClass = screenRegistryClass.getClasses()[0]; // ScreenProvider interface
             
-            // Get ScreenRegistry.register method
-            java.lang.reflect.Method registerMethod = screenRegistryClass.getMethod("register", 
-                menuTypeClass, screenProviderClass);
+            // Get HandledScreens.register method
+            // In Minecraft 1.20.1, HandledScreens.register() takes a BiFunction or similar functional interface
+            // Let's find the actual register method and see what it expects
+            java.lang.reflect.Method[] registerMethods = handledScreensClass.getDeclaredMethods();
+            java.lang.reflect.Method registerMethod = null;
+            Class<?> screenFactoryClass = null;
             
-            // Get menu types from FabricMenuTypeHelper
-            Object tradeMenuType = FabricMenuTypeHelper.getTradeMenuTypeStatic();
-            Object storageMenuType = FabricMenuTypeHelper.getStorageMenuTypeStatic();
-            Object paymentBoardMenuType = FabricMenuTypeHelper.getPaymentBoardMenuTypeStatic();
+            LOGGER.info("Looking for register method in HandledScreens...");
+            for (java.lang.reflect.Method m : registerMethods) {
+                if ("register".equals(m.getName()) && java.lang.reflect.Modifier.isStatic(m.getModifiers())) {
+                    Class<?>[] paramTypes = m.getParameterTypes();
+                    LOGGER.info("Found register method: {} with parameters: {}", m.getName(), java.util.Arrays.toString(paramTypes));
+                    if (paramTypes.length == 2 && paramTypes[0] == screenHandlerTypeClass) {
+                        registerMethod = m;
+                        screenFactoryClass = paramTypes[1];
+                        LOGGER.info("Using register method with ScreenFactory type: {}", screenFactoryClass.getName());
+                        break;
+                    }
+                }
+            }
             
-            // Register TownInterfaceScreen
+            if (registerMethod == null || screenFactoryClass == null) {
+                LOGGER.error("Could not find HandledScreens.register() method. Available methods:");
+                for (java.lang.reflect.Method m : registerMethods) {
+                    if (java.lang.reflect.Modifier.isStatic(m.getModifiers())) {
+                        LOGGER.error("  - {} ({})", m.getName(), java.util.Arrays.toString(m.getParameterTypes()));
+                    }
+                }
+                throw new RuntimeException("Could not find HandledScreens.register() method");
+            }
+            
+            // Register FabricTownInterfaceScreen
             if (townInterfaceMenuType != null) {
-                registerScreen(registerMethod, townInterfaceMenuType, menuTypeClass, screenProviderClass,
-                    "com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen", classLoader);
-            }
-            
-            // Register TradeScreen
-            if (tradeMenuType != null) {
-                registerScreen(registerMethod, tradeMenuType, menuTypeClass, screenProviderClass,
-                    "com.quackers29.businesscraft.ui.screens.town.TradeScreen", classLoader);
-            }
-            
-            // Register StorageScreen
-            if (storageMenuType != null) {
-                registerScreen(registerMethod, storageMenuType, menuTypeClass, screenProviderClass,
-                    "com.quackers29.businesscraft.ui.screens.town.StorageScreen", classLoader);
-            }
-            
-            // Register PaymentBoardScreen
-            if (paymentBoardMenuType != null) {
-                registerScreen(registerMethod, paymentBoardMenuType, menuTypeClass, screenProviderClass,
-                    "com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen", classLoader);
+                registerFabricScreen(registerMethod, townInterfaceMenuType, screenHandlerTypeClass, screenFactoryClass,
+                    "com.quackers29.businesscraft.fabric.client.FabricTownInterfaceScreen", classLoader);
             }
             
             LOGGER.info("Screen registration complete");
@@ -343,49 +362,139 @@ public class FabricClientSetup implements ClientModInitializer {
     }
     
     /**
-     * Register a single screen using reflection
+     * Register a Fabric-specific screen using HandledScreens.register()
      */
-    private void registerScreen(java.lang.reflect.Method registerMethod, Object menuType, 
-                                Class<?> menuTypeClass, Class<?> screenProviderClass,
-                                String screenClassName, ClassLoader classLoader) {
+    private void registerFabricScreen(java.lang.reflect.Method registerMethod, Object menuType, 
+                                     Class<?> screenHandlerTypeClass, Class<?> screenFactoryClass,
+                                     String screenClassName, ClassLoader classLoader) {
         try {
-            // Load screen class
+            LOGGER.info("Attempting to register Fabric screen: {}", screenClassName);
+            
+            // Load screen class (Fabric-specific, extends HandledScreen)
             Class<?> screenClass = classLoader.loadClass(screenClassName);
+            LOGGER.info("Loaded screen class: {}", screenClass.getName());
             
             // Load required classes for screen constructor
-            Class<?> abstractContainerMenuClass = classLoader.loadClass("net.minecraft.world.inventory.AbstractContainerMenu");
-            Class<?> playerInventoryClass = classLoader.loadClass("net.minecraft.world.entity.player.Inventory");
-            Class<?> componentClass = classLoader.loadClass("net.minecraft.network.chat.Component");
+            Class<?> playerInventoryClass = classLoader.loadClass("net.minecraft.entity.player.PlayerInventory");
+            Class<?> textClass = classLoader.loadClass("net.minecraft.text.Text");
             
-            // Create ScreenProvider using Proxy
-            Object screenProvider = java.lang.reflect.Proxy.newProxyInstance(
+            // Find the screen constructor dynamically
+            // HandledScreen<T> constructor takes (T handler, PlayerInventory inventory, Text title)
+            // So we need to find a constructor that takes (some ScreenHandler subclass, PlayerInventory, Text)
+            java.lang.reflect.Constructor<?> screenConstructor = null;
+            LOGGER.info("Looking for screen constructor in: {}", screenClass.getName());
+            for (java.lang.reflect.Constructor<?> c : screenClass.getConstructors()) {
+                Class<?>[] paramTypes = c.getParameterTypes();
+                LOGGER.debug("Found constructor: {}", java.util.Arrays.toString(paramTypes));
+                if (paramTypes.length == 3) {
+                    // Check if first parameter extends ScreenHandler, second is PlayerInventory, third is Text
+                    Class<?> screenHandlerClass = classLoader.loadClass("net.minecraft.screen.ScreenHandler");
+                    if (screenHandlerClass.isAssignableFrom(paramTypes[0]) && 
+                        paramTypes[1] == playerInventoryClass && 
+                        paramTypes[2] == textClass) {
+                        screenConstructor = c;
+                        LOGGER.info("Found matching screen constructor: {}", screenConstructor);
+                        break;
+                    }
+                }
+            }
+            
+            if (screenConstructor == null) {
+                throw new RuntimeException("Could not find screen constructor with signature (ScreenHandler, PlayerInventory, Text)");
+            }
+            
+            // Create ScreenFactory lambda using Proxy
+            // ScreenFactory is a functional interface, so we need to implement its single abstract method
+            // Find the abstract method (should be something like create(handler, inventory, title))
+            java.lang.reflect.Method factoryMethod = null;
+            LOGGER.info("Looking for ScreenFactory method in: {}", screenFactoryClass.getName());
+            for (java.lang.reflect.Method m : screenFactoryClass.getMethods()) {
+                LOGGER.debug("Checking method: {} - abstract: {}, declaring class: {}", 
+                    m.getName(), java.lang.reflect.Modifier.isAbstract(m.getModifiers()), m.getDeclaringClass().getName());
+                if (java.lang.reflect.Modifier.isAbstract(m.getModifiers()) || 
+                    (m.getDeclaringClass() == screenFactoryClass && !m.isDefault())) {
+                    factoryMethod = m;
+                    LOGGER.info("Found factory method: {}", m);
+                    break;
+                }
+            }
+            
+            if (factoryMethod == null) {
+                // Fallback: try common method names
+                LOGGER.info("Factory method not found via inspection, trying common names...");
+                // Provider interface likely has a method that takes (ScreenHandler, PlayerInventory, Text)
+                Class<?> screenHandlerClass = classLoader.loadClass("net.minecraft.screen.ScreenHandler");
+                try {
+                    factoryMethod = screenFactoryClass.getMethod("create", screenHandlerClass, playerInventoryClass, textClass);
+                    LOGGER.info("Found factory method via getMethod(create): {}", factoryMethod);
+                } catch (NoSuchMethodException e) {
+                    try {
+                        factoryMethod = screenFactoryClass.getMethod("apply", screenHandlerClass, playerInventoryClass, textClass);
+                        LOGGER.info("Found factory method via getMethod(apply): {}", factoryMethod);
+                    } catch (NoSuchMethodException e2) {
+                        // Try to find any method that takes 3 parameters
+                        for (java.lang.reflect.Method m : screenFactoryClass.getMethods()) {
+                            if (m.getParameterCount() == 3) {
+                                factoryMethod = m;
+                                LOGGER.info("Found factory method with 3 parameters: {}", m);
+                                break;
+                            }
+                        }
+                        if (factoryMethod == null) {
+                            LOGGER.error("Could not find ScreenFactory method. Available methods:");
+                            for (java.lang.reflect.Method m : screenFactoryClass.getMethods()) {
+                                LOGGER.error("  - {} ({})", m.getName(), java.util.Arrays.toString(m.getParameterTypes()));
+                            }
+                            throw new RuntimeException("Could not find ScreenFactory method");
+                        }
+                    }
+                }
+            }
+            
+            final java.lang.reflect.Method finalFactoryMethod = factoryMethod;
+            final java.lang.reflect.Constructor<?> finalScreenConstructor = screenConstructor;
+            Object screenFactory = java.lang.reflect.Proxy.newProxyInstance(
                 classLoader,
-                new Class[]{screenProviderClass},
+                new Class[]{screenFactoryClass},
                 (proxy, method, args) -> {
-                    if (method.getName().equals("create") || method.getName().equals("apply")) {
-                        // args[0] = menu, args[1] = inventory, args[2] = title
-                        Object menu = args[0];
+                    LOGGER.debug("ScreenFactory proxy invoked: method={}, args.length={}", method.getName(), args != null ? args.length : 0);
+                    // Invoke the screen constructor when the factory method is called
+                    if (method.equals(finalFactoryMethod)) {
+                        Object handler = args[0];
                         Object inventory = args[1];
                         Object title = args.length > 2 ? args[2] : null;
                         
-                        // Create screen instance using constructor
-                        // Screen constructors typically take: (AbstractContainerMenu menu, Inventory inventory, Component title)
-                        java.lang.reflect.Constructor<?> constructor = screenClass.getConstructor(
-                            abstractContainerMenuClass,
-                            playerInventoryClass,
-                            componentClass
-                        );
-                        return constructor.newInstance(menu, inventory, title);
+                        LOGGER.info("Creating screen instance with handler={}, inventory={}, title={}", 
+                            handler != null ? handler.getClass().getName() : "null",
+                            inventory != null ? inventory.getClass().getName() : "null",
+                            title);
+                        return finalScreenConstructor.newInstance(handler, inventory, title);
+                    }
+                    // Handle Object methods
+                    if (method.getDeclaringClass() == Object.class) {
+                        if (method.getName().equals("toString")) {
+                            return "ScreenFactory for " + screenClassName;
+                        }
+                        if (method.getName().equals("equals")) {
+                            return proxy == args[0];
+                        }
+                        if (method.getName().equals("hashCode")) {
+                            return System.identityHashCode(proxy);
+                        }
                     }
                     return null;
                 }
             );
+            LOGGER.info("Created ScreenFactory proxy: {}", screenFactory.getClass().getName());
             
-            // Register the screen
-            registerMethod.invoke(null, menuType, screenProvider);
-            LOGGER.debug("Registered screen: {}", screenClassName);
+            // Register the screen using the provided register method
+            LOGGER.info("Invoking register method with menuType={}, screenFactory={}", 
+                menuType != null ? menuType.getClass().getName() : "null",
+                screenFactory.getClass().getName());
+            registerMethod.invoke(null, menuType, screenFactory);
+            LOGGER.info("Successfully registered Fabric screen: {}", screenClassName);
         } catch (Exception e) {
-            LOGGER.error("Error registering screen: {}", screenClassName, e);
+            LOGGER.error("Error registering Fabric screen: {}", screenClassName, e);
             e.printStackTrace();
         }
     }

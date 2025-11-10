@@ -1,8 +1,11 @@
 package com.quackers29.businesscraft.fabric.init;
 
+import com.quackers29.businesscraft.fabric.menu.FabricTownInterfaceMenu;
 import com.quackers29.businesscraft.fabric.platform.FabricMenuTypeHelper;
 import com.quackers29.businesscraft.fabric.platform.FabricRegistryHelper;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
 import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
+import net.minecraft.screen.ScreenHandlerType;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,19 +110,27 @@ public class FabricModMenuTypes {
 
 
     /**
-     * Menu types cannot be registered on Fabric because the common module classes
-     * use Forge-specific classes (AbstractContainerMenu) that don't exist in Fabric.
-     * Menu opening will be handled through event callbacks instead.
+     * Register Fabric-specific menu types
      */
     private static void registerMenuTypes() {
         try {
-            // Skip menu type registration - common module classes use Forge-specific AbstractContainerMenu
-            // Menu opening will be handled through Fabric's event system instead
-            System.out.println("DEBUG: Skipping menu type registration - common module uses Forge-specific classes");
-            System.out.println("DEBUG: Menu opening will be handled through Fabric event callbacks");
+            // Register FabricTownInterfaceMenu using ExtendedScreenHandlerType (allows passing BlockPos via PacketByteBuf)
+            @SuppressWarnings("unchecked")
+            ExtendedScreenHandlerType<FabricTownInterfaceMenu> townInterfaceMenuType = 
+                (ExtendedScreenHandlerType<FabricTownInterfaceMenu>) ScreenHandlerRegistry.registerExtended(
+                    new Identifier(MOD_ID, "town_interface"),
+                    (syncId, inventory, buf) -> new FabricTownInterfaceMenu(syncId, inventory, buf.readBlockPos())
+                );
+            
+            // Store in FabricMenuTypeHelper for PlatformAccess
+            FabricMenuTypeHelper.setTownInterfaceMenuType(townInterfaceMenuType);
+            
+            LOGGER.info("Registered FabricTownInterfaceMenu");
+            System.out.println("DEBUG: Successfully registered FabricTownInterfaceMenu");
         } catch (Exception e) {
-            System.err.println("ERROR: Failed to skip menu type registration: " + e.getMessage());
+            System.err.println("ERROR: Failed to register Fabric menu types: " + e.getMessage());
             e.printStackTrace();
+            throw e;
         }
     }
     
