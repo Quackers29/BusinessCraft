@@ -27,23 +27,23 @@ loom {
     // Include common module - use api to expose common module's classes
     // Ensure common module jar is built first (see task dependency above)
     // Exclude Forge dependency since Fabric doesn't need it
-    api(project(':common')) {
-        exclude group: 'net.minecraftforge', module: 'forge'
-    }
-    // Also add as compileOnly and implementation to ensure classes are available
-    compileOnly(project(':common')) {
-        exclude group: 'net.minecraftforge', module: 'forge'
-    }
+    // Include common module - use implementation since we are using Mojang mappings
+    // Ensure common module jar is built first (see task dependency above)
+    // Exclude Forge dependency since Fabric doesn't need it
     implementation(project(':common')) {
         exclude group: 'net.minecraftforge', module: 'forge'
     }
+    // Also add as compileOnly to ensure classes are available
+    // compileOnly(project(':common')) {
+    //    exclude group: 'net.minecraftforge', module: 'forge'
+    // }
 
     // JetBrains annotations for @NotNull/@Nullable
     compileOnly 'org.jetbrains:annotations:23.0.0'
 }
 
 // Include common module source directly to allow compilation
-sourceSets.main.java.srcDirs += project(':common').sourceSets.main.java.srcDirs
+// sourceSets.main.java.srcDirs += project(':common').sourceSets.main.java.srcDirs
 
 // No excludes - we want full common module visibility
 

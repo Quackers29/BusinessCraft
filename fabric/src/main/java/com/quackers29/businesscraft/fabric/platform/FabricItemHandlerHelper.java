@@ -2,395 +2,245 @@ package com.quackers29.businesscraft.fabric.platform;
 
 import com.quackers29.businesscraft.api.ItemHandlerHelper;
 import com.quackers29.businesscraft.api.SlotBasedStorageAccess;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.world.Container;
+import net.minecraft.world.ContainerHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
+
 /**
  * Fabric implementation of ItemHandlerHelper
- * Uses reflection to access Forge's ItemStackHandler and LazyOptional classes
- * (available at runtime via common module dependencies)
+ * Uses vanilla SimpleContainer instead of Forge's ItemStackHandler
  */
 public class FabricItemHandlerHelper implements ItemHandlerHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(FabricItemHandlerHelper.class);
-    
-    // Cache reflected classes for performance - lazy initialization
-    private static Class<?> itemStackHandlerClass;
-    private static Class<?> lazyOptionalClass;
-    private static Class<?> slotItemHandlerClass;
-    private static Class<?> iItemHandlerClass;
-    private static Class<?> itemStackClass;
-    private static Class<?> compoundTagClass;
-    private static Object emptyItemStack;
-    private static boolean initialized = false;
-    
-    /**
-     * Lazy initialization of reflection classes
-     */
-    private static synchronized void ensureInitialized() {
-        if (initialized) return;
-        
-        try {
-            ClassLoader classLoader = FabricItemHandlerHelper.class.getClassLoader();
-            itemStackHandlerClass = classLoader.loadClass("net.minecraftforge.items.ItemStackHandler");
-            lazyOptionalClass = classLoader.loadClass("net.minecraftforge.common.util.LazyOptional");
-            slotItemHandlerClass = classLoader.loadClass("net.minecraftforge.items.SlotItemHandler");
-            iItemHandlerClass = classLoader.loadClass("net.minecraftforge.items.IItemHandler");
-            itemStackClass = classLoader.loadClass("net.minecraft.world.item.ItemStack");
-            compoundTagClass = classLoader.loadClass("net.minecraft.nbt.CompoundTag");
-            
-            // Get empty ItemStack
-            java.lang.reflect.Field emptyField = itemStackClass.getField("EMPTY");
-            emptyItemStack = emptyField.get(null);
-            
-            initialized = true;
-        } catch (Exception e) {
-            LOGGER.error("Error initializing FabricItemHandlerHelper reflection classes", e);
-            initialized = false;
-        }
-    }
-    
-    // @Override - temporarily removed due to classpath issue with common module interfaces
+
+    @Override
     public Object createItemStackHandler(int size) {
-        ensureInitialized();
-        if (!initialized) {
-            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
-        }
-        try {
-            java.lang.reflect.Constructor<?> constructor = itemStackHandlerClass.getConstructor(int.class);
-            return constructor.newInstance(size);
-        } catch (Exception e) {
-            LOGGER.error("Error creating ItemStackHandler", e);
-            throw new RuntimeException("Failed to create ItemStackHandler", e);
-        }
+        return new SimpleContainer(size);
     }
 
-    // @Override - temporarily removed due to classpath issue with common module interfaces
+    @Override
     public int getSlots(Object itemHandler) {
-        ensureInitialized();
-        if (!initialized) {
-            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
+        if (itemHandler instanceof Container container) {
+            return container.getContainerSize();
         }
-        try {
-            if (itemStackHandlerClass.isInstance(itemHandler)) {
-                java.lang.reflect.Method method = itemStackHandlerClass.getMethod("getSlots");
-                return (Integer) method.invoke(itemHandler);
-            }
-            throw new IllegalArgumentException("Invalid item handler type");
-        } catch (Exception e) {
-            LOGGER.error("Error getting slots", e);
-            throw new RuntimeException("Failed to get slots", e);
-        }
+        return 0;
     }
 
-    // @Override - temporarily removed due to classpath issue with common module interfaces
+    @Override
     public void setStackInSlot(Object itemHandler, int slot, Object stack) {
-        ensureInitialized();
-        if (!initialized) {
-            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
-        }
-        try {
-            if (itemStackHandlerClass.isInstance(itemHandler) && itemStackClass.isInstance(stack)) {
-                java.lang.reflect.Method method = itemStackHandlerClass.getMethod("setStackInSlot", int.class, itemStackClass);
-                method.invoke(itemHandler, slot, stack);
-            } else {
-                throw new IllegalArgumentException("Invalid item handler or stack type");
-            }
-        } catch (Exception e) {
-            LOGGER.error("Error setting stack in slot", e);
-            throw new RuntimeException("Failed to set stack in slot", e);
+        if (itemHandler instanceof Container container && stack instanceof ItemStack itemStack) {
+            container.setItem(slot, itemStack);
         }
     }
 
-    // @Override - temporarily removed due to classpath issue with common module interfaces
+    @Override
     public Object getStackInSlot(Object itemHandler, int slot) {
-        ensureInitialized();
-        if (!initialized) {
-            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
+        if (itemHandler instanceof Container container) {
+            return container.getItem(slot);
         }
-        try {
-            if (itemStackHandlerClass.isInstance(itemHandler)) {
-                java.lang.reflect.Method method = itemStackHandlerClass.getMethod("getStackInSlot", int.class);
-                return method.invoke(itemHandler, slot);
-            }
-            throw new IllegalArgumentException("Invalid item handler type");
-        } catch (Exception e) {
-            LOGGER.error("Error getting stack in slot", e);
-            throw new RuntimeException("Failed to get stack in slot", e);
-        }
+        return ItemStack.EMPTY;
     }
 
-    // @Override - temporarily removed due to classpath issue with common module interfaces
+    @Override
     public Object createSlot(Object itemHandler, int index, int x, int y) {
-        ensureInitialized();
-        if (!initialized) {
-            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
+        if (itemHandler instanceof Container container) {
+            return new net.minecraft.world.inventory.Slot(container, index, x, y);
         }
-        try {
-            if (itemStackHandlerClass.isInstance(itemHandler)) {
-                java.lang.reflect.Constructor<?> constructor = slotItemHandlerClass.getConstructor(
-                    itemStackHandlerClass, int.class, int.class, int.class
-                );
-                return constructor.newInstance(itemHandler, index, x, y);
-            }
-            throw new IllegalArgumentException("Invalid item handler type");
-        } catch (Exception e) {
-            LOGGER.error("Error creating slot", e);
-            throw new RuntimeException("Failed to create slot", e);
-        }
+        return null;
     }
 
-    // @Override - temporarily removed due to classpath issue with common module interfaces
+    @Override
     public Object createWithdrawalOnlySlot(Object itemHandler, int index, int x, int y) {
-        // For Fabric, we'll create a regular slot and override behavior via reflection if needed
-        // For now, just return a regular slot (withdrawal-only behavior handled in menu code)
-        return createSlot(itemHandler, index, x, y);
+        if (itemHandler instanceof Container container) {
+            return new net.minecraft.world.inventory.Slot(container, index, x, y) {
+                @Override
+                public boolean mayPlace(ItemStack stack) {
+                    return false;
+                }
+            };
+        }
+        return null;
     }
 
-    // @Override - temporarily removed due to classpath issue with common module interfaces
+    @Override
     public Object createLazyOptional(Object itemHandler) {
-        ensureInitialized();
-        if (!initialized) {
-            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
-        }
-        try {
-            if (iItemHandlerClass.isInstance(itemHandler)) {
-                java.lang.reflect.Method ofMethod = lazyOptionalClass.getMethod("of", java.util.function.Supplier.class);
-                java.util.function.Supplier<Object> supplier = () -> itemHandler;
-                return ofMethod.invoke(null, supplier);
-            }
-            throw new IllegalArgumentException("Invalid item handler type");
-        } catch (Exception e) {
-            LOGGER.error("Error creating LazyOptional", e);
-            throw new RuntimeException("Failed to create LazyOptional", e);
-        }
+        // Fabric doesn't use LazyOptional, so we just wrap it in a Java Optional or
+        // return it directly
+        // For compatibility with common code that expects an object, we'll use Optional
+        return Optional.ofNullable(itemHandler);
     }
 
-    // @Override - temporarily removed due to classpath issue with common module interfaces
+    @Override
     public boolean isItemHandlerCapability(Object capability) {
-        ensureInitialized();
-        if (!initialized) return false;
-        try {
-            // Check if capability is ForgeCapabilities.ITEM_HANDLER
-            Class<?> forgeCapabilitiesClass = Class.forName("net.minecraftforge.common.capabilities.ForgeCapabilities");
-            java.lang.reflect.Field itemHandlerField = forgeCapabilitiesClass.getField("ITEM_HANDLER");
-            Object itemHandlerCapability = itemHandlerField.get(null);
-            return capability == itemHandlerCapability;
-        } catch (Exception e) {
-            LOGGER.warn("Error checking item handler capability", e);
-            return false;
-        }
+        // Fabric doesn't use Forge capabilities
+        return false;
     }
 
-    // @Override - temporarily removed due to classpath issue with common module interfaces
+    @Override
     public Object getEmptyLazyOptional() {
-        ensureInitialized();
-        if (!initialized) {
-            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
-        }
-        try {
-            java.lang.reflect.Method emptyMethod = lazyOptionalClass.getMethod("empty");
-            return emptyMethod.invoke(null);
-        } catch (Exception e) {
-            LOGGER.error("Error getting empty LazyOptional", e);
-            throw new RuntimeException("Failed to get empty LazyOptional", e);
-        }
+        return Optional.empty();
     }
 
-    // @Override - temporarily removed due to classpath issue with common module interfaces
+    @Override
     public Object castLazyOptional(Object lazyOptional, Object capability) {
-        ensureInitialized();
-        if (!initialized) return lazyOptional;
-        try {
-            if (lazyOptionalClass.isInstance(lazyOptional)) {
-                java.lang.reflect.Method castMethod = lazyOptionalClass.getMethod("cast");
-                return castMethod.invoke(lazyOptional);
-            }
-            return lazyOptional;
-        } catch (Exception e) {
-            LOGGER.error("Error casting LazyOptional", e);
-            return lazyOptional;
+        // Since we don't use capabilities, just return the value if present
+        if (lazyOptional instanceof Optional<?> optional) {
+            return optional.orElse(null);
         }
+        return lazyOptional;
     }
 
-    // @Override - temporarily removed due to classpath issue with common module interfaces
+    @Override
     public Object createCustomItemStackHandler(int size, Runnable onContentsChanged) {
-        ensureInitialized();
-        if (!initialized) {
-            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
-        }
-        try {
-            // Create a regular ItemStackHandler
-            // Note: Callback functionality would require subclassing, which is complex with reflection
-            // For now, return a regular handler - callback can be handled separately if needed
-            java.lang.reflect.Constructor<?> constructor = itemStackHandlerClass.getConstructor(int.class);
-            Object handler = constructor.newInstance(size);
-            
-            // Store callback for potential future use
-            // TODO: Implement proper callback mechanism if needed
-            return handler;
-        } catch (Exception e) {
-            LOGGER.error("Error creating custom ItemStackHandler", e);
-            throw new RuntimeException("Failed to create custom ItemStackHandler", e);
-        }
+        // SimpleContainer with listener
+        SimpleContainer container = new SimpleContainer(size);
+        container.addListener(c -> onContentsChanged.run());
+        return container;
     }
 
-    // @Override - temporarily removed due to classpath issue with common module interfaces
+    @Override
     public void invalidateLazyOptional(Object lazyOptional) {
-        ensureInitialized();
-        if (!initialized) return;
-        try {
-            if (lazyOptionalClass.isInstance(lazyOptional)) {
-                java.lang.reflect.Method invalidateMethod = lazyOptionalClass.getMethod("invalidate");
-                invalidateMethod.invoke(lazyOptional);
-            }
-        } catch (Exception e) {
-            LOGGER.error("Error invalidating LazyOptional", e);
-        }
+        // No-op for Optional
     }
 
-    // @Override - temporarily removed due to classpath issue with common module interfaces
+    @Override
     public Object serializeNBT(Object itemHandler) {
-        ensureInitialized();
-        if (!initialized) {
-            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
-        }
-        try {
-            if (itemStackHandlerClass.isInstance(itemHandler)) {
-                java.lang.reflect.Method method = itemStackHandlerClass.getMethod("serializeNBT");
-                return method.invoke(itemHandler);
+        if (itemHandler instanceof SimpleContainer container) {
+            ListTag listTag = new ListTag();
+            for (int i = 0; i < container.getContainerSize(); ++i) {
+                ItemStack itemStack = container.getItem(i);
+                if (!itemStack.isEmpty()) {
+                    CompoundTag compoundTag = new CompoundTag();
+                    compoundTag.putByte("Slot", (byte) i);
+                    itemStack.save(compoundTag);
+                    listTag.add(compoundTag);
+                }
             }
-            throw new IllegalArgumentException("Invalid item handler type");
-        } catch (Exception e) {
-            LOGGER.error("Error serializing NBT", e);
-            throw new RuntimeException("Failed to serialize NBT", e);
+            CompoundTag root = new CompoundTag();
+            root.put("Items", listTag);
+            root.putInt("Size", container.getContainerSize());
+            return root;
         }
+        return new CompoundTag();
     }
 
-    // @Override - temporarily removed due to classpath issue with common module interfaces
+    @Override
     public void deserializeNBT(Object itemHandler, Object nbt) {
-        ensureInitialized();
-        if (!initialized) {
-            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
-        }
-        try {
-            if (itemStackHandlerClass.isInstance(itemHandler) && compoundTagClass.isInstance(nbt)) {
-                java.lang.reflect.Method method = itemStackHandlerClass.getMethod("deserializeNBT", compoundTagClass);
-                method.invoke(itemHandler, nbt);
-            } else {
-                throw new IllegalArgumentException("Invalid item handler or NBT type");
+        if (itemHandler instanceof SimpleContainer container && nbt instanceof CompoundTag tag) {
+            if (tag.contains("Items", 9)) {
+                ListTag listTag = tag.getList("Items", 10);
+                for (int i = 0; i < listTag.size(); ++i) {
+                    CompoundTag compoundTag = listTag.getCompound(i);
+                    int j = compoundTag.getByte("Slot") & 255;
+                    if (j >= 0 && j < container.getContainerSize()) {
+                        container.setItem(j, ItemStack.of(compoundTag));
+                    }
+                }
             }
-        } catch (Exception e) {
-            LOGGER.error("Error deserializing NBT", e);
-            throw new RuntimeException("Failed to deserialize NBT", e);
         }
     }
 
-    // @Override - temporarily removed due to classpath issue with common module interfaces
+    @Override
     public Object extractItem(Object itemHandler, int slot, int amount, boolean simulate) {
-        ensureInitialized();
-        if (!initialized) return emptyItemStack;
-        try {
-            if (iItemHandlerClass.isInstance(itemHandler)) {
-                java.lang.reflect.Method method = iItemHandlerClass.getMethod("extractItem", int.class, int.class, boolean.class);
-                Object result = method.invoke(itemHandler, slot, amount, simulate);
-                return result != null ? result : emptyItemStack;
+        if (itemHandler instanceof Container container) {
+            if (slot >= 0 && slot < container.getContainerSize()) {
+                ItemStack stack = container.getItem(slot);
+                if (stack.isEmpty()) {
+                    return ItemStack.EMPTY;
+                }
+
+                int extract = Math.min(amount, stack.getCount());
+                ItemStack result = stack.copy();
+                result.setCount(extract);
+
+                if (!simulate) {
+                    container.removeItem(slot, extract);
+                }
+
+                return result;
             }
-            return emptyItemStack;
-        } catch (Exception e) {
-            LOGGER.error("Error extracting item", e);
-            return emptyItemStack;
         }
+        return ItemStack.EMPTY;
     }
 
-    // @Override - temporarily removed due to classpath issue with common module interfaces
+    @Override
     public Object insertItem(Object itemHandler, int slot, Object stack, boolean simulate) {
-        ensureInitialized();
-        if (!initialized) return stack;
-        try {
-            if (iItemHandlerClass.isInstance(itemHandler) && itemStackClass.isInstance(stack)) {
-                java.lang.reflect.Method method = iItemHandlerClass.getMethod("insertItem", int.class, itemStackClass, boolean.class);
-                Object result = method.invoke(itemHandler, slot, stack, simulate);
-                return result != null ? result : stack;
-            }
-            return stack;
-        } catch (Exception e) {
-            LOGGER.error("Error inserting item", e);
-            return stack;
-        }
-    }
-    
-    // @Override - temporarily removed due to classpath issue with common module interfaces
-    public Object createStorageWrapper(SlotBasedStorageAccess storage) {
-        ensureInitialized();
-        if (!initialized) {
-            throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
-        }
-        try {
-            // Create a wrapper class that extends ItemStackHandler and delegates to SlotBasedStorage
-            return new SlotBasedItemStackHandlerWrapper(storage);
-        } catch (Exception e) {
-            LOGGER.error("Error creating storage wrapper", e);
-            throw new RuntimeException("Failed to create storage wrapper", e);
-        }
-    }
-    
-    /**
-     * ItemStackHandler wrapper for SlotBasedStorage
-     * Similar to Forge's SlotBasedItemStackHandler
-     */
-    private static class SlotBasedItemStackHandlerWrapper {
-        private final SlotBasedStorageAccess storage;
-        private Object itemStackHandler;
-        
-        public SlotBasedItemStackHandlerWrapper(SlotBasedStorageAccess storage) {
-            this.storage = storage;
-            ensureInitialized();
-            if (!initialized) {
-                throw new RuntimeException("FabricItemHandlerHelper not initialized - Forge classes not available");
-            }
-            try {
-                java.lang.reflect.Constructor<?> constructor = itemStackHandlerClass.getConstructor(int.class);
-                this.itemStackHandler = constructor.newInstance(storage.getSlotCount());
-                
-                // Sync initial state from storage
-                // Use reflection to call getSlot() to avoid compile-time ItemStack dependency
-                try {
-                    java.lang.reflect.Method getSlotMethod = SlotBasedStorageAccess.class.getMethod("getSlot", int.class);
-                    for (int i = 0; i < storage.getSlotCount(); i++) {
-                        Object stack = getSlotMethod.invoke(storage, i);
-                        if (stack != null) {
-                            // Check if stack is empty using reflection
-                            try {
-                                java.lang.reflect.Method isEmptyMethod = itemStackClass.getMethod("isEmpty");
-                                boolean isEmpty = (Boolean) isEmptyMethod.invoke(stack);
-                                if (!isEmpty) {
-                                    java.lang.reflect.Method setMethod = itemStackHandlerClass.getMethod("setStackInSlot", int.class, itemStackClass);
-                                    setMethod.invoke(itemStackHandler, i, stack);
-                                }
-                            } catch (Exception e) {
-                                // If isEmpty check fails, try to set anyway
-                                try {
-                                    java.lang.reflect.Method setMethod = itemStackHandlerClass.getMethod("setStackInSlot", int.class, itemStackClass);
-                                    setMethod.invoke(itemStackHandler, i, stack);
-                                } catch (Exception e2) {
-                                    LOGGER.warn("Failed to sync storage slot {} to ItemStackHandler", i, e2);
-                                }
+        if (itemHandler instanceof Container container && stack instanceof ItemStack itemStack) {
+            if (slot >= 0 && slot < container.getContainerSize()) {
+                ItemStack existing = container.getItem(slot);
+
+                if (existing.isEmpty()) {
+                    int limit = Math.min(container.getMaxStackSize(), itemStack.getMaxStackSize());
+                    int insert = Math.min(itemStack.getCount(), limit);
+
+                    if (!simulate) {
+                        ItemStack toInsert = itemStack.copy();
+                        toInsert.setCount(insert);
+                        container.setItem(slot, toInsert);
+                    }
+
+                    if (insert < itemStack.getCount()) {
+                        ItemStack remainder = itemStack.copy();
+                        remainder.setCount(itemStack.getCount() - insert);
+                        return remainder;
+                    }
+                    return ItemStack.EMPTY;
+                } else {
+                    if (ItemStack.isSameItemSameTags(existing, itemStack)) {
+                        int limit = Math.min(container.getMaxStackSize(), existing.getMaxStackSize());
+                        int space = limit - existing.getCount();
+                        int insert = Math.min(itemStack.getCount(), space);
+
+                        if (insert > 0) {
+                            if (!simulate) {
+                                existing.grow(insert);
                             }
+
+                            if (insert < itemStack.getCount()) {
+                                ItemStack remainder = itemStack.copy();
+                                remainder.setCount(itemStack.getCount() - insert);
+                                return remainder;
+                            }
+                            return ItemStack.EMPTY;
                         }
                     }
-                } catch (Exception e) {
-                    LOGGER.warn("Failed to sync storage to ItemStackHandler", e);
                 }
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to create ItemStackHandler wrapper", e);
             }
         }
-        
-        public Object getItemStackHandler() {
-            return itemStackHandler;
-        }
-        
-        // Note: Full implementation would need to override all ItemStackHandler methods
-        // to delegate to storage and sync changes. This is a simplified version.
+        return stack; // Could not insert
+    }
+
+    @Override
+    public Object createStorageWrapper(SlotBasedStorageAccess storage) {
+        // Create a SimpleContainer that delegates to the storage access
+        // This is a simplified wrapper
+        return new SimpleContainer(storage.getSlotCount()) {
+            @Override
+            public ItemStack getItem(int slot) {
+                Object stack = storage.getSlot(slot);
+                return stack instanceof ItemStack ? (ItemStack) stack : ItemStack.EMPTY;
+            }
+
+            @Override
+            public void setItem(int slot, ItemStack stack) {
+                storage.setSlot(slot, stack);
+            }
+
+            @Override
+            public boolean isEmpty() {
+                for (int i = 0; i < getContainerSize(); i++) {
+                    if (!getItem(i).isEmpty())
+                        return false;
+                }
+                return true;
+            }
+        };
     }
 }

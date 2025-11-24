@@ -40,59 +40,55 @@ public class ForgeEventHelper implements EventHelper {
     }
 
     @Override
-    public void setActiveTownBlock(Object pos) {
-        if (pos instanceof net.minecraft.core.BlockPos blockPos) {
-            com.quackers29.businesscraft.forge.event.ForgeModEvents.setActiveTownBlock(blockPos);
-        } else {
-            com.quackers29.businesscraft.forge.event.ForgeModEvents.setActiveTownBlock(null);
-        }
+    public void setActiveTownBlock(net.minecraft.core.BlockPos pos) {
+        com.quackers29.businesscraft.forge.event.ForgeModEvents.setActiveTownBlock(pos);
     }
 
     @Override
     public void clearActiveTownBlock() {
         com.quackers29.businesscraft.forge.event.ForgeModEvents.setActiveTownBlock(null);
     }
-    
+
     @Override
     public void registerPlayerTickCallback(EventCallbacks.PlayerTickCallback callback) {
         ForgeEventCallbackHandler.registerPlayerTickCallback(callback);
     }
-    
+
     @Override
     public void registerPlayerLoginCallback(EventCallbacks.PlayerLoginCallback callback) {
         ForgeEventCallbackHandler.registerPlayerLoginCallback(callback);
     }
-    
+
     @Override
     public void registerPlayerLogoutCallback(EventCallbacks.PlayerLogoutCallback callback) {
         ForgeEventCallbackHandler.registerPlayerLogoutCallback(callback);
     }
-    
+
     @Override
     public void registerRightClickBlockCallback(EventCallbacks.RightClickBlockCallback callback) {
         ForgeEventCallbackHandler.registerRightClickBlockCallback(callback);
     }
-    
+
     @Override
     public void registerClientTickCallback(EventCallbacks.ClientTickCallback callback) {
         ForgeEventCallbackHandler.registerClientTickCallback(callback);
     }
-    
+
     @Override
     public void registerKeyInputCallback(EventCallbacks.KeyInputCallback callback) {
         ForgeEventCallbackHandler.registerKeyInputCallback(callback);
     }
-    
+
     @Override
     public void registerMouseScrollCallback(EventCallbacks.MouseScrollCallback callback) {
         ForgeEventCallbackHandler.registerMouseScrollCallback(callback);
     }
-    
+
     @Override
     public void registerRenderLevelCallback(EventCallbacks.RenderLevelCallback callback) {
         ForgeEventCallbackHandler.registerRenderLevelCallback(callback);
     }
-    
+
     @Override
     public void registerLevelUnloadCallback(EventCallbacks.LevelUnloadCallback callback) {
         ForgeEventCallbackHandler.registerLevelUnloadCallback(callback);

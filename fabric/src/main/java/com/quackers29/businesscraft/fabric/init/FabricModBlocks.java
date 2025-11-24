@@ -1,12 +1,12 @@
 package com.quackers29.businesscraft.fabric.init;
 
-import com.quackers29.businesscraft.fabric.block.entity.FabricTownInterfaceEntity;
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.util.Identifier;
-import net.minecraft.block.Block;
-import net.minecraft.item.BlockItem;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.item.BlockItem;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 
 /**
@@ -15,133 +15,6 @@ import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 public class FabricModBlocks {
     private static boolean registrationAttempted = false;
     private static boolean registrationSuccessful = false;
-
-    /**
-     * Helper method to load classes with fallback classloaders
-     * Tries multiple classloaders to find Minecraft classes
-     */
-    private static Class<?> loadClass(String className) throws ClassNotFoundException {
-        // First, try to get a Minecraft class that's definitely loaded (like Block or Item)
-        // Use that class's classloader to load other classes
-        ClassLoader mcClassLoader = null;
-        
-        // Try to find a Minecraft class that's definitely loaded
-        String[] knownMcClasses = {
-            "net.minecraft.world.level.block.Block",
-            "net.minecraft.world.item.Item", 
-            "net.minecraft.util.Identifier",
-            "net.minecraft.resources.ResourceLocation"
-        };
-        
-        ClassLoader threadClassLoader = Thread.currentThread().getContextClassLoader();
-        ClassLoader[] classLoaders = {
-            threadClassLoader,
-            FabricModBlocks.class.getClassLoader(),
-            ClassLoader.getSystemClassLoader()
-        };
-        
-        for (ClassLoader loader : classLoaders) {
-            if (loader == null) continue;
-            for (String knownClass : knownMcClasses) {
-                try {
-                    Class<?> testClass = Class.forName(knownClass, true, loader);
-                    mcClassLoader = testClass.getClassLoader();
-                    System.out.println("DEBUG: Found Minecraft classloader via " + knownClass);
-                    break;
-                } catch (ClassNotFoundException e) {
-                    continue;
-                }
-            }
-            if (mcClassLoader != null) break;
-        }
-        
-        if (mcClassLoader == null) {
-            throw new ClassNotFoundException("Could not find Minecraft classloader - no Minecraft classes available");
-        }
-        
-        // Now try to load the requested class using the Minecraft classloader
-        try {
-            return Class.forName(className, true, mcClassLoader);
-        } catch (ClassNotFoundException e) {
-            // Try alternative names
-            String[] alternatives = {
-                className.replace("net.minecraft.core.Registry", "net.minecraft.core.Registry"),
-                className.replace("net.minecraft.core.registries.BuiltInRegistries", "net.minecraft.core.registries.Registries"),
-                className.replace("net.minecraft.resources.ResourceLocation", "net.minecraft.util.Identifier")
-            };
-            
-            for (String alt : alternatives) {
-                if (alt.equals(className)) continue;
-                try {
-                    return Class.forName(alt, true, mcClassLoader);
-                } catch (ClassNotFoundException e2) {
-                    continue;
-                }
-            }
-            
-            throw new ClassNotFoundException("Could not load " + className + " using Minecraft classloader", e);
-        }
-    }
-
-    /**
-     * Check if Minecraft classes are available
-     * In Fabric, we need Registry and the registry objects (BLOCK, ITEM)
-     */
-    private static boolean areMinecraftClassesAvailable() {
-        try {
-            // Load Registry class
-            Class<?> registryClass = loadClass("net.minecraft.core.Registry");
-            
-            // Try to find where BLOCK and ITEM registries are defined
-            // They might be in Registries, BuiltInRegistries, or Registry itself
-            String[] possibleRegistryLocations = {
-                "net.minecraft.core.registries.Registries",
-                "net.minecraft.core.registries.BuiltInRegistries",
-                "net.minecraft.registry.Registries" // Alternative location
-            };
-            
-            boolean foundRegistries = false;
-            for (String location : possibleRegistryLocations) {
-                try {
-                    Class<?> registriesClass = loadClass(location);
-                    // Check if it has BLOCK and ITEM fields
-                    try {
-                        registriesClass.getField("BLOCK");
-                        registriesClass.getField("ITEM");
-                        foundRegistries = true;
-                        System.out.println("DEBUG: Found registries in " + location);
-                        break;
-                    } catch (NoSuchFieldException e) {
-                        // Try next location
-                        continue;
-                    }
-                } catch (ClassNotFoundException e) {
-                    // Try next location
-                    continue;
-                }
-            }
-            
-            // Also check Registry class itself for static fields
-            if (!foundRegistries) {
-                try {
-                    registryClass.getField("BLOCK");
-                    registryClass.getField("ITEM");
-                    foundRegistries = true;
-                    System.out.println("DEBUG: Found registries in Registry class");
-                } catch (NoSuchFieldException e) {
-                    // Not in Registry class either
-                }
-            }
-            
-            loadClass("net.minecraft.util.Identifier"); // In Fabric, ResourceLocation is Identifier
-            return foundRegistries;
-        } catch (ClassNotFoundException e) {
-            return false;
-        } catch (Exception e) {
-            System.err.println("DEBUG: Error checking class availability: " + e.getMessage());
-            return false;
-        }
-    }
 
     public static void register() {
         System.out.println("DEBUG: FabricModBlocks.register() called");
@@ -178,24 +51,23 @@ public class FabricModBlocks {
         }
     }
 
-
     /**
      * Actual block registration logic - block with block entity
      */
     private static void registerBlocks() {
         try {
-            // Create a block that implements BlockEntityProvider to indicate it has a block entity
-            // In Fabric, blocks with block entities must implement BlockEntityProvider
-            class TownInterfaceBlock extends Block implements net.minecraft.block.BlockEntityProvider {
-                public TownInterfaceBlock(Settings settings) {
+            // Create a block that implements EntityBlock to indicate it has a block entity
+            class TownInterfaceBlock extends Block implements net.minecraft.world.level.block.EntityBlock {
+                public TownInterfaceBlock(Properties settings) {
                     super(settings);
                 }
-                
+
                 @Override
-                public net.minecraft.block.entity.BlockEntity createBlockEntity(net.minecraft.util.math.BlockPos pos, net.minecraft.block.BlockState state) {
-                    System.out.println("DEBUG: createBlockEntity called for block at " + pos);
+                public net.minecraft.world.level.block.entity.BlockEntity newBlockEntity(
+                        net.minecraft.core.BlockPos pos, net.minecraft.world.level.block.state.BlockState state) {
+                    System.out.println("DEBUG: newBlockEntity called for block at " + pos);
                     if (FabricModBlockEntities.TOWN_INTERFACE_ENTITY_TYPE != null) {
-                        return new FabricTownInterfaceEntity(pos, state);
+                        return new TownInterfaceEntity(pos, state);
                     } else {
                         System.err.println("ERROR: Block entity type is null when creating block entity");
                         return null;
@@ -203,144 +75,154 @@ public class FabricModBlocks {
                 }
 
                 @Override
-                public net.minecraft.util.ActionResult onUse(net.minecraft.block.BlockState state, net.minecraft.world.World world,
-                        net.minecraft.util.math.BlockPos pos, net.minecraft.entity.player.PlayerEntity player,
-                        net.minecraft.util.Hand hand, net.minecraft.util.hit.BlockHitResult hit) {
+                public net.minecraft.world.InteractionResult use(net.minecraft.world.level.block.state.BlockState state,
+                        net.minecraft.world.level.Level world,
+                        net.minecraft.core.BlockPos pos, net.minecraft.world.entity.player.Player player,
+                        net.minecraft.world.InteractionHand hand, net.minecraft.world.phys.BlockHitResult hit) {
 
-                    if (world.isClient) {
+                    if (world.isClientSide) {
                         // On client side, just return success to indicate interaction was handled
-                        return net.minecraft.util.ActionResult.SUCCESS;
+                        return net.minecraft.world.InteractionResult.SUCCESS;
                     }
 
                     // On server side, try to open the menu
                     try {
                         // Get the block entity
-                        net.minecraft.block.entity.BlockEntity blockEntity = world.getBlockEntity(pos);
+                        net.minecraft.world.level.block.entity.BlockEntity blockEntity = world.getBlockEntity(pos);
                         if (blockEntity != null) {
-                            System.out.println("DEBUG: Found block entity at " + pos + ": " + blockEntity.getClass().getName());
+                            System.out.println(
+                                    "DEBUG: Found block entity at " + pos + ": " + blockEntity.getClass().getName());
 
-                            // Open the menu directly using PlatformAccess.openScreen() instead of using packets
-                            // This avoids the Forge/Fabric mapping issues with packet classes
-                            // This matches the pattern used in TownInterfaceBlock.use() in the common module
+                            // Open the menu directly using PlatformAccess.openScreen() instead of using
+                            // packets
                             try {
-                                Class<?> platformAccessClass = Class.forName("com.quackers29.businesscraft.api.PlatformAccess");
+                                Class<?> platformAccessClass = Class
+                                        .forName("com.quackers29.businesscraft.api.PlatformAccess");
                                 Object network = platformAccessClass.getMethod("getNetwork").invoke(null);
-                                
-                                // Create an ExtendedScreenHandlerFactory (Fabric) since we registered with registerExtended()
-                                // ExtendedScreenHandlerFactory extends NamedScreenHandlerFactory and adds writeScreenOpeningData()
-                                Class<?> extendedScreenHandlerFactoryClass = Class.forName("net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory");
+
+                                // Create an ExtendedScreenHandlerFactory (Fabric) since we registered with
+                                // registerExtended()
+                                Class<?> extendedScreenHandlerFactoryClass = Class.forName(
+                                        "net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory");
                                 Object menuProvider = java.lang.reflect.Proxy.newProxyInstance(
-                                    extendedScreenHandlerFactoryClass.getClassLoader(),
-                                    new Class<?>[] { extendedScreenHandlerFactoryClass },
-                                    new java.lang.reflect.InvocationHandler() {
-                                        @Override
-                                        public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) throws Throwable {
-                                            String methodName = method.getName();
-                                            if ("getDisplayName".equals(methodName)) {
-                                                // Return translated text (Fabric uses Text instead of Component)
-                                                try {
-                                                    // Try Fabric's Text class first
-                                                    Class<?> textClass = Class.forName("net.minecraft.text.Text");
-                                                    java.lang.reflect.Method translatableMethod = textClass.getMethod("translatable", String.class);
-                                                    return translatableMethod.invoke(null, "block.businesscraft.town_interface");
-                                                } catch (ClassNotFoundException e) {
-                                                    // Fallback to Forge's Component class if Text not available
+                                        extendedScreenHandlerFactoryClass.getClassLoader(),
+                                        new Class<?>[] { extendedScreenHandlerFactoryClass },
+                                        new java.lang.reflect.InvocationHandler() {
+                                            @Override
+                                            public Object invoke(Object proxy, java.lang.reflect.Method method,
+                                                    Object[] args) throws Throwable {
+                                                String methodName = method.getName();
+                                                if ("getDisplayName".equals(methodName)) {
+                                                    // Return translated text (Fabric uses Text, but mapped to Component
+                                                    // in Mojang mappings)
                                                     try {
-                                                        Class<?> componentClass = Class.forName("net.minecraft.network.chat.Component");
-                                                        java.lang.reflect.Method translatableMethod = componentClass.getMethod("translatable", String.class);
-                                                        return translatableMethod.invoke(null, "block.businesscraft.town_interface");
-                                                    } catch (ClassNotFoundException e2) {
-                                                        // If neither is available, return a simple string wrapped in a Text object
-                                                        // This shouldn't happen, but handle it gracefully
-                                                        throw new RuntimeException("Neither Text nor Component class available", e2);
+                                                        Class<?> componentClass = Class
+                                                                .forName("net.minecraft.network.chat.Component");
+                                                        java.lang.reflect.Method translatableMethod = componentClass
+                                                                .getMethod("translatable", String.class);
+                                                        return translatableMethod.invoke(null,
+                                                                "block.businesscraft.town_interface");
+                                                    } catch (Exception e) {
+                                                        throw new RuntimeException("Component class not found", e);
                                                     }
-                                                }
-                                            } else if ("createMenu".equals(methodName)) {
-                                                // Create FabricTownInterfaceMenu (Fabric-specific ScreenHandler)
-                                                try {
-                                                    int windowId = (Integer) args[0];
-                                                    Object inventory = args[1];
-                                                    
-                                                    // Get the registered ScreenHandlerType
-                                                    Class<?> menuTypeHelperClass = Class.forName("com.quackers29.businesscraft.fabric.platform.FabricMenuTypeHelper");
-                                                    java.lang.reflect.Method getMenuTypeMethod = menuTypeHelperClass.getMethod("getTownInterfaceMenuTypeStatic");
-                                                    Object menuType = getMenuTypeMethod.invoke(null);
-                                                    
-                                                    if (menuType == null) {
-                                                        throw new RuntimeException("TownInterfaceMenuType not registered yet");
+                                                } else if ("createMenu".equals(methodName)) {
+                                                    // Create TownInterfaceMenu
+                                                    try {
+                                                        int windowId = (Integer) args[0];
+                                                        Object inventory = args[1];
+
+                                                        // Get the registered ScreenHandlerType
+                                                        Class<?> menuTypeHelperClass = Class.forName(
+                                                                "com.quackers29.businesscraft.fabric.platform.FabricMenuTypeHelper");
+                                                        java.lang.reflect.Method getMenuTypeMethod = menuTypeHelperClass
+                                                                .getMethod("getTownInterfaceMenuTypeStatic");
+                                                        Object menuType = getMenuTypeMethod.invoke(null);
+
+                                                        if (menuType == null) {
+                                                            throw new RuntimeException(
+                                                                    "TownInterfaceMenuType not registered yet");
+                                                        }
+
+                                                        // Use the constructor that takes ScreenHandlerType
+                                                        Class<?> menuClass = Class.forName(
+                                                                "com.quackers29.businesscraft.menu.TownInterfaceMenu");
+                                                        Class<?> inventoryClass = Class
+                                                                .forName("net.minecraft.world.entity.player.Inventory");
+                                                        Class<?> blockPosClass = Class
+                                                                .forName("net.minecraft.core.BlockPos");
+
+                                                        java.lang.reflect.Constructor<?> constructor = menuClass
+                                                                .getConstructor(
+                                                                        int.class,
+                                                                        inventoryClass,
+                                                                        blockPosClass);
+                                                        return constructor.newInstance(windowId, inventory, pos);
+                                                    } catch (Exception e) {
+                                                        System.err.println("ERROR: Cannot create TownInterfaceMenu: "
+                                                                + e.getMessage());
+                                                        e.printStackTrace();
+                                                        throw new RuntimeException("Failed to create TownInterfaceMenu",
+                                                                e);
                                                     }
-                                                    
-                                                    // Use the constructor that takes ScreenHandlerType
-                                                    Class<?> menuClass = Class.forName("com.quackers29.businesscraft.fabric.menu.FabricTownInterfaceMenu");
-                                                    Class<?> screenHandlerTypeClass = Class.forName("net.minecraft.screen.ScreenHandlerType");
-                                                    Class<?> playerInventoryClass = Class.forName("net.minecraft.entity.player.PlayerInventory");
-                                                    Class<?> blockPosClass = Class.forName("net.minecraft.util.math.BlockPos");
-                                                    
-                                                    java.lang.reflect.Constructor<?> constructor = menuClass.getConstructor(
-                                                        screenHandlerTypeClass,
-                                                        int.class,
-                                                        playerInventoryClass,
-                                                        blockPosClass
-                                                    );
-                                                    return constructor.newInstance(menuType, windowId, inventory, pos);
-                                                } catch (Exception e) {
-                                                    System.err.println("ERROR: Cannot create FabricTownInterfaceMenu: " + e.getMessage());
-                                                    e.printStackTrace();
-                                                    throw new RuntimeException("Failed to create FabricTownInterfaceMenu", e);
-                                                }
-                                            } else if ("writeScreenOpeningData".equals(methodName)) {
-                                                // ExtendedScreenHandlerFactory requires this method to write BlockPos to PacketByteBuf
-                                                // Method signature: writeScreenOpeningData(ServerPlayerEntity player, PacketByteBuf buf)
-                                                // This is called by Fabric to send the BlockPos to the client
-                                                try {
-                                                    Object player = args[0]; // ServerPlayerEntity (first arg)
-                                                    Object buf = args[1]; // PacketByteBuf (second arg)
-                                                    Class<?> blockPosClass = Class.forName("net.minecraft.util.math.BlockPos");
-                                                    
-                                                    // Find writeBlockPos method on the actual buffer object's class
-                                                    // Try the object's class and its superclasses/interfaces
-                                                    java.lang.reflect.Method writeBlockPosMethod = null;
-                                                    Class<?> bufClass = buf.getClass();
-                                                    
-                                                    // Try to find writeBlockPos method
-                                                    for (Class<?> c = bufClass; c != null && writeBlockPosMethod == null; c = c.getSuperclass()) {
-                                                        try {
-                                                            writeBlockPosMethod = c.getMethod("writeBlockPos", blockPosClass);
-                                                        } catch (NoSuchMethodException e) {
-                                                            // Try interfaces
-                                                            for (Class<?> iface : c.getInterfaces()) {
-                                                                try {
-                                                                    writeBlockPosMethod = iface.getMethod("writeBlockPos", blockPosClass);
-                                                                    break;
-                                                                } catch (NoSuchMethodException e2) {
-                                                                    continue;
+                                                } else if ("writeScreenOpeningData".equals(methodName)) {
+                                                    // ExtendedScreenHandlerFactory requires this method to write
+                                                    // BlockPos to PacketByteBuf
+                                                    try {
+                                                        Object player = args[0]; // ServerPlayerEntity
+                                                        Object buf = args[1]; // FriendlyByteBuf
+                                                        Class<?> blockPosClass = Class
+                                                                .forName("net.minecraft.core.BlockPos");
+
+                                                        // Find writeBlockPos method on the actual buffer object's class
+                                                        java.lang.reflect.Method writeBlockPosMethod = null;
+                                                        Class<?> bufClass = buf.getClass();
+
+                                                        // Try to find writeBlockPos method
+                                                        for (Class<?> c = bufClass; c != null
+                                                                && writeBlockPosMethod == null; c = c.getSuperclass()) {
+                                                            try {
+                                                                writeBlockPosMethod = c.getMethod("writeBlockPos",
+                                                                        blockPosClass);
+                                                            } catch (NoSuchMethodException e) {
+                                                                // Try interfaces
+                                                                for (Class<?> iface : c.getInterfaces()) {
+                                                                    try {
+                                                                        writeBlockPosMethod = iface.getMethod(
+                                                                                "writeBlockPos", blockPosClass);
+                                                                        break;
+                                                                    } catch (NoSuchMethodException e2) {
+                                                                        continue;
+                                                                    }
                                                                 }
                                                             }
                                                         }
+
+                                                        if (writeBlockPosMethod == null) {
+                                                            throw new RuntimeException(
+                                                                    "Could not find writeBlockPos method on buffer class: "
+                                                                            + bufClass.getName());
+                                                        }
+
+                                                        writeBlockPosMethod.invoke(buf, pos);
+                                                        return null; // void method
+                                                    } catch (Exception e) {
+                                                        System.err.println(
+                                                                "ERROR: Cannot write BlockPos to FriendlyByteBuf: "
+                                                                        + e.getMessage());
+                                                        e.printStackTrace();
+                                                        throw new RuntimeException(
+                                                                "Failed to write BlockPos to FriendlyByteBuf", e);
                                                     }
-                                                    
-                                                    if (writeBlockPosMethod == null) {
-                                                        throw new RuntimeException("Could not find writeBlockPos method on buffer class: " + bufClass.getName());
-                                                    }
-                                                    
-                                                    writeBlockPosMethod.invoke(buf, pos);
-                                                    return null; // void method
-                                                } catch (Exception e) {
-                                                    System.err.println("ERROR: Cannot write BlockPos to PacketByteBuf: " + e.getMessage());
-                                                    e.printStackTrace();
-                                                    throw new RuntimeException("Failed to write BlockPos to PacketByteBuf", e);
                                                 }
+                                                return null;
                                             }
-                                            return null;
-                                        }
-                                    }
-                                );
-                                
+                                        });
+
                                 // Call PlatformAccess.getNetwork().openScreen(player, menuProvider, blockPos)
-                                java.lang.reflect.Method openScreenMethod = network.getClass().getMethod("openScreen", 
-                                    Object.class, Object.class, Object.class);
+                                java.lang.reflect.Method openScreenMethod = network.getClass().getMethod("openScreen",
+                                        Object.class, Object.class, Object.class);
                                 openScreenMethod.invoke(network, player, menuProvider, pos);
-                                
+
                                 System.out.println("DEBUG: Opened town interface menu directly via PlatformAccess");
                             } catch (Exception e) {
                                 System.err.println("ERROR: Could not open menu via PlatformAccess: " + e.getMessage());
@@ -350,26 +232,28 @@ public class FabricModBlocks {
                             System.out.println("DEBUG: No block entity found at " + pos);
                         }
 
-                        return net.minecraft.util.ActionResult.SUCCESS;
+                        return net.minecraft.world.InteractionResult.SUCCESS;
                     } catch (Exception e) {
                         System.err.println("Error in block onUse: " + e.getMessage());
                         e.printStackTrace();
-                        return net.minecraft.util.ActionResult.FAIL;
+                        return net.minecraft.world.InteractionResult.FAIL;
                     }
                 }
             }
-            
+
             // Instantiate the block
             Block townInterfaceBlock = new TownInterfaceBlock(FabricBlockSettings.create()
-                .strength(3.0f, 3.0f)
-                .requiresTool());
+                    .strength(3.0f, 3.0f)
+                    .requiresTool());
 
             // Register the block using proper Fabric Registry.register method
-            Registry.register(Registries.BLOCK, new Identifier("businesscraft", "town_interface"), townInterfaceBlock);
+            Registry.register(BuiltInRegistries.BLOCK, new ResourceLocation("businesscraft", "town_interface"),
+                    townInterfaceBlock);
 
             // Create and register block item
             BlockItem townInterfaceBlockItem = new BlockItem(townInterfaceBlock, new FabricItemSettings());
-            Registry.register(Registries.ITEM, new Identifier("businesscraft", "town_interface"), townInterfaceBlockItem);
+            Registry.register(BuiltInRegistries.ITEM, new ResourceLocation("businesscraft", "town_interface"),
+                    townInterfaceBlockItem);
 
             System.out.println("DEBUG: Town Interface Block with BlockEntity registration completed successfully!");
         } catch (Exception e) {

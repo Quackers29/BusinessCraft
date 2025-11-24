@@ -1,9 +1,0 @@
-Manifest-Version: 1.0
-Specification-Title: businesscraft-forge
-Specification-Vendor: Quackers29
-Specification-Version: 1
-Implementation-Title: BusinessCraft Forge
-Implementation-Version: 1.0.0
-Implementation-Vendor: Quackers29
-Implementation-Timestamp: 2025-11-24T00:20:50+0000
-

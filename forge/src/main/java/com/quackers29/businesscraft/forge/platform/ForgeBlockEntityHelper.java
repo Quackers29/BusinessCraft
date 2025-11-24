@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
  */
 public class ForgeBlockEntityHelper implements BlockEntityHelper {
     @Override
-    public Object getTownInterfaceEntityType() {
+    public BlockEntityType<?> getTownInterfaceEntityType() {
         return ForgeModBlockEntities.TOWN_INTERFACE_ENTITY.get();
     }
 }

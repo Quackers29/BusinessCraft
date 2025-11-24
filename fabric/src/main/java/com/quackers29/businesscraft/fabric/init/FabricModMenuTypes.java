@@ -4,7 +4,7 @@ import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import com.quackers29.businesscraft.fabric.platform.FabricMenuTypeHelper;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
 import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,13 +41,14 @@ public class FabricModMenuTypes {
     private static void registerMenuTypes() {
         try {
             // Register TownInterfaceMenu using ExtendedScreenHandlerType
-            // Fabric API uses Identifier, even with Mojang mappings
-            // Use raw cast to bypass generic type mismatch between Mojang and Fabric
+            // Fabric API uses ResourceLocation (mapped from Identifier) when using Mojang
             // mappings
+            // Use raw cast to bypass generic type mismatch if needed
+
             @SuppressWarnings("unchecked")
             ExtendedScreenHandlerType<TownInterfaceMenu> townInterfaceMenuType = (ExtendedScreenHandlerType<TownInterfaceMenu>) (Object) ScreenHandlerRegistry
                     .registerExtended(
-                            new Identifier(MOD_ID, "town_interface"),
+                            new ResourceLocation(MOD_ID, "town_interface"),
                             (int syncId, net.minecraft.world.entity.player.Inventory inventory,
                                     net.minecraft.network.FriendlyByteBuf buf) -> new TownInterfaceMenu(syncId,
                                             inventory, buf));

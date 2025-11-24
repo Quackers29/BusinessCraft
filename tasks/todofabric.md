@@ -181,22 +181,6 @@
 #### 2.5: Menu Type Registration ⚠️ **BLOCKED BY FORGE DEPENDENCIES**
 - **File:** `fabric/src/main/java/com/quackers29/businesscraft/fabric/init/FabricModMenuTypes.java`
 - **Status:** ⚠️ Registration skipped - common menu classes extend Forge-specific `AbstractContainerMenu`
-- **Forge Reference:** `forge/src/main/java/com/quackers29/businesscraft/forge/init/ForgeModMenuTypes.java`
-- **Actions Required:** ⚠️ **CRITICAL BLOCKER**
-  - ⚠️ Common module menu classes (`TownInterfaceMenu`, `TradeMenu`, `StorageMenu`, `PaymentBoardMenu`) extend `AbstractContainerMenu` (Forge-specific)
-  - ⚠️ Fabric uses `net.minecraft.screen.ScreenHandler` instead of `AbstractContainerMenu`
-  - ⚠️ Cannot instantiate Forge menu classes on Fabric (causes `NoClassDefFoundError`)
-  - ⚠️ Menu opening attempted via `PlatformAccess.openScreen()` but fails when creating menu instance
-  - ⚠️ **Solution Required:** Create Fabric-specific menu classes extending `ScreenHandler`
-    - Need `FabricTownInterfaceMenu` extending `ScreenHandler`
-    - Need `FabricTradeMenu` extending `ScreenHandler`
-    - Need `FabricStorageMenu` extending `ScreenHandler`
-    - Need `FabricPaymentBoardMenu` extending `ScreenHandler`
-  - ⚠️ Menu types cannot be registered until Fabric menu classes exist
-
-### Phase 3: Network System ✅ **PLANNED**
-**Status:** ⚠️ **INFRASTRUCTURE EXISTS, NEEDS COMPLETION**
-
 #### 3.1: Network Message Registration ✅ **COMPLETE**
 - **File:** `fabric/src/main/java/com/quackers29/businesscraft/fabric/FabricModMessages.java`
 - **Status:** ✅ Complete - all 39+ packets registered using Fabric's networking API
