@@ -89,147 +89,16 @@ public class FabricModBlocks {
                     try {
                         // Get the block entity
                         net.minecraft.world.level.block.entity.BlockEntity blockEntity = world.getBlockEntity(pos);
-                        if (blockEntity != null) {
+                        if (blockEntity instanceof TownInterfaceEntity townEntity) {
                             System.out.println(
                                     "DEBUG: Found block entity at " + pos + ": " + blockEntity.getClass().getName());
 
-                            // Open the menu directly using PlatformAccess.openScreen() instead of using
-                            // packets
-                            try {
-                                Class<?> platformAccessClass = Class
-                                        .forName("com.quackers29.businesscraft.api.PlatformAccess");
-                                Object network = platformAccessClass.getMethod("getNetwork").invoke(null);
-
-                                // Create an ExtendedScreenHandlerFactory (Fabric) since we registered with
-                                // registerExtended()
-                                Class<?> extendedScreenHandlerFactoryClass = Class.forName(
-                                        "net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory");
-                                Object menuProvider = java.lang.reflect.Proxy.newProxyInstance(
-                                        extendedScreenHandlerFactoryClass.getClassLoader(),
-                                        new Class<?>[] { extendedScreenHandlerFactoryClass },
-                                        new java.lang.reflect.InvocationHandler() {
-                                            @Override
-                                            public Object invoke(Object proxy, java.lang.reflect.Method method,
-                                                    Object[] args) throws Throwable {
-                                                String methodName = method.getName();
-                                                if ("getDisplayName".equals(methodName)) {
-                                                    // Return translated text (Fabric uses Text, but mapped to Component
-                                                    // in Mojang mappings)
-                                                    try {
-                                                        Class<?> componentClass = Class
-                                                                .forName("net.minecraft.network.chat.Component");
-                                                        java.lang.reflect.Method translatableMethod = componentClass
-                                                                .getMethod("translatable", String.class);
-                                                        return translatableMethod.invoke(null,
-                                                                "block.businesscraft.town_interface");
-                                                    } catch (Exception e) {
-                                                        throw new RuntimeException("Component class not found", e);
-                                                    }
-                                                } else if ("createMenu".equals(methodName)) {
-                                                    // Create TownInterfaceMenu
-                                                    try {
-                                                        int windowId = (Integer) args[0];
-                                                        Object inventory = args[1];
-
-                                                        // Get the registered ScreenHandlerType
-                                                        Class<?> menuTypeHelperClass = Class.forName(
-                                                                "com.quackers29.businesscraft.fabric.platform.FabricMenuTypeHelper");
-                                                        java.lang.reflect.Method getMenuTypeMethod = menuTypeHelperClass
-                                                                .getMethod("getTownInterfaceMenuTypeStatic");
-                                                        Object menuType = getMenuTypeMethod.invoke(null);
-
-                                                        if (menuType == null) {
-                                                            throw new RuntimeException(
-                                                                    "TownInterfaceMenuType not registered yet");
-                                                        }
-
-                                                        // Use the constructor that takes ScreenHandlerType
-                                                        Class<?> menuClass = Class.forName(
-                                                                "com.quackers29.businesscraft.menu.TownInterfaceMenu");
-                                                        Class<?> inventoryClass = Class
-                                                                .forName("net.minecraft.world.entity.player.Inventory");
-                                                        Class<?> blockPosClass = Class
-                                                                .forName("net.minecraft.core.BlockPos");
-
-                                                        java.lang.reflect.Constructor<?> constructor = menuClass
-                                                                .getConstructor(
-                                                                        int.class,
-                                                                        inventoryClass,
-                                                                        blockPosClass);
-                                                        return constructor.newInstance(windowId, inventory, pos);
-                                                    } catch (Exception e) {
-                                                        System.err.println("ERROR: Cannot create TownInterfaceMenu: "
-                                                                + e.getMessage());
-                                                        e.printStackTrace();
-                                                        throw new RuntimeException("Failed to create TownInterfaceMenu",
-                                                                e);
-                                                    }
-                                                } else if ("writeScreenOpeningData".equals(methodName)) {
-                                                    // ExtendedScreenHandlerFactory requires this method to write
-                                                    // BlockPos to PacketByteBuf
-                                                    try {
-                                                        Object player = args[0]; // ServerPlayerEntity
-                                                        Object buf = args[1]; // FriendlyByteBuf
-                                                        Class<?> blockPosClass = Class
-                                                                .forName("net.minecraft.core.BlockPos");
-
-                                                        // Find writeBlockPos method on the actual buffer object's class
-                                                        java.lang.reflect.Method writeBlockPosMethod = null;
-                                                        Class<?> bufClass = buf.getClass();
-
-                                                        // Try to find writeBlockPos method
-                                                        for (Class<?> c = bufClass; c != null
-                                                                && writeBlockPosMethod == null; c = c.getSuperclass()) {
-                                                            try {
-                                                                writeBlockPosMethod = c.getMethod("writeBlockPos",
-                                                                        blockPosClass);
-                                                            } catch (NoSuchMethodException e) {
-                                                                // Try interfaces
-                                                                for (Class<?> iface : c.getInterfaces()) {
-                                                                    try {
-                                                                        writeBlockPosMethod = iface.getMethod(
-                                                                                "writeBlockPos", blockPosClass);
-                                                                        break;
-                                                                    } catch (NoSuchMethodException e2) {
-                                                                        continue;
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-
-                                                        if (writeBlockPosMethod == null) {
-                                                            throw new RuntimeException(
-                                                                    "Could not find writeBlockPos method on buffer class: "
-                                                                            + bufClass.getName());
-                                                        }
-
-                                                        writeBlockPosMethod.invoke(buf, pos);
-                                                        return null; // void method
-                                                    } catch (Exception e) {
-                                                        System.err.println(
-                                                                "ERROR: Cannot write BlockPos to FriendlyByteBuf: "
-                                                                        + e.getMessage());
-                                                        e.printStackTrace();
-                                                        throw new RuntimeException(
-                                                                "Failed to write BlockPos to FriendlyByteBuf", e);
-                                                    }
-                                                }
-                                                return null;
-                                            }
-                                        });
-
-                                // Call PlatformAccess.getNetwork().openScreen(player, menuProvider, blockPos)
-                                java.lang.reflect.Method openScreenMethod = network.getClass().getMethod("openScreen",
-                                        Object.class, Object.class, Object.class);
-                                openScreenMethod.invoke(network, player, menuProvider, pos);
-
-                                System.out.println("DEBUG: Opened town interface menu directly via PlatformAccess");
-                            } catch (Exception e) {
-                                System.err.println("ERROR: Could not open menu via PlatformAccess: " + e.getMessage());
-                                e.printStackTrace();
-                            }
+                            // Open the menu directly using PlatformAccess
+                            com.quackers29.businesscraft.api.PlatformAccess.getNetwork().openScreen(player, townEntity,
+                                    pos);
+                            System.out.println("DEBUG: Opened town interface menu via PlatformAccess");
                         } else {
-                            System.out.println("DEBUG: No block entity found at " + pos);
+                            System.out.println("DEBUG: No TownInterfaceEntity found at " + pos);
                         }
 
                         return net.minecraft.world.InteractionResult.SUCCESS;
