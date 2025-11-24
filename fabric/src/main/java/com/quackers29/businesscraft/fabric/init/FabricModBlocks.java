@@ -1,6 +1,6 @@
 package com.quackers29.businesscraft.fabric.init;
 
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.block.TownInterfaceBlock;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -56,61 +56,9 @@ public class FabricModBlocks {
      */
     private static void registerBlocks() {
         try {
-            // Create a block that implements EntityBlock to indicate it has a block entity
-            class TownInterfaceBlock extends Block implements net.minecraft.world.level.block.EntityBlock {
-                public TownInterfaceBlock(Properties settings) {
-                    super(settings);
-                }
-
-                @Override
-                public net.minecraft.world.level.block.entity.BlockEntity newBlockEntity(
-                        net.minecraft.core.BlockPos pos, net.minecraft.world.level.block.state.BlockState state) {
-                    System.out.println("DEBUG: newBlockEntity called for block at " + pos);
-                    if (FabricModBlockEntities.TOWN_INTERFACE_ENTITY_TYPE != null) {
-                        return new TownInterfaceEntity(pos, state);
-                    } else {
-                        System.err.println("ERROR: Block entity type is null when creating block entity");
-                        return null;
-                    }
-                }
-
-                @Override
-                public net.minecraft.world.InteractionResult use(net.minecraft.world.level.block.state.BlockState state,
-                        net.minecraft.world.level.Level world,
-                        net.minecraft.core.BlockPos pos, net.minecraft.world.entity.player.Player player,
-                        net.minecraft.world.InteractionHand hand, net.minecraft.world.phys.BlockHitResult hit) {
-
-                    if (world.isClientSide) {
-                        // On client side, just return success to indicate interaction was handled
-                        return net.minecraft.world.InteractionResult.SUCCESS;
-                    }
-
-                    // On server side, try to open the menu
-                    try {
-                        // Get the block entity
-                        net.minecraft.world.level.block.entity.BlockEntity blockEntity = world.getBlockEntity(pos);
-                        if (blockEntity instanceof TownInterfaceEntity townEntity) {
-                            System.out.println(
-                                    "DEBUG: Found block entity at " + pos + ": " + blockEntity.getClass().getName());
-
-                            // Open the menu directly using PlatformAccess
-                            com.quackers29.businesscraft.api.PlatformAccess.getNetwork().openScreen(player, townEntity,
-                                    pos);
-                            System.out.println("DEBUG: Opened town interface menu via PlatformAccess");
-                        } else {
-                            System.out.println("DEBUG: No TownInterfaceEntity found at " + pos);
-                        }
-
-                        return net.minecraft.world.InteractionResult.SUCCESS;
-                    } catch (Exception e) {
-                        System.err.println("Error in block onUse: " + e.getMessage());
-                        e.printStackTrace();
-                        return net.minecraft.world.InteractionResult.FAIL;
-                    }
-                }
-            }
-
-            // Instantiate the block
+            // Instantiate the common TownInterfaceBlock
+            // This ensures we use the shared logic for town creation (setPlacedBy) and UI
+            // opening (use)
             Block townInterfaceBlock = new TownInterfaceBlock(FabricBlockSettings.create()
                     .strength(3.0f, 3.0f)
                     .requiresTool());
@@ -124,9 +72,9 @@ public class FabricModBlocks {
             Registry.register(BuiltInRegistries.ITEM, new ResourceLocation("businesscraft", "town_interface"),
                     townInterfaceBlockItem);
 
-            System.out.println("DEBUG: Town Interface Block with BlockEntity registration completed successfully!");
+            System.out.println("DEBUG: Town Interface Block registration completed successfully!");
         } catch (Exception e) {
-            System.err.println("ERROR: Failed to register block with block entity: " + e.getMessage());
+            System.err.println("ERROR: Failed to register block: " + e.getMessage());
             e.printStackTrace();
         }
     }
