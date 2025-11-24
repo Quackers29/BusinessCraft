@@ -1,5 +1,5 @@
-[15:03:12] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.20.1 with Fabric Loader 0.15.6
-[15:03:12] [main/INFO] (FabricLoader) Loading 58 mods:
+[15:09:00] [main/INFO] (FabricLoader/GameProvider) Loading Minecraft 1.20.1 with Fabric Loader 0.15.6
+[15:09:00] [main/INFO] (FabricLoader) Loading 58 mods:
 	- businesscraft 1.0.0
 	- fabric-api 0.91.0+1.20.1
 	- fabric-api-base 0.4.30+7abfd51577
@@ -58,14 +58,14 @@
 	- java 17
 	- minecraft 1.20.1
 	- mixinextras 0.3.2
-[15:03:12] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.5 Source=file:/home/az/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.12.5+mixin.0.8.5/8d31fb97c3e0cd7c8dad3441851c523bcfae6d8e/sponge-mixin-0.12.5+mixin.0.8.5.jar Service=Knot/Fabric Env=CLIENT
-[15:03:12] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
-[15:03:12] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_16
-[15:03:12] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_17
-[15:03:13] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.3.2).
-[15:03:15] [Datafixer Bootstrap/INFO] (Minecraft) 188 Datafixer optimizations took 61 milliseconds
-[15:03:16] [Render thread/INFO] (Minecraft) Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
-[15:03:16] [Render thread/ERROR] (Minecraft) Failed to verify authentication
+[15:09:00] [main/INFO] (FabricLoader/Mixin) SpongePowered MIXIN Subsystem Version=0.8.5 Source=file:/home/az/.gradle/caches/modules-2/files-2.1/net.fabricmc/sponge-mixin/0.12.5+mixin.0.8.5/8d31fb97c3e0cd7c8dad3441851c523bcfae6d8e/sponge-mixin-0.12.5+mixin.0.8.5.jar Service=Knot/Fabric Env=CLIENT
+[15:09:00] [main/INFO] (FabricLoader/Mixin) Loaded Fabric development mappings for mixin remapper!
+[15:09:00] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_16
+[15:09:00] [main/INFO] (FabricLoader/Mixin) Compatibility level set to JAVA_17
+[15:09:00] [main/INFO] (FabricLoader/MixinExtras|Service) Initializing MixinExtras via com.llamalad7.mixinextras.service.MixinExtrasServiceImpl(version=0.3.2).
+[15:09:03] [Datafixer Bootstrap/INFO] (Minecraft) 188 Datafixer optimizations took 60 milliseconds
+[15:09:03] [Render thread/INFO] (Minecraft) Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
+[15:09:04] [Render thread/ERROR] (Minecraft) Failed to verify authentication
 com.mojang.authlib.exceptions.InvalidCredentialsException: Status: 401
 	at com.mojang.authlib.exceptions.MinecraftClientHttpException.toAuthenticationException(MinecraftClientHttpException.java:56) ~[authlib-4.0.43.jar:?]
 	at com.mojang.authlib.yggdrasil.YggdrasilUserApiService.fetchProperties(YggdrasilUserApiService.java:156) ~[authlib-4.0.43.jar:?]
@@ -83,49 +83,49 @@ Caused by: com.mojang.authlib.exceptions.MinecraftClientHttpException: Status: 4
 	at com.mojang.authlib.minecraft.client.MinecraftClient.get(MinecraftClient.java:48) ~[authlib-4.0.43.jar:?]
 	at com.mojang.authlib.yggdrasil.YggdrasilUserApiService.fetchProperties(YggdrasilUserApiService.java:129) ~[authlib-4.0.43.jar:?]
 	... 9 more
-[15:03:16] [Render thread/INFO] (Minecraft) Setting user: Player811
-[15:03:16] [Render thread/INFO] (BusinessCraft Fabric) BusinessCraft Fabric constructor called!
-[15:03:16] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: BusinessCraft Fabric mod starting up!
-[15:03:16] [Render thread/INFO] (BusinessCraft Fabric) Registering blocks and items...
-[15:03:16] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModBlocks.register() called
-[15:03:16] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModBlocks.register() - Attempting block registration
-[15:03:16] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Town Interface Block with BlockEntity registration completed successfully!
-[15:03:16] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Block registration completed successfully!
-[15:03:16] [Render thread/INFO] (BusinessCraft Fabric) Blocks registered successfully
-[15:03:16] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Entity registration placeholder
-[15:03:16] [Render thread/INFO] (BusinessCraft Fabric) Entity types registered successfully
-[15:03:16] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModBlockEntities.register() called
-[15:03:16] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModBlockEntities.register() - Attempting block entity registration
-[15:03:16] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Found town interface block in registry: Block{businesscraft:town_interface}
-[15:03:16] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Registering TownInterfaceEntity
-[15:03:16] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Creating block entity type for town interface block
-[15:03:16] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Successfully registered TownInterfaceEntity: net.minecraft.world.level.block.entity.BlockEntityType@1efb864e
-[15:03:16] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Block entity registration completed successfully!
-[15:03:16] [Render thread/INFO] (BusinessCraft Fabric) Block entities registered successfully
-[15:03:16] [Render thread/INFO] (FabricModMenuTypes) Registering Fabric menu types...
-[15:03:16] [Render thread/INFO] (FabricModMenuTypes) Registered TownInterfaceMenu
-[15:03:16] [Render thread/INFO] (FabricModMenuTypes) Fabric menu types registered successfully
-[15:03:16] [Render thread/INFO] (BusinessCraft Fabric) Menu types registered successfully
-[15:03:16] [Render thread/INFO] (FabricModMessages) Registering Fabric network messages...
-[15:03:16] [Render thread/WARN] (FabricModMessages) Fabric API classes not available during initialization. Network message registration will be skipped.
-[15:03:16] [Render thread/WARN] (FabricModMessages) Missing class: Could not load net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking from any classloader
-[15:03:16] [Render thread/WARN] (FabricModMessages) Network messages will be registered when classes become available.
-[15:03:16] [Render thread/INFO] (FabricModEvents) Registering Fabric events...
-[15:03:16] [Render thread/INFO] (FabricEventCallbackHandler) Initializing Fabric event callback handlers...
-[15:03:16] [Render thread/INFO] (FabricEventCallbackHandler) Fabric event callback handlers initialized successfully
-[15:03:16] [Render thread/INFO] (FabricModEvents) Fabric events registered successfully
-[15:03:16] [Render thread/INFO] (BusinessCraft Fabric) BusinessCraft Fabric initialized successfully!
-[15:03:16] [Render thread/INFO] (Indigo) [Indigo] Registering Indigo renderer!
-[15:03:16] [Render thread/INFO] (BusinessCraft Fabric Client) BusinessCraft Fabric client setup starting
-[15:03:16] [Render thread/INFO] (FabricModMessages) Registering Fabric client packet handlers...
-[15:03:16] [Render thread/WARN] (FabricModMessages) Client packet IDs or classes not initialized - skipping client packet registration
-[15:03:16] [Render thread/INFO] (BusinessCraft Fabric Client) Client packet handlers registered
-[15:03:16] [Render thread/INFO] (BusinessCraft Fabric Client) Attempting initial screen registration...
-[15:03:16] [Render thread/INFO] (BusinessCraft Fabric Client) Registering screens for menu types...
-[15:03:16] [Render thread/INFO] (BusinessCraft Fabric Client) Screen registration complete
-[15:03:16] [Render thread/INFO] (BusinessCraft Fabric Client) Screen registration completed successfully on first attempt
-[15:03:16] [Render thread/INFO] (BusinessCraft Fabric Client) Client rendering events initialized
-[15:03:16] [Render thread/ERROR] (FabricRenderHelper) Error registering overlay with Fabric: town_debug
+[15:09:04] [Render thread/INFO] (Minecraft) Setting user: Player479
+[15:09:04] [Render thread/INFO] (BusinessCraft Fabric) BusinessCraft Fabric constructor called!
+[15:09:04] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: BusinessCraft Fabric mod starting up!
+[15:09:04] [Render thread/INFO] (BusinessCraft Fabric) Registering blocks and items...
+[15:09:04] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModBlocks.register() called
+[15:09:04] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModBlocks.register() - Attempting block registration
+[15:09:04] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Town Interface Block with BlockEntity registration completed successfully!
+[15:09:04] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Block registration completed successfully!
+[15:09:04] [Render thread/INFO] (BusinessCraft Fabric) Blocks registered successfully
+[15:09:04] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Entity registration placeholder
+[15:09:04] [Render thread/INFO] (BusinessCraft Fabric) Entity types registered successfully
+[15:09:04] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModBlockEntities.register() called
+[15:09:04] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: FabricModBlockEntities.register() - Attempting block entity registration
+[15:09:04] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Found town interface block in registry: Block{businesscraft:town_interface}
+[15:09:04] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Registering TownInterfaceEntity
+[15:09:04] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Creating block entity type for town interface block
+[15:09:04] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Successfully registered TownInterfaceEntity: net.minecraft.world.level.block.entity.BlockEntityType@7b73e93
+[15:09:04] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: Block entity registration completed successfully!
+[15:09:04] [Render thread/INFO] (BusinessCraft Fabric) Block entities registered successfully
+[15:09:04] [Render thread/INFO] (FabricModMenuTypes) Registering Fabric menu types...
+[15:09:04] [Render thread/INFO] (FabricModMenuTypes) Registered TownInterfaceMenu
+[15:09:04] [Render thread/INFO] (FabricModMenuTypes) Fabric menu types registered successfully
+[15:09:04] [Render thread/INFO] (BusinessCraft Fabric) Menu types registered successfully
+[15:09:04] [Render thread/INFO] (FabricModMessages) Registering Fabric network messages...
+[15:09:04] [Render thread/WARN] (FabricModMessages) Fabric API classes not available during initialization. Network message registration will be skipped.
+[15:09:04] [Render thread/WARN] (FabricModMessages) Missing class: Could not load net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking from any classloader
+[15:09:04] [Render thread/WARN] (FabricModMessages) Network messages will be registered when classes become available.
+[15:09:04] [Render thread/INFO] (FabricModEvents) Registering Fabric events...
+[15:09:04] [Render thread/INFO] (FabricEventCallbackHandler) Initializing Fabric event callback handlers...
+[15:09:04] [Render thread/INFO] (FabricEventCallbackHandler) Fabric event callback handlers initialized successfully
+[15:09:04] [Render thread/INFO] (FabricModEvents) Fabric events registered successfully
+[15:09:04] [Render thread/INFO] (BusinessCraft Fabric) BusinessCraft Fabric initialized successfully!
+[15:09:04] [Render thread/INFO] (Indigo) [Indigo] Registering Indigo renderer!
+[15:09:04] [Render thread/INFO] (BusinessCraft Fabric Client) BusinessCraft Fabric client setup starting
+[15:09:04] [Render thread/INFO] (FabricModMessages) Registering Fabric client packet handlers...
+[15:09:04] [Render thread/WARN] (FabricModMessages) Client packet IDs or classes not initialized - skipping client packet registration
+[15:09:04] [Render thread/INFO] (BusinessCraft Fabric Client) Client packet handlers registered
+[15:09:04] [Render thread/INFO] (BusinessCraft Fabric Client) Attempting initial screen registration...
+[15:09:04] [Render thread/INFO] (BusinessCraft Fabric Client) Registering screens for menu types...
+[15:09:04] [Render thread/INFO] (BusinessCraft Fabric Client) Screen registration complete
+[15:09:04] [Render thread/INFO] (BusinessCraft Fabric Client) Screen registration completed successfully on first attempt
+[15:09:04] [Render thread/INFO] (BusinessCraft Fabric Client) Client rendering events initialized
+[15:09:04] [Render thread/ERROR] (FabricRenderHelper) Error registering overlay with Fabric: town_debug
 java.lang.NoSuchMethodException: net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.register(net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback)
 	at java.lang.Class.getMethod(Class.java:2227) ~[?:?]
 	at com.quackers29.businesscraft.fabric.platform.FabricRenderHelper.registerOverlayWithFabric(FabricRenderHelper.java:149) ~[main/:?]
@@ -141,10 +141,10 @@ java.lang.NoSuchMethodException: net.fabricmc.fabric.api.client.rendering.v1.Hud
 	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74) ~[fabric-loader-0.15.6.jar:?]
 	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) ~[fabric-loader-0.15.6.jar:?]
 	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86) ~[dev-launch-injector-0.2.1+build.8.jar:?]
-[15:03:16] [Render thread/INFO] (BusinessCraft Fabric Client) Key handlers initialized
-[15:03:16] [Render thread/INFO] (BusinessCraft Fabric Client) BusinessCraft Fabric client setup complete
-[15:03:16] [Render thread/INFO] (Minecraft) Backend library: LWJGL version 3.3.1 SNAPSHOT
-[15:03:17] [Render thread/ERROR] (Minecraft) Error while loading the narrator
+[15:09:04] [Render thread/INFO] (BusinessCraft Fabric Client) Key handlers initialized
+[15:09:04] [Render thread/INFO] (BusinessCraft Fabric Client) BusinessCraft Fabric client setup complete
+[15:09:04] [Render thread/INFO] (Minecraft) Backend library: LWJGL version 3.3.1 SNAPSHOT
+[15:09:05] [Render thread/ERROR] (Minecraft) Error while loading the narrator
 com.mojang.text2speech.Narrator$InitializeException: Failed to load library flite
 	at com.mojang.text2speech.NarratorLinux$FliteLibrary.loadNative(NarratorLinux.java:69) ~[text2speech-1.17.9.jar:?]
 	at com.mojang.text2speech.NarratorLinux.<init>(NarratorLinux.java:18) ~[text2speech-1.17.9.jar:?]
@@ -210,12 +210,12 @@ Native library (linux-x86-64/libflite.so) not found in resource path (/home/az/p
 		at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74) ~[fabric-loader-0.15.6.jar:?]
 		at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) ~[fabric-loader-0.15.6.jar:?]
 		at net.fabricmc.devlaunchinjector.Main.main(Main.java:86) ~[dev-launch-injector-0.2.1+build.8.jar:?]
-[15:03:17] [Render thread/INFO] (Minecraft) Reloading ResourceManager: vanilla, fabric (fabric-renderer-registries-v1, fabric-content-registries-v0, fabric-block-api-v1, fabric-rendering-v1, fabric-rendering-v0, fabric-events-interaction-v0, fabric-biome-api-v1, fabric-keybindings-v0, fabric-models-v0, fabric-client-tags-api-v1, fabric-resource-conditions-api-v1, fabric-rendering-fluids-v1, fabric-renderer-indigo, fabric-events-lifecycle-v0, fabric-resource-loader-v0, fabric-recipe-api-v1, businesscraft, fabric-entity-events-v1, fabric-block-view-api-v2, fabric-loot-api-v2, fabric-renderer-api-v1, fabric-crash-report-info-v1, fabric-loot-tables-v1, fabric-dimensions-v1, fabric-message-api-v1, fabric-item-group-api-v1, fabric-commands-v0, fabric-mining-level-api-v1, fabric-registry-sync-v0, fabric-transfer-api-v1, fabric-data-generation-api-v1, fabric-object-builder-api-v1, fabric-key-binding-api-v1, fabric-lifecycle-events-v1, fabric-command-api-v1, fabric-networking-api-v1, fabric-sound-api-v1, fabric-networking-v0, fabricloader, fabric-particles-v1, fabric-gametest-api-v1, fabric-convention-tags-v1, fabric-api-base, fabric-api, fabric-item-api-v1, fabric-screen-handler-api-v1, fabric-screen-api-v1, fabric-blockrenderlayer-v1, fabric-transitive-access-wideners-v1, fabric-containers-v0, fabric-command-api-v2, fabric-game-rule-api-v1, fabric-model-loading-api-v1, fabric-rendering-data-attachment-v1, fabric-api-lookup-api-v1)
-[15:03:17] [Worker-Main-13/INFO] (Minecraft) Found unifont_all_no_pua-15.0.06.hex, loading
-[15:03:17] [Realms Notification Availability checker #1/INFO] (Minecraft) Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: FabricMC
-[15:03:18] [Render thread/WARN] (Minecraft) Missing sound for event: minecraft:item.goat_horn.play
-[15:03:18] [Render thread/WARN] (Minecraft) Missing sound for event: minecraft:entity.goat.screaming.horn_break
-[15:03:18] [Render thread/ERROR] (Minecraft) Error starting SoundSystem. Turning off sounds & music
+[15:09:05] [Render thread/INFO] (Minecraft) Reloading ResourceManager: vanilla, fabric (fabric-particles-v1, fabric-events-interaction-v0, fabric-client-tags-api-v1, fabric-screen-handler-api-v1, fabric-command-api-v1, fabric-sound-api-v1, fabric-networking-api-v1, fabric-model-loading-api-v1, fabric-biome-api-v1, fabric-transfer-api-v1, fabric-data-generation-api-v1, fabric-renderer-indigo, fabric-api-lookup-api-v1, fabric-blockrenderlayer-v1, fabric-resource-conditions-api-v1, fabric-item-api-v1, fabric-rendering-v1, fabric-message-api-v1, fabric-containers-v0, fabric-transitive-access-wideners-v1, fabric-events-lifecycle-v0, fabric-rendering-data-attachment-v1, fabric-block-view-api-v2, fabric-rendering-v0, fabric-object-builder-api-v1, fabric-recipe-api-v1, fabric-convention-tags-v1, fabric-entity-events-v1, fabric-screen-api-v1, fabric-models-v0, fabric-rendering-fluids-v1, fabricloader, fabric-command-api-v2, fabric-item-group-api-v1, fabric-commands-v0, fabric-gametest-api-v1, fabric-dimensions-v1, businesscraft, fabric-networking-v0, fabric-api-base, fabric-key-binding-api-v1, fabric-content-registries-v0, fabric-lifecycle-events-v1, fabric-renderer-registries-v1, fabric-api, fabric-renderer-api-v1, fabric-keybindings-v0, fabric-mining-level-api-v1, fabric-block-api-v1, fabric-loot-api-v2, fabric-game-rule-api-v1, fabric-crash-report-info-v1, fabric-registry-sync-v0, fabric-resource-loader-v0, fabric-loot-tables-v1)
+[15:09:05] [Worker-Main-15/INFO] (Minecraft) Found unifont_all_no_pua-15.0.06.hex, loading
+[15:09:05] [Realms Notification Availability checker #1/INFO] (Minecraft) Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: FabricMC
+[15:09:06] [Render thread/WARN] (Minecraft) Missing sound for event: minecraft:item.goat_horn.play
+[15:09:06] [Render thread/WARN] (Minecraft) Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[15:09:06] [Render thread/ERROR] (Minecraft) Error starting SoundSystem. Turning off sounds & music
 java.lang.IllegalStateException: Failed to open OpenAL device
 	at com.mojang.blaze3d.audio.Library.openDeviceOrFallback(Library.java:283) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
 	at com.mojang.blaze3d.audio.Library.init(Library.java:153) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
@@ -238,99 +238,194 @@ java.lang.IllegalStateException: Failed to open OpenAL device
 	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74) ~[fabric-loader-0.15.6.jar:?]
 	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) ~[fabric-loader-0.15.6.jar:?]
 	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86) ~[dev-launch-injector-0.2.1+build.8.jar:?]
-[15:03:18] [Render thread/INFO] (Minecraft) Created: 1024x512x4 minecraft:textures/atlas/blocks.png-atlas
-[15:03:18] [Render thread/INFO] (Minecraft) Created: 256x256x4 minecraft:textures/atlas/signs.png-atlas
-[15:03:18] [Render thread/INFO] (Minecraft) Created: 512x512x4 minecraft:textures/atlas/banner_patterns.png-atlas
-[15:03:18] [Render thread/INFO] (Minecraft) Created: 512x512x4 minecraft:textures/atlas/shield_patterns.png-atlas
-[15:03:18] [Render thread/INFO] (Minecraft) Created: 1024x1024x4 minecraft:textures/atlas/armor_trims.png-atlas
-[15:03:18] [Render thread/INFO] (Minecraft) Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
-[15:03:18] [Render thread/INFO] (Minecraft) Created: 128x64x4 minecraft:textures/atlas/decorated_pot.png-atlas
-[15:03:18] [Render thread/INFO] (Minecraft) Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
-[15:03:18] [Render thread/INFO] (Minecraft) Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
-[15:03:18] [Render thread/WARN] (Minecraft) Shader rendertype_entity_translucent_emissive could not find sampler named Sampler2 in the specified shader program.
-[15:03:18] [Render thread/INFO] (Minecraft) Created: 256x256x0 minecraft:textures/atlas/particles.png-atlas
-[15:03:18] [Render thread/INFO] (Minecraft) Created: 256x256x0 minecraft:textures/atlas/paintings.png-atlas
-[15:03:18] [Render thread/INFO] (Minecraft) Created: 128x128x0 minecraft:textures/atlas/mob_effects.png-atlas
-[15:03:32] [Render thread/INFO] (Minecraft) Loaded 7 recipes
-[15:03:32] [Render thread/INFO] (Minecraft) Loaded 1271 advancements
-[15:03:32] [Render thread/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 64 new biomes in 1.437 ms
-[15:03:32] [Server thread/INFO] (Minecraft) Starting integrated minecraft server version 1.20.1
-[15:03:32] [Server thread/INFO] (Minecraft) Generating keypair
-[15:03:32] [Server thread/INFO] (Minecraft) Preparing start region for dimension minecraft:overworld
-[15:03:33] [Render thread/INFO] (Minecraft) Preparing spawn area: 0%
-[15:03:33] [Render thread/INFO] (Minecraft) Preparing spawn area: 0%
-[15:03:33] [Render thread/INFO] (Minecraft) Preparing spawn area: 0%
-[15:03:34] [Render thread/INFO] (Minecraft) Preparing spawn area: 73%
-[15:03:34] [Render thread/INFO] (Minecraft) Time elapsed: 1611 ms
-[15:03:34] [Server thread/INFO] (Minecraft) Changing view distance to 12, from 10
-[15:03:34] [Server thread/INFO] (Minecraft) Changing simulation distance to 12, from 0
-[15:03:34] [Server thread/INFO] (Minecraft) Player811[local:E:02b7896d] logged in with entity id 18 at (-0.35801249368841875, -59.0, -4.160750675634102)
-[15:03:34] [Server thread/INFO] (Minecraft) Player811 joined the game
-[15:03:35] [Render thread/INFO] (Minecraft) Loaded 11 advancements
-[15:03:36] [Render thread/INFO] (FabricEventCallbackHandler) Right-clicked on town interface block - opening menu
-[15:03:36] [Server thread/INFO] (FabricEventCallbackHandler) Right-clicked on town interface block - opening menu
-[15:03:36] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: newBlockEntity called for block at MutableBlockPos{x=-1, y=-60, z=-6}
-[15:03:36] [Server thread/INFO] (ConfigLoader) Added default test milestone: 10m -> bread + XP bottle
-[15:03:36] [Server thread/INFO] (ConfigLoader) Enable Create Trains: true
-[15:03:36] [Server thread/INFO] (ConfigLoader) Enable Minecarts: true
-[15:03:36] [Server thread/INFO] (ConfigLoader) Vehicle Search Radius: 3
-[15:03:36] [Server thread/INFO] (ConfigLoader) Bread Per Pop: 1
-[15:03:36] [Server thread/INFO] (ConfigLoader) Min Pop For Tourists: 5
-[15:03:36] [Server thread/INFO] (ConfigLoader) Min Distance Between Towns: 100
-[15:03:36] [Server thread/INFO] (ConfigLoader) Default Starting Population: 5
-[15:03:36] [Server thread/INFO] (ConfigLoader) Max Tourists Per Town: 10
-[15:03:36] [Server thread/INFO] (ConfigLoader) Population Per Tourist: 10
-[15:03:36] [Server thread/INFO] (ConfigLoader) Max Population-based Tourists: 20
-[15:03:36] [Server thread/INFO] (ConfigLoader) Town Names: []
-[15:03:36] [Server thread/INFO] (ConfigLoader) Tourist Expiry Minutes: 120.0
-[15:03:36] [Server thread/INFO] (ConfigLoader) Enable Tourist Expiry: true
-[15:03:36] [Server thread/INFO] (ConfigLoader) Notify On Tourist Departure: true
-[15:03:36] [Server thread/INFO] (ConfigLoader) Tourists Per Population Increase: 2
-[15:03:36] [Server thread/INFO] (ConfigLoader) Meters Per Emerald: 50
-[15:03:36] [Server thread/INFO] (ConfigLoader) Enable Milestones: true
-[15:03:36] [Server thread/INFO] (ConfigLoader) Milestone Rewards: 1 configured
-[15:03:36] [Server thread/INFO] (ConfigLoader) Player Tracking: true
-[15:03:36] [Server thread/INFO] (ConfigLoader) Town Boundary Messages: true
-[15:03:36] [Server thread/INFO] (ConfigurationService) Started configuration file watching service
-[15:03:36] [Server thread/INFO] (ConfigurationService) Registered file watcher for directory: config
-[15:03:36] [Server thread/INFO] (ConfigurationService) Registered configuration 'businesscraft-main' for hot-reloading: config/businesscraft.properties
-[15:03:36] [Server thread/INFO] (ConfigLoader) Registered BusinessCraft configuration for hot-reloading
-[15:03:36] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: Found block entity at MutableBlockPos{x=-1, y=-60, z=-6}: com.quackers29.businesscraft.block.entity.TownInterfaceEntity
-[15:03:36] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] No town found exactly at position MutableBlockPos{x=-1, y=-60, z=-6}, checking block entity
-[15:03:36] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] No town found at or associated with position MutableBlockPos{x=-1, y=-60, z=-6}
-[15:03:36] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
-[15:03:36] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
-[15:03:36] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: Opened town interface menu directly via PlatformAccess
-[15:03:36] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: newBlockEntity called for block at BlockPos{x=-1, y=-60, z=-6}
-[15:03:36] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
-[15:03:36] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
-[15:03:36] [Render thread/INFO] (TownNamePopupManager) [DEBUG] TownNamePopupManager instance created
-[15:03:36] [Render thread/INFO] (ButtonActionCoordinator) [DEBUG] ButtonActionCoordinator initialized
-[15:03:36] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
-[15:03:37] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
-[15:03:38] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
-[15:03:39] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
-[15:03:40] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
-[15:03:41] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
-[15:03:42] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
-[15:03:42] [Server thread/INFO] (Minecraft) Stopping server
-[15:03:42] [Server thread/INFO] (Minecraft) Saving players
-[15:03:42] [Server thread/INFO] (Minecraft) Saving worlds
-[15:03:42] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
-[15:03:42] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
-[15:03:42] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
-[15:03:42] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (New World (1)): All chunks are saved
-[15:03:42] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[15:03:42] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[15:03:42] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
-[15:03:43] [Render thread/ERROR] (Minecraft) Reported exception thrown!
-net.minecraft.ReportedException: mouseClicked event handler
-	at net.minecraft.client.gui.screens.Screen.wrapScreenError(Screen.java:414) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
-	at net.minecraft.client.MouseHandler.onPress(MouseHandler.java:98) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
-	at net.minecraft.client.MouseHandler.method_22686(MouseHandler.java:169) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+[15:09:06] [Render thread/INFO] (Minecraft) Created: 1024x512x4 minecraft:textures/atlas/blocks.png-atlas
+[15:09:06] [Render thread/INFO] (Minecraft) Created: 256x256x4 minecraft:textures/atlas/signs.png-atlas
+[15:09:06] [Render thread/INFO] (Minecraft) Created: 512x512x4 minecraft:textures/atlas/shield_patterns.png-atlas
+[15:09:06] [Render thread/INFO] (Minecraft) Created: 512x512x4 minecraft:textures/atlas/banner_patterns.png-atlas
+[15:09:06] [Render thread/INFO] (Minecraft) Created: 1024x1024x4 minecraft:textures/atlas/armor_trims.png-atlas
+[15:09:06] [Render thread/INFO] (Minecraft) Created: 128x64x4 minecraft:textures/atlas/decorated_pot.png-atlas
+[15:09:06] [Render thread/INFO] (Minecraft) Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
+[15:09:06] [Render thread/INFO] (Minecraft) Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
+[15:09:06] [Render thread/INFO] (Minecraft) Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
+[15:09:06] [Render thread/WARN] (Minecraft) Shader rendertype_entity_translucent_emissive could not find sampler named Sampler2 in the specified shader program.
+[15:09:06] [Render thread/INFO] (Minecraft) Created: 256x256x0 minecraft:textures/atlas/particles.png-atlas
+[15:09:06] [Render thread/INFO] (Minecraft) Created: 256x256x0 minecraft:textures/atlas/paintings.png-atlas
+[15:09:06] [Render thread/INFO] (Minecraft) Created: 128x128x0 minecraft:textures/atlas/mob_effects.png-atlas
+[15:09:19] [Render thread/INFO] (Minecraft) Loaded 7 recipes
+[15:09:19] [Render thread/INFO] (Minecraft) Loaded 1271 advancements
+[15:09:19] [Render thread/INFO] (BiomeModificationImpl) Applied 0 biome modifications to 0 of 64 new biomes in 1.031 ms
+[15:09:19] [Server thread/INFO] (Minecraft) Starting integrated minecraft server version 1.20.1
+[15:09:19] [Server thread/INFO] (Minecraft) Generating keypair
+[15:09:19] [Server thread/INFO] (Minecraft) Preparing start region for dimension minecraft:overworld
+[15:09:20] [Render thread/INFO] (Minecraft) Preparing spawn area: 0%
+[15:09:20] [Render thread/INFO] (Minecraft) Preparing spawn area: 0%
+[15:09:20] [Render thread/INFO] (Minecraft) Preparing spawn area: 0%
+[15:09:20] [Server thread/INFO] (ConfigLoader) Added default test milestone: 10m -> bread + XP bottle
+[15:09:20] [Server thread/INFO] (ConfigLoader) Enable Create Trains: true
+[15:09:20] [Server thread/INFO] (ConfigLoader) Enable Minecarts: true
+[15:09:20] [Server thread/INFO] (ConfigLoader) Vehicle Search Radius: 3
+[15:09:20] [Server thread/INFO] (ConfigLoader) Bread Per Pop: 1
+[15:09:20] [Server thread/INFO] (ConfigLoader) Min Pop For Tourists: 5
+[15:09:20] [Server thread/INFO] (ConfigLoader) Min Distance Between Towns: 100
+[15:09:20] [Server thread/INFO] (ConfigLoader) Default Starting Population: 5
+[15:09:20] [Server thread/INFO] (ConfigLoader) Max Tourists Per Town: 10
+[15:09:20] [Server thread/INFO] (ConfigLoader) Population Per Tourist: 10
+[15:09:20] [Server thread/INFO] (ConfigLoader) Max Population-based Tourists: 20
+[15:09:20] [Server thread/INFO] (ConfigLoader) Town Names: []
+[15:09:20] [Server thread/INFO] (ConfigLoader) Tourist Expiry Minutes: 120.0
+[15:09:20] [Server thread/INFO] (ConfigLoader) Enable Tourist Expiry: true
+[15:09:20] [Server thread/INFO] (ConfigLoader) Notify On Tourist Departure: true
+[15:09:20] [Server thread/INFO] (ConfigLoader) Tourists Per Population Increase: 2
+[15:09:20] [Server thread/INFO] (ConfigLoader) Meters Per Emerald: 50
+[15:09:20] [Server thread/INFO] (ConfigLoader) Enable Milestones: true
+[15:09:20] [Server thread/INFO] (ConfigLoader) Milestone Rewards: 1 configured
+[15:09:20] [Server thread/INFO] (ConfigLoader) Player Tracking: true
+[15:09:20] [Server thread/INFO] (ConfigLoader) Town Boundary Messages: true
+[15:09:20] [Server thread/INFO] (ConfigurationService) Started configuration file watching service
+[15:09:20] [Server thread/INFO] (ConfigurationService) Registered file watcher for directory: config
+[15:09:21] [Server thread/INFO] (ConfigurationService) Registered configuration 'businesscraft-main' for hot-reloading: config/businesscraft.properties
+[15:09:21] [Server thread/INFO] (ConfigLoader) Registered BusinessCraft configuration for hot-reloading
+[15:09:21] [Render thread/INFO] (Minecraft) Preparing spawn area: 68%
+[15:09:21] [Render thread/INFO] (Minecraft) Time elapsed: 1629 ms
+[15:09:21] [Server thread/INFO] (Minecraft) Changing view distance to 12, from 10
+[15:09:21] [Server thread/INFO] (Minecraft) Changing simulation distance to 12, from 0
+[15:09:21] [Server thread/INFO] (Minecraft) Player479[local:E:f391bcc5] logged in with entity id 18 at (2.262990112979503, -60.0, -5.699999988079071)
+[15:09:21] [Server thread/INFO] (Minecraft) Player479 joined the game
+[15:09:22] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: newBlockEntity called for block at MutableBlockPos{x=-1, y=-60, z=-5}
+[15:09:22] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: newBlockEntity called for block at MutableBlockPos{x=3, y=-60, z=-6}
+[15:09:22] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: newBlockEntity called for block at MutableBlockPos{x=2, y=-60, z=-7}
+[15:09:22] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: newBlockEntity called for block at MutableBlockPos{x=0, y=-60, z=-8}
+[15:09:22] [Render thread/INFO] (Minecraft) Loaded 11 advancements
+[15:09:23] [Render thread/INFO] (FabricEventCallbackHandler) Right-clicked on town interface block - opening menu
+[15:09:23] [Server thread/INFO] (FabricEventCallbackHandler) Right-clicked on town interface block - opening menu
+[15:09:23] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: Found block entity at MutableBlockPos{x=2, y=-60, z=-7}: com.quackers29.businesscraft.block.entity.TownInterfaceEntity
+[15:09:23] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] No town found exactly at position MutableBlockPos{x=2, y=-60, z=-7}, checking block entity
+[15:09:23] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] No town found at or associated with position MutableBlockPos{x=2, y=-60, z=-7}
+[15:09:23] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:23] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:23] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: Opened town interface menu directly via PlatformAccess
+[15:09:23] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:23] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:23] [Render thread/INFO] (TownNamePopupManager) [DEBUG] TownNamePopupManager instance created
+[15:09:23] [Render thread/INFO] (ButtonActionCoordinator) [DEBUG] ButtonActionCoordinator initialized
+[15:09:23] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:24] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:25] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:26] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:27] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:28] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:28] [Render thread/INFO] (TownNamePopupManager) [DEBUG] TownNamePopupManager cleanup completed
+[15:09:28] [Render thread/INFO] (ButtonActionCoordinator) [DEBUG] ButtonActionCoordinator cleanup completed
+[15:09:28] [Render thread/ERROR] (FabricModMessages) Error in sendToServer
+java.lang.ClassNotFoundException: net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking
+	at jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641) ~[?:?]
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:525) ~[?:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:226) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119) ~[fabric-loader-0.15.6.jar:?]
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:525) ~[?:?]
+	at com.quackers29.businesscraft.fabric.FabricModMessages.sendToServer(FabricModMessages.java:312) ~[main/:?]
+	at com.quackers29.businesscraft.fabric.platform.FabricNetworkMessages.sendToServer(FabricNetworkMessages.java:28) ~[main/:?]
+	at com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen.performAdditionalCleanup(TownInterfaceScreen.java:85) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.performSafeCleanup(BaseTownScreen.java:418) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.onClose(BaseTownScreen.java:395) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at net.minecraft.client.gui.screens.Screen.keyPressed(Screen.java:127) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.keyPressed(AbstractContainerScreen.java:553) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.lambda$keyPressed$4(BaseTownScreen.java:343) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.managers.TownScreenEventHandler.handleKeyPressed(TownScreenEventHandler.java:267) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.keyPressed(BaseTownScreen.java:342) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at net.minecraft.client.KeyboardHandler.method_1454(KeyboardHandler.java:395) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.gui.screens.Screen.wrapScreenError(Screen.java:409) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.KeyboardHandler.keyPress(KeyboardHandler.java:391) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.KeyboardHandler.method_22678(KeyboardHandler.java:477) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
 	at net.minecraft.util.thread.BlockableEventLoop.execute(BlockableEventLoop.java:102) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
-	at net.minecraft.client.MouseHandler.method_22684(MouseHandler.java:169) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
-	at org.lwjgl.glfw.GLFWMouseButtonCallbackI.callback(GLFWMouseButtonCallbackI.java:43) ~[lwjgl-glfw-3.3.1.jar:build 7]
+	at net.minecraft.client.KeyboardHandler.method_22676(KeyboardHandler.java:477) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at org.lwjgl.glfw.GLFWKeyCallbackI.callback(GLFWKeyCallbackI.java:44) ~[lwjgl-glfw-3.3.1.jar:build 7]
+	at org.lwjgl.system.JNI.invokeV(Native Method) ~[lwjgl-3.3.1.jar:build 7]
+	at org.lwjgl.glfw.GLFW.glfwPollEvents(GLFW.java:3403) ~[lwjgl-glfw-3.3.1.jar:build 7]
+	at com.mojang.blaze3d.systems.RenderSystem.pollEvents(RenderSystem.java:201) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at com.mojang.blaze3d.systems.RenderSystem.flipFrame(RenderSystem.java:219) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at com.mojang.blaze3d.platform.Window.updateDisplay(Window.java:288) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.Minecraft.runTick(Minecraft.java:1241) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.Minecraft.run(Minecraft.java:802) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.main.Main.main(Main.java:250) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:470) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86) ~[dev-launch-injector-0.2.1+build.8.jar:?]
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: java.lang.ClassNotFoundException: net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:226)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.fabric.FabricModMessages.sendToServer(FabricModMessages.java:312)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.fabric.platform.FabricNetworkMessages.sendToServer(FabricNetworkMessages.java:28)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen.performAdditionalCleanup(TownInterfaceScreen.java:85)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.performSafeCleanup(BaseTownScreen.java:418)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.onClose(BaseTownScreen.java:395)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.gui.screens.Screen.keyPressed(Screen.java:127)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.keyPressed(AbstractContainerScreen.java:553)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.lambda$keyPressed$4(BaseTownScreen.java:343)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.managers.TownScreenEventHandler.handleKeyPressed(TownScreenEventHandler.java:267)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.keyPressed(BaseTownScreen.java:342)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.method_1454(KeyboardHandler.java:395)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.gui.screens.Screen.wrapScreenError(Screen.java:409)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.keyPress(KeyboardHandler.java:391)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.method_22678(KeyboardHandler.java:477)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.util.thread.BlockableEventLoop.execute(BlockableEventLoop.java:102)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.method_22676(KeyboardHandler.java:477)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.lwjgl.glfw.GLFWKeyCallbackI.callback(GLFWKeyCallbackI.java:44)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.lwjgl.system.JNI.invokeV(Native Method)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.lwjgl.glfw.GLFW.glfwPollEvents(GLFW.java:3403)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.mojang.blaze3d.systems.RenderSystem.pollEvents(RenderSystem.java:201)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.mojang.blaze3d.systems.RenderSystem.flipFrame(RenderSystem.java:219)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.mojang.blaze3d.platform.Window.updateDisplay(Window.java:288)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.Minecraft.runTick(Minecraft.java:1241)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.Minecraft.run(Minecraft.java:802)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.main.Main.main(Main.java:250)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:470)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+[15:09:28] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86)
+[15:09:30] [Render thread/INFO] (FabricEventCallbackHandler) Right-clicked on town interface block - opening menu
+[15:09:30] [Server thread/INFO] (FabricEventCallbackHandler) Right-clicked on town interface block - opening menu
+[15:09:30] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: Found block entity at MutableBlockPos{x=3, y=-60, z=-6}: com.quackers29.businesscraft.block.entity.TownInterfaceEntity
+[15:09:30] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] No town found exactly at position MutableBlockPos{x=3, y=-60, z=-6}, checking block entity
+[15:09:30] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] No town found at or associated with position MutableBlockPos{x=3, y=-60, z=-6}
+[15:09:30] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:30] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:30] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: Opened town interface menu directly via PlatformAccess
+[15:09:30] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:30] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:30] [Render thread/INFO] (TownNamePopupManager) [DEBUG] TownNamePopupManager instance created
+[15:09:30] [Render thread/INFO] (ButtonActionCoordinator) [DEBUG] ButtonActionCoordinator initialized
+[15:09:30] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:30] [Render thread/INFO] (TownNamePopupManager) [DEBUG] TownNamePopupManager cleanup completed
+[15:09:30] [Render thread/INFO] (ButtonActionCoordinator) [DEBUG] ButtonActionCoordinator cleanup completed
+[15:09:30] [Render thread/ERROR] (FabricModMessages) Error in sendToServer
+java.lang.ClassNotFoundException: net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking
+	at jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641) ~[?:?]
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:525) ~[?:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:226) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119) ~[fabric-loader-0.15.6.jar:?]
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:525) ~[?:?]
+	at com.quackers29.businesscraft.fabric.FabricModMessages.sendToServer(FabricModMessages.java:312) ~[main/:?]
+	at com.quackers29.businesscraft.fabric.platform.FabricNetworkMessages.sendToServer(FabricNetworkMessages.java:28) ~[main/:?]
+	at com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen.performAdditionalCleanup(TownInterfaceScreen.java:85) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.performSafeCleanup(BaseTownScreen.java:418) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.onClose(BaseTownScreen.java:395) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at net.minecraft.client.gui.screens.Screen.keyPressed(Screen.java:127) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.keyPressed(AbstractContainerScreen.java:553) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.lambda$keyPressed$4(BaseTownScreen.java:343) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.managers.TownScreenEventHandler.handleKeyPressed(TownScreenEventHandler.java:267) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.keyPressed(BaseTownScreen.java:342) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at net.minecraft.client.KeyboardHandler.method_1454(KeyboardHandler.java:395) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.gui.screens.Screen.wrapScreenError(Screen.java:409) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.KeyboardHandler.keyPress(KeyboardHandler.java:391) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.KeyboardHandler.method_22678(KeyboardHandler.java:477) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.util.thread.BlockableEventLoop.execute(BlockableEventLoop.java:102) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.KeyboardHandler.method_22676(KeyboardHandler.java:477) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at org.lwjgl.glfw.GLFWKeyCallbackI.callback(GLFWKeyCallbackI.java:44) ~[lwjgl-glfw-3.3.1.jar:build 7]
 	at org.lwjgl.system.JNI.invokeV(Native Method) ~[lwjgl-3.3.1.jar:build 7]
 	at org.lwjgl.glfw.GLFW.glfwPollEvents(GLFW.java:3403) ~[lwjgl-glfw-3.3.1.jar:build 7]
 	at com.mojang.blaze3d.systems.RenderSystem.pollEvents(RenderSystem.java:201) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
@@ -343,10 +438,322 @@ net.minecraft.ReportedException: mouseClicked event handler
 	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74) ~[fabric-loader-0.15.6.jar:?]
 	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) ~[fabric-loader-0.15.6.jar:?]
 	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86) ~[dev-launch-injector-0.2.1+build.8.jar:?]
-Caused by: java.lang.NoSuchMethodError: 'void com.quackers29.businesscraft.api.NetworkMessages.sendToServer(java.lang.Object)'
-	at com.quackers29.businesscraft.ui.util.ScreenNavigationHelper.returnToTownInterface(ScreenNavigationHelper.java:25) ~[businesscraft-common-1.0.0.jar:1.0.0]
-	at com.quackers29.businesscraft.ui.screens.platform.PlatformManagementScreenV2.onBackButtonClick(PlatformManagementScreenV2.java:527) ~[businesscraft-common-1.0.0.jar:1.0.0]
-	at com.quackers29.businesscraft.ui.screens.platform.PlatformManagementScreenV2.mouseClicked(PlatformManagementScreenV2.java:304) ~[businesscraft-common-1.0.0.jar:1.0.0]
-	at net.minecraft.client.MouseHandler.method_1611(MouseHandler.java:98) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: java.lang.ClassNotFoundException: net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:226)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.fabric.FabricModMessages.sendToServer(FabricModMessages.java:312)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.fabric.platform.FabricNetworkMessages.sendToServer(FabricNetworkMessages.java:28)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen.performAdditionalCleanup(TownInterfaceScreen.java:85)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.performSafeCleanup(BaseTownScreen.java:418)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.onClose(BaseTownScreen.java:395)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.gui.screens.Screen.keyPressed(Screen.java:127)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.keyPressed(AbstractContainerScreen.java:553)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.lambda$keyPressed$4(BaseTownScreen.java:343)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.managers.TownScreenEventHandler.handleKeyPressed(TownScreenEventHandler.java:267)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.keyPressed(BaseTownScreen.java:342)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.method_1454(KeyboardHandler.java:395)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.gui.screens.Screen.wrapScreenError(Screen.java:409)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.keyPress(KeyboardHandler.java:391)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.method_22678(KeyboardHandler.java:477)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.util.thread.BlockableEventLoop.execute(BlockableEventLoop.java:102)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.method_22676(KeyboardHandler.java:477)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.lwjgl.glfw.GLFWKeyCallbackI.callback(GLFWKeyCallbackI.java:44)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.lwjgl.system.JNI.invokeV(Native Method)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.lwjgl.glfw.GLFW.glfwPollEvents(GLFW.java:3403)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.mojang.blaze3d.systems.RenderSystem.pollEvents(RenderSystem.java:201)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.mojang.blaze3d.systems.RenderSystem.flipFrame(RenderSystem.java:212)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.mojang.blaze3d.platform.Window.updateDisplay(Window.java:288)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.Minecraft.runTick(Minecraft.java:1241)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.Minecraft.run(Minecraft.java:802)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.main.Main.main(Main.java:250)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:470)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+[15:09:30] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86)
+[15:09:32] [Render thread/INFO] (FabricEventCallbackHandler) Right-clicked on town interface block - opening menu
+[15:09:32] [Server thread/INFO] (FabricEventCallbackHandler) Right-clicked on town interface block - opening menu
+[15:09:32] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: newBlockEntity called for block at MutableBlockPos{x=1, y=-60, z=-3}
+[15:09:32] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: Found block entity at MutableBlockPos{x=1, y=-60, z=-3}: com.quackers29.businesscraft.block.entity.TownInterfaceEntity
+[15:09:32] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] No town found exactly at position MutableBlockPos{x=1, y=-60, z=-3}, checking block entity
+[15:09:32] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] No town found at or associated with position MutableBlockPos{x=1, y=-60, z=-3}
+[15:09:32] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:32] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:32] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: Opened town interface menu directly via PlatformAccess
+[15:09:32] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: newBlockEntity called for block at BlockPos{x=1, y=-60, z=-3}
+[15:09:32] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:32] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:32] [Render thread/INFO] (TownNamePopupManager) [DEBUG] TownNamePopupManager instance created
+[15:09:32] [Render thread/INFO] (ButtonActionCoordinator) [DEBUG] ButtonActionCoordinator initialized
+[15:09:32] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:32] [Render thread/INFO] (TownNamePopupManager) [DEBUG] TownNamePopupManager cleanup completed
+[15:09:32] [Render thread/INFO] (ButtonActionCoordinator) [DEBUG] ButtonActionCoordinator cleanup completed
+[15:09:32] [Render thread/ERROR] (FabricModMessages) Error in sendToServer
+java.lang.ClassNotFoundException: net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking
+	at jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641) ~[?:?]
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:525) ~[?:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:226) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119) ~[fabric-loader-0.15.6.jar:?]
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:525) ~[?:?]
+	at com.quackers29.businesscraft.fabric.FabricModMessages.sendToServer(FabricModMessages.java:312) ~[main/:?]
+	at com.quackers29.businesscraft.fabric.platform.FabricNetworkMessages.sendToServer(FabricNetworkMessages.java:28) ~[main/:?]
+	at com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen.performAdditionalCleanup(TownInterfaceScreen.java:85) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.performSafeCleanup(BaseTownScreen.java:418) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.onClose(BaseTownScreen.java:395) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.keyPressed(AbstractContainerScreen.java:557) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.lambda$keyPressed$4(BaseTownScreen.java:343) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.managers.TownScreenEventHandler.handleKeyPressed(TownScreenEventHandler.java:267) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.keyPressed(BaseTownScreen.java:342) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at net.minecraft.client.KeyboardHandler.method_1454(KeyboardHandler.java:395) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
 	at net.minecraft.client.gui.screens.Screen.wrapScreenError(Screen.java:409) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
-	... 17 more
+	at net.minecraft.client.KeyboardHandler.keyPress(KeyboardHandler.java:391) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.KeyboardHandler.method_22678(KeyboardHandler.java:477) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.util.thread.BlockableEventLoop.execute(BlockableEventLoop.java:102) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.KeyboardHandler.method_22676(KeyboardHandler.java:477) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at org.lwjgl.glfw.GLFWKeyCallbackI.callback(GLFWKeyCallbackI.java:44) ~[lwjgl-glfw-3.3.1.jar:build 7]
+	at org.lwjgl.system.JNI.invokeV(Native Method) ~[lwjgl-3.3.1.jar:build 7]
+	at org.lwjgl.glfw.GLFW.glfwPollEvents(GLFW.java:3403) ~[lwjgl-glfw-3.3.1.jar:build 7]
+	at com.mojang.blaze3d.systems.RenderSystem.pollEvents(RenderSystem.java:201) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at com.mojang.blaze3d.systems.RenderSystem.flipFrame(RenderSystem.java:219) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at com.mojang.blaze3d.platform.Window.updateDisplay(Window.java:288) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.Minecraft.runTick(Minecraft.java:1241) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.Minecraft.run(Minecraft.java:802) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.main.Main.main(Main.java:250) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:470) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86) ~[dev-launch-injector-0.2.1+build.8.jar:?]
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: java.lang.ClassNotFoundException: net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:226)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.fabric.FabricModMessages.sendToServer(FabricModMessages.java:312)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.fabric.platform.FabricNetworkMessages.sendToServer(FabricNetworkMessages.java:28)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen.performAdditionalCleanup(TownInterfaceScreen.java:85)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.performSafeCleanup(BaseTownScreen.java:418)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.onClose(BaseTownScreen.java:395)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.keyPressed(AbstractContainerScreen.java:557)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.lambda$keyPressed$4(BaseTownScreen.java:343)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.managers.TownScreenEventHandler.handleKeyPressed(TownScreenEventHandler.java:267)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.keyPressed(BaseTownScreen.java:342)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.method_1454(KeyboardHandler.java:395)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.gui.screens.Screen.wrapScreenError(Screen.java:409)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.keyPress(KeyboardHandler.java:391)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.method_22678(KeyboardHandler.java:477)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.util.thread.BlockableEventLoop.execute(BlockableEventLoop.java:102)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.method_22676(KeyboardHandler.java:477)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.lwjgl.glfw.GLFWKeyCallbackI.callback(GLFWKeyCallbackI.java:44)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.lwjgl.system.JNI.invokeV(Native Method)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.lwjgl.glfw.GLFW.glfwPollEvents(GLFW.java:3403)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.mojang.blaze3d.systems.RenderSystem.pollEvents(RenderSystem.java:201)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.mojang.blaze3d.systems.RenderSystem.flipFrame(RenderSystem.java:219)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.mojang.blaze3d.platform.Window.updateDisplay(Window.java:288)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.Minecraft.runTick(Minecraft.java:1241)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.Minecraft.run(Minecraft.java:802)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.main.Main.main(Main.java:250)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:470)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+[15:09:32] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86)
+[15:09:33] [Render thread/INFO] (FabricEventCallbackHandler) Right-clicked on town interface block - opening menu
+[15:09:33] [Server thread/INFO] (FabricEventCallbackHandler) Right-clicked on town interface block - opening menu
+[15:09:33] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: Found block entity at MutableBlockPos{x=1, y=-60, z=-3}: com.quackers29.businesscraft.block.entity.TownInterfaceEntity
+[15:09:33] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] No town found exactly at position MutableBlockPos{x=1, y=-60, z=-3}, checking block entity
+[15:09:33] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] No town found at or associated with position MutableBlockPos{x=1, y=-60, z=-3}
+[15:09:33] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:33] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:33] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: Opened town interface menu directly via PlatformAccess
+[15:09:33] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:33] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:33] [Render thread/INFO] (TownNamePopupManager) [DEBUG] TownNamePopupManager instance created
+[15:09:33] [Render thread/INFO] (ButtonActionCoordinator) [DEBUG] ButtonActionCoordinator initialized
+[15:09:33] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:34] [Render thread/INFO] (TownNamePopupManager) [DEBUG] TownNamePopupManager cleanup completed
+[15:09:34] [Render thread/INFO] (ButtonActionCoordinator) [DEBUG] ButtonActionCoordinator cleanup completed
+[15:09:34] [Render thread/ERROR] (FabricModMessages) Error in sendToServer
+java.lang.ClassNotFoundException: net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking
+	at jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641) ~[?:?]
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:525) ~[?:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:226) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119) ~[fabric-loader-0.15.6.jar:?]
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:525) ~[?:?]
+	at com.quackers29.businesscraft.fabric.FabricModMessages.sendToServer(FabricModMessages.java:312) ~[main/:?]
+	at com.quackers29.businesscraft.fabric.platform.FabricNetworkMessages.sendToServer(FabricNetworkMessages.java:28) ~[main/:?]
+	at com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen.performAdditionalCleanup(TownInterfaceScreen.java:85) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.performSafeCleanup(BaseTownScreen.java:418) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.onClose(BaseTownScreen.java:395) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.keyPressed(AbstractContainerScreen.java:557) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.lambda$keyPressed$4(BaseTownScreen.java:343) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.managers.TownScreenEventHandler.handleKeyPressed(TownScreenEventHandler.java:267) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.keyPressed(BaseTownScreen.java:342) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at net.minecraft.client.KeyboardHandler.method_1454(KeyboardHandler.java:395) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.gui.screens.Screen.wrapScreenError(Screen.java:409) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.KeyboardHandler.keyPress(KeyboardHandler.java:391) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.KeyboardHandler.method_22678(KeyboardHandler.java:477) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.util.thread.BlockableEventLoop.execute(BlockableEventLoop.java:102) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.KeyboardHandler.method_22676(KeyboardHandler.java:477) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at org.lwjgl.glfw.GLFWKeyCallbackI.callback(GLFWKeyCallbackI.java:44) ~[lwjgl-glfw-3.3.1.jar:build 7]
+	at org.lwjgl.system.JNI.invokeV(Native Method) ~[lwjgl-3.3.1.jar:build 7]
+	at org.lwjgl.glfw.GLFW.glfwPollEvents(GLFW.java:3403) ~[lwjgl-glfw-3.3.1.jar:build 7]
+	at com.mojang.blaze3d.systems.RenderSystem.pollEvents(RenderSystem.java:201) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at com.mojang.blaze3d.systems.RenderSystem.flipFrame(RenderSystem.java:219) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at com.mojang.blaze3d.platform.Window.updateDisplay(Window.java:288) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.Minecraft.runTick(Minecraft.java:1241) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.Minecraft.run(Minecraft.java:802) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.main.Main.main(Main.java:250) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:470) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86) ~[dev-launch-injector-0.2.1+build.8.jar:?]
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: java.lang.ClassNotFoundException: net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:226)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.fabric.FabricModMessages.sendToServer(FabricModMessages.java:312)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.fabric.platform.FabricNetworkMessages.sendToServer(FabricNetworkMessages.java:28)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen.performAdditionalCleanup(TownInterfaceScreen.java:85)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.performSafeCleanup(BaseTownScreen.java:418)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.onClose(BaseTownScreen.java:395)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.keyPressed(AbstractContainerScreen.java:557)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.lambda$keyPressed$4(BaseTownScreen.java:343)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.managers.TownScreenEventHandler.handleKeyPressed(TownScreenEventHandler.java:267)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.keyPressed(BaseTownScreen.java:342)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.method_1454(KeyboardHandler.java:395)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.gui.screens.Screen.wrapScreenError(Screen.java:409)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.keyPress(KeyboardHandler.java:391)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.method_22678(KeyboardHandler.java:477)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.util.thread.BlockableEventLoop.execute(BlockableEventLoop.java:102)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.method_22676(KeyboardHandler.java:477)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.lwjgl.glfw.GLFWKeyCallbackI.callback(GLFWKeyCallbackI.java:44)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.lwjgl.system.JNI.invokeV(Native Method)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.lwjgl.glfw.GLFW.glfwPollEvents(GLFW.java:3403)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.mojang.blaze3d.systems.RenderSystem.pollEvents(RenderSystem.java:201)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.mojang.blaze3d.systems.RenderSystem.flipFrame(RenderSystem.java:219)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.mojang.blaze3d.platform.Window.updateDisplay(Window.java:288)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.Minecraft.runTick(Minecraft.java:1241)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.Minecraft.run(Minecraft.java:802)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.main.Main.main(Main.java:250)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:470)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86)
+[15:09:34] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: newBlockEntity called for block at BlockPos{x=3, y=-60, z=-4}
+[15:09:34] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: newBlockEntity called for block at BlockPos{x=3, y=-60, z=-4}
+[15:09:36] [Render thread/INFO] (FabricEventCallbackHandler) Right-clicked on town interface block - opening menu
+[15:09:36] [Server thread/INFO] (FabricEventCallbackHandler) Right-clicked on town interface block - opening menu
+[15:09:36] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: Found block entity at MutableBlockPos{x=3, y=-60, z=-4}: com.quackers29.businesscraft.block.entity.TownInterfaceEntity
+[15:09:36] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] No town found exactly at position MutableBlockPos{x=3, y=-60, z=-4}, checking block entity
+[15:09:36] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] No town found at or associated with position MutableBlockPos{x=3, y=-60, z=-4}
+[15:09:36] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:36] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:36] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: Opened town interface menu directly via PlatformAccess
+[15:09:36] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:36] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:36] [Render thread/INFO] (TownNamePopupManager) [DEBUG] TownNamePopupManager instance created
+[15:09:36] [Render thread/INFO] (ButtonActionCoordinator) [DEBUG] ButtonActionCoordinator initialized
+[15:09:36] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:37] [Render thread/INFO] (TownNamePopupManager) [DEBUG] TownNamePopupManager cleanup completed
+[15:09:37] [Render thread/INFO] (ButtonActionCoordinator) [DEBUG] ButtonActionCoordinator cleanup completed
+[15:09:37] [Render thread/ERROR] (FabricModMessages) Error in sendToServer
+java.lang.ClassNotFoundException: net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking
+	at jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641) ~[?:?]
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:525) ~[?:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:226) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119) ~[fabric-loader-0.15.6.jar:?]
+	at java.lang.ClassLoader.loadClass(ClassLoader.java:525) ~[?:?]
+	at com.quackers29.businesscraft.fabric.FabricModMessages.sendToServer(FabricModMessages.java:312) ~[main/:?]
+	at com.quackers29.businesscraft.fabric.platform.FabricNetworkMessages.sendToServer(FabricNetworkMessages.java:28) ~[main/:?]
+	at com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen.performAdditionalCleanup(TownInterfaceScreen.java:85) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.performSafeCleanup(BaseTownScreen.java:418) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.onClose(BaseTownScreen.java:395) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.keyPressed(AbstractContainerScreen.java:557) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.lambda$keyPressed$4(BaseTownScreen.java:343) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.managers.TownScreenEventHandler.handleKeyPressed(TownScreenEventHandler.java:267) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.keyPressed(BaseTownScreen.java:342) ~[businesscraft-common-1.0.0.jar:1.0.0]
+	at net.minecraft.client.KeyboardHandler.method_1454(KeyboardHandler.java:395) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.gui.screens.Screen.wrapScreenError(Screen.java:409) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.KeyboardHandler.keyPress(KeyboardHandler.java:391) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.KeyboardHandler.method_22678(KeyboardHandler.java:477) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.util.thread.BlockableEventLoop.execute(BlockableEventLoop.java:102) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.KeyboardHandler.method_22676(KeyboardHandler.java:477) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at org.lwjgl.glfw.GLFWKeyCallbackI.callback(GLFWKeyCallbackI.java:44) ~[lwjgl-glfw-3.3.1.jar:build 7]
+	at org.lwjgl.system.JNI.invokeV(Native Method) ~[lwjgl-3.3.1.jar:build 7]
+	at org.lwjgl.glfw.GLFW.glfwWaitEventsTimeout(GLFW.java:3474) ~[lwjgl-glfw-3.3.1.jar:build 7]
+	at com.mojang.blaze3d.systems.RenderSystem.limitDisplayFPS(RenderSystem.java:237) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.Minecraft.runTick(Minecraft.java:1244) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.Minecraft.run(Minecraft.java:802) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.minecraft.client.main.Main.main(Main.java:250) ~[minecraft-merged-51c0cfe141-1.20.1-loom.mappings.1_20_1.layered+hash.2198-v2.jar:?]
+	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:470) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23) ~[fabric-loader-0.15.6.jar:?]
+	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86) ~[dev-launch-injector-0.2.1+build.8.jar:?]
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: java.lang.ClassNotFoundException: net.fabricmc.fabric.api.networking.v1.ClientPlayNetworking
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.KnotClassDelegate.loadClass(KnotClassDelegate.java:226)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.KnotClassLoader.loadClass(KnotClassLoader.java:119)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.fabric.FabricModMessages.sendToServer(FabricModMessages.java:312)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.fabric.platform.FabricNetworkMessages.sendToServer(FabricNetworkMessages.java:28)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen.performAdditionalCleanup(TownInterfaceScreen.java:85)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.performSafeCleanup(BaseTownScreen.java:418)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.onClose(BaseTownScreen.java:395)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.gui.screens.inventory.AbstractContainerScreen.keyPressed(AbstractContainerScreen.java:557)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.lambda$keyPressed$4(BaseTownScreen.java:343)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.managers.TownScreenEventHandler.handleKeyPressed(TownScreenEventHandler.java:267)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.quackers29.businesscraft.ui.screens.BaseTownScreen.keyPressed(BaseTownScreen.java:342)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.method_1454(KeyboardHandler.java:395)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.gui.screens.Screen.wrapScreenError(Screen.java:409)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.keyPress(KeyboardHandler.java:391)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.method_22678(KeyboardHandler.java:477)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.util.thread.BlockableEventLoop.execute(BlockableEventLoop.java:102)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.KeyboardHandler.method_22676(KeyboardHandler.java:477)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.lwjgl.glfw.GLFWKeyCallbackI.callback(GLFWKeyCallbackI.java:44)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.lwjgl.system.JNI.invokeV(Native Method)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at org.lwjgl.glfw.GLFW.glfwWaitEventsTimeout(GLFW.java:3474)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at com.mojang.blaze3d.systems.RenderSystem.limitDisplayFPS(RenderSystem.java:237)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.Minecraft.runTick(Minecraft.java:1244)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.Minecraft.run(Minecraft.java:802)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.minecraft.client.main.Main.main(Main.java:250)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.game.minecraft.MinecraftGameProvider.launch(MinecraftGameProvider.java:470)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.Knot.launch(Knot.java:74)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.loader.impl.launch.knot.KnotClient.main(KnotClient.java:23)
+[15:09:37] [Render thread/INFO] (Minecraft) [STDERR]: 	at net.fabricmc.devlaunchinjector.Main.main(Main.java:86)
+[15:09:39] [Render thread/INFO] (Minecraft) [STDOUT]: DEBUG: newBlockEntity called for block at BlockPos{x=1, y=-60, z=-2}
+[15:09:39] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: newBlockEntity called for block at BlockPos{x=1, y=-60, z=-2}
+[15:09:39] [Render thread/INFO] (FabricEventCallbackHandler) Right-clicked on town interface block - opening menu
+[15:09:39] [Server thread/INFO] (FabricEventCallbackHandler) Right-clicked on town interface block - opening menu
+[15:09:39] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: Found block entity at MutableBlockPos{x=1, y=-60, z=-3}: com.quackers29.businesscraft.block.entity.TownInterfaceEntity
+[15:09:39] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] No town found exactly at position MutableBlockPos{x=1, y=-60, z=-3}, checking block entity
+[15:09:39] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] No town found at or associated with position MutableBlockPos{x=1, y=-60, z=-3}
+[15:09:39] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:39] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:39] [Server thread/INFO] (Minecraft) [STDOUT]: DEBUG: Opened town interface menu directly via PlatformAccess
+[15:09:40] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:40] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:40] [Render thread/INFO] (TownNamePopupManager) [DEBUG] TownNamePopupManager instance created
+[15:09:40] [Render thread/INFO] (ButtonActionCoordinator) [DEBUG] ButtonActionCoordinator initialized
+[15:09:40] [Render thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] getSearchRadius() returning entity value: 3
+[15:09:40] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:41] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:42] [Server thread/INFO] (BusinessCraft/TownInterfaceMenu) [DEBUG] updateDataSlots() using entity fallback, search radius: 3
+[15:09:43] [Render thread/INFO] (Minecraft) Stopping!
+[15:09:43] [Server thread/INFO] (Minecraft) Player479 lost connection: Disconnected
+[15:09:43] [Server thread/INFO] (Minecraft) Player479 left the game
+[15:09:43] [Server thread/INFO] (Minecraft) Stopping singleplayer server as player logged out
+[15:09:43] [Server thread/INFO] (Minecraft) Stopping server
+[15:09:43] [Server thread/INFO] (Minecraft) Saving players
+[15:09:43] [Server thread/INFO] (Minecraft) Saving worlds
+[15:09:43] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
+[15:09:43] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
+[15:09:43] [Server thread/INFO] (Minecraft) Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
+[15:09:43] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (New World (1)): All chunks are saved
+[15:09:43] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[15:09:43] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[15:09:43] [Server thread/INFO] (Minecraft) ThreadedAnvilChunkStorage: All dimensions are saved
