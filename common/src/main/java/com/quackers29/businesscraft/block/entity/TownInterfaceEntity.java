@@ -104,17 +104,19 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     // Buffer management - extracted to separate class for better organization
     private TownBufferManager bufferManager;
     private Object lazyBufferHandler = PlatformAccess.getItemHandlers().getEmptyLazyOptional();
-    
+
     // Modular ContainerData system - replaces hardcoded indices with named fields
     private final ContainerDataHelper containerData = ContainerDataHelper.builder("TownBlock")
-        .addReadOnlyField("bread_count", this::getBreadCountFromTown, "Legacy bread count for compatibility")
-        .addReadOnlyField("population", this::getPopulationFromTown, "Current town population")
-        .addField("spawn_enabled", this::getTouristSpawningEnabledAsInt, this::setTouristSpawningEnabledFromInt, "Tourist spawning enabled flag")
-        .addReadOnlyField("can_spawn", this::getCanSpawnTouristsAsInt, "Whether town can currently spawn tourists")
-        .addField("search_radius", this::getSearchRadius, this::setSearchRadius, "Search radius for tourist detection")
-        .addReadOnlyField("tourist_count", this::getTouristCountFromTown, "Current number of tourists in town")
-        .addReadOnlyField("max_tourists", this::getMaxTouristsFromTown, "Maximum tourists allowed in town")
-        .build();
+            .addReadOnlyField("bread_count", this::getBreadCountFromTown, "Legacy bread count for compatibility")
+            .addReadOnlyField("population", this::getPopulationFromTown, "Current town population")
+            .addField("spawn_enabled", this::getTouristSpawningEnabledAsInt, this::setTouristSpawningEnabledFromInt,
+                    "Tourist spawning enabled flag")
+            .addReadOnlyField("can_spawn", this::getCanSpawnTouristsAsInt, "Whether town can currently spawn tourists")
+            .addField("search_radius", this::getSearchRadius, this::setSearchRadius,
+                    "Search radius for tourist detection")
+            .addReadOnlyField("tourist_count", this::getTouristCountFromTown, "Current number of tourists in town")
+            .addReadOnlyField("max_tourists", this::getMaxTouristsFromTown, "Maximum tourists allowed in town")
+            .build();
     private static final Logger LOGGER = LoggerFactory.getLogger(TownInterfaceEntity.class);
     private Map<String, Integer> visitingPopulation = new HashMap<>();
     private BlockPos pathStart;
@@ -132,21 +134,22 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     private final AABB searchBounds = new AABB(worldPosition).inflate(15);
     private List<LivingEntity> tourists = new ArrayList<>();
     private ITownDataProvider townDataProvider;
-    
+
     /**
      * Rate limiting parameters for markDirty calls
      * Prevents excessive updates which can flood logs and impact performance
      */
     private long lastMarkDirtyTime = 0;
     private static final long MARK_DIRTY_COOLDOWN_MS = 2000; // 2 seconds between calls
-    
+
     // Add a new TouristVehicleManager instance
     private final TouristVehicleManager touristVehicleManager = new TouristVehicleManager();
 
     // History buffer storage
     private final VisitBuffer visitBuffer = new VisitBuffer();
 
-    // Client-server synchronization helper (handles all client caching and sync logic)
+    // Client-server synchronization helper (handles all client caching and sync
+    // logic)
     private final ClientSyncHelper clientSyncHelper = new ClientSyncHelper();
 
     // Platform management (handles platform storage and operations)
@@ -160,7 +163,8 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     private Map<UUID, Long> extendedIndicatorPlayers = new HashMap<>();
     private static final long EXTENDED_INDICATOR_DURATION = 600; // 30 seconds in ticks
 
-    // Platform visualization is now handled by the modular client-side rendering system
+    // Platform visualization is now handled by the modular client-side rendering
+    // system
     // See: client.render.world.PlatformVisualizationRenderer
 
     // Tourist spawning helper (handles complex spawning logic)
@@ -175,7 +179,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     // Special UUID for "any town" destination
     private static final UUID ANY_TOWN_DESTINATION = new UUID(0, 0);
     private static final String ANY_TOWN_NAME = "Any Town";
-    
+
     // Helper methods for ContainerData integration
     private int getBreadCountFromTown() {
         if (townId != null && level instanceof ServerLevel sLevel) {
@@ -184,7 +188,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         }
         return 0;
     }
-    
+
     private int getPopulationFromTown() {
         if (townId != null && level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
@@ -192,15 +196,15 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         }
         return 0;
     }
-    
+
     private int getTouristSpawningEnabledAsInt() {
         return touristSpawningEnabled ? 1 : 0;
     }
-    
+
     private void setTouristSpawningEnabledFromInt(int value) {
         setTouristSpawningEnabled(value != 0);
     }
-    
+
     private int getCanSpawnTouristsAsInt() {
         if (townId != null && level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
@@ -208,7 +212,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         }
         return 0;
     }
-    
+
     private int getTouristCountFromTown() {
         if (townId != null && level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
@@ -216,7 +220,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         }
         return 0;
     }
-    
+
     private int getMaxTouristsFromTown() {
         if (townId != null && level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
@@ -226,11 +230,17 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     }
 
     public TownInterfaceEntity(BlockPos pos, BlockState state) {
-        super((net.minecraft.world.level.block.entity.BlockEntityType<TownInterfaceEntity>) PlatformAccess.getBlockEntities().getTownInterfaceEntityType(), pos, state);
-        
+        super((net.minecraft.world.level.block.entity.BlockEntityType<TownInterfaceEntity>) PlatformAccess
+                .getBlockEntities().getTownInterfaceEntityType(), pos, state);
+
+        // Initialize buffer manager immediately so it's available for setTownId
+        // We pass null for level initially, it will be updated in onLoad or when level
+        // is set
+        this.bufferManager = new TownBufferManager(this, null);
+
         // Set up platform manager callback
         platformManager.setChangeCallback(this::setChanged);
-        
+
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "TownInterfaceEntity created at position: {}", pos);
     }
 
@@ -248,7 +258,8 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     }
 
     // Platform-agnostic capability access method
-    // Note: Platform-specific implementations should bridge this to Forge's getCapability or Fabric's equivalent
+    // Note: Platform-specific implementations should bridge this to Forge's
+    // getCapability or Fabric's equivalent
     public @NotNull <T> Object getCapability(@NotNull Object cap, @Nullable Direction side) {
         if (PlatformAccess.getItemHandlers().isItemHandlerCapability(cap)) {
             // Return buffer handler for hopper extraction from below
@@ -265,18 +276,26 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     @Override
     public void onLoad() {
         super.onLoad();
-        
+
         // Initialize buffer manager now that level is available
         if (bufferManager == null) {
             bufferManager = new TownBufferManager(this, level);
-            if (townId != null) {
-                bufferManager.setTownId(townId);
+        } else {
+            // Re-initialize with level if needed, preserving townId
+            UUID currentTownId = this.townId;
+            bufferManager = new TownBufferManager(this, level);
+            if (currentTownId != null) {
+                bufferManager.setTownId(currentTownId);
             }
         }
-        
+
+        if (townId != null) {
+            bufferManager.setTownId(townId);
+        }
+
         lazyItemHandler = PlatformAccess.getItemHandlers().createLazyOptional(itemHandler);
         lazyBufferHandler = PlatformAccess.getItemHandlers().createLazyOptional(bufferManager.getBufferHandler());
-        
+
         // Update from provider when loaded
         if (!level.isClientSide()) {
             updateFromTownProvider();
@@ -298,16 +317,17 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         if (!level.isClientSide()) {
             updateFromTownProvider();
         }
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Saving TownInterfaceEntity with searchRadius: {}", searchRadius);
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Saving TownInterfaceEntity with searchRadius: {}",
+                searchRadius);
         nbtDataHelper.saveToNBT(tag, itemHandler, townId, name, pathStart, pathEnd, platformManager, searchRadius);
     }
 
     @Override
     public void load(CompoundTag tag) {
         super.load(tag);
-        
+
         NBTDataHelper.LoadResult result = nbtDataHelper.loadFromNBT(tag, itemHandler, level, platformManager);
-        
+
         // Apply loaded data to instance variables
         this.townId = result.townId;
         this.name = result.name;
@@ -315,22 +335,24 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         this.pathStart = result.pathStart;
         this.pathEnd = result.pathEnd;
         this.touristSpawningEnabled = result.touristSpawningEnabled;
-        
+
         // Update buffer manager with townId if it exists
         if (bufferManager != null && townId != null) {
             bufferManager.setTownId(townId);
         }
-        
+
         // Apply search radius if loaded, otherwise use default
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Before NBT load: searchRadius={}", this.searchRadius);
         if (result.hasSearchRadius()) {
             this.searchRadius = result.searchRadius;
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Loaded searchRadius from NBT: {} -> {}", result.searchRadius, this.searchRadius);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Loaded searchRadius from NBT: {} -> {}",
+                    result.searchRadius, this.searchRadius);
         } else {
             this.searchRadius = DEFAULT_SEARCH_RADIUS;
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Using default searchRadius: {} -> {}", DEFAULT_SEARCH_RADIUS, this.searchRadius);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Using default searchRadius: {} -> {}",
+                    DEFAULT_SEARCH_RADIUS, this.searchRadius);
         }
-        
+
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Loaded NBT data: {}", result.getSummary());
     }
 
@@ -338,7 +360,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     public void tick(Level level, BlockPos pos, BlockState state, TownInterfaceEntity blockEntity) {
         // Process resources every tick (not just once per second)
         processResourcesInSlot();
-        
+
         // Sync town data from the provider
         if (level.getGameTime() % 60 == 0) { // Every 3 seconds
             updateFromTownProvider();
@@ -347,16 +369,16 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
                 bufferManager.tick();
             }
         }
-        
+
         if (!level.isClientSide && townId != null) {
             if (level instanceof ServerLevel sLevel1) {
                 Town town = TownManager.get(sLevel1).getTown(townId);
                 if (town != null) {
                     // Platform-based villager spawning
-                    if (touristSpawningEnabled && town.canSpawnTourists() && 
-                        platformManager.getPlatformCount() > 0 && 
-                        level.getGameTime() % 200 == 0) {
-                        
+                    if (touristSpawningEnabled && town.canSpawnTourists() &&
+                            platformManager.getPlatformCount() > 0 &&
+                            level.getGameTime() % 200 == 0) {
+
                         // Try to spawn from each enabled platform
                         for (Platform platform : platformManager.getEnabledPlatforms()) {
                             touristSpawningHelper.spawnTouristOnPlatform(level, town, platform, townId);
@@ -366,15 +388,14 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
                     // Check for visitors using helper
                     if (level.getGameTime() % 40 == 0) {
                         visitorProcessingHelper.processVisitors(
-                            level, 
-                            pos, 
-                            townId, 
-                            platformManager, 
-                            visitBuffer, 
-                            searchRadius, 
-                            name, 
-                            this::setChanged
-                        );
+                                level,
+                                pos,
+                                townId,
+                                platformManager,
+                                visitBuffer,
+                                searchRadius,
+                                name,
+                                this::setChanged);
                     }
 
                     // Add scoreboard update
@@ -384,7 +405,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
                 }
             }
         }
-        
+
         // Handle tourist vehicles for all platforms
         if (level.getGameTime() % 20 == 0) { // Every 1 second
             if (touristSpawningEnabled && townId != null) {
@@ -393,29 +414,28 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
                 if (level instanceof ServerLevel sLevel) {
                     currentTown = TownManager.get(sLevel).getTown(townId);
                 }
-                
+
                 if (currentTown != null && currentTown.canSpawnTourists()) {
                     // Process each enabled platform
                     for (Platform platform : platformManager.getEnabledPlatforms()) {
-                            touristVehicleManager.mountTouristsToVehicles(
-                                level, 
-                                platform.getStartPos(), 
-                                platform.getEndPos(), 
-                                searchRadius, 
-                                townId
-                            );
+                        touristVehicleManager.mountTouristsToVehicles(
+                                level,
+                                platform.getStartPos(),
+                                platform.getEndPos(),
+                                searchRadius,
+                                townId);
                     }
                 }
             }
-            
-            // Platform visualization cleanup is now handled automatically by the modular system
+
+            // Platform visualization cleanup is now handled automatically by the modular
+            // system
         }
-        
-        // Platform visualization is now handled entirely client-side through the modular rendering system
+
+        // Platform visualization is now handled entirely client-side through the
+        // modular rendering system
         // No server-side platform indicator spawning needed
     }
-
-
 
     public String getTownName() {
         if (townId != null) {
@@ -427,7 +447,8 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
                 if (town != null) {
                     // Always update our local cached name with the latest town name
                     if (!town.getName().equals(name)) {
-                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Updating cached name from {} to {}", name, town.getName());
+                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Updating cached name from {} to {}",
+                                name, town.getName());
                         name = town.getName();
                     }
                     return town.getName();
@@ -450,21 +471,22 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     public void setChanged() {
         super.setChanged();
         if (level != null && !level.isClientSide()) {
-            // Update client cache from town data before syncing to ensure latest data is sent
+            // Update client cache from town data before syncing to ensure latest data is
+            // sent
             if (townId != null && level instanceof ServerLevel serverLevel) {
                 Town town = TownManager.get(serverLevel).getTown(townId);
                 if (town != null) {
                     clientSyncHelper.updateClientResourcesFromTown(town);
                 }
             }
-            
+
             // Refresh ContainerData for any open TownInterfaceMenu instances
             refreshOpenMenus();
-            
+
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
         }
     }
-    
+
     /**
      * Refreshes ContainerData for any open TownInterfaceMenu instances
      * This ensures population and tourist values are updated in real-time
@@ -484,33 +506,35 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     }
 
     /**
-     * Creates a standardized update tag with all necessary data for client rendering
+     * Creates a standardized update tag with all necessary data for client
+     * rendering
      */
     @Override
     public CompoundTag getUpdateTag() {
         CompoundTag tag = super.getUpdateTag();
-        
+
         // Add town info
         if (townId != null) {
             tag.putUUID("TownId", townId);
         }
-        
-        // Add name for client display - use fresh name from Town object instead of cached field
+
+        // Add name for client display - use fresh name from Town object instead of
+        // cached field
         String freshTownName = getTownName();
         tag.putString("name", freshTownName != null ? freshTownName : "");
-        
+
         // Add search radius for client sync
         tag.putInt("searchRadius", getSearchRadius());
-        
+
         // Add resource data for client rendering
         syncResourcesForClient(tag);
-        
+
         // Add platforms using platform manager
         platformManager.saveToNBT(tag);
-        
+
         return tag;
     }
-    
+
     /**
      * Adds resource data to the provided tag for client-side rendering
      * This centralizes our resource serialization logic in one place
@@ -520,7 +544,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         if (provider != null) {
             clientSyncHelper.syncResourcesForClient(tag, provider);
         }
-        
+
         // Add visit history data
         clientSyncHelper.syncVisitHistoryForClient(tag, provider, level);
     }
@@ -528,35 +552,37 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     @Override
     public void handleUpdateTag(CompoundTag tag) {
         super.handleUpdateTag(tag);
-        
+
         // Handle name updates
         if (tag.contains("name")) {
             String newName = tag.getString("name");
             if (!newName.equals(name)) {
-                DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Updating town name from {} to {}", name, newName);
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Updating town name from {} to {}", name,
+                        newName);
                 name = newName;
             }
         }
-        
+
         // Handle search radius updates
         if (tag.contains("searchRadius")) {
             int newSearchRadius = tag.getInt("searchRadius");
             if (newSearchRadius != this.searchRadius) {
-                DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Client updating search radius from {} to {}", this.searchRadius, newSearchRadius);
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Client updating search radius from {} to {}",
+                        this.searchRadius, newSearchRadius);
                 this.searchRadius = newSearchRadius;
             }
         }
-        
+
         // Handle platform data updates using platform manager
         platformManager.updateClientPlatforms(tag);
-        
+
         // Load client resources data
         loadResourcesFromTag(tag);
-        
+
         // Load visit history data
         clientSyncHelper.loadVisitHistoryFromTag(tag);
     }
-    
+
     /**
      * Loads resources from the provided tag into the client-side cache
      * This centralizes our resource deserialization logic in one place
@@ -595,27 +621,27 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
 
     public void setPathStart(BlockPos pos) {
         this.pathStart = pos;
-        
+
         // Update the town through the provider
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
             provider.setPathStart(pos);
             markDirtyWithRateLimit(provider);
         }
-        
+
         setChanged();
     }
 
     public void setPathEnd(BlockPos pos) {
         this.pathEnd = pos;
-        
+
         // Update the town through the provider
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
             provider.setPathEnd(pos);
             markDirtyWithRateLimit(provider);
         }
-        
+
         setChanged();
     }
 
@@ -629,6 +655,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
 
     /**
      * Validates if a position is within the town's boundary radius
+     * 
      * @param pos The position to validate
      * @return true if valid, false if outside boundary
      */
@@ -636,15 +663,15 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         if (townId == null || !(level instanceof ServerLevel serverLevel)) {
             return false; // Cannot validate without town or on client
         }
-        
+
         Town town = TownManager.get(serverLevel).getTown(townId);
         if (town == null) {
             return false; // No town found
         }
-        
+
         int boundaryRadius = town.getBoundaryRadius();
         double distance = Math.sqrt(pos.distSqr(this.getBlockPos()));
-        
+
         return distance <= boundaryRadius;
     }
 
@@ -664,7 +691,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         if (level != null && !level.isClientSide()) {
             // Sync all data from town provider
             updateFromTownProvider();
-            
+
             // Explicitly update client resources when syncing town data
             if (townId != null && level instanceof ServerLevel serverLevel) {
                 Town town = TownManager.get(serverLevel).getTown(townId);
@@ -672,10 +699,10 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
                     clientSyncHelper.updateClientResourcesFromTown(town);
                 }
             }
-            
+
             // Update container data - mark all fields as dirty to refresh values
             containerData.markAllDirty();
-            
+
             // Force a block update to sync the latest data
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
             setChanged();
@@ -695,14 +722,18 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         }
     }
 
-    // Replace the old mountTouristsToVehicles method with a simplified version that delegates to the manager
+    // Replace the old mountTouristsToVehicles method with a simplified version that
+    // delegates to the manager
     private void mountTouristsToVehicles() {
-        if (level == null || level.isClientSide || town == null) return;
-        if (pathStart == null || pathEnd == null) return;
+        if (level == null || level.isClientSide || town == null)
+            return;
+        if (pathStart == null || pathEnd == null)
+            return;
 
         int mounted = touristVehicleManager.mountTouristsToVehicles(level, pathStart, pathEnd, searchRadius, townId);
         if (mounted > 0) {
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Mounted {} tourists to vehicles for town {}", mounted, name);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Mounted {} tourists to vehicles for town {}",
+                    mounted, name);
         }
     }
 
@@ -713,15 +744,17 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     public int getSearchRadius() {
         // Use default if not yet initialized from NBT
         int result = searchRadius > 0 ? searchRadius : DEFAULT_SEARCH_RADIUS;
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "getSearchRadius() field={}, result={}", searchRadius, result);
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "getSearchRadius() field={}, result={}", searchRadius,
+                result);
         return result;
     }
 
     public void setSearchRadius(int radius) {
         int oldValue = this.searchRadius;
         this.searchRadius = Math.max(1, Math.min(radius, 100)); // Limit between 1-100 blocks
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "setSearchRadius() {} -> {}", oldValue, this.searchRadius);
-        
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "setSearchRadius() {} -> {}", oldValue,
+                this.searchRadius);
+
         // Also update in the Town object
         if (townId != null && level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
@@ -730,14 +763,14 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
                 TownManager.get(sLevel).markDirty();
             }
         }
-        
+
         // Make sure to update the container data
         if (level != null && !level.isClientSide()) {
             containerData.markDirty("search_radius");
             // Force client sync when search radius changes
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
         }
-        
+
         setChanged();
     }
 
@@ -747,22 +780,22 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
 
     public void setTouristSpawningEnabled(boolean enabled) {
         this.touristSpawningEnabled = enabled;
-        
+
         // Update the town through the provider
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
             provider.setTouristSpawningEnabled(enabled);
             markDirtyWithRateLimit(provider);
         }
-        
+
         // Update container data
         if (level != null && !level.isClientSide()) {
             containerData.markDirty("spawn_enabled");
         }
-        
+
         setChanged();
     }
-    
+
     /**
      * Gets all towns available as destinations
      * 
@@ -771,18 +804,18 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
      */
     public Map<UUID, String> getAllTownsForDestination(ServerLevel serverLevel) {
         Map<UUID, String> result = new HashMap<>();
-        
+
         // Get all towns from the town manager
         TownManager townManager = TownManager.get(serverLevel);
         Map<UUID, Town> allTowns = townManager.getAllTowns();
-        
+
         // Filter out the current town
         allTowns.forEach((id, town) -> {
             if (!id.equals(townId)) {
                 result.put(id, town.getName());
             }
         });
-        
+
         return result;
     }
 
@@ -798,7 +831,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         }
         return townDataProvider;
     }
-    
+
     /**
      * Updates cached values from the town data provider
      */
@@ -810,17 +843,19 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
             this.pathStart = provider.getPathStart();
             this.pathEnd = provider.getPathEnd();
             this.searchRadius = provider.getSearchRadius();
-            
+
             // If we made any local changes, we need to sync them back
             if (level != null && !level.isClientSide() && this.townId != null) {
-                // Mark the provider as dirty to ensure changes are saved, but with rate limiting
+                // Mark the provider as dirty to ensure changes are saved, but with rate
+                // limiting
                 markDirtyWithRateLimit(provider);
             }
         }
     }
-    
+
     /**
      * Marks the provider as dirty with rate limiting to reduce excessive updates
+     * 
      * @param provider The provider to mark as dirty
      */
     private void markDirtyWithRateLimit(ITownDataProvider provider) {
@@ -832,26 +867,27 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     }
 
     public void processResourcesInSlot() {
-        if (level == null || level.isClientSide()) return;
-        
-            Object stackObj = PlatformAccess.getItemHandlers().getStackInSlot(itemHandler, 0);
-            if (stackObj instanceof net.minecraft.world.item.ItemStack stack) {
-                if (!stack.isEmpty() && townId != null) {
-                    if (level instanceof ServerLevel sLevel) {
-                        Town town = TownManager.get(sLevel).getTown(townId);
-                        if (town != null) {
-                            Item item = stack.getItem();
-                            // Process just 1 item per tick
-                            stack.shrink(1);
-                            town.addResource(item, 1);
-                            setChanged();
+        if (level == null || level.isClientSide())
+            return;
 
-                            // Send update to clients when resources change
-                            level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
-                        }
+        Object stackObj = PlatformAccess.getItemHandlers().getStackInSlot(itemHandler, 0);
+        if (stackObj instanceof net.minecraft.world.item.ItemStack stack) {
+            if (!stack.isEmpty() && townId != null) {
+                if (level instanceof ServerLevel sLevel) {
+                    Town town = TownManager.get(sLevel).getTown(townId);
+                    if (town != null) {
+                        Item item = stack.getItem();
+                        // Process just 1 item per tick
+                        stack.shrink(1);
+                        town.addResource(item, 1);
+                        setChanged();
+
+                        // Send update to clients when resources change
+                        level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
                     }
                 }
             }
+        }
     }
 
     // Ensure we clean up resources when the block entity is removed
@@ -863,38 +899,43 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         clientSyncHelper.clearAll();
         // Clear platform indicators
         platformIndicatorSpawnTimes.clear();
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Cleared visitor position tracking, client caches, and platform indicators on block removal");
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY,
+                "Cleared visitor position tracking, client caches, and platform indicators on block removal");
     }
 
     /**
      * Gets the client-side cached resources
+     * 
      * @return Map of resources
      */
     public Map<Item, Integer> getClientResources() {
         return clientSyncHelper.getClientResources();
     }
-    
+
     /**
      * Gets the client-side cached communal storage items
+     * 
      * @return Map of communal storage items
      */
     public Map<Item, Integer> getClientCommunalStorage() {
         return clientSyncHelper.getClientCommunalStorage();
     }
-    
+
     /**
      * Gets the client-side cached personal storage items for a specific player
+     * 
      * @param playerId UUID of the player
      * @return Map of personal storage items for that player
      */
     public Map<Item, Integer> getClientPersonalStorage(UUID playerId) {
         return clientSyncHelper.getClientPersonalStorage(playerId);
     }
-    
+
     /**
      * Updates the client-side personal storage cache for a player
+     * 
      * @param playerId UUID of the player
-     * @param items Map of items in the player's personal storage
+     * @param items    Map of items in the player's personal storage
      */
     public void updateClientPersonalStorage(UUID playerId, Map<Item, Integer> items) {
         clientSyncHelper.updateClientPersonalStorage(playerId, items);
@@ -920,27 +961,24 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         return clientSyncHelper.getTownNameFromId(townId, level);
     }
 
-
-
-
-    
     // Platform management methods - delegated to PlatformManager
-    
+
     /**
      * Gets the list of all platforms
      */
     public List<Platform> getPlatforms() {
         return platformManager.getPlatforms(level != null && level.isClientSide());
     }
-    
+
     /**
      * Adds a new platform
+     * 
      * @return true if added successfully, false if at max capacity
      */
     public boolean addPlatform() {
         return platformManager.addPlatform();
     }
-    
+
     /**
      * Removes a platform by ID
      */
@@ -952,56 +990,56 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         }
         return removed;
     }
-    
+
     /**
      * Gets a platform by ID
      */
     public Platform getPlatform(UUID platformId) {
         return platformManager.getPlatform(platformId);
     }
-    
+
     /**
      * Sets the path start for a specific platform
      */
     public void setPlatformPathStart(UUID platformId, BlockPos pos) {
         platformManager.setPlatformPathStart(platformId, pos);
     }
-    
+
     /**
      * Sets the path end for a specific platform
      */
     public void setPlatformPathEnd(UUID platformId, BlockPos pos) {
         platformManager.setPlatformPathEnd(platformId, pos);
     }
-    
+
     /**
      * Toggles a platform's enabled state
      */
     public void togglePlatformEnabled(UUID platformId) {
         platformManager.togglePlatformEnabled(platformId);
     }
-    
+
     /**
      * Sets whether we're in platform path creation mode
      */
     public void setPlatformCreationMode(boolean mode, UUID platformId) {
         platformManager.setPlatformCreationMode(mode, platformId);
     }
-    
+
     /**
      * Gets whether we're in platform path creation mode
      */
     public boolean isInPlatformCreationMode() {
         return platformManager.isInPlatformCreationMode();
     }
-    
+
     /**
      * Gets the ID of the platform currently being edited
      */
     public UUID getPlatformBeingEdited() {
         return platformManager.getPlatformBeingEdited();
     }
-    
+
     /**
      * Checks if we can add more platforms
      */
@@ -1009,10 +1047,9 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         return platformManager.canAddMorePlatforms();
     }
 
-
-    
     /**
      * Registers a player as having exited the town UI, enabling extended indicators
+     * 
      * @param playerId The UUID of the player who exited the UI
      */
     public void registerPlayerExitUI(UUID playerId) {
@@ -1022,9 +1059,10 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
             extendedIndicatorPlayers.put(playerId, level.getGameTime());
         }
     }
-    
+
     /**
-     * Called when items are added to town buffer storage externally (e.g., from claim system)
+     * Called when items are added to town buffer storage externally (e.g., from
+     * claim system)
      * Forces a buffer sync to ensure ItemStackHandler reflects the new items
      */
     public void onTownBufferChanged() {
@@ -1032,9 +1070,10 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
             bufferManager.onTownBufferChanged();
         }
     }
-    
+
     /**
      * Get the buffer handler for direct access (used by PaymentBoardMenu)
+     * 
      * @return The buffer handler or null if not initialized
      */
     public Object getBufferHandler() {
@@ -1042,7 +1081,8 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     }
 
     /**
-     * Creates a Payment Board menu provider for proper server-client synchronization
+     * Creates a Payment Board menu provider for proper server-client
+     * synchronization
      */
     public MenuProvider createPaymentBoardMenuProvider() {
         return new MenuProvider() {
@@ -1057,8 +1097,9 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
                 io.netty.buffer.ByteBuf buf = io.netty.buffer.Unpooled.buffer();
                 net.minecraft.network.FriendlyByteBuf friendlyBuf = new net.minecraft.network.FriendlyByteBuf(buf);
                 friendlyBuf.writeBlockPos(TownInterfaceEntity.this.getBlockPos());
-                
-                return new com.quackers29.businesscraft.menu.PaymentBoardMenu(containerId, playerInventory, friendlyBuf);
+
+                return new com.quackers29.businesscraft.menu.PaymentBoardMenu(containerId, playerInventory,
+                        friendlyBuf);
             }
         };
     }
