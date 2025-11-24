@@ -16,9 +16,9 @@ loom {
     // accessWidenerPath = file("src/main/resources/businesscraft.accesswidener")
 }
 
-dependencies {
+    dependencies {
     minecraft "com.mojang:minecraft:${project.mc_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
     // Fabric API
@@ -42,38 +42,10 @@ dependencies {
     compileOnly 'org.jetbrains:annotations:23.0.0'
 }
 
-// TEMPORARILY DISABLE common module inclusion - need to implement Fabric-specific classes first
-// sourceSets.main.java.srcDirs += project(':common').sourceSets.main.java.srcDirs
+// Include common module source directly to allow compilation
+sourceSets.main.java.srcDirs += project(':common').sourceSets.main.java.srcDirs
 
-// Filter out all Forge-specific files that would cause compilation issues
-// Exclude specific common module files that conflict with Fabric implementations
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/menu/TownInterfaceMenu.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/block/entity/TownInterfaceEntity.java'
-
-// Allow TownInterfaceBlock to be included for runtime access
-// sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/block/TownInterfaceBlock.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/entity/TouristEntity.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/platform/Platform.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/network/**/*.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/town/TownManager.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/town/Town.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/town/data/**/*.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/town/service/**/*.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/town/components/**/*.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/service/TouristVehicleManager.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/error/**/*.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/debug/DebugConfig.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/ui/**/*.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/config/**/*.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/scoreboard/**/*.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/command/**/*.java'
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/client/**/*.java'
-sourceSets.main.java.exclude '**/client/render/**/*.java'
-sourceSets.main.java.exclude '**/client/renderer/**/*.java'
-// Only exclude common module event files, not fabric-specific ones
-sourceSets.main.java.exclude 'common/src/main/java/com/quackers29/businesscraft/**/event/**/*.java'
-sourceSets.main.java.exclude '**/data/**/*.java'
-sourceSets.main.java.exclude '**/town/TownManager.java'
+// No excludes - we want full common module visibility
 
 sourceSets.main.resources.srcDirs += project(':common').sourceSets.main.resources.srcDirs
 
