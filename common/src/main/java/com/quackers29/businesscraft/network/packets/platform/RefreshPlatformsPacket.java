@@ -18,15 +18,15 @@ import com.quackers29.businesscraft.debug.DebugConfig;
 public class RefreshPlatformsPacket {
     private static final Logger LOGGER = LogManager.getLogger();
     private final BlockPos pos;
-    
+
     public RefreshPlatformsPacket(BlockPos pos) {
         this.pos = pos;
     }
-    
+
     public RefreshPlatformsPacket(FriendlyByteBuf buf) {
         this.pos = buf.readBlockPos();
     }
-    
+
     public void encode(FriendlyByteBuf buf) {
         buf.writeBlockPos(pos);
     }
@@ -42,7 +42,7 @@ public class RefreshPlatformsPacket {
     public static RefreshPlatformsPacket decode(FriendlyByteBuf buf) {
         return new RefreshPlatformsPacket(buf);
     }
-    
+
     public boolean handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // This code runs on the client
@@ -51,18 +51,18 @@ public class RefreshPlatformsPacket {
         PlatformAccess.getNetwork().setPacketHandled(context);
         return true;
     }
-    
+
     private void handleClient() {
         try {
             com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
             if (clientHelper == null) {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                    "ClientHelper not available (server side?)");
+                        "ClientHelper not available (server side?)");
                 return;
             }
 
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                "Processing RefreshPlatformsPacket for pos {}", pos);
+                    "Processing RefreshPlatformsPacket for pos {}", pos);
 
             // Get the block entity
             Object levelObj = clientHelper.getClientLevel();
@@ -71,45 +71,48 @@ public class RefreshPlatformsPacket {
 
                 if (be instanceof TownInterfaceEntity townInterfaceEntity) {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                        "Found TownInterfaceEntity at {}", pos);
+                            "Found TownInterfaceEntity at {}", pos);
 
                     // Clear platform cache for this town to force fresh data on next map view
                     UUID townId = townInterfaceEntity.getTownId();
                     if (townId != null) {
                         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                            "Clearing platform cache for town {}", townId);
+                                "Clearing platform cache for town {}", townId);
                         ClientTownMapCache.getInstance().clearTownPlatformData(townId);
                         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                            "Platform cache cleared successfully");
+                                "Platform cache cleared successfully");
+
+                        // Request fresh platform data from server
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                                "Requesting fresh platform data from server for town {}", townId);
+                        PlatformAccess.getNetworkMessages().sendToServer(
+                                new com.quackers29.businesscraft.network.packets.ui.RequestTownPlatformDataPacket(
+                                        townId));
                     } else {
                         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                            "Town ID is null, skipping cache clear");
+                                "Town ID is null, skipping cache clear");
                     }
 
-                    // If the PlatformManagementScreenV2 is open, refresh data without reopening
+                    // If the PlatformManagementScreenV2 is open, it will be updated when the
+                    // response packet arrives
                     Object currentScreen = clientHelper.getCurrentScreen();
-                    if (currentScreen instanceof PlatformManagementScreenV2 platformScreen) {
+                    if (currentScreen instanceof PlatformManagementScreenV2) {
                         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                            "PlatformManagementScreenV2 is open, refreshing data");
-                        platformScreen.refreshPlatformData();
-                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                            "Platform screen data refreshed successfully");
-                    } else {
-                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                            "PlatformManagementScreenV2 is not open, skipping refresh");
+                                "PlatformManagementScreenV2 is open, fresh data will be applied when response arrives");
                     }
                     // Additional handling for other screens can be added here if needed
                 } else {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                        "Block entity at {} is not TownInterfaceEntity, is: {}", pos, be != null ? be.getClass().getSimpleName() : "null");
+                            "Block entity at {} is not TownInterfaceEntity, is: {}", pos,
+                            be != null ? be.getClass().getSimpleName() : "null");
                 }
             } else {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                    "Client level is null");
+                        "Client level is null");
             }
         } catch (Exception e) {
             LOGGER.error("Error processing RefreshPlatformsPacket", e);
             // Don't crash the client, but log the error
         }
     }
-} 
+}

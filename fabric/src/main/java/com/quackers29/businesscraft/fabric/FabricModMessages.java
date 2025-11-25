@@ -68,58 +68,60 @@ public class FabricModMessages {
 
         try {
             // Register server-to-server packets (PLAY_TO_SERVER)
-            registerServerPacket("toggle_tourist_spawning", ToggleTouristSpawningPacket.class);
-            registerServerPacket("set_town_name", SetTownNamePacket.class);
-            registerServerPacket("set_search_radius", SetSearchRadiusPacket.class);
-            registerServerPacket("set_path_creation_mode", SetPathCreationModePacket.class);
-            registerServerPacket("add_platform", AddPlatformPacket.class);
-            registerServerPacket("delete_platform", DeletePlatformPacket.class);
-            registerServerPacket("set_platform_enabled", SetPlatformEnabledPacket.class);
-            registerServerPacket("set_platform_path", SetPlatformPathPacket.class);
-            registerServerPacket("reset_platform_path", ResetPlatformPathPacket.class);
-            registerServerPacket("set_platform_path_creation_mode", SetPlatformPathCreationModePacket.class);
-            registerServerPacket("set_platform_destination", SetPlatformDestinationPacket.class);
-            registerServerPacket("open_destinations_ui", OpenDestinationsUIPacket.class);
-            registerServerPacket("player_exit_ui", PlayerExitUIPacket.class);
-            registerServerPacket("boundary_sync_request", BoundarySyncRequestPacket.class);
-            registerServerPacket("open_town_interface", OpenTownInterfacePacket.class);
+            registerServerPacket("toggle_tourist_spawning_packet", ToggleTouristSpawningPacket.class);
+            registerServerPacket("set_town_name_packet", SetTownNamePacket.class);
+            registerServerPacket("set_search_radius_packet", SetSearchRadiusPacket.class);
+            registerServerPacket("set_path_creation_mode_packet", SetPathCreationModePacket.class);
+            registerServerPacket("add_platform_packet", AddPlatformPacket.class);
+            registerServerPacket("delete_platform_packet", DeletePlatformPacket.class);
+            registerServerPacket("set_platform_enabled_packet", SetPlatformEnabledPacket.class);
+            registerServerPacket("set_platform_path_packet", SetPlatformPathPacket.class);
+            registerServerPacket("reset_platform_path_packet", ResetPlatformPathPacket.class);
+            registerServerPacket("set_platform_path_creation_mode_packet", SetPlatformPathCreationModePacket.class);
+            registerServerPacket("set_platform_destination_packet", SetPlatformDestinationPacket.class);
+            registerServerPacket("open_destinations_u_i_packet", OpenDestinationsUIPacket.class);
+            registerServerPacket("player_exit_u_i_packet", PlayerExitUIPacket.class);
+            registerServerPacket("boundary_sync_request_packet", BoundarySyncRequestPacket.class);
+            registerServerPacket("open_town_interface_packet", OpenTownInterfacePacket.class);
             registerServerPacket("open_payment_board_packet", OpenPaymentBoardPacket.class);
-            registerServerPacket("request_town_map_data", RequestTownMapDataPacket.class);
-            registerServerPacket("request_town_platform_data", RequestTownPlatformDataPacket.class);
-            registerServerPacket("trade_resource", TradeResourcePacket.class);
-            registerServerPacket("communal_storage", CommunalStoragePacket.class);
-            registerServerPacket("payment_board_request", PaymentBoardRequestPacket.class);
-            registerServerPacket("payment_board_claim", PaymentBoardClaimPacket.class);
-            registerServerPacket("buffer_storage", BufferStoragePacket.class);
-            registerServerPacket("personal_storage", PersonalStoragePacket.class);
-            registerServerPacket("personal_storage_request", PersonalStorageRequestPacket.class);
-            registerServerPacket("request_town_data", RequestTownDataPacket.class);
+            registerServerPacket("request_town_map_data_packet", RequestTownMapDataPacket.class);
+            registerServerPacket("request_town_platform_data_packet", RequestTownPlatformDataPacket.class);
+            registerServerPacket("trade_resource_packet", TradeResourcePacket.class);
+            registerServerPacket("communal_storage_packet", CommunalStoragePacket.class);
+            registerServerPacket("payment_board_request_packet", PaymentBoardRequestPacket.class);
+            registerServerPacket("payment_board_claim_packet", PaymentBoardClaimPacket.class);
+            registerServerPacket("buffer_storage_packet", BufferStoragePacket.class);
+            registerServerPacket("personal_storage_packet", PersonalStoragePacket.class);
+            registerServerPacket("personal_storage_request_packet", PersonalStorageRequestPacket.class);
+            registerServerPacket("request_town_data_packet", RequestTownDataPacket.class);
 
             // Register client-to-client packets (PLAY_TO_CLIENT) - these need to be
             // registered on both sides
             // Server side registration for sending
-            registerClientPacketForServer("refresh_platforms", RefreshPlatformsPacket.class);
-            registerClientPacketForServer("refresh_destinations", RefreshDestinationsPacket.class);
-            registerClientPacketForServer("platform_visualization", PlatformVisualizationPacket.class);
-            registerClientPacketForServer("boundary_sync_response", BoundarySyncResponsePacket.class);
-            registerClientPacketForServer("town_map_data_response", TownMapDataResponsePacket.class);
-            registerClientPacketForServer("town_platform_data_response", TownPlatformDataResponsePacket.class);
-            registerClientPacketForServer("communal_storage_response", CommunalStorageResponsePacket.class);
-            registerClientPacketForServer("payment_board_response", PaymentBoardResponsePacket.class);
-            registerClientPacketForServer("buffer_storage_response", BufferStorageResponsePacket.class);
-            registerClientPacketForServer("buffer_slot_storage_response", BufferSlotStorageResponsePacket.class);
-            registerClientPacketForServer("personal_storage_response", PersonalStorageResponsePacket.class);
-            registerClientPacketForServer("payment_result", PaymentResultPacket.class);
-            registerClientPacketForServer("town_data_response", TownDataResponsePacket.class);
+            registerClientPacketForServer("refresh_platforms_packet", RefreshPlatformsPacket.class);
+            registerClientPacketForServer("refresh_destinations_packet", RefreshDestinationsPacket.class);
+            registerClientPacketForServer("platform_visualization_packet", PlatformVisualizationPacket.class);
+            registerClientPacketForServer("boundary_sync_response_packet", BoundarySyncResponsePacket.class);
+            registerClientPacketForServer("town_map_data_response_packet", TownMapDataResponsePacket.class);
+            registerClientPacketForServer("town_platform_data_response_packet", TownPlatformDataResponsePacket.class);
+            registerClientPacketForServer("communal_storage_response_packet", CommunalStorageResponsePacket.class);
+            registerClientPacketForServer("payment_board_response_packet", PaymentBoardResponsePacket.class);
+            registerClientPacketForServer("buffer_storage_response_packet", BufferStorageResponsePacket.class);
+            registerClientPacketForServer("buffer_slot_storage_response_packet", BufferSlotStorageResponsePacket.class);
+            registerClientPacketForServer("personal_storage_response_packet", PersonalStorageResponsePacket.class);
+            registerClientPacketForServer("payment_result_packet", PaymentResultPacket.class);
+            registerClientPacketForServer("town_data_response_packet", TownDataResponsePacket.class);
 
             // Client side registration for receiving - will be done in FabricClientSetup
             // Store identifiers for client-side registration
             CLIENT_PACKET_IDS = new String[] {
-                    "refresh_platforms", "refresh_destinations", "platform_visualization",
-                    "boundary_sync_response", "town_map_data_response", "town_platform_data_response",
-                    "communal_storage_response", "payment_board_response", "buffer_storage_response",
-                    "buffer_slot_storage_response", "personal_storage_response", "payment_result",
-                    "town_data_response"
+                    "refresh_platforms_packet", "refresh_destinations_packet", "platform_visualization_packet",
+                    "boundary_sync_response_packet", "town_map_data_response_packet",
+                    "town_platform_data_response_packet",
+                    "communal_storage_response_packet", "payment_board_response_packet",
+                    "buffer_storage_response_packet",
+                    "buffer_slot_storage_response_packet", "personal_storage_response_packet", "payment_result_packet",
+                    "town_data_response_packet"
             };
             CLIENT_PACKET_CLASSES = new Class[] {
                     RefreshPlatformsPacket.class, RefreshDestinationsPacket.class, PlatformVisualizationPacket.class,
