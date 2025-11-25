@@ -16,6 +16,7 @@ import net.minecraft.world.level.Level;
 import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.town.Town;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 
 /**
  * Packet for toggling platform enabled state
@@ -82,6 +83,16 @@ public class SetPlatformEnabledPacket {
                     
                     // Sync the town interface
                     townInterface.setChanged();
+                    
+                    // NEW: Explicitly send BE data packet to the requesting player
+                    if (level instanceof ServerLevel serverLevel) {
+                        ClientboundBlockEntityDataPacket bePacket = ClientboundBlockEntityDataPacket.create(townInterface);
+                        player.connection.send(bePacket);
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                            "Sent explicit BE sync packet to {} for platform {} enabled={} at {}", 
+                            player.getName().getString(), platformId, enabled, blockPos);
+                    }
+                    
                     level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), 
                         level.getBlockState(blockPos), 3);
                     

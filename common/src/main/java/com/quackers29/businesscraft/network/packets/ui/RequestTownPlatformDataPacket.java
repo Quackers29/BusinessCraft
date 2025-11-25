@@ -91,15 +91,13 @@ public class RequestTownPlatformDataPacket {
                     response.setTownInfo(town.getName(), town.getPopulation(), town.getTouristCount(), boundaryRadius);
 
                     for (Platform platform : platforms) {
-                        if (platform.isComplete()) { // Only send platforms with both start and end positions
-                            response.addPlatform(
-                                    platform.getId(),
-                                    platform.getName(),
-                                    platform.isEnabled(),
-                                    platform.getStartPos(),
-                                    platform.getEndPos(),
-                                    platform.getEnabledDestinations());
-                        }
+                        response.addPlatform(
+                                platform.getId(),
+                                platform.getName(),
+                                platform.isEnabled(),
+                                platform.getStartPos(),
+                                platform.getEndPos(),
+                                platform.getEnabledDestinations());
                     }
 
                     // Send response back to client

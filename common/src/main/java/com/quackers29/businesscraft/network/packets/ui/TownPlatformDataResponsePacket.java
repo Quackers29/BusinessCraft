@@ -86,9 +86,19 @@ public class TownPlatformDataResponsePacket {
             buf.writeUUID(platform.id);
             buf.writeUtf(platform.name, MAX_STRING_LENGTH);
             buf.writeBoolean(platform.enabled);
-            buf.writeBlockPos(platform.startPos);
-            buf.writeBlockPos(platform.endPos);
-
+            
+            // Nullable startPos
+            buf.writeBoolean(platform.startPos != null);
+            if (platform.startPos != null) {
+                buf.writeBlockPos(platform.startPos);
+            }
+            
+            // Nullable endPos
+            buf.writeBoolean(platform.endPos != null);
+            if (platform.endPos != null) {
+                buf.writeBlockPos(platform.endPos);
+            }
+            
             // Write enabled destinations
             buf.writeInt(platform.enabledDestinations.size());
             for (UUID destId : platform.enabledDestinations) {
@@ -126,16 +136,22 @@ public class TownPlatformDataResponsePacket {
             UUID platformId = buf.readUUID();
             String name = buf.readUtf(MAX_STRING_LENGTH);
             boolean enabled = buf.readBoolean();
-            BlockPos startPos = buf.readBlockPos();
-            BlockPos endPos = buf.readBlockPos();
-
+            
+            // Nullable startPos
+            boolean hasStartPos = buf.readBoolean();
+            BlockPos startPos = hasStartPos ? buf.readBlockPos() : null;
+            
+            // Nullable endPos
+            boolean hasEndPos = buf.readBoolean();
+            BlockPos endPos = hasEndPos ? buf.readBlockPos() : null;
+            
             // Read enabled destinations
             int destCount = buf.readInt();
             Set<UUID> enabledDestinations = new java.util.HashSet<>();
             for (int j = 0; j < destCount; j++) {
                 enabledDestinations.add(buf.readUUID());
             }
-
+            
             packet.addPlatform(platformId, name, enabled, startPos, endPos, enabledDestinations);
         }
 

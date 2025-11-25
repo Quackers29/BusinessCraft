@@ -13,6 +13,7 @@ import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 import net.minecraft.world.level.Level;
 import com.quackers29.businesscraft.debug.DebugConfig;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 
 /**
  * Packet for deleting a platform from a town
@@ -72,6 +73,16 @@ public class DeletePlatformPacket {
                     
                     // Sync the town block
                     townInterface.setChanged();
+                    
+                    // NEW: Explicitly send BE data packet to the requesting player
+                    if (level instanceof ServerLevel serverLevel) {
+                        ClientboundBlockEntityDataPacket bePacket = ClientboundBlockEntityDataPacket.create(townInterface);
+                        player.connection.send(bePacket);
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                            "Sent explicit BE sync packet to {} for updated platforms at {}", 
+                            player.getName().getString(), blockPos);
+                    }
+                    
                     level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), 
                         level.getBlockState(blockPos), 3);
                     

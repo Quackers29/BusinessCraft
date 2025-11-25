@@ -49,8 +49,12 @@ public class ClientSyncHelper {
         
         // Add all resources to the tag
         provider.getAllResources().forEach((item, count) -> {
-            String itemKey = PlatformAccess.getRegistry().getItemKey(item).toString();
-            resourcesTag.putInt(itemKey, count);
+            Object keyObj = PlatformAccess.getRegistry().getItemKey(item);
+            if (keyObj != null) {
+                resourcesTag.putInt(keyObj.toString(), count);
+            } else {
+                LOGGER.warn("Skipping invalid item {} in resources sync (null registry key)", item);
+            }
         });
         
         // Add resources tag to the update tag
@@ -59,8 +63,12 @@ public class ClientSyncHelper {
         // Add communal storage data
         CompoundTag communalTag = new CompoundTag();
         provider.getAllCommunalStorageItems().forEach((item, count) -> {
-            String itemKey = PlatformAccess.getRegistry().getItemKey(item).toString();
-            communalTag.putInt(itemKey, count);
+            Object keyObj = PlatformAccess.getRegistry().getItemKey(item);
+            if (keyObj != null) {
+                communalTag.putInt(keyObj.toString(), count);
+            } else {
+                LOGGER.warn("Skipping invalid item {} in communal storage sync (null registry key)", item);
+            }
         });
         tag.put("clientCommunalStorage", communalTag);
     }

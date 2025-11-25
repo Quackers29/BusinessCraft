@@ -93,12 +93,15 @@ public class RefreshPlatformsPacket {
                                 "Town ID is null, skipping cache clear");
                     }
 
-                    // If the PlatformManagementScreenV2 is open, it will be updated when the
-                    // response packet arrives
+                    // If the PlatformManagementScreenV2 is open, force refresh with BE-synced data
                     Object currentScreen = clientHelper.getCurrentScreen();
-                    if (currentScreen instanceof PlatformManagementScreenV2) {
+                    if (currentScreen instanceof PlatformManagementScreenV2 screenV2) {
                         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                                "PlatformManagementScreenV2 is open, fresh data will be applied when response arrives");
+                            "PlatformManagementScreenV2 open at {}, forcing refreshPlatformData(true)", pos);
+                        screenV2.refreshPlatformData(true);  // Force bypass toggle protection
+                    } else {
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                            "PlatformManagementScreenV2 is open, fresh data will be applied when response arrives");
                     }
                     // Additional handling for other screens can be added here if needed
                 } else {
