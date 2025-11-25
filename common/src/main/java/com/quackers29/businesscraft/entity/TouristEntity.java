@@ -398,6 +398,10 @@ public class TouristEntity extends Villager {
         return Villager.createAttributes();
     }
     
+    public static TouristEntity create(EntityType<TouristEntity> entityType, Level level) {
+        return new TouristEntity(entityType, level);
+    }
+    
     
     @Override
     public boolean startRiding(Entity entity, boolean force) {

@@ -14,6 +14,9 @@ import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.world.inventory.MenuType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.minecraft.client.renderer.entity.VillagerRenderer;
+import com.quackers29.businesscraft.fabric.init.FabricModEntityTypes;
 
 /**
  * Fabric client-side initialization
@@ -57,6 +60,9 @@ public class FabricClientSetup implements ClientModInitializer {
 
         // Initialize key handlers
         initializeKeyHandlers();
+
+        // Register entity renderers
+        EntityRendererRegistry.register(FabricModEntityTypes.TOURIST, VillagerRenderer::new);
 
         LOGGER.info("BusinessCraft Fabric client setup complete");
     }

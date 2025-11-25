@@ -274,6 +274,14 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     }
 
     @Override
+    public void setLevel(Level level) {
+        super.setLevel(level);
+        if (bufferManager != null) {
+            bufferManager.setLevel(level);
+        }
+    }
+
+    @Override
     public void onLoad() {
         super.onLoad();
 
@@ -366,6 +374,8 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
             updateFromTownProvider();
             // Delegate buffer synchronization to manager
             if (bufferManager != null) {
+                // Ensure buffer manager has level (safety check)
+                bufferManager.setLevel(level);
                 bufferManager.tick();
             }
         }
