@@ -141,6 +141,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
      */
     private long lastMarkDirtyTime = 0;
     private static final long MARK_DIRTY_COOLDOWN_MS = 2000; // 2 seconds between calls
+    private long lastSearchRadiusLogTime = 0; // For rate-limiting debug logs
 
     // Add a new TouristVehicleManager instance
     private final TouristVehicleManager touristVehicleManager = new TouristVehicleManager();
@@ -563,6 +564,9 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     public void handleUpdateTag(CompoundTag tag) {
         super.handleUpdateTag(tag);
 
+        LOGGER.info("[PLATFORM] handleUpdateTag called on client, tag contains platforms: {}",
+                tag.contains("platforms"));
+
         // Handle name updates
         if (tag.contains("name")) {
             String newName = tag.getString("name");
@@ -754,8 +758,15 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     public int getSearchRadius() {
         // Use default if not yet initialized from NBT
         int result = searchRadius > 0 ? searchRadius : DEFAULT_SEARCH_RADIUS;
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "getSearchRadius() field={}, result={}", searchRadius,
-                result);
+
+        // Rate-limit debug logging - only log once per second
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastSearchRadiusLogTime > 1000) {
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "getSearchRadius() field={}, result={}",
+                    searchRadius, result);
+            lastSearchRadiusLogTime = currentTime;
+        }
+
         return result;
     }
 
@@ -978,6 +989,17 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
      */
     public List<Platform> getPlatforms() {
         return platformManager.getPlatforms(level != null && level.isClientSide());
+    }
+
+    /**
+     * Updates client-side platform data from a packet
+     * This is called when receiving platform data from the server
+     */
+    public void updateClientPlatformsFromPacket(net.minecraft.nbt.CompoundTag tag) {
+        if (level != null && level.isClientSide()) {
+            platformManager.updateClientPlatforms(tag);
+            LOGGER.info("[PLATFORM] TownInterfaceEntity updated client platforms from packet");
+        }
     }
 
     /**

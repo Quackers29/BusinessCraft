@@ -130,20 +130,7 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
 
         Object poseStackObj = renderHelper.getPoseStack(renderEvent);
         if (!(poseStackObj instanceof com.mojang.blaze3d.vertex.PoseStack poseStack)) {
-            // Log failure to get PoseStack
-            long time = System.currentTimeMillis();
-            if (time % 1000 < 50) {
-                LOGGER.warn("Failed to get PoseStack from render event. Object type: {}",
-                        poseStackObj != null ? poseStackObj.getClass().getName() : "null");
-            }
             return;
-        }
-
-        // Log successful render attempt occasionally
-        long time = System.currentTimeMillis();
-        if (time % 1000 < 50) {
-            LOGGER.info("Rendering boundary at {} with radius {}", visualization.getPosition(),
-                    boundaryData.getBoundaryRadius());
         }
 
         // Simple green circle - no color coding

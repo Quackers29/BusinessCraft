@@ -86,19 +86,19 @@ public class TownPlatformDataResponsePacket {
             buf.writeUUID(platform.id);
             buf.writeUtf(platform.name, MAX_STRING_LENGTH);
             buf.writeBoolean(platform.enabled);
-            
+
             // Nullable startPos
             buf.writeBoolean(platform.startPos != null);
             if (platform.startPos != null) {
                 buf.writeBlockPos(platform.startPos);
             }
-            
+
             // Nullable endPos
             buf.writeBoolean(platform.endPos != null);
             if (platform.endPos != null) {
                 buf.writeBlockPos(platform.endPos);
             }
-            
+
             // Write enabled destinations
             buf.writeInt(platform.enabledDestinations.size());
             for (UUID destId : platform.enabledDestinations) {
@@ -136,22 +136,22 @@ public class TownPlatformDataResponsePacket {
             UUID platformId = buf.readUUID();
             String name = buf.readUtf(MAX_STRING_LENGTH);
             boolean enabled = buf.readBoolean();
-            
+
             // Nullable startPos
             boolean hasStartPos = buf.readBoolean();
             BlockPos startPos = hasStartPos ? buf.readBlockPos() : null;
-            
+
             // Nullable endPos
             boolean hasEndPos = buf.readBoolean();
             BlockPos endPos = hasEndPos ? buf.readBlockPos() : null;
-            
+
             // Read enabled destinations
             int destCount = buf.readInt();
             Set<UUID> enabledDestinations = new java.util.HashSet<>();
             for (int j = 0; j < destCount; j++) {
                 enabledDestinations.add(buf.readUUID());
             }
-            
+
             packet.addPlatform(platformId, name, enabled, startPos, endPos, enabledDestinations);
         }
 
@@ -177,8 +177,67 @@ public class TownPlatformDataResponsePacket {
                             townInfo.touristCount);
                 }
 
-                // Try to refresh any open town map modals
+                // CRITICAL FIX: Also update the TownInterfaceEntity's platform manager
+                // Find the town block entity and sync the platform data to it
                 com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+                if (clientHelper != null) {
+                    Object levelObj = clientHelper.getClientLevel();
+                    if (levelObj instanceof net.minecraft.world.level.Level level) {
+                        // Search for TownInterfaceEntity with this townId
+                        // This is a bit expensive but necessary for visualization to work
+                        BlockPos foundPos = findTownBlockPos(level, townId);
+                        if (foundPos != null) {
+                            net.minecraft.world.level.block.entity.BlockEntity be = level.getBlockEntity(foundPos);
+                            if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity townEntity) {
+                                // Build NBT tag with platform data
+                                net.minecraft.nbt.CompoundTag platformTag = new net.minecraft.nbt.CompoundTag();
+                                net.minecraft.nbt.ListTag platformsTag = new net.minecraft.nbt.ListTag();
+
+                                for (PlatformInfo platform : platforms.values()) {
+                                    net.minecraft.nbt.CompoundTag pTag = new net.minecraft.nbt.CompoundTag();
+                                    pTag.putUUID("Id", platform.id); // Capital I
+                                    pTag.putString("Name", platform.name); // Capital N
+                                    pTag.putBoolean("Enabled", platform.enabled); // Capital E
+
+                                    // Use StartX/Y/Z and EndX/Y/Z format instead of long
+                                    if (platform.startPos != null) {
+                                        pTag.putInt("StartX", platform.startPos.getX());
+                                        pTag.putInt("StartY", platform.startPos.getY());
+                                        pTag.putInt("StartZ", platform.startPos.getZ());
+                                    }
+                                    if (platform.endPos != null) {
+                                        pTag.putInt("EndX", platform.endPos.getX());
+                                        pTag.putInt("EndY", platform.endPos.getY());
+                                        pTag.putInt("EndZ", platform.endPos.getZ());
+                                    }
+
+                                    // Add enabled destinations in the correct format
+                                    net.minecraft.nbt.CompoundTag destTag = new net.minecraft.nbt.CompoundTag();
+                                    destTag.putInt("Count", platform.enabledDestinations.size());
+                                    int destIndex = 0;
+                                    for (java.util.UUID destId : platform.enabledDestinations) {
+                                        destTag.putUUID("Dest" + destIndex, destId);
+                                        destIndex++;
+                                    }
+                                    pTag.put("Destinations", destTag);
+
+                                    platformsTag.add(pTag);
+                                }
+
+                                platformTag.put("platforms", platformsTag);
+
+                                // Update the platform manager with this data
+                                townEntity.updateClientPlatformsFromPacket(platformTag);
+
+                                LOGGER.info(
+                                        "[PLATFORM] Updated TownInterfaceEntity at {} with {} platforms from packet",
+                                        foundPos, platforms.size());
+                            }
+                        }
+                    }
+                }
+
+                // Try to refresh any open town map modals
                 if (clientHelper != null) {
                     Object currentScreen = clientHelper.getCurrentScreen();
                     if (currentScreen instanceof com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal) {
@@ -199,6 +258,45 @@ public class TownPlatformDataResponsePacket {
             }
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
+    }
+
+    /**
+     * Helper method to find the BlockPos of a TownInterfaceEntity with the given
+     * townId
+     */
+    private BlockPos findTownBlockPos(net.minecraft.world.level.Level level, java.util.UUID townId) {
+        // Search nearby chunks for the town block
+        // This is called on the client so we can't search the entire world
+        // We'll search within render distance
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null)
+            return null;
+
+        Object playerObj = clientHelper.getClientPlayer();
+        if (!(playerObj instanceof net.minecraft.world.entity.player.Player player))
+            return null;
+
+        BlockPos playerPos = player.blockPosition();
+        int searchRadius = 128; // Search within 128 blocks
+
+        for (int x = -searchRadius; x <= searchRadius; x += 16) {
+            for (int z = -searchRadius; z <= searchRadius; z += 16) {
+                BlockPos chunkPos = playerPos.offset(x, 0, z);
+                net.minecraft.world.level.chunk.ChunkAccess chunk = level.getChunk(chunkPos);
+                if (chunk != null) {
+                    for (BlockPos pos : chunk.getBlockEntitiesPos()) {
+                        net.minecraft.world.level.block.entity.BlockEntity be = level.getBlockEntity(pos);
+                        if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity townEntity) {
+                            if (townId.equals(townEntity.getTownId())) {
+                                return pos;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
