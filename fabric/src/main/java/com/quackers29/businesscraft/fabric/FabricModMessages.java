@@ -79,8 +79,8 @@ public class FabricModMessages {
             registerServerPacket("reset_platform_path_packet", ResetPlatformPathPacket.class);
             registerServerPacket("set_platform_path_creation_mode_packet", SetPlatformPathCreationModePacket.class);
             registerServerPacket("set_platform_destination_packet", SetPlatformDestinationPacket.class);
-            registerServerPacket("open_destinations_u_i_packet", OpenDestinationsUIPacket.class);
-            registerServerPacket("player_exit_u_i_packet", PlayerExitUIPacket.class);
+            registerServerPacket("open_destinations_uipacket", OpenDestinationsUIPacket.class);
+            registerServerPacket("player_exit_uipacket", PlayerExitUIPacket.class);
             registerServerPacket("boundary_sync_request_packet", BoundarySyncRequestPacket.class);
             registerServerPacket("open_town_interface_packet", OpenTownInterfacePacket.class);
             registerServerPacket("open_payment_board_packet", OpenPaymentBoardPacket.class);

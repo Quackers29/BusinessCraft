@@ -247,6 +247,16 @@ public class FabricEventCallbackHandler {
             }
             return InteractionResult.PASS;
         });
+
+        // World Render Event (After Translucent) - Critical for platform/boundary
+        // visualization
+        net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.AFTER_TRANSLUCENT.register(context -> {
+            for (EventCallbacks.RenderLevelCallback callback : renderLevelCallbacks) {
+                // Pass "AFTER_TRANSLUCENT_BLOCKS" to match the common RenderHelper.RenderStage
+                // constant
+                callback.onRenderLevel("AFTER_TRANSLUCENT_BLOCKS", context.tickDelta(), context);
+            }
+        });
     }
 
     // Registration methods
