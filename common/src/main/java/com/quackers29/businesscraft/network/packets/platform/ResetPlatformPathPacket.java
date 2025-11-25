@@ -29,6 +29,14 @@ public class ResetPlatformPathPacket {
         buf.writeUUID(msg.platformId);
     }
     
+    /**
+     * Serialize packet data for Fabric networking
+     */
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeBlockPos(townInterfacePos);
+        buf.writeUUID(platformId);
+    }
+    
     public static ResetPlatformPathPacket decode(FriendlyByteBuf buf) {
         return new ResetPlatformPathPacket(
             buf.readBlockPos(),

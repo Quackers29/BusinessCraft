@@ -20,39 +20,44 @@ import java.util.function.Consumer;
  * Refactored to use BaseModalManager for common functionality.
  */
 public class StorageModalManager extends BaseModalManager {
-    
+
     /**
-     * Creates and shows a payment board screen using proper Minecraft container system.
+     * Creates and shows a payment board screen using proper Minecraft container
+     * system.
      * 
-     * @param parentScreen The parent screen to return to
-     * @param blockPos The position of the town block
-     * @param townMenu The town interface menu for accessing storage data
-     * @param targetTab The tab to activate when returning
+     * @param parentScreen   The parent screen to return to
+     * @param blockPos       The position of the town block
+     * @param townMenu       The town interface menu for accessing storage data
+     * @param targetTab      The tab to activate when returning
      * @param onScreenClosed Optional callback when screen is closed
      */
     public static void showStorageModal(
-            Screen parentScreen, 
-            BlockPos blockPos, 
+            Screen parentScreen,
+            BlockPos blockPos,
             TownInterfaceMenu townMenu,
             String targetTab,
             Consumer<BCModalInventoryScreen<StorageMenu>> onScreenClosed) {
-        
+
         // Validate inputs
         validateParentScreen(parentScreen, "parentScreen");
-        
+
         // Get the player
         com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
         if (clientHelper == null) {
             throw new IllegalStateException("ClientHelper not available when creating payment board screen");
         }
-        
+
         Object playerObj = clientHelper.getClientPlayer();
         if (!(playerObj instanceof Player player)) {
             throw new IllegalStateException("Player cannot be null when creating payment board screen");
         }
-        
+
         // Send packet to server to open Payment Board using proper container system
         // This ensures proper server-client synchronization via NetworkHooks
+        org.slf4j.LoggerFactory.getLogger(StorageModalManager.class)
+                .info("Sending OpenPaymentBoardPacket to server for position: {}", blockPos);
         PlatformAccess.getNetworkMessages().sendToServer(new OpenPaymentBoardPacket(blockPos));
+        org.slf4j.LoggerFactory.getLogger(StorageModalManager.class)
+                .info("OpenPaymentBoardPacket sent successfully");
     }
-} 
+}

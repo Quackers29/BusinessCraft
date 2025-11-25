@@ -57,6 +57,21 @@ public class FabricModMenuTypes {
             FabricMenuTypeHelper.setTownInterfaceMenuType(townInterfaceMenuType);
 
             LOGGER.info("Registered TownInterfaceMenu");
+
+            // Register PaymentBoardMenu using ExtendedScreenHandlerType
+            @SuppressWarnings("unchecked")
+            ExtendedScreenHandlerType<com.quackers29.businesscraft.menu.PaymentBoardMenu> paymentBoardMenuType = (ExtendedScreenHandlerType<com.quackers29.businesscraft.menu.PaymentBoardMenu>) (Object) ScreenHandlerRegistry
+                    .registerExtended(
+                            new ResourceLocation(MOD_ID, "payment_board_menu"),
+                            (int syncId, net.minecraft.world.entity.player.Inventory inventory,
+                                    net.minecraft.network.FriendlyByteBuf buf) -> new com.quackers29.businesscraft.menu.PaymentBoardMenu(
+                                            syncId,
+                                            inventory, buf));
+
+            // Store in FabricMenuTypeHelper for PlatformAccess
+            FabricMenuTypeHelper.setPaymentBoardMenuType(paymentBoardMenuType);
+
+            LOGGER.info("Registered PaymentBoardMenu");
         } catch (Exception e) {
             LOGGER.error("Failed to register Fabric menu types: " + e.getMessage(), e);
             throw e;

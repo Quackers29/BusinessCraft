@@ -34,6 +34,14 @@ public class DeletePlatformPacket {
         buf.writeBlockPos(blockPos);
         buf.writeUUID(platformId);
     }
+
+    /**
+     * Serialize packet data for Fabric networking
+     */
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeBlockPos(blockPos);
+        buf.writeUUID(platformId);
+    }
     
     /**
      * Decode the packet data from the buffer

@@ -42,6 +42,16 @@ public class SetPlatformPathPacket {
     }
     
     /**
+     * Serialize packet data for Fabric networking
+     */
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeBlockPos(blockPos);
+        buf.writeUUID(platformId);
+        buf.writeBlockPos(startPos);
+        buf.writeBlockPos(endPos);
+    }
+    
+    /**
      * Decode the packet data from the buffer
      */
     public static SetPlatformPathPacket decode(FriendlyByteBuf buf) {

@@ -63,6 +63,10 @@ public class FabricNetworkHelper implements NetworkHelper {
 
     @Override
     public Object getSender(Object context) {
+        // In Fabric, the context is the ServerPlayer directly
+        if (context instanceof ServerPlayer) {
+            return context;
+        }
         return null;
     }
 

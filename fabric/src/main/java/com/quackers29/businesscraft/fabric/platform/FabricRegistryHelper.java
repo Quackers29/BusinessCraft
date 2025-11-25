@@ -3,8 +3,10 @@ package com.quackers29.businesscraft.fabric.platform;
 import com.quackers29.businesscraft.api.RegistryHelper;
 
 /**
- * Fabric implementation of RegistryHelper using Object types for platform-agnostic interface.
- * Actual Minecraft-specific registration logic is handled in Fabric mod initialization.
+ * Fabric implementation of RegistryHelper using Object types for
+ * platform-agnostic interface.
+ * Actual Minecraft-specific registration logic is handled in Fabric mod
+ * initialization.
  */
 public class FabricRegistryHelper implements RegistryHelper {
 
@@ -54,8 +56,10 @@ public class FabricRegistryHelper implements RegistryHelper {
     }
 
     /**
-     * Platform-specific registry delegate using reflection to avoid compile-time dependencies.
-     * The actual Minecraft-specific code will be implemented in a separate runtime-loaded class.
+     * Platform-specific registry delegate using reflection to avoid compile-time
+     * dependencies.
+     * The actual Minecraft-specific code will be implemented in a separate
+     * runtime-loaded class.
      */
     private static class FabricRegistryDelegate {
         // Use reflection to avoid compile-time Minecraft dependencies
@@ -110,15 +114,17 @@ public class FabricRegistryHelper implements RegistryHelper {
             try {
                 // Use Fabric's registry system (BuiltInRegistries.ITEM)
                 ClassLoader classLoader = FabricRegistryDelegate.class.getClassLoader();
-                Class<?> registryClass = classLoader.loadClass("net.minecraft.core.Registry");
-                Class<?> builtInRegistriesClass = classLoader.loadClass("net.minecraft.core.registries.BuiltInRegistries");
-                
+                Class<?> builtInRegistriesClass = classLoader
+                        .loadClass("net.minecraft.core.registries.BuiltInRegistries");
+                Class<?> resourceLocationClass = classLoader.loadClass("net.minecraft.resources.ResourceLocation");
+
                 // Get the ITEM registry
                 Object itemRegistry = builtInRegistriesClass.getField("ITEM").get(null);
-                
+
                 // Get the item from the registry using the location (ResourceLocation)
-                return registryClass.getMethod("get", Object.class, Object.class)
-                    .invoke(null, itemRegistry, location);
+                // Registry.get(ResourceLocation) is the correct method
+                return itemRegistry.getClass().getMethod("get", resourceLocationClass)
+                        .invoke(itemRegistry, location);
             } catch (Exception e) {
                 System.err.println("Error in getItem: " + e.getMessage());
                 e.printStackTrace();
@@ -130,15 +136,17 @@ public class FabricRegistryHelper implements RegistryHelper {
             try {
                 // Use Fabric's registry system (BuiltInRegistries.ITEM)
                 ClassLoader classLoader = FabricRegistryDelegate.class.getClassLoader();
-                Class<?> registryClass = classLoader.loadClass("net.minecraft.core.Registry");
-                Class<?> builtInRegistriesClass = classLoader.loadClass("net.minecraft.core.registries.BuiltInRegistries");
-                
+                Class<?> builtInRegistriesClass = classLoader
+                        .loadClass("net.minecraft.core.registries.BuiltInRegistries");
+                Class<?> itemClass = classLoader.loadClass("net.minecraft.world.item.Item");
+
                 // Get the ITEM registry
                 Object itemRegistry = builtInRegistriesClass.getField("ITEM").get(null);
-                
+
                 // Get the key (ResourceLocation) for the item
-                return registryClass.getMethod("getKey", Object.class, Object.class)
-                    .invoke(null, itemRegistry, item);
+                // Registry.getKey(Item) is the correct method
+                return itemRegistry.getClass().getMethod("getKey", itemClass)
+                        .invoke(itemRegistry, item);
             } catch (Exception e) {
                 System.err.println("Error in getItemKey: " + e.getMessage());
                 e.printStackTrace();

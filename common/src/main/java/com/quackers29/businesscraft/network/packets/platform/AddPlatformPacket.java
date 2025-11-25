@@ -32,6 +32,13 @@ public class AddPlatformPacket {
     }
     
     /**
+     * Serialize packet data for Fabric networking (toBytes)
+     */
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeBlockPos(blockPos);
+    }
+    
+    /**
      * Decode the packet data from the buffer
      */
     public static AddPlatformPacket decode(FriendlyByteBuf buf) {

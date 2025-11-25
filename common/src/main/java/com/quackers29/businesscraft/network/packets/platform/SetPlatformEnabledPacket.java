@@ -42,6 +42,15 @@ public class SetPlatformEnabledPacket {
     }
     
     /**
+     * Serialize packet data for Fabric networking
+     */
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeBlockPos(blockPos);
+        buf.writeUUID(platformId);
+        buf.writeBoolean(enabled);
+    }
+    
+    /**
      * Decode the packet data from the buffer
      */
     public static SetPlatformEnabledPacket decode(FriendlyByteBuf buf) {

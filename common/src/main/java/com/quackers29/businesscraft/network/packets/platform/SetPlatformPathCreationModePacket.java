@@ -40,6 +40,15 @@ public class SetPlatformPathCreationModePacket {
         buf.writeBoolean(mode);
     }
 
+    /**
+     * Serialize packet data for Fabric networking
+     */
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeBlockPos(pos);
+        buf.writeUUID(platformId);
+        buf.writeBoolean(mode);
+    }
+
     // Static decode method for Forge network registration
     public static SetPlatformPathCreationModePacket decode(FriendlyByteBuf buf) {
         return new SetPlatformPathCreationModePacket(buf);

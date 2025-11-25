@@ -49,6 +49,16 @@ public class SetPlatformDestinationPacket {
         buf.writeBoolean(enabled);
     }
 
+    /**
+     * Serialize packet data for Fabric networking
+     */
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeBlockPos(pos);
+        buf.writeUUID(platformId);
+        buf.writeUUID(townId);
+        buf.writeBoolean(enabled);
+    }
+
     // Static decode method for Forge network registration
     public static SetPlatformDestinationPacket decode(FriendlyByteBuf buf) {
         return new SetPlatformDestinationPacket(buf);

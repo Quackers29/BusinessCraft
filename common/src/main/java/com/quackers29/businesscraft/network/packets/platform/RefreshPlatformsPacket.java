@@ -31,6 +31,13 @@ public class RefreshPlatformsPacket {
         buf.writeBlockPos(pos);
     }
 
+    /**
+     * Serialize packet data for Fabric networking (S2C)
+     */
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeBlockPos(pos);
+    }
+
     // Static decode method for Forge network registration
     public static RefreshPlatformsPacket decode(FriendlyByteBuf buf) {
         return new RefreshPlatformsPacket(buf);

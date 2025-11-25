@@ -83,7 +83,7 @@ public class FabricModMessages {
             registerServerPacket("player_exit_ui", PlayerExitUIPacket.class);
             registerServerPacket("boundary_sync_request", BoundarySyncRequestPacket.class);
             registerServerPacket("open_town_interface", OpenTownInterfacePacket.class);
-            registerServerPacket("open_payment_board", OpenPaymentBoardPacket.class);
+            registerServerPacket("open_payment_board_packet", OpenPaymentBoardPacket.class);
             registerServerPacket("request_town_map_data", RequestTownMapDataPacket.class);
             registerServerPacket("request_town_platform_data", RequestTownPlatformDataPacket.class);
             registerServerPacket("trade_resource", TradeResourcePacket.class);
@@ -154,6 +154,9 @@ public class FabricModMessages {
 
             ServerPlayNetworking.registerGlobalReceiver(packetId, (server, player, handler, buf, responseSender) -> {
                 try {
+                    LOGGER.info("[PACKET RECEIVED] Server received packet: {} from player: {}", packetName,
+                            player.getName().getString());
+
                     // Convert PacketByteBuf to FriendlyByteBuf (they're compatible)
                     FriendlyByteBuf friendlyBuf = new FriendlyByteBuf(buf);
 
@@ -162,22 +165,27 @@ public class FabricModMessages {
                     try {
                         java.lang.reflect.Method decodeMethod = packetClass.getMethod("decode", FriendlyByteBuf.class);
                         packet = decodeMethod.invoke(null, friendlyBuf);
+                        LOGGER.info("[PACKET DECODED] Successfully decoded packet: {}", packetName);
                     } catch (NoSuchMethodException e) {
                         // Fall back to constructor with FriendlyByteBuf
                         java.lang.reflect.Constructor<?> constructor = packetClass
                                 .getConstructor(FriendlyByteBuf.class);
                         packet = constructor.newInstance(friendlyBuf);
+                        LOGGER.info("[PACKET DECODED] Successfully decoded packet via constructor: {}", packetName);
                     }
 
                     // Execute on server thread
                     Object finalPacket = packet;
                     server.execute(() -> {
                         try {
+                            LOGGER.info("[PACKET HANDLING] About to handle packet: {} for player: {}", packetName,
+                                    player.getName().getString());
                             // Create a context object for the packet (Fabric doesn't have
                             // NetworkEvent.Context)
                             // Pass the player as the context - packets expect Object context
                             java.lang.reflect.Method handleMethod = packetClass.getMethod("handle", Object.class);
                             handleMethod.invoke(finalPacket, player);
+                            LOGGER.info("[PACKET HANDLED] Successfully handled packet: {}", packetName);
                         } catch (Exception e) {
                             LOGGER.error("Error handling server packet {}", packetName, e);
                             e.printStackTrace();
@@ -299,6 +307,8 @@ public class FabricModMessages {
             String packetName = getPacketName(message.getClass());
             ResourceLocation packetId = new ResourceLocation(MOD_ID, packetName);
 
+            LOGGER.info("[SEND TO SERVER] Preparing to send packet: {} with ID: {}", packetName, packetId);
+
             // Create buffer
             FriendlyByteBuf friendlyBuf = new FriendlyByteBuf(Unpooled.buffer());
 
@@ -307,14 +317,19 @@ public class FabricModMessages {
                 java.lang.reflect.Method encodeMethod = message.getClass().getMethod("encode", message.getClass(),
                         FriendlyByteBuf.class);
                 encodeMethod.invoke(null, message, friendlyBuf);
+                LOGGER.info("[SEND TO SERVER] Encoded packet using static encode method");
             } catch (NoSuchMethodException e) {
                 // Fall back to instance toBytes method
                 java.lang.reflect.Method toBytesMethod = message.getClass().getMethod("toBytes", FriendlyByteBuf.class);
                 toBytesMethod.invoke(message, friendlyBuf);
+                LOGGER.info("[SEND TO SERVER] Encoded packet using instance toBytes method");
             }
+
+            LOGGER.info("[SEND TO SERVER] Buffer size: {} bytes", friendlyBuf.writerIndex());
 
             // Send to server
             ClientPlayNetworking.send(packetId, friendlyBuf);
+            LOGGER.info("[SEND TO SERVER] Successfully called ClientPlayNetworking.send() for packet: {}", packetName);
         } catch (Exception e) {
             LOGGER.error("Error in sendToServer", e);
             e.printStackTrace();

@@ -155,10 +155,9 @@ public class FabricClientSetup implements ClientModInitializer {
         try {
             LOGGER.info("Registering screens for menu types...");
 
-            // Get the registered menu type
-            // We cast to MenuType because FabricMenuTypeHelper stores it as Object or
-            // ExtendedScreenHandlerType
+            // Get the registered menu types
             MenuType<?> townInterfaceMenuType = (MenuType<?>) FabricMenuTypeHelper.getTownInterfaceMenuTypeStatic();
+            MenuType<?> paymentBoardMenuType = (MenuType<?>) FabricMenuTypeHelper.getPaymentBoardMenuTypeStatic();
 
             if (townInterfaceMenuType == null) {
                 LOGGER.warn("Menu types not registered yet");
@@ -166,15 +165,21 @@ public class FabricClientSetup implements ClientModInitializer {
             }
 
             // Register TownInterfaceScreen
-            // MenuScreens.register takes (MenuType, ScreenConstructor)
-            // ScreenConstructor is (Menu, Inventory, Component) -> Screen
-
-            // We need to suppress warnings because of generic type erasure issues with the
-            // helper
             @SuppressWarnings("unchecked")
             MenuType<com.quackers29.businesscraft.menu.TownInterfaceMenu> typedMenuType = (MenuType<com.quackers29.businesscraft.menu.TownInterfaceMenu>) townInterfaceMenuType;
-
             MenuScreens.register(typedMenuType, TownInterfaceScreen::new);
+            LOGGER.info("Registered TownInterfaceScreen");
+
+            // Register PaymentBoardScreen
+            if (paymentBoardMenuType != null) {
+                @SuppressWarnings("unchecked")
+                MenuType<com.quackers29.businesscraft.menu.PaymentBoardMenu> typedPaymentBoardMenuType = (MenuType<com.quackers29.businesscraft.menu.PaymentBoardMenu>) paymentBoardMenuType;
+                MenuScreens.register(typedPaymentBoardMenuType,
+                        com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen::new);
+                LOGGER.info("Registered PaymentBoardScreen");
+            } else {
+                LOGGER.warn("PaymentBoardMenuType not registered yet");
+            }
 
             LOGGER.info("Screen registration complete");
         } catch (Exception e) {
