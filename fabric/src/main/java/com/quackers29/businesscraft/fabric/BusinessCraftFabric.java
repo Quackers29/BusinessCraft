@@ -64,7 +64,8 @@ public class BusinessCraftFabric implements ModInitializer {
         PlatformAccess.menuTypes = MENU_TYPES;
         PlatformAccess.itemHandlers = ITEM_HANDLERS;
         PlatformAccess.networkMessages = NETWORK_MESSAGES;
-        // ClientHelper and RenderHelper will be initialized in clientSetup() - only available on client side
+        // ClientHelper and RenderHelper will be initialized in clientSetup() - only
+        // available on client side
 
         // Register Fabric-specific registrations
         // Register blocks and items during mod initialization
@@ -99,6 +100,10 @@ public class BusinessCraftFabric implements ModInitializer {
 
         // Initialize networking
         FabricModMessages.register();
+
+        // Initialize common event handlers
+        com.quackers29.businesscraft.event.PlayerBoundaryTracker.initialize();
+        com.quackers29.businesscraft.event.PlatformPathHandler.initialize();
 
         // Register events
         FabricModEvents.register();
