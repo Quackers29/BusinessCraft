@@ -24,26 +24,7 @@ public class FabricTownInterfaceEntity extends TownInterfaceEntity {
     public void setChanged() {
         super.setChanged();
 
-        /*
-        // COMMENTED OUT: Rely on MC auto-sync via sendBlockUpdated (Forge behavior)
-        // In Fabric, we need to explicitly send the update packet to nearby players
-        if (level != null && !level.isClientSide() && level instanceof ServerLevel serverLevel) {
-            LOGGER.info("[FABRIC] Manually sending update packet to players");
-
-            // Get the update packet
-            ClientboundBlockEntityDataPacket packet = ClientboundBlockEntityDataPacket.create(this);
-
-            if (packet != null) {
-                // Send to all players tracking this chunk
-                for (ServerPlayer player : serverLevel.players()) {
-                    // Check if player is close enough to receive the packet
-                    if (player.distanceToSqr(worldPosition.getX(), worldPosition.getY(), worldPosition.getZ()) < 4096) { // 64 blocks squared
-                        player.connection.send(packet);
-                        LOGGER.info("[FABRIC] Sent update packet to player: {}", player.getName().getString());
-                    }
-                }
-            }
-        }
-        */
+        // Note: Fabric's sendBlockUpdated() DOES send packets to nearby players
+        // No manual packet sending needed (tested and confirmed working)
     }
 }

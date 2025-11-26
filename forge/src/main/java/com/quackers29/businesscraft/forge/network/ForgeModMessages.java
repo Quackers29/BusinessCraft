@@ -57,6 +57,7 @@ import com.quackers29.businesscraft.network.packets.debug.TownDataResponsePacket
  */
 public class ForgeModMessages {
     private static int packetId = 0;
+
     private static int id() {
         return packetId++;
     }
@@ -66,7 +67,8 @@ public class ForgeModMessages {
         SimpleChannel net = networkHelper.getChannel();
 
         // Register all packets using a consistent pattern
-        // Platform-agnostic: wrap handler to convert Supplier<NetworkEvent.Context> to Object
+        // Platform-agnostic: wrap handler to convert Supplier<NetworkEvent.Context> to
+        // Object
         net.messageBuilder(ToggleTouristSpawningPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(ToggleTouristSpawningPacket::new)
                 .encoder(ToggleTouristSpawningPacket::toBytes)
@@ -409,7 +411,8 @@ public class ForgeModMessages {
         networkHelper.sendToAllPlayers(message);
     }
 
-    public static void sendToAllTrackingChunk(Object message, net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos) {
+    public static void sendToAllTrackingChunk(Object message, net.minecraft.world.level.Level level,
+            net.minecraft.core.BlockPos pos) {
         ForgeNetworkHelper networkHelper = (ForgeNetworkHelper) com.quackers29.businesscraft.forge.BusinessCraftForge.NETWORK;
         networkHelper.sendToAllTrackingChunk(message, level, pos);
     }

@@ -93,7 +93,7 @@ public class PlatformAccess {
         // ClientHelper may be null on server side, so we don't throw an exception
         return client;
     }
-    
+
     public static RenderHelper getRender() {
         // RenderHelper may be null on server side, so we don't throw an exception
         return render;
