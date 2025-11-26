@@ -79,7 +79,7 @@ public class TownMapDataResponsePacket {
     public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             try {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                     "Received town map data response with {} towns", townData.size());
                 
                 // Store the town data in the client-side cache

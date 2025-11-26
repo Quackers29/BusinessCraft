@@ -22,49 +22,54 @@ import com.quackers29.businesscraft.fabric.init.FabricModEntityTypes;
  * Fabric client-side initialization
  */
 public class FabricClientSetup implements ClientModInitializer {
-    private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft Fabric Client");
+    private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft Fabric");
     private static boolean screensRegistered = false;
+
 
     @Override
     public void onInitializeClient() {
-        LOGGER.info("BusinessCraft Fabric client setup starting");
-
-        // Initialize client-side platform helpers
-        PlatformAccess.client = BusinessCraftFabric.CLIENT;
-        PlatformAccess.render = BusinessCraftFabric.RENDER;
-
-        // Register client-side events
         try {
-            FabricEventCallbackHandler.registerClientEvents();
+            // CRITICAL: Register client-side packet handlers FIRST
+            registerClientPackets();
+
+            // Initialize client-side platform helpers
+            PlatformAccess.client = BusinessCraftFabric.CLIENT;
+            PlatformAccess.render = BusinessCraftFabric.RENDER;
+
+            // Register client-side events
+            try {
+                FabricEventCallbackHandler.registerClientEvents();
+            } catch (Exception e) {
+                LOGGER.warn("Could not register client events", e);
+            }
+
+            // Register screens for menu types
+            // Try to register immediately, schedule retry if menu types not ready yet
+            LOGGER.info("Attempting initial screen registration...");
+            try {
+                registerScreens();
+                screensRegistered = true;
+                LOGGER.info("Screen registration completed successfully on first attempt");
+            } catch (Exception e) {
+                LOGGER.warn("Screen registration failed on first attempt: " + e.getMessage(), e);
+                scheduleDelayedScreenRegistration();
+            }
+
+            // Initialize client-side rendering events
+            initializeClientRendering();
+
+            // Initialize key handlers
+            initializeKeyHandlers();
+
+            // Register entity renderers
+            EntityRendererRegistry.register(FabricModEntityTypes.TOURIST, TouristRenderer::new);
+
+            LOGGER.info("BusinessCraft Fabric client setup complete");
         } catch (Exception e) {
-            LOGGER.warn("Could not register client events", e);
+            LOGGER.error("CRITICAL: Exception in onInitializeClient", e);
+            e.printStackTrace();
+            throw e;
         }
-
-        // Register client-side packet handlers
-        registerClientPackets();
-
-        // Register screens for menu types
-        // Try to register immediately, schedule retry if menu types not ready yet
-        LOGGER.info("Attempting initial screen registration...");
-        try {
-            registerScreens();
-            screensRegistered = true;
-            LOGGER.info("Screen registration completed successfully on first attempt");
-        } catch (Exception e) {
-            LOGGER.warn("Screen registration failed on first attempt: " + e.getMessage(), e);
-            scheduleDelayedScreenRegistration();
-        }
-
-        // Initialize client-side rendering events
-        initializeClientRendering();
-
-        // Initialize key handlers
-        initializeKeyHandlers();
-
-        // Register entity renderers
-        EntityRendererRegistry.register(FabricModEntityTypes.TOURIST, TouristRenderer::new);
-
-        LOGGER.info("BusinessCraft Fabric client setup complete");
     }
 
     /**

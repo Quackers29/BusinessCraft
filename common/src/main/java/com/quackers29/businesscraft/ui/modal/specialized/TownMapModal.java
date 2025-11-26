@@ -147,6 +147,7 @@ public class TownMapModal extends Screen {
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                     "Sending RequestTownMapDataPacket to server");
         } catch (Exception e) {
+            System.out.println("=== TOWN MAP MODAL: FAILED TO REQUEST DATA ===");
             LOGGER.error("Failed to load town data for map", e);
             this.allTowns = new java.util.HashMap<>();
         }

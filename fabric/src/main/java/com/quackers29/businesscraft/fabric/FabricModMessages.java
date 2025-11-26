@@ -41,6 +41,7 @@ import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.network.packets.debug.RequestTownDataPacket;
 import com.quackers29.businesscraft.network.packets.debug.TownDataResponsePacket;
 import com.quackers29.businesscraft.network.packets.ResourceSyncPacket;
+import com.quackers29.businesscraft.debug.DebugConfig;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -135,6 +136,8 @@ public class FabricModMessages {
                     PaymentResultPacket.class,
                     TownDataResponsePacket.class, ResourceSyncPacket.class
             };
+
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Client packet arrays initialized with {} packets", CLIENT_PACKET_IDS.length);
 
             LOGGER.info("Fabric network messages registered successfully ({} server packets, {} client packets)",
                     26, CLIENT_PACKET_IDS.length);
@@ -231,25 +234,30 @@ public class FabricModMessages {
             String packetName = getPacketName(message.getClass());
             ResourceLocation packetId = new ResourceLocation(MOD_ID, packetName);
 
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "[SEND TO PLAYER] Preparing to send packet: {} with ID: {}", packetName, packetId);
+
             // Create buffer
             FriendlyByteBuf friendlyBuf = new FriendlyByteBuf(Unpooled.buffer());
 
-            // Try static encode method first, then instance toBytes method
+            // Try instance encode method first, then instance toBytes method
             try {
-                java.lang.reflect.Method encodeMethod = message.getClass().getMethod("encode", message.getClass(),
-                        FriendlyByteBuf.class);
-                encodeMethod.invoke(null, message, friendlyBuf);
+                java.lang.reflect.Method encodeMethod = message.getClass().getMethod("encode", FriendlyByteBuf.class);
+                encodeMethod.invoke(message, friendlyBuf);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "[SEND TO PLAYER] Encoded packet using instance encode method");
             } catch (NoSuchMethodException e) {
                 // Fall back to instance toBytes method
                 java.lang.reflect.Method toBytesMethod = message.getClass().getMethod("toBytes", FriendlyByteBuf.class);
                 toBytesMethod.invoke(message, friendlyBuf);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "[SEND TO PLAYER] Encoded packet using instance toBytes method");
             }
+
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "[SEND TO PLAYER] Buffer size: {} bytes", friendlyBuf.writerIndex());
 
             // Send to player
             ServerPlayNetworking.send(serverPlayer, packetId, friendlyBuf);
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "[SEND TO PLAYER] Successfully sent packet: {} to player: {}", packetName, serverPlayer.getName().getString());
         } catch (Exception e) {
-            LOGGER.error("Error in sendToPlayer", e);
-            e.printStackTrace();
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Error in sendToPlayer", e);
         }
     }
 
@@ -311,32 +319,30 @@ public class FabricModMessages {
             String packetName = getPacketName(message.getClass());
             ResourceLocation packetId = new ResourceLocation(MOD_ID, packetName);
 
-            LOGGER.info("[SEND TO SERVER] Preparing to send packet: {} with ID: {}", packetName, packetId);
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "[SEND TO SERVER] Preparing to send packet: {} with ID: {}", packetName, packetId);
 
             // Create buffer
             FriendlyByteBuf friendlyBuf = new FriendlyByteBuf(Unpooled.buffer());
 
-            // Try static encode method first, then instance toBytes method
+            // Try instance encode method first, then instance toBytes method
             try {
-                java.lang.reflect.Method encodeMethod = message.getClass().getMethod("encode", message.getClass(),
-                        FriendlyByteBuf.class);
-                encodeMethod.invoke(null, message, friendlyBuf);
-                LOGGER.info("[SEND TO SERVER] Encoded packet using static encode method");
+                java.lang.reflect.Method encodeMethod = message.getClass().getMethod("encode", FriendlyByteBuf.class);
+                encodeMethod.invoke(message, friendlyBuf);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "[SEND TO SERVER] Encoded packet using instance encode method");
             } catch (NoSuchMethodException e) {
                 // Fall back to instance toBytes method
                 java.lang.reflect.Method toBytesMethod = message.getClass().getMethod("toBytes", FriendlyByteBuf.class);
                 toBytesMethod.invoke(message, friendlyBuf);
-                LOGGER.info("[SEND TO SERVER] Encoded packet using instance toBytes method");
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "[SEND TO SERVER] Encoded packet using instance toBytes method");
             }
 
-            LOGGER.info("[SEND TO SERVER] Buffer size: {} bytes", friendlyBuf.writerIndex());
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "[SEND TO SERVER] Buffer size: {} bytes", friendlyBuf.writerIndex());
 
             // Send to server
             ClientPlayNetworking.send(packetId, friendlyBuf);
-            LOGGER.info("[SEND TO SERVER] Successfully called ClientPlayNetworking.send() for packet: {}", packetName);
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "[SEND TO SERVER] Successfully sent packet: {}", packetName);
         } catch (Exception e) {
-            LOGGER.error("Error in sendToServer", e);
-            e.printStackTrace();
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Error in sendToServer", e);
         }
     }
 
@@ -346,11 +352,15 @@ public class FabricModMessages {
      * server
      */
     public static void registerClientPackets() {
-        LOGGER.info("Registering Fabric client packet handlers...");
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Registering Fabric client packet handlers...");
 
         try {
-            if (CLIENT_PACKET_IDS == null || CLIENT_PACKET_CLASSES == null) {
-                LOGGER.warn("Client packet IDs or classes not initialized - skipping client packet registration");
+            if (CLIENT_PACKET_IDS == null) {
+                LOGGER.error("CLIENT_PACKET_IDS is null!");
+                return;
+            }
+            if (CLIENT_PACKET_CLASSES == null) {
+                LOGGER.error("CLIENT_PACKET_CLASSES is null!");
                 return;
             }
 
@@ -358,6 +368,8 @@ public class FabricModMessages {
                 LOGGER.error("Mismatch between client packet IDs and classes count");
                 return;
             }
+
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Registering {} client packet handlers", CLIENT_PACKET_IDS.length);
 
             // Register each client packet
             for (int i = 0; i < CLIENT_PACKET_IDS.length; i++) {
@@ -367,9 +379,11 @@ public class FabricModMessages {
                 try {
                     // Create packet identifier
                     ResourceLocation packetId = new ResourceLocation(MOD_ID, packetName);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Registering client packet: {} -> {}", packetName, packetId);
 
                     ClientPlayNetworking.registerGlobalReceiver(packetId, (client, handler, buf, responseSender) -> {
                         try {
+                            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Received client packet: {}", packetName);
                             // Convert PacketByteBuf to FriendlyByteBuf
                             FriendlyByteBuf friendlyBuf = new FriendlyByteBuf(buf);
 

@@ -14,6 +14,7 @@ import com.quackers29.businesscraft.api.NetworkMessages;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.api.ClientHelper;
 import com.quackers29.businesscraft.api.RenderHelper;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.fabric.init.FabricModBlocks;
 import com.quackers29.businesscraft.fabric.init.FabricModEntityTypes;
 import com.quackers29.businesscraft.fabric.init.FabricModBlockEntities;
@@ -102,6 +103,18 @@ public class BusinessCraftFabric implements ModInitializer {
 
         // Initialize networking
         FabricModMessages.register();
+
+        // Register client packets if we're on the client side
+        // This is a workaround since FabricClientSetup may not be running
+        try {
+            net.fabricmc.loader.api.FabricLoader fabricLoader = net.fabricmc.loader.api.FabricLoader.getInstance();
+            if (fabricLoader.getEnvironmentType() == net.fabricmc.api.EnvType.CLIENT) {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Registering client packets from main mod initializer");
+                FabricModMessages.registerClientPackets();
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Could not register client packets from main initializer", e);
+        }
 
         // Add to packet registration (find ModMessages or PlatformAccess.getNetworkMessages().registerS2C)
         // Remove this invalid line - registration handled by FabricModMessages.register()
