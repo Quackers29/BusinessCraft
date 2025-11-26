@@ -21,3 +21,6 @@
 /fabric/run/saves
 java_pid29391.hprof
 /forge/build
+/common/build/tmp
+/fabric/run/config/fabric
+/fabric/run/logs
