@@ -122,9 +122,13 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
             } else {
                 // Initialize data values from town
                 updateDataSlots();
-                PlatformAccess.getNetworkMessages().sendToPlayer(new ResourceSyncPacket(pos, this.town.getAllResources()), inv.player);
-                LOGGER.info("TownInterfaceMenu created - sent ResourceSyncPacket with {} resources on open", this.town.getAllResources().size());
-                    if (level != null && !level.isClientSide()) {
+
+                // Force client cache sync on menu open (fixes reload visibility)
+                // Uses platform-specific implementation - Fabric sends packet, Forge does nothing
+                PlatformAccess.getNetworkMessages().sendResourceSyncPacketIfSupported(pos, this.town.getAllResources(), inv.player);
+                LOGGER.info("TownInterfaceMenu created - attempted ResourceSyncPacket send with {} resources", this.town.getAllResources().size());
+
+                if (level != null && !level.isClientSide()) {
                         broadcastChanges();
                     }
                 }

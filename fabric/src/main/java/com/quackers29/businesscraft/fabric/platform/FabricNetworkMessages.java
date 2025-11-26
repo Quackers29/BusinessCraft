@@ -27,4 +27,24 @@ public class FabricNetworkMessages implements NetworkMessages {
     public void sendToServer(Object message) {
         FabricModMessages.sendToServer(message);
     }
+
+    @Override
+    public void sendResourceSyncPacketIfSupported(Object pos, Object resources, Object player) {
+        try {
+            if (pos instanceof net.minecraft.core.BlockPos blockPos &&
+                resources instanceof java.util.Map map &&
+                player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+
+                // Create and send the ResourceSyncPacket
+                var packetClass = Class.forName("com.quackers29.businesscraft.network.packets.ResourceSyncPacket");
+                var constructor = packetClass.getConstructor(net.minecraft.core.BlockPos.class, java.util.Map.class);
+                var packet = constructor.newInstance(blockPos, map);
+
+                FabricModMessages.sendToPlayer(packet, serverPlayer);
+            }
+        } catch (Exception e) {
+            // Log error but don't crash - this is an enhancement feature
+            System.err.println("FabricNetworkMessages: Failed to send ResourceSyncPacket: " + e.getMessage());
+        }
+    }
 }

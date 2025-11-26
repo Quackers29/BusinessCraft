@@ -24,4 +24,14 @@ public interface NetworkMessages {
      * Send a message to the server
      */
     void sendToServer(Object message);
+
+    /**
+     * Send ResourceSyncPacket if supported on this platform
+     * Fabric: sends packet for immediate resource UI updates
+     * Forge: does nothing (uses existing sync mechanisms)
+     */
+    default void sendResourceSyncPacketIfSupported(Object pos, Object resources, Object player) {
+        // Default implementation: do nothing (Forge behavior)
+        // Fabric will override this to send the actual packet
+    }
 }

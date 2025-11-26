@@ -21,7 +21,6 @@ import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import com.quackers29.businesscraft.menu.TradeMenu;
-import com.quackers29.businesscraft.network.packets.ResourceSyncPacket;
 
 /**
  * Packet for trading resources with towns.
@@ -184,8 +183,10 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
             // Force the TownManager to save changes
             townManager.markDirty();
 
-            LOGGER.info("TradeResourcePacket: Sent ResourceSyncPacket to {} with {} resources", player.getName().getString(), town.getAllResources().size());
-            PlatformAccess.getNetworkMessages().sendToPlayer(new ResourceSyncPacket(pos, town.getAllResources()), player);
+            // Send ResourceSyncPacket for immediate UI update
+            // Uses platform-specific implementation - Fabric sends packet, Forge does nothing
+            PlatformAccess.getNetworkMessages().sendResourceSyncPacketIfSupported(pos, town.getAllResources(), player);
+            LOGGER.info("TradeResourcePacket: Attempted ResourceSyncPacket send to {} with {} resources", player.getName().getString(), town.getAllResources().size());
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
     }

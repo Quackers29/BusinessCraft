@@ -35,6 +35,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.core.Direction;
+import net.minecraft.world.WorldlyContainer;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.npc.Villager;
@@ -97,7 +101,7 @@ import com.quackers29.businesscraft.town.data.ContainerDataHelper;
 import com.quackers29.businesscraft.town.data.TownBufferManager;
 import com.quackers29.businesscraft.debug.DebugConfig;
 
-public class TownInterfaceEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownInterfaceEntity> {
+public class TownInterfaceEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownInterfaceEntity>, WorldlyContainer {
     private final Object itemHandler = PlatformAccess.getItemHandlers().createItemStackHandler(1);
     private Object lazyItemHandler = PlatformAccess.getItemHandlers().getEmptyLazyOptional();
 
@@ -276,6 +280,232 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         }
         // Platform-specific implementations should handle other capabilities
         return PlatformAccess.getItemHandlers().getEmptyLazyOptional();
+    }
+
+    // Hopper compatibility methods - Fabric uses SidedInventory interface
+    // These methods delegate to the internal item handlers
+
+    /**
+     * Gets the container size for hopper interactions
+     * Top/Front: Input handler (1 slot), Bottom: Buffer handler (18 slots)
+     */
+    public int getContainerSize() {
+        return 19; // 1 input slot + 18 buffer slots
+    }
+
+    /**
+     * Checks if the container is empty
+     */
+    public boolean isEmpty() {
+        // Check input handler
+        Object inputStack = PlatformAccess.getItemHandlers().getStackInSlot(itemHandler, 0);
+        if (inputStack instanceof ItemStack stack && !stack.isEmpty()) {
+            return false;
+        }
+
+        // Check buffer handler (if available)
+        if (bufferManager != null && bufferManager.getBufferHandler() instanceof Container bufferContainer) {
+            for (int i = 0; i < bufferContainer.getContainerSize(); i++) {
+                if (!bufferContainer.getItem(i).isEmpty()) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Gets an item from the specified slot index
+     */
+    public ItemStack getItem(int slot) {
+        if (slot == 0) {
+            // Input slot
+            Object stack = PlatformAccess.getItemHandlers().getStackInSlot(itemHandler, 0);
+            return stack instanceof ItemStack ? (ItemStack) stack : ItemStack.EMPTY;
+        } else if (slot >= 1 && slot <= 18) {
+            // Buffer slots (1-18 map to buffer slots 0-17)
+            if (bufferManager != null && bufferManager.getBufferHandler() instanceof Container bufferContainer) {
+                int bufferSlot = slot - 1;
+                if (bufferSlot < bufferContainer.getContainerSize()) {
+                    return bufferContainer.getItem(bufferSlot);
+                }
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+
+    /**
+     * Sets an item in the specified slot index
+     */
+    public void setItem(int slot, ItemStack stack) {
+        if (slot == 0) {
+            // Input slot
+            PlatformAccess.getItemHandlers().setStackInSlot(itemHandler, 0, stack);
+        } else if (slot >= 1 && slot <= 18) {
+            // Buffer slots
+            if (bufferManager != null && bufferManager.getBufferHandler() instanceof Container bufferContainer) {
+                int bufferSlot = slot - 1;
+            if (bufferSlot < bufferContainer.getContainerSize()) {
+                bufferContainer.setItem(bufferSlot, stack);
+                // Notify buffer manager of changes
+                // bufferManager.onBufferContentsChanged(); // TODO: Add this method if needed
+            }
+            }
+        }
+    }
+
+    /**
+     * Removes and returns an item from the specified slot
+     */
+    public ItemStack removeItem(int slot, int amount) {
+        ItemStack existing = getItem(slot);
+        if (existing.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+
+        int toRemove = Math.min(amount, existing.getCount());
+        ItemStack result = existing.copy();
+        result.setCount(toRemove);
+
+        existing.shrink(toRemove);
+        setItem(slot, existing);
+
+        return result;
+    }
+
+    /**
+     * Removes and returns the entire item from the specified slot
+     */
+    public ItemStack removeItemNoUpdate(int slot) {
+        ItemStack existing = getItem(slot);
+        setItem(slot, ItemStack.EMPTY);
+        return existing;
+    }
+
+    /**
+     * Gets the maximum stack size for the specified slot
+     */
+    public int getMaxStackSize() {
+        return 64; // Standard stack size
+    }
+
+    /**
+     * Checks if the specified item can be placed in the slot
+     */
+    public boolean canPlaceItem(int slot, ItemStack stack) {
+        if (slot == 0) {
+            // Input slot - accept any item
+            return true;
+        }
+        // Buffer slots - only allow placement through UI (not hoppers)
+        return false;
+    }
+
+    /**
+     * Checks if the specified item can be taken from the slot
+     */
+    public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction direction) {
+        if (direction == Direction.DOWN && slot >= 1 && slot <= 18) {
+            // Buffer slots can be extracted from below
+            return true;
+        }
+        return false; // Input slot cannot be extracted
+    }
+
+    /**
+     * Gets the slots accessible from the specified face
+     */
+    public int[] getSlotsForFace(Direction direction) {
+        if (direction == Direction.DOWN) {
+            // Bottom face: buffer slots (1-18)
+            return new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18};
+        } else {
+            // All other faces: input slot (0)
+            return new int[]{0};
+        }
+    }
+
+    /**
+     * Checks if automation can insert into the specified slot from the specified face
+     */
+    public boolean canPlaceItemThroughFace(int slot, ItemStack stack, Direction direction) {
+        if (direction != Direction.DOWN && slot == 0) {
+            // Input slot accepts items from any side except bottom
+            return true;
+        }
+        return false;
+    }
+
+
+    /**
+     * Checks if the player can still interact with this container
+     * Required by Container interface
+     */
+    @Override
+    public boolean stillValid(Player player) {
+        return player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5) < 64;
+    }
+
+    /**
+     * Clears all contents from this container
+     * Required by Clearable interface
+     */
+    @Override
+    public void clearContent() {
+        // Clear input slot
+        PlatformAccess.getItemHandlers().setStackInSlot(itemHandler, 0, ItemStack.EMPTY);
+
+        // Clear buffer slots if buffer manager exists
+        if (bufferManager != null && bufferManager.getBufferHandler() instanceof Container bufferContainer) {
+            for (int i = 0; i < bufferContainer.getContainerSize(); i++) {
+                bufferContainer.setItem(i, ItemStack.EMPTY);
+            }
+        }
+    }
+
+    /**
+     * Gets the container for hopper interactions
+     * This is needed for Fabric's hopper logic
+     */
+    public Container getContainer() {
+        // Create a wrapper container that delegates to our methods
+        return new SimpleContainer(getContainerSize()) {
+            @Override
+            public ItemStack getItem(int slot) {
+                return TownInterfaceEntity.this.getItem(slot);
+            }
+
+            @Override
+            public void setItem(int slot, ItemStack stack) {
+                TownInterfaceEntity.this.setItem(slot, stack);
+            }
+
+            @Override
+            public ItemStack removeItem(int slot, int amount) {
+                return TownInterfaceEntity.this.removeItem(slot, amount);
+            }
+
+            @Override
+            public ItemStack removeItemNoUpdate(int slot) {
+                return TownInterfaceEntity.this.removeItemNoUpdate(slot);
+            }
+
+            @Override
+            public boolean canPlaceItem(int slot, ItemStack stack) {
+                return TownInterfaceEntity.this.canPlaceItem(slot, stack);
+            }
+
+            @Override
+            public int getMaxStackSize() {
+                return TownInterfaceEntity.this.getMaxStackSize();
+            }
+
+            @Override
+            public boolean isEmpty() {
+                return TownInterfaceEntity.this.isEmpty();
+            }
+        };
     }
 
     @Override
