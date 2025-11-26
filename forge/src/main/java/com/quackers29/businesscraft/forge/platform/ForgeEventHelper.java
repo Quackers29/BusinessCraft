@@ -41,12 +41,12 @@ public class ForgeEventHelper implements EventHelper {
 
     @Override
     public void setActiveTownBlock(net.minecraft.core.BlockPos pos) {
-        com.quackers29.businesscraft.forge.event.ForgeModEvents.setActiveTownBlock(pos);
+        com.quackers29.businesscraft.event.TownEventHandler.setActiveTownBlock(pos);
     }
 
     @Override
     public void clearActiveTownBlock() {
-        com.quackers29.businesscraft.forge.event.ForgeModEvents.setActiveTownBlock(null);
+        com.quackers29.businesscraft.event.TownEventHandler.clearActiveTownBlock();
     }
 
     @Override

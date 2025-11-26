@@ -13,6 +13,6 @@ public class TownDebugNetwork {
      */
     public static void requestTownData() {
         RequestTownDataPacket packet = new RequestTownDataPacket();
-        PlatformAccess.getNetwork().sendToServer(packet);
+        PlatformAccess.getNetworkMessages().sendToServer(packet);
     }
-} 
+}

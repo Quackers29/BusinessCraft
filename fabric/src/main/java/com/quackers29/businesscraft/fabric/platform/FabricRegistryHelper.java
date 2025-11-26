@@ -5,8 +5,11 @@ import com.quackers29.businesscraft.api.RegistryHelper;
 /**
  * Fabric implementation of RegistryHelper using Object types for
  * platform-agnostic interface.
- * Actual Minecraft-specific registration logic is handled in Fabric mod
- * initialization.
+ * 
+ * NOTE: The register methods here are largely placeholders or delegates.
+ * In Fabric, blocks and items must be registered during mod initialization
+ * (see FabricModBlocks and FabricModBlockEntities).
+ * This class exists primarily to satisfy the RegistryHelper interface.
  */
 public class FabricRegistryHelper implements RegistryHelper {
 

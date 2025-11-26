@@ -15,27 +15,27 @@ public class FabricNetworkHelper implements NetworkHelper {
     @Override
     public <T> void registerMessage(int index, Class<T> messageType, Object encoder, Object decoder) {
         // Platform-specific registration is handled in Fabric mod networking setup
-        // TODO: Implement proper networking registration if needed
     }
 
     @Override
     public void sendToPlayer(Object message, Object player) {
-        // TODO: Implement proper networking
+        throw new UnsupportedOperationException("Use PlatformAccess.getNetworkMessages().sendToPlayer() instead");
     }
 
     @Override
     public void sendToAllPlayers(Object message) {
-        // TODO: Implement proper networking
+        throw new UnsupportedOperationException("Use PlatformAccess.getNetworkMessages().sendToAllPlayers() instead");
     }
 
     @Override
     public void sendToAllTrackingChunk(Object message, Object level, Object pos) {
-        // TODO: Implement proper networking
+        throw new UnsupportedOperationException(
+                "Use PlatformAccess.getNetworkMessages().sendToAllTrackingChunk() instead");
     }
 
     @Override
     public void sendToServer(Object message) {
-        // TODO: Implement proper networking
+        throw new UnsupportedOperationException("Use PlatformAccess.getNetworkMessages().sendToServer() instead");
     }
 
     @Override

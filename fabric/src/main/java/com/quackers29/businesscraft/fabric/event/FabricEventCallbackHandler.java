@@ -6,6 +6,7 @@ import com.quackers29.businesscraft.fabric.FabricModMessages;
 import com.quackers29.businesscraft.network.packets.ui.OpenTownInterfacePacket;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.api.ITownDataProvider;
+import com.quackers29.businesscraft.event.TownEventHandler;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
@@ -139,49 +140,8 @@ public class FabricEventCallbackHandler {
             BlockPos pos = hitResult.getBlockPos();
 
             // Path creation mode logic
-            if (!world.isClientSide) {
-                BlockPos activePos = FabricModEvents.getActiveTownBlockPos();
-                if (activePos != null) {
-                    long currentTime = System.currentTimeMillis();
-                    long lastClickTime = FabricModEvents.getLastClickTime();
-
-                    if (currentTime - lastClickTime < 500) {
-                        return InteractionResult.PASS;
-                    }
-                    FabricModEvents.setLastClickTime(currentTime);
-
-                    if (world.getBlockEntity(activePos) instanceof TownInterfaceEntity townInterfaceEntity) {
-                        if (townInterfaceEntity.isInPathCreationMode()) {
-                            if (!townInterfaceEntity.isValidPathDistance(pos)) {
-                                player.sendSystemMessage(Component.literal("Point too far from town!"));
-                                return InteractionResult.FAIL;
-                            }
-
-                            boolean awaitingSecondClick = FabricModEvents.isAwaitingSecondClick();
-                            if (!awaitingSecondClick) {
-                                townInterfaceEntity.setPathStart(pos);
-                                FabricModEvents.setAwaitingSecondClick(true);
-                                player.sendSystemMessage(
-                                        Component.literal("First point set! Now click to set the end point."));
-                            } else {
-                                townInterfaceEntity.setPathEnd(pos);
-                                townInterfaceEntity.setPathCreationMode(false);
-
-                                ITownDataProvider provider = townInterfaceEntity.getTownDataProvider();
-                                if (provider != null) {
-                                    provider.setPathStart(townInterfaceEntity.getPathStart());
-                                    provider.setPathEnd(pos);
-                                    provider.markDirty();
-                                }
-
-                                player.sendSystemMessage(Component.literal("Path created!"));
-                                FabricModEvents.setAwaitingSecondClick(false);
-                                FabricModEvents.clearActiveTownBlock();
-                            }
-                            return InteractionResult.FAIL;
-                        }
-                    }
-                }
+            if (TownEventHandler.onRightClickBlock(player, world, pos)) {
+                return InteractionResult.FAIL;
             }
 
             // Call registered callbacks
@@ -240,9 +200,9 @@ public class FabricEventCallbackHandler {
                 return InteractionResult.PASS;
 
             BlockPos pos = hitResult.getBlockPos();
-            if (world.getBlockState(pos).getBlock().toString().contains("businesscraft:town_interface")) {
+            if (world.getBlockState(pos).getBlock() instanceof com.quackers29.businesscraft.block.TownInterfaceBlock) {
                 LOGGER.info("Right-clicked on town interface block - opening menu");
-                PlatformAccess.getNetwork().sendToServer(new OpenTownInterfacePacket(pos));
+                PlatformAccess.getNetworkMessages().sendToServer(new OpenTownInterfacePacket(pos));
                 return InteractionResult.PASS; // Allow interaction to proceed (or should we consume it?)
             }
             return InteractionResult.PASS;
