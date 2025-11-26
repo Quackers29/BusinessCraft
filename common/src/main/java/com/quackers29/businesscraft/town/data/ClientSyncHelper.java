@@ -29,24 +29,27 @@ import java.util.*;
  */
 public class ClientSyncHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientSyncHelper.class);
-    
+
     // Client-side caches
     private final Map<Item, Integer> clientResources = new HashMap<>();
     private final Map<Item, Integer> clientCommunalStorage = new HashMap<>();
     private final Map<UUID, Map<Item, Integer>> clientPersonalStorage = new HashMap<>();
     private final List<ITownDataProvider.VisitHistoryRecord> clientVisitHistory = new ArrayList<>();
     private final Map<UUID, String> townNameCache = new HashMap<>();
-    
+
     /**
      * Adds resource data to the provided tag for client-side rendering
      * This centralizes our resource serialization logic in one place
      */
     public void syncResourcesForClient(CompoundTag tag, ITownDataProvider provider) {
-        if (provider == null) return;
-        
+        if (provider == null)
+            return;
+
+        LOGGER.info("ClientSyncHelper.syncResourcesForClient - provider resources size: {}", provider.getAllResources().size());
+
         // Create a resources tag
         CompoundTag resourcesTag = new CompoundTag();
-        
+
         // Add all resources to the tag
         provider.getAllResources().forEach((item, count) -> {
             Object keyObj = PlatformAccess.getRegistry().getItemKey(item);
@@ -56,10 +59,10 @@ public class ClientSyncHelper {
                 LOGGER.warn("Skipping invalid item {} in resources sync (null registry key)", item);
             }
         });
-        
+
         // Add resources tag to the update tag
         tag.put("clientResources", resourcesTag);
-        
+
         // Add communal storage data
         CompoundTag communalTag = new CompoundTag();
         provider.getAllCommunalStorageItems().forEach((item, count) -> {
@@ -72,7 +75,7 @@ public class ClientSyncHelper {
         });
         tag.put("clientCommunalStorage", communalTag);
     }
-    
+
     /**
      * Loads resources from the provided tag into the client-side cache
      * This centralizes our resource deserialization logic in one place
@@ -80,15 +83,14 @@ public class ClientSyncHelper {
     public void loadResourcesFromTag(CompoundTag tag) {
         if (tag.contains("clientResources")) {
             CompoundTag resourcesTag = tag.getCompound("clientResources");
-            
-            // Clear previous resources
+
             clientResources.clear();
-            
-            // Load all resources from the tag
+
             for (String key : resourcesTag.getAllKeys()) {
                 try {
                     ResourceLocation resourceLocation = new ResourceLocation(key);
                     Object itemObj = PlatformAccess.getRegistry().getItem(resourceLocation);
+
                     if (itemObj instanceof net.minecraft.world.item.Item item) {
                         if (item != null && item != Items.AIR) {
                             int count = resourcesTag.getInt(key);
@@ -100,15 +102,13 @@ public class ClientSyncHelper {
                 }
             }
         }
-        
-        // Load communal storage data
+
+        // Load communal storage data (keep minimal)
         if (tag.contains("clientCommunalStorage")) {
             CompoundTag communalTag = tag.getCompound("clientCommunalStorage");
-            
-            // Clear previous communal storage
+
             clientCommunalStorage.clear();
-            
-            // Load all communal storage items from the tag
+
             for (String key : communalTag.getAllKeys()) {
                 try {
                     ResourceLocation resourceLocation = new ResourceLocation(key);
@@ -125,33 +125,35 @@ public class ClientSyncHelper {
             }
         }
     }
-    
+
     /**
      * Adds visit history data to the provided tag for client-side rendering
      */
     public void syncVisitHistoryForClient(CompoundTag tag, ITownDataProvider provider, Level level) {
-        if (provider == null) return;
-        
+        if (provider == null)
+            return;
+
         List<ITownDataProvider.VisitHistoryRecord> history = provider.getVisitHistory();
-        if (history.isEmpty()) return;
-        
+        if (history.isEmpty())
+            return;
+
         ListTag historyTag = new ListTag();
         for (ITownDataProvider.VisitHistoryRecord record : history) {
             CompoundTag visitTag = new CompoundTag();
             visitTag.putLong("timestamp", record.getTimestamp());
-            
+
             // Store both UUID and resolved name for client display
             if (record.getOriginTownId() != null) {
                 UUID townId = record.getOriginTownId();
                 visitTag.putUUID("townId", townId);
-                
+
                 // Resolve town name using the centralized method
                 String townName = resolveTownName(townId, true, level);
                 visitTag.putString("townName", townName);
             }
-            
+
             visitTag.putInt("count", record.getCount());
-            
+
             // Add origin position
             if (record.getOriginPos() != null && record.getOriginPos() != BlockPos.ZERO) {
                 CompoundTag posTag = new CompoundTag();
@@ -160,29 +162,29 @@ public class ClientSyncHelper {
                 posTag.putInt("z", record.getOriginPos().getZ());
                 visitTag.put("pos", posTag);
             }
-            
+
             historyTag.add(visitTag);
         }
         tag.put("visitHistory", historyTag);
     }
-    
+
     /**
      * Loads visit history from the provided tag into the client-side cache
      */
     public void loadVisitHistoryFromTag(CompoundTag tag) {
         if (tag.contains("visitHistory")) {
             ListTag historyTag = tag.getList("visitHistory", Tag.TAG_COMPOUND);
-            
+
             // Clear previous history
             clientVisitHistory.clear();
-            
+
             // Load all history entries
             for (int i = 0; i < historyTag.size(); i++) {
                 CompoundTag visitTag = historyTag.getCompound(i);
-                
+
                 long timestamp = visitTag.getLong("timestamp");
                 int count = visitTag.getInt("count");
-                
+
                 // Handle both old and new formats
                 UUID townId = null;
                 if (visitTag.contains("townId")) {
@@ -192,13 +194,14 @@ public class ClientSyncHelper {
                     LOGGER.warn("Found legacy visit history format without townId");
                     continue;
                 }
-                
+
                 // Store the pre-resolved town name from the server in a client field
                 if (visitTag.contains("townName")) {
                     String townName = visitTag.getString("townName");
                     // Only log when a town name is added for the first time
                     if (!townNameCache.containsKey(townId)) {
-                        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Loaded town name for {}: {}", townId, townName);
+                        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Loaded town name for {}: {}", townId,
+                                townName);
                     }
                     // Store the name in a map for client-side lookup
                     townNameCache.put(townId, townName);
@@ -207,33 +210,35 @@ public class ClientSyncHelper {
                     // If no name is provided, use a fallback
                     townNameCache.put(townId, "Town-" + townId.toString().substring(0, 8));
                 }
-                
+
                 BlockPos originPos = BlockPos.ZERO;
                 if (visitTag.contains("pos")) {
                     CompoundTag posTag = visitTag.getCompound("pos");
                     originPos = new BlockPos(
-                        posTag.getInt("x"),
-                        posTag.getInt("y"),
-                        posTag.getInt("z")
-                    );
+                            posTag.getInt("x"),
+                            posTag.getInt("y"),
+                            posTag.getInt("z"));
                 }
-                
+
                 // Create the visit record
                 clientVisitHistory.add(new ITownDataProvider.VisitHistoryRecord(timestamp, townId, count, originPos));
             }
         }
     }
-    
+
     /**
-     * Resolves a town name from its UUID with flexible behavior for client/server contexts
-     * @param townId The UUID of the town to resolve
+     * Resolves a town name from its UUID with flexible behavior for client/server
+     * contexts
+     * 
+     * @param townId            The UUID of the town to resolve
      * @param logResolveFailure Whether to log when resolution fails
-     * @param level The level for server-side lookups
+     * @param level             The level for server-side lookups
      * @return The resolved name or a fallback
      */
     public String resolveTownName(UUID townId, boolean logResolveFailure, Level level) {
-        if (townId == null) return "Unknown";
-        
+        if (townId == null)
+            return "Unknown";
+
         // For server-side or forced server-side lookup
         if (level != null && !level.isClientSide()) {
             if (level instanceof ServerLevel serverLevel) {
@@ -246,7 +251,7 @@ public class ClientSyncHelper {
             }
             return "Unknown Town";
         }
-        
+
         // For client-side lookup
         if (townNameCache.containsKey(townId)) {
             String cachedName = townNameCache.get(townId);
@@ -254,101 +259,114 @@ public class ClientSyncHelper {
                 return cachedName;
             }
         }
-        
+
         // Fallback for client-side with no cache
         return "Town-" + townId.toString().substring(0, 8);
     }
-    
+
     /**
-     * Helper method to resolve town name from UUID - simplified version for backward compatibility
+     * Helper method to resolve town name from UUID - simplified version for
+     * backward compatibility
      */
     public String resolveTownName(UUID townId, Level level) {
         return resolveTownName(townId, false, level);
     }
-    
+
     /**
      * Helper method to get town name from client cache or resolve from server
      */
     public String getTownNameFromId(UUID townId, Level level) {
-        if (townId == null) return "Unknown";
-        
+        if (townId == null)
+            return "Unknown";
+
         return resolveTownName(townId, level != null && !level.isClientSide(), level);
     }
-    
+
     /**
      * Updates the client-side personal storage cache for a player
+     * 
      * @param playerId UUID of the player
-     * @param items Map of items in the player's personal storage
+     * @param items    Map of items in the player's personal storage
      */
     public void updateClientPersonalStorage(UUID playerId, Map<Item, Integer> items) {
-        if (playerId == null) return;
-        
+        if (playerId == null)
+            return;
+
         // Clear existing items for this player
         Map<Item, Integer> playerItems = clientPersonalStorage.computeIfAbsent(playerId, k -> new HashMap<>());
         playerItems.clear();
-        
+
         // Add all the new items
         playerItems.putAll(items);
-        
-        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Updated client personal storage cache for player {} with {} items", 
-            playerId, items.size());
+
+        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
+                "Updated client personal storage cache for player {} with {} items",
+                playerId, items.size());
     }
-    
+
     /**
      * Updates client resources from town data during sync operations
      */
     public void updateClientResourcesFromTown(Town town) {
-        if (town == null) return;
-        
-        // Update client resources from the town (make sure emeralds are properly reflected)
+        if (town == null)
+            return;
+
+        // Update client resources from the town (make sure emeralds are properly
+        // reflected)
         clientResources.clear();
         town.getAllResources().forEach((item, count) -> {
             clientResources.put(item, count);
         });
-        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Updated client resources from town during sync, resources count: {}", clientResources.size());
-        
+        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
+                "Updated client resources from town during sync, resources count: {}", clientResources.size());
+
         // Update client communal storage from the town
         clientCommunalStorage.clear();
         town.getAllCommunalStorageItems().forEach((item, count) -> {
             clientCommunalStorage.put(item, count);
         });
-        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Updated client communal storage from town during sync, storage count: {}", clientCommunalStorage.size());
+        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
+                "Updated client communal storage from town during sync, storage count: {}",
+                clientCommunalStorage.size());
     }
-    
+
     // Getters for client-side data access
-    
+
     /**
      * Gets the client-side cached resources
+     * 
      * @return Map of resources
      */
     public Map<Item, Integer> getClientResources() {
         return clientResources;
     }
-    
+
     /**
      * Gets the client-side cached communal storage items
+     * 
      * @return Map of communal storage items
      */
     public Map<Item, Integer> getClientCommunalStorage() {
         return clientCommunalStorage;
     }
-    
+
     /**
      * Gets the client-side cached personal storage items for a specific player
+     * 
      * @param playerId UUID of the player
      * @return Map of personal storage items for that player
      */
     public Map<Item, Integer> getClientPersonalStorage(UUID playerId) {
         return clientPersonalStorage.getOrDefault(playerId, Collections.emptyMap());
     }
-    
+
     /**
      * Gets the visit history for client-side display
      */
     public List<ITownDataProvider.VisitHistoryRecord> getClientVisitHistory() {
         return Collections.unmodifiableList(clientVisitHistory);
     }
-    
+
     /**
      * Gets the visit history, choosing between client cache and server data
      */
@@ -362,7 +380,7 @@ public class ClientSyncHelper {
             return Collections.emptyList();
         }
     }
-    
+
     /**
      * Clears all client-side caches (useful for cleanup)
      */
@@ -373,60 +391,65 @@ public class ClientSyncHelper {
         clientVisitHistory.clear();
         townNameCache.clear();
     }
-    
+
     /**
      * Gets the size of all cached data for debugging
      */
     public String getCacheStats() {
         return String.format("Resources: %d, Communal: %d, Personal: %d, History: %d, Names: %d",
-            clientResources.size(),
-            clientCommunalStorage.size(),
-            clientPersonalStorage.size(),
-            clientVisitHistory.size(),
-            townNameCache.size());
+                clientResources.size(),
+                clientCommunalStorage.size(),
+                clientPersonalStorage.size(),
+                clientVisitHistory.size(),
+                townNameCache.size());
     }
-    
+
     /**
-     * Notifies all nearby players of buffer storage changes for real-time UI updates
+     * Notifies all nearby players of buffer storage changes for real-time UI
+     * updates
      * This is a static method for easy access from TownBlockEntity
      */
     public static void notifyBufferStorageChange(ServerLevel level, UUID townId, Map<Item, Integer> bufferItems) {
-        if (level == null || townId == null) return;
-        
+        if (level == null || townId == null)
+            return;
+
         // Send legacy BufferStorageResponsePacket to all players in the area
         // This ensures Payment Board UI updates in real-time when hoppers extract items
-        com.quackers29.businesscraft.network.packets.storage.BufferStorageResponsePacket packet = 
-            new com.quackers29.businesscraft.network.packets.storage.BufferStorageResponsePacket(bufferItems);
-        
+        com.quackers29.businesscraft.network.packets.storage.BufferStorageResponsePacket packet = new com.quackers29.businesscraft.network.packets.storage.BufferStorageResponsePacket(
+                bufferItems);
+
         // Send to all players within a reasonable distance of any town blocks
         level.players().forEach(player -> {
             // Send to all players - the client will filter based on which UI is open
             PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
         });
-        
-        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, 
-            "Sent legacy buffer storage update for town {} to {} players", townId, level.players().size());
+
+        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
+                "Sent legacy buffer storage update for town {} to {} players", townId, level.players().size());
     }
-    
+
     /**
-     * Notifies all nearby players of slot-based buffer storage changes for real-time UI updates
+     * Notifies all nearby players of slot-based buffer storage changes for
+     * real-time UI updates
      * This is the new method that preserves exact slot positions
      */
     public static void notifyBufferSlotStorageChange(ServerLevel level, UUID townId, SlotBasedStorage slotStorage) {
-        if (level == null || townId == null || slotStorage == null) return;
-        
+        if (level == null || townId == null || slotStorage == null)
+            return;
+
         // Send new BufferSlotStorageResponsePacket to all players in the area
-        // This ensures Payment Board UI updates in real-time with exact slot preservation
-        com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket packet = 
-            new com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket(slotStorage);
-        
+        // This ensures Payment Board UI updates in real-time with exact slot
+        // preservation
+        com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket packet = new com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket(
+                slotStorage);
+
         // Send to all players within a reasonable distance of any town blocks
         level.players().forEach(player -> {
             // Send to all players - the client will filter based on which UI is open
             PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
         });
-        
-        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, 
-            "Sent slot-based buffer storage update for town {} to {} players", townId, level.players().size());
+
+        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
+                "Sent slot-based buffer storage update for town {} to {} players", townId, level.players().size());
     }
-} 
+}

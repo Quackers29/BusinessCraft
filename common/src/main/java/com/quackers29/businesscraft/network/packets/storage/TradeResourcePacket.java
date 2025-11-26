@@ -21,6 +21,7 @@ import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import com.quackers29.businesscraft.menu.TradeMenu;
+import com.quackers29.businesscraft.network.packets.ResourceSyncPacket;
 
 /**
  * Packet for trading resources with towns.
@@ -112,7 +113,7 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
                 LOGGER.warn("No town found for town block at position {} for player {}", pos, player.getName().getString());
                 return;
             }
-            
+
             // Add the item to the town's resources
             int itemCount = itemToTrade.getCount();
             town.addResource(itemToTrade.getItem(), itemCount);
@@ -182,6 +183,9 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
             
             // Force the TownManager to save changes
             townManager.markDirty();
+
+            LOGGER.info("TradeResourcePacket: Sent ResourceSyncPacket to {} with {} resources", player.getName().getString(), town.getAllResources().size());
+            PlatformAccess.getNetworkMessages().sendToPlayer(new ResourceSyncPacket(pos, town.getAllResources()), player);
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
     }

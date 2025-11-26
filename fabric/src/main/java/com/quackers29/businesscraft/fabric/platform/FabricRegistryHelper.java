@@ -123,8 +123,10 @@ public class FabricRegistryHelper implements RegistryHelper {
 
                 // Get the item from the registry using the location (ResourceLocation)
                 // Registry.get(ResourceLocation) is the correct method
-                return itemRegistry.getClass().getMethod("get", resourceLocationClass)
+                Object result = itemRegistry.getClass().getMethod("get", resourceLocationClass)
                         .invoke(itemRegistry, location);
+                System.out.println("FabricRegistryHelper.getItem: " + location + " -> " + result);
+                return result;
             } catch (Exception e) {
                 System.err.println("Error in getItem: " + e.getMessage());
                 e.printStackTrace();
@@ -144,9 +146,12 @@ public class FabricRegistryHelper implements RegistryHelper {
                 Object itemRegistry = builtInRegistriesClass.getField("ITEM").get(null);
 
                 // Get the key (ResourceLocation) for the item
-                // Registry.getKey(Item) is the correct method
-                return itemRegistry.getClass().getMethod("getKey", itemClass)
+                // Registry.getKey(Item) is the correct method, but due to type erasure it might
+                // be getKey(Object)
+                Object result = itemRegistry.getClass().getMethod("getKey", Object.class)
                         .invoke(itemRegistry, item);
+                System.out.println("FabricRegistryHelper.getItemKey: " + item + " -> " + result);
+                return result;
             } catch (Exception e) {
                 System.err.println("Error in getItemKey: " + e.getMessage());
                 e.printStackTrace();

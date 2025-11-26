@@ -40,6 +40,7 @@ import com.quackers29.businesscraft.network.packets.misc.PaymentResultPacket;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.network.packets.debug.RequestTownDataPacket;
 import com.quackers29.businesscraft.network.packets.debug.TownDataResponsePacket;
+import com.quackers29.businesscraft.network.packets.ResourceSyncPacket;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -111,6 +112,7 @@ public class FabricModMessages {
             registerClientPacketForServer("personal_storage_response_packet", PersonalStorageResponsePacket.class);
             registerClientPacketForServer("payment_result_packet", PaymentResultPacket.class);
             registerClientPacketForServer("town_data_response_packet", TownDataResponsePacket.class);
+            registerClientPacketForServer("resource_sync_packet", ResourceSyncPacket.class);
 
             // Client side registration for receiving - will be done in FabricClientSetup
             // Store identifiers for client-side registration
@@ -121,7 +123,7 @@ public class FabricModMessages {
                     "communal_storage_response_packet", "payment_board_response_packet",
                     "buffer_storage_response_packet",
                     "buffer_slot_storage_response_packet", "personal_storage_response_packet", "payment_result_packet",
-                    "town_data_response_packet"
+                    "town_data_response_packet", "resource_sync_packet"
             };
             CLIENT_PACKET_CLASSES = new Class[] {
                     RefreshPlatformsPacket.class, RefreshDestinationsPacket.class, PlatformVisualizationPacket.class,
@@ -131,7 +133,7 @@ public class FabricModMessages {
                     BufferStorageResponsePacket.class,
                     BufferSlotStorageResponsePacket.class, PersonalStorageResponsePacket.class,
                     PaymentResultPacket.class,
-                    TownDataResponsePacket.class
+                    TownDataResponsePacket.class, ResourceSyncPacket.class
             };
 
             LOGGER.info("Fabric network messages registered successfully ({} server packets, {} client packets)",

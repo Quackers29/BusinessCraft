@@ -23,6 +23,8 @@ import com.quackers29.businesscraft.fabric.FabricModEvents;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import net.minecraft.resources.ResourceLocation;
+import com.quackers29.businesscraft.network.packets.ResourceSyncPacket;
 
 /**
  * Fabric-specific mod entry point for BusinessCraft.
@@ -100,6 +102,13 @@ public class BusinessCraftFabric implements ModInitializer {
 
         // Initialize networking
         FabricModMessages.register();
+
+        // Add to packet registration (find ModMessages or PlatformAccess.getNetworkMessages().registerS2C)
+        // Remove this invalid line - registration handled by FabricModMessages.register()
+        /*
+        PlatformAccess.getNetworkMessages().registerS2C(new ResourceLocation("businesscraft", "resource_sync"), ResourceSyncPacket::decode, ResourceSyncPacket::handle);
+        LOGGER.info("Registered ResourceSyncPacket for Fabric resource sync");
+        */
 
         // Initialize common event handlers
         com.quackers29.businesscraft.event.PlayerBoundaryTracker.initialize();

@@ -153,6 +153,10 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     // logic)
     private final ClientSyncHelper clientSyncHelper = new ClientSyncHelper();
 
+    public ClientSyncHelper getClientSyncHelper() {
+        return clientSyncHelper;
+    }
+
     // Platform management (handles platform storage and operations)
     private final PlatformManager platformManager = new PlatformManager();
 
@@ -309,6 +313,16 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         if (!level.isClientSide()) {
             updateFromTownProvider();
             bufferManager.onLoad(); // Delegate buffer initialization to manager
+        } else {
+            clientSyncHelper.clearAll(); // Clean client cache on load
+        }
+
+        // Sync town data to ensure client-side cache is up-to-date
+        if (townId != null && level instanceof ServerLevel sLevel) {
+            Town town = TownManager.get(sLevel).getTown(townId);
+            if (town != null) {
+                clientSyncHelper.updateClientResourcesFromTown(town);
+            }
         }
     }
 
@@ -482,12 +496,15 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     public void setChanged() {
         super.setChanged();
         if (level != null && !level.isClientSide()) {
+            LOGGER.info("[PLATFORM] setChanged called on SERVER");
             // Update client cache from town data before syncing to ensure latest data is
             // sent
             if (townId != null && level instanceof ServerLevel serverLevel) {
                 Town town = TownManager.get(serverLevel).getTown(townId);
                 if (town != null) {
                     clientSyncHelper.updateClientResourcesFromTown(town);
+                    LOGGER.info("[PLATFORM] Updated client resources from town, resource count: {}",
+                            town.getAllResources().size());
                 }
             }
 
@@ -495,6 +512,7 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
             refreshOpenMenus();
 
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
+            LOGGER.info("[PLATFORM] sendBlockUpdated called");
         }
     }
 
@@ -522,8 +540,8 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
      */
     @Override
     public CompoundTag getUpdateTag() {
+        LOGGER.info("[PLATFORM] getUpdateTag called on SERVER");
         CompoundTag tag = super.getUpdateTag();
-
         // Add town info
         if (townId != null) {
             tag.putUUID("TownId", townId);
@@ -564,8 +582,9 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     public void handleUpdateTag(CompoundTag tag) {
         super.handleUpdateTag(tag);
 
-        LOGGER.info("[PLATFORM] handleUpdateTag called on client, tag contains platforms: {}",
-                tag.contains("platforms"));
+        LOGGER.info("[PLATFORM] handleUpdateTag called on CLIENT, tag keys: {}", tag.getAllKeys());
+        LOGGER.info("[PLATFORM] tag contains platforms: {}", tag.contains("platforms"));
+        LOGGER.info("[PLATFORM] tag contains clientResources: {}", tag.contains("clientResources"));
 
         // Handle name updates
         if (tag.contains("name")) {
@@ -602,11 +621,13 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
      * This centralizes our resource deserialization logic in one place
      */
     private void loadResourcesFromTag(CompoundTag tag) {
+        LOGGER.info("[PLATFORM] loadResourcesFromTag called");
         clientSyncHelper.loadResourcesFromTag(tag);
     }
 
     @Override
     public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
+        LOGGER.info("[PLATFORM] onDataPacket called on CLIENT");
         CompoundTag tag = pkt.getTag();
         if (tag != null) {
             handleUpdateTag(tag);
@@ -703,10 +724,8 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
 
     public void syncTownData() {
         if (level != null && !level.isClientSide()) {
-            // Sync all data from town provider
             updateFromTownProvider();
 
-            // Explicitly update client resources when syncing town data
             if (townId != null && level instanceof ServerLevel serverLevel) {
                 Town town = TownManager.get(serverLevel).getTown(townId);
                 if (town != null) {
@@ -714,10 +733,8 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
                 }
             }
 
-            // Update container data - mark all fields as dirty to refresh values
             containerData.markAllDirty();
 
-            // Force a block update to sync the latest data
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
             setChanged();
         }
@@ -967,7 +984,10 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
      */
     @Override
     public Packet<ClientGamePacketListener> getUpdatePacket() {
-        return ClientboundBlockEntityDataPacket.create(this);
+        LOGGER.info("[PLATFORM] getUpdatePacket called, creating packet");
+        Packet<ClientGamePacketListener> packet = ClientboundBlockEntityDataPacket.create(this);
+        LOGGER.info("[PLATFORM] getUpdatePacket created packet: {}", packet != null);
+        return packet;
     }
 
     /**

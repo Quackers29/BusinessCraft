@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import com.quackers29.businesscraft.debug.DebugConfig;
+import com.quackers29.businesscraft.network.packets.ResourceSyncPacket;
 
 /**
  * Menu container for the Town Interface block.
@@ -121,6 +122,8 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
             } else {
                 // Initialize data values from town
                 updateDataSlots();
+                PlatformAccess.getNetworkMessages().sendToPlayer(new ResourceSyncPacket(pos, this.town.getAllResources()), inv.player);
+                LOGGER.info("TownInterfaceMenu created - sent ResourceSyncPacket with {} resources on open", this.town.getAllResources().size());
                     if (level != null && !level.isClientSide()) {
                         broadcastChanges();
                     }
@@ -440,12 +443,9 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         // Try to get resources from town entity
         if (level != null) {
             if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
-                // On client-side, we need to get cached resources from the entity directly
                 if (level.isClientSide()) {
                     return townEntity.getClientResources();
-                }
-                // On server-side, get from TownManager
-                else {
+                } else {
                     UUID entityTownId = townEntity.getTownId();
                     if (entityTownId != null && level instanceof ServerLevel serverLevel) {
                         Town townFromEntity = TownManager.get(serverLevel).getTown(entityTownId);
@@ -457,7 +457,6 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
             }
         }
         
-        // Return empty map if no resources found
         return Collections.emptyMap();
     }
     

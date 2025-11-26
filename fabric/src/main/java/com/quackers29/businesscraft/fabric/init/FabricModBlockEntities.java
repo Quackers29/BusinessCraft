@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.fabric.init;
 
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.fabric.block.entity.FabricTownInterfaceEntity;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -14,7 +15,7 @@ public class FabricModBlockEntities {
     private static final String MOD_ID = "businesscraft";
 
     // Store the registered block entity type for later retrieval
-    public static BlockEntityType<TownInterfaceEntity> TOWN_INTERFACE_ENTITY_TYPE;
+    public static BlockEntityType<?> TOWN_INTERFACE_ENTITY_TYPE;
     private static boolean registrationAttempted = false;
     private static boolean registrationSuccessful = false;
 
@@ -71,7 +72,7 @@ public class FabricModBlockEntities {
      */
     private static void registerBlockEntities() {
         try {
-            System.out.println("DEBUG: Registering TownInterfaceEntity");
+            System.out.println("DEBUG: Registering FabricTownInterfaceEntity");
 
             // Get the town interface block from the registry (registered in
             // FabricModBlocks)
@@ -83,19 +84,20 @@ public class FabricModBlockEntities {
                 System.out.println("DEBUG: Creating block entity type for town interface block");
 
                 TOWN_INTERFACE_ENTITY_TYPE = FabricBlockEntityTypeBuilder.create(
-                        TownInterfaceEntity::new,
+                        FabricTownInterfaceEntity::new,
                         townInterfaceBlock).build();
 
                 // Register it in the registry
                 Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
                         new ResourceLocation("businesscraft", "town_interface_entity"), TOWN_INTERFACE_ENTITY_TYPE);
 
-                System.out.println("DEBUG: Successfully registered TownInterfaceEntity: " + TOWN_INTERFACE_ENTITY_TYPE);
+                System.out.println(
+                        "DEBUG: Successfully registered FabricTownInterfaceEntity: " + TOWN_INTERFACE_ENTITY_TYPE);
             } else {
                 System.out.println("DEBUG: Skipping block entity type registration - town interface block not found");
                 // Try to create without specifying the block
                 TOWN_INTERFACE_ENTITY_TYPE = FabricBlockEntityTypeBuilder.create(
-                        TownInterfaceEntity::new
+                        FabricTownInterfaceEntity::new
                 // No blocks specified - this might work for dynamic association
                 ).build();
 
