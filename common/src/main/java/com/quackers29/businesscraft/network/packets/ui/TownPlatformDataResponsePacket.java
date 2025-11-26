@@ -22,7 +22,7 @@ public class TownPlatformDataResponsePacket {
     private static final int MAX_STRING_LENGTH = 32767;
 
     private final UUID townId;
-    private final Map<UUID, PlatformInfo> platforms = new HashMap<>();
+    private final Map<UUID, PlatformInfo> platforms = new java.util.LinkedHashMap<>();
     private TownInfo townInfo;
 
     public TownPlatformDataResponsePacket(UUID townId) {

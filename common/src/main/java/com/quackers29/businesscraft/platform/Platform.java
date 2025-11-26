@@ -19,7 +19,7 @@ public class Platform {
     private BlockPos startPos;
     private BlockPos endPos;
     private Set<UUID> enabledDestinations = new HashSet<>();
-    
+
     /**
      * Create a new platform with a random ID
      */
@@ -28,7 +28,7 @@ public class Platform {
         this.name = "New Platform";
         this.enabled = true;
     }
-    
+
     /**
      * Create a new platform with the given ID
      */
@@ -37,7 +37,7 @@ public class Platform {
         this.name = "New Platform";
         this.enabled = true;
     }
-    
+
     /**
      * Create a new platform with the given name, enabled state, and path
      */
@@ -59,18 +59,16 @@ public class Platform {
 
         if (tag.contains("StartX")) {
             this.startPos = new BlockPos(
-                tag.getInt("StartX"),
-                tag.getInt("StartY"),
-                tag.getInt("StartZ")
-            );
+                    tag.getInt("StartX"),
+                    tag.getInt("StartY"),
+                    tag.getInt("StartZ"));
         }
 
         if (tag.contains("EndX")) {
             this.endPos = new BlockPos(
-                tag.getInt("EndX"),
-                tag.getInt("EndY"),
-                tag.getInt("EndZ")
-            );
+                    tag.getInt("EndX"),
+                    tag.getInt("EndY"),
+                    tag.getInt("EndZ"));
         }
 
         // Load enabled destinations
@@ -118,42 +116,42 @@ public class Platform {
 
         return tag;
     }
-    
+
     /**
      * Get the unique ID of this platform
      */
     public UUID getId() {
         return id;
     }
-    
+
     /**
      * Get the name of this platform
      */
     public String getName() {
         return name;
     }
-    
+
     /**
      * Set the name of this platform
      */
     public void setName(String name) {
         this.name = name;
     }
-    
+
     /**
      * Check if this platform is enabled
      */
     public boolean isEnabled() {
         return enabled;
     }
-    
+
     /**
      * Set whether this platform is enabled
      */
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
-    
+
     /**
      * Get the start position of this platform
      */
@@ -181,58 +179,59 @@ public class Platform {
     public void setEndPos(BlockPos endPos) {
         this.endPos = endPos;
     }
-    
+
     /**
      * Check if this platform is complete (has both start and end positions)
      */
     public boolean isComplete() {
         return startPos != null && endPos != null;
     }
-    
+
     /**
      * Check if this platform has no enabled destinations (accepts any)
      */
     public boolean hasNoEnabledDestinations() {
         return enabledDestinations.isEmpty();
     }
-    
+
     /**
      * Enable a destination for this platform
      */
     public void enableDestination(UUID destinationId) {
         enabledDestinations.add(destinationId);
     }
-    
+
     /**
      * Disable a destination for this platform
      */
     public void disableDestination(UUID destinationId) {
         enabledDestinations.remove(destinationId);
     }
-    
+
     /**
      * Check if a destination is enabled for this platform
      */
     public boolean isDestinationEnabled(UUID destinationId) {
         return enabledDestinations.contains(destinationId);
     }
-    
+
     /**
      * Get all enabled destinations
      */
     public Set<UUID> getEnabledDestinations() {
         return new HashSet<>(enabledDestinations);
     }
-    
+
     /**
      * Clear all enabled destinations
      */
     public void clearEnabledDestinations() {
         enabledDestinations.clear();
     }
-    
+
     /**
      * Get destinations as a map (for compatibility with existing code)
+     * 
      * @return Map of destination IDs to enabled status
      */
     public Map<UUID, Boolean> getDestinations() {
@@ -242,11 +241,12 @@ public class Platform {
         }
         return result;
     }
-    
+
     /**
      * Set destination enabled status
+     * 
      * @param destinationId The destination ID
-     * @param enabled Whether the destination is enabled
+     * @param enabled       Whether the destination is enabled
      */
     public void setDestinationEnabled(UUID destinationId, boolean enabled) {
         if (enabled) {
@@ -255,9 +255,10 @@ public class Platform {
             enabledDestinations.remove(destinationId);
         }
     }
-    
+
     /**
      * Convert this platform to an NBT tag
+     * 
      * @return The NBT tag
      */
     public CompoundTag toNBT() {
@@ -266,10 +267,31 @@ public class Platform {
 
     /**
      * Create a platform from an NBT tag
+     * 
      * @param tag The NBT tag
      * @return The platform
      */
     public static Platform fromNBT(CompoundTag tag) {
         return new Platform(tag);
     }
-} 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
+        Platform platform = (Platform) o;
+        return enabled == platform.enabled &&
+                java.util.Objects.equals(id, platform.id) &&
+                java.util.Objects.equals(name, platform.name) &&
+                java.util.Objects.equals(startPos, platform.startPos) &&
+                java.util.Objects.equals(endPos, platform.endPos) &&
+                java.util.Objects.equals(enabledDestinations, platform.enabledDestinations);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(id, name, enabled, startPos, endPos, enabledDestinations);
+    }
+}

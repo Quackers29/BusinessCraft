@@ -539,15 +539,21 @@ public class PlatformManagementScreenV2 extends Screen {
                     // Get fresh platform data from server
                     List<Platform> freshPlatforms = townInterface.getPlatforms();
 
-                    // Always update platforms and force grid refresh (simplified logic)
-                    this.platforms = new ArrayList<>(freshPlatforms);
-                    currentPlatforms.clear(); // Force refresh by clearing cache
+                    // Only update if platforms have actually changed
+                    if (!freshPlatforms.equals(this.platforms)) {
+                        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS,
+                                "Platform data changed, updating UI (old: {}, new: {})",
+                                this.platforms.size(), freshPlatforms.size());
 
-                    // Force grid update
-                    if (platformListGrid != null) {
-                        updatePlatformListGridData();
-                    } else {
-                        initializePlatformListGrid();
+                        this.platforms = new ArrayList<>(freshPlatforms);
+                        // currentPlatforms will be updated in updatePlatformListData
+
+                        // Force grid update
+                        if (platformListGrid != null) {
+                            updatePlatformListData();
+                        } else {
+                            initializePlatformListGrid();
+                        }
                     }
                 }
             }
