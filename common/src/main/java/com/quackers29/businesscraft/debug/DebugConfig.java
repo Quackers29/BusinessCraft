@@ -9,15 +9,16 @@ import org.slf4j.LoggerFactory;
  * 
  * Usage:
  * if (DebugConfig.isEnabled(DebugConfig.TOWN_BLOCK_ENTITY)) {
- *     LOGGER.info("[DEBUG] Your debug message here");
+ * LOGGER.info("[DEBUG] Your debug message here");
  * }
  */
 public class DebugConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/DebugConfig");
-    
-    // Global override - when true, enables ALL debug logging regardless of individual flags
-    public static final boolean FORCE_ALL_DEBUG = true;
-    
+
+    // Global override - when true, enables ALL debug logging regardless of
+    // individual flags
+    public static final boolean FORCE_ALL_DEBUG = false;
+
     // Core Systems - High Priority (Milestone 2)
     public static final boolean TOWN_BLOCK_ENTITY = false;
     public static final boolean TOWN_INTERFACE_MENU = true;
@@ -31,7 +32,7 @@ public class DebugConfig {
     public static final boolean UI_RESOURCES_TAB = false;
     public static final boolean UI_GRID_BUILDER = false;
     public static final boolean UI_STANDARD_TAB_CONTENT = false;
-    
+
     // Town & Data Systems (Milestone 3)
     public static final boolean TOWN_DATA_SYSTEMS = false;
     public static final boolean TOWN_SERVICE = false;
@@ -40,32 +41,32 @@ public class DebugConfig {
     public static final boolean SYNC_HELPERS = false;
     public static final boolean VISITOR_PROCESSING = false;
     public static final boolean UI_BASE_SCREEN = false;
-    
+
     // Platform System
     public static final boolean PLATFORM_SYSTEM = false;
     public static final boolean PLATFORM_VISUALIZATION = false;
-    
+
     // Entity System
     public static final boolean ENTITY_SYSTEM = false;
     public static final boolean TOURIST_ENTITY = false;
     public static final boolean TOURIST_SPAWNING = false;
-    
+
     // Client Systems
     public static final boolean CLIENT_HANDLERS = false;
     public static final boolean KEY_HANDLERS = false;
     public static final boolean DEBUG_OVERLAY = false;
-    
+
     // Storage Systems
     public static final boolean STORAGE_OPERATIONS = false;
     public static final boolean TRADE_OPERATIONS = false;
-    
+
     // Configuration and Initialization
     public static final boolean CONFIG_SYSTEM = false;
     public static final boolean MOD_INITIALIZATION = false;
-    
+
     // Error Handling
     public static final boolean ERROR_HANDLING = true;
-    
+
     /**
      * Helper method to check if debug logging is enabled for a specific component.
      * Takes into account both the global override and individual component flags.
@@ -76,65 +77,66 @@ public class DebugConfig {
     public static boolean isEnabled(boolean componentFlag) {
         return FORCE_ALL_DEBUG || componentFlag;
     }
-    
+
     /**
      * Conditional debug logging helper with message formatting.
      * Only logs if the component flag is enabled.
      * 
-     * @param logger The logger instance to use
+     * @param logger        The logger instance to use
      * @param componentFlag The component's debug flag
-     * @param message The message to log
-     * @param args Optional message arguments for formatting
+     * @param message       The message to log
+     * @param args          Optional message arguments for formatting
      */
     public static void debug(Logger logger, boolean componentFlag, String message, Object... args) {
         if (isEnabled(componentFlag)) {
             logger.info("[DEBUG] " + message, args);
         }
     }
-    
+
     /**
      * Conditional debug logging helper for simple messages.
      * Only logs if the component flag is enabled.
      * 
-     * @param logger The logger instance to use
+     * @param logger        The logger instance to use
      * @param componentFlag The component's debug flag
-     * @param message The message to log
+     * @param message       The message to log
      */
     public static void debug(Logger logger, boolean componentFlag, String message) {
         if (isEnabled(componentFlag)) {
             logger.info("[DEBUG] " + message);
         }
     }
-    
+
     /**
      * Conditional debug logging helper with message formatting for Log4J loggers.
      * Only logs if the component flag is enabled.
      * 
-     * @param logger The Log4J logger instance to use
+     * @param logger        The Log4J logger instance to use
      * @param componentFlag The component's debug flag
-     * @param message The message to log
-     * @param args Optional message arguments for formatting
+     * @param message       The message to log
+     * @param args          Optional message arguments for formatting
      */
-    public static void debug(org.apache.logging.log4j.Logger logger, boolean componentFlag, String message, Object... args) {
+    public static void debug(org.apache.logging.log4j.Logger logger, boolean componentFlag, String message,
+            Object... args) {
         if (isEnabled(componentFlag)) {
             logger.info("[DEBUG] " + message, args);
         }
     }
-    
+
     /**
      * Conditional debug logging helper for simple messages for Log4J loggers.
      * Only logs if the component flag is enabled.
      * 
-     * @param logger The Log4J logger instance to use
+     * @param logger        The Log4J logger instance to use
      * @param componentFlag The component's debug flag
-     * @param message The message to log
+     * @param message       The message to log
      */
     public static void debug(org.apache.logging.log4j.Logger logger, boolean componentFlag, String message) {
         if (isEnabled(componentFlag)) {
             logger.info("[DEBUG] " + message);
         }
     }
-    
+
     /**
      * Reports all active debug loggers at startup.
      * This provides transparency about which systems have debug logging enabled.
@@ -146,12 +148,12 @@ public class DebugConfig {
             LOGGER.info("===================================");
             return;
         }
-        
+
         boolean anyEnabled = false;
         StringBuilder enabledSystems = new StringBuilder();
         enabledSystems.append("=== BusinessCraft Debug Config ===\n");
         enabledSystems.append("Active debug logging for:\n");
-        
+
         // Check each system and report if enabled
         if (TOWN_BLOCK_ENTITY) {
             enabledSystems.append("  - TOWN_BLOCK_ENTITY\n");
@@ -253,7 +255,7 @@ public class DebugConfig {
             enabledSystems.append("  - ERROR_HANDLING\n");
             anyEnabled = true;
         }
-        
+
         if (anyEnabled) {
             enabledSystems.append("===================================");
             LOGGER.info(enabledSystems.toString());
@@ -263,12 +265,14 @@ public class DebugConfig {
             LOGGER.info("===================================");
         }
     }
-    
+
     /**
-     * Quick toggle method for enabling debug logging for common development scenarios.
+     * Quick toggle method for enabling debug logging for common development
+     * scenarios.
      * This can be called from debug commands or development tools.
      * 
-     * @param category The category to enable: "all", "core", "ui", "data", "network"
+     * @param category The category to enable: "all", "core", "ui", "data",
+     *                 "network"
      * @return true if the category was recognized and enabled
      */
     public static boolean enableDebugCategory(String category) {
@@ -277,7 +281,7 @@ public class DebugConfig {
         LOGGER.info("Debug category toggle requested for: {} (requires restart to take effect)", category);
         return false;
     }
-    
+
     /**
      * Gets the total number of debug flags that are currently enabled.
      * Useful for performance monitoring and configuration validation.
@@ -288,34 +292,59 @@ public class DebugConfig {
         if (FORCE_ALL_DEBUG) {
             return -1; // Special value indicating all flags are enabled
         }
-        
+
         int count = 0;
-        if (TOWN_BLOCK_ENTITY) count++;
-        if (TOWN_INTERFACE_MENU) count++;
-        if (NETWORK_PACKETS) count++;
-        if (UI_MANAGERS) count++;
-        if (SEARCH_RADIUS_MANAGER) count++;
-        if (MODAL_MANAGERS) count++;
-        if (TOWN_SCREEN_DEPENDENCIES) count++;
-        if (TOWN_DATA_SYSTEMS) count++;
-        if (TOWN_SERVICE) count++;
-        if (TOWN_MANAGER) count++;
-        if (NBT_DATA_HELPER) count++;
-        if (SYNC_HELPERS) count++;
-        if (PLATFORM_SYSTEM) count++;
-        if (PLATFORM_VISUALIZATION) count++;
-        if (ENTITY_SYSTEM) count++;
-        if (TOURIST_ENTITY) count++;
-        if (TOURIST_SPAWNING) count++;
-        if (CLIENT_HANDLERS) count++;
-        if (KEY_HANDLERS) count++;
-        if (DEBUG_OVERLAY) count++;
-        if (STORAGE_OPERATIONS) count++;
-        if (TRADE_OPERATIONS) count++;
-        if (CONFIG_SYSTEM) count++;
-        if (MOD_INITIALIZATION) count++;
-        if (ERROR_HANDLING) count++;
-        
+        if (TOWN_BLOCK_ENTITY)
+            count++;
+        if (TOWN_INTERFACE_MENU)
+            count++;
+        if (NETWORK_PACKETS)
+            count++;
+        if (UI_MANAGERS)
+            count++;
+        if (SEARCH_RADIUS_MANAGER)
+            count++;
+        if (MODAL_MANAGERS)
+            count++;
+        if (TOWN_SCREEN_DEPENDENCIES)
+            count++;
+        if (TOWN_DATA_SYSTEMS)
+            count++;
+        if (TOWN_SERVICE)
+            count++;
+        if (TOWN_MANAGER)
+            count++;
+        if (NBT_DATA_HELPER)
+            count++;
+        if (SYNC_HELPERS)
+            count++;
+        if (PLATFORM_SYSTEM)
+            count++;
+        if (PLATFORM_VISUALIZATION)
+            count++;
+        if (ENTITY_SYSTEM)
+            count++;
+        if (TOURIST_ENTITY)
+            count++;
+        if (TOURIST_SPAWNING)
+            count++;
+        if (CLIENT_HANDLERS)
+            count++;
+        if (KEY_HANDLERS)
+            count++;
+        if (DEBUG_OVERLAY)
+            count++;
+        if (STORAGE_OPERATIONS)
+            count++;
+        if (TRADE_OPERATIONS)
+            count++;
+        if (CONFIG_SYSTEM)
+            count++;
+        if (MOD_INITIALIZATION)
+            count++;
+        if (ERROR_HANDLING)
+            count++;
+
         return count;
     }
 }
