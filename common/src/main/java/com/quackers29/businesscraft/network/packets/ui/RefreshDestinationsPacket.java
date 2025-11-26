@@ -28,16 +28,16 @@ public class RefreshDestinationsPacket {
     private final Map<UUID, Boolean> enabledState = new HashMap<>();
     private final Map<UUID, Integer> townDistances = new HashMap<>();
     private final Map<UUID, String> townDirections = new HashMap<>(); // Store directions
-    
+
     public RefreshDestinationsPacket(BlockPos pos, UUID platformId) {
         this.pos = pos;
         this.platformId = platformId;
     }
-    
+
     public RefreshDestinationsPacket(FriendlyByteBuf buf) {
         this.pos = buf.readBlockPos();
         this.platformId = buf.readUUID();
-        
+
         // Read town names and enabled states
         int size = buf.readInt();
         for (int i = 0; i < size; i++) {
@@ -52,11 +52,11 @@ public class RefreshDestinationsPacket {
             townDirections.put(id, direction);
         }
     }
-    
+
     public void encode(FriendlyByteBuf buf) {
         buf.writeBlockPos(pos);
         buf.writeUUID(platformId);
-        
+
         // Write town names and enabled states
         buf.writeInt(townNames.size());
         for (Map.Entry<UUID, String> entry : townNames.entrySet()) {
@@ -69,17 +69,25 @@ public class RefreshDestinationsPacket {
         }
     }
 
+    /**
+     * Serialize packet data for Fabric networking
+     */
+    public void toBytes(FriendlyByteBuf buf) {
+        encode(buf);
+    }
+
     // Static decode method for Forge network registration
     public static RefreshDestinationsPacket decode(FriendlyByteBuf buf) {
         return new RefreshDestinationsPacket(buf);
     }
-    
+
     /**
      * Add town data to this packet
-     * @param townId The town ID
-     * @param name The town name
-     * @param enabled Whether this town is enabled as a destination
-     * @param distance Distance to this town in meters
+     * 
+     * @param townId    The town ID
+     * @param name      The town name
+     * @param enabled   Whether this town is enabled as a destination
+     * @param distance  Distance to this town in meters
      * @param direction Cardinal direction to this town (N, NE, E, SE, S, SW, W, NW)
      */
     public void addTown(UUID townId, String name, boolean enabled, int distance, String direction) {
@@ -88,7 +96,7 @@ public class RefreshDestinationsPacket {
         townDistances.put(townId, distance);
         townDirections.put(townId, direction);
     }
-    
+
     public boolean handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // This runs on the client side
@@ -101,7 +109,7 @@ public class RefreshDestinationsPacket {
             Object levelObj = clientHelper.getClientLevel();
             if (levelObj instanceof Level level) {
                 BlockEntity be = level.getBlockEntity(pos);
-                
+
                 if (be instanceof TownInterfaceEntity townInterface) {
                     // Find the platform with this ID
                     Platform platform = null;
@@ -111,20 +119,19 @@ public class RefreshDestinationsPacket {
                             break;
                         }
                     }
-                    
+
                     if (platform != null) {
                         Object minecraft = clientHelper.getMinecraft();
                         if (minecraft instanceof net.minecraft.client.Minecraft mc) {
                             // Open destinations screen V2 (using BC UI framework)
                             mc.setScreen(new DestinationsScreenV2(
-                                pos, 
-                                platformId, 
-                                platform.getName(),
-                                townNames,
-                                enabledState,
-                                townDistances,
-                                townDirections
-                            ));
+                                    pos,
+                                    platformId,
+                                    platform.getName(),
+                                    townNames,
+                                    enabledState,
+                                    townDistances,
+                                    townDirections));
                         }
                     }
                 }
@@ -133,4 +140,4 @@ public class RefreshDestinationsPacket {
         PlatformAccess.getNetwork().setPacketHandled(context);
         return true;
     }
-} 
+}
