@@ -5429,3 +5429,205 @@ java.lang.IllegalAccessException: class io.netty.util.internal.PlatformDependent
 [20:30:58] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItemKey: bread -> minecraft:bread
 [20:30:58] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItemKey: experience_bottle -> minecraft:experience_bottle
 [20:30:58] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] getUpdatePacket created packet: true
+[20:31:00] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:00] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:00] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:00] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:00] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:00] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:00] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:00] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:00] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:00] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:02] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:02] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:02] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:02] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:02] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:02] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:02] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:02] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:02] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:02] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:04] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:04] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:04] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:04] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:04] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:04] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:04] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:04] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:04] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:04] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:06] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:06] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:06] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:06] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:06] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:06] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:06] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:06] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:06] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:06] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:06] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] setChanged called on SERVER
+[20:31:06] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] Updated client resources from town, resource count: 3
+[20:31:06] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] sendBlockUpdated called
+[20:31:06] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] setChanged called on SERVER
+[20:31:06] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] Updated client resources from town, resource count: 3
+[20:31:06] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] sendBlockUpdated called
+[20:31:06] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] setChanged called on SERVER
+[20:31:06] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] Updated client resources from town, resource count: 3
+[20:31:06] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] sendBlockUpdated called
+[20:31:06] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] setChanged called on SERVER
+[20:31:06] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] Updated client resources from town, resource count: 3
+[20:31:06] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] sendBlockUpdated called
+[20:31:06] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] getUpdatePacket called, creating packet
+[20:31:06] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] getUpdateTag called on SERVER
+[20:31:06] [Server thread/INFO] (com.quackers29.businesscraft.town.data.ClientSyncHelper) ClientSyncHelper.syncResourcesForClient - provider resources size: 3
+[20:31:06] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItemKey: stripped_jungle_wood -> minecraft:stripped_jungle_wood
+[20:31:06] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItemKey: bread -> minecraft:bread
+[20:31:06] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItemKey: experience_bottle -> minecraft:experience_bottle
+[20:31:06] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] getUpdatePacket created packet: true
+[20:31:08] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:08] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:08] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:08] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:08] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:08] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:08] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:08] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:08] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:08] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:08] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItem: minecraft:bread -> bread
+[20:31:08] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItem: minecraft:experience_bottle -> experience_bottle
+[20:31:08] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] setChanged called on SERVER
+[20:31:08] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] Updated client resources from town, resource count: 3
+[20:31:08] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] sendBlockUpdated called
+[20:31:08] [Render thread/INFO] (net.minecraft.client.gui.components.ChatComponent) [System] [CHAT] 💰 Tourism Revenue | 4 from Greystoneawewaea (28m) | +2 emeralds
+[20:31:08] [Render thread/INFO] (net.minecraft.client.gui.components.ChatComponent) [System] [CHAT] 🏆 Distance Milestone | 28m journey | +4 Bread, 8 Bottle o' Enchanting
+[20:31:08] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] getUpdatePacket called, creating packet
+[20:31:08] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] getUpdateTag called on SERVER
+[20:31:08] [Server thread/INFO] (com.quackers29.businesscraft.town.data.ClientSyncHelper) ClientSyncHelper.syncResourcesForClient - provider resources size: 3
+[20:31:08] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItemKey: stripped_jungle_wood -> minecraft:stripped_jungle_wood
+[20:31:08] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItemKey: bread -> minecraft:bread
+[20:31:08] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItemKey: experience_bottle -> minecraft:experience_bottle
+[20:31:08] [Server thread/INFO] (com.quackers29.businesscraft.block.entity.TownInterfaceEntity) [PLATFORM] getUpdatePacket created packet: true
+[20:31:10] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:10] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:10] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:10] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:10] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:10] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:10] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:10] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:12] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:12] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:12] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:12] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:12] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:12] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:12] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:12] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:12] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:12] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:14] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:14] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:14] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:14] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:14] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:14] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:14] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:14] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:14] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Active visualizations: 0
+[20:31:14] [Render thread/INFO] (com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer) [PLATFORM] Returning 0 visualizations
+[20:31:14] [Render thread/INFO] (net.minecraft.client.Minecraft) Stopping!
+[20:31:14] [Netty Server IO #1/DEBUG] (com.quackers29.businesscraft.event.PlayerBoundaryTracker) Cleaned up boundary tracking data for player: Player531
+[20:31:14] [Server thread/INFO] (net.minecraft.server.network.ServerGamePacketListenerImpl) Player531 lost connection: Disconnected
+[20:31:14] [Server thread/INFO] (net.minecraft.server.MinecraftServer) Player531 left the game
+[20:31:14] [Server thread/INFO] (net.minecraft.server.network.ServerGamePacketListenerImpl) Stopping singleplayer server as player logged out
+[20:31:14] [Server thread/INFO] (net.minecraft.server.MinecraftServer) Stopping server
+[20:31:14] [Server thread/INFO] (net.minecraft.server.MinecraftServer) Saving players
+[20:31:14] [Server thread/INFO] (net.minecraft.server.MinecraftServer) Saving worlds
+[20:31:14] [Server thread/INFO] (net.minecraft.server.MinecraftServer) Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
+[20:31:14] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItemKey: stripped_jungle_wood -> minecraft:stripped_jungle_wood
+[20:31:14] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItemKey: bread -> minecraft:bread
+[20:31:14] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItemKey: hopper -> minecraft:hopper
+[20:31:14] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItemKey: town_interface -> businesscraft:town_interface
+[20:31:14] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItemKey: experience_bottle -> minecraft:experience_bottle
+[20:31:14] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItemKey: stripped_jungle_wood -> minecraft:stripped_jungle_wood
+[20:31:14] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItemKey: bread -> minecraft:bread
+[20:31:14] [Server thread/INFO] (net.minecraft.server.LoggedPrintStream) [STDOUT]: FabricRegistryHelper.getItemKey: experience_bottle -> minecraft:experience_bottle
+[20:31:14] [Server thread/INFO] (net.minecraft.server.MinecraftServer) Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
+[20:31:14] [Server thread/INFO] (net.minecraft.server.MinecraftServer) Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Starting registry save
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:command_argument_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:item
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:block_entity_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:custom_stat
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/foliage_placer_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:stat_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/material_rule
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/structure_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:attribute
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:position_source_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:height_provider_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:rule_block_entity_modifier
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/density_function_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:fluid
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:loot_condition_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/structure_pool_element
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:activity
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:recipe_serializer
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:frog_variant
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:banner_pattern
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:instrument
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:decorated_pot_patterns
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/feature_size_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:point_of_interest_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Skipping un-modded registry: minecraft:mob_effect
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:loot_pool_entry_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/block_state_provider_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/chunk_generator
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:float_provider_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:chunk_status
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:enchantment
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:loot_function_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/structure_processor
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:loot_score_provider_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/tree_decorator_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:schedule
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/material_condition
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:entity_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:villager_profession
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:potion
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:recipe_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:int_provider_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/feature
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:cat_variant
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:pos_rule_test
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/structure_placement
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:loot_nbt_provider_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:menu
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/trunk_placer_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:creative_mode_tab
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/placement_modifier_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/carver
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:loot_number_provider_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/structure_piece
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:sound_event
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:particle_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:game_event
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/biome_source
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:worldgen/root_placer_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:villager_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:painting_variant
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:block_predicate_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:block
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:sensor_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:rule_test
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving registry: minecraft:memory_module_type
+[20:31:14] [Server thread/DEBUG] (FabricRegistrySync) Not saving empty registry data
+[20:31:14] [Server thread/INFO] (net.minecraft.server.MinecraftServer) ThreadedAnvilChunkStorage (New World (1)): All chunks are saved
+[20:31:14] [Server thread/INFO] (net.minecraft.server.MinecraftServer) ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[20:31:14] [Server thread/INFO] (net.minecraft.server.MinecraftServer) ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[20:31:14] [Server thread/INFO] (net.minecraft.server.MinecraftServer) ThreadedAnvilChunkStorage: All dimensions are saved

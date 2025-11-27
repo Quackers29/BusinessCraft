@@ -1,165 +1,57 @@
 package com.quackers29.businesscraft.fabric.platform;
 
 import com.quackers29.businesscraft.api.RegistryHelper;
+import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 
 /**
- * Fabric implementation of RegistryHelper using Object types for
- * platform-agnostic interface.
- * 
- * NOTE: The register methods here are largely placeholders or delegates.
- * In Fabric, blocks and items must be registered during mod initialization
- * (see FabricModBlocks and FabricModBlockEntities).
- * This class exists primarily to satisfy the RegistryHelper interface.
+ * Fabric implementation of RegistryHelper using strong types.
  */
 public class FabricRegistryHelper implements RegistryHelper {
 
     private static final String MOD_ID = "businesscraft";
 
     @Override
-    public void registerBlock(String name, Object block) {
-        // Platform-specific registration is handled in Fabric mod initialization
-        // This method provides the interface but delegates to platform-specific code
-        FabricRegistryDelegate.registerBlock(name, block);
+    public void registerBlock(String name, Block block) {
+        Registry.register(BuiltInRegistries.BLOCK, new ResourceLocation(MOD_ID, name), block);
     }
 
     @Override
-    public void registerBlockItem(String name, Object block) {
-        // Platform-specific registration is handled in Fabric mod initialization
-        FabricRegistryDelegate.registerBlockItem(name, block);
+    public void registerBlockItem(String name, Block block) {
+        BlockItem blockItem = new BlockItem(block, new FabricItemSettings());
+        Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MOD_ID, name), blockItem);
     }
 
     @Override
-    public void registerEntityType(String name, Object entityType) {
-        // Platform-specific registration is handled in Fabric mod initialization
-        FabricRegistryDelegate.registerEntityType(name, entityType);
+    public void registerEntityType(String name, EntityType<?> entityType) {
+        Registry.register(BuiltInRegistries.ENTITY_TYPE, new ResourceLocation(MOD_ID, name), entityType);
     }
 
     @Override
-    public void registerBlockEntityType(String name, Object blockEntityType) {
-        // Platform-specific registration is handled in Fabric mod initialization
-        FabricRegistryDelegate.registerBlockEntityType(name, blockEntityType);
+    public void registerBlockEntityType(String name, BlockEntityType<?> blockEntityType) {
+        Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, new ResourceLocation(MOD_ID, name), blockEntityType);
     }
 
     @Override
-    public void registerMenuType(String name, Object menuType) {
-        // Platform-specific registration is handled in Fabric mod initialization
-        FabricRegistryDelegate.registerMenuType(name, menuType);
+    public void registerMenuType(String name, MenuType<?> menuType) {
+        Registry.register(BuiltInRegistries.MENU, new ResourceLocation(MOD_ID, name), menuType);
     }
 
     @Override
-    public Object getItem(Object location) {
-        // Platform-specific lookup is handled in Fabric registry delegate
-        return FabricRegistryDelegate.getItem(location);
+    public Item getItem(ResourceLocation location) {
+        return BuiltInRegistries.ITEM.get(location);
     }
 
     @Override
-    public Object getItemKey(Object item) {
-        // Platform-specific lookup is handled in Fabric registry delegate
-        return FabricRegistryDelegate.getItemKey(item);
-    }
-
-    /**
-     * Platform-specific registry delegate using reflection to avoid compile-time
-     * dependencies.
-     * The actual Minecraft-specific code will be implemented in a separate
-     * runtime-loaded class.
-     */
-    private static class FabricRegistryDelegate {
-        // Use reflection to avoid compile-time Minecraft dependencies
-
-        static void registerBlock(String name, Object block) {
-            try {
-                // Reflection-based implementation would go here
-                // For now, this is a placeholder
-                System.out.println("FabricRegistryDelegate.registerBlock: " + name);
-            } catch (Exception e) {
-                System.err.println("Error in registerBlock: " + e.getMessage());
-            }
-        }
-
-        static void registerBlockItem(String name, Object block) {
-            try {
-                // Reflection-based implementation would go here
-                System.out.println("FabricRegistryDelegate.registerBlockItem: " + name);
-            } catch (Exception e) {
-                System.err.println("Error in registerBlockItem: " + e.getMessage());
-            }
-        }
-
-        static void registerEntityType(String name, Object entityType) {
-            try {
-                // Reflection-based implementation would go here
-                System.out.println("FabricRegistryDelegate.registerEntityType: " + name);
-            } catch (Exception e) {
-                System.err.println("Error in registerEntityType: " + e.getMessage());
-            }
-        }
-
-        static void registerBlockEntityType(String name, Object blockEntityType) {
-            try {
-                // Reflection-based implementation would go here
-                System.out.println("FabricRegistryDelegate.registerBlockEntityType: " + name);
-            } catch (Exception e) {
-                System.err.println("Error in registerBlockEntityType: " + e.getMessage());
-            }
-        }
-
-        static void registerMenuType(String name, Object menuType) {
-            try {
-                // Reflection-based implementation would go here
-                System.out.println("FabricRegistryDelegate.registerMenuType: " + name);
-            } catch (Exception e) {
-                System.err.println("Error in registerMenuType: " + e.getMessage());
-            }
-        }
-
-        static Object getItem(Object location) {
-            try {
-                // Use Fabric's registry system (BuiltInRegistries.ITEM)
-                ClassLoader classLoader = FabricRegistryDelegate.class.getClassLoader();
-                Class<?> builtInRegistriesClass = classLoader
-                        .loadClass("net.minecraft.core.registries.BuiltInRegistries");
-                Class<?> resourceLocationClass = classLoader.loadClass("net.minecraft.resources.ResourceLocation");
-
-                // Get the ITEM registry
-                Object itemRegistry = builtInRegistriesClass.getField("ITEM").get(null);
-
-                // Get the item from the registry using the location (ResourceLocation)
-                // Registry.get(ResourceLocation) is the correct method
-                Object result = itemRegistry.getClass().getMethod("get", resourceLocationClass)
-                        .invoke(itemRegistry, location);
-                System.out.println("FabricRegistryHelper.getItem: " + location + " -> " + result);
-                return result;
-            } catch (Exception e) {
-                System.err.println("Error in getItem: " + e.getMessage());
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        static Object getItemKey(Object item) {
-            try {
-                // Use Fabric's registry system (BuiltInRegistries.ITEM)
-                ClassLoader classLoader = FabricRegistryDelegate.class.getClassLoader();
-                Class<?> builtInRegistriesClass = classLoader
-                        .loadClass("net.minecraft.core.registries.BuiltInRegistries");
-                Class<?> itemClass = classLoader.loadClass("net.minecraft.world.item.Item");
-
-                // Get the ITEM registry
-                Object itemRegistry = builtInRegistriesClass.getField("ITEM").get(null);
-
-                // Get the key (ResourceLocation) for the item
-                // Registry.getKey(Item) is the correct method, but due to type erasure it might
-                // be getKey(Object)
-                Object result = itemRegistry.getClass().getMethod("getKey", Object.class)
-                        .invoke(itemRegistry, item);
-                System.out.println("FabricRegistryHelper.getItemKey: " + item + " -> " + result);
-                return result;
-            } catch (Exception e) {
-                System.err.println("Error in getItemKey: " + e.getMessage());
-                e.printStackTrace();
-                return null;
-            }
-        }
+    public ResourceLocation getItemKey(Item item) {
+        return BuiltInRegistries.ITEM.getKey(item);
     }
 }

@@ -211,7 +211,9 @@ public class BusinessCraftForge {
     public void onCreativeModeTabBuildContents(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == net.minecraft.world.item.CreativeModeTabs.BUILDING_BLOCKS) {
             // Add our Town Interface block item to the Building Blocks creative tab
-            ForgeModBlocks.TOWN_INTERFACE_BLOCK_ITEM.ifPresent(event::accept);
+            if (com.quackers29.businesscraft.init.CommonModBlocks.TOWN_INTERFACE_BLOCK != null) {
+                event.accept(com.quackers29.businesscraft.init.CommonModBlocks.TOWN_INTERFACE_BLOCK);
+            }
         }
     }
 
