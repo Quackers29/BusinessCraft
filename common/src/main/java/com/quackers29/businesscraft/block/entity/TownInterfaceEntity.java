@@ -101,7 +101,8 @@ import com.quackers29.businesscraft.town.data.ContainerDataHelper;
 import com.quackers29.businesscraft.town.data.TownBufferManager;
 import com.quackers29.businesscraft.debug.DebugConfig;
 
-public class TownInterfaceEntity extends BlockEntity implements MenuProvider, BlockEntityTicker<TownInterfaceEntity>, WorldlyContainer {
+public class TownInterfaceEntity extends BlockEntity
+        implements MenuProvider, BlockEntityTicker<TownInterfaceEntity>, WorldlyContainer {
     private final Object itemHandler = PlatformAccess.getItemHandlers().createItemStackHandler(1);
     private Object lazyItemHandler = PlatformAccess.getItemHandlers().getEmptyLazyOptional();
 
@@ -250,6 +251,11 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         // Set up platform manager callback
         platformManager.setChangeCallback(this::setChanged);
 
+        // Initialize lazy handlers immediately to handle early capability queries (e.g.
+        // from hoppers)
+        this.lazyItemHandler = PlatformAccess.getItemHandlers().createLazyOptional(itemHandler);
+        this.lazyBufferHandler = PlatformAccess.getItemHandlers().createLazyOptional(bufferManager.getBufferHandler());
+
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "TownInterfaceEntity created at position: {}", pos);
     }
 
@@ -269,11 +275,20 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     // Platform-agnostic capability access method
     // Note: Platform-specific implementations should bridge this to Forge's
     // getCapability or Fabric's equivalent
-    public @NotNull <T> Object getCapability(@NotNull Object cap, @Nullable Direction side) {
+    public @NotNull <T> Object getCapabilityCommon(@NotNull Object cap, @Nullable Direction side) {
         if (PlatformAccess.getItemHandlers().isItemHandlerCapability(cap)) {
             // Return buffer handler for hopper extraction from below
-            if (side == Direction.DOWN && bufferManager != null) {
-                return PlatformAccess.getItemHandlers().castLazyOptional(lazyBufferHandler, cap);
+            if (side == Direction.DOWN) {
+                if (bufferManager != null) {
+                    Object result = PlatformAccess.getItemHandlers().castLazyOptional(lazyBufferHandler, cap);
+                    LOGGER.info(
+                            "[PLATFORM] getCapabilityCommon (DOWN): bufferManager is not null. lazyBufferHandler present: {}",
+                            PlatformAccess.getItemHandlers().castLazyOptional(lazyBufferHandler,
+                                    PlatformAccess.getItemHandlers().getEmptyLazyOptional()) != null);
+                    return result;
+                } else {
+                    LOGGER.info("[PLATFORM] getCapabilityCommon (DOWN): bufferManager is NULL");
+                }
             }
             // Return regular resource input handler for other sides
             return PlatformAccess.getItemHandlers().castLazyOptional(lazyItemHandler, cap);
@@ -346,11 +361,11 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
             // Buffer slots
             if (bufferManager != null && bufferManager.getBufferHandler() instanceof Container bufferContainer) {
                 int bufferSlot = slot - 1;
-            if (bufferSlot < bufferContainer.getContainerSize()) {
-                bufferContainer.setItem(bufferSlot, stack);
-                // Notify buffer manager of changes
-                // bufferManager.onBufferContentsChanged(); // TODO: Add this method if needed
-            }
+                if (bufferSlot < bufferContainer.getContainerSize()) {
+                    bufferContainer.setItem(bufferSlot, stack);
+                    // Notify buffer manager of changes
+                    // bufferManager.onBufferContentsChanged(); // TODO: Add this method if needed
+                }
             }
         }
     }
@@ -419,15 +434,16 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
     public int[] getSlotsForFace(Direction direction) {
         if (direction == Direction.DOWN) {
             // Bottom face: buffer slots (1-18)
-            return new int[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18};
+            return new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
         } else {
             // All other faces: input slot (0)
-            return new int[]{0};
+            return new int[] { 0 };
         }
     }
 
     /**
-     * Checks if automation can insert into the specified slot from the specified face
+     * Checks if automation can insert into the specified slot from the specified
+     * face
      */
     public boolean canPlaceItemThroughFace(int slot, ItemStack stack, Direction direction) {
         if (direction != Direction.DOWN && slot == 0) {
@@ -437,14 +453,14 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         return false;
     }
 
-
     /**
      * Checks if the player can still interact with this container
      * Required by Container interface
      */
     @Override
     public boolean stillValid(Player player) {
-        return player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5, worldPosition.getZ() + 0.5) < 64;
+        return player.distanceToSqr(worldPosition.getX() + 0.5, worldPosition.getY() + 0.5,
+                worldPosition.getZ() + 0.5) < 64;
     }
 
     /**
@@ -514,53 +530,6 @@ public class TownInterfaceEntity extends BlockEntity implements MenuProvider, Bl
         if (bufferManager != null) {
             bufferManager.setLevel(level);
         }
-    }
-
-    @Override
-    public void onLoad() {
-        super.onLoad();
-
-        // Initialize buffer manager now that level is available
-        if (bufferManager == null) {
-            bufferManager = new TownBufferManager(this, level);
-        } else {
-            // Re-initialize with level if needed, preserving townId
-            UUID currentTownId = this.townId;
-            bufferManager = new TownBufferManager(this, level);
-            if (currentTownId != null) {
-                bufferManager.setTownId(currentTownId);
-            }
-        }
-
-        if (townId != null) {
-            bufferManager.setTownId(townId);
-        }
-
-        lazyItemHandler = PlatformAccess.getItemHandlers().createLazyOptional(itemHandler);
-        lazyBufferHandler = PlatformAccess.getItemHandlers().createLazyOptional(bufferManager.getBufferHandler());
-
-        // Update from provider when loaded
-        if (!level.isClientSide()) {
-            updateFromTownProvider();
-            bufferManager.onLoad(); // Delegate buffer initialization to manager
-        } else {
-            clientSyncHelper.clearAll(); // Clean client cache on load
-        }
-
-        // Sync town data to ensure client-side cache is up-to-date
-        if (townId != null && level instanceof ServerLevel sLevel) {
-            Town town = TownManager.get(sLevel).getTown(townId);
-            if (town != null) {
-                clientSyncHelper.updateClientResourcesFromTown(town);
-            }
-        }
-    }
-
-    @Override
-    public void invalidateCaps() {
-        super.invalidateCaps();
-        PlatformAccess.getItemHandlers().invalidateLazyOptional(lazyItemHandler);
-        PlatformAccess.getItemHandlers().invalidateLazyOptional(lazyBufferHandler);
     }
 
     @Override
