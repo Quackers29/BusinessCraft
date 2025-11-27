@@ -20,7 +20,6 @@ public class ForgeTownInterfaceEntity extends TownInterfaceEntity {
 
     public ForgeTownInterfaceEntity(BlockPos pos, BlockState state) {
         super(pos, state);
-        LOGGER.info("ForgeTownInterfaceEntity created at {}", pos);
     }
 
     @Override
@@ -29,10 +28,6 @@ public class ForgeTownInterfaceEntity extends TownInterfaceEntity {
         // Call the platform-agnostic version and cast the result
         Object result = super.getCapabilityCommon(cap, side);
         if (result instanceof LazyOptional) {
-            if (cap == net.minecraftforge.common.capabilities.ForgeCapabilities.ITEM_HANDLER) {
-                LOGGER.info("getCapability called for ITEM_HANDLER on side {}, result present: {}", side,
-                        ((LazyOptional<?>) result).isPresent());
-            }
             @SuppressWarnings("unchecked")
             LazyOptional<T> castResult = (LazyOptional<T>) result;
             return castResult;

@@ -278,17 +278,8 @@ public class TownInterfaceEntity extends BlockEntity
     public @NotNull <T> Object getCapabilityCommon(@NotNull Object cap, @Nullable Direction side) {
         if (PlatformAccess.getItemHandlers().isItemHandlerCapability(cap)) {
             // Return buffer handler for hopper extraction from below
-            if (side == Direction.DOWN) {
-                if (bufferManager != null) {
-                    Object result = PlatformAccess.getItemHandlers().castLazyOptional(lazyBufferHandler, cap);
-                    LOGGER.info(
-                            "[PLATFORM] getCapabilityCommon (DOWN): bufferManager is not null. lazyBufferHandler present: {}",
-                            PlatformAccess.getItemHandlers().castLazyOptional(lazyBufferHandler,
-                                    PlatformAccess.getItemHandlers().getEmptyLazyOptional()) != null);
-                    return result;
-                } else {
-                    LOGGER.info("[PLATFORM] getCapabilityCommon (DOWN): bufferManager is NULL");
-                }
+            if (side == Direction.DOWN && bufferManager != null) {
+                return PlatformAccess.getItemHandlers().castLazyOptional(lazyBufferHandler, cap);
             }
             // Return regular resource input handler for other sides
             return PlatformAccess.getItemHandlers().castLazyOptional(lazyItemHandler, cap);
