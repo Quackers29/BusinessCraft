@@ -50,6 +50,7 @@ public class BusinessCraftFabric implements ModInitializer {
     public static final ClientHelper CLIENT = new FabricClientHelper();
     // RenderHelper uses reflection to avoid compile-time GuiGraphics dependency
     public static final RenderHelper RENDER = new FabricRenderHelper();
+    public static final com.quackers29.businesscraft.api.ITouristHelper TOURIST_HELPER = new FabricTouristHelper();
 
     @Override
     public void onInitialize() {
@@ -67,6 +68,7 @@ public class BusinessCraftFabric implements ModInitializer {
         PlatformAccess.menuTypes = MENU_TYPES;
         PlatformAccess.itemHandlers = ITEM_HANDLERS;
         PlatformAccess.networkMessages = NETWORK_MESSAGES;
+        PlatformAccess.touristHelper = TOURIST_HELPER;
         // ClientHelper and RenderHelper will be initialized in clientSetup() - only
         // available on client side
 
@@ -109,19 +111,24 @@ public class BusinessCraftFabric implements ModInitializer {
         try {
             net.fabricmc.loader.api.FabricLoader fabricLoader = net.fabricmc.loader.api.FabricLoader.getInstance();
             if (fabricLoader.getEnvironmentType() == net.fabricmc.api.EnvType.CLIENT) {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Registering client packets from main mod initializer");
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                        "Registering client packets from main mod initializer");
                 FabricModMessages.registerClientPackets();
             }
         } catch (Exception e) {
             LOGGER.warn("Could not register client packets from main initializer", e);
         }
 
-        // Add to packet registration (find ModMessages or PlatformAccess.getNetworkMessages().registerS2C)
-        // Remove this invalid line - registration handled by FabricModMessages.register()
+        // Add to packet registration (find ModMessages or
+        // PlatformAccess.getNetworkMessages().registerS2C)
+        // Remove this invalid line - registration handled by
+        // FabricModMessages.register()
         /*
-        PlatformAccess.getNetworkMessages().registerS2C(new ResourceLocation("businesscraft", "resource_sync"), ResourceSyncPacket::decode, ResourceSyncPacket::handle);
-        LOGGER.info("Registered ResourceSyncPacket for Fabric resource sync");
-        */
+         * PlatformAccess.getNetworkMessages().registerS2C(new
+         * ResourceLocation("businesscraft", "resource_sync"),
+         * ResourceSyncPacket::decode, ResourceSyncPacket::handle);
+         * LOGGER.info("Registered ResourceSyncPacket for Fabric resource sync");
+         */
 
         // Initialize common event handlers
         com.quackers29.businesscraft.event.PlayerBoundaryTracker.initialize();

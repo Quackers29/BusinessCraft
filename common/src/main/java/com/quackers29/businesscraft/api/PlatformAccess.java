@@ -98,4 +98,13 @@ public class PlatformAccess {
         // RenderHelper may be null on server side, so we don't throw an exception
         return render;
     }
+
+    public static ITouristHelper touristHelper;
+
+    public static ITouristHelper getTouristHelper() {
+        if (touristHelper == null) {
+            throw new IllegalStateException("TouristHelper not initialized yet");
+        }
+        return touristHelper;
+    }
 }

@@ -1,46 +1,10 @@
 package com.quackers29.businesscraft.fabric;
 
-import com.quackers29.businesscraft.network.packets.town.ToggleTouristSpawningPacket;
-import com.quackers29.businesscraft.network.packets.town.SetTownNamePacket;
-import com.quackers29.businesscraft.network.packets.platform.SetSearchRadiusPacket;
-import com.quackers29.businesscraft.network.packets.platform.AddPlatformPacket;
-import com.quackers29.businesscraft.network.packets.platform.DeletePlatformPacket;
-import com.quackers29.businesscraft.network.packets.platform.SetPlatformEnabledPacket;
-import com.quackers29.businesscraft.network.packets.platform.SetPlatformPathPacket;
-import com.quackers29.businesscraft.network.packets.platform.ResetPlatformPathPacket;
-import com.quackers29.businesscraft.network.packets.platform.SetPlatformPathCreationModePacket;
-import com.quackers29.businesscraft.network.packets.platform.RefreshPlatformsPacket;
-import com.quackers29.businesscraft.network.packets.platform.SetPlatformDestinationPacket;
-import com.quackers29.businesscraft.network.packets.ui.SetPathCreationModePacket;
-import com.quackers29.businesscraft.network.packets.ui.OpenDestinationsUIPacket;
-import com.quackers29.businesscraft.network.packets.ui.RefreshDestinationsPacket;
-import com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket;
-import com.quackers29.businesscraft.network.packets.ui.PlatformVisualizationPacket;
-import com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket;
-import com.quackers29.businesscraft.network.packets.ui.BoundarySyncResponsePacket;
-import com.quackers29.businesscraft.network.packets.ui.OpenTownInterfacePacket;
-import com.quackers29.businesscraft.network.packets.ui.OpenPaymentBoardPacket;
-import com.quackers29.businesscraft.network.packets.ui.RequestTownMapDataPacket;
-import com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket;
-import com.quackers29.businesscraft.network.packets.ui.RequestTownPlatformDataPacket;
-import com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket;
-import com.quackers29.businesscraft.network.packets.storage.TradeResourcePacket;
-import com.quackers29.businesscraft.network.packets.storage.CommunalStoragePacket;
-import com.quackers29.businesscraft.network.packets.storage.CommunalStorageResponsePacket;
-import com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket;
-import com.quackers29.businesscraft.network.packets.storage.PaymentBoardRequestPacket;
-import com.quackers29.businesscraft.network.packets.storage.PaymentBoardClaimPacket;
-import com.quackers29.businesscraft.network.packets.storage.BufferStoragePacket;
-import com.quackers29.businesscraft.network.packets.storage.BufferStorageResponsePacket;
-import com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket;
-import com.quackers29.businesscraft.network.packets.storage.PersonalStoragePacket;
-import com.quackers29.businesscraft.network.packets.storage.PersonalStorageRequestPacket;
-import com.quackers29.businesscraft.network.packets.storage.PersonalStorageResponsePacket;
-import com.quackers29.businesscraft.network.packets.misc.PaymentResultPacket;
-import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
-import com.quackers29.businesscraft.network.packets.debug.RequestTownDataPacket;
-import com.quackers29.businesscraft.network.packets.debug.TownDataResponsePacket;
-import com.quackers29.businesscraft.network.packets.ResourceSyncPacket;
+import com.quackers29.businesscraft.network.PacketRegistry;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiConsumer;
+
 import com.quackers29.businesscraft.debug.DebugConfig;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -69,79 +33,32 @@ public class FabricModMessages {
         LOGGER.info("Registering Fabric network messages...");
 
         try {
-            // Register server-to-server packets (PLAY_TO_SERVER)
-            registerServerPacket("toggle_tourist_spawning_packet", ToggleTouristSpawningPacket.class);
-            registerServerPacket("set_town_name_packet", SetTownNamePacket.class);
-            registerServerPacket("set_search_radius_packet", SetSearchRadiusPacket.class);
-            registerServerPacket("set_path_creation_mode_packet", SetPathCreationModePacket.class);
-            registerServerPacket("add_platform_packet", AddPlatformPacket.class);
-            registerServerPacket("delete_platform_packet", DeletePlatformPacket.class);
-            registerServerPacket("set_platform_enabled_packet", SetPlatformEnabledPacket.class);
-            registerServerPacket("set_platform_path_packet", SetPlatformPathPacket.class);
-            registerServerPacket("reset_platform_path_packet", ResetPlatformPathPacket.class);
-            registerServerPacket("set_platform_path_creation_mode_packet", SetPlatformPathCreationModePacket.class);
-            registerServerPacket("set_platform_destination_packet", SetPlatformDestinationPacket.class);
-            registerServerPacket("open_destinations_uipacket", OpenDestinationsUIPacket.class);
-            registerServerPacket("player_exit_uipacket", PlayerExitUIPacket.class);
-            registerServerPacket("boundary_sync_request_packet", BoundarySyncRequestPacket.class);
-            registerServerPacket("open_town_interface_packet", OpenTownInterfacePacket.class);
-            registerServerPacket("open_payment_board_packet", OpenPaymentBoardPacket.class);
-            registerServerPacket("request_town_map_data_packet", RequestTownMapDataPacket.class);
-            registerServerPacket("request_town_platform_data_packet", RequestTownPlatformDataPacket.class);
-            registerServerPacket("trade_resource_packet", TradeResourcePacket.class);
-            registerServerPacket("communal_storage_packet", CommunalStoragePacket.class);
-            registerServerPacket("payment_board_request_packet", PaymentBoardRequestPacket.class);
-            registerServerPacket("payment_board_claim_packet", PaymentBoardClaimPacket.class);
-            registerServerPacket("buffer_storage_packet", BufferStoragePacket.class);
-            registerServerPacket("personal_storage_packet", PersonalStoragePacket.class);
-            registerServerPacket("personal_storage_request_packet", PersonalStorageRequestPacket.class);
-            registerServerPacket("request_town_data_packet", RequestTownDataPacket.class);
+            List<String> clientPacketIds = new ArrayList<>();
+            List<Class<?>> clientPacketClasses = new ArrayList<>();
 
-            // Register client-to-client packets (PLAY_TO_CLIENT) - these need to be
-            // registered on both sides
-            // Server side registration for sending
-            registerClientPacketForServer("refresh_platforms_packet", RefreshPlatformsPacket.class);
-            registerClientPacketForServer("refresh_destinations_packet", RefreshDestinationsPacket.class);
-            registerClientPacketForServer("platform_visualization_packet", PlatformVisualizationPacket.class);
-            registerClientPacketForServer("boundary_sync_response_packet", BoundarySyncResponsePacket.class);
-            registerClientPacketForServer("town_map_data_response_packet", TownMapDataResponsePacket.class);
-            registerClientPacketForServer("town_platform_data_response_packet", TownPlatformDataResponsePacket.class);
-            registerClientPacketForServer("communal_storage_response_packet", CommunalStorageResponsePacket.class);
-            registerClientPacketForServer("payment_board_response_packet", PaymentBoardResponsePacket.class);
-            registerClientPacketForServer("buffer_storage_response_packet", BufferStorageResponsePacket.class);
-            registerClientPacketForServer("buffer_slot_storage_response_packet", BufferSlotStorageResponsePacket.class);
-            registerClientPacketForServer("personal_storage_response_packet", PersonalStorageResponsePacket.class);
-            registerClientPacketForServer("payment_result_packet", PaymentResultPacket.class);
-            registerClientPacketForServer("town_data_response_packet", TownDataResponsePacket.class);
-            registerClientPacketForServer("resource_sync_packet", ResourceSyncPacket.class);
+            for (PacketRegistry.PacketDefinition<?> packet : PacketRegistry.getPackets()) {
+                if (packet.direction() == PacketRegistry.NetworkDirection.PLAY_TO_SERVER) {
+                    registerServerPacket(packet);
+                } else {
+                    // Register client-to-client packets (PLAY_TO_CLIENT)
+                    // Server side registration for sending
+                    registerClientPacketForServer(packet.name(), packet.packetClass());
 
-            // Client side registration for receiving - will be done in FabricClientSetup
+                    // Store for client-side registration
+                    clientPacketIds.add(packet.name());
+                    clientPacketClasses.add(packet.packetClass());
+                }
+            }
+
             // Store identifiers for client-side registration
-            CLIENT_PACKET_IDS = new String[] {
-                    "refresh_platforms_packet", "refresh_destinations_packet", "platform_visualization_packet",
-                    "boundary_sync_response_packet", "town_map_data_response_packet",
-                    "town_platform_data_response_packet",
-                    "communal_storage_response_packet", "payment_board_response_packet",
-                    "buffer_storage_response_packet",
-                    "buffer_slot_storage_response_packet", "personal_storage_response_packet", "payment_result_packet",
-                    "town_data_response_packet", "resource_sync_packet"
-            };
-            CLIENT_PACKET_CLASSES = new Class[] {
-                    RefreshPlatformsPacket.class, RefreshDestinationsPacket.class, PlatformVisualizationPacket.class,
-                    BoundarySyncResponsePacket.class, TownMapDataResponsePacket.class,
-                    TownPlatformDataResponsePacket.class,
-                    CommunalStorageResponsePacket.class, PaymentBoardResponsePacket.class,
-                    BufferStorageResponsePacket.class,
-                    BufferSlotStorageResponsePacket.class, PersonalStorageResponsePacket.class,
-                    PaymentResultPacket.class,
-                    TownDataResponsePacket.class, ResourceSyncPacket.class
-            };
+            CLIENT_PACKET_IDS = clientPacketIds.toArray(new String[0]);
+            CLIENT_PACKET_CLASSES = clientPacketClasses.toArray(new Class<?>[0]);
 
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Client packet arrays initialized with {} packets",
                     CLIENT_PACKET_IDS.length);
 
-            LOGGER.info("Fabric network messages registered successfully ({} server packets, {} client packets)",
-                    26, CLIENT_PACKET_IDS.length);
+            LOGGER.info("Fabric network messages registered successfully ({} total packets)",
+                    PacketRegistry.getPackets().size());
         } catch (Exception e) {
             LOGGER.error("Error registering network messages", e);
             e.printStackTrace();
@@ -155,7 +72,11 @@ public class FabricModMessages {
     /**
      * Register a server-side packet handler (PLAY_TO_SERVER)
      */
-    private static void registerServerPacket(String packetName, Class<?> packetClass) {
+    /**
+     * Register a server-side packet handler (PLAY_TO_SERVER)
+     */
+    private static <MSG> void registerServerPacket(PacketRegistry.PacketDefinition<MSG> packetDef) {
+        String packetName = packetDef.name();
         try {
             // Create packet-specific identifier
             ResourceLocation packetId = new ResourceLocation(MOD_ID, packetName);
@@ -168,31 +89,17 @@ public class FabricModMessages {
                     // Convert PacketByteBuf to FriendlyByteBuf (they're compatible)
                     FriendlyByteBuf friendlyBuf = new FriendlyByteBuf(buf);
 
-                    // Try static decode method first, then constructor with FriendlyByteBuf
-                    Object packet;
-                    try {
-                        java.lang.reflect.Method decodeMethod = packetClass.getMethod("decode", FriendlyByteBuf.class);
-                        packet = decodeMethod.invoke(null, friendlyBuf);
-                        LOGGER.info("[PACKET DECODED] Successfully decoded packet: {}", packetName);
-                    } catch (NoSuchMethodException e) {
-                        // Fall back to constructor with FriendlyByteBuf
-                        java.lang.reflect.Constructor<?> constructor = packetClass
-                                .getConstructor(FriendlyByteBuf.class);
-                        packet = constructor.newInstance(friendlyBuf);
-                        LOGGER.info("[PACKET DECODED] Successfully decoded packet via constructor: {}", packetName);
-                    }
+                    // Use the decoder from the definition
+                    MSG packet = packetDef.decoder().apply(friendlyBuf);
+                    LOGGER.info("[PACKET DECODED] Successfully decoded packet: {}", packetName);
 
                     // Execute on server thread
-                    Object finalPacket = packet;
                     server.execute(() -> {
                         try {
                             LOGGER.info("[PACKET HANDLING] About to handle packet: {} for player: {}", packetName,
                                     player.getName().getString());
-                            // Create a context object for the packet (Fabric doesn't have
-                            // NetworkEvent.Context)
-                            // Pass the player as the context - packets expect Object context
-                            java.lang.reflect.Method handleMethod = packetClass.getMethod("handle", Object.class);
-                            handleMethod.invoke(finalPacket, player);
+                            // Use the handler from the definition
+                            packetDef.handler().accept(packet, player);
                             LOGGER.info("[PACKET HANDLED] Successfully handled packet: {}", packetName);
                         } catch (Exception e) {
                             LOGGER.error("Error handling server packet {}", packetName, e);
@@ -390,6 +297,22 @@ public class FabricModMessages {
                 Class<?> packetClass = CLIENT_PACKET_CLASSES[i];
 
                 try {
+                    // Find definition
+                    PacketRegistry.PacketDefinition<?> definition = null;
+                    for (PacketRegistry.PacketDefinition<?> def : PacketRegistry.getPackets()) {
+                        if (def.name().equals(packetName)) {
+                            definition = def;
+                            break;
+                        }
+                    }
+
+                    if (definition == null) {
+                        LOGGER.error("Could not find definition for client packet: {}", packetName);
+                        continue;
+                    }
+
+                    final PacketRegistry.PacketDefinition<?> finalDef = definition;
+
                     // Create packet identifier
                     ResourceLocation packetId = new ResourceLocation(MOD_ID, packetName);
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Registering client packet: {} -> {}",
@@ -402,27 +325,17 @@ public class FabricModMessages {
                             // Convert PacketByteBuf to FriendlyByteBuf
                             FriendlyByteBuf friendlyBuf = new FriendlyByteBuf(buf);
 
-                            // Try static decode method first, then constructor with FriendlyByteBuf
-                            Object packet;
-                            try {
-                                java.lang.reflect.Method decodeMethod = packetClass.getMethod("decode",
-                                        FriendlyByteBuf.class);
-                                packet = decodeMethod.invoke(null, friendlyBuf);
-                            } catch (NoSuchMethodException e) {
-                                // Fall back to constructor with FriendlyByteBuf
-                                java.lang.reflect.Constructor<?> constructor = packetClass
-                                        .getConstructor(FriendlyByteBuf.class);
-                                packet = constructor.newInstance(friendlyBuf);
-                            }
+                            // Use decoder
+                            Object packet = finalDef.decoder().apply(friendlyBuf);
 
                             // Execute on client thread
-                            Object finalPacket = packet;
                             client.execute(() -> {
                                 try {
-                                    // Call handle method with client as context
-                                    java.lang.reflect.Method handleMethod = packetClass.getMethod("handle",
-                                            Object.class);
-                                    handleMethod.invoke(finalPacket, client);
+                                    // Use handler
+                                    @SuppressWarnings("unchecked")
+                                    BiConsumer<Object, Object> packetHandler = (BiConsumer<Object, Object>) finalDef
+                                            .handler();
+                                    packetHandler.accept(packet, client);
                                 } catch (Exception e) {
                                     LOGGER.error("Error handling client packet {}", packetName, e);
                                     e.printStackTrace();
