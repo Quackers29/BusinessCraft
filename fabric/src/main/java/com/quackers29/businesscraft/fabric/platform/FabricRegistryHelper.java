@@ -15,34 +15,53 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 /**
  * Fabric implementation of RegistryHelper using strong types.
  */
+import java.util.function.Supplier;
+
+/**
+ * Fabric implementation of RegistryHelper using strong types.
+ */
 public class FabricRegistryHelper implements RegistryHelper {
 
     private static final String MOD_ID = "businesscraft";
 
     @Override
-    public void registerBlock(String name, Block block) {
-        Registry.register(BuiltInRegistries.BLOCK, new ResourceLocation(MOD_ID, name), block);
+    public <T extends Block> Supplier<T> registerBlock(String name, Supplier<T> block) {
+        T blockInstance = block.get();
+        Registry.register(BuiltInRegistries.BLOCK, new ResourceLocation(MOD_ID, name), blockInstance);
+        return () -> blockInstance;
     }
 
     @Override
-    public void registerBlockItem(String name, Block block) {
-        BlockItem blockItem = new BlockItem(block, new FabricItemSettings());
+    public <T extends Item> Supplier<T> registerBlockItem(String name, Supplier<? extends Block> block) {
+        BlockItem blockItem = new BlockItem(block.get(), new FabricItemSettings());
         Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MOD_ID, name), blockItem);
+        // Cast is safe because we just created it
+        @SuppressWarnings("unchecked")
+        T result = (T) blockItem;
+        return () -> result;
     }
 
     @Override
-    public void registerEntityType(String name, EntityType<?> entityType) {
-        Registry.register(BuiltInRegistries.ENTITY_TYPE, new ResourceLocation(MOD_ID, name), entityType);
+    public <T extends EntityType<?>> Supplier<T> registerEntityType(String name, Supplier<T> entityType) {
+        T entityTypeInstance = entityType.get();
+        Registry.register(BuiltInRegistries.ENTITY_TYPE, new ResourceLocation(MOD_ID, name), entityTypeInstance);
+        return () -> entityTypeInstance;
     }
 
     @Override
-    public void registerBlockEntityType(String name, BlockEntityType<?> blockEntityType) {
-        Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, new ResourceLocation(MOD_ID, name), blockEntityType);
+    public <T extends BlockEntityType<?>> Supplier<T> registerBlockEntityType(String name,
+            Supplier<T> blockEntityType) {
+        T blockEntityTypeInstance = blockEntityType.get();
+        Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, new ResourceLocation(MOD_ID, name),
+                blockEntityTypeInstance);
+        return () -> blockEntityTypeInstance;
     }
 
     @Override
-    public void registerMenuType(String name, MenuType<?> menuType) {
-        Registry.register(BuiltInRegistries.MENU, new ResourceLocation(MOD_ID, name), menuType);
+    public <T extends MenuType<?>> Supplier<T> registerMenuType(String name, Supplier<T> menuType) {
+        T menuTypeInstance = menuType.get();
+        Registry.register(BuiltInRegistries.MENU, new ResourceLocation(MOD_ID, name), menuTypeInstance);
+        return () -> menuTypeInstance;
     }
 
     @Override

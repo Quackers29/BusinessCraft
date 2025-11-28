@@ -11,6 +11,9 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
+
+import java.util.function.Supplier;
 
 /**
  * Forge implementation of RegistryHelper using strong types.
@@ -42,28 +45,30 @@ public class ForgeRegistryHelper implements RegistryHelper {
     }
 
     @Override
-    public void registerBlock(String name, Block block) {
-        BLOCKS.register(name, () -> block);
+    public <T extends Block> Supplier<T> registerBlock(String name, Supplier<T> block) {
+        return BLOCKS.register(name, block);
     }
 
     @Override
-    public void registerBlockItem(String name, Block block) {
-        ITEMS.register(name, () -> new BlockItem(block, new Item.Properties()));
+    public <T extends Item> Supplier<T> registerBlockItem(String name, Supplier<? extends Block> block) {
+        RegistryObject<Item> registered = ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties()));
+        return () -> (T) registered.get();
     }
 
     @Override
-    public void registerEntityType(String name, EntityType<?> entityType) {
-        ENTITY_TYPES.register(name, () -> entityType);
+    public <T extends EntityType<?>> Supplier<T> registerEntityType(String name, Supplier<T> entityType) {
+        return ENTITY_TYPES.register(name, entityType);
     }
 
     @Override
-    public void registerBlockEntityType(String name, BlockEntityType<?> blockEntityType) {
-        BLOCK_ENTITY_TYPES.register(name, () -> blockEntityType);
+    public <T extends BlockEntityType<?>> Supplier<T> registerBlockEntityType(String name,
+            Supplier<T> blockEntityType) {
+        return BLOCK_ENTITY_TYPES.register(name, blockEntityType);
     }
 
     @Override
-    public void registerMenuType(String name, MenuType<?> menuType) {
-        MENU_TYPES.register(name, () -> menuType);
+    public <T extends MenuType<?>> Supplier<T> registerMenuType(String name, Supplier<T> menuType) {
+        return MENU_TYPES.register(name, menuType);
     }
 
     @Override

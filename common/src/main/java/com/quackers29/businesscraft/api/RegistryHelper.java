@@ -7,6 +7,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 
+import java.util.function.Supplier;
+
 /**
  * Platform-agnostic interface for registration operations.
  * Implementations will handle platform-specific registration.
@@ -15,27 +17,27 @@ public interface RegistryHelper {
     /**
      * Register a block with the given name
      */
-    void registerBlock(String name, Block block);
+    <T extends Block> Supplier<T> registerBlock(String name, Supplier<T> block);
 
     /**
      * Register a block item for the given block
      */
-    void registerBlockItem(String name, Block block);
+    <T extends Item> Supplier<T> registerBlockItem(String name, Supplier<? extends Block> block);
 
     /**
      * Register an entity type with the given name
      */
-    void registerEntityType(String name, EntityType<?> entityType);
+    <T extends EntityType<?>> Supplier<T> registerEntityType(String name, Supplier<T> entityType);
 
     /**
      * Register a block entity type with the given name
      */
-    void registerBlockEntityType(String name, BlockEntityType<?> blockEntityType);
+    <T extends BlockEntityType<?>> Supplier<T> registerBlockEntityType(String name, Supplier<T> blockEntityType);
 
     /**
      * Register a menu type with the given name
      */
-    void registerMenuType(String name, MenuType<?> menuType);
+    <T extends MenuType<?>> Supplier<T> registerMenuType(String name, Supplier<T> menuType);
 
     /**
      * Get an item by its ResourceLocation
