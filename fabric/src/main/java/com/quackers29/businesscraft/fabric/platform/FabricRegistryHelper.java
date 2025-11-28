@@ -11,10 +11,9 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
+import net.fabricmc.fabric.api.screenhandler.v1.ScreenHandlerRegistry;
 
-/**
- * Fabric implementation of RegistryHelper using strong types.
- */
 import java.util.function.Supplier;
 
 /**
@@ -62,6 +61,21 @@ public class FabricRegistryHelper implements RegistryHelper {
         T menuTypeInstance = menuType.get();
         Registry.register(BuiltInRegistries.MENU, new ResourceLocation(MOD_ID, name), menuTypeInstance);
         return () -> menuTypeInstance;
+    }
+
+    @Override
+    public <T extends net.minecraft.world.inventory.AbstractContainerMenu> Supplier<MenuType<T>> registerExtendedMenuType(
+            String name, MenuFactory<T> factory) {
+        // Use Fabric's ScreenHandlerRegistry for extended menu types
+        // Note: ScreenHandlerRegistry is deprecated in newer versions but used here for
+        // consistency with existing code
+        @SuppressWarnings("unchecked")
+        ExtendedScreenHandlerType<T> menuType = (ExtendedScreenHandlerType<T>) (Object) ScreenHandlerRegistry
+                .registerExtended(
+                        new ResourceLocation(MOD_ID, name),
+                        (syncId, inventory, buf) -> factory.create(syncId, inventory, buf));
+
+        return () -> (MenuType<T>) menuType;
     }
 
     @Override

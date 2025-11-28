@@ -15,22 +15,18 @@ import net.minecraft.world.level.Level;
 /**
  * Fabric-specific entity type registrations
  */
+import com.quackers29.businesscraft.init.CommonModEntityTypes;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
+
+/**
+ * Fabric-specific entity type registrations
+ */
 public class FabricModEntityTypes {
     public static EntityType<TouristEntity> TOURIST;
 
     public static void register() {
-        ResourceLocation id = new ResourceLocation("businesscraft", "tourist");
-        
-        EntityType<TouristEntity> touristType = FabricEntityTypeBuilder.create(
-            MobCategory.CREATURE,
-            TouristEntity::create
-        )
-        .dimensions(EntityDimensions.fixed(0.6F, 1.95F))
-        .trackRangeBlocks(10)
-        .trackedUpdateRate(3)
-        .build();
-
-        TOURIST = Registry.register(BuiltInRegistries.ENTITY_TYPE, id, touristType);
+        CommonModEntityTypes.register();
+        TOURIST = CommonModEntityTypes.TOURIST.get();
 
         // Register default attributes (matches Forge)
         FabricDefaultAttributeRegistry.register(TOURIST, TouristEntity.createAttributes());

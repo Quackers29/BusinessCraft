@@ -12,16 +12,27 @@ import net.minecraftforge.registries.RegistryObject;
 /**
  * Forge-specific entity type registrations
  */
+import com.quackers29.businesscraft.init.CommonModEntityTypes;
+
+/**
+ * Forge-specific entity type registrations
+ */
 @Mod.EventBusSubscriber(modid = "businesscraft", bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ForgeModEntityTypes {
-    public static RegistryObject<EntityType<TouristEntity>> TOURIST = ForgeRegistryHelper.ENTITY_TYPES.register("tourist",
-            () -> EntityType.Builder.<TouristEntity>of(TouristEntity::new, MobCategory.CREATURE)
-                .sized(0.6F, 1.95F) // Same size as regular villager
-                .clientTrackingRange(10)
-                .build("tourist"));
+    public static RegistryObject<EntityType<TouristEntity>> TOURIST;
 
     public static void register() {
-        // Entity registration is handled by RegistryObject above
+        CommonModEntityTypes.register();
+        // We need to cast the Supplier back to RegistryObject for Forge-specific event
+        // handling if needed,
+        // but for general usage, we can just use the common supplier.
+        // However, ForgeModEntityTypes.TOURIST is public static and might be used
+        // elsewhere as RegistryObject.
+        // Let's check usages of ForgeModEntityTypes.TOURIST.
+        // Actually, RegistryHelper on Forge returns a Supplier which IS a
+        // RegistryObject.
+        // So we can cast it.
+        TOURIST = (RegistryObject<EntityType<TouristEntity>>) CommonModEntityTypes.TOURIST;
     }
 
     // Event handler to register entity attributes

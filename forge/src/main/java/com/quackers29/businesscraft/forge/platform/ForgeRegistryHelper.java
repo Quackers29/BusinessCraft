@@ -72,6 +72,13 @@ public class ForgeRegistryHelper implements RegistryHelper {
     }
 
     @Override
+    public <T extends net.minecraft.world.inventory.AbstractContainerMenu> Supplier<MenuType<T>> registerExtendedMenuType(
+            String name, MenuFactory<T> factory) {
+        return MENU_TYPES.register(name, () -> net.minecraftforge.common.extensions.IForgeMenuType.create(
+                (windowId, inv, data) -> factory.create(windowId, inv, data)));
+    }
+
+    @Override
     public Item getItem(ResourceLocation location) {
         return ForgeRegistries.ITEMS.getValue(location);
     }

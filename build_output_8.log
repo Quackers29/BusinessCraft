@@ -1,0 +1,67 @@
+
+> Configure project :fabric
+Fabric Loom: 1.5.8
+
+> Task :common:compileJava
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :common:processResources UP-TO-DATE
+> Task :common:classes
+> Task :common:jar
+> Task :common:downloadMcpConfig
+> Task :common:extractSrg UP-TO-DATE
+> Task :common:createMcpToSrg UP-TO-DATE
+> Task :common:reobfJar
+> Task :common:jarJar SKIPPED
+> Task :common:reobfJarJar SKIPPED
+> Task :common:assemble
+> Task :common:compileTestJava NO-SOURCE
+> Task :common:processTestResources NO-SOURCE
+> Task :common:testClasses UP-TO-DATE
+> Task :common:test NO-SOURCE
+> Task :common:check UP-TO-DATE
+> Task :common:build
+
+> Task :fabric:compileJava
+Note: /home/az/project/BusinessCraft/fabric/src/main/java/com/quackers29/businesscraft/fabric/platform/FabricRegistryHelper.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :fabric:processResources UP-TO-DATE
+> Task :fabric:classes
+> Task :fabric:jar
+> Task :fabric:compileTestJava NO-SOURCE
+> Task :fabric:processTestResources NO-SOURCE
+> Task :fabric:testClasses UP-TO-DATE
+> Task :fabric:test NO-SOURCE
+> Task :fabric:validateAccessWidener NO-SOURCE
+> Task :fabric:check UP-TO-DATE
+
+> Task :forge:compileJava FAILED
+/home/az/project/BusinessCraft/forge/src/main/java/com/quackers29/businesscraft/forge/init/ForgeModMenuTypes.java:12: error: class, interface, enum, or record expected
+package com.quackers29.businesscraft.forge.init;
+^
+1 error
+
+> Task :fabric:remapJar
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':forge:compileJava'.
+> Compilation failed; see the compiler error output for details.
+
+* Try:
+> Run with --info option to get more log output.
+> Run with --scan to get full insights.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.8/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 6s
+12 actionable tasks: 8 executed, 4 up-to-date

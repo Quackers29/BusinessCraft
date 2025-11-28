@@ -37,7 +37,25 @@ public interface RegistryHelper {
     /**
      * Register a menu type with the given name
      */
+    /**
+     * Register a menu type with the given name
+     */
     <T extends MenuType<?>> Supplier<T> registerMenuType(String name, Supplier<T> menuType);
+
+    /**
+     * Factory for creating menus with extra data
+     */
+    @FunctionalInterface
+    interface MenuFactory<T extends net.minecraft.world.inventory.AbstractContainerMenu> {
+        T create(int windowId, net.minecraft.world.entity.player.Inventory inv,
+                net.minecraft.network.FriendlyByteBuf data);
+    }
+
+    /**
+     * Register an extended menu type (one that requires extra data from the server)
+     */
+    <T extends net.minecraft.world.inventory.AbstractContainerMenu> Supplier<MenuType<T>> registerExtendedMenuType(
+            String name, MenuFactory<T> factory);
 
     /**
      * Get an item by its ResourceLocation
