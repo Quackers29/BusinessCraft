@@ -144,7 +144,6 @@ public class ForgeRenderHelper implements RenderHelper {
             renderHelper = helper;
         }
 
-        @SubscribeEvent
         public static boolean isOverlayRegistered(String overlayId) {
             return registeredOverlayIds.contains(overlayId);
         }

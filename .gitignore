@@ -9,13 +9,11 @@
 /common/run/saves
 /common/run/logs
 /common/run/crash-reports
-/forge/run/logs
 /forge/run/crash-reports
 /common/build
 /forge/run/saves
 /forge/build
 /fabric/build
-/fabric/run/logs
 /fabric/run/data
 /fabric/run/crash-reports
 /fabric/run/saves
