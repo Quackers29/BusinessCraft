@@ -1,11 +1,15 @@
-Starting a Gradle Daemon, 6 busy Daemons could not be reused, use --status for details
 
 > Configure project :fabric
 Fabric Loom: 1.5.8
 
-> Task :common:compileJava UP-TO-DATE
+> Task :common:compileJava
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
 > Task :common:processResources UP-TO-DATE
-> Task :common:classes UP-TO-DATE
+> Task :common:classes
 > Task :common:jar
 > Task :common:downloadMcpConfig
 > Task :common:extractSrg UP-TO-DATE
@@ -20,20 +24,20 @@ Fabric Loom: 1.5.8
 > Task :common:test NO-SOURCE
 > Task :common:check UP-TO-DATE
 > Task :common:build
-> Task :fabric:compileJava UP-TO-DATE
+
+> Task :fabric:compileJava
+Note: /home/az/project/BusinessCraft/fabric/src/main/java/com/quackers29/businesscraft/fabric/FabricClientSetup.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
 > Task :fabric:processResources UP-TO-DATE
-> Task :fabric:classes UP-TO-DATE
-> Task :fabric:jar UP-TO-DATE
-> Task :fabric:remapJar UP-TO-DATE
-> Task :fabric:remapSourcesJar SKIPPED
-> Task :fabric:assemble UP-TO-DATE
+> Task :fabric:classes
+> Task :fabric:jar
 > Task :fabric:compileTestJava NO-SOURCE
 > Task :fabric:processTestResources NO-SOURCE
 > Task :fabric:testClasses UP-TO-DATE
 > Task :fabric:test NO-SOURCE
 > Task :fabric:validateAccessWidener NO-SOURCE
 > Task :fabric:check UP-TO-DATE
-> Task :fabric:build UP-TO-DATE
 
 > Task :forge:compileJava
 Note: Some input files use or override a deprecated API.
@@ -57,6 +61,10 @@ Note: Recompile with -Xlint:unchecked for details.
 > Task :forge:test NO-SOURCE
 > Task :forge:check UP-TO-DATE
 > Task :forge:build
+> Task :fabric:remapJar
+> Task :fabric:remapSourcesJar SKIPPED
+> Task :fabric:assemble
+> Task :fabric:build
 
 Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
 
@@ -64,5 +72,5 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/8.8/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD SUCCESSFUL in 13s
-18 actionable tasks: 7 executed, 11 up-to-date
+BUILD SUCCESSFUL in 8s
+18 actionable tasks: 11 executed, 7 up-to-date

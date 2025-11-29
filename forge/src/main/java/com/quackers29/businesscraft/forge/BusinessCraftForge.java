@@ -75,15 +75,8 @@ public class BusinessCraftForge {
     public static final RenderHelper RENDER = new ForgeRenderHelper(); // Client-side only
     public static final com.quackers29.businesscraft.api.ITouristHelper TOURIST_HELPER = new ForgeTouristHelper();
 
-    // Add a static reference to the manager to use in event handlers
-    public static final TouristVehicleManager TOURIST_VEHICLE_MANAGER = new TouristVehicleManager();
-
-    public BusinessCraftForge() {
-        LOGGER.info("BusinessCraft Forge constructor called!");
-        System.out.println("DEBUG: BusinessCraft Forge mod starting up!");
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-
-        // Initialize platform abstractions for common code access
+    static {
+        // Initialize platform abstractions for common code access early
         PlatformAccess.platform = PLATFORM;
         PlatformAccess.registry = REGISTRY;
         PlatformAccess.events = EVENTS;
@@ -95,6 +88,16 @@ public class BusinessCraftForge {
         PlatformAccess.itemHandlers = ITEM_HANDLERS;
         PlatformAccess.networkMessages = NETWORK_MESSAGES;
         PlatformAccess.touristHelper = TOURIST_HELPER;
+    }
+
+    // Add a static reference to the manager to use in event handlers
+    public static final TouristVehicleManager TOURIST_VEHICLE_MANAGER = new TouristVehicleManager();
+
+    public BusinessCraftForge() {
+        LOGGER.info("BusinessCraft Forge constructor called!");
+        System.out.println("DEBUG: BusinessCraft Forge mod starting up!");
+        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+
         // ClientHelper and RenderHelper will be initialized in clientSetup() - only
         // available on client side
         // But we need to set the renderHelper reference early for overlay registration
@@ -162,13 +165,7 @@ public class BusinessCraftForge {
         // RenderHelper reference already set in constructor for overlay registration
 
         // Client-side setup handled by ForgeClientSetup
-        ForgeClientSetup.init();
-
-        // Initialize client-side event handlers
-        com.quackers29.businesscraft.event.ClientRenderEvents.initialize();
-        com.quackers29.businesscraft.client.TownDebugOverlay.initialize();
-        com.quackers29.businesscraft.client.TownDebugKeyHandler.initialize();
-        com.quackers29.businesscraft.client.PlatformPathKeyHandler.initialize();
+        ForgeClientSetup.init(event);
 
         LOGGER.info("BusinessCraft Forge client setup complete");
     }

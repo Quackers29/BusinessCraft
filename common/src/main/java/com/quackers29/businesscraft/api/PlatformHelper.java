@@ -24,4 +24,9 @@ public interface PlatformHelper {
      * Get the current platform name (e.g., "forge", "fabric")
      */
     String getPlatformName();
+
+    /**
+     * Get the configuration directory
+     */
+    java.nio.file.Path getConfigDirectory();
 }

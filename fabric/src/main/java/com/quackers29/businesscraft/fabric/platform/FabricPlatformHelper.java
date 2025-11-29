@@ -27,4 +27,9 @@ public class FabricPlatformHelper implements PlatformHelper {
     public String getPlatformName() {
         return "fabric";
     }
+
+    @Override
+    public java.nio.file.Path getConfigDirectory() {
+        return FabricLoader.getInstance().getConfigDir();
+    }
 }

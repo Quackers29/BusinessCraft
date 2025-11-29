@@ -19,31 +19,31 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ForgeRenderHelper implements RenderHelper {
     private final Map<String, OverlayRenderer> registeredOverlays = new ConcurrentHashMap<>();
-    
+
     @Override
     public void renderOverlay(Object guiGraphics, float partialTick, int screenWidth, int screenHeight) {
         // This method is not used directly - overlays are registered with ForgeGui
         // Cast handled by Forge implementation
     }
-    
+
     @Override
     public void registerOverlay(String overlayId, OverlayRenderer overlay) {
         registeredOverlays.put(overlayId, overlay);
         // Overlay will be rendered during RenderGameOverlayEvent
     }
-    
+
     @Override
     public void unregisterOverlay(String overlayId) {
         registeredOverlays.remove(overlayId);
         // Note: Forge doesn't have a direct unregister method, but we can track it
     }
-    
+
     @Override
     public void registerWorldRenderCallback(String renderStage, WorldRenderCallback callback) {
         // Register with Forge's event system via the static handler
         ForgeWorldRenderHandler.registerCallback(renderStage, callback);
     }
-    
+
     @Override
     public Object getPoseStack(Object renderEvent) {
         if (renderEvent instanceof RenderLevelStageEvent event) {
@@ -51,7 +51,7 @@ public class ForgeRenderHelper implements RenderHelper {
         }
         return null;
     }
-    
+
     @Override
     public Object getCamera(Object renderEvent) {
         if (renderEvent instanceof RenderLevelStageEvent event) {
@@ -59,7 +59,7 @@ public class ForgeRenderHelper implements RenderHelper {
         }
         return null;
     }
-    
+
     @Override
     public float getPartialTick(Object renderEvent) {
         if (renderEvent instanceof RenderLevelStageEvent event) {
@@ -67,12 +67,13 @@ public class ForgeRenderHelper implements RenderHelper {
         }
         return 0.0f;
     }
-    
+
     @Override
     public String getRenderStage(Object renderEvent) {
         if (renderEvent instanceof RenderLevelStageEvent event) {
             // Convert Forge's Stage enum to our platform-agnostic string constant
-            // Forge returns "minecraft:after_translucent_blocks", we need "AFTER_TRANSLUCENT_BLOCKS"
+            // Forge returns "minecraft:after_translucent_blocks", we need
+            // "AFTER_TRANSLUCENT_BLOCKS"
             String stageStr = event.getStage().toString();
             // Remove "minecraft:" prefix if present and convert to uppercase
             if (stageStr.startsWith("minecraft:")) {
@@ -83,7 +84,7 @@ public class ForgeRenderHelper implements RenderHelper {
         }
         return "";
     }
-    
+
     @Override
     public boolean isRenderStage(Object renderEvent, String stageName) {
         if (renderEvent instanceof RenderLevelStageEvent event) {
@@ -93,44 +94,44 @@ public class ForgeRenderHelper implements RenderHelper {
                 eventStage = eventStage.substring("minecraft:".length());
             }
             eventStage = eventStage.toUpperCase();
-            
+
             // Compare with normalized stage name
             return eventStage.equals(stageName.toUpperCase());
         }
         return false;
     }
-    
+
     /**
      * Get the map of registered overlays (for use by event handler)
      */
     public Map<String, OverlayRenderer> getRegisteredOverlays() {
         return registeredOverlays;
     }
-    
+
     /**
      * Static handler for world render events
      */
     @Mod.EventBusSubscriber(modid = "businesscraft", bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ForgeWorldRenderHandler {
         private static final Map<String, WorldRenderCallback> callbacks = new ConcurrentHashMap<>();
-        
+
         @SubscribeEvent
         public static void onRenderLevelStage(RenderLevelStageEvent event) {
             String stageName = event.getStage().toString();
             float partialTick = event.getPartialTick();
-            
+
             // Invoke all registered callbacks for this stage
             WorldRenderCallback callback = callbacks.get(stageName);
             if (callback != null) {
                 callback.onRender(stageName, partialTick, event);
             }
         }
-        
+
         public static void registerCallback(String renderStage, WorldRenderCallback callback) {
             callbacks.put(renderStage, callback);
         }
     }
-    
+
     /**
      * Static handler for registering overlays
      */
@@ -138,28 +139,14 @@ public class ForgeRenderHelper implements RenderHelper {
     public static class ForgeOverlayRegistry {
         private static ForgeRenderHelper renderHelper;
         private static final Set<String> registeredOverlayIds = new HashSet<>();
-        
+
         public static void setRenderHelper(ForgeRenderHelper helper) {
             renderHelper = helper;
         }
-        
+
         @SubscribeEvent
-        public static void onRegisterGuiOverlays(RegisterGuiOverlaysEvent event) {
-            if (renderHelper != null) {
-                Map<String, OverlayRenderer> overlays = renderHelper.getRegisteredOverlays();
-                for (Map.Entry<String, OverlayRenderer> entry : overlays.entrySet()) {
-                    String overlayId = "businesscraft:" + entry.getKey();
-                    event.registerAboveAll(overlayId, (gui, guiGraphics, partialTick, screenWidth, screenHeight) -> {
-                        entry.getValue().render(guiGraphics, partialTick, screenWidth, screenHeight);
-                    });
-                    registeredOverlayIds.add(entry.getKey()); // Mark as registered
-                }
-            }
-        }
-        
         public static boolean isOverlayRegistered(String overlayId) {
             return registeredOverlayIds.contains(overlayId);
         }
     }
 }
-

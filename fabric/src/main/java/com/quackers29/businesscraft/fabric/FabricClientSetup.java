@@ -1,22 +1,14 @@
 package com.quackers29.businesscraft.fabric;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.client.CommonClientSetup;
 import com.quackers29.businesscraft.fabric.event.FabricEventCallbackHandler;
-import com.quackers29.businesscraft.fabric.platform.FabricMenuTypeHelper;
-import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
-import com.quackers29.businesscraft.client.TownDebugKeyHandler;
-import com.quackers29.businesscraft.client.PlatformPathKeyHandler;
-import com.quackers29.businesscraft.client.TownDebugOverlay;
-import com.quackers29.businesscraft.event.ClientRenderEvents;
 import com.quackers29.businesscraft.fabric.FabricModMessages;
 import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.world.inventory.MenuType;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
-import com.quackers29.businesscraft.client.renderer.TouristRenderer;
-import com.quackers29.businesscraft.fabric.init.FabricModEntityTypes;
 
 /**
  * Fabric client-side initialization
@@ -24,7 +16,6 @@ import com.quackers29.businesscraft.fabric.init.FabricModEntityTypes;
 public class FabricClientSetup implements ClientModInitializer {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft Fabric");
     private static boolean screensRegistered = false;
-
 
     @Override
     public void onInitializeClient() {
@@ -55,14 +46,14 @@ public class FabricClientSetup implements ClientModInitializer {
                 scheduleDelayedScreenRegistration();
             }
 
-            // Initialize client-side rendering events
-            initializeClientRendering();
-
-            // Initialize key handlers
-            initializeKeyHandlers();
+            // Initialize common client setup (key handlers, render events)
+            CommonClientSetup.init();
 
             // Register entity renderers
-            EntityRendererRegistry.register(FabricModEntityTypes.TOURIST, TouristRenderer::new);
+            CommonClientSetup.registerRenderers((type, provider) -> {
+                EntityRendererRegistry.register((net.minecraft.world.entity.EntityType) type,
+                        (context) -> provider.create(context));
+            });
 
             LOGGER.info("BusinessCraft Fabric client setup complete");
         } catch (Exception e) {
@@ -86,22 +77,16 @@ public class FabricClientSetup implements ClientModInitializer {
                     Thread.sleep(delayMs);
                     retryCount++;
 
-                    // Check if menu type is available before retrying
-                    Object menuType = FabricMenuTypeHelper.getTownInterfaceMenuTypeStatic();
-                    if (menuType != null) {
-                        try {
-                            // We need to run this on the main thread if possible, or ensure thread safety
-                            // But MenuScreens.register is usually safe to call during init
-                            registerScreens();
-                            screensRegistered = true;
-                            LOGGER.info("Screen registration successful on retry!");
-                            return;
-                        } catch (Exception e) {
-                            LOGGER.warn("Screen registration failed on retry {}: {}", retryCount, e.getMessage(), e);
-                            delayMs = Math.min(delayMs * 2, 5000);
-                        }
-                    } else {
-                        LOGGER.debug("Menu type not available yet, will retry...");
+                    try {
+                        // We need to run this on the main thread if possible, or ensure thread safety
+                        // But MenuScreens.register is usually safe to call during init
+                        registerScreens();
+                        screensRegistered = true;
+                        LOGGER.info("Screen registration successful on retry!");
+                        return;
+                    } catch (Exception e) {
+                        LOGGER.warn("Screen registration failed on retry {}: {}", retryCount, e.getMessage(), e);
+                        delayMs = Math.min(delayMs * 2, 5000);
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -113,32 +98,6 @@ public class FabricClientSetup implements ClientModInitializer {
                 LOGGER.error("Screen registration failed after {} retries.", maxRetries);
             }
         }).start();
-    }
-
-    /**
-     * Initialize client-side rendering events
-     */
-    private void initializeClientRendering() {
-        try {
-            ClientRenderEvents.initialize();
-            LOGGER.info("Client rendering events initialized");
-        } catch (Exception e) {
-            LOGGER.warn("Could not initialize client rendering events", e);
-        }
-    }
-
-    /**
-     * Initialize key handlers for debug overlay and platform path creation
-     */
-    private void initializeKeyHandlers() {
-        try {
-            TownDebugKeyHandler.initialize();
-            PlatformPathKeyHandler.initialize();
-            TownDebugOverlay.initialize();
-            LOGGER.info("Key handlers initialized");
-        } catch (Exception e) {
-            LOGGER.warn("Could not initialize key handlers", e);
-        }
     }
 
     /**
@@ -159,33 +118,7 @@ public class FabricClientSetup implements ClientModInitializer {
     private void registerScreens() {
         try {
             LOGGER.info("Registering screens for menu types...");
-
-            // Get the registered menu types
-            MenuType<?> townInterfaceMenuType = (MenuType<?>) FabricMenuTypeHelper.getTownInterfaceMenuTypeStatic();
-            MenuType<?> paymentBoardMenuType = (MenuType<?>) FabricMenuTypeHelper.getPaymentBoardMenuTypeStatic();
-
-            if (townInterfaceMenuType == null) {
-                LOGGER.warn("Menu types not registered yet");
-                throw new IllegalStateException("Menu types not registered yet");
-            }
-
-            // Register TownInterfaceScreen
-            @SuppressWarnings("unchecked")
-            MenuType<com.quackers29.businesscraft.menu.TownInterfaceMenu> typedMenuType = (MenuType<com.quackers29.businesscraft.menu.TownInterfaceMenu>) townInterfaceMenuType;
-            MenuScreens.register(typedMenuType, TownInterfaceScreen::new);
-            LOGGER.info("Registered TownInterfaceScreen");
-
-            // Register PaymentBoardScreen
-            if (paymentBoardMenuType != null) {
-                @SuppressWarnings("unchecked")
-                MenuType<com.quackers29.businesscraft.menu.PaymentBoardMenu> typedPaymentBoardMenuType = (MenuType<com.quackers29.businesscraft.menu.PaymentBoardMenu>) paymentBoardMenuType;
-                MenuScreens.register(typedPaymentBoardMenuType,
-                        com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen::new);
-                LOGGER.info("Registered PaymentBoardScreen");
-            } else {
-                LOGGER.warn("PaymentBoardMenuType not registered yet");
-            }
-
+            CommonClientSetup.registerScreens();
             LOGGER.info("Screen registration complete");
         } catch (Exception e) {
             LOGGER.error("Error registering screens", e);

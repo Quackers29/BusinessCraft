@@ -64,7 +64,8 @@ public class ConfigLoader {
      */
     private void registerWithHotReload() {
         try {
-            Path configPath = Paths.get("config/businesscraft.properties");
+            Path configDir = com.quackers29.businesscraft.api.PlatformAccess.platform.getConfigDirectory();
+            Path configPath = configDir.resolve("businesscraft.properties");
             ConfigurationService.getInstance().registerConfiguration(
                     "businesscraft-main",
                     configPath,
@@ -88,9 +89,13 @@ public class ConfigLoader {
         Properties props = new Properties();
 
         try {
-            File configFile = new File("config/businesscraft.properties");
+            Path configDir = com.quackers29.businesscraft.api.PlatformAccess.platform.getConfigDirectory();
+            File configFile = configDir.resolve("businesscraft.properties").toFile();
+
             if (!configFile.exists()) {
-                configFile.getParentFile().mkdirs();
+                if (!configFile.getParentFile().exists()) {
+                    configFile.getParentFile().mkdirs();
+                }
                 saveConfig();
                 return;
             }
@@ -206,8 +211,13 @@ public class ConfigLoader {
         props.setProperty("townBoundaryMessages", String.valueOf(townBoundaryMessages));
 
         try {
-            File configFile = new File("config/businesscraft.properties");
-            configFile.getParentFile().mkdirs();
+            Path configDir = com.quackers29.businesscraft.api.PlatformAccess.platform.getConfigDirectory();
+            File configFile = configDir.resolve("businesscraft.properties").toFile();
+
+            if (!configFile.getParentFile().exists()) {
+                configFile.getParentFile().mkdirs();
+            }
+
             FileWriter writer = new FileWriter(configFile);
             props.store(writer, "BusinessCraft Configuration");
             writer.close();

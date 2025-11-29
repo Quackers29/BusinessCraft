@@ -27,4 +27,9 @@ public class ForgePlatformHelper implements PlatformHelper {
     public String getPlatformName() {
         return "forge";
     }
+
+    @Override
+    public java.nio.file.Path getConfigDirectory() {
+        return net.minecraftforge.fml.loading.FMLPaths.CONFIGDIR.get();
+    }
 }
