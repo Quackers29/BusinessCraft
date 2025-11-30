@@ -26,6 +26,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.resources.ResourceLocation;
 import com.quackers29.businesscraft.network.packets.ResourceSyncPacket;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import com.quackers29.businesscraft.town.TownManager;
 
 /**
  * Fabric-specific mod entry point for BusinessCraft.
@@ -69,6 +71,9 @@ public class BusinessCraftFabric implements ModInitializer {
         PlatformAccess.itemHandlers = ITEM_HANDLERS;
         PlatformAccess.networkMessages = NETWORK_MESSAGES;
         PlatformAccess.touristHelper = TOURIST_HELPER;
+
+        // Load config
+        com.quackers29.businesscraft.config.ConfigLoader.loadConfig();
         // ClientHelper and RenderHelper will be initialized in clientSetup() - only
         // available on client side
 
@@ -134,8 +139,22 @@ public class BusinessCraftFabric implements ModInitializer {
         com.quackers29.businesscraft.event.PlayerBoundaryTracker.initialize();
         com.quackers29.businesscraft.event.PlatformPathHandler.initialize();
 
+        // Load registries
+        com.quackers29.businesscraft.economy.ResourceRegistry.load();
+        com.quackers29.businesscraft.production.UpgradeRegistry.load();
+        com.quackers29.businesscraft.contract.ContractBoard.getInstance().load();
+
         // Register events
         FabricModEvents.register();
+
+        // Register server tick event
+        ServerTickEvents.END_WORLD_TICK.register(level -> {
+            TownManager.get(level).tick();
+            // Only tick ContractBoard once per server tick, not per level
+            if (level.dimension() == net.minecraft.world.level.Level.OVERWORLD) {
+                com.quackers29.businesscraft.contract.ContractBoard.getInstance().tick();
+            }
+        });
 
         LOGGER.info("BusinessCraft Fabric initialized successfully!");
     }

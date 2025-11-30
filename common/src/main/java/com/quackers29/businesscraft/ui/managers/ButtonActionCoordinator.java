@@ -4,34 +4,36 @@ import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.ui.screens.BaseTownScreen;
 import net.minecraft.core.BlockPos;
+import com.quackers29.businesscraft.ui.util.ScreenNavigationHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Coordinates button actions for town interface screens.
- * Extracted from TownInterfaceScreen to separate UI action logic from screen management.
+ * Extracted from TownInterfaceScreen to separate UI action logic from screen
+ * management.
  */
 public class ButtonActionCoordinator {
     private static final Logger LOGGER = LoggerFactory.getLogger(ButtonActionCoordinator.class);
-    
+
     private final BaseTownScreen<?> screen;
     private final ModalCoordinator modalCoordinator;
     private final TownNamePopupManager popupManager;
-    
+
     /**
      * Creates a new ButtonActionCoordinator.
      * 
-     * @param screen The parent screen
+     * @param screen           The parent screen
      * @param modalCoordinator The modal coordinator for modal actions
      */
     public ButtonActionCoordinator(BaseTownScreen<?> screen, ModalCoordinator modalCoordinator) {
         this.screen = screen;
         this.modalCoordinator = modalCoordinator;
         this.popupManager = new TownNamePopupManager(screen);
-        
+
         DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "ButtonActionCoordinator initialized");
     }
-    
+
     /**
      * Handles the edit town details action.
      */
@@ -44,7 +46,7 @@ public class ButtonActionCoordinator {
             screen.sendChatMessage("Unable to open town name editor");
         }
     }
-    
+
     /**
      * Handles the view visitors action.
      */
@@ -55,7 +57,7 @@ public class ButtonActionCoordinator {
             if (screen instanceof com.quackers29.businesscraft.ui.screens.BaseTownScreen) {
                 ((com.quackers29.businesscraft.ui.screens.BaseTownScreen<?>) screen).saveActiveTab();
             }
-            
+
             modalCoordinator.showVisitorModal(closedModal -> {
                 // Trigger data refresh when modal closes
                 refreshScreenData();
@@ -65,7 +67,7 @@ public class ButtonActionCoordinator {
             screen.sendChatMessage("Unable to open visitor list");
         }
     }
-    
+
     /**
      * Handles the trade resources action.
      */
@@ -81,7 +83,7 @@ public class ButtonActionCoordinator {
             screen.sendChatMessage("Unable to open trade interface");
         }
     }
-    
+
     /**
      * Handles the manage storage action.
      */
@@ -97,7 +99,29 @@ public class ButtonActionCoordinator {
             screen.sendChatMessage("Unable to open storage interface");
         }
     }
-    
+
+    /**
+     * Handles the contract board action.
+     */
+    public void handleContractBoard() {
+        try {
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling contract board action");
+
+            // Get current town position
+            if (screen.getMenu() == null) {
+                throw new IllegalStateException("Menu is not available");
+            }
+            BlockPos currentTownPos = screen.getMenu().getBlockPos();
+
+            // Open the contract board screen
+            ScreenNavigationHelper.openContractBoard(screen.getMinecraft(), screen.getMinecraft().player,
+                    currentTownPos);
+        } catch (Exception e) {
+            LOGGER.error("Failed to handle contract board action", e);
+            screen.sendChatMessage("Unable to open contract board");
+        }
+    }
+
     /**
      * Handles the assign jobs action.
      * Currently shows a placeholder message as the feature is not yet implemented.
@@ -106,7 +130,7 @@ public class ButtonActionCoordinator {
         DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling assign jobs action (placeholder)");
         screen.sendChatMessage("Job assignment feature coming soon!");
     }
-    
+
     /**
      * Handles the view visitor history action.
      */
@@ -124,7 +148,7 @@ public class ButtonActionCoordinator {
             screen.sendChatMessage("Unable to open visitor history");
         }
     }
-    
+
     /**
      * Handles the save settings action.
      */
@@ -138,7 +162,7 @@ public class ButtonActionCoordinator {
             screen.sendChatMessage("Failed to save settings");
         }
     }
-    
+
     /**
      * Handles the reset defaults action.
      */
@@ -152,7 +176,7 @@ public class ButtonActionCoordinator {
             screen.sendChatMessage("Failed to reset settings");
         }
     }
-    
+
     /**
      * Handles the map view action by opening the town map modal.
      */
@@ -163,14 +187,14 @@ public class ButtonActionCoordinator {
             if (screen instanceof com.quackers29.businesscraft.ui.screens.BaseTownScreen) {
                 ((com.quackers29.businesscraft.ui.screens.BaseTownScreen<?>) screen).saveActiveTab();
             }
-            
+
             openTownMapModal();
         } catch (Exception e) {
             LOGGER.error("Failed to handle map view action", e);
             screen.sendChatMessage("Unable to open town map");
         }
     }
-    
+
     /**
      * Handles generic actions with a message.
      * 
@@ -180,7 +204,7 @@ public class ButtonActionCoordinator {
         DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling generic action: {}", action);
         screen.sendChatMessage("Action: " + action);
     }
-    
+
     /**
      * Opens the town map modal with proper error handling.
      */
@@ -189,44 +213,43 @@ public class ButtonActionCoordinator {
         if (screen.getMenu() == null) {
             throw new IllegalStateException("Menu is not available");
         }
-        
+
         // Get current town position
         BlockPos currentTownPos = screen.getMenu().getBlockPos();
         if (currentTownPos == null) {
             throw new IllegalStateException("Block position not available");
         }
-        
+
         // Create and show the town map modal
         com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
         if (clientHelper == null) {
             throw new IllegalStateException("ClientHelper not available");
         }
-        
+
         Object currentScreen = clientHelper.getCurrentScreen();
-        com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal = 
-            new com.quackers29.businesscraft.ui.modal.specialized.TownMapModal(
+        com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal = new com.quackers29.businesscraft.ui.modal.specialized.TownMapModal(
                 currentScreen instanceof net.minecraft.client.gui.screens.Screen screen ? screen : null,
                 currentTownPos,
                 closedModal -> {
                     // Callback when modal closes - refresh data if needed
                     refreshScreenData();
                     DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town map modal closed");
-                }
-            );
-        
+                });
+
         // Load town data from client cache if available
-        com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache cache = 
-            com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache.getInstance();
+        com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache cache = com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache
+                .getInstance();
         mapModal.setTownData(cache.getAllTowns());
-        
-        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town map modal opened from current position: {}", currentTownPos);
-        
+
+        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town map modal opened from current position: {}",
+                currentTownPos);
+
         Object minecraft = clientHelper.getMinecraft();
         if (minecraft instanceof net.minecraft.client.Minecraft mc) {
             mc.setScreen(mapModal);
         }
     }
-    
+
     /**
      * Validates that all required dependencies are available.
      * 
@@ -237,20 +260,20 @@ public class ButtonActionCoordinator {
             LOGGER.error("Screen is null");
             return false;
         }
-        
+
         if (modalCoordinator == null) {
             LOGGER.error("ModalCoordinator is null");
             return false;
         }
-        
+
         if (!modalCoordinator.validateDependencies()) {
             LOGGER.error("ModalCoordinator dependencies are invalid");
             return false;
         }
-        
+
         return true;
     }
-    
+
     /**
      * Gets the currently active tab ID.
      * 
@@ -267,11 +290,11 @@ public class ButtonActionCoordinator {
         }
         return "overview";
     }
-    
+
     /**
      * Returns to the specified tab, with fallback to current tab.
      * 
-     * @param targetTab The tab to return to
+     * @param targetTab   The tab to return to
      * @param fallbackTab The fallback tab if target is not available
      */
     private void returnToTab(String targetTab, String fallbackTab) {
@@ -285,7 +308,7 @@ public class ButtonActionCoordinator {
                         tabToActivate = "overview";
                     }
                 }
-                
+
                 screen.getTabPanel().setActiveTab(tabToActivate);
                 DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Returned to tab: {}", tabToActivate);
             }
@@ -293,7 +316,7 @@ public class ButtonActionCoordinator {
             LOGGER.warn("Failed to return to tab: {}", targetTab, e);
         }
     }
-    
+
     /**
      * Checks if a tab is available in the tab panel.
      * 
@@ -307,7 +330,7 @@ public class ButtonActionCoordinator {
             return false;
         }
     }
-    
+
     /**
      * Refreshes screen data after modal operations.
      */
@@ -315,10 +338,12 @@ public class ButtonActionCoordinator {
         try {
             // Refresh cache data
             if (screen.getCacheManager() != null) {
-                // screen.getCacheManager().refreshCachedValues();  // Removed - less aggressive refresh
-                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Modal closed - relying on normal data sync mechanisms");
+                // screen.getCacheManager().refreshCachedValues(); // Removed - less aggressive
+                // refresh
+                DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS,
+                        "Modal closed - relying on normal data sync mechanisms");
             }
-            
+
             // Force refresh specific tabs that might have changed (keep this for resources)
             if (screen instanceof com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen) {
                 ((com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen) screen).forceRefreshResourcesTab();
@@ -327,7 +352,7 @@ public class ButtonActionCoordinator {
             LOGGER.warn("Failed to refresh screen data", e);
         }
     }
-    
+
     /**
      * Performs cleanup when the coordinator is no longer needed.
      */

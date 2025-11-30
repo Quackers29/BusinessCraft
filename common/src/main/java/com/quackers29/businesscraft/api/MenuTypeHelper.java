@@ -6,22 +6,12 @@ package com.quackers29.businesscraft.api;
  */
 public interface MenuTypeHelper {
     /**
-     * Get the Town Interface menu type
-     */
-    Object getTownInterfaceMenuType();
-
-    /**
-     * Get the Trade menu type
-     */
-    Object getTradeMenuType();
-
-    /**
-     * Get the Storage menu type
-     */
-    Object getStorageMenuType();
-
-    /**
      * Get the Payment Board menu type
      */
     Object getPaymentBoardMenuType();
+
+    /**
+     * Get the Contract Board menu type
+     */
+    Object getContractBoardMenuType();
 }

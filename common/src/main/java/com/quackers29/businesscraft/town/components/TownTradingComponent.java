@@ -1,0 +1,95 @@
+package com.quackers29.businesscraft.town.components;
+
+import com.quackers29.businesscraft.config.ConfigLoader;
+import com.quackers29.businesscraft.economy.ResourceRegistry;
+import com.quackers29.businesscraft.economy.ResourceType;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class TownTradingComponent implements TownComponent {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TownTradingComponent.class);
+
+    private final Map<String, TradingStock> stocks = new HashMap<>();
+
+    public static class TradingStock {
+        public float current;
+        public float learnedMin;
+        public float learnedMax;
+
+        public TradingStock(float current, float min, float max) {
+            this.current = current;
+            this.learnedMin = min;
+            this.learnedMax = max;
+        }
+    }
+
+    public TownTradingComponent() {
+        // Initialize default stocks for known resources
+        // In a real scenario, this might be done lazily or based on town type
+    }
+
+    @Override
+    public void tick() {
+        // Restock logic
+        for (Map.Entry<String, TradingStock> entry : stocks.entrySet()) {
+            TradingStock stock = entry.getValue();
+            if (stock.current < stock.learnedMin) {
+                stock.current += ConfigLoader.tradingRestockRate;
+                // Clamp to max? Or just let it grow?
+                // For now, just simple linear growth
+            }
+        }
+    }
+
+    public float getStock(String resourceId) {
+        return stocks.containsKey(resourceId) ? stocks.get(resourceId).current : 0.0f;
+    }
+
+    public void adjustStock(String resourceId, float amount) {
+        // Ensure stock exists
+        if (!stocks.containsKey(resourceId)) {
+            stocks.put(resourceId, new TradingStock(0, 100, ConfigLoader.tradingDefaultMaxStock));
+        }
+
+        TradingStock stock = stocks.get(resourceId);
+        stock.current += amount;
+        if (stock.current < 0)
+            stock.current = 0;
+    }
+
+    @Override
+    public void save(CompoundTag tag) {
+        ListTag list = new ListTag();
+        for (Map.Entry<String, TradingStock> entry : stocks.entrySet()) {
+            CompoundTag stockTag = new CompoundTag();
+            stockTag.putString("id", entry.getKey());
+            stockTag.putFloat("current", entry.getValue().current);
+            stockTag.putFloat("min", entry.getValue().learnedMin);
+            stockTag.putFloat("max", entry.getValue().learnedMax);
+            list.add(stockTag);
+        }
+        tag.put("tradingStocks", list);
+    }
+
+    @Override
+    public void load(CompoundTag tag) {
+        stocks.clear();
+        if (tag.contains("tradingStocks")) {
+            ListTag list = tag.getList("tradingStocks", Tag.TAG_COMPOUND);
+            for (int i = 0; i < list.size(); i++) {
+                CompoundTag stockTag = list.getCompound(i);
+                String id = stockTag.getString("id");
+                float current = stockTag.getFloat("current");
+                float min = stockTag.getFloat("min");
+                float max = stockTag.getFloat("max");
+                stocks.put(id, new TradingStock(current, min, max));
+            }
+        }
+    }
+}

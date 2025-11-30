@@ -33,6 +33,7 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -141,6 +142,9 @@ public class BusinessCraftForge {
         LOGGER.info("BusinessCraft Forge common setup starting");
 
         ConfigLoader.loadConfig();
+        com.quackers29.businesscraft.economy.ResourceRegistry.load();
+        com.quackers29.businesscraft.production.UpgradeRegistry.load();
+        com.quackers29.businesscraft.contract.ContractBoard.getInstance().load();
 
         // Report active debug logging configuration
         DebugConfig.logActiveDebuggers();
@@ -219,6 +223,17 @@ public class BusinessCraftForge {
         if (event.getLevel() instanceof ServerLevel) {
             DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "Clearing tracked vehicles on level unload");
             TOURIST_VEHICLE_MANAGER.clearTrackedVehicles();
+        }
+    }
+
+    @SubscribeEvent
+    public void onLevelTick(TickEvent.LevelTickEvent event) {
+        if (event.phase == TickEvent.Phase.END && event.level instanceof ServerLevel) {
+            TownManager.get((ServerLevel) event.level).tick();
+            // Only tick ContractBoard once per server tick, not per level
+            if (event.level.dimension() == net.minecraft.world.level.Level.OVERWORLD) {
+                com.quackers29.businesscraft.contract.ContractBoard.getInstance().tick();
+            }
         }
     }
 }

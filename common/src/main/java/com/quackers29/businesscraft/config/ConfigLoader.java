@@ -52,6 +52,16 @@ public class ConfigLoader {
     public static boolean playerTracking = true; // Master toggle for all player tracking functionality
     public static boolean townBoundaryMessages = true; // Whether to show town entry/exit messages
 
+    // Trading config
+    public static boolean tradingEnabled = true;
+    public static int tradingTickInterval = 60;
+    public static float tradingRestockRate = 0.5f;
+    public static float tradingDefaultMaxStock = 1000.0f;
+
+    // Production config
+    public static boolean productionEnabled = true;
+    public static int productionTickInterval = 100;
+
     public static final ConfigLoader INSTANCE = new ConfigLoader();
 
     private ConfigLoader() {
@@ -143,6 +153,16 @@ public class ConfigLoader {
                 townNames.addAll(Arrays.asList("Riverside", "Hillcrest", "Meadowbrook", "Oakville"));
             }
 
+            // Load trading config
+            tradingEnabled = Boolean.parseBoolean(props.getProperty("tradingEnabled", "true"));
+            tradingTickInterval = Integer.parseInt(props.getProperty("tradingTickInterval", "60"));
+            tradingRestockRate = Float.parseFloat(props.getProperty("tradingRestockRate", "0.5"));
+            tradingDefaultMaxStock = Float.parseFloat(props.getProperty("tradingDefaultMaxStock", "1000.0"));
+
+            // Load production config
+            productionEnabled = Boolean.parseBoolean(props.getProperty("productionEnabled", "true"));
+            productionTickInterval = Integer.parseInt(props.getProperty("productionTickInterval", "100"));
+
         } catch (IOException e) {
             LOGGER.error("Failed to load config: {}", e.getMessage());
         }
@@ -209,6 +229,16 @@ public class ConfigLoader {
         // Save player tracking config
         props.setProperty("playerTracking", String.valueOf(playerTracking));
         props.setProperty("townBoundaryMessages", String.valueOf(townBoundaryMessages));
+
+        // Save trading config
+        props.setProperty("tradingEnabled", String.valueOf(tradingEnabled));
+        props.setProperty("tradingTickInterval", String.valueOf(tradingTickInterval));
+        props.setProperty("tradingRestockRate", String.valueOf(tradingRestockRate));
+        props.setProperty("tradingDefaultMaxStock", String.valueOf(tradingDefaultMaxStock));
+
+        // Save production config
+        props.setProperty("productionEnabled", String.valueOf(productionEnabled));
+        props.setProperty("productionTickInterval", String.valueOf(productionTickInterval));
 
         try {
             Path configDir = com.quackers29.businesscraft.api.PlatformAccess.platform.getConfigDirectory();

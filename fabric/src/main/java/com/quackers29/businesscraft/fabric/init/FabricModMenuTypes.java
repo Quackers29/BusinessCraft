@@ -29,6 +29,7 @@ public class FabricModMenuTypes {
             FabricMenuTypeHelper.setTradeMenuType(CommonModMenuTypes.TRADE_MENU.get());
             FabricMenuTypeHelper.setStorageMenuType(CommonModMenuTypes.STORAGE_MENU.get());
             FabricMenuTypeHelper.setPaymentBoardMenuType(CommonModMenuTypes.PAYMENT_BOARD_MENU.get());
+            FabricMenuTypeHelper.setContractBoardMenuType(CommonModMenuTypes.CONTRACT_BOARD_MENU.get());
 
             registrationSuccessful = true;
             LOGGER.info("Fabric menu types registered successfully");

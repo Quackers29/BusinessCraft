@@ -48,6 +48,7 @@ public class CommonClientSetup {
         MenuScreens.register(CommonModMenuTypes.TRADE_MENU.get(), TradeScreen::new);
         MenuScreens.register(CommonModMenuTypes.STORAGE_MENU.get(), StorageScreen::new);
         MenuScreens.register(CommonModMenuTypes.PAYMENT_BOARD_MENU.get(), PaymentBoardScreen::new);
+        MenuScreens.register(CommonModMenuTypes.CONTRACT_BOARD_MENU.get(), ContractBoardScreen::new);
     }
 
     @SuppressWarnings("unchecked")
