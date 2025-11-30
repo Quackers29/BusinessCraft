@@ -66,4 +66,11 @@ public interface RegistryHelper {
      * Get the ResourceLocation for an item
      */
     ResourceLocation getItemKey(Item item);
+
+    /**
+     * Get all registered items
+     * 
+     * @return An iterable of all items in the registry
+     */
+    Iterable<Item> getItems();
 }

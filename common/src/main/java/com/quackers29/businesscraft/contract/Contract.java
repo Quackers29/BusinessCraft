@@ -1,6 +1,8 @@
 package com.quackers29.businesscraft.contract;
 
 import net.minecraft.nbt.CompoundTag;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public abstract class Contract {
@@ -9,6 +11,7 @@ public abstract class Contract {
     protected long creationTime;
     protected long expiryTime;
     protected boolean isCompleted;
+    protected Map<UUID, Float> bids = new HashMap<>();
 
     public Contract(UUID issuerTownId, long duration) {
         this.id = UUID.randomUUID();
@@ -38,8 +41,30 @@ public abstract class Contract {
         return isCompleted;
     }
 
+    public long getExpiryTime() {
+        return expiryTime;
+    }
+
     public void complete() {
         this.isCompleted = true;
+    }
+
+    public Map<UUID, Float> getBids() {
+        return bids;
+    }
+
+    public void addBid(UUID bidder, float amount) {
+        bids.put(bidder, Math.max(bids.getOrDefault(bidder, 0f), amount));
+    }
+
+    public float getHighestBid() {
+        return bids.isEmpty() ? 0f : bids.values().stream().max(Float::compare).orElse(0f);
+    }
+
+    public UUID getHighestBidder() {
+        return bids.entrySet().stream()
+            .max(Map.Entry.comparingByValue(Float::compare))
+            .map(Map.Entry::getKey).orElse(null);
     }
 
     public void save(CompoundTag tag) {

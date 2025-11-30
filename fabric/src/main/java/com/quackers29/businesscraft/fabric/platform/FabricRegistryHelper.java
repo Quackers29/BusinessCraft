@@ -87,4 +87,9 @@ public class FabricRegistryHelper implements RegistryHelper {
     public ResourceLocation getItemKey(Item item) {
         return BuiltInRegistries.ITEM.getKey(item);
     }
+
+    @Override
+    public Iterable<Item> getItems() {
+        return BuiltInRegistries.ITEM;
+    }
 }

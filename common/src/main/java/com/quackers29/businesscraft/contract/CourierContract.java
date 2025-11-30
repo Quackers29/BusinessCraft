@@ -48,6 +48,11 @@ public class CourierContract extends Contract {
         this.courierId = courierId;
     }
 
+    // UI convenience methods
+    public int getAmount() {
+        return quantity;
+    }
+
     @Override
     protected void saveAdditional(CompoundTag tag) {
         tag.putString("resourceId", resourceId);

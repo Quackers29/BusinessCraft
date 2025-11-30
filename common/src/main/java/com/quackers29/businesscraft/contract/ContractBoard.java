@@ -132,4 +132,12 @@ public class ContractBoard {
             LOGGER.error("Failed to load contract board data", e);
         }
     }
+
+    public void addBid(UUID contractId, UUID bidder, float amount) {
+        Contract contract = getContract(contractId);
+        if (contract != null) {
+            contract.addBid(bidder, amount);
+            save(); // Persist
+        }
+    }
 }

@@ -5,6 +5,7 @@ import com.quackers29.businesscraft.contract.Contract;
 import com.quackers29.businesscraft.contract.CourierContract;
 import com.quackers29.businesscraft.contract.SellContract;
 import com.quackers29.businesscraft.menu.ContractBoardMenu;
+import com.quackers29.businesscraft.ui.screens.town.ContractBoardScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -69,12 +70,19 @@ public class ContractSyncPacket {
     public boolean handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // Client-side handling
-            Player player = PlatformAccess.getClient().getPlayer();
+            Player player = (Player) PlatformAccess.getClient().getPlayer();
             if (player != null && player.containerMenu instanceof ContractBoardMenu menu) {
                 menu.setContracts(contracts);
             }
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
         return true;
+    }
+
+    // Client handler
+    public void handleClient(Minecraft mc) {
+        if (mc.screen instanceof ContractBoardScreen screen) {
+            screen.updateContracts(contracts);
+        }
     }
 }

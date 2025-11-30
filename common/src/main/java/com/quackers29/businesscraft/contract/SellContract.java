@@ -41,6 +41,17 @@ public class SellContract extends Contract {
         this.buyerTownId = buyerTownId;
     }
 
+    // UI convenience methods
+    public int getAmount() {
+        return quantity;
+    }
+
+    public float getCurrentBid() {
+        // TODO: Implement bidding system tracking
+        // For now, return the price per unit times quantity as a placeholder
+        return pricePerUnit * quantity;
+    }
+
     @Override
     protected void saveAdditional(CompoundTag tag) {
         tag.putString("resourceId", resourceId);

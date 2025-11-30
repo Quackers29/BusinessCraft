@@ -87,4 +87,9 @@ public class ForgeRegistryHelper implements RegistryHelper {
     public ResourceLocation getItemKey(Item item) {
         return ForgeRegistries.ITEMS.getKey(item);
     }
+
+    @Override
+    public Iterable<Item> getItems() {
+        return ForgeRegistries.ITEMS;
+    }
 }

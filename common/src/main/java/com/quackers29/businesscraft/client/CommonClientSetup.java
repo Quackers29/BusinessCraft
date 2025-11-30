@@ -13,6 +13,7 @@ import com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen;
 import com.quackers29.businesscraft.ui.screens.town.StorageScreen;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
 import com.quackers29.businesscraft.ui.screens.town.TradeScreen;
+import com.quackers29.businesscraft.ui.screens.town.ContractBoardScreen;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;

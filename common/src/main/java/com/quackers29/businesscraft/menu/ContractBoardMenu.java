@@ -7,6 +7,9 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.core.BlockPos;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class ContractBoardMenu extends AbstractContainerMenu {
     private BlockPos townBlockPos;
 
@@ -80,5 +83,17 @@ public class ContractBoardMenu extends AbstractContainerMenu {
 
     public java.util.List<com.quackers29.businesscraft.contract.Contract> getContracts() {
         return contracts;
+    }
+
+    public List<com.quackers29.businesscraft.contract.Contract> getAvailableContracts() {
+        return contracts.stream().filter(c -> !c.isExpired() && !c.isCompleted()).collect(Collectors.toList());
+    }
+
+    public List<com.quackers29.businesscraft.contract.Contract> getActiveContracts() {
+        return contracts.stream().filter(c -> !c.isExpired() && c.isCompleted()).collect(Collectors.toList());
+    }
+
+    public List<com.quackers29.businesscraft.contract.Contract> getHistoryContracts() {
+        return contracts.stream().filter(c -> c.isExpired() || c.isCompleted()).collect(Collectors.toList());
     }
 }

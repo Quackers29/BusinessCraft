@@ -16,4 +16,19 @@ public class ForgeMenuTypeHelper implements MenuTypeHelper {
     public Object getContractBoardMenuType() {
         return ForgeModMenuTypes.CONTRACT_BOARD_MENU.get();
     }
+
+    @Override
+    public Object getTownInterfaceMenuType() {
+        return ForgeModMenuTypes.TOWN_INTERFACE_MENU.get();
+    }
+
+    @Override
+    public Object getTradeMenuType() {
+        return ForgeModMenuTypes.TRADE_MENU.get();
+    }
+
+    @Override
+    public Object getStorageMenuType() {
+        return ForgeModMenuTypes.STORAGE_MENU.get();
+    }
 }

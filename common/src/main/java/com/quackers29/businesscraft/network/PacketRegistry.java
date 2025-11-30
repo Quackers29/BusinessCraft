@@ -155,6 +155,14 @@ public class PacketRegistry {
                                 RequestTownDataPacket::decode, RequestTownDataPacket::encode,
                                 RequestTownDataPacket::handle);
 
+                register(OpenContractBoardPacket.class, "open_contract_board_packet", NetworkDirection.PLAY_TO_SERVER,
+                                OpenContractBoardPacket::decode, OpenContractBoardPacket::encode,
+                                OpenContractBoardPacket::handle);
+
+                register(AcceptContractPacket.class, "accept_contract_packet", NetworkDirection.PLAY_TO_SERVER,
+                                AcceptContractPacket::decode, AcceptContractPacket::encode,
+                                AcceptContractPacket::handle);
+
                 // Client-bound packets (PLAY_TO_CLIENT)
                 register(RefreshPlatformsPacket.class, "refresh_platforms_packet", NetworkDirection.PLAY_TO_CLIENT,
                                 RefreshPlatformsPacket::decode, RefreshPlatformsPacket::encode,

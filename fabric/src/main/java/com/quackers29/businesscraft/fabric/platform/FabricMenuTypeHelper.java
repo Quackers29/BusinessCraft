@@ -71,4 +71,19 @@ public class FabricMenuTypeHelper implements MenuTypeHelper {
     public Object getContractBoardMenuType() {
         return getContractBoardMenuTypeStatic();
     }
+
+    @Override
+    public Object getTownInterfaceMenuType() {
+        return getTownInterfaceMenuTypeStatic();
+    }
+
+    @Override
+    public Object getTradeMenuType() {
+        return getTradeMenuTypeStatic();
+    }
+
+    @Override
+    public Object getStorageMenuType() {
+        return getStorageMenuTypeStatic();
+    }
 }

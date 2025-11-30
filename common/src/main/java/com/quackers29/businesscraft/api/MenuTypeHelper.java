@@ -14,4 +14,19 @@ public interface MenuTypeHelper {
      * Get the Contract Board menu type
      */
     Object getContractBoardMenuType();
+
+    /**
+     * Get the Town Interface menu type
+     */
+    Object getTownInterfaceMenuType();
+
+    /**
+     * Get the Trade menu type
+     */
+    Object getTradeMenuType();
+
+    /**
+     * Get the Storage menu type
+     */
+    Object getStorageMenuType();
 }
