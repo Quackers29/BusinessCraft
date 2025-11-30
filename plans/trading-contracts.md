@@ -3,15 +3,15 @@
 ## Introduction
 Replaces direct trading with **timed contract auctions** for realism/delays. Integrates `trading-overview.md` (resources/units/market) & `town-production.md` (excess/deficits):
 
-- **Sell Contracts**: Town posts excess → bids during timer → highest wins.
-- **Courier Contracts**: Post-sale delivery bid → player hauls or auto-slow courier.
-- **Timers**: 5-10min bids (player integration).
-- **Global Board**: Active contracts (NBT-persisted). **Player UI (Contracts Board Screen) for search/browse/bid.**
-- **Phase 1**: Towns auto-post/bid. **Phase 1.5: Player UI access.** Phase 2: Players bid/reward.
+- **Sell Contracts**: Town posts excess → **town-only bids** during timer → highest wins. Players view real-time bids/history.
+- **Courier Contracts**: Post-sale delivery → **town/player bids** (players can compete for haul rewards).
+- **Timers**: 5-10min bids.
+- **Global Board**: Active contracts (NBT-persisted). Player UI for search/browse/view (real-time/history).
+- **Full Implementation**: Towns auto-post/bid sells; players bid couriers + full visibility.
 - **Multi-Loader**: Common `contracts/` logic.
 - **Drives Economy**: Production excess → contracts → deliveries.
 
-**Goals**: Immersive delays, player jobs, configurable.
+**Goals**: Immersive delays, player jobs (couriers), configurable.
 
 ## Core Components
 
@@ -62,8 +62,8 @@ if (excess(resource) > threshold && cooldownOk()) {
 }
 ```
 
-### 4. Town Bidding (Auto, Needs-Based)
-Town tick scans board:
+### 4. Town Bidding (Auto, Needs-Based) **– Sell Contracts Only**
+Town tick scans board **(towns only – players view via UI)**:
 ```java
 for (SellContract sc : board.activeSells()) {
   if (sc.sellerTown != this.id && needs(sc.resource)) {
@@ -74,7 +74,7 @@ for (SellContract sc : board.activeSells()) {
   }
 }
 ```
-- **Auction Close** (board tick): Highest bid wins → notify, post CourierContract.
+- **Auction Close** (board tick): Highest **town** bid wins → notify, post CourierContract.
   - Seller += bid emeralds equiv (abstract).
   - Buyer pays reserve.
 
@@ -95,38 +95,39 @@ board.post(cc);
   - Learn market: price = avg(sell bid).
   - Visual: Particles, sounds.
 
-### 6. Player Integration (Phase 1.5 UI + Phase 2 Bidding/Fulfillment)
-**Contracts Board UI (Priority: High, before full bidding)**
+### 6. Player Integration (**View Sells + Bid Couriers**)
+**Contracts Board UI (Core Feature)**
 
 - **Access**: 
   - Placeable "Contracts Board" block (sign-like, recipe: paper+emerald). Right-click opens `ContractsBoardScreen`.
   - Command: `/contracts` (requires permission).
-  - Packet: `OpenContractsBoardPacket` (like existing `OpenPaymentBoardPacket`).
+  - Packet: `OpenContractsBoardPacket`.
 
-- **UI Layout** (Screen, 276x195px):
+- **UI Layout** (276x195px):
   ```
-  [Search: wood] [Filter: Sell/Courier/Near Me] [Sort: Time/Reward/Dist]
+  [Tabs: Available/Active/History] [Search: wood] [Filter: Sell/Courier] [Sort: Time/Reward/Dist]
   ---------------- List ----------------
-  ID:abc | Sell Wood x50 (TownA) | Min:0.55e | Bids:3 | Ends:4m32s | [Bid]
-  ID:def | Courier Iron to TownB | Reward:12e | Ends:9m | Dist:250b | [Accept]
-  ... (paginated, 10/contract)
+  ID:abc | Sell Wood x50 (TownA) | Min:0.55e | **Town Bids: TownB=0.62 (lead)** | Ends:4m32s | [View]
+  ID:def | Courier Iron to TownB | Reward:12e | Ends:9m | Dist:250b | [Bid]
+  ... (paginated, real-time updates)
   ---------------- Footer -------------
   [Refresh] [Map View] [Close]
   ```
-  - **Icons**: Render resource item (from ResourceType canonical).
-  - **Map Preview**: Mini town positions (world map projection).
-  - **Search**: Fuzzy match resource/town name (client-side filter).
-  - **Details Modal**: Click row → full info (linked sell, from/to coords).
+  - **Icons**: Resource item.
+  - **Map Preview**: Town positions.
+  - **Search/Filter**: Fuzzy/client-side.
+  - **Details Modal**: Full info, bid history log.
+  - **Real-time**: Live bid updates (server sync), history tab (past completed).
 
 - **Interactions**:
-  - **Bid**: Opens number input (emeralds), sends `BidContractPacket(id, amount)`. Leader shown live.
-  - **Accept Courier**: If lowest bid/no bids & player near "from", claim → haul to "to".
-  - **Fulfill**: At destination chest (right-click with contract itemized? or `/fulfill <id>`), verify stock → reward emeralds.
+  - **Sells**: View-only (real-time town bids, history).
+  - **Couriers**: Bid (number input → `BidContractPacket`), Accept (if eligible), Fulfill (`/fulfill <id>` or chest → rewards).
+  - History: View past contracts (fulfilled/timed-out).
 
-**Phase 2 Commands** (backup for no UI):
-- `/contracts list [filter]`
-- `/bid <id> <price>`
-- `/deliver <contract_id>` at toPos → instant reward.
+**Commands** (backup):
+- `/contracts list [available/active/history] [filter]`
+- `/bid <courier_id> <price>`
+- `/deliver <contract_id>`
 
 ## Data Flow Diagram
 ```
@@ -178,11 +179,10 @@ T=5min+: Courier bid 10min, no player
 T=15min+: Slow cart A→B (5min travel), transfer, wood price→0.59
 ```
 
-## Next Phases
-- **Contracts Board UI** (screen/ledger) → **MOVED UP: Now Phase 1.5**.
+## Future Enhancements
 - Multi-resource contracts.
-- Contract buildings (board spawns near town hall?).
-- Player companies (group bids).
+- Auto-spawn contract buildings near town halls.
+- Player companies (group bids on couriers).
 
 ## Risks/Mitigations
 - No Bids: Auto courier.
