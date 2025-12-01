@@ -34,7 +34,7 @@ public class AddContractCommand {
 
         if ("sell".equalsIgnoreCase(type)) {
             UUID dummyTownId = UUID.randomUUID();
-            long duration = 72000L * 50L; // 3 game days converted to ms (assuming 20tps)
+            long duration = 60000L; // 60 seconds in milliseconds
 
             SellContract contract = new SellContract(dummyTownId, duration, resource, quantity, price);
 

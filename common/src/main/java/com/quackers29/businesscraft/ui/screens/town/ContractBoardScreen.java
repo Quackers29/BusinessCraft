@@ -131,7 +131,7 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
             boolean completed = c.isCompleted();
             switch (selectedTab) {
                 case 0:
-                    return !expired && !completed; // Available
+                    return !expired && !completed; // Auction
                 case 1:
                     return !expired && completed; // Active
                 case 2:
@@ -214,7 +214,7 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     private String getTabTitle() {
         switch (selectedTab) {
             case 0:
-                return "Available";
+                return "Auction";
             case 1:
                 return "Active";
             case 2:
@@ -355,7 +355,7 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     }
 
     private void renderTabButtons(GuiGraphics g, int x, int y, int mx, int my) {
-        String[] tabNames = { "Available", "Active", "History" };
+        String[] tabNames = { "Auction", "Active", "History" };
         for (int i = 0; i < 3; i++) {
             boolean hover = isMouseOverTab(mx, my, i);
             boolean sel = i == selectedTab;
