@@ -151,8 +151,9 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
             contractGrid.addLabel(i, 2, truncate(status, 12), TEXT_COLOR);
 
             // Col 3: Time
-            long timeLeft = (c.getExpiryTime() - System.currentTimeMillis()) / 1000L;
-            String time = timeLeft > 0 ? Long.toString(timeLeft) + "s" : "Expired";
+            long currentTick = this.minecraft.level.getGameTime();
+            long ticksLeft = c.getExpiryTime() - currentTick;
+            String time = ticksLeft > 0 ? (ticksLeft / 20) + "s" : "Expired";
             contractGrid.addLabel(i, 3, time, TEXT_COLOR);
 
             // Col 4: Action button

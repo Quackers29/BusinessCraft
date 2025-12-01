@@ -64,14 +64,6 @@ public class FabricEventCallbackHandler {
      * Check if we're running on a server (as opposed to client-only)
      */
     private static boolean isServerSide() {
-        // In Fabric, we can check if the server classes are available or use
-        // FabricLoader
-        // But since we are compiling against Mojang mappings which include server
-        // classes,
-        // we can just return true if we are in a server environment.
-        // For simplicity in this handler, we'll assume we can register server events
-        // safely
-        // because Fabric handles environment separation.
         return true;
     }
 
@@ -153,6 +145,13 @@ public class FabricEventCallbackHandler {
 
             return InteractionResult.PASS;
         });
+
+        // Register Commands
+        net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback.EVENT
+                .register((dispatcher, registryAccess, environment) -> {
+                    com.quackers29.businesscraft.command.ClearTownsCommand.register(dispatcher);
+                    com.quackers29.businesscraft.command.AddContractCommand.register(dispatcher);
+                });
     }
 
     /**

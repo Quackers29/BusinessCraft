@@ -155,6 +155,10 @@ public class PacketRegistry {
                                 RequestTownDataPacket::decode, RequestTownDataPacket::encode,
                                 RequestTownDataPacket::handle);
 
+                register(OpenPaymentBoardPacket.class, "open_payment_board_packet", NetworkDirection.PLAY_TO_SERVER,
+                                OpenPaymentBoardPacket::decode, OpenPaymentBoardPacket::encode,
+                                OpenPaymentBoardPacket::handle);
+
                 register(OpenContractBoardPacket.class, "open_contract_board_packet", NetworkDirection.PLAY_TO_SERVER,
                                 OpenContractBoardPacket::decode, OpenContractBoardPacket::encode,
                                 OpenContractBoardPacket::handle);

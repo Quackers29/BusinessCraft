@@ -36,11 +36,15 @@ public class OpenPaymentBoardPacket {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (senderObj instanceof ServerPlayer player) {
-                // Open payment board menu
-                // Assume TownBlockEntity.createPaymentBoardMenuProvider(pos)
-                // Placeholder - use existing logic
-                LOGGER.info("Opening Payment Board for player {} at {}", player.getName().getString(), pos);
-                // PlatformAccess.getNetwork().openScreen(player, menuProvider, pos);
+                // Get the block entity to ensure all town data is accessible
+                net.minecraft.world.level.block.entity.BlockEntity entity = player.level().getBlockEntity(pos);
+                if (entity instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface) {
+                    // Open the PaymentBoardMenu using the entity's provider method
+                    LOGGER.info("Opening Payment Board for player {} at {}", player.getName().getString(), pos);
+                    PlatformAccess.getNetwork().openScreen(player, townInterface.createPaymentBoardMenuProvider(), pos);
+                } else {
+                    LOGGER.error("Failed to get TownInterfaceEntity at position: {}", pos);
+                }
             }
         });
         PlatformAccess.getNetwork().setPacketHandled(context);

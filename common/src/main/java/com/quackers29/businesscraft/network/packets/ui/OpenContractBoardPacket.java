@@ -64,6 +64,19 @@ public class OpenContractBoardPacket {
                             return new ContractBoardMenu(windowId, inventory, blockPos);
                         }
                     }, blockPos);
+
+                    // Force sync contracts to the player opening the board
+                    try {
+                        com.quackers29.businesscraft.contract.ContractBoard board = com.quackers29.businesscraft.contract.ContractBoard
+                                .getInstance();
+                        PlatformAccess.getNetworkMessages().sendToPlayer(
+                                new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(
+                                        board.getContracts()),
+                                player);
+                        LOGGER.info("Sent initial contract sync to player {}", player.getName().getString());
+                    } catch (Exception e) {
+                        LOGGER.error("Failed to send initial contract sync", e);
+                    }
                 } else {
                     LOGGER.error("Failed to get TownInterfaceEntity at position: {}", blockPos);
                 }

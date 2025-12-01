@@ -33,11 +33,13 @@ public class ContractBoard {
     public void addContract(Contract contract) {
         activeContracts.add(contract);
         dirty = true;
+        broadcastUpdate();
     }
 
     public void removeContract(UUID contractId) {
         activeContracts.removeIf(c -> c.getId().equals(contractId));
         dirty = true;
+        broadcastUpdate();
     }
 
     public void updateContract(Contract contract) {
@@ -73,6 +75,7 @@ public class ContractBoard {
         }
         if (changed) {
             dirty = true;
+            broadcastUpdate();
         }
 
         if (dirty) {
@@ -138,6 +141,19 @@ public class ContractBoard {
         if (contract != null) {
             contract.addBid(bidder, amount);
             save(); // Persist
+            broadcastUpdate();
+        }
+    }
+
+    private void broadcastUpdate() {
+        try {
+            LOGGER.info("Broadcasting contract update to all players. Contract count: {}", activeContracts.size());
+            if (PlatformAccess.getNetworkMessages() != null) {
+                PlatformAccess.getNetworkMessages().sendToAllPlayers(
+                        new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(activeContracts));
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to broadcast contract update", e);
         }
     }
 }

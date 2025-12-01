@@ -175,23 +175,24 @@ public class FabricModMessages {
         }
     }
 
+    private static net.minecraft.server.MinecraftServer serverInstance;
+
+    public static void setServer(net.minecraft.server.MinecraftServer server) {
+        serverInstance = server;
+    }
+
     /**
      * Send a message to all players on the server
      */
     public static void sendToAllPlayers(Object message) {
         try {
-            // Get server instance
-            // This is a bit hacky, but we don't have direct access to the server instance
-            // here easily
-            // In a real impl we might want to pass it in or use a singleton
-            // For now, we'll rely on the caller to use sendToPlayer if they have the server
-            // Or we can try to get it from a player if we had one
-
-            // Since we can't easily get the server here without context, we'll log a
-            // warning
-            // In a proper Fabric impl, we'd use PlayerLookup.all(server)
-            LOGGER.warn("sendToAllPlayers called but server instance not available directly");
-
+            if (serverInstance != null) {
+                for (ServerPlayer player : PlayerLookup.all(serverInstance)) {
+                    sendToPlayer(message, player);
+                }
+            } else {
+                LOGGER.warn("sendToAllPlayers called but server instance is null");
+            }
         } catch (Exception e) {
             LOGGER.error("Error in sendToAllPlayers", e);
         }
@@ -200,6 +201,7 @@ public class FabricModMessages {
     /**
      * Send a message to all players tracking a specific chunk
      */
+
     public static void sendToAllTrackingChunk(Object message, Object level, Object pos) {
         try {
             if (!(level instanceof net.minecraft.server.level.ServerLevel))

@@ -13,6 +13,10 @@ import com.quackers29.businesscraft.town.TownManager;
 import com.quackers29.businesscraft.api.ITownDataProvider;
 // import com.quackers29.businesscraft.data.VisitHistoryRecord;
 import com.quackers29.businesscraft.scoreboard.TownScoreboardManager;
+import com.quackers29.businesscraft.contract.ContractBoard;
+import com.quackers29.businesscraft.contract.SellContract;
+import java.util.Map;
+import java.util.UUID;
 import net.minecraft.core.particles.ParticleTypes;
 import io.netty.buffer.Unpooled;
 import net.minecraft.core.BlockPos;
@@ -598,6 +602,11 @@ public class TownInterfaceEntity extends BlockEntity
                         for (Platform platform : platformManager.getEnabledPlatforms()) {
                             touristSpawningHelper.spawnTouristOnPlatform(level, town, platform, townId);
                         }
+                    }
+
+                    // Contract generation
+                    if (level.getGameTime() % 100 == 0) { // Every 5 seconds
+                        tickContractGeneration(town);
                     }
 
                     // Check for visitors using helper
@@ -1343,7 +1352,55 @@ public class TownInterfaceEntity extends BlockEntity
                 return new com.quackers29.businesscraft.menu.PaymentBoardMenu(containerId, playerInventory,
                         friendlyBuf);
             }
+
         };
     }
 
+    /**
+     * Gets the visit history for client-side display
+     */
+
+    private void tickContractGeneration(Town town) {
+        if (!ConfigLoader.tradingEnabled)
+            return;
+
+        // Only generate contracts on server side
+        if (level.isClientSide)
+            return;
+
+        Map<Item, Integer> resources = town.getAllResources();
+
+        // Threshold for selling (e.g. keep 1000, sell excess)
+        // Ideally this should be configurable per resource or global
+        int keepThreshold = 1000;
+        int sellAmount = 64; // Stack size
+
+        for (Map.Entry<Item, Integer> entry : resources.entrySet()) {
+            Item item = entry.getKey();
+            int count = entry.getValue();
+            if (count > keepThreshold) {
+                String resourceId = PlatformAccess.getRegistry().getItemKey(item).toString();
+
+                // Check if we already have a contract for this item
+                boolean hasContract = ContractBoard.getInstance().getContracts().stream()
+                        .filter(c -> c instanceof SellContract)
+                        .map(c -> (SellContract) c)
+                        .anyMatch(
+                                c -> c.getIssuerTownId().equals(town.getId()) && c.getResourceId().equals(resourceId));
+
+                if (!hasContract) {
+                    // Create new contract
+                    // Duration: 3 game days = 72000 ticks * 50ms = 3,600,000 ms (1 hour)
+                    long duration = 72000L * 50L;
+                    float price = 1.0f; // Default price
+
+                    SellContract contract = new SellContract(town.getId(), duration, resourceId, sellAmount, price);
+                    ContractBoard.getInstance().addContract(contract);
+
+                    LOGGER.info("[DEBUG] Generated SellContract for town {}: {}x {} at {} (ID: {})",
+                            town.getName(), sellAmount, resourceId, price, contract.getId());
+                }
+            }
+        }
+    }
 }

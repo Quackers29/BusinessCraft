@@ -1,3 +1,4 @@
+
 package com.quackers29.businesscraft.fabric;
 
 import com.quackers29.businesscraft.fabric.platform.*;
@@ -154,6 +155,15 @@ public class BusinessCraftFabric implements ModInitializer {
             if (level.dimension() == net.minecraft.world.level.Level.OVERWORLD) {
                 com.quackers29.businesscraft.contract.ContractBoard.getInstance().tick();
             }
+        });
+
+        // Register server lifecycle events to capture server instance
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTING.register(server -> {
+            FabricModMessages.setServer(server);
+        });
+
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            FabricModMessages.setServer(null);
         });
 
         LOGGER.info("BusinessCraft Fabric initialized successfully!");

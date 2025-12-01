@@ -22,7 +22,7 @@ public class DebugConfig {
     // Core Systems - High Priority (Milestone 2)
     public static final boolean TOWN_BLOCK_ENTITY = false;
     public static final boolean TOWN_INTERFACE_MENU = false;
-    public static final boolean NETWORK_PACKETS = false;
+    public static final boolean NETWORK_PACKETS = true;
 
     // UI Management Systems (Milestone 3)
     public static final boolean UI_MANAGERS = false;

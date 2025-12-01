@@ -177,6 +177,7 @@ public class BusinessCraftForge {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         ClearTownsCommand.register(event.getDispatcher());
+        com.quackers29.businesscraft.command.AddContractCommand.register(event.getDispatcher());
     }
 
     private void onServerStopping(ServerStoppingEvent event) {
