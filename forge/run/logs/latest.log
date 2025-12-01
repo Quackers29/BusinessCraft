@@ -2029,3 +2029,99 @@ java.lang.IllegalStateException: Failed to open OpenAL device
 [01Dec2025 23:17:06.007] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Returning 0 visualizations
 [01Dec2025 23:17:06.030] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Active visualizations: 0
 [01Dec2025 23:17:06.031] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Returning 0 visualizations
+[01Dec2025 23:17:08.009] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Active visualizations: 0
+[01Dec2025 23:17:08.009] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Returning 0 visualizations
+[01Dec2025 23:17:08.032] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Active visualizations: 0
+[01Dec2025 23:17:08.033] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Returning 0 visualizations
+[01Dec2025 23:17:10.003] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Active visualizations: 0
+[01Dec2025 23:17:10.003] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Returning 0 visualizations
+[01Dec2025 23:17:10.028] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Active visualizations: 0
+[01Dec2025 23:17:10.028] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Returning 0 visualizations
+[01Dec2025 23:17:10.759] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] setChanged called on SERVER
+[01Dec2025 23:17:10.759] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] Updated client resources from town, resource count: 0
+[01Dec2025 23:17:10.759] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] sendBlockUpdated called
+[01Dec2025 23:17:10.760] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] setChanged called on SERVER
+[01Dec2025 23:17:10.760] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] Updated client resources from town, resource count: 0
+[01Dec2025 23:17:10.760] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] sendBlockUpdated called
+[01Dec2025 23:17:10.808] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] getUpdatePacket called, creating packet
+[01Dec2025 23:17:10.808] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] getUpdateTag called on SERVER
+[01Dec2025 23:17:10.808] [Server thread/INFO] [com.quackers29.businesscraft.town.data.ClientSyncHelper/]: ClientSyncHelper.syncResourcesForClient - provider resources size: 0
+[01Dec2025 23:17:10.808] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] getUpdatePacket created packet: true
+[01Dec2025 23:17:10.809] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] getUpdatePacket called, creating packet
+[01Dec2025 23:17:10.809] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] getUpdateTag called on SERVER
+[01Dec2025 23:17:10.809] [Server thread/INFO] [com.quackers29.businesscraft.town.data.ClientSyncHelper/]: ClientSyncHelper.syncResourcesForClient - provider resources size: 0
+[01Dec2025 23:17:10.809] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] getUpdatePacket created packet: true
+[01Dec2025 23:17:10.824] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] onDataPacket called on CLIENT
+[01Dec2025 23:17:10.824] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] handleUpdateTag called on CLIENT, tag keys: [clientCommunalStorage, clientResources, TownId, visitHistory, name, searchRadius, platforms]
+[01Dec2025 23:17:10.825] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] tag contains platforms: true
+[01Dec2025 23:17:10.825] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] tag contains clientResources: true
+[01Dec2025 23:17:10.825] [Render thread/INFO] [com.quackers29.businesscraft.town.data.PlatformManager/]: [PLATFORM] Updated 1 client platforms from NBT tag
+[01Dec2025 23:17:10.825] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] loadResourcesFromTag called
+[01Dec2025 23:17:10.825] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] onDataPacket called on CLIENT
+[01Dec2025 23:17:10.825] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] handleUpdateTag called on CLIENT, tag keys: [clientCommunalStorage, clientResources, TownId, visitHistory, name, searchRadius, platforms]
+[01Dec2025 23:17:10.825] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] tag contains platforms: true
+[01Dec2025 23:17:10.825] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] tag contains clientResources: true
+[01Dec2025 23:17:10.825] [Render thread/INFO] [com.quackers29.businesscraft.town.data.PlatformManager/]: [PLATFORM] Updated 1 client platforms from NBT tag
+[01Dec2025 23:17:10.825] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] loadResourcesFromTag called
+[01Dec2025 23:17:12.005] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Active visualizations: 0
+[01Dec2025 23:17:12.005] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Returning 0 visualizations
+[01Dec2025 23:17:12.027] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Active visualizations: 0
+[01Dec2025 23:17:12.027] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Returning 0 visualizations
+[01Dec2025 23:17:12.759] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] setChanged called on SERVER
+[01Dec2025 23:17:12.759] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] Updated client resources from town, resource count: 0
+[01Dec2025 23:17:12.759] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] sendBlockUpdated called
+[01Dec2025 23:17:12.760] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] setChanged called on SERVER
+[01Dec2025 23:17:12.760] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] Updated client resources from town, resource count: 0
+[01Dec2025 23:17:12.760] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] sendBlockUpdated called
+[01Dec2025 23:17:12.774] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 💰 Tourism Revenue | Fairview → Brookside (12m) | +1 emeralds
+[01Dec2025 23:17:12.774] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 🏆 Distance Milestone | 12m journey | +1 Bread, 2 Bottle o' Enchanting
+[01Dec2025 23:17:12.774] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 💰 Tourism Revenue | Brookside → Meadowbrook (24m) | +1 emeralds
+[01Dec2025 23:17:12.774] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] 🏆 Distance Milestone | 24m journey | +1 Bread, 2 Bottle o' Enchanting
+[01Dec2025 23:17:12.808] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] getUpdatePacket called, creating packet
+[01Dec2025 23:17:12.808] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] getUpdateTag called on SERVER
+[01Dec2025 23:17:12.808] [Server thread/INFO] [com.quackers29.businesscraft.town.data.ClientSyncHelper/]: ClientSyncHelper.syncResourcesForClient - provider resources size: 0
+[01Dec2025 23:17:12.808] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] getUpdatePacket created packet: true
+[01Dec2025 23:17:12.808] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] getUpdatePacket called, creating packet
+[01Dec2025 23:17:12.808] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] getUpdateTag called on SERVER
+[01Dec2025 23:17:12.808] [Server thread/INFO] [com.quackers29.businesscraft.town.data.ClientSyncHelper/]: ClientSyncHelper.syncResourcesForClient - provider resources size: 0
+[01Dec2025 23:17:12.808] [Server thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] getUpdatePacket created packet: true
+[01Dec2025 23:17:12.821] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] onDataPacket called on CLIENT
+[01Dec2025 23:17:12.821] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] handleUpdateTag called on CLIENT, tag keys: [clientCommunalStorage, clientResources, TownId, visitHistory, name, searchRadius, platforms]
+[01Dec2025 23:17:12.821] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] tag contains platforms: true
+[01Dec2025 23:17:12.821] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] tag contains clientResources: true
+[01Dec2025 23:17:12.821] [Render thread/INFO] [com.quackers29.businesscraft.town.data.PlatformManager/]: [PLATFORM] Updated 1 client platforms from NBT tag
+[01Dec2025 23:17:12.821] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] loadResourcesFromTag called
+[01Dec2025 23:17:12.821] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] onDataPacket called on CLIENT
+[01Dec2025 23:17:12.821] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] handleUpdateTag called on CLIENT, tag keys: [clientCommunalStorage, clientResources, TownId, visitHistory, name, searchRadius, platforms]
+[01Dec2025 23:17:12.821] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] tag contains platforms: true
+[01Dec2025 23:17:12.821] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] tag contains clientResources: true
+[01Dec2025 23:17:12.821] [Render thread/INFO] [com.quackers29.businesscraft.town.data.PlatformManager/]: [PLATFORM] Updated 1 client platforms from NBT tag
+[01Dec2025 23:17:12.821] [Render thread/INFO] [com.quackers29.businesscraft.block.entity.TownInterfaceEntity/]: [PLATFORM] loadResourcesFromTag called
+[01Dec2025 23:17:14.015] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Active visualizations: 0
+[01Dec2025 23:17:14.015] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Returning 0 visualizations
+[01Dec2025 23:17:14.038] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Active visualizations: 0
+[01Dec2025 23:17:14.038] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Returning 0 visualizations
+[01Dec2025 23:17:16.013] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Active visualizations: 0
+[01Dec2025 23:17:16.013] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Returning 0 visualizations
+[01Dec2025 23:17:16.037] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Active visualizations: 0
+[01Dec2025 23:17:16.037] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Returning 0 visualizations
+[01Dec2025 23:17:18.019] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Active visualizations: 0
+[01Dec2025 23:17:18.019] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Returning 0 visualizations
+[01Dec2025 23:17:18.048] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Active visualizations: 0
+[01Dec2025 23:17:18.048] [Render thread/INFO] [com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer/]: [PLATFORM] Returning 0 visualizations
+[01Dec2025 23:17:18.638] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Stopping!
+[01Dec2025 23:17:18.660] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Dev lost connection: Disconnected
+[01Dec2025 23:17:18.660] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev left the game
+[01Dec2025 23:17:18.667] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Stopping singleplayer server as player logged out
+[01Dec2025 23:17:18.706] [Server thread/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: Server stopping, saving town data...
+[01Dec2025 23:17:18.706] [Server thread/INFO] [com.quackers29.businesscraft.forge.BusinessCraftForge/]: Clearing tracked vehicles on server stopping
+[01Dec2025 23:17:18.706] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Stopping server
+[01Dec2025 23:17:18.707] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving players
+[01Dec2025 23:17:18.707] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving worlds
+[01Dec2025 23:17:18.956] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:overworld
+[01Dec2025 23:17:18.987] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_nether
+[01Dec2025 23:17:18.988] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World]'/minecraft:the_end
+[01Dec2025 23:17:18.996] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (New World (11)): All chunks are saved
+[01Dec2025 23:17:18.996] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[01Dec2025 23:17:18.996] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[01Dec2025 23:17:18.996] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage: All dimensions are saved

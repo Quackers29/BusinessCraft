@@ -44,7 +44,7 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     private static final int CONTRACT_GRID_Y = HEADER_HEIGHT + ELEMENT_SPACING;
     private static final int CONTRACT_GRID_WIDTH = 300;
     private static final int CONTRACT_GRID_HEIGHT = 140;
-    private static final int TAB_BUTTON_Y = 40; // Below header
+    private static final int TAB_BUTTON_Y = 22; // Below header
     private static final int TAB_WIDTH = 80;
     private static final int TAB_HEIGHT = 20;
 
@@ -63,16 +63,16 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     private static final int TEXT_COLOR = 0xFFFFFFFF;
     private static final int SUCCESS_COLOR = 0xB0228B22;
 
-        public ContractBoardScreen(ContractBoardMenu menu, Inventory inventory, Component title) {
-                super(menu, inventory, title);
+    public ContractBoardScreen(ContractBoardMenu menu, Inventory inventory, Component title) {
+        super(menu, inventory, title);
         this.imageWidth = 340;
         this.imageHeight = 240;
         this.titleLabelX = BACK_BUTTON_X + BACK_BUTTON_WIDTH + 6;
         this.titleLabelY = SECTION_PADDING + 4;
         this.inventoryLabelY = 300; // Hide inventory label
-        }
+    }
 
-        @Override
+    @Override
     protected void init() {
         super.init();
         createContractGrid(); // Init grid early
@@ -95,7 +95,8 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
 
     private void updateContractData() {
         List<Contract> contracts = menu.getContracts();
-        if (contracts == null) contracts = new ArrayList<>();
+        if (contracts == null)
+            contracts = new ArrayList<>();
         if (!contracts.equals(currentContracts)) {
             currentContracts = new ArrayList<>(contracts);
             updateContractGrid();
@@ -103,11 +104,13 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     }
 
     private void createContractGrid() {
-        contractGrid = UIGridBuilder.create(CONTRACT_GRID_X, CONTRACT_GRID_Y + 5, CONTRACT_GRID_WIDTH - 8, CONTRACT_GRID_HEIGHT - 6, 5)
+        contractGrid = UIGridBuilder
+                .create(CONTRACT_GRID_X, CONTRACT_GRID_Y + 5, CONTRACT_GRID_WIDTH - 8, CONTRACT_GRID_HEIGHT - 6, 5)
                 .withRowHeight(18)
                 .withSpacing(8, 2)
                 .drawBackground(false)
-                .drawBorder(false);
+                .drawBorder(false)
+                .withVerticalScrollAuto(true);
         updateContractGrid();
     }
 
@@ -127,9 +130,12 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
             boolean expired = c.isExpired();
             boolean completed = c.isCompleted();
             switch (selectedTab) {
-                case 0: return !expired && !completed; // Available
-                case 1: return !expired && completed; // Active
-                case 2: return expired || completed; // History
+                case 0:
+                    return !expired && !completed; // Available
+                case 1:
+                    return !expired && completed; // Active
+                case 2:
+                    return expired || completed; // History
             }
             return false;
         }).collect(Collectors.toList());
@@ -158,7 +164,8 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
 
             // Col 4: Action button
             if (c instanceof CourierContract && selectedTab == 0) {
-                contractGrid.addButtonWithTooltip(i, 4, "Bid", "Place bid on courier", (Consumer<Void>) v -> startBid(c.getId()), SUCCESS_COLOR);
+                contractGrid.addButtonWithTooltip(i, 4, "Bid", "Place bid on courier",
+                        (Consumer<Void>) v -> startBid(c.getId()), SUCCESS_COLOR);
             } else {
                 contractGrid.addLabel(i, 4, "View", 0xFF666666);
             }
@@ -169,23 +176,31 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     }
 
     private String getContractDetails(Contract c) {
-        if (c instanceof SellContract sc) return "Sell " + sc.getQuantity() + " " + sc.getResourceId();
-        if (c instanceof CourierContract cc) return "Courier " + cc.getQuantity() + " " + cc.getResourceId();
+        if (c instanceof SellContract sc)
+            return "Sell " + sc.getQuantity() + " " + sc.getResourceId();
+        if (c instanceof CourierContract cc)
+            return "Courier " + cc.getQuantity() + " " + cc.getResourceId();
         return "Contract";
     }
 
     private String getContractStatus(Contract c) {
-        if (c instanceof SellContract sc) return "Town bids: " + String.format("%.2f", sc.getHighestBid());
-        if (c instanceof CourierContract cc) return "Reward: " + String.format("%.2f", cc.getReward());
+        if (c instanceof SellContract sc)
+            return "Town bids: " + String.format("%.2f", sc.getHighestBid());
+        if (c instanceof CourierContract cc)
+            return "Reward: " + String.format("%.2f", cc.getReward());
         return "N/A";
     }
 
     private ItemStack getResourceIcon(Contract c) {
         String res = "";
-        if (c instanceof SellContract sc) res = sc.getResourceId();
-        else if (c instanceof CourierContract cc) res = cc.getResourceId();
-        if ("wood".equals(res)) return new ItemStack(Items.OAK_LOG);
-        if ("iron".equals(res)) return new ItemStack(Items.IRON_INGOT);
+        if (c instanceof SellContract sc)
+            res = sc.getResourceId();
+        else if (c instanceof CourierContract cc)
+            res = cc.getResourceId();
+        if ("wood".equals(res))
+            return new ItemStack(Items.OAK_LOG);
+        if ("iron".equals(res))
+            return new ItemStack(Items.IRON_INGOT);
         return new ItemStack(Items.EMERALD); // Fallback
     }
 
@@ -194,15 +209,19 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     }
 
     private String truncate(String text, int maxChars) {
-        if (text == null || text.length() <= maxChars) return text;
+        if (text == null || text.length() <= maxChars)
+            return text;
         return text.substring(0, maxChars - 3) + "...";
     }
 
     private String getTabTitle() {
         switch (selectedTab) {
-            case 0: return "Available";
-            case 1: return "Active";
-            case 2: return "History";
+            case 0:
+                return "Available";
+            case 1:
+                return "Active";
+            case 2:
+                return "History";
         }
         return "Contracts";
     }
@@ -210,19 +229,21 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     private boolean isMouseOverBackButton(int mx, int my) {
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
-        return InventoryRenderer.isMouseOverElement(mx, my, x, y, BACK_BUTTON_X, BACK_BUTTON_Y, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT);
+        return InventoryRenderer.isMouseOverElement(mx, my, x, y, BACK_BUTTON_X, BACK_BUTTON_Y, BACK_BUTTON_WIDTH,
+                BACK_BUTTON_HEIGHT);
     }
 
     private boolean isMouseOverTab(int mx, int my, int tabIndex) {
         int x = (width - imageWidth) / 2;
         int y = (height - imageHeight) / 2;
-        int tabX = x + 12 + tabIndex * (TAB_WIDTH + 4);
+        int tabX = x + 50 + tabIndex * (TAB_WIDTH + 4);
         return mx >= tabX && mx < tabX + TAB_WIDTH && my >= y + TAB_BUTTON_Y && my < y + TAB_BUTTON_Y + TAB_HEIGHT;
     }
 
     private boolean isMouseOverAnyTab(int mx, int my) {
         for (int i = 0; i < 3; i++) {
-            if (isMouseOverTab(mx, my, i)) return true;
+            if (isMouseOverTab(mx, my, i))
+                return true;
         }
         return false;
     }
@@ -238,7 +259,8 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     }
 
     private void playClickSound() {
-        minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+        minecraft.getSoundManager().play(
+                net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
     }
 
     private void returnToTownInterface() {
@@ -291,7 +313,8 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
             g.pose().popPose();
         }
         renderCustomTooltips(g, mx, my);
-        if (showBidInput) renderBidInput(g, mx, my);
+        if (showBidInput)
+            renderBidInput(g, mx, my);
         renderTooltip(g, mx, my);
         if (isMouseOverBackButton(mx, my)) {
             g.renderTooltip(font, Component.literal("Return to Town Interface"), mx, my);
@@ -312,7 +335,8 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     private void renderHeaderSection(GuiGraphics g, int x, int y, int mx, int my) {
         g.fill(x + 4, y + 4, x + imageWidth - 4, y + HEADER_HEIGHT, SECTION_BG_COLOR);
         boolean hover = isMouseOverBackButton(mx, my);
-        InventoryRenderer.drawButton(g, x + BACK_BUTTON_X, y + BACK_BUTTON_Y, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT, "◀", font, hover);
+        InventoryRenderer.drawButton(g, x + BACK_BUTTON_X, y + BACK_BUTTON_Y, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT,
+                "◀", font, hover);
         g.drawString(font, "Contracts Board", x + titleLabelX, y + titleLabelY, HEADER_COLOR);
     }
 
@@ -328,12 +352,13 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     }
 
     private void renderTabButtons(GuiGraphics g, int x, int y, int mx, int my) {
-        String[] tabNames = {"Available", "Active", "History"};
+        String[] tabNames = { "Available", "Active", "History" };
         for (int i = 0; i < 3; i++) {
             boolean hover = isMouseOverTab(mx, my, i);
             boolean sel = i == selectedTab;
             int tabX = x + 50 + i * (TAB_WIDTH + 4); // Start after back button
-            InventoryRenderer.drawButton(g, tabX, y + TAB_BUTTON_Y, TAB_WIDTH, TAB_HEIGHT, tabNames[i], font, hover || sel);
+            InventoryRenderer.drawButton(g, tabX, y + TAB_BUTTON_Y, TAB_WIDTH, TAB_HEIGHT, tabNames[i], font,
+                    hover || sel);
         }
     }
 
@@ -350,11 +375,11 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
                 return true;
             }
             if (isMouseOverAnyTab((int) mx, (int) my)) {
-                int tabX = (width - imageWidth) / 2 + 12;
+                int tabX = (width - imageWidth) / 2 + 50;
                 int tx = (int) mx - ((width - imageWidth) / 2);
-                if (tx >= 12 && tx < 12 + 3 * TAB_WIDTH + 2 * 4) {
-                    selectedTab = ((tx - 12) / (TAB_WIDTH + 4));
-                    updateContractData(); // Safe full update
+                if (tx >= 50 && tx < 50 + 3 * TAB_WIDTH + 2 * 4) {
+                    selectedTab = ((tx - 50) / (TAB_WIDTH + 4));
+                    updateContractGrid(); // Force update on tab switch
                     playDownSound();
                     return true;
                 }
@@ -363,7 +388,8 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
         if (contractGrid != null) {
             int sx = (width - imageWidth) / 2;
             int sy = (height - imageHeight) / 2;
-            if (contractGrid.mouseClicked((int) mx - sx, (int) my - sy, btn)) return true;
+            if (contractGrid.mouseClicked((int) mx - sx, (int) my - sy, btn))
+                return true;
         }
         return super.mouseClicked(mx, my, btn);
     }
@@ -381,9 +407,10 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     @Override
     public boolean keyPressed(int key, int scan, int mod) {
         if (showBidInput && bidInput.keyPressed(key, scan, mod)) {
-            if (key == 257 || key == 335) sendBid();
+            if (key == 257 || key == 335)
+                sendBid();
             return true;
         }
         return super.keyPressed(key, scan, mod);
-        }
+    }
 }

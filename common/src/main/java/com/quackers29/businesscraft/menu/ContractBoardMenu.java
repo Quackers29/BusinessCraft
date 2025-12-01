@@ -42,7 +42,7 @@ public class ContractBoardMenu extends AbstractContainerMenu {
                 .getContractBoardMenuType(), containerId);
 
         // Add player inventory slots
-        layoutPlayerInventory(playerInventory, 8, 84);
+        // layoutPlayerInventory(playerInventory, 8, 84);
     }
 
     private void layoutPlayerInventory(Inventory playerInventory, int leftCol, int topRow) {
