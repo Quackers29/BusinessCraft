@@ -163,12 +163,9 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
             contractGrid.addLabel(i, 3, time, TEXT_COLOR);
 
             // Col 4: Action button
-            if (c instanceof CourierContract && selectedTab == 0) {
-                contractGrid.addButtonWithTooltip(i, 4, "Bid", "Place bid on courier",
-                        (Consumer<Void>) v -> startBid(c.getId()), SUCCESS_COLOR);
-            } else {
-                contractGrid.addLabel(i, 4, "View", 0xFF666666);
-            }
+            // Always show "View" button which opens details
+            contractGrid.addButtonWithTooltip(i, 4, "View", "View contract details",
+                    (Consumer<Void>) v -> openContractDetails(c), 0xFF666666);
         }
         if (contracts.isEmpty()) {
             contractGrid.addLabel(0, 1, "No contracts", 0xFF808080);
@@ -288,6 +285,12 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
 
     private void renderCustomTooltips(GuiGraphics g, int mx, int my) {
         // Handled by UIGridBuilder
+    }
+
+    private void openContractDetails(Contract c) {
+        if (minecraft != null) {
+            minecraft.setScreen(new ContractDetailScreen(c, this));
+        }
     }
 
     private void sendBid() {
