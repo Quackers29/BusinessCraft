@@ -60,6 +60,8 @@ public class Town implements ITownDataProvider {
     private final com.quackers29.businesscraft.town.components.TownTradingComponent trading = new com.quackers29.businesscraft.town.components.TownTradingComponent();
     private final com.quackers29.businesscraft.town.components.TownProductionComponent production = new com.quackers29.businesscraft.town.components.TownProductionComponent(
             this);
+    private final com.quackers29.businesscraft.town.components.TownContractComponent contracts = new com.quackers29.businesscraft.town.components.TownContractComponent(
+            this);
 
     public void tick() {
         economy.tick();
@@ -69,6 +71,7 @@ public class Town implements ITownDataProvider {
         if (ConfigLoader.productionEnabled) {
             production.tick();
         }
+        contracts.tick(); // Always tick contracts
     }
 
     public void addBread(int count) {
@@ -274,6 +277,10 @@ public class Town implements ITownDataProvider {
         production.save(productionTag);
         tag.put("production", productionTag);
 
+        CompoundTag contractsTag = new CompoundTag();
+        contracts.save(contractsTag);
+        tag.put("contracts", contractsTag);
+
         if (pathStart != null) {
             CompoundTag startPos = new CompoundTag();
             startPos.putInt("x", pathStart.getX());
@@ -382,6 +389,9 @@ public class Town implements ITownDataProvider {
         }
         if (tag.contains("production")) {
             town.production.load(tag.getCompound("production"));
+        }
+        if (tag.contains("contracts")) {
+            town.contracts.load(tag.getCompound("contracts"));
         }
 
         if (tag.contains("PathStart")) {

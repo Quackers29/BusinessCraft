@@ -127,15 +127,13 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
 
     private List<Contract> filterContractsByTab() {
         return currentContracts.stream().filter(c -> {
-            boolean expired = c.isExpired();
-            boolean completed = c.isCompleted();
             switch (selectedTab) {
-                case 0:
-                    return !expired && !completed; // Auction
-                case 1:
-                    return !expired && completed; // Active
-                case 2:
-                    return expired || completed; // History
+                case 0: // Auction - not yet completed/expired
+                    return !c.isCompleted() && !c.isExpired();
+                case 1: // Active - completed (has winner) but not expired
+                    return c.isCompleted() && !c.isExpired();
+                case 2: // History - expired contracts
+                    return c.isExpired();
             }
             return false;
         }).collect(Collectors.toList());

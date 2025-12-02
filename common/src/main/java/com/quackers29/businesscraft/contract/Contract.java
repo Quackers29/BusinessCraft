@@ -49,6 +49,10 @@ public abstract class Contract {
         this.isCompleted = true;
     }
 
+    public void extendExpiry(long additionalMillis) {
+        this.expiryTime = System.currentTimeMillis() + additionalMillis;
+    }
+
     public Map<UUID, Float> getBids() {
         return bids;
     }
@@ -63,8 +67,8 @@ public abstract class Contract {
 
     public UUID getHighestBidder() {
         return bids.entrySet().stream()
-            .max(Map.Entry.comparingByValue(Float::compare))
-            .map(Map.Entry::getKey).orElse(null);
+                .max(Map.Entry.comparingByValue(Float::compare))
+                .map(Map.Entry::getKey).orElse(null);
     }
 
     public void save(CompoundTag tag) {

@@ -8,6 +8,8 @@ public class SellContract extends Contract {
     private int quantity;
     private float pricePerUnit;
     private UUID buyerTownId;
+    private UUID winningTownId; // Town that won the auction
+    private float acceptedBid; // Winning bid amount
 
     public SellContract(UUID issuerTownId, long duration, String resourceId, int quantity, float pricePerUnit) {
         super(issuerTownId, duration);
@@ -15,6 +17,8 @@ public class SellContract extends Contract {
         this.quantity = quantity;
         this.pricePerUnit = pricePerUnit;
         this.buyerTownId = null;
+        this.winningTownId = null;
+        this.acceptedBid = 0f;
     }
 
     public SellContract(CompoundTag tag) {
@@ -41,6 +45,26 @@ public class SellContract extends Contract {
         this.buyerTownId = buyerTownId;
     }
 
+    public UUID getWinningTownId() {
+        return winningTownId;
+    }
+
+    public void setWinningTownId(UUID winningTownId) {
+        this.winningTownId = winningTownId;
+    }
+
+    public float getAcceptedBid() {
+        return acceptedBid;
+    }
+
+    public void setAcceptedBid(float acceptedBid) {
+        this.acceptedBid = acceptedBid;
+    }
+
+    public boolean isAuctionClosed() {
+        return isExpired() && winningTownId != null;
+    }
+
     // UI convenience methods
     public int getAmount() {
         return quantity;
@@ -60,6 +84,10 @@ public class SellContract extends Contract {
         if (buyerTownId != null) {
             tag.putUUID("buyerTownId", buyerTownId);
         }
+        if (winningTownId != null) {
+            tag.putUUID("winningTownId", winningTownId);
+        }
+        tag.putFloat("acceptedBid", acceptedBid);
     }
 
     @Override
@@ -70,6 +98,10 @@ public class SellContract extends Contract {
         if (tag.hasUUID("buyerTownId")) {
             buyerTownId = tag.getUUID("buyerTownId");
         }
+        if (tag.hasUUID("winningTownId")) {
+            winningTownId = tag.getUUID("winningTownId");
+        }
+        acceptedBid = tag.getFloat("acceptedBid");
     }
 
     @Override

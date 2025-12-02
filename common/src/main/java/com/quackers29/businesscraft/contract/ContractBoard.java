@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
@@ -43,9 +42,6 @@ public class ContractBoard {
     }
 
     public void updateContract(Contract contract) {
-        // Since we hold references, modifying the object directly updates it in the
-        // list.
-        // We just need to mark as dirty to ensure save.
         dirty = true;
     }
 
@@ -63,24 +59,45 @@ public class ContractBoard {
     }
 
     public void tick() {
-        // Remove expired or completed contracts
-        Iterator<Contract> iterator = activeContracts.iterator();
-        boolean changed = false;
-        while (iterator.hasNext()) {
-            Contract c = iterator.next();
-            if (c.isExpired() || c.isCompleted()) {
-                iterator.remove();
-                changed = true;
+        closeAuctions();
+
+        // Keep expired contracts for History tab, but limit total to 100
+        while (activeContracts.size() > 100) {
+            Contract oldest = activeContracts.stream()
+                    .min((c1, c2) -> Long.compare(c1.getExpiryTime(), c2.getExpiryTime()))
+                    .orElse(null);
+            if (oldest != null) {
+                activeContracts.remove(oldest);
+                dirty = true;
+            } else {
+                break;
             }
-        }
-        if (changed) {
-            dirty = true;
-            broadcastUpdate();
         }
 
         if (dirty) {
             save();
             dirty = false;
+        }
+    }
+
+    private void closeAuctions() {
+        for (Contract contract : activeContracts) {
+            if (contract instanceof SellContract sc) {
+                if (sc.isExpired() && sc.getWinningTownId() == null && !sc.getBids().isEmpty()) {
+                    UUID highestBidder = sc.getHighestBidder();
+                    float highestBid = sc.getHighestBid();
+
+                    if (highestBidder != null) {
+                        sc.setWinningTownId(highestBidder);
+                        sc.setAcceptedBid(highestBid);
+                        sc.complete();
+                        sc.extendExpiry(90000L); // 90 seconds for Active phase
+                        LOGGER.info("Auction closed for contract {}: Winner={}, Bid={}",
+                                sc.getId(), highestBidder, highestBid);
+                        dirty = true;
+                    }
+                }
+            }
         }
     }
 
@@ -140,7 +157,7 @@ public class ContractBoard {
         Contract contract = getContract(contractId);
         if (contract != null) {
             contract.addBid(bidder, amount);
-            save(); // Persist
+            save();
             broadcastUpdate();
         }
     }
