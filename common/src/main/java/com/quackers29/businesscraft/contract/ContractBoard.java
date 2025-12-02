@@ -164,18 +164,23 @@ public class ContractBoard {
                             sc.extendExpiry(90000L); // 90 seconds for Active phase
 
                             // Auto-create CourierContract for delivery from seller to buyer
-                            com.quackers29.businesscraft.town.Town sellerTown = townManager.getTown(sc.getIssuerTownId());
+                            com.quackers29.businesscraft.town.Town sellerTown = townManager
+                                    .getTown(sc.getIssuerTownId());
                             if (sellerTown != null) {
                                 CourierContract courier = new CourierContract(
-                                        highestBidder, // buyer as issuer
-                                        winnerTown != null ? winnerTown.getName() : "Unknown",
+                                        sc.getIssuerTownId(), // Seller is the issuer (source)
+                                        sc.getIssuerTownName(),
                                         180000L, // 3 min for courier acceptance
                                         sc.getResourceId(),
                                         sc.getQuantity(),
-                                        sc.getIssuerTownId(), // seller as destination
-                                        highestBid * 0.1f); // 10% reward
+                                        highestBidder, // Buyer is the destination
+                                        winnerTown != null ? winnerTown.getName() : "Unknown",
+                                        highestBid * 0.25f); // 25% reward
                                 addContract(courier);
-                                LOGGER.info("Created auto-courier {} for SellContract {} (buyer={} to seller={})", courier.getId(), sc.getId(), highestBidder, sc.getIssuerTownId());
+                                LOGGER.info(
+                                        "Created auto-courier {} for SellContract {} (seller={} [{}] to buyer={} [{}])",
+                                        courier.getId(), sc.getId(), sc.getIssuerTownId(), sc.getIssuerTownName(),
+                                        highestBidder, winnerTown != null ? winnerTown.getName() : "Unknown");
                             }
 
                             LOGGER.info("Auction closed for contract {}: Winner={}, Bid={}",
@@ -211,40 +216,66 @@ public class ContractBoard {
 
     public void addBid(UUID contractId, UUID bidder, float amount, ServerLevel level) {
         Contract contract = getContract(contractId);
-        if (contract != null && contract instanceof SellContract) {
-            com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
-                    .get(level);
-            com.quackers29.businesscraft.town.Town bidderTown = townManager.getTown(bidder);
+        if (contract != null) {
+            if (contract instanceof SellContract) {
+                com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
+                        .get(level);
+                com.quackers29.businesscraft.town.Town bidderTown = townManager.getTown(bidder);
 
-            if (bidderTown == null) {
-                LOGGER.warn("Cannot place bid: bidder town {} not found", bidder);
-                return;
-            }
+                if (bidderTown == null) {
+                    LOGGER.warn("Cannot place bid: bidder town {} not found", bidder);
+                    return;
+                }
 
-            // Get previous highest bidder (if exists and different from new bidder)
-            UUID previousHighestBidder = contract.getHighestBidder();
-            float previousHighestBid = contract.getHighestBid();
+                // Prevent self-bidding
+                if (bidder.equals(contract.getIssuerTownId())) {
+                    LOGGER.warn("Town {} attempted to bid on their own contract {}", bidderTown.getName(), contractId);
+                    return;
+                }
 
-            // Add the bid to the contract
-            contract.addBid(bidder, amount);
+                // Get previous highest bidder (if exists and different from new bidder)
+                UUID previousHighestBidder = contract.getHighestBidder();
+                float previousHighestBid = contract.getHighestBid();
 
-            // ESCROW: Deduct emeralds from new bidder
-            bidderTown.addResource(net.minecraft.world.item.Items.EMERALD, -(int) amount);
-            LOGGER.info("Escrowed {} emeralds from town {} for bid on contract {}",
-                    (int) amount, bidderTown.getName(), contractId);
+                // Add the bid to the contract
+                contract.addBid(bidder, amount);
 
-            // ESCROW: Refund emeralds to previous highest bidder (if different)
-            if (previousHighestBidder != null && !previousHighestBidder.equals(bidder)) {
-                com.quackers29.businesscraft.town.Town previousTown = townManager.getTown(previousHighestBidder);
-                if (previousTown != null) {
-                    previousTown.addResource(net.minecraft.world.item.Items.EMERALD, (int) previousHighestBid);
-                    LOGGER.info("Refunded {} emeralds to town {} (outbid on contract {})",
-                            (int) previousHighestBid, previousTown.getName(), contractId);
+                // ESCROW: Deduct emeralds from new bidder
+                bidderTown.addResource(net.minecraft.world.item.Items.EMERALD, -(int) amount);
+                LOGGER.info("Escrowed {} emeralds from town {} for bid on contract {}",
+                        (int) amount, bidderTown.getName(), contractId);
+
+                // ESCROW: Refund emeralds to previous highest bidder (if different)
+                if (previousHighestBidder != null && !previousHighestBidder.equals(bidder)) {
+                    com.quackers29.businesscraft.town.Town previousTown = townManager.getTown(previousHighestBidder);
+                    if (previousTown != null) {
+                        previousTown.addResource(net.minecraft.world.item.Items.EMERALD, (int) previousHighestBid);
+                        LOGGER.info("Refunded {} emeralds to town {} (outbid on contract {})",
+                                (int) previousHighestBid, previousTown.getName(), contractId);
+                    }
+                }
+
+                savedData.setDirty();
+                broadcastUpdate();
+            } else if (contract instanceof CourierContract cc) {
+                // Handle Courier Contract Acceptance
+                if (!cc.isAccepted() && !cc.isExpired()) {
+                    cc.setCourierId(bidder);
+                    cc.setAcceptedTime(System.currentTimeMillis());
+
+                    // Update expiry to 4 minutes from now for delivery
+                    long currentExpiry = cc.getExpiryTime();
+                    long newDuration = 240000L; // 4 minutes
+                    long now = System.currentTimeMillis();
+
+                    long delta = (now + newDuration) - currentExpiry;
+                    cc.extendExpiry(delta);
+
+                    LOGGER.info("Courier contract {} accepted by {}. New expiry in 4 mins.", contractId, bidder);
+                    savedData.setDirty();
+                    broadcastUpdate();
                 }
             }
-
-            savedData.setDirty();
-            broadcastUpdate();
         }
     }
 

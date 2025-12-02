@@ -54,11 +54,14 @@ public class ContractDetailScreen extends Screen {
         } else if (contract instanceof SellContract sc) {
             quantity = sc.getQuantity();
         }
+
         if (quantity > 0 && !contract.isExpired()) {
-            if (tabIndex == 1 && contract instanceof CourierContract) {
+            if (tabIndex == 1 && contract instanceof CourierContract cc && !cc.isAccepted()) {
                 // Active tab: Accept Courier button
                 this.addRenderableWidget(Button.builder(Component.literal("Accept Courier"), b -> {
-                    PlatformAccess.getNetworkMessages().sendToServer(new BidContractPacket(contract.getId(), 0f)); // Placeholder for accept
+                    PlatformAccess.getNetworkMessages().sendToServer(new BidContractPacket(contract.getId(), 0f)); // Placeholder
+                                                                                                                   // for
+                                                                                                                   // accept
                     onClose();
                 })
                         .bounds(x + 10, y + WINDOW_HEIGHT - 25, 90, 20)
@@ -118,10 +121,29 @@ public class ContractDetailScreen extends Screen {
         textY += 15;
 
         // Seller/Issuer
-        g.drawString(font, "Seller:", x + 10, textY, labelColor);
+        g.drawString(font, "From:", x + 10, textY, labelColor);
         String sellerName = getTownName(contract.getIssuerTownId(), contract.getIssuerTownName());
         g.drawString(font, truncate(sellerName, 20), x + 80, textY, valueColor);
         textY += 15;
+
+        // Destination & Reward (Courier Only)
+        if (contract instanceof CourierContract cc) {
+            g.drawString(font, "To:", x + 10, textY, labelColor);
+            String destName = getTownName(cc.getDestinationTownId(), cc.getDestinationTownName());
+            g.drawString(font, truncate(destName, 20), x + 80, textY, valueColor);
+            textY += 15;
+
+            g.drawString(font, "Reward:", x + 10, textY, labelColor);
+            g.drawString(font, String.format("%.1f ◎", cc.getReward()), x + 80, textY, 0xFF55FF55);
+            textY += 15;
+
+            if (cc.isAccepted()) {
+                g.drawString(font, "Courier:", x + 10, textY, labelColor);
+                // We don't have courier name cached, so use ID for now or "Player"
+                g.drawString(font, "Assigned", x + 80, textY, 0xFF55FF55);
+                textY += 15;
+            }
+        }
 
         // Created timestamp
         g.drawString(font, "Created:", x + 10, textY, labelColor);
