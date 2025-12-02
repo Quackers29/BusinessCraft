@@ -287,9 +287,7 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
 
     private void returnToTownInterface() {
         this.onClose();
-        if (minecraft != null) {
-            minecraft.setScreen(null);
-        }
+        ScreenNavigationHelper.returnToTownInterface(this.minecraft, this.minecraft.player, this.menu.getTownBlockPos());
     }
 
     private void startBid(UUID id) {

@@ -163,6 +163,10 @@ public class PacketRegistry {
                                 OpenContractBoardPacket::decode, OpenContractBoardPacket::encode,
                                 OpenContractBoardPacket::handle);
 
+                register(OpenTownInterfacePacket.class, "open_town_interface_packet", NetworkDirection.PLAY_TO_SERVER,
+                                OpenTownInterfacePacket::decode, OpenTownInterfacePacket::encode,
+                                OpenTownInterfacePacket::handle);
+
                 register(AcceptContractPacket.class, "accept_contract_packet", NetworkDirection.PLAY_TO_SERVER,
                                 AcceptContractPacket::decode, AcceptContractPacket::encode,
                                 AcceptContractPacket::handle);
