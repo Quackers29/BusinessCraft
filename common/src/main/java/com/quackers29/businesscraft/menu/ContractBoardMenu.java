@@ -28,8 +28,10 @@ public class ContractBoardMenu extends AbstractContainerMenu {
 
         // Sync contracts to client
         if (playerInventory.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            net.minecraft.server.level.ServerLevel level = (net.minecraft.server.level.ServerLevel) serverPlayer
+                    .level();
             com.quackers29.businesscraft.contract.ContractBoard board = com.quackers29.businesscraft.contract.ContractBoard
-                    .getInstance();
+                    .get(level);
             PlatformAccess.getNetworkMessages().sendToPlayer(
                     new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(board.getContracts()),
                     serverPlayer);

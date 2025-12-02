@@ -10,15 +10,18 @@ public class SellContract extends Contract {
     private UUID buyerTownId;
     private UUID winningTownId; // Town that won the auction
     private float acceptedBid; // Winning bid amount
+    private boolean isDelivered; // Track if items/money have been transferred
 
-    public SellContract(UUID issuerTownId, long duration, String resourceId, int quantity, float pricePerUnit) {
-        super(issuerTownId, duration);
+    public SellContract(UUID issuerTownId, String issuerTownName, long duration, String resourceId, int quantity,
+            float pricePerUnit) {
+        super(issuerTownId, issuerTownName, duration);
         this.resourceId = resourceId;
         this.quantity = quantity;
         this.pricePerUnit = pricePerUnit;
         this.buyerTownId = null;
         this.winningTownId = null;
         this.acceptedBid = 0f;
+        this.isDelivered = false;
     }
 
     public SellContract(CompoundTag tag) {
@@ -65,6 +68,14 @@ public class SellContract extends Contract {
         return isExpired() && winningTownId != null;
     }
 
+    public boolean isDelivered() {
+        return isDelivered;
+    }
+
+    public void setDelivered(boolean delivered) {
+        this.isDelivered = delivered;
+    }
+
     // UI convenience methods
     public int getAmount() {
         return quantity;
@@ -88,6 +99,7 @@ public class SellContract extends Contract {
             tag.putUUID("winningTownId", winningTownId);
         }
         tag.putFloat("acceptedBid", acceptedBid);
+        tag.putBoolean("isDelivered", isDelivered);
     }
 
     @Override
@@ -102,6 +114,7 @@ public class SellContract extends Contract {
             winningTownId = tag.getUUID("winningTownId");
         }
         acceptedBid = tag.getFloat("acceptedBid");
+        isDelivered = tag.getBoolean("isDelivered");
     }
 
     @Override

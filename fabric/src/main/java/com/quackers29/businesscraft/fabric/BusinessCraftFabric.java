@@ -143,7 +143,6 @@ public class BusinessCraftFabric implements ModInitializer {
         // Load registries
         com.quackers29.businesscraft.economy.ResourceRegistry.load();
         com.quackers29.businesscraft.production.UpgradeRegistry.load();
-        com.quackers29.businesscraft.contract.ContractBoard.getInstance().load();
 
         // Register events
         FabricModEvents.register();
@@ -151,10 +150,8 @@ public class BusinessCraftFabric implements ModInitializer {
         // Register server tick event
         ServerTickEvents.END_WORLD_TICK.register(level -> {
             TownManager.get(level).tick();
-            // Only tick ContractBoard once per server tick, not per level
-            if (level.dimension() == net.minecraft.world.level.Level.OVERWORLD) {
-                com.quackers29.businesscraft.contract.ContractBoard.getInstance().tick();
-            }
+            // Tick ContractBoard for each level
+            com.quackers29.businesscraft.contract.ContractBoard.get(level).tick(level);
         });
 
         // Register server lifecycle events to capture server instance
@@ -164,6 +161,8 @@ public class BusinessCraftFabric implements ModInitializer {
 
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
             FabricModMessages.setServer(null);
+            com.quackers29.businesscraft.contract.ContractBoard.clearInstances();
+            com.quackers29.businesscraft.town.TownManager.clearInstances();
         });
 
         LOGGER.info("BusinessCraft Fabric initialized successfully!");

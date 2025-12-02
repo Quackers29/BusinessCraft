@@ -144,7 +144,6 @@ public class BusinessCraftForge {
         ConfigLoader.loadConfig();
         com.quackers29.businesscraft.economy.ResourceRegistry.load();
         com.quackers29.businesscraft.production.UpgradeRegistry.load();
-        com.quackers29.businesscraft.contract.ContractBoard.getInstance().load();
 
         // Report active debug logging configuration
         DebugConfig.logActiveDebuggers();
@@ -192,6 +191,9 @@ public class BusinessCraftForge {
         // Don't forget to clean up the tourist vehicle manager
         LOGGER.info("Clearing tracked vehicles on server stopping");
         TOURIST_VEHICLE_MANAGER.clearTrackedVehicles();
+
+        // Clear ContractBoard instances
+        com.quackers29.businesscraft.contract.ContractBoard.clearInstances();
     }
 
     private void onServerStarted(ServerStartedEvent event) {
@@ -233,7 +235,8 @@ public class BusinessCraftForge {
             TownManager.get((ServerLevel) event.level).tick();
             // Only tick ContractBoard once per server tick, not per level
             if (event.level.dimension() == net.minecraft.world.level.Level.OVERWORLD) {
-                com.quackers29.businesscraft.contract.ContractBoard.getInstance().tick();
+                com.quackers29.businesscraft.contract.ContractBoard.get((ServerLevel) event.level)
+                        .tick((ServerLevel) event.level);
             }
         }
     }

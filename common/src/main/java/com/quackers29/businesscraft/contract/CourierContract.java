@@ -10,9 +10,10 @@ public class CourierContract extends Contract {
     private float reward;
     private UUID courierId;
 
-    public CourierContract(UUID issuerTownId, long duration, String resourceId, int quantity, UUID destinationTownId,
+    public CourierContract(UUID issuerTownId, String issuerTownName, long duration, String resourceId, int quantity,
+            UUID destinationTownId,
             float reward) {
-        super(issuerTownId, duration);
+        super(issuerTownId, issuerTownName, duration);
         this.resourceId = resourceId;
         this.quantity = quantity;
         this.destinationTownId = destinationTownId;

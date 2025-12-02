@@ -1381,8 +1381,11 @@ public class TownInterfaceEntity extends BlockEntity
             if (count > keepThreshold) {
                 String resourceId = PlatformAccess.getRegistry().getItemKey(item).toString();
 
+                // Get ServerLevel
+                net.minecraft.server.level.ServerLevel serverLevel = (net.minecraft.server.level.ServerLevel) level;
+
                 // Check if we already have a contract for this item
-                boolean hasContract = ContractBoard.getInstance().getContracts().stream()
+                boolean hasContract = ContractBoard.get(serverLevel).getContracts().stream()
                         .filter(c -> c instanceof SellContract)
                         .map(c -> (SellContract) c)
                         .anyMatch(
@@ -1394,8 +1397,9 @@ public class TownInterfaceEntity extends BlockEntity
                     long duration = 72000L * 50L;
                     float price = 1.0f; // Default price
 
-                    SellContract contract = new SellContract(town.getId(), duration, resourceId, sellAmount, price);
-                    ContractBoard.getInstance().addContract(contract);
+                    SellContract contract = new SellContract(town.getId(), town.getName(), duration, resourceId,
+                            sellAmount, price);
+                    ContractBoard.get(serverLevel).addContract(contract);
 
                     LOGGER.info("[DEBUG] Generated SellContract for town {}: {}x {} at {} (ID: {})",
                             town.getName(), sellAmount, resourceId, price, contract.getId());

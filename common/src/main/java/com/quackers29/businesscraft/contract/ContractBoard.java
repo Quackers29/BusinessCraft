@@ -1,52 +1,55 @@
 package com.quackers29.businesscraft.contract;
 
-import com.quackers29.businesscraft.api.PlatformAccess;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.Tag;
+import com.quackers29.businesscraft.data.ContractSavedData;
+import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class ContractBoard {
     private static final Logger LOGGER = LoggerFactory.getLogger(ContractBoard.class);
-    private static final ContractBoard INSTANCE = new ContractBoard();
-    private static final String DATA_FILENAME = "contract_board.dat";
+    private static final Map<ServerLevel, ContractBoard> INSTANCES = new HashMap<>();
 
-    private final List<Contract> activeContracts = new ArrayList<>();
-    private boolean dirty = false;
+    private final ContractSavedData savedData;
+    private final ServerLevel level;
 
-    private ContractBoard() {
+    private ContractBoard(ServerLevel level) {
+        this.level = level;
+        this.savedData = level.getDataStorage().computeIfAbsent(
+                ContractSavedData::load,
+                ContractSavedData::create,
+                ContractSavedData.NAME);
+        LOGGER.info("ContractBoard initialized for level: {}", level.dimension().location());
     }
 
-    public static ContractBoard getInstance() {
-        return INSTANCE;
+    public static ContractBoard get(ServerLevel level) {
+        return INSTANCES.computeIfAbsent(level, key -> new ContractBoard(level));
+    }
+
+    public static void clearInstances() {
+        LOGGER.info("Clearing {} ContractBoard instances", INSTANCES.size());
+        INSTANCES.clear();
     }
 
     public void addContract(Contract contract) {
-        activeContracts.add(contract);
-        dirty = true;
+        savedData.getContracts().add(contract);
+        savedData.setDirty();
         broadcastUpdate();
     }
 
     public void removeContract(UUID contractId) {
-        activeContracts.removeIf(c -> c.getId().equals(contractId));
-        dirty = true;
+        savedData.getContracts().removeIf(c -> c.getId().equals(contractId));
+        savedData.setDirty();
         broadcastUpdate();
     }
 
     public void updateContract(Contract contract) {
-        dirty = true;
+        savedData.setDirty();
     }
 
     public Contract getContract(UUID contractId) {
-        for (Contract c : activeContracts) {
+        for (Contract c : savedData.getContracts()) {
             if (c.getId().equals(contractId)) {
                 return c;
             }
@@ -55,33 +58,80 @@ public class ContractBoard {
     }
 
     public List<Contract> getContracts() {
-        return Collections.unmodifiableList(activeContracts);
+        return Collections.unmodifiableList(savedData.getContracts());
     }
 
-    public void tick() {
+    public void tick(ServerLevel level) {
         closeAuctions();
 
         // Keep expired contracts for History tab, but limit total to 100
-        while (activeContracts.size() > 100) {
-            Contract oldest = activeContracts.stream()
+        while (savedData.getContracts().size() > 100) {
+            Contract oldest = savedData.getContracts().stream()
                     .min((c1, c2) -> Long.compare(c1.getExpiryTime(), c2.getExpiryTime()))
                     .orElse(null);
             if (oldest != null) {
-                activeContracts.remove(oldest);
-                dirty = true;
+                savedData.getContracts().remove(oldest);
+                savedData.setDirty();
             } else {
                 break;
             }
         }
 
-        if (dirty) {
-            save();
-            dirty = false;
+        // Check for contracts that have finished their "Active" phase (delivery time)
+        for (Contract c : savedData.getContracts()) {
+            if (c.isCompleted() && c.isExpired() && c instanceof SellContract sc && !sc.isDelivered()) {
+                processContractDelivery(sc, level);
+            }
+        }
+
+        savedData.setDirty();
+    }
+
+    private void processContractDelivery(SellContract sc, ServerLevel level) {
+        // Mark as delivered so we don't process again
+        sc.setDelivered(true);
+        savedData.setDirty();
+
+        com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
+                .get(level);
+        com.quackers29.businesscraft.town.Town sellerTown = townManager.getTown(sc.getIssuerTownId());
+        com.quackers29.businesscraft.town.Town buyerTown = townManager.getTown(sc.getWinningTownId());
+
+        if (sellerTown != null && buyerTown != null) {
+            // Transfer Items
+            net.minecraft.world.item.Item item = null;
+            if ("wood".equals(sc.getResourceId()))
+                item = net.minecraft.world.item.Items.OAK_LOG;
+            else if ("iron".equals(sc.getResourceId()))
+                item = net.minecraft.world.item.Items.IRON_INGOT;
+            else if ("coal".equals(sc.getResourceId()))
+                item = net.minecraft.world.item.Items.COAL;
+
+            if (item != null) {
+                // Remove from seller (if they still have it)
+                sellerTown.addResource(item, -sc.getQuantity());
+
+                // Add to buyer
+                buyerTown.addResource(item, sc.getQuantity());
+
+                LOGGER.info("Transferred {} {} from {} to {}",
+                        sc.getQuantity(), sc.getResourceId(), sellerTown.getName(), buyerTown.getName());
+            }
+
+            // Transfer Money (Emeralds)
+            int cost = (int) sc.getAcceptedBid();
+            if (cost > 0) {
+                buyerTown.addResource(net.minecraft.world.item.Items.EMERALD, -cost);
+                sellerTown.addResource(net.minecraft.world.item.Items.EMERALD, cost);
+
+                LOGGER.info("Transferred {} emeralds from {} to {}",
+                        cost, buyerTown.getName(), sellerTown.getName());
+            }
         }
     }
 
     private void closeAuctions() {
-        for (Contract contract : activeContracts) {
+        for (Contract contract : savedData.getContracts()) {
             if (contract instanceof SellContract sc) {
                 if (sc.isExpired() && sc.getWinningTownId() == null && !sc.getBids().isEmpty()) {
                     UUID highestBidder = sc.getHighestBidder();
@@ -94,62 +144,10 @@ public class ContractBoard {
                         sc.extendExpiry(90000L); // 90 seconds for Active phase
                         LOGGER.info("Auction closed for contract {}: Winner={}, Bid={}",
                                 sc.getId(), highestBidder, highestBid);
-                        dirty = true;
+                        savedData.setDirty();
                     }
                 }
             }
-        }
-    }
-
-    public void save() {
-        try {
-            File file = PlatformAccess.platform.getConfigDirectory().resolve(DATA_FILENAME).toFile();
-            CompoundTag root = new CompoundTag();
-            ListTag list = new ListTag();
-
-            for (Contract c : activeContracts) {
-                CompoundTag contractTag = new CompoundTag();
-                contractTag.putString("type", c.getType());
-                c.save(contractTag);
-                list.add(contractTag);
-            }
-
-            root.put("contracts", list);
-            NbtIo.writeCompressed(root, file);
-        } catch (Exception e) {
-            LOGGER.error("Failed to save contract board data", e);
-        }
-    }
-
-    public void load() {
-        try {
-            File file = PlatformAccess.platform.getConfigDirectory().resolve(DATA_FILENAME).toFile();
-            if (!file.exists())
-                return;
-
-            CompoundTag root = NbtIo.readCompressed(file);
-            if (root.contains("contracts")) {
-                ListTag list = root.getList("contracts", Tag.TAG_COMPOUND);
-                activeContracts.clear();
-
-                for (int i = 0; i < list.size(); i++) {
-                    CompoundTag contractTag = list.getCompound(i);
-                    String type = contractTag.getString("type");
-                    Contract contract = null;
-
-                    if ("sell".equals(type)) {
-                        contract = new SellContract(contractTag);
-                    } else if ("courier".equals(type)) {
-                        contract = new CourierContract(contractTag);
-                    }
-
-                    if (contract != null) {
-                        activeContracts.add(contract);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.error("Failed to load contract board data", e);
         }
     }
 
@@ -157,17 +155,19 @@ public class ContractBoard {
         Contract contract = getContract(contractId);
         if (contract != null) {
             contract.addBid(bidder, amount);
-            save();
+            savedData.setDirty();
             broadcastUpdate();
         }
     }
 
     private void broadcastUpdate() {
         try {
-            LOGGER.info("Broadcasting contract update to all players. Contract count: {}", activeContracts.size());
-            if (PlatformAccess.getNetworkMessages() != null) {
-                PlatformAccess.getNetworkMessages().sendToAllPlayers(
-                        new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(activeContracts));
+            LOGGER.info("Broadcasting contract update to all players. Contract count: {}",
+                    savedData.getContracts().size());
+            if (com.quackers29.businesscraft.api.PlatformAccess.getNetworkMessages() != null) {
+                com.quackers29.businesscraft.api.PlatformAccess.getNetworkMessages().sendToAllPlayers(
+                        new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(
+                                savedData.getContracts()));
             }
         } catch (Exception e) {
             LOGGER.error("Failed to broadcast contract update", e);

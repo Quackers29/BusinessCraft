@@ -11,6 +11,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.quackers29.businesscraft.debug.DebugConfig;
+
 /**
  * Platform-specific implementation of the modular visualization renderer.
  * 
@@ -65,7 +67,7 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
         // Log occasionally
         long time = System.currentTimeMillis();
         if (time % 2000 < 50) {
-            LOGGER.info("[PLATFORM] Active visualizations: {}", activeVisualizations.size());
+            DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_VISUALIZATION, "[PLATFORM] Active visualizations: {}", activeVisualizations.size());
         }
 
         // For each active platform visualization, find the corresponding
@@ -87,7 +89,7 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
                         int searchRadius = townInterfaceEntity.getSearchRadius();
 
                         if (time % 2000 < 50) {
-                            LOGGER.info("[PLATFORM] Town at {} has {} platforms", pos, platforms.size());
+                            DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_VISUALIZATION, "[PLATFORM] Town at {} has {} platforms", pos, platforms.size());
                         }
 
                         if (!platforms.isEmpty()) {
@@ -101,7 +103,7 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
         });
 
         if (time % 2000 < 50) {
-            LOGGER.info("[PLATFORM] Returning {} visualizations", visualizations.size());
+            DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_VISUALIZATION, "[PLATFORM] Returning {} visualizations", visualizations.size());
         }
 
         return visualizations;

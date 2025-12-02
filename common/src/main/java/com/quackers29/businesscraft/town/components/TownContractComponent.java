@@ -43,7 +43,24 @@ public class TownContractComponent implements TownComponent {
     }
 
     private void tryCreateContract() {
-        ContractBoard board = ContractBoard.getInstance();
+        // Get the server level from any of the active TownManager instances
+        // Since this town exists, we know its manager is loaded
+        net.minecraft.server.level.ServerLevel level = null;
+        for (com.quackers29.businesscraft.town.TownManager manager : com.quackers29.businesscraft.town.TownManager
+                .getAllInstances()) {
+            if (manager.getTown(town.getId()) != null) {
+                // Found our manager, get its level
+                level = getServerLevelFromManager(manager);
+                break;
+            }
+        }
+
+        if (level == null) {
+            LOGGER.warn("Could not find ServerLevel for town {}", town.getName());
+            return;
+        }
+
+        ContractBoard board = ContractBoard.get(level);
         long activeCount = board.getContracts().stream()
                 .filter(c -> c instanceof SellContract sc &&
                         sc.getIssuerTownId().equals(town.getId()) &&
@@ -55,12 +72,18 @@ public class TownContractComponent implements TownComponent {
         }
 
         // Check multiple resources for excess
-        checkAndCreateContract(board, "wood", Items.OAK_LOG);
-        checkAndCreateContract(board, "iron", Items.IRON_INGOT);
-        checkAndCreateContract(board, "coal", Items.COAL);
+        checkAndCreateContract(board, level, "wood", Items.OAK_LOG);
+        checkAndCreateContract(board, level, "iron", Items.IRON_INGOT);
+        checkAndCreateContract(board, level, "coal", Items.COAL);
     }
 
-    private void checkAndCreateContract(ContractBoard board, String resourceId, Item item) {
+    private net.minecraft.server.level.ServerLevel getServerLevelFromManager(
+            com.quackers29.businesscraft.town.TownManager manager) {
+        return manager.getLevel();
+    }
+
+    private void checkAndCreateContract(ContractBoard board, net.minecraft.server.level.ServerLevel level,
+            String resourceId, Item item) {
         // Check if already at max contracts
         long activeCount = board.getContracts().stream()
                 .filter(c -> c instanceof SellContract sc &&
@@ -94,6 +117,7 @@ public class TownContractComponent implements TownComponent {
 
             SellContract contract = new SellContract(
                     town.getId(),
+                    town.getName(),
                     60000L,
                     resourceId,
                     sellQuantity,
@@ -106,7 +130,21 @@ public class TownContractComponent implements TownComponent {
     }
 
     private void tryBidOnContracts() {
-        ContractBoard board = ContractBoard.getInstance();
+        // Get the server level
+        net.minecraft.server.level.ServerLevel level = null;
+        for (com.quackers29.businesscraft.town.TownManager manager : com.quackers29.businesscraft.town.TownManager
+                .getAllInstances()) {
+            if (manager.getTown(town.getId()) != null) {
+                level = manager.getLevel();
+                break;
+            }
+        }
+
+        if (level == null) {
+            return;
+        }
+
+        ContractBoard board = ContractBoard.get(level);
         List<Contract> contracts = board.getContracts();
 
         for (Contract contract : contracts) {

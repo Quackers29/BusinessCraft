@@ -36,9 +36,11 @@ public class AddContractCommand {
             UUID dummyTownId = UUID.randomUUID();
             long duration = 60000L; // 60 seconds in milliseconds
 
-            SellContract contract = new SellContract(dummyTownId, duration, resource, quantity, price);
+            SellContract contract = new SellContract(dummyTownId, "Debug Town", duration, resource, quantity, price);
 
-            ContractBoard.getInstance().addContract(contract);
+            // Get the server level from the command context
+            net.minecraft.server.level.ServerLevel level = context.getSource().getLevel();
+            com.quackers29.businesscraft.contract.ContractBoard.get(level).addContract(contract);
 
             // Log for debugging
             System.out.println("[DEBUG] Created SellContract: " + contract.getId() + " for " + resource);

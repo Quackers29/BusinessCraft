@@ -20,6 +20,7 @@ public class TownManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/TownManager");
     private final TownSavedData savedData;
     private final TownBoundaryService boundaryService;
+    private final ServerLevel level;
 
     // Static reference to the current level for context
     private static final Map<ServerLevel, TownManager> INSTANCES = new HashMap<>();
@@ -28,7 +29,12 @@ public class TownManager {
         return this.savedData;
     }
 
+    public ServerLevel getLevel() {
+        return this.level;
+    }
+
     private TownManager(ServerLevel level) {
+        this.level = level;
         this.savedData = level.getDataStorage().computeIfAbsent(
                 TownSavedData::load,
                 TownSavedData::create,

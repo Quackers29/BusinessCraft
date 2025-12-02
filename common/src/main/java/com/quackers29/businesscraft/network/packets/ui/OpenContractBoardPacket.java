@@ -67,8 +67,10 @@ public class OpenContractBoardPacket {
 
                     // Force sync contracts to the player opening the board
                     try {
+                        net.minecraft.server.level.ServerLevel level = (net.minecraft.server.level.ServerLevel) player
+                                .level();
                         com.quackers29.businesscraft.contract.ContractBoard board = com.quackers29.businesscraft.contract.ContractBoard
-                                .getInstance();
+                                .get(level);
                         PlatformAccess.getNetworkMessages().sendToPlayer(
                                 new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(
                                         board.getContracts()),

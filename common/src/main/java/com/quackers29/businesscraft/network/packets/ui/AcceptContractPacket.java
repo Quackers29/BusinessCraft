@@ -44,7 +44,8 @@ public class AcceptContractPacket {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (senderObj instanceof ServerPlayer player) {
-                ContractBoard board = ContractBoard.getInstance();
+                net.minecraft.server.level.ServerLevel level = (net.minecraft.server.level.ServerLevel) player.level();
+                ContractBoard board = ContractBoard.get(level);
                 Contract contract = board.getContract(contractId);
 
                 if (contract instanceof CourierContract courierContract) {

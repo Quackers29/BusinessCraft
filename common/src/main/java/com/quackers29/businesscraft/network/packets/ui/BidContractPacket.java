@@ -42,12 +42,13 @@ public class BidContractPacket {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (senderObj instanceof ServerPlayer player) {
-                ContractBoard board = ContractBoard.getInstance();
+                net.minecraft.server.level.ServerLevel level = (net.minecraft.server.level.ServerLevel) player.level();
+                ContractBoard board = ContractBoard.get(level);
                 board.addBid(contractId, player.getUUID(), amount);
                 LOGGER.info("Player {} bid {} on contract {}", player.getName().getString(), amount, contractId);
                 // Sync updated to player
                 PlatformAccess.getNetworkMessages().sendToPlayer(
-                    new ContractSyncPacket(board.getContracts()), player);
+                        new ContractSyncPacket(board.getContracts()), player);
             }
         });
         PlatformAccess.getNetwork().setPacketHandled(context);

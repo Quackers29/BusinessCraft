@@ -146,18 +146,20 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
             ItemStack icon = getResourceIcon(c);
             contractGrid.addItemStackWithTooltip(i, 0, icon, getContractTooltip(c), null);
 
-            // Col 1: Details with tooltip
+            // Col 1: Town Name
+            String townName = c.getIssuerTownName();
+            if (townName == null)
+                townName = "Unknown";
+            contractGrid.addLabelWithTooltip(i, 1, truncate(townName, 12), getContractTooltip(c), TEXT_COLOR);
+
+            // Col 2: Details
             String details = getContractDetails(c);
-            contractGrid.addLabelWithTooltip(i, 1, truncate(details, 12), getContractTooltip(c), TEXT_COLOR);
+            contractGrid.addLabel(i, 2, truncate(details, 12), TEXT_COLOR);
 
-            // Col 2: Status
-            String status = getContractStatus(c);
-            contractGrid.addLabel(i, 2, truncate(status, 12), TEXT_COLOR);
-
-            // Col 3: Time
-            long currentTick = this.minecraft.level.getGameTime();
-            long ticksLeft = c.getExpiryTime() - currentTick;
-            String time = ticksLeft > 0 ? (ticksLeft / 20) + "s" : "Expired";
+            // Col 3: Time (Seconds left)
+            long currentTime = System.currentTimeMillis();
+            long millisLeft = c.getExpiryTime() - currentTime;
+            String time = millisLeft > 0 ? (millisLeft / 1000) + "s" : "Expired";
             contractGrid.addLabel(i, 3, time, TEXT_COLOR);
 
             // Col 4: Action button
@@ -172,35 +174,50 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
 
     private String getContractDetails(Contract c) {
         if (c instanceof SellContract sc)
-            return "Sell " + sc.getQuantity() + " " + sc.getResourceId();
+            return sc.getQuantity() + " " + sc.getResourceId();
         if (c instanceof CourierContract cc)
-            return "Courier " + cc.getQuantity() + " " + cc.getResourceId();
+            return cc.getQuantity() + " " + cc.getResourceId();
         return "Contract";
     }
 
     private String getContractStatus(Contract c) {
+        // Unused in grid now, but kept for reference
         if (c instanceof SellContract sc)
-            return "Town bids: " + String.format("%.2f", sc.getHighestBid());
-        if (c instanceof CourierContract cc)
-            return "Reward: " + String.format("%.2f", cc.getReward());
+            return "Bid: " + String.format("%.2f", sc.getHighestBid());
         return "N/A";
     }
 
     private ItemStack getResourceIcon(Contract c) {
         String res = "";
-        if (c instanceof SellContract sc)
+        int count = 1;
+        if (c instanceof SellContract sc) {
             res = sc.getResourceId();
-        else if (c instanceof CourierContract cc)
+            count = sc.getQuantity();
+        } else if (c instanceof CourierContract cc) {
             res = cc.getResourceId();
+            count = cc.getQuantity();
+        }
+
+        ItemStack stack;
         if ("wood".equals(res))
-            return new ItemStack(Items.OAK_LOG);
-        if ("iron".equals(res))
-            return new ItemStack(Items.IRON_INGOT);
-        return new ItemStack(Items.EMERALD); // Fallback
+            stack = new ItemStack(Items.OAK_LOG);
+        else if ("iron".equals(res))
+            stack = new ItemStack(Items.IRON_INGOT);
+        else if ("coal".equals(res))
+            stack = new ItemStack(Items.COAL);
+        else
+            stack = new ItemStack(Items.EMERALD); // Fallback
+
+        stack.setCount(Math.min(count, 64)); // Clamp to 64 for display
+        return stack;
     }
 
     private String getContractTooltip(Contract c) {
-        return "ID: " + c.getId() + " Expires: " + c.getExpiryTime();
+        if (c instanceof SellContract sc) {
+            return String.format("Selling %d %s for %.2f Emeralds",
+                    sc.getQuantity(), sc.getResourceId(), sc.getPricePerUnit() * sc.getQuantity());
+        }
+        return "ID: " + c.getId();
     }
 
     private String truncate(String text, int maxChars) {

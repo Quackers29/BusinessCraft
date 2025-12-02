@@ -8,14 +8,16 @@ import java.util.UUID;
 public abstract class Contract {
     protected UUID id;
     protected UUID issuerTownId;
+    protected String issuerTownName;
     protected long creationTime;
     protected long expiryTime;
     protected boolean isCompleted;
     protected Map<UUID, Float> bids = new HashMap<>();
 
-    public Contract(UUID issuerTownId, long duration) {
+    public Contract(UUID issuerTownId, String issuerTownName, long duration) {
         this.id = UUID.randomUUID();
         this.issuerTownId = issuerTownId;
+        this.issuerTownName = issuerTownName;
         this.creationTime = System.currentTimeMillis();
         this.expiryTime = this.creationTime + duration;
         this.isCompleted = false;
@@ -31,6 +33,10 @@ public abstract class Contract {
 
     public UUID getIssuerTownId() {
         return issuerTownId;
+    }
+
+    public String getIssuerTownName() {
+        return issuerTownName;
     }
 
     public boolean isExpired() {
@@ -74,6 +80,9 @@ public abstract class Contract {
     public void save(CompoundTag tag) {
         tag.putUUID("id", id);
         tag.putUUID("issuerTownId", issuerTownId);
+        if (issuerTownName != null) {
+            tag.putString("issuerTownName", issuerTownName);
+        }
         tag.putLong("creationTime", creationTime);
         tag.putLong("expiryTime", expiryTime);
         tag.putBoolean("isCompleted", isCompleted);
@@ -83,6 +92,11 @@ public abstract class Contract {
     public void load(CompoundTag tag) {
         id = tag.getUUID("id");
         issuerTownId = tag.getUUID("issuerTownId");
+        if (tag.contains("issuerTownName")) {
+            issuerTownName = tag.getString("issuerTownName");
+        } else {
+            issuerTownName = "Unknown Town";
+        }
         creationTime = tag.getLong("creationTime");
         expiryTime = tag.getLong("expiryTime");
         isCompleted = tag.getBoolean("isCompleted");
