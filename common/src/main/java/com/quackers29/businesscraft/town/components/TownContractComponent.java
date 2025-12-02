@@ -130,6 +130,10 @@ public class TownContractComponent implements TownComponent {
 
             // Create a sell contract for excess resource
             int sellQuantity = (resourceCount - EXCESS_THRESHOLD) / 2;
+            if (sellQuantity <= 0) {
+                LOGGER.debug("Insufficient excess resources for {} ({} - {} = {}), skipping contract creation", resourceId, resourceCount, EXCESS_THRESHOLD, sellQuantity);
+                return;
+            }
             float pricePerUnit = 1.0f;
 
             SellContract contract = new SellContract(

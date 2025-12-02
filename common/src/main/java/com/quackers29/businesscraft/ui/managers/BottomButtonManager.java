@@ -176,9 +176,9 @@ public class BottomButtonManager {
                 .withRowHeight(20);
 
         bottomButtonsGrid
-                .addButtonWithTooltip(0, 0, "Trade Resources", "Trade resources with other towns",
+                .addButtonWithTooltip(0, 0, "Trade", "Trade resources with other towns",
                         v -> actionHandler.onTradeResources(), TownInterfaceTheme.PRIMARY_COLOR)
-                .addButtonWithTooltip(0, 1, "Manage Storage", "Manage town storage and inventory",
+                .addButtonWithTooltip(0, 1, "Payment", "View payment board and rewards",
                         v -> actionHandler.onManageStorage(), TownInterfaceTheme.SECONDARY_COLOR)
                 .addButtonWithTooltip(0, 2, "Contracts", "View and manage contracts",
                         v -> actionHandler.onContractBoard(), TownInterfaceTheme.ACCENT_COLOR);

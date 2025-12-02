@@ -1,7 +1,10 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.contract.Contract;
 import com.quackers29.businesscraft.contract.ContractBoard;
+import com.quackers29.businesscraft.contract.CourierContract;
+import com.quackers29.businesscraft.contract.SellContract;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
@@ -44,9 +47,29 @@ public class BidContractPacket {
             if (senderObj instanceof ServerPlayer player) {
                 net.minecraft.server.level.ServerLevel level = (net.minecraft.server.level.ServerLevel) player.level();
                 ContractBoard board = ContractBoard.get(level);
-                board.addBid(contractId, player.getUUID(), amount, level);
-                LOGGER.info("Player {} bid {} on contract {}", player.getName().getString(), amount, contractId);
-                // Sync updated to player
+                Contract contract = board.getContract(contractId);
+                if (contract == null || contract.isExpired()) {
+                    LOGGER.warn("Invalid bid on non-existent/expired contract {} by {}", contractId, player.getName().getString());
+                    return;
+                }
+                if (contract instanceof CourierContract cc && amount == 0f && cc.getCourierId() == null) {
+                    // Player accepting courier mission
+                    cc.setCourierId(player.getUUID());
+                    LOGGER.info("Player {} accepted courier mission {}", player.getName().getString(), contractId);
+                } else if (contract instanceof SellContract sc && amount > 0f) {
+                    // Normal SellContract bid
+                    int quantity = sc.getQuantity();
+                    if (quantity <= 0) {
+                        LOGGER.warn("Bid rejected on 0-quantity SellContract {} by {}", contractId, player.getName().getString());
+                        return;
+                    }
+                    board.addBid(contractId, player.getUUID(), amount, level);
+                    LOGGER.info("Player {} bid {} on SellContract {}", player.getName().getString(), amount, contractId);
+                } else {
+                    LOGGER.warn("Invalid bid parameters for contract {} by {}", contractId, player.getName().getString());
+                    return;
+                }
+                // Sync updated contracts
                 PlatformAccess.getNetworkMessages().sendToPlayer(
                         new ContractSyncPacket(board.getContracts()), player);
             }

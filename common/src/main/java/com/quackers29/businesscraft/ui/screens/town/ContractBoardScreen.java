@@ -128,10 +128,11 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     private List<Contract> filterContractsByTab() {
         return currentContracts.stream().filter(c -> {
             switch (selectedTab) {
-                case 0: // Auction - not yet completed/expired
-                    return !c.isCompleted() && !c.isExpired();
-                case 1: // Active - completed (has winner) but not expired
-                    return c.isCompleted() && !c.isExpired();
+                case 0: // Auction - SellContracts not completed/expired
+                    return c instanceof SellContract && !c.isCompleted() && !c.isExpired();
+                case 1: // Active - SellContracts completed !expired OR any Courier !expired
+                    return (c instanceof SellContract && c.isCompleted() && !c.isExpired()) ||
+                           (c instanceof CourierContract && !c.isExpired());
                 case 2: // History - expired contracts
                     return c.isExpired();
             }
@@ -312,7 +313,7 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
 
     private void openContractDetails(Contract c) {
         if (minecraft != null) {
-            minecraft.setScreen(new ContractDetailScreen(c, this));
+            minecraft.setScreen(new ContractDetailScreen(c, this, selectedTab));
         }
     }
 

@@ -167,6 +167,10 @@ public class PacketRegistry {
                                 OpenTownInterfacePacket::decode, OpenTownInterfacePacket::encode,
                                 OpenTownInterfacePacket::handle);
 
+                register(BidContractPacket.class, "bid_contract_packet", NetworkDirection.PLAY_TO_SERVER,
+                                BidContractPacket::decode, BidContractPacket::encode,
+                                BidContractPacket::handle);
+
                 register(AcceptContractPacket.class, "accept_contract_packet", NetworkDirection.PLAY_TO_SERVER,
                                 AcceptContractPacket::decode, AcceptContractPacket::encode,
                                 AcceptContractPacket::handle);

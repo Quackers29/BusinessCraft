@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class ContractBoard {
@@ -138,7 +139,9 @@ public class ContractBoard {
         com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
                 .get(level);
 
-        for (Contract contract : savedData.getContracts()) {
+        List<Contract> contractsCopy = new ArrayList<>(savedData.getContracts());
+
+        for (Contract contract : contractsCopy) {
             if (contract instanceof SellContract sc) {
                 // Check if auction expired without being closed yet
                 if (sc.isExpired() && !sc.isCompleted() && sc.getWinningTownId() == null) {
@@ -159,13 +162,28 @@ public class ContractBoard {
                             sc.setAcceptedBid(highestBid);
                             sc.complete();
                             sc.extendExpiry(90000L); // 90 seconds for Active phase
+
+                            // Auto-create CourierContract for delivery from seller to buyer
+                            com.quackers29.businesscraft.town.Town sellerTown = townManager.getTown(sc.getIssuerTownId());
+                            if (sellerTown != null) {
+                                CourierContract courier = new CourierContract(
+                                        highestBidder, // buyer as issuer
+                                        winnerTown != null ? winnerTown.getName() : "Unknown",
+                                        180000L, // 3 min for courier acceptance
+                                        sc.getResourceId(),
+                                        sc.getQuantity(),
+                                        sc.getIssuerTownId(), // seller as destination
+                                        highestBid * 0.1f); // 10% reward
+                                addContract(courier);
+                                LOGGER.info("Created auto-courier {} for SellContract {} (buyer={} to seller={})", courier.getId(), sc.getId(), highestBidder, sc.getIssuerTownId());
+                            }
+
                             LOGGER.info("Auction closed for contract {}: Winner={}, Bid={}",
                                     sc.getId(), highestBidder, highestBid);
-                            // Winner's emeralds already escrowed, seller's resources already escrowed
                             savedData.setDirty();
                         }
                     } else {
-                        // ESCROW REFUND: Auction failed (no bids) - return resources to seller
+                        // ESCRO refund: Auction failed (no bids) - return resources to seller
                         com.quackers29.businesscraft.town.Town sellerTown = townManager.getTown(sc.getIssuerTownId());
                         if (sellerTown != null) {
                             net.minecraft.world.item.Item item = null;

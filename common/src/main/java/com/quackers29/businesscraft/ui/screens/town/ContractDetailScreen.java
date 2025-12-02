@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 public class ContractDetailScreen extends Screen {
     private final Contract contract;
     private final Screen parentScreen;
+    private final int tabIndex;
 
     private static final int WINDOW_WIDTH = 280;
     private static final int WINDOW_HEIGHT = 300;
@@ -29,10 +30,11 @@ public class ContractDetailScreen extends Screen {
     private int scrollOffset = 0;
     private static final int MAX_VISIBLE_BIDS = 5;
 
-    public ContractDetailScreen(Contract contract, Screen parentScreen) {
+    public ContractDetailScreen(Contract contract, Screen parentScreen, int tabIndex) {
         super(Component.literal("Contract Details"));
         this.contract = contract;
         this.parentScreen = parentScreen;
+        this.tabIndex = tabIndex;
     }
 
     @Override
@@ -45,25 +47,22 @@ public class ContractDetailScreen extends Screen {
                 .bounds(x + WINDOW_WIDTH - 50, y + WINDOW_HEIGHT - 25, 40, 20)
                 .build());
 
-        // Bid button (only for CourierContract that isn't expired/completed)
-        if (contract instanceof CourierContract && !contract.isExpired() && !contract.isCompleted()) {
-            this.addRenderableWidget(Button.builder(Component.literal("Bid"), b -> {
-                if (showBidInput) {
-                    sendBid();
-                } else {
-                    showBidInput = true;
-                    // Re-init to show input box
-                    this.rebuildWidgets();
-                }
-            })
-                    .bounds(x + 10, y + WINDOW_HEIGHT - 25, 40, 20)
-                    .build());
-
-            if (showBidInput) {
-                bidInput = new EditBox(this.font, x + 60, y + WINDOW_HEIGHT - 25, 60, 20,
-                        Component.literal("Bid Amount"));
-                bidInput.setValue("10.0");
-                this.addRenderableWidget(bidInput);
+        // Bid button conditional on tab
+        int quantity = 0;
+        if (contract instanceof CourierContract cc) {
+            quantity = cc.getQuantity();
+        } else if (contract instanceof SellContract sc) {
+            quantity = sc.getQuantity();
+        }
+        if (quantity > 0 && !contract.isExpired()) {
+            if (tabIndex == 1 && contract instanceof CourierContract) {
+                // Active tab: Accept Courier button
+                this.addRenderableWidget(Button.builder(Component.literal("Accept Courier"), b -> {
+                    PlatformAccess.getNetworkMessages().sendToServer(new BidContractPacket(contract.getId(), 0f)); // Placeholder for accept
+                    onClose();
+                })
+                        .bounds(x + 10, y + WINDOW_HEIGHT - 25, 90, 20)
+                        .build());
             }
         }
     }
