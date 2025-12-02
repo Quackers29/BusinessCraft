@@ -44,7 +44,7 @@ public class BidContractPacket {
             if (senderObj instanceof ServerPlayer player) {
                 net.minecraft.server.level.ServerLevel level = (net.minecraft.server.level.ServerLevel) player.level();
                 ContractBoard board = ContractBoard.get(level);
-                board.addBid(contractId, player.getUUID(), amount);
+                board.addBid(contractId, player.getUUID(), amount, level);
                 LOGGER.info("Player {} bid {} on contract {}", player.getName().getString(), amount, contractId);
                 // Sync updated to player
                 PlatformAccess.getNetworkMessages().sendToPlayer(

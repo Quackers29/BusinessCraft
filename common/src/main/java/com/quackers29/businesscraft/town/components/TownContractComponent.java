@@ -124,8 +124,12 @@ public class TownContractComponent implements TownComponent {
                     pricePerUnit);
 
             board.addContract(contract);
-            LOGGER.info("Town {} created sell contract for {} {}",
-                    town.getName(), sellQuantity, resourceId);
+
+            // ESCROW: Immediately deduct resources from seller
+            town.addResource(item, -sellQuantity);
+
+            LOGGER.info("Town {} created sell contract for {} {} (escrowed {} resources)",
+                    town.getName(), sellQuantity, resourceId, sellQuantity);
         }
     }
 
@@ -183,8 +187,16 @@ public class TownContractComponent implements TownComponent {
                     // Calculate bid (base price * 1.1)
                     float bid = sc.getPricePerUnit() * sc.getQuantity() * 1.1f;
 
-                    // Place bid
-                    board.addBid(sc.getId(), town.getId(), bid);
+                    // ESCROW: Check if town has enough emeralds before bidding
+                    int emeraldCount = town.getResourceCount(Items.EMERALD);
+                    if (emeraldCount < bid) {
+                        LOGGER.debug("Town {} cannot bid {} on contract {} - insufficient emeralds ({} available)",
+                                town.getName(), bid, sc.getId(), emeraldCount);
+                        continue;
+                    }
+
+                    // Place bid (escrow will be handled by ContractBoard)
+                    board.addBid(sc.getId(), town.getId(), bid, level);
                     LOGGER.info("Town {} bid {} on contract {} for {}",
                             town.getName(), bid, sc.getId(), resourceId);
                 }

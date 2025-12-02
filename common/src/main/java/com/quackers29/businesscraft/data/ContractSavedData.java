@@ -74,4 +74,8 @@ public class ContractSavedData extends SavedData {
 
         return tag;
     }
+
+    public static ContractSavedData get(net.minecraft.server.level.ServerLevel level) {
+        return level.getDataStorage().computeIfAbsent(ContractSavedData::load, ContractSavedData::create, NAME);
+    }
 }

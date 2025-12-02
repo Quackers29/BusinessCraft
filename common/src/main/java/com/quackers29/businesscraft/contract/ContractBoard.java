@@ -1,11 +1,16 @@
 package com.quackers29.businesscraft.contract;
 
+import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.data.ContractSavedData;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class ContractBoard {
     private static final Logger LOGGER = LoggerFactory.getLogger(ContractBoard.class);
@@ -16,19 +21,14 @@ public class ContractBoard {
 
     private ContractBoard(ServerLevel level) {
         this.level = level;
-        this.savedData = level.getDataStorage().computeIfAbsent(
-                ContractSavedData::load,
-                ContractSavedData::create,
-                ContractSavedData.NAME);
-        LOGGER.info("ContractBoard initialized for level: {}", level.dimension().location());
+        this.savedData = ContractSavedData.get(level);
     }
 
     public static ContractBoard get(ServerLevel level) {
-        return INSTANCES.computeIfAbsent(level, key -> new ContractBoard(level));
+        return INSTANCES.computeIfAbsent(level, ContractBoard::new);
     }
 
     public static void clearInstances() {
-        LOGGER.info("Clearing {} ContractBoard instances", INSTANCES.size());
         INSTANCES.clear();
     }
 
@@ -78,13 +78,13 @@ public class ContractBoard {
         }
 
         // Check for contracts that have finished their "Active" phase (delivery time)
-        for (Contract c : savedData.getContracts()) {
-            if (c.isCompleted() && c.isExpired() && c instanceof SellContract sc && !sc.isDelivered()) {
-                processContractDelivery(sc, level);
+        for (Contract contract : savedData.getContracts()) {
+            if (contract instanceof SellContract sc) {
+                if (sc.isCompleted() && sc.isExpired() && !sc.isDelivered()) {
+                    processContractDelivery(sc, level);
+                }
             }
         }
-
-        savedData.setDirty();
     }
 
     private void processContractDelivery(SellContract sc, ServerLevel level) {
@@ -94,11 +94,18 @@ public class ContractBoard {
 
         com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
                 .get(level);
+
+        // If there is no winning town (e.g. failed auction), we don't need to do any
+        // delivery
+        if (sc.getWinningTownId() == null) {
+            return;
+        }
+
         com.quackers29.businesscraft.town.Town sellerTown = townManager.getTown(sc.getIssuerTownId());
         com.quackers29.businesscraft.town.Town buyerTown = townManager.getTown(sc.getWinningTownId());
 
         if (sellerTown != null && buyerTown != null) {
-            // Transfer Items
+            // Transfer Items (already escrowed from seller at auction start)
             net.minecraft.world.item.Item item = null;
             if ("wood".equals(sc.getResourceId()))
                 item = net.minecraft.world.item.Items.OAK_LOG;
@@ -108,42 +115,68 @@ public class ContractBoard {
                 item = net.minecraft.world.item.Items.COAL;
 
             if (item != null) {
-                // Remove from seller (if they still have it)
-                sellerTown.addResource(item, -sc.getQuantity());
-
-                // Add to buyer
+                // Just add to buyer (resources already deducted from seller at auction start)
                 buyerTown.addResource(item, sc.getQuantity());
 
-                LOGGER.info("Transferred {} {} from {} to {}",
+                LOGGER.info("Delivered {} {} from {} to {} (escrowed resources transferred)",
                         sc.getQuantity(), sc.getResourceId(), sellerTown.getName(), buyerTown.getName());
             }
 
-            // Transfer Money (Emeralds)
+            // Transfer Money (Emeralds already escrowed from buyer when they bid)
             int cost = (int) sc.getAcceptedBid();
             if (cost > 0) {
-                buyerTown.addResource(net.minecraft.world.item.Items.EMERALD, -cost);
+                // Just add to seller (emeralds already deducted from buyer when they won)
                 sellerTown.addResource(net.minecraft.world.item.Items.EMERALD, cost);
 
-                LOGGER.info("Transferred {} emeralds from {} to {}",
+                LOGGER.info("Delivered {} emeralds from {} to {} (escrowed emeralds transferred)",
                         cost, buyerTown.getName(), sellerTown.getName());
             }
         }
     }
 
     private void closeAuctions() {
+        com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
+                .get(level);
+
         for (Contract contract : savedData.getContracts()) {
             if (contract instanceof SellContract sc) {
-                if (sc.isExpired() && sc.getWinningTownId() == null && !sc.getBids().isEmpty()) {
-                    UUID highestBidder = sc.getHighestBidder();
-                    float highestBid = sc.getHighestBid();
+                // Check if auction expired without being closed yet
+                if (sc.isExpired() && !sc.isCompleted() && sc.getWinningTownId() == null) {
+                    if (!sc.getBids().isEmpty()) {
+                        // Auction has bids - close it with winner
+                        UUID highestBidder = sc.getHighestBidder();
+                        float highestBid = sc.getHighestBid();
 
-                    if (highestBidder != null) {
-                        sc.setWinningTownId(highestBidder);
-                        sc.setAcceptedBid(highestBid);
+                        if (highestBidder != null) {
+                            sc.setWinningTownId(highestBidder);
+                            sc.setAcceptedBid(highestBid);
+                            sc.complete();
+                            sc.extendExpiry(90000L); // 90 seconds for Active phase
+                            LOGGER.info("Auction closed for contract {}: Winner={}, Bid={}",
+                                    sc.getId(), highestBidder, highestBid);
+                            // Winner's emeralds already escrowed, seller's resources already escrowed
+                            savedData.setDirty();
+                        }
+                    } else {
+                        // ESCROW REFUND: Auction failed (no bids) - return resources to seller
+                        com.quackers29.businesscraft.town.Town sellerTown = townManager.getTown(sc.getIssuerTownId());
+                        if (sellerTown != null) {
+                            net.minecraft.world.item.Item item = null;
+                            if ("wood".equals(sc.getResourceId()))
+                                item = net.minecraft.world.item.Items.OAK_LOG;
+                            else if ("iron".equals(sc.getResourceId()))
+                                item = net.minecraft.world.item.Items.IRON_INGOT;
+                            else if ("coal".equals(sc.getResourceId()))
+                                item = net.minecraft.world.item.Items.COAL;
+
+                            if (item != null) {
+                                sellerTown.addResource(item, sc.getQuantity());
+                                LOGGER.info("Refunded {} {} to town {} (auction {} had no bids)",
+                                        sc.getQuantity(), sc.getResourceId(), sellerTown.getName(), sc.getId());
+                            }
+                        }
+                        // Mark as completed so it moves to history
                         sc.complete();
-                        sc.extendExpiry(90000L); // 90 seconds for Active phase
-                        LOGGER.info("Auction closed for contract {}: Winner={}, Bid={}",
-                                sc.getId(), highestBidder, highestBid);
                         savedData.setDirty();
                     }
                 }
@@ -151,10 +184,40 @@ public class ContractBoard {
         }
     }
 
-    public void addBid(UUID contractId, UUID bidder, float amount) {
+    public void addBid(UUID contractId, UUID bidder, float amount, ServerLevel level) {
         Contract contract = getContract(contractId);
-        if (contract != null) {
+        if (contract != null && contract instanceof SellContract) {
+            com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
+                    .get(level);
+            com.quackers29.businesscraft.town.Town bidderTown = townManager.getTown(bidder);
+
+            if (bidderTown == null) {
+                LOGGER.warn("Cannot place bid: bidder town {} not found", bidder);
+                return;
+            }
+
+            // Get previous highest bidder (if exists and different from new bidder)
+            UUID previousHighestBidder = contract.getHighestBidder();
+            float previousHighestBid = contract.getHighestBid();
+
+            // Add the bid to the contract
             contract.addBid(bidder, amount);
+
+            // ESCROW: Deduct emeralds from new bidder
+            bidderTown.addResource(net.minecraft.world.item.Items.EMERALD, -(int) amount);
+            LOGGER.info("Escrowed {} emeralds from town {} for bid on contract {}",
+                    (int) amount, bidderTown.getName(), contractId);
+
+            // ESCROW: Refund emeralds to previous highest bidder (if different)
+            if (previousHighestBidder != null && !previousHighestBidder.equals(bidder)) {
+                com.quackers29.businesscraft.town.Town previousTown = townManager.getTown(previousHighestBidder);
+                if (previousTown != null) {
+                    previousTown.addResource(net.minecraft.world.item.Items.EMERALD, (int) previousHighestBid);
+                    LOGGER.info("Refunded {} emeralds to town {} (outbid on contract {})",
+                            (int) previousHighestBid, previousTown.getName(), contractId);
+                }
+            }
+
             savedData.setDirty();
             broadcastUpdate();
         }
@@ -162,10 +225,8 @@ public class ContractBoard {
 
     private void broadcastUpdate() {
         try {
-            LOGGER.info("Broadcasting contract update to all players. Contract count: {}",
-                    savedData.getContracts().size());
-            if (com.quackers29.businesscraft.api.PlatformAccess.getNetworkMessages() != null) {
-                com.quackers29.businesscraft.api.PlatformAccess.getNetworkMessages().sendToAllPlayers(
+            if (PlatformAccess.getNetworkMessages() != null) {
+                PlatformAccess.getNetworkMessages().sendToAllPlayers(
                         new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(
                                 savedData.getContracts()));
             }
