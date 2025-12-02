@@ -198,15 +198,25 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
             count = cc.getQuantity();
         }
 
+        // Look up resource from ResourceRegistry dynamically
         ItemStack stack;
-        if ("wood".equals(res))
-            stack = new ItemStack(Items.OAK_LOG);
-        else if ("iron".equals(res))
-            stack = new ItemStack(Items.IRON_INGOT);
-        else if ("coal".equals(res))
-            stack = new ItemStack(Items.COAL);
-        else
-            stack = new ItemStack(Items.EMERALD); // Fallback
+        com.quackers29.businesscraft.economy.ResourceType resourceType = com.quackers29.businesscraft.economy.ResourceRegistry
+                .get(res);
+
+        if (resourceType != null) {
+            // Get the canonical item for this resource
+            ResourceLocation itemId = resourceType.getCanonicalItemId();
+            Object itemObj = PlatformAccess.getRegistry().getItem(itemId);
+            if (itemObj instanceof net.minecraft.world.item.Item item && item != Items.AIR) {
+                stack = new ItemStack(item);
+            } else {
+                // Fallback if item not found
+                stack = new ItemStack(Items.BARRIER); // Visual indicator of missing item
+            }
+        } else {
+            // Fallback if resource not in registry
+            stack = new ItemStack(Items.BARRIER); // Visual indicator of missing resource
+        }
 
         stack.setCount(Math.min(count, 64)); // Clamp to 64 for display
         return stack;

@@ -1378,8 +1378,23 @@ public class TownInterfaceEntity extends BlockEntity
         for (Map.Entry<Item, Integer> entry : resources.entrySet()) {
             Item item = entry.getKey();
             int count = entry.getValue();
+
+            // Skip emeralds - they are the currency
+            if (item == Items.EMERALD) {
+                continue;
+            }
+
             if (count > keepThreshold) {
-                String resourceId = PlatformAccess.getRegistry().getItemKey(item).toString();
+                // Look up the resource type from ResourceRegistry
+                com.quackers29.businesscraft.economy.ResourceType resourceType = com.quackers29.businesscraft.economy.ResourceRegistry
+                        .getFor(item);
+
+                // Only create contracts for registered resources
+                if (resourceType == null) {
+                    continue;
+                }
+
+                String resourceId = resourceType.getId(); // Use the resource ID like "wood", "iron", etc.
 
                 // Get ServerLevel
                 net.minecraft.server.level.ServerLevel serverLevel = (net.minecraft.server.level.ServerLevel) level;

@@ -71,10 +71,27 @@ public class TownContractComponent implements TownComponent {
             return;
         }
 
-        // Check multiple resources for excess
-        checkAndCreateContract(board, level, "wood", Items.OAK_LOG);
-        checkAndCreateContract(board, level, "iron", Items.IRON_INGOT);
-        checkAndCreateContract(board, level, "coal", Items.COAL);
+        // Check all resources for excess (excluding currency)
+        for (java.util.Map.Entry<Item, Integer> entry : town.getAllResources().entrySet()) {
+            Item item = entry.getKey();
+
+            // Skip emeralds - they are the currency
+            if (item == Items.EMERALD) {
+                continue;
+            }
+
+            // Look up the resource type from ResourceRegistry
+            com.quackers29.businesscraft.economy.ResourceType resourceType = com.quackers29.businesscraft.economy.ResourceRegistry
+                    .getFor(item);
+
+            // Only create contracts for registered resources
+            if (resourceType == null) {
+                continue;
+            }
+
+            String resourceId = resourceType.getId();
+            checkAndCreateContract(board, level, resourceId, item);
+        }
     }
 
     private net.minecraft.server.level.ServerLevel getServerLevelFromManager(
@@ -165,23 +182,26 @@ public class TownContractComponent implements TownComponent {
 
                 // Check if town needs this resource
                 String resourceId = sc.getResourceId();
-                Item item = null;
-                int currentCount = 0;
 
-                switch (resourceId) {
-                    case "wood":
-                        item = Items.OAK_LOG;
-                        currentCount = town.getResourceCount(Items.OAK_LOG);
-                        break;
-                    case "iron":
-                        item = Items.IRON_INGOT;
-                        currentCount = town.getResourceCount(Items.IRON_INGOT);
-                        break;
-                    case "coal":
-                        item = Items.COAL;
-                        currentCount = town.getResourceCount(Items.COAL);
-                        break;
+                // Look up the resource type from ResourceRegistry
+                com.quackers29.businesscraft.economy.ResourceType resourceType = com.quackers29.businesscraft.economy.ResourceRegistry
+                        .get(resourceId);
+
+                // Skip if resource not found in registry
+                if (resourceType == null) {
+                    continue;
                 }
+
+                // Get the canonical item for this resource
+                net.minecraft.resources.ResourceLocation itemLoc = resourceType.getCanonicalItemId();
+                Object itemObj = com.quackers29.businesscraft.api.PlatformAccess.getRegistry().getItem(itemLoc);
+
+                if (!(itemObj instanceof Item)) {
+                    continue;
+                }
+
+                Item item = (Item) itemObj;
+                int currentCount = town.getResourceCount(item);
 
                 if (item != null && currentCount < NEED_THRESHOLD) {
                     // Calculate bid (base price * 1.1)

@@ -148,7 +148,14 @@ public class ContractBoard {
                         float highestBid = sc.getHighestBid();
 
                         if (highestBidder != null) {
-                            sc.setWinningTownId(highestBidder);
+                            // Get winner town name for caching
+                            com.quackers29.businesscraft.town.Town winnerTown = townManager.getTown(highestBidder);
+                            if (winnerTown != null) {
+                                sc.setWinningTown(highestBidder, winnerTown.getName());
+                            } else {
+                                sc.setWinningTownId(highestBidder);
+                            }
+
                             sc.setAcceptedBid(highestBid);
                             sc.complete();
                             sc.extendExpiry(90000L); // 90 seconds for Active phase

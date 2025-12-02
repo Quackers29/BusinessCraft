@@ -9,6 +9,7 @@ public class SellContract extends Contract {
     private float pricePerUnit;
     private UUID buyerTownId;
     private UUID winningTownId; // Town that won the auction
+    private String winningTownName; // Cached name of winning town
     private float acceptedBid; // Winning bid amount
     private boolean isDelivered; // Track if items/money have been transferred
 
@@ -20,6 +21,7 @@ public class SellContract extends Contract {
         this.pricePerUnit = pricePerUnit;
         this.buyerTownId = null;
         this.winningTownId = null;
+        this.winningTownName = null;
         this.acceptedBid = 0f;
         this.isDelivered = false;
     }
@@ -52,8 +54,18 @@ public class SellContract extends Contract {
         return winningTownId;
     }
 
+    public String getWinningTownName() {
+        return winningTownName;
+    }
+
     public void setWinningTownId(UUID winningTownId) {
         this.winningTownId = winningTownId;
+        this.winningTownName = null; // Clear cached name when setting new ID
+    }
+
+    public void setWinningTown(UUID winningTownId, String winningTownName) {
+        this.winningTownId = winningTownId;
+        this.winningTownName = winningTownName;
     }
 
     public float getAcceptedBid() {
@@ -98,6 +110,9 @@ public class SellContract extends Contract {
         if (winningTownId != null) {
             tag.putUUID("winningTownId", winningTownId);
         }
+        if (winningTownName != null) {
+            tag.putString("winningTownName", winningTownName);
+        }
         tag.putFloat("acceptedBid", acceptedBid);
         tag.putBoolean("isDelivered", isDelivered);
     }
@@ -112,6 +127,9 @@ public class SellContract extends Contract {
         }
         if (tag.hasUUID("winningTownId")) {
             winningTownId = tag.getUUID("winningTownId");
+        }
+        if (tag.contains("winningTownName")) {
+            winningTownName = tag.getString("winningTownName");
         }
         acceptedBid = tag.getFloat("acceptedBid");
         isDelivered = tag.getBoolean("isDelivered");

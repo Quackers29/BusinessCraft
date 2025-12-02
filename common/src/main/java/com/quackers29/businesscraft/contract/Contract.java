@@ -51,6 +51,10 @@ public abstract class Contract {
         return expiryTime;
     }
 
+    public long getCreationTime() {
+        return creationTime;
+    }
+
     public void complete() {
         this.isCompleted = true;
     }

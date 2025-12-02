@@ -12,18 +12,22 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-import java.util.Map;
-import java.util.UUID;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ContractDetailScreen extends Screen {
     private final Contract contract;
     private final Screen parentScreen;
 
-    private static final int WINDOW_WIDTH = 220;
-    private static final int WINDOW_HEIGHT = 180;
+    private static final int WINDOW_WIDTH = 280;
+    private static final int WINDOW_HEIGHT = 300;
 
     private EditBox bidInput;
     private boolean showBidInput = false;
+
+    private int scrollOffset = 0;
+    private static final int MAX_VISIBLE_BIDS = 5;
 
     public ContractDetailScreen(Contract contract, Screen parentScreen) {
         super(Component.literal("Contract Details"));
@@ -92,6 +96,7 @@ public class ContractDetailScreen extends Screen {
         int textY = y + 30;
         int labelColor = 0xFFAAAAAA;
         int valueColor = 0xFFFFFFFF;
+        int headerColor = 0xFFFCB821;
 
         // Type
         g.drawString(font, "Type:", x + 10, textY, labelColor);
@@ -113,43 +118,148 @@ public class ContractDetailScreen extends Screen {
         g.drawString(font, resourceName + " x" + quantity, x + 80, textY, valueColor);
         textY += 15;
 
-        // Issuer
-        g.drawString(font, "Town ID:", x + 10, textY, labelColor);
-        String townId = contract.getIssuerTownId().toString();
-        g.drawString(font, townId.substring(0, 8) + "...", x + 80, textY, valueColor);
+        // Seller/Issuer
+        g.drawString(font, "Seller:", x + 10, textY, labelColor);
+        String sellerName = getTownName(contract.getIssuerTownId(), contract.getIssuerTownName());
+        g.drawString(font, truncate(sellerName, 20), x + 80, textY, valueColor);
+        textY += 15;
+
+        // Created timestamp
+        g.drawString(font, "Created:", x + 10, textY, labelColor);
+        g.drawString(font, formatTime(contract.getCreationTime()), x + 80, textY, valueColor);
+        textY += 15;
+
+        // Expiry timestamp
+        g.drawString(font, "Expires:", x + 10, textY, labelColor);
+        g.drawString(font, formatTime(contract.getExpiryTime()), x + 80, textY, valueColor);
         textY += 15;
 
         // Time Remaining
         g.drawString(font, "Time Left:", x + 10, textY, labelColor);
         long currentTime = System.currentTimeMillis();
         long timeLeft = contract.getExpiryTime() - currentTime;
-        String time = timeLeft > 0 ? (timeLeft / 1000) + "s" : "Expired";
-        g.drawString(font, time, x + 80, textY, valueColor);
-        textY += 20;
+        String time = timeLeft > 0 ? formatDuration(timeLeft) : "Expired";
+        int timeColor = timeLeft > 0 ? valueColor : 0xFFFF5555;
+        g.drawString(font, time, x + 80, textY, timeColor);
+        textY += 18;
 
         // Bids Section
-        g.drawString(font, "Bids:", x + 10, textY, 0xFFFCB821);
-        textY += 15;
+        g.drawString(font, "Bids:", x + 10, textY, headerColor);
+        textY += 12;
 
         Map<UUID, Float> bids = contract.getBids();
         if (bids.isEmpty()) {
             g.drawString(font, "No bids yet", x + 20, textY, 0xFF888888);
+            textY += 12;
         } else {
+            // Sort bids by amount (highest first)
+            List<Map.Entry<UUID, Float>> sortedBids = bids.entrySet().stream()
+                    .sorted(Map.Entry.<UUID, Float>comparingByValue().reversed())
+                    .collect(Collectors.toList());
+
+            UUID highestBidder = contract.getHighestBidder();
+
             int count = 0;
-            for (Map.Entry<UUID, Float> entry : bids.entrySet()) {
-                if (count >= 3) {
-                    g.drawString(font, "... and " + (bids.size() - 3) + " more", x + 20, textY, 0xFF888888);
+            for (Map.Entry<UUID, Float> entry : sortedBids) {
+                if (count >= MAX_VISIBLE_BIDS && count < sortedBids.size()) {
+                    g.drawString(font, "... +" + (sortedBids.size() - MAX_VISIBLE_BIDS) + " more",
+                            x + 20, textY, 0xFF888888);
+                    textY += 12;
                     break;
                 }
-                String bidder = entry.getKey().toString().substring(0, 8);
-                String amount = String.format("%.2f", entry.getValue());
-                g.drawString(font, bidder + ": " + amount, x + 20, textY, valueColor);
+
+                String bidderName = getTownName(entry.getKey(), null);
+                String amount = String.format("%.1f", entry.getValue());
+                boolean isHighest = entry.getKey().equals(highestBidder);
+
+                String bidText = truncate(bidderName, 15) + ": " + amount + " ◎";
+                if (isHighest) {
+                    bidText += " ⭐";
+                    g.drawString(font, bidText, x + 20, textY, 0xFF55FF55);
+                } else {
+                    g.drawString(font, bidText, x + 20, textY, valueColor);
+                }
+
                 textY += 12;
                 count++;
             }
         }
 
+        textY += 6;
+
+        // Winner Section (for completed SellContracts)
+        if (contract instanceof SellContract sc && sc.getWinningTownId() != null) {
+            // Draw separator line
+            g.hLine(x + 10, x + WINDOW_WIDTH - 10, textY, 0xFF666666);
+            textY += 8;
+
+            g.drawString(font, "Winner:", x + 10, textY, headerColor);
+            textY += 12;
+
+            String winnerName = getTownName(sc.getWinningTownId(), sc.getWinningTownName());
+            g.drawString(font, "Buyer:", x + 20, textY, labelColor);
+            g.drawString(font, truncate(winnerName, 18), x + 90, textY, 0xFF55FF55);
+            textY += 12;
+
+            g.drawString(font, "Price:", x + 20, textY, labelColor);
+            g.drawString(font, String.format("%.1f ◎", sc.getAcceptedBid()), x + 90, textY, 0xFF55FF55);
+            textY += 12;
+
+            g.drawString(font, "Status:", x + 20, textY, labelColor);
+            String status = sc.isDelivered() ? "Delivered ✓" : "Pending";
+            int statusColor = sc.isDelivered() ? 0xFF55FF55 : 0xFFFFAA00;
+            g.drawString(font, status, x + 90, textY, statusColor);
+        }
+
         super.render(g, mx, my, pt);
+    }
+
+    /**
+     * Get town name from UUID, with fallback to provided name or shortened UUID
+     * Note: This is a client-side screen, so we use cached names from contracts
+     */
+    private String getTownName(UUID townId, String fallbackName) {
+        if (townId == null) {
+            return fallbackName != null ? fallbackName : "Unknown";
+        }
+
+        // Use fallback name if provided (from contract's cached name)
+        if (fallbackName != null && !fallbackName.isEmpty() && !fallbackName.equals("Unknown Town")) {
+            return fallbackName;
+        }
+
+        // Fallback to shortened UUID for bidders (no cached names available)
+        return "Town-" + townId.toString().substring(0, 8);
+    }
+
+    /**
+     * Format timestamp to readable date/time
+     */
+    private String formatTime(long timestamp) {
+        SimpleDateFormat timeFormat = new SimpleDateFormat("MM/dd HH:mm");
+        return timeFormat.format(new Date(timestamp));
+    }
+
+    /**
+     * Format duration in a readable way
+     */
+    private String formatDuration(long millis) {
+        long seconds = millis / 1000;
+        if (seconds < 60) {
+            return seconds + "s";
+        } else if (seconds < 3600) {
+            return (seconds / 60) + "m " + (seconds % 60) + "s";
+        } else {
+            long hours = seconds / 3600;
+            long minutes = (seconds % 3600) / 60;
+            return hours + "h " + minutes + "m";
+        }
+    }
+
+    private String truncate(String text, int maxChars) {
+        if (text == null || text.length() <= maxChars)
+            return text;
+        return text.substring(0, maxChars - 2) + "..";
     }
 
     @Override
@@ -160,5 +270,11 @@ public class ContractDetailScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        // Handle scrolling for long bid lists if needed in future
+        return super.mouseScrolled(mouseX, mouseY, delta);
     }
 }
