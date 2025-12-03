@@ -343,10 +343,32 @@ public class ContractBoard {
                                         sc.getQuantity(), sc.getResourceId(), sellerTown.getName(), sc.getId());
                             }
                         }
-                        // Mark as completed so it moves to history
-                        sc.complete();
+                        // DELETE contract instead of moving to history
+                        removeContract(sc.getId());
+                        LOGGER.info("Deleted contract {} (no bids)", sc.getId());
                         savedData.setDirty();
                     }
+                }
+                // Check for Courier Acceptance Expiry (Auction closed, no courier, expired)
+                else if (sc.isAuctionClosed() && !sc.isCourierAssigned() && sc.isExpired() && !sc.isCompleted()) {
+                    // Assign Snail Mail
+                    sc.setCourierId(SellContract.SNAIL_MAIL_UUID);
+                    sc.setCourierAcceptedTime(System.currentTimeMillis());
+
+                    // Extend expiry for Snail Mail delivery (2x courier time = 2 * 4 min = 8 min)
+                    sc.extendExpiry(480000L);
+
+                    LOGGER.info("Contract {} assigned to Snail Mail (courier acceptance expired)", sc.getId());
+                    savedData.setDirty();
+                    broadcastUpdate();
+                }
+                // Check for Snail Mail Delivery Completion (Snail Mail assigned, expired)
+                else if (sc.isSnailMail() && sc.isExpired() && !sc.isCompleted()) {
+                    // Snail Mail Delivery Complete
+                    sc.complete();
+                    LOGGER.info("Contract {} completed via Snail Mail delivery", sc.getId());
+                    savedData.setDirty();
+                    broadcastUpdate();
                 }
             }
         }

@@ -20,6 +20,12 @@ public class SellContract extends Contract {
     private long courierAcceptedTime;
     private int deliveredAmount;
 
+    public static final UUID SNAIL_MAIL_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+
+    public boolean isSnailMail() {
+        return SNAIL_MAIL_UUID.equals(courierId);
+    }
+
     public SellContract(UUID issuerTownId, String issuerTownName, long duration, String resourceId, int quantity,
             float pricePerUnit) {
         super(issuerTownId, issuerTownName, duration);

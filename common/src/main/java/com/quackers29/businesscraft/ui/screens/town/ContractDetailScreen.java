@@ -294,7 +294,8 @@ public class ContractDetailScreen extends Screen {
 
             g.drawString(font, "Status:", x + 20, textY, labelColor);
             if (sc.isCourierAssigned()) {
-                g.drawString(font, "Assigned", x + 90, textY, 0xFF55FF55);
+                String courierName = sc.isSnailMail() ? "Snail Mail" : "Assigned";
+                g.drawString(font, courierName, x + 90, textY, 0xFF55FF55);
                 textY += 12;
 
                 g.drawString(font, "Progress:", x + 20, textY, labelColor);
