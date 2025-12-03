@@ -13,6 +13,7 @@ public class CourierContract extends Contract {
     private float reward;
     private UUID courierId;
     private long acceptedTime;
+    private int deliveredAmount;
 
     public CourierContract(UUID issuerTownId, String issuerTownName, net.minecraft.core.BlockPos sourceTownPos,
             int sourceTownRadius, long duration, String resourceId, int quantity,
@@ -28,6 +29,7 @@ public class CourierContract extends Contract {
         this.reward = reward;
         this.courierId = null;
         this.acceptedTime = 0;
+        this.deliveredAmount = 0;
     }
 
     public CourierContract(CompoundTag tag) {
@@ -40,6 +42,22 @@ public class CourierContract extends Contract {
 
     public int getQuantity() {
         return quantity;
+    }
+
+    public int getDeliveredAmount() {
+        return deliveredAmount;
+    }
+
+    public void setDeliveredAmount(int deliveredAmount) {
+        this.deliveredAmount = deliveredAmount;
+    }
+
+    public void addDeliveredAmount(int amount) {
+        this.deliveredAmount += amount;
+    }
+
+    public boolean isDelivered() {
+        return deliveredAmount >= quantity;
     }
 
     public UUID getDestinationTownId() {
@@ -91,6 +109,7 @@ public class CourierContract extends Contract {
     protected void saveAdditional(CompoundTag tag) {
         tag.putString("resourceId", resourceId);
         tag.putInt("quantity", quantity);
+        tag.putInt("deliveredAmount", deliveredAmount);
         tag.putUUID("destinationTownId", destinationTownId);
         if (destinationTownName != null) {
             tag.putString("destinationTownName", destinationTownName);
@@ -112,6 +131,9 @@ public class CourierContract extends Contract {
     protected void loadAdditional(CompoundTag tag) {
         resourceId = tag.getString("resourceId");
         quantity = tag.getInt("quantity");
+        if (tag.contains("deliveredAmount")) {
+            deliveredAmount = tag.getInt("deliveredAmount");
+        }
         destinationTownId = tag.getUUID("destinationTownId");
         if (tag.contains("destinationTownName")) {
             destinationTownName = tag.getString("destinationTownName");

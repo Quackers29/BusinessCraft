@@ -89,7 +89,7 @@ if (courierContract.getCourierId() == null) {
 ```
 
 ### Visual Distinction
-- **Curse Enchantments**: Binding Curse + Vanishing Curse provide purple glow effect
+- **Curse Enchantments**: Vanishing Curse provides purple glow effect
 - **Unique Appearance**: Curse enchantments make items visually distinct from normal items
 - **Tooltip Enhancement**: Could add custom hover text (future enhancement)
 
@@ -161,8 +161,6 @@ public void completeContractDelivery(ServerPlayer courier, ItemStack contractIte
     }
 }
 ```
-
-## Technical Considerations
 
 ### NBT Data Structure
 ```java

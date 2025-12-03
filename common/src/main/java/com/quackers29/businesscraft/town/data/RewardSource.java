@@ -42,7 +42,15 @@ public enum RewardSource {
     /**
      * Items for courier pickup
      */
-    COURIER_PICKUP("📦", "Courier Pickup");
+    /**
+     * Items for courier pickup
+     */
+    COURIER_PICKUP("📦", "Courier Pickup"),
+
+    /**
+     * Payment for courier delivery
+     */
+    COURIER_DELIVERY("🚚", "Courier Delivery");
 
     private final String icon;
     private final String displayName;

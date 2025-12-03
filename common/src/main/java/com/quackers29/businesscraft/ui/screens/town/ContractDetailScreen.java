@@ -159,6 +159,13 @@ public class ContractDetailScreen extends Screen {
                 // We don't have courier name cached, so use ID for now or "Player"
                 g.drawString(font, "Assigned", x + 80, textY, 0xFF55FF55);
                 textY += 15;
+
+                // Delivery Progress
+                g.drawString(font, "Delivered:", x + 10, textY, labelColor);
+                String progress = cc.getDeliveredAmount() + " / " + cc.getQuantity();
+                int progressColor = cc.isDelivered() ? 0xFF55FF55 : 0xFFFFAA00;
+                g.drawString(font, progress, x + 80, textY, progressColor);
+                textY += 15;
             }
         }
 

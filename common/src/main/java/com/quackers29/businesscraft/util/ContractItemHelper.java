@@ -35,7 +35,6 @@ public class ContractItemHelper {
         ItemStack stack = new ItemStack(baseItem, quantity);
 
         // Add curse enchantments for visual distinction (purple glow)
-        stack.enchant(Enchantments.BINDING_CURSE, 1);
         stack.enchant(Enchantments.VANISHING_CURSE, 1);
 
         // Store contract data in NBT
@@ -67,9 +66,9 @@ public class ContractItemHelper {
 
         lore.add(Component.literal("═══ Contract Delivery ═══").withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
         lore.add(Component.literal(""));
-        lore.add(Component.literal("From: ").withStyle(ChatFormatting.GRAY)
+        lore.add(Component.literal("Pickup From: ").withStyle(ChatFormatting.GRAY)
                 .append(Component.literal(sourceTown).withStyle(ChatFormatting.WHITE)));
-        lore.add(Component.literal("To: ").withStyle(ChatFormatting.GRAY)
+        lore.add(Component.literal("Deliver To: ").withStyle(ChatFormatting.GRAY)
                 .append(Component.literal(destinationTown).withStyle(ChatFormatting.WHITE)));
         lore.add(Component.literal(""));
         lore.add(Component.literal("Cargo: ").withStyle(ChatFormatting.GRAY)

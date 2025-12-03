@@ -1111,6 +1111,28 @@ public class TownInterfaceEntity extends BlockEntity
         if (stackObj instanceof net.minecraft.world.item.ItemStack stack) {
             if (!stack.isEmpty() && townId != null) {
                 if (level instanceof ServerLevel sLevel) {
+                    // Check if it's a contract item first
+                    if (com.quackers29.businesscraft.util.ContractItemHelper.isContractItem(stack)) {
+                        UUID contractId = com.quackers29.businesscraft.util.ContractItemHelper.getContractId(stack);
+                        CompoundTag contractData = com.quackers29.businesscraft.util.ContractItemHelper
+                                .getContractData(stack);
+
+                        if (contractId != null && contractData != null) {
+                            UUID destTownId = contractData.getUUID("destinationTownId");
+
+                            // Only process if this is the correct destination town
+                            if (townId.equals(destTownId)) {
+                                // Process 1 item per tick
+                                stack.shrink(1);
+                                ContractBoard.get(sLevel).processCourierDelivery(contractId, 1);
+                                setChanged();
+                                level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(),
+                                        Block.UPDATE_ALL);
+                                return; // Don't process as normal resource
+                            }
+                        }
+                    }
+
                     Town town = TownManager.get(sLevel).getTown(townId);
                     if (town != null) {
                         Item item = stack.getItem();

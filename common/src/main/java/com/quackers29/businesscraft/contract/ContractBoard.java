@@ -135,6 +135,51 @@ public class ContractBoard {
         }
     }
 
+    public void processCourierDelivery(UUID contractId, int amount) {
+        Contract contract = getContract(contractId);
+        if (contract instanceof CourierContract cc) {
+            cc.addDeliveredAmount(amount);
+            savedData.setDirty();
+            broadcastUpdate();
+
+            if (cc.isDelivered()) {
+                // Contract Complete!
+                cc.complete();
+                savedData.setDirty();
+                broadcastUpdate();
+
+                // Payout Reward
+                com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
+                        .get(level);
+                com.quackers29.businesscraft.town.Town destTown = townManager.getTown(cc.getDestinationTownId());
+
+                if (destTown != null && cc.getCourierId() != null) {
+                    // Create reward item (Emeralds)
+                    int rewardAmount = (int) cc.getReward();
+                    if (rewardAmount > 0) {
+                        net.minecraft.world.item.ItemStack emeralds = new net.minecraft.world.item.ItemStack(
+                                net.minecraft.world.item.Items.EMERALD, rewardAmount);
+                        List<net.minecraft.world.item.ItemStack> rewards = new ArrayList<>();
+                        rewards.add(emeralds);
+
+                        // Add to destination town's payment board for the courier
+                        com.quackers29.businesscraft.town.data.RewardSource source = com.quackers29.businesscraft.town.data.RewardSource.COURIER_DELIVERY;
+                        UUID rewardId = destTown.getPaymentBoard().addReward(source, rewards,
+                                cc.getCourierId().toString());
+
+                        if (rewardId != null) {
+                            destTown.getPaymentBoard().getRewardById(rewardId).ifPresent(entry -> {
+                                entry.addMetadata("contractId", contractId.toString());
+                            });
+                            LOGGER.info("Courier contract {} completed! Reward {} emeralds added to {} for courier {}",
+                                    contractId, rewardAmount, destTown.getName(), cc.getCourierId());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private void closeAuctions() {
         com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
                 .get(level);
