@@ -4,6 +4,8 @@ import net.minecraft.nbt.CompoundTag;
 import java.util.UUID;
 
 public class CourierContract extends Contract {
+    private net.minecraft.core.BlockPos sourceTownPos;
+    private int sourceTownRadius;
     private String resourceId;
     private int quantity;
     private UUID destinationTownId;
@@ -12,10 +14,13 @@ public class CourierContract extends Contract {
     private UUID courierId;
     private long acceptedTime;
 
-    public CourierContract(UUID issuerTownId, String issuerTownName, long duration, String resourceId, int quantity,
+    public CourierContract(UUID issuerTownId, String issuerTownName, net.minecraft.core.BlockPos sourceTownPos,
+            int sourceTownRadius, long duration, String resourceId, int quantity,
             UUID destinationTownId, String destinationTownName,
             float reward) {
         super(issuerTownId, issuerTownName, duration);
+        this.sourceTownPos = sourceTownPos;
+        this.sourceTownRadius = sourceTownRadius;
         this.resourceId = resourceId;
         this.quantity = quantity;
         this.destinationTownId = destinationTownId;
@@ -69,6 +74,14 @@ public class CourierContract extends Contract {
         return courierId != null;
     }
 
+    public net.minecraft.core.BlockPos getSourceTownPos() {
+        return sourceTownPos;
+    }
+
+    public int getSourceTownRadius() {
+        return sourceTownRadius;
+    }
+
     // UI convenience methods
     public int getAmount() {
         return quantity;
@@ -87,6 +100,12 @@ public class CourierContract extends Contract {
             tag.putUUID("courierId", courierId);
         }
         tag.putLong("acceptedTime", acceptedTime);
+        if (sourceTownPos != null) {
+            tag.putInt("sourceX", sourceTownPos.getX());
+            tag.putInt("sourceY", sourceTownPos.getY());
+            tag.putInt("sourceZ", sourceTownPos.getZ());
+        }
+        tag.putInt("sourceRadius", sourceTownRadius);
     }
 
     @Override
@@ -104,6 +123,11 @@ public class CourierContract extends Contract {
         if (tag.contains("acceptedTime")) {
             acceptedTime = tag.getLong("acceptedTime");
         }
+        if (tag.contains("sourceX")) {
+            sourceTownPos = new net.minecraft.core.BlockPos(tag.getInt("sourceX"), tag.getInt("sourceY"),
+                    tag.getInt("sourceZ"));
+        }
+        sourceTownRadius = tag.getInt("sourceRadius");
     }
 
     @Override

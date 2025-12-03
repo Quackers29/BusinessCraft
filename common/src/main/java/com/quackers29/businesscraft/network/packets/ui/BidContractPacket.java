@@ -49,24 +49,28 @@ public class BidContractPacket {
                 ContractBoard board = ContractBoard.get(level);
                 Contract contract = board.getContract(contractId);
                 if (contract == null || contract.isExpired()) {
-                    LOGGER.warn("Invalid bid on non-existent/expired contract {} by {}", contractId, player.getName().getString());
+                    LOGGER.warn("Invalid bid on non-existent/expired contract {} by {}", contractId,
+                            player.getName().getString());
                     return;
                 }
                 if (contract instanceof CourierContract cc && amount == 0f && cc.getCourierId() == null) {
-                    // Player accepting courier mission
-                    cc.setCourierId(player.getUUID());
-                    LOGGER.info("Player {} accepted courier mission {}", player.getName().getString(), contractId);
+                    // Player accepting courier mission - delegate to ContractBoard
+                    board.addBid(contractId, player.getUUID(), amount, level);
+                    // Logging handled in ContractBoard
                 } else if (contract instanceof SellContract sc && amount > 0f) {
                     // Normal SellContract bid
                     int quantity = sc.getQuantity();
                     if (quantity <= 0) {
-                        LOGGER.warn("Bid rejected on 0-quantity SellContract {} by {}", contractId, player.getName().getString());
+                        LOGGER.warn("Bid rejected on 0-quantity SellContract {} by {}", contractId,
+                                player.getName().getString());
                         return;
                     }
                     board.addBid(contractId, player.getUUID(), amount, level);
-                    LOGGER.info("Player {} bid {} on SellContract {}", player.getName().getString(), amount, contractId);
+                    LOGGER.info("Player {} bid {} on SellContract {}", player.getName().getString(), amount,
+                            contractId);
                 } else {
-                    LOGGER.warn("Invalid bid parameters for contract {} by {}", contractId, player.getName().getString());
+                    LOGGER.warn("Invalid bid parameters for contract {} by {}", contractId,
+                            player.getName().getString());
                     return;
                 }
                 // Sync updated contracts

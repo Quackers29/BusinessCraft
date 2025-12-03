@@ -170,6 +170,8 @@ public class ContractBoard {
                                 CourierContract courier = new CourierContract(
                                         sc.getIssuerTownId(), // Seller is the issuer (source)
                                         sc.getIssuerTownName(),
+                                        sellerTown.getPosition(),
+                                        sellerTown.getBoundaryRadius(),
                                         180000L, // 3 min for courier acceptance
                                         sc.getResourceId(),
                                         sc.getQuantity(),
@@ -260,16 +262,69 @@ public class ContractBoard {
             } else if (contract instanceof CourierContract cc) {
                 // Handle Courier Contract Acceptance
                 if (!cc.isAccepted() && !cc.isExpired()) {
+                    // Verify player location
+                    net.minecraft.server.level.ServerPlayer player = level.getServer().getPlayerList()
+                            .getPlayer(bidder);
+                    if (player == null) {
+                        LOGGER.warn("Cannot accept courier contract: player {} not found", bidder);
+                        return;
+                    }
+
+                    com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
+                            .get(level);
+                    com.quackers29.businesscraft.town.Town sellerTown = townManager.getTown(cc.getIssuerTownId());
+
+                    if (sellerTown == null) {
+                        LOGGER.warn("Cannot accept courier contract: seller town {} not found", cc.getIssuerTownId());
+                        return;
+                    }
+
+                    // Check distance (allow slightly larger radius for leniency)
+                    double distSqr = player.blockPosition().distSqr(sellerTown.getPosition());
+                    double maxDist = sellerTown.getBoundaryRadius() + 10; // +10 buffer
+                    if (distSqr > maxDist * maxDist) {
+                        LOGGER.warn("Cannot accept courier contract: player too far from seller town (dist={}, max={})",
+                                Math.sqrt(distSqr), maxDist);
+                        return;
+                    }
+
                     cc.setCourierId(bidder);
                     cc.setAcceptedTime(System.currentTimeMillis());
 
                     // Update expiry to 4 minutes from now for delivery
-                    long currentExpiry = cc.getExpiryTime();
-                    long newDuration = 240000L; // 4 minutes
-                    long now = System.currentTimeMillis();
+                    cc.extendExpiry(240000L); // 4 minutes
 
-                    long delta = (now + newDuration) - currentExpiry;
-                    cc.extendExpiry(delta);
+                    // Transfer items to Seller Town's Payment Buffer
+                    net.minecraft.world.item.Item item = null;
+                    if ("wood".equals(cc.getResourceId()))
+                        item = net.minecraft.world.item.Items.OAK_LOG;
+                    else if ("iron".equals(cc.getResourceId()))
+                        item = net.minecraft.world.item.Items.IRON_INGOT;
+                    else if ("coal".equals(cc.getResourceId()))
+                        item = net.minecraft.world.item.Items.COAL;
+
+                    if (item != null) {
+                        // Create item stack list
+                        java.util.List<net.minecraft.world.item.ItemStack> rewards = new java.util.ArrayList<>();
+                        rewards.add(new net.minecraft.world.item.ItemStack(item, cc.getQuantity()));
+
+                        // Add to payment board as a claimable reward for the courier
+                        com.quackers29.businesscraft.town.data.RewardSource source = com.quackers29.businesscraft.town.data.RewardSource.COURIER_PICKUP;
+                        java.util.UUID rewardId = sellerTown.getPaymentBoard().addReward(source, rewards,
+                                bidder.toString());
+
+                        if (rewardId != null) {
+                            // Add metadata to link to contract
+                            sellerTown.getPaymentBoard().getRewardById(rewardId).ifPresent(entry -> {
+                                entry.addMetadata("contractId", contractId.toString());
+                            });
+
+                            LOGGER.info("Created courier pickup reward {} for town {} (courier={})",
+                                    rewardId, sellerTown.getName(), bidder);
+                        } else {
+                            LOGGER.warn("Failed to create courier pickup reward for town {}", sellerTown.getName());
+                        }
+                    }
 
                     LOGGER.info("Courier contract {} accepted by {}. New expiry in 4 mins.", contractId, bidder);
                     savedData.setDirty();

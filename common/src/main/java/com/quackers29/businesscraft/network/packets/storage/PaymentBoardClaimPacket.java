@@ -20,7 +20,7 @@ import java.util.UUID;
  */
 public class PaymentBoardClaimPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(PaymentBoardClaimPacket.class);
-    
+
     private final BlockPos townBlockPos;
     private final UUID rewardId;
     private final boolean toBuffer;
@@ -42,14 +42,14 @@ public class PaymentBoardClaimPacket {
         buf.writeUUID(rewardId);
         buf.writeBoolean(toBuffer);
     }
-    
+
     /**
      * Static encode method needed by ModMessages registration
      */
     public static void encode(PaymentBoardClaimPacket msg, FriendlyByteBuf buf) {
         msg.toBytes(buf);
     }
-    
+
     /**
      * Static decode method needed by ModMessages registration
      */
@@ -61,25 +61,25 @@ public class PaymentBoardClaimPacket {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             // Server-side handling
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
-            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                "PaymentBoardClaimPacket.handle() - received claim request from player: {}, rewardId: {}, toBuffer: {}", 
-                senderObj != null ? ((ServerPlayer)senderObj).getName().getString() : "null", rewardId, toBuffer);
-                
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                    "PaymentBoardClaimPacket.handle() - received claim request from player: {}, rewardId: {}, toBuffer: {}",
+                    senderObj != null ? ((ServerPlayer) senderObj).getName().getString() : "null", rewardId, toBuffer);
+
             if (senderObj instanceof ServerPlayer player && player.level() instanceof ServerLevel serverLevel) {
                 handleServerSide(player, serverLevel);
             } else {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                    "PaymentBoardClaimPacket.handle() - Invalid player or level state");
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                        "PaymentBoardClaimPacket.handle() - Invalid player or level state");
             }
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
     }
 
     private void handleServerSide(ServerPlayer player, ServerLevel serverLevel) {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-            "Processing claim request from player {} for reward {} at {}", 
-            player.getName().getString(), rewardId, townBlockPos);
-        
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                "Processing claim request from player {} for reward {} at {}",
+                player.getName().getString(), rewardId, townBlockPos);
+
         try {
             // Get the town block entity
             var blockEntity = serverLevel.getBlockEntity(townBlockPos);
@@ -91,13 +91,13 @@ public class PaymentBoardClaimPacket {
                     if (town != null) {
                         // Attempt to claim the reward
                         TownPaymentBoard.ClaimResult result = town.getPaymentBoard()
-                            .claimReward(rewardId, "ALL", toBuffer);
-                        
+                                .claimReward(rewardId, player.getStringUUID(), toBuffer);
+
                         if (result.isSuccess()) {
-                            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                                "Successfully claimed reward {} for player {} - {}", 
-                                rewardId, player.getName().getString(), result.getMessage());
-                            
+                            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                                    "Successfully claimed reward {} for player {} - {}",
+                                    rewardId, player.getName().getString(), result.getMessage());
+
                             // If not claiming to buffer, try to add items to player inventory
                             if (!toBuffer && !result.getClaimedItems().isEmpty()) {
                                 boolean inventoryFull = false;
@@ -108,65 +108,69 @@ public class PaymentBoardClaimPacket {
                                         inventoryFull = true;
                                     }
                                 }
-                                
+
                                 if (inventoryFull) {
                                     // Notify town block entity that buffer has changed due to overflow
                                     townInterfaceEntity.onTownBufferChanged();
                                     player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                                        "Some items were sent to buffer storage due to full inventory"));
+                                            "Some items were sent to buffer storage due to full inventory"));
                                 }
                             }
-                            
+
                             // Mark town as dirty for saving
                             town.markDirty();
-                            
+
                             // Notify town block entity that buffer has changed
                             townInterfaceEntity.onTownBufferChanged();
-                            
+
                             // Send updated payment board data to client
                             var rewards = town.getPaymentBoard().getUnclaimedRewards();
-                            PlatformAccess.getNetworkMessages().sendToPlayer(new PaymentBoardResponsePacket(rewards), player);
-                            
+                            PlatformAccess.getNetworkMessages().sendToPlayer(new PaymentBoardResponsePacket(rewards),
+                                    player);
+
                             // Send updated buffer storage data to client using new slot-based packet
                             var bufferSlots = town.getPaymentBoard().getBufferStorageSlots();
-                            PlatformAccess.getNetworkMessages().sendToPlayer(new com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket(bufferSlots), player);
-                            
+                            PlatformAccess.getNetworkMessages().sendToPlayer(
+                                    new com.quackers29.businesscraft.network.packets.storage.BufferSlotStorageResponsePacket(
+                                            bufferSlots),
+                                    player);
+
                             // Send success message to player
                             player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                                "§a" + result.getMessage()));
-                            
+                                    "§a" + result.getMessage()));
+
                         } else {
-                            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                                "Failed to claim reward {} for player {} - {}", 
-                                rewardId, player.getName().getString(), result.getMessage());
-                            
+                            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                                    "Failed to claim reward {} for player {} - {}",
+                                    rewardId, player.getName().getString(), result.getMessage());
+
                             // Send failure message to player
                             player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                                "§c" + result.getMessage()));
+                                    "§c" + result.getMessage()));
                         }
                     } else {
-                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                            "No town found for ID: {}", townId);
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                                "No town found for ID: {}", townId);
                         player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                            "§cError: Town not found"));
+                                "§cError: Town not found"));
                     }
                 } else {
-                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                        "Town block at {} has no town ID", townBlockPos);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                            "Town block at {} has no town ID", townBlockPos);
                     player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                        "§cError: Town block not properly configured"));
+                            "§cError: Town block not properly configured"));
                 }
             } else {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                    "Block at {} is not a TownInterfaceEntity", townBlockPos);
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                        "Block at {} is not a TownInterfaceEntity", townBlockPos);
                 player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                    "§cError: Invalid town block"));
+                        "§cError: Invalid town block"));
             }
         } catch (Exception e) {
-            LOGGER.error("Error handling claim request from player {}", 
-                player.getName().getString(), e);
+            LOGGER.error("Error handling claim request from player {}",
+                    player.getName().getString(), e);
             player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                "§cError: Failed to process claim request"));
+                    "§cError: Failed to process claim request"));
         }
     }
 }

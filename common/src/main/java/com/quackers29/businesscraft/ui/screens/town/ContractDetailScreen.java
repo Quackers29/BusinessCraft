@@ -58,14 +58,31 @@ public class ContractDetailScreen extends Screen {
         if (quantity > 0 && !contract.isExpired()) {
             if (tabIndex == 1 && contract instanceof CourierContract cc && !cc.isAccepted()) {
                 // Active tab: Accept Courier button
-                this.addRenderableWidget(Button.builder(Component.literal("Accept Courier"), b -> {
+                boolean canAccept = false;
+                if (cc.getSourceTownPos() != null) {
+                    net.minecraft.client.player.LocalPlayer player = net.minecraft.client.Minecraft
+                            .getInstance().player;
+                    if (player != null) {
+                        double distSqr = player.blockPosition().distSqr(cc.getSourceTownPos());
+                        double maxDist = cc.getSourceTownRadius(); // no buffer
+                        canAccept = distSqr <= maxDist * maxDist;
+                    }
+                }
+
+                Button acceptBtn = Button.builder(Component.literal("Accept Courier"), b -> {
                     PlatformAccess.getNetworkMessages().sendToServer(new BidContractPacket(contract.getId(), 0f)); // Placeholder
                                                                                                                    // for
                                                                                                                    // accept
                     onClose();
                 })
                         .bounds(x + 10, y + WINDOW_HEIGHT - 25, 90, 20)
-                        .build());
+                        .build();
+
+                if (!canAccept) {
+                    acceptBtn.active = false;
+                    acceptBtn.setMessage(Component.literal("Too Far"));
+                }
+                this.addRenderableWidget(acceptBtn);
             }
         }
     }
