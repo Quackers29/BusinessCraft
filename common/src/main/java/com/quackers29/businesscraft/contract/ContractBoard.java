@@ -295,18 +295,28 @@ public class ContractBoard {
                     cc.extendExpiry(240000L); // 4 minutes
 
                     // Transfer items to Seller Town's Payment Buffer
-                    net.minecraft.world.item.Item item = null;
-                    if ("wood".equals(cc.getResourceId()))
-                        item = net.minecraft.world.item.Items.OAK_LOG;
-                    else if ("iron".equals(cc.getResourceId()))
-                        item = net.minecraft.world.item.Items.IRON_INGOT;
-                    else if ("coal".equals(cc.getResourceId()))
-                        item = net.minecraft.world.item.Items.COAL;
+                    if (cc.getResourceId() != null) {
+                        // Get town names for lore
+                        String destTownName = "Unknown";
+                        com.quackers29.businesscraft.town.Town destTown = townManager
+                                .getTown(cc.getDestinationTownId());
+                        if (destTown != null) {
+                            destTownName = destTown.getName();
+                        }
 
-                    if (item != null) {
-                        // Create item stack list
+                        // Create contract item with NBT data and enchantments
+                        net.minecraft.world.item.ItemStack contractItem = com.quackers29.businesscraft.util.ContractItemHelper
+                                .createContractItem(
+                                        cc.getResourceId(),
+                                        cc.getQuantity(),
+                                        contractId,
+                                        cc.getDestinationTownId(),
+                                        destTownName,
+                                        sellerTown.getName());
+
+                        // Create item stack list with the contract item
                         java.util.List<net.minecraft.world.item.ItemStack> rewards = new java.util.ArrayList<>();
-                        rewards.add(new net.minecraft.world.item.ItemStack(item, cc.getQuantity()));
+                        rewards.add(contractItem);
 
                         // Add to payment board as a claimable reward for the courier
                         com.quackers29.businesscraft.town.data.RewardSource source = com.quackers29.businesscraft.town.data.RewardSource.COURIER_PICKUP;
@@ -319,7 +329,7 @@ public class ContractBoard {
                                 entry.addMetadata("contractId", contractId.toString());
                             });
 
-                            LOGGER.info("Created courier pickup reward {} for town {} (courier={})",
+                            LOGGER.info("Created courier pickup reward {} for town {} (courier={}) with contract item",
                                     rewardId, sellerTown.getName(), bidder);
                         } else {
                             LOGGER.warn("Failed to create courier pickup reward for town {}", sellerTown.getName());
