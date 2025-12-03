@@ -56,6 +56,7 @@ public class ContractDetailScreen extends Screen {
         }
 
         if (quantity > 0 && !contract.isExpired()) {
+            // Check for CourierContract acceptance
             if (tabIndex == 1 && contract instanceof CourierContract cc && !cc.isAccepted()) {
                 // Active tab: Accept Courier button
                 boolean canAccept = false;
@@ -70,9 +71,7 @@ public class ContractDetailScreen extends Screen {
                 }
 
                 Button acceptBtn = Button.builder(Component.literal("Accept Courier"), b -> {
-                    PlatformAccess.getNetworkMessages().sendToServer(new BidContractPacket(contract.getId(), 0f)); // Placeholder
-                                                                                                                   // for
-                                                                                                                   // accept
+                    PlatformAccess.getNetworkMessages().sendToServer(new BidContractPacket(contract.getId(), 0f));
                     onClose();
                 })
                         .bounds(x + 10, y + WINDOW_HEIGHT - 25, 90, 20)
@@ -82,6 +81,41 @@ public class ContractDetailScreen extends Screen {
                     acceptBtn.active = false;
                     acceptBtn.setMessage(Component.literal("Too Far"));
                 }
+                this.addRenderableWidget(acceptBtn);
+            }
+            // Check for SellContract courier acceptance
+            else if (tabIndex == 1 && contract instanceof SellContract sc && sc.isAuctionClosed()
+                    && !sc.isCourierAssigned()) {
+                // Active tab: Accept Courier Job for SellContract
+                boolean canAccept = false;
+
+                // Check if we are at the seller's town
+                if (parentScreen instanceof ContractBoardScreen cbs) {
+                    net.minecraft.core.BlockPos pos = cbs.getMenu().getTownBlockPos();
+                    if (pos != null && net.minecraft.client.Minecraft.getInstance().level != null) {
+                        net.minecraft.world.level.block.entity.BlockEntity be = net.minecraft.client.Minecraft
+                                .getInstance().level.getBlockEntity(pos);
+                        if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity tie) {
+                            UUID currentTownId = tie.getTownId();
+                            if (currentTownId != null && currentTownId.equals(sc.getIssuerTownId())) {
+                                canAccept = true;
+                            }
+                        }
+                    }
+                }
+
+                Button acceptBtn = Button.builder(Component.literal("Accept Job"), b -> {
+                    PlatformAccess.getNetworkMessages().sendToServer(new BidContractPacket(contract.getId(), 0f));
+                    onClose();
+                })
+                        .bounds(x + 10, y + WINDOW_HEIGHT - 25, 90, 20)
+                        .build();
+
+                if (!canAccept) {
+                    acceptBtn.active = false;
+                    acceptBtn.setMessage(Component.literal("Wrong Town"));
+                }
+
                 this.addRenderableWidget(acceptBtn);
             }
         }
@@ -248,6 +282,29 @@ public class ContractDetailScreen extends Screen {
 
             g.drawString(font, "Price:", x + 20, textY, labelColor);
             g.drawString(font, String.format("%.1f ◎", sc.getAcceptedBid()), x + 90, textY, 0xFF55FF55);
+            textY += 15;
+
+            // Courier Info for SellContract
+            g.drawString(font, "Courier Info:", x + 10, textY, headerColor);
+            textY += 12;
+
+            g.drawString(font, "Reward:", x + 20, textY, labelColor);
+            g.drawString(font, String.format("%.1f ◎", sc.getCourierReward()), x + 90, textY, 0xFF55FF55);
+            textY += 12;
+
+            g.drawString(font, "Status:", x + 20, textY, labelColor);
+            if (sc.isCourierAssigned()) {
+                g.drawString(font, "Assigned", x + 90, textY, 0xFF55FF55);
+                textY += 12;
+
+                g.drawString(font, "Progress:", x + 20, textY, labelColor);
+                String progress = sc.getDeliveredAmount() + " / " + sc.getQuantity();
+                int progressColor = sc.isDeliveryComplete() ? 0xFF55FF55 : 0xFFFFAA00;
+                g.drawString(font, progress, x + 90, textY, progressColor);
+            } else {
+                g.drawString(font, "Waiting for Courier", x + 90, textY, 0xFFFFAA00);
+            }
+            textY += 12;
             textY += 12;
 
             g.drawString(font, "Status:", x + 20, textY, labelColor);

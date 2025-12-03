@@ -4,14 +4,21 @@ import net.minecraft.nbt.CompoundTag;
 import java.util.UUID;
 
 public class SellContract extends Contract {
+    // Original SellContract fields
     private String resourceId;
     private int quantity;
     private float pricePerUnit;
     private UUID buyerTownId;
-    private UUID winningTownId; // Town that won the auction
-    private String winningTownName; // Cached name of winning town
-    private float acceptedBid; // Winning bid amount
-    private boolean isDelivered; // Track if items/money have been transferred
+    private UUID winningTownId;
+    private String winningTownName;
+    private float acceptedBid;
+    private boolean isDelivered;
+
+    // Courier Phase Fields
+    private UUID courierId;
+    private float courierReward;
+    private long courierAcceptedTime;
+    private int deliveredAmount;
 
     public SellContract(UUID issuerTownId, String issuerTownName, long duration, String resourceId, int quantity,
             float pricePerUnit) {
@@ -24,6 +31,12 @@ public class SellContract extends Contract {
         this.winningTownName = null;
         this.acceptedBid = 0f;
         this.isDelivered = false;
+
+        // Courier defaults
+        this.courierId = null;
+        this.courierReward = 0f;
+        this.courierAcceptedTime = 0L;
+        this.deliveredAmount = 0;
     }
 
     public SellContract(CompoundTag tag) {
@@ -77,7 +90,8 @@ public class SellContract extends Contract {
     }
 
     public boolean isAuctionClosed() {
-        return isExpired() && winningTownId != null;
+        // Auction is closed if we have a winner
+        return winningTownId != null;
     }
 
     public boolean isDelivered() {
@@ -86,6 +100,52 @@ public class SellContract extends Contract {
 
     public void setDelivered(boolean delivered) {
         this.isDelivered = delivered;
+    }
+
+    // Courier Methods
+
+    public UUID getCourierId() {
+        return courierId;
+    }
+
+    public void setCourierId(UUID courierId) {
+        this.courierId = courierId;
+    }
+
+    public float getCourierReward() {
+        return courierReward;
+    }
+
+    public void setCourierReward(float courierReward) {
+        this.courierReward = courierReward;
+    }
+
+    public long getCourierAcceptedTime() {
+        return courierAcceptedTime;
+    }
+
+    public void setCourierAcceptedTime(long courierAcceptedTime) {
+        this.courierAcceptedTime = courierAcceptedTime;
+    }
+
+    public int getDeliveredAmount() {
+        return deliveredAmount;
+    }
+
+    public void setDeliveredAmount(int deliveredAmount) {
+        this.deliveredAmount = deliveredAmount;
+    }
+
+    public void addDeliveredAmount(int amount) {
+        this.deliveredAmount += amount;
+    }
+
+    public boolean isCourierAssigned() {
+        return courierId != null;
+    }
+
+    public boolean isDeliveryComplete() {
+        return deliveredAmount >= quantity;
     }
 
     // UI convenience methods
@@ -115,6 +175,14 @@ public class SellContract extends Contract {
         }
         tag.putFloat("acceptedBid", acceptedBid);
         tag.putBoolean("isDelivered", isDelivered);
+
+        // Courier fields
+        if (courierId != null) {
+            tag.putUUID("courierId", courierId);
+        }
+        tag.putFloat("courierReward", courierReward);
+        tag.putLong("courierAcceptedTime", courierAcceptedTime);
+        tag.putInt("deliveredAmount", deliveredAmount);
     }
 
     @Override
@@ -133,6 +201,20 @@ public class SellContract extends Contract {
         }
         acceptedBid = tag.getFloat("acceptedBid");
         isDelivered = tag.getBoolean("isDelivered");
+
+        // Courier fields
+        if (tag.hasUUID("courierId")) {
+            courierId = tag.getUUID("courierId");
+        }
+        if (tag.contains("courierReward")) {
+            courierReward = tag.getFloat("courierReward");
+        }
+        if (tag.contains("courierAcceptedTime")) {
+            courierAcceptedTime = tag.getLong("courierAcceptedTime");
+        }
+        if (tag.contains("deliveredAmount")) {
+            deliveredAmount = tag.getInt("deliveredAmount");
+        }
     }
 
     @Override

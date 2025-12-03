@@ -57,17 +57,27 @@ public class BidContractPacket {
                     // Player accepting courier mission - delegate to ContractBoard
                     board.addBid(contractId, player.getUUID(), amount, level);
                     // Logging handled in ContractBoard
-                } else if (contract instanceof SellContract sc && amount > 0f) {
-                    // Normal SellContract bid
-                    int quantity = sc.getQuantity();
-                    if (quantity <= 0) {
-                        LOGGER.warn("Bid rejected on 0-quantity SellContract {} by {}", contractId,
+                } else if (contract instanceof SellContract sc) {
+                    if (amount > 0f) {
+                        // Normal SellContract bid
+                        int quantity = sc.getQuantity();
+                        if (quantity <= 0) {
+                            LOGGER.warn("Bid rejected on 0-quantity SellContract {} by {}", contractId,
+                                    player.getName().getString());
+                            return;
+                        }
+                        board.addBid(contractId, player.getUUID(), amount, level);
+                        LOGGER.info("Player {} bid {} on SellContract {}", player.getName().getString(), amount,
+                                contractId);
+                    } else if (amount == 0f && sc.isAuctionClosed() && !sc.isCourierAssigned()) {
+                        // Courier acceptance for SellContract
+                        board.addBid(contractId, player.getUUID(), amount, level);
+                        // Logging handled in ContractBoard
+                    } else {
+                        LOGGER.warn("Invalid bid amount {} for SellContract {} by {}", amount, contractId,
                                 player.getName().getString());
                         return;
                     }
-                    board.addBid(contractId, player.getUUID(), amount, level);
-                    LOGGER.info("Player {} bid {} on SellContract {}", player.getName().getString(), amount,
-                            contractId);
                 } else {
                     LOGGER.warn("Invalid bid parameters for contract {} by {}", contractId,
                             player.getName().getString());

@@ -137,7 +137,51 @@ public class ContractBoard {
 
     public void processCourierDelivery(UUID contractId, int amount) {
         Contract contract = getContract(contractId);
-        if (contract instanceof CourierContract cc) {
+
+        // Handle SellContract (unified contract)
+        if (contract instanceof SellContract sc) {
+            sc.addDeliveredAmount(amount);
+            savedData.setDirty();
+            broadcastUpdate();
+
+            if (sc.isDeliveryComplete()) {
+                // Delivery Complete!
+                sc.complete();
+                savedData.setDirty();
+                broadcastUpdate();
+
+                // Payout Reward to courier
+                com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
+                        .get(level);
+                com.quackers29.businesscraft.town.Town destTown = townManager.getTown(sc.getWinningTownId());
+
+                if (destTown != null && sc.getCourierId() != null) {
+                    // Create reward item (Emeralds)
+                    int rewardAmount = (int) sc.getCourierReward();
+                    if (rewardAmount > 0) {
+                        net.minecraft.world.item.ItemStack emeralds = new net.minecraft.world.item.ItemStack(
+                                net.minecraft.world.item.Items.EMERALD, rewardAmount);
+                        List<net.minecraft.world.item.ItemStack> rewards = new ArrayList<>();
+                        rewards.add(emeralds);
+
+                        // Add to destination town's payment board for the courier
+                        com.quackers29.businesscraft.town.data.RewardSource source = com.quackers29.businesscraft.town.data.RewardSource.COURIER_DELIVERY;
+                        UUID rewardId = destTown.getPaymentBoard().addReward(source, rewards,
+                                sc.getCourierId().toString());
+
+                        if (rewardId != null) {
+                            destTown.getPaymentBoard().getRewardById(rewardId).ifPresent(entry -> {
+                                entry.addMetadata("contractId", contractId.toString());
+                            });
+                            LOGGER.info("Contract {} delivery completed! Reward {} emeralds added to {} for courier {}",
+                                    contractId, rewardAmount, destTown.getName(), sc.getCourierId());
+                        }
+                    }
+                }
+            }
+        }
+        // Legacy CourierContract support
+        else if (contract instanceof CourierContract cc) {
             cc.addDeliveredAmount(amount);
             savedData.setDirty();
             broadcastUpdate();
@@ -180,6 +224,69 @@ public class ContractBoard {
         }
     }
 
+    private void handleCourierAcceptance(SellContract sc, UUID contractId, UUID courierId, ServerLevel level) {
+        // Verify player location at seller town
+        net.minecraft.server.level.ServerPlayer player = level.getServer().getPlayerList()
+                .getPlayer(courierId);
+        if (player == null) {
+            LOGGER.warn("Cannot accept courier job: player {} not found", courierId);
+            return;
+        }
+
+        com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
+                .get(level);
+        com.quackers29.businesscraft.town.Town sellerTown = townManager.getTown(sc.getIssuerTownId());
+
+        if (sellerTown == null) {
+            LOGGER.warn("Cannot accept courier job: seller town {} not found", sc.getIssuerTownId());
+            return;
+        }
+
+        // Check distance
+        double distSqr = player.blockPosition().distSqr(sellerTown.getPosition());
+        double maxDist = sellerTown.getBoundaryRadius() + 10;
+        if (distSqr > maxDist * maxDist) {
+            LOGGER.warn("Cannot accept courier job: player too far from seller town (dist={}, max={})",
+                    Math.sqrt(distSqr), maxDist);
+            return;
+        }
+
+        sc.setCourierId(courierId);
+        sc.setCourierAcceptedTime(System.currentTimeMillis());
+
+        // Extend expiry for delivery (4 minutes)
+        sc.extendExpiry(240000L);
+
+        // Create contract items and add to seller town's payment board
+        String destTownName = sc.getWinningTownName() != null ? sc.getWinningTownName() : "Unknown";
+        net.minecraft.world.item.ItemStack contractItem = com.quackers29.businesscraft.util.ContractItemHelper
+                .createContractItem(
+                        sc.getResourceId(),
+                        sc.getQuantity(),
+                        contractId,
+                        sc.getWinningTownId(),
+                        destTownName,
+                        sellerTown.getName());
+
+        java.util.List<net.minecraft.world.item.ItemStack> rewards = new java.util.ArrayList<>();
+        rewards.add(contractItem);
+
+        com.quackers29.businesscraft.town.data.RewardSource source = com.quackers29.businesscraft.town.data.RewardSource.COURIER_PICKUP;
+        UUID rewardId = sellerTown.getPaymentBoard().addReward(source, rewards,
+                courierId.toString());
+
+        if (rewardId != null) {
+            sellerTown.getPaymentBoard().getRewardById(rewardId).ifPresent(entry -> {
+                entry.addMetadata("contractId", contractId.toString());
+            });
+            LOGGER.info("Courier job {} accepted by {}. Pickup reward {} added to town {}",
+                    contractId, courierId, rewardId, sellerTown.getName());
+        }
+
+        savedData.setDirty();
+        broadcastUpdate();
+    }
+
     private void closeAuctions() {
         com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
                 .get(level);
@@ -205,33 +312,17 @@ public class ContractBoard {
                             }
 
                             sc.setAcceptedBid(highestBid);
-                            sc.complete();
-                            sc.extendExpiry(90000L); // 90 seconds for Active phase
+                            // DON'T complete yet - needs courier & delivery
+                            // sc.complete(); // REMOVED
 
-                            // Auto-create CourierContract for delivery from seller to buyer
-                            com.quackers29.businesscraft.town.Town sellerTown = townManager
-                                    .getTown(sc.getIssuerTownId());
-                            if (sellerTown != null) {
-                                CourierContract courier = new CourierContract(
-                                        sc.getIssuerTownId(), // Seller is the issuer (source)
-                                        sc.getIssuerTownName(),
-                                        sellerTown.getPosition(),
-                                        sellerTown.getBoundaryRadius(),
-                                        180000L, // 3 min for courier acceptance
-                                        sc.getResourceId(),
-                                        sc.getQuantity(),
-                                        highestBidder, // Buyer is the destination
-                                        winnerTown != null ? winnerTown.getName() : "Unknown",
-                                        highestBid * 0.25f); // 25% reward
-                                addContract(courier);
-                                LOGGER.info(
-                                        "Created auto-courier {} for SellContract {} (seller={} [{}] to buyer={} [{}])",
-                                        courier.getId(), sc.getId(), sc.getIssuerTownId(), sc.getIssuerTownName(),
-                                        highestBidder, winnerTown != null ? winnerTown.getName() : "Unknown");
-                            }
+                            // Set courier reward (25% of bid)
+                            sc.setCourierReward(highestBid * 0.25f);
 
-                            LOGGER.info("Auction closed for contract {}: Winner={}, Bid={}",
-                                    sc.getId(), highestBidder, highestBid);
+                            // Extend expiry for courier acceptance (3 min)
+                            sc.extendExpiry(180000L);
+
+                            LOGGER.info("Auction closed for contract {}: Winner={}, Bid={}, CourierReward={}",
+                                    sc.getId(), highestBidder, highestBid, sc.getCourierReward());
                             savedData.setDirty();
                         }
                     } else {
@@ -264,9 +355,18 @@ public class ContractBoard {
     public void addBid(UUID contractId, UUID bidder, float amount, ServerLevel level) {
         Contract contract = getContract(contractId);
         if (contract != null) {
-            if (contract instanceof SellContract) {
+            if (contract instanceof SellContract sc) {
                 com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
                         .get(level);
+
+                // Check if this is a courier acceptance (contract has winner but no courier)
+                if (sc.getWinningTownId() != null && !sc.isCourierAssigned() && !sc.isExpired()) {
+                    // Handle courier assignment
+                    handleCourierAcceptance(sc, contractId, bidder, level);
+                    return;
+                }
+
+                // Otherwise, handle normal auction bidding
                 com.quackers29.businesscraft.town.Town bidderTown = townManager.getTown(bidder);
 
                 if (bidderTown == null) {

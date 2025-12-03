@@ -128,13 +128,16 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     private List<Contract> filterContractsByTab() {
         return currentContracts.stream().filter(c -> {
             switch (selectedTab) {
-                case 0: // Auction - SellContracts not completed/expired
-                    return c instanceof SellContract && !c.isCompleted() && !c.isExpired();
-                case 1: // Active - SellContracts completed !expired OR any Courier !expired
-                    return (c instanceof SellContract && c.isCompleted() && !c.isExpired()) ||
-                           (c instanceof CourierContract && !c.isExpired());
-                case 2: // History - expired contracts
-                    return c.isExpired();
+                case 0: // Auction - SellContracts where auction is NOT closed (no winner yet)
+                    return c instanceof SellContract sc && !sc.isAuctionClosed() && !c.isExpired();
+                case 1: // Active - SellContracts where auction IS closed (winner exists) but not fully
+                        // completed/expired
+                        // OR any Courier !expired
+                    return (c instanceof SellContract sc && sc.isAuctionClosed() && !c.isCompleted() && !c.isExpired())
+                            ||
+                            (c instanceof CourierContract && !c.isExpired());
+                case 2: // History - expired contracts or completed contracts
+                    return c.isExpired() || c.isCompleted();
             }
             return false;
         }).collect(Collectors.toList());
@@ -288,7 +291,8 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
 
     private void returnToTownInterface() {
         this.onClose();
-        ScreenNavigationHelper.returnToTownInterface(this.minecraft, this.minecraft.player, this.menu.getTownBlockPos());
+        ScreenNavigationHelper.returnToTownInterface(this.minecraft, this.minecraft.player,
+                this.menu.getTownBlockPos());
     }
 
     private void startBid(UUID id) {
