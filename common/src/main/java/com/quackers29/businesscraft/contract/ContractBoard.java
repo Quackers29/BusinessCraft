@@ -81,7 +81,7 @@ public class ContractBoard {
         // Check for contracts that have finished their "Active" phase (delivery time)
         for (Contract contract : savedData.getContracts()) {
             if (contract instanceof SellContract sc) {
-                if (sc.isCompleted() && sc.isExpired() && !sc.isDelivered()) {
+                if (sc.isCompleted() && !sc.isDelivered()) {
                     processContractDelivery(sc, level);
                 }
             }
@@ -144,7 +144,7 @@ public class ContractBoard {
             savedData.setDirty();
             broadcastUpdate();
 
-            if (sc.isDeliveryComplete()) {
+            if (sc.isDeliveryComplete() && !sc.isCompleted()) {
                 // Delivery Complete!
                 sc.complete();
                 savedData.setDirty();
@@ -414,8 +414,8 @@ public class ContractBoard {
                 LOGGER.info("Escrowed {} emeralds from town {} for bid on contract {}",
                         (int) amount, bidderTown.getName(), contractId);
 
-                // ESCROW: Refund emeralds to previous highest bidder (if different)
-                if (previousHighestBidder != null && !previousHighestBidder.equals(bidder)) {
+                // ESCROW: Refund emeralds to previous highest bidder
+                if (previousHighestBidder != null) {
                     com.quackers29.businesscraft.town.Town previousTown = townManager.getTown(previousHighestBidder);
                     if (previousTown != null) {
                         previousTown.addResource(net.minecraft.world.item.Items.EMERALD, (int) previousHighestBid);

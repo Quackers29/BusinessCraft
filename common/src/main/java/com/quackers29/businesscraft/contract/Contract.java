@@ -90,6 +90,17 @@ public abstract class Contract {
         tag.putLong("creationTime", creationTime);
         tag.putLong("expiryTime", expiryTime);
         tag.putBoolean("isCompleted", isCompleted);
+
+        // Save bids
+        net.minecraft.nbt.ListTag bidsList = new net.minecraft.nbt.ListTag();
+        for (Map.Entry<UUID, Float> entry : bids.entrySet()) {
+            CompoundTag bidTag = new CompoundTag();
+            bidTag.putUUID("bidder", entry.getKey());
+            bidTag.putFloat("amount", entry.getValue());
+            bidsList.add(bidTag);
+        }
+        tag.put("bids", bidsList);
+
         saveAdditional(tag);
     }
 
@@ -104,6 +115,17 @@ public abstract class Contract {
         creationTime = tag.getLong("creationTime");
         expiryTime = tag.getLong("expiryTime");
         isCompleted = tag.getBoolean("isCompleted");
+
+        // Load bids
+        bids.clear();
+        if (tag.contains("bids")) {
+            net.minecraft.nbt.ListTag bidsList = tag.getList("bids", 10); // 10 = CompoundTag
+            for (int i = 0; i < bidsList.size(); i++) {
+                CompoundTag bidTag = bidsList.getCompound(i);
+                bids.put(bidTag.getUUID("bidder"), bidTag.getFloat("amount"));
+            }
+        }
+
         loadAdditional(tag);
     }
 
