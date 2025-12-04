@@ -123,6 +123,11 @@ public class PacketRegistry {
                                 RequestTownPlatformDataPacket::decode, RequestTownPlatformDataPacket::encode,
                                 RequestTownPlatformDataPacket::handle);
 
+                register(RequestTownMapDataPacket.class, "request_town_map_data_packet",
+                                NetworkDirection.PLAY_TO_SERVER,
+                                RequestTownMapDataPacket::decode, RequestTownMapDataPacket::encode,
+                                RequestTownMapDataPacket::handle);
+
                 register(TradeResourcePacket.class, "trade_resource_packet", NetworkDirection.PLAY_TO_SERVER,
                                 TradeResourcePacket::decode, TradeResourcePacket::encode, TradeResourcePacket::handle);
 
