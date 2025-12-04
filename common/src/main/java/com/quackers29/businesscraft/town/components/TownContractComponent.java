@@ -47,6 +47,8 @@ public class TownContractComponent implements TownComponent {
         scanForBids(currentTime);
     }
 
+    private static final float MAX_BID_MULTIPLIER = 3.0f; // Don't pay more than 3x base price
+
     private void processPendingBids(long currentTime) {
         if (pendingBids.isEmpty())
             return;
@@ -75,6 +77,11 @@ public class TownContractComponent implements TownComponent {
                 // Re-evaluate and place bid
                 Contract contract = board.getContract(contractId);
                 if (contract instanceof SellContract sc && !sc.isExpired()) {
+                    // Don't bid if auction is closed (courier phase)
+                    if (sc.isAuctionClosed()) {
+                        continue;
+                    }
+
                     // Check if already the highest bidder (again, just in case)
                     if (town.getId().equals(sc.getHighestBidder())) {
                         continue;
@@ -84,6 +91,13 @@ public class TownContractComponent implements TownComponent {
                     float currentHighest = sc.getHighestBid();
                     float basePrice = sc.getPricePerUnit() * sc.getQuantity();
                     float bid = (currentHighest > 0 ? currentHighest : basePrice) * 1.1f;
+
+                    // Check max bid limit
+                    if (bid > basePrice * MAX_BID_MULTIPLIER) {
+                        LOGGER.debug("Town {} skipping bid on {} - price too high ({} > {} * {})",
+                                town.getName(), sc.getId(), bid, basePrice, MAX_BID_MULTIPLIER);
+                        continue;
+                    }
 
                     // ESCROW: Check if town has enough emeralds before bidding
                     int emeraldCount = town.getResourceCount(Items.EMERALD);
@@ -132,6 +146,11 @@ public class TownContractComponent implements TownComponent {
                     continue;
                 }
 
+                // Don't bid if auction is closed (courier phase)
+                if (sc.isAuctionClosed()) {
+                    continue;
+                }
+
                 // Don't schedule if already pending
                 if (pendingBids.containsKey(sc.getId())) {
                     continue;
@@ -163,6 +182,15 @@ public class TownContractComponent implements TownComponent {
                 if (item != null && currentCount < NEED_THRESHOLD) {
                     // Check if already the highest bidder
                     if (town.getId().equals(sc.getHighestBidder())) {
+                        continue;
+                    }
+
+                    // Pre-check max bid (approximate)
+                    float currentHighest = sc.getHighestBid();
+                    float basePrice = sc.getPricePerUnit() * sc.getQuantity();
+                    float projectedBid = (currentHighest > 0 ? currentHighest : basePrice) * 1.1f;
+
+                    if (projectedBid > basePrice * MAX_BID_MULTIPLIER) {
                         continue;
                     }
 
