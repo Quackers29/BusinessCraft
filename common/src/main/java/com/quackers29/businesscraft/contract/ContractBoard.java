@@ -406,21 +406,25 @@ public class ContractBoard {
                 UUID previousHighestBidder = contract.getHighestBidder();
                 float previousHighestBid = contract.getHighestBid();
 
+                // Round up bid amount (emeralds are integers)
+                float roundedAmount = (float) Math.ceil(amount);
+
                 // Add the bid to the contract
-                contract.addBid(bidder, amount);
+                contract.addBid(bidder, bidderTown.getName(), roundedAmount);
 
                 // ESCROW: Deduct emeralds from new bidder
-                bidderTown.addResource(net.minecraft.world.item.Items.EMERALD, -(int) amount);
+                bidderTown.addResource(net.minecraft.world.item.Items.EMERALD, -(int) roundedAmount);
                 LOGGER.info("Escrowed {} emeralds from town {} for bid on contract {}",
-                        (int) amount, bidderTown.getName(), contractId);
+                        (int) roundedAmount, bidderTown.getName(), contractId);
 
                 // ESCROW: Refund emeralds to previous highest bidder
                 if (previousHighestBidder != null) {
                     com.quackers29.businesscraft.town.Town previousTown = townManager.getTown(previousHighestBidder);
                     if (previousTown != null) {
-                        previousTown.addResource(net.minecraft.world.item.Items.EMERALD, (int) previousHighestBid);
+                        int refundAmount = (int) Math.ceil(previousHighestBid);
+                        previousTown.addResource(net.minecraft.world.item.Items.EMERALD, refundAmount);
                         LOGGER.info("Refunded {} emeralds to town {} (outbid on contract {})",
-                                (int) previousHighestBid, previousTown.getName(), contractId);
+                                refundAmount, previousTown.getName(), contractId);
                     }
                 }
 

@@ -67,8 +67,17 @@ public abstract class Contract {
         return bids;
     }
 
-    public void addBid(UUID bidder, float amount) {
+    protected Map<UUID, String> bidderNames = new HashMap<>();
+
+    public void addBid(UUID bidder, String name, float amount) {
         bids.put(bidder, Math.max(bids.getOrDefault(bidder, 0f), amount));
+        if (name != null) {
+            bidderNames.put(bidder, name);
+        }
+    }
+
+    public String getBidderName(UUID bidder) {
+        return bidderNames.getOrDefault(bidder, "Unknown Town");
     }
 
     public float getHighestBid() {
@@ -97,6 +106,10 @@ public abstract class Contract {
             CompoundTag bidTag = new CompoundTag();
             bidTag.putUUID("bidder", entry.getKey());
             bidTag.putFloat("amount", entry.getValue());
+            String name = bidderNames.get(entry.getKey());
+            if (name != null) {
+                bidTag.putString("name", name);
+            }
             bidsList.add(bidTag);
         }
         tag.put("bids", bidsList);
@@ -118,11 +131,16 @@ public abstract class Contract {
 
         // Load bids
         bids.clear();
+        bidderNames.clear();
         if (tag.contains("bids")) {
             net.minecraft.nbt.ListTag bidsList = tag.getList("bids", 10); // 10 = CompoundTag
             for (int i = 0; i < bidsList.size(); i++) {
                 CompoundTag bidTag = bidsList.getCompound(i);
-                bids.put(bidTag.getUUID("bidder"), bidTag.getFloat("amount"));
+                UUID bidder = bidTag.getUUID("bidder");
+                bids.put(bidder, bidTag.getFloat("amount"));
+                if (bidTag.contains("name")) {
+                    bidderNames.put(bidder, bidTag.getString("name"));
+                }
             }
         }
 

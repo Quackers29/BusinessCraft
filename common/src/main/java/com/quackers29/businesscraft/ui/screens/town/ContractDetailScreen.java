@@ -247,7 +247,7 @@ public class ContractDetailScreen extends Screen {
                     break;
                 }
 
-                String bidderName = getTownName(entry.getKey(), null);
+                String bidderName = contract.getBidderName(entry.getKey());
                 String amount = String.format("%.1f", entry.getValue());
                 boolean isHighest = entry.getKey().equals(highestBidder);
 

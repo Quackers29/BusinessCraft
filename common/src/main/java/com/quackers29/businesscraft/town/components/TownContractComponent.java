@@ -90,7 +90,7 @@ public class TownContractComponent implements TownComponent {
                     // Calculate bid again to be fresh
                     float currentHighest = sc.getHighestBid();
                     float basePrice = sc.getPricePerUnit() * sc.getQuantity();
-                    float bid = (currentHighest > 0 ? currentHighest : basePrice) * 1.1f;
+                    float bid = (float) Math.ceil((currentHighest > 0 ? currentHighest : basePrice) * 1.1f);
 
                     // Check max bid limit
                     if (bid > basePrice * MAX_BID_MULTIPLIER) {
@@ -188,7 +188,7 @@ public class TownContractComponent implements TownComponent {
                     // Pre-check max bid (approximate)
                     float currentHighest = sc.getHighestBid();
                     float basePrice = sc.getPricePerUnit() * sc.getQuantity();
-                    float projectedBid = (currentHighest > 0 ? currentHighest : basePrice) * 1.1f;
+                    float projectedBid = (float) Math.ceil((currentHighest > 0 ? currentHighest : basePrice) * 1.1f);
 
                     if (projectedBid > basePrice * MAX_BID_MULTIPLIER) {
                         continue;
@@ -223,7 +223,7 @@ public class TownContractComponent implements TownComponent {
         long activeCount = board.getContracts().stream()
                 .filter(c -> c instanceof SellContract sc &&
                         sc.getIssuerTownId().equals(town.getId()) &&
-                        !sc.isExpired())
+                        !sc.isExpired() && !sc.isCompleted())
                 .count();
 
         if (activeCount >= MAX_ACTIVE_CONTRACTS) {
@@ -264,7 +264,7 @@ public class TownContractComponent implements TownComponent {
         long activeCount = board.getContracts().stream()
                 .filter(c -> c instanceof SellContract sc &&
                         sc.getIssuerTownId().equals(town.getId()) &&
-                        !sc.isExpired())
+                        !sc.isExpired() && !sc.isCompleted())
                 .count();
 
         if (activeCount >= MAX_ACTIVE_CONTRACTS) {
