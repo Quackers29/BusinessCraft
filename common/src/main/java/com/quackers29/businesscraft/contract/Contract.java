@@ -63,6 +63,10 @@ public abstract class Contract {
         this.expiryTime = System.currentTimeMillis() + additionalMillis;
     }
 
+    public void expireNow() {
+        this.expiryTime = System.currentTimeMillis() - 1;
+    }
+
     public Map<UUID, Float> getBids() {
         return bids;
     }

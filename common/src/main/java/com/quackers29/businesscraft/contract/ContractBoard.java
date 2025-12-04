@@ -147,6 +147,7 @@ public class ContractBoard {
             if (sc.isDeliveryComplete() && !sc.isCompleted()) {
                 // Delivery Complete!
                 sc.complete();
+                sc.expireNow(); // Expire immediately so contract shows as closed
                 savedData.setDirty();
                 broadcastUpdate();
 
