@@ -27,6 +27,11 @@ public class Town implements ITownDataProvider {
     private final BlockPos position;
     private String name;
     private final TownEconomyComponent economy = new TownEconomyComponent();
+
+    public TownEconomyComponent getEconomy() {
+        return economy;
+    }
+
     private final Map<UUID, Integer> visitors = new HashMap<>();
     private int touristCount = 0; // Track tourists separately from population
     private boolean touristSpawningEnabled;
@@ -96,6 +101,14 @@ public class Town implements ITownDataProvider {
     // ================================
     // Town Boundary System Methods
     // ================================
+
+    public int getHappiness() {
+        return economy.getHappiness();
+    }
+
+    public void setHappiness(int happiness) {
+        economy.setHappiness(happiness);
+    }
 
     /**
      * Gets the boundary radius for this town based on population (1:1 ratio)
