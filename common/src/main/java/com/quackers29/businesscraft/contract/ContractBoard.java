@@ -62,6 +62,25 @@ public class ContractBoard {
         return Collections.unmodifiableList(savedData.getContracts());
     }
 
+    public float getMarketPrice(String resourceId) {
+        return savedData.getMarketPrices().getOrDefault(resourceId, 1.0f);
+    }
+
+    public void updateMarketPrice(String resourceId, float transactionPrice) {
+        float currentPrice = getMarketPrice(resourceId);
+        float alpha = 0.1f; // Learning rate (10% influence)
+        float newPrice = (currentPrice * (1.0f - alpha)) + (transactionPrice * alpha);
+
+        // Ensure price doesn't drop too low
+        if (newPrice < 0.1f)
+            newPrice = 0.1f;
+
+        savedData.getMarketPrices().put(resourceId, newPrice);
+        savedData.setDirty();
+        LOGGER.info("Updated market price for {}: {} -> {} (Transaction: {})", resourceId, currentPrice, newPrice,
+                transactionPrice);
+    }
+
     public void tick(ServerLevel level) {
         closeAuctions();
 
@@ -150,6 +169,12 @@ public class ContractBoard {
                 sc.expireNow(); // Expire immediately so contract shows as closed
                 savedData.setDirty();
                 broadcastUpdate();
+
+                // Update Global Price Index
+                if (sc.getQuantity() > 0 && sc.getHighestBid() > 0) {
+                    float transactionPrice = sc.getHighestBid() / (float) sc.getQuantity();
+                    updateMarketPrice(sc.getResourceId(), transactionPrice);
+                }
 
                 // Payout Reward to courier
                 com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager

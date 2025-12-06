@@ -18,12 +18,17 @@ public class ContractSavedData extends SavedData {
     public static final String NAME = "businesscraft_contracts";
 
     private final List<Contract> activeContracts = new ArrayList<>();
+    private final java.util.Map<String, Float> marketPrices = new java.util.HashMap<>();
 
     public ContractSavedData() {
     }
 
     public List<Contract> getContracts() {
         return activeContracts;
+    }
+
+    public java.util.Map<String, Float> getMarketPrices() {
+        return marketPrices;
     }
 
     public static ContractSavedData create() {
@@ -55,6 +60,14 @@ public class ContractSavedData extends SavedData {
             LOGGER.info("Loaded {} contracts from saved data", data.activeContracts.size());
         }
 
+        if (tag.contains("marketPrices")) {
+            CompoundTag pricesTag = tag.getCompound("marketPrices");
+            for (String key : pricesTag.getAllKeys()) {
+                data.marketPrices.put(key, pricesTag.getFloat(key));
+            }
+            LOGGER.info("Loaded market prices for {} items", data.marketPrices.size());
+        }
+
         return data;
     }
 
@@ -70,7 +83,14 @@ public class ContractSavedData extends SavedData {
         }
 
         tag.put("contracts", list);
-        LOGGER.debug("Saved {} contracts to saved data", activeContracts.size());
+
+        CompoundTag pricesTag = new CompoundTag();
+        for (java.util.Map.Entry<String, Float> entry : marketPrices.entrySet()) {
+            pricesTag.putFloat(entry.getKey(), entry.getValue());
+        }
+        tag.put("marketPrices", pricesTag);
+
+        LOGGER.debug("Saved {} contracts and {} market prices", activeContracts.size(), marketPrices.size());
 
         return tag;
     }

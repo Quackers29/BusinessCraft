@@ -88,9 +88,9 @@ public class TownContractComponent implements TownComponent {
                     }
 
                     // Calculate bid again to be fresh
-                    // Calculate bid again to be fresh
                     float currentHighest = sc.getHighestBid();
-                    float basePrice = sc.getPricePerUnit() * sc.getQuantity();
+                    float marketPrice = board.getMarketPrice(sc.getResourceId());
+                    float basePrice = marketPrice * sc.getQuantity();
 
                     // Calculate courier cost
                     com.quackers29.businesscraft.town.Town sellerTown = com.quackers29.businesscraft.town.TownManager
@@ -198,7 +198,8 @@ public class TownContractComponent implements TownComponent {
 
                     // Pre-check max bid (approximate)
                     float currentHighest = sc.getHighestBid();
-                    float basePrice = sc.getPricePerUnit() * sc.getQuantity();
+                    float marketPrice = board.getMarketPrice(sc.getResourceId());
+                    float basePrice = marketPrice * sc.getQuantity();
 
                     // Calculate courier cost
                     com.quackers29.businesscraft.town.Town sellerTown = com.quackers29.businesscraft.town.TownManager
@@ -315,7 +316,7 @@ public class TownContractComponent implements TownComponent {
                         resourceId, resourceCount, EXCESS_THRESHOLD, sellQuantity);
                 return;
             }
-            float pricePerUnit = 1.0f;
+            float pricePerUnit = board.getMarketPrice(resourceId);
 
             SellContract contract = new SellContract(
                     town.getId(),
