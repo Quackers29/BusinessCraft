@@ -88,22 +88,33 @@ public class TownContractComponent implements TownComponent {
                     }
 
                     // Calculate bid again to be fresh
+                    // Calculate bid again to be fresh
                     float currentHighest = sc.getHighestBid();
                     float basePrice = sc.getPricePerUnit() * sc.getQuantity();
+
+                    // Calculate courier cost
+                    com.quackers29.businesscraft.town.Town sellerTown = com.quackers29.businesscraft.town.TownManager
+                            .get(level).getTown(sc.getIssuerTownId());
+                    int courierCost = ContractBoard.calculateCourierCost(town, sellerTown);
+
                     float bid = (float) Math.ceil((currentHighest > 0 ? currentHighest : basePrice) * 1.1f);
 
-                    // Check max bid limit
-                    if (bid > basePrice * MAX_BID_MULTIPLIER) {
-                        LOGGER.debug("Town {} skipping bid on {} - price too high ({} > {} * {})",
-                                town.getName(), sc.getId(), bid, basePrice, MAX_BID_MULTIPLIER);
+                    // Check max bid limit (Total budget = 3x base price)
+                    float maxTotalBudget = basePrice * MAX_BID_MULTIPLIER;
+                    float maxBid = maxTotalBudget - courierCost;
+
+                    if (bid > maxBid) {
+                        LOGGER.debug("Town {} skipping bid on {} - total cost too high (Bid {} + Courier {} > {})",
+                                town.getName(), sc.getId(), bid, courierCost, maxTotalBudget);
                         continue;
                     }
 
-                    // ESCROW: Check if town has enough emeralds before bidding
+                    // ESCROW: Check if town has enough emeralds before bidding (Bid + Courier)
                     int emeraldCount = town.getResourceCount(Items.EMERALD);
-                    if (emeraldCount < bid) {
-                        LOGGER.debug("Town {} cannot bid {} on contract {} - insufficient emeralds ({} available)",
-                                town.getName(), bid, sc.getId(), emeraldCount);
+                    if (emeraldCount < (bid + courierCost)) {
+                        LOGGER.debug(
+                                "Town {} cannot bid {} on contract {} - insufficient emeralds ({} available, need {})",
+                                town.getName(), bid, sc.getId(), emeraldCount, (int) (bid + courierCost));
                         continue;
                     }
 
@@ -188,9 +199,19 @@ public class TownContractComponent implements TownComponent {
                     // Pre-check max bid (approximate)
                     float currentHighest = sc.getHighestBid();
                     float basePrice = sc.getPricePerUnit() * sc.getQuantity();
+
+                    // Calculate courier cost
+                    com.quackers29.businesscraft.town.Town sellerTown = com.quackers29.businesscraft.town.TownManager
+                            .get(level).getTown(sc.getIssuerTownId());
+                    int courierCost = ContractBoard.calculateCourierCost(town, sellerTown);
+
                     float projectedBid = (float) Math.ceil((currentHighest > 0 ? currentHighest : basePrice) * 1.1f);
 
-                    if (projectedBid > basePrice * MAX_BID_MULTIPLIER) {
+                    // Check max bid limit (Total budget = 3x base price)
+                    float maxTotalBudget = basePrice * MAX_BID_MULTIPLIER;
+                    float maxBid = maxTotalBudget - courierCost;
+
+                    if (projectedBid > maxBid) {
                         continue;
                     }
 

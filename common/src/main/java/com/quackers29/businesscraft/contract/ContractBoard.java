@@ -157,25 +157,32 @@ public class ContractBoard {
                 com.quackers29.businesscraft.town.Town destTown = townManager.getTown(sc.getWinningTownId());
 
                 if (destTown != null && sc.getCourierId() != null) {
-                    // Create reward item (Emeralds)
-                    int rewardAmount = (int) sc.getCourierReward();
-                    if (rewardAmount > 0) {
-                        net.minecraft.world.item.ItemStack emeralds = new net.minecraft.world.item.ItemStack(
-                                net.minecraft.world.item.Items.EMERALD, rewardAmount);
-                        List<net.minecraft.world.item.ItemStack> rewards = new ArrayList<>();
-                        rewards.add(emeralds);
+                    // If Snail Mail, do nothing (money sink)
+                    if (sc.isSnailMail()) {
+                        LOGGER.info("Snail Mail delivery complete for contract {}. Reward {} voided.", sc.getId(),
+                                sc.getCourierReward());
+                    } else {
+                        // Create reward item (Emeralds)
+                        int rewardAmount = (int) sc.getCourierReward();
+                        if (rewardAmount > 0) {
+                            net.minecraft.world.item.ItemStack emeralds = new net.minecraft.world.item.ItemStack(
+                                    net.minecraft.world.item.Items.EMERALD, rewardAmount);
+                            List<net.minecraft.world.item.ItemStack> rewards = new ArrayList<>();
+                            rewards.add(emeralds);
 
-                        // Add to destination town's payment board for the courier
-                        com.quackers29.businesscraft.town.data.RewardSource source = com.quackers29.businesscraft.town.data.RewardSource.COURIER_DELIVERY;
-                        UUID rewardId = destTown.getPaymentBoard().addReward(source, rewards,
-                                sc.getCourierId().toString());
+                            // Add to destination town's payment board for the courier
+                            com.quackers29.businesscraft.town.data.RewardSource source = com.quackers29.businesscraft.town.data.RewardSource.COURIER_DELIVERY;
+                            UUID rewardId = destTown.getPaymentBoard().addReward(source, rewards,
+                                    sc.getCourierId().toString());
 
-                        if (rewardId != null) {
-                            destTown.getPaymentBoard().getRewardById(rewardId).ifPresent(entry -> {
-                                entry.addMetadata("contractId", contractId.toString());
-                            });
-                            LOGGER.info("Contract {} delivery completed! Reward {} emeralds added to {} for courier {}",
-                                    contractId, rewardAmount, destTown.getName(), sc.getCourierId());
+                            if (rewardId != null) {
+                                destTown.getPaymentBoard().getRewardById(rewardId).ifPresent(entry -> {
+                                    entry.addMetadata("contractId", contractId.toString());
+                                });
+                                LOGGER.info(
+                                        "Contract {} delivery completed! Reward {} emeralds added to {} for courier {}",
+                                        contractId, rewardAmount, destTown.getName(), sc.getCourierId());
+                            }
                         }
                     }
                 }
@@ -316,8 +323,12 @@ public class ContractBoard {
                             // DON'T complete yet - needs courier & delivery
                             // sc.complete(); // REMOVED
 
-                            // Set courier reward (25% of bid)
-                            sc.setCourierReward(highestBid * 0.25f);
+                            // Set courier reward (Distance based)
+                            // We need to get the seller town again as we are inside the loop
+                            com.quackers29.businesscraft.town.Town sellerTown = townManager
+                                    .getTown(sc.getIssuerTownId());
+                            int courierCost = calculateCourierCost(winnerTown, sellerTown);
+                            sc.setCourierReward(courierCost);
 
                             // Extend expiry for courier acceptance (3 min)
                             sc.extendExpiry(180000L);
@@ -391,6 +402,7 @@ public class ContractBoard {
 
                 // Otherwise, handle normal auction bidding
                 com.quackers29.businesscraft.town.Town bidderTown = townManager.getTown(bidder);
+                com.quackers29.businesscraft.town.Town sellerTown = townManager.getTown(sc.getIssuerTownId());
 
                 if (bidderTown == null) {
                     LOGGER.warn("Cannot place bid: bidder town {} not found", bidder);
@@ -407,25 +419,32 @@ public class ContractBoard {
                 UUID previousHighestBidder = contract.getHighestBidder();
                 float previousHighestBid = contract.getHighestBid();
 
+                // Calculate courier cost
+                int courierCost = calculateCourierCost(bidderTown, sellerTown);
+
                 // Round up bid amount (emeralds are integers)
                 float roundedAmount = (float) Math.ceil(amount);
+                int totalCost = (int) roundedAmount + courierCost;
 
                 // Add the bid to the contract
                 contract.addBid(bidder, bidderTown.getName(), roundedAmount);
 
-                // ESCROW: Deduct emeralds from new bidder
-                bidderTown.addResource(net.minecraft.world.item.Items.EMERALD, -(int) roundedAmount);
-                LOGGER.info("Escrowed {} emeralds from town {} for bid on contract {}",
-                        (int) roundedAmount, bidderTown.getName(), contractId);
+                // ESCROW: Deduct total cost (Bid + Courier) from new bidder
+                bidderTown.addResource(net.minecraft.world.item.Items.EMERALD, -totalCost);
+                LOGGER.info("Escrowed {} emeralds ({} bid + {} courier) from town {} for contract {}",
+                        totalCost, (int) roundedAmount, courierCost, bidderTown.getName(), contractId);
 
                 // ESCROW: Refund emeralds to previous highest bidder
                 if (previousHighestBidder != null) {
                     com.quackers29.businesscraft.town.Town previousTown = townManager.getTown(previousHighestBidder);
                     if (previousTown != null) {
-                        int refundAmount = (int) Math.ceil(previousHighestBid);
+                        int prevBid = (int) Math.ceil(previousHighestBid);
+                        int prevCourierCost = calculateCourierCost(previousTown, sellerTown);
+                        int refundAmount = prevBid + prevCourierCost;
+
                         previousTown.addResource(net.minecraft.world.item.Items.EMERALD, refundAmount);
-                        LOGGER.info("Refunded {} emeralds to town {} (outbid on contract {})",
-                                refundAmount, previousTown.getName(), contractId);
+                        LOGGER.info("Refunded {} emeralds ({} bid + {} courier) to town {} (outbid on contract {})",
+                                refundAmount, prevBid, prevCourierCost, previousTown.getName(), contractId);
                     }
                 }
 
@@ -514,6 +533,14 @@ public class ContractBoard {
                 }
             }
         }
+    }
+
+    public static int calculateCourierCost(com.quackers29.businesscraft.town.Town town1,
+            com.quackers29.businesscraft.town.Town town2) {
+        if (town1 == null || town2 == null)
+            return 0;
+        double distance = Math.sqrt(town1.getPosition().distSqr(town2.getPosition()));
+        return (int) Math.ceil(distance / 10.0);
     }
 
     private void broadcastUpdate() {
