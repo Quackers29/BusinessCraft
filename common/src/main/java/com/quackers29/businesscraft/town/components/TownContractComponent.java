@@ -316,7 +316,27 @@ public class TownContractComponent implements TownComponent {
                         resourceId, resourceCount, EXCESS_THRESHOLD, sellQuantity);
                 return;
             }
-            float pricePerUnit = board.getMarketPrice(resourceId);
+            float marketPrice = board.getMarketPrice(resourceId);
+
+            // Calculate excess ratio (how much above threshold)
+            // Threshold = 200. "Vast excess" = 600 (3x threshold).
+            // Ratio 0.0 (at 200) -> +5% price
+            // Ratio 1.0 (at 600) -> -40% price
+            float excessRatio = (float) (resourceCount - EXCESS_THRESHOLD) / (float) (EXCESS_THRESHOLD * 2);
+            if (excessRatio > 1.0f)
+                excessRatio = 1.0f;
+
+            // Interpolate modifier: +0.05 to -0.40
+            float modifier = 0.05f + (excessRatio * (-0.40f - 0.05f));
+
+            // Add randomness (+/- 5%)
+            float randomness = (float) (Math.random() * 0.10f) - 0.05f;
+
+            float pricePerUnit = marketPrice * (1.0f + modifier + randomness);
+
+            // Ensure price is at least 0.1
+            if (pricePerUnit < 0.1f)
+                pricePerUnit = 0.1f;
 
             SellContract contract = new SellContract(
                     town.getId(),
