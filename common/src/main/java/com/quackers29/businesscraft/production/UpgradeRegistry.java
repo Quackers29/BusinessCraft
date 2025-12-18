@@ -38,33 +38,24 @@ public class UpgradeRegistry {
                 }
 
                 String[] parts = line.split(",");
-                if (parts.length >= 11) {
-                    // id,name,pop_req,track,tier,happiness_bonus,housing_capacity,input_id,input_rate,output_id,output_rate
-                    try {
-                        String id = parts[0].trim();
-                        String name = parts[1].trim();
-                        int popReq = Integer.parseInt(parts[2].trim());
-                        Upgrade.UpgradeTrack track = Upgrade.UpgradeTrack.valueOf(parts[3].trim().toUpperCase());
-                        int tier = Integer.parseInt(parts[4].trim());
-                        float happinessBonus = Float.parseFloat(parts[5].trim());
-                        int housingCapacity = Integer.parseInt(parts[6].trim());
+                if (parts.length >= 6) {
+                    // id,name,pop_req,input_id,input_rate,output_id,output_rate
+                    String id = parts[0].trim();
+                    String name = parts[1].trim();
+                    int popReq = Integer.parseInt(parts[2].trim());
 
-                        Upgrade upgrade = UPGRADES.computeIfAbsent(id,
-                                k -> new Upgrade(k, name, popReq, track, tier, happinessBonus, housingCapacity));
+                    Upgrade upgrade = UPGRADES.computeIfAbsent(id, k -> new Upgrade(k, name, popReq));
 
-                        String inputId = parts[7].trim();
-                        float inputRate = Float.parseFloat(parts[8].trim());
-                        if (!inputId.isEmpty() && !inputId.equals("none")) {
-                            upgrade.addInput(inputId, inputRate);
-                        }
+                    String inputId = parts[3].trim();
+                    float inputRate = Float.parseFloat(parts[4].trim());
+                    if (!inputId.isEmpty() && !inputId.equals("none")) {
+                        upgrade.addInput(inputId, inputRate);
+                    }
 
-                        String outputId = parts[9].trim();
-                        float outputRate = Float.parseFloat(parts[10].trim());
-                        if (!outputId.isEmpty() && !outputId.equals("none")) {
-                            upgrade.addOutput(outputId, outputRate);
-                        }
-                    } catch (Exception e) {
-                        LOGGER.error("Error parsing upgrade line: {}", line, e);
+                    String outputId = parts[5].trim();
+                    float outputRate = Float.parseFloat(parts[6].trim());
+                    if (!outputId.isEmpty() && !outputId.equals("none")) {
+                        upgrade.addOutput(outputId, outputRate);
                     }
                 }
             }
@@ -76,19 +67,11 @@ public class UpgradeRegistry {
 
     private static void createDefaultConfig(File file) {
         try (FileWriter writer = new FileWriter(file)) {
-            writer.write(
-                    "id,name,pop_req,track,tier,happiness_bonus,housing_capacity,input_id,input_rate,output_id,output_rate\n");
-            // Resources
-            writer.write("wheat_farm,Wheat Farm,10,RESOURCES,1,0,0,none,0,food,1.0\n");
-            writer.write("lumber_camp,Lumber Camp,15,RESOURCES,1,0,0,none,0,wood,1.0\n");
-            writer.write("bakery,Bakery,20,RESOURCES,2,2,0,wheat,2.0,food,3.0\n");
-            writer.write("iron_mine,Iron Mine,30,RESOURCES,2,0,0,wood,0.5,iron,0.5\n");
-            // Services
-            writer.write("school,School,50,SERVICES,1,10,0,none,0,none,0\n");
-            writer.write("park,Park,20,SERVICES,1,5,0,none,0,none,0\n");
-            // Population
-            writer.write("small_house,Small House,0,POPULATION,1,0,5,wood,10,none,0\n");
-            writer.write("apartment,Apartment,50,POPULATION,2,-5,20,wood,50,none,0\n");
+            writer.write("id,name,pop_req,input_id,input_rate,output_id,output_rate\n");
+            writer.write("wheat_farm,Wheat Farm,10,none,0,food,1.0\n");
+            writer.write("bakery,Bakery,20,wheat,2.0,food,3.0\n");
+            writer.write("lumber_camp,Lumber Camp,15,none,0,wood,1.0\n");
+            writer.write("iron_mine,Iron Mine,30,wood,0.5,iron,0.5\n");
         } catch (IOException e) {
             LOGGER.error("Failed to create default {}", CONFIG_FILE_NAME, e);
         }
