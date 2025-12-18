@@ -89,10 +89,6 @@ public class Town implements ITownDataProvider {
         research.tick(); // Always tick research
     }
 
-    public void addBread(int count) {
-        economy.addBread(count);
-    }
-
     @Override
     public void addResource(Item item, int count) {
         economy.addResource(item, count);
@@ -588,12 +584,13 @@ public class Town implements ITownDataProvider {
         this.name = newName;
     }
 
-    public int getBreadCount() {
-        return economy.getBreadCount();
-    }
-
     public int getPopulation() {
         return economy.getPopulation();
+    }
+
+    public void setPopulation(int population) {
+        economy.setPopulation(population);
+        markDirty();
     }
 
     public UUID getId() {
@@ -909,6 +906,7 @@ public class Town implements ITownDataProvider {
         markDirty();
     }
 
+    @Override
     public java.util.Set<String> getUnlockedUpgrades() {
         return java.util.Collections.unmodifiableSet(unlockedUpgrades);
     }

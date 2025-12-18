@@ -15,6 +15,7 @@ import java.util.HashMap;
 import net.minecraft.world.item.Item;
 import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.town.service.TownBoundaryService;
+import com.quackers29.businesscraft.api.PlatformAccess;
 
 public class TownManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/TownManager");
@@ -77,7 +78,65 @@ public class TownManager {
         UUID townId = UUID.randomUUID();
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Registering new town. ID: {}, Name: {}, Position: {}",
                 townId, name, pos);
-        savedData.getTowns().put(townId, new Town(townId, pos, name));
+
+        Town newTown = new Town(townId, pos, name);
+
+        // Apply biome-specific starting configuration
+        try {
+            net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> biomeHolder = level.getBiome(pos);
+            net.minecraft.resources.ResourceLocation biomeId = biomeHolder.unwrapKey()
+                    .map(net.minecraft.resources.ResourceKey::location)
+                    .orElse(null);
+
+            if (biomeId != null) {
+                com.quackers29.businesscraft.config.registries.BiomeRegistry.BiomeEntry entry = com.quackers29.businesscraft.config.registries.BiomeRegistry
+                        .get(biomeId);
+
+                if (entry != null) {
+                    LOGGER.info("Applying biome config for {} to town {}", biomeId, name);
+
+                    // grant starting upgrades
+                    if (entry.startingNodes != null) {
+                        for (String upgradeId : entry.startingNodes) {
+                            newTown.addUpgrade(upgradeId);
+                            LOGGER.info("Granted starting upgrade: {}", upgradeId);
+                        }
+                    }
+
+                    // apply starting stats/resources
+                    if (entry.startingValues != null) {
+                        entry.startingValues.forEach((key, value) -> {
+                            if ("population".equals(key)) {
+                                newTown.setPopulation(value);
+                            } else if ("happiness".equals(key)) {
+                                newTown.setHappiness(value.doubleValue());
+                            } else if ("money".equals(key)) {
+                                // Not implemented
+                            } else {
+                                // Try to parse as item
+                                try {
+                                    net.minecraft.resources.ResourceLocation itemId = new net.minecraft.resources.ResourceLocation(
+                                            key);
+                                    Item item = PlatformAccess.getRegistry().getItem(itemId);
+                                    if (item != null && item != net.minecraft.world.item.Items.AIR) {
+                                        newTown.addResource(item, value);
+                                    }
+                                } catch (Exception e) {
+                                    LOGGER.warn("Unknown starting value key: {}", key);
+                                }
+                            }
+                        });
+                    }
+                } else {
+                    LOGGER.warn("No biome config found for {}, using defaults", biomeId);
+                    // Fallback to defaults? Defaults are already set in constructor.
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to apply biome config", e);
+        }
+
+        savedData.getTowns().put(townId, newTown);
         savedData.setDirty();
         return townId;
     }

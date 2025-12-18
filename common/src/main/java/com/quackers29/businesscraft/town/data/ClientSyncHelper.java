@@ -35,7 +35,9 @@ public class ClientSyncHelper {
     private final Map<Item, Integer> clientCommunalStorage = new HashMap<>();
     private final Map<UUID, Map<Item, Integer>> clientPersonalStorage = new HashMap<>();
     private final List<ITownDataProvider.VisitHistoryRecord> clientVisitHistory = new ArrayList<>();
+    private final Set<String> clientUpgrades = new HashSet<>();
     private final Map<UUID, String> townNameCache = new HashMap<>();
+    private int clientPopulation = 0;
 
     /**
      * Adds resource data to the provided tag for client-side rendering
@@ -45,7 +47,8 @@ public class ClientSyncHelper {
         if (provider == null)
             return;
 
-        LOGGER.info("ClientSyncHelper.syncResourcesForClient - provider resources size: {}", provider.getAllResources().size());
+        LOGGER.info("ClientSyncHelper.syncResourcesForClient - provider resources size: {}",
+                provider.getAllResources().size());
 
         // Create a resources tag
         CompoundTag resourcesTag = new CompoundTag();
@@ -63,6 +66,9 @@ public class ClientSyncHelper {
         // Add resources tag to the update tag
         tag.put("clientResources", resourcesTag);
 
+        // Add population to the tag
+        tag.putInt("clientPopulation", provider.getPopulation());
+
         // Add communal storage data
         CompoundTag communalTag = new CompoundTag();
         provider.getAllCommunalStorageItems().forEach((item, count) -> {
@@ -74,6 +80,43 @@ public class ClientSyncHelper {
             }
         });
         tag.put("clientCommunalStorage", communalTag);
+    }
+
+    /**
+     * Adds upgrades data to the provided tag for client-side rendering
+     */
+    public void syncUpgradesForClient(CompoundTag tag, ITownDataProvider provider) {
+        if (provider == null)
+            return;
+
+        // Add unlocked upgrades
+        ListTag upgradesTag = new ListTag();
+        Set<String> unlocked = provider.getUnlockedUpgrades();
+        unlocked.forEach(upgradeId -> {
+            upgradesTag.add(net.minecraft.nbt.StringTag.valueOf(upgradeId));
+        });
+        tag.put("clientUpgrades", upgradesTag);
+
+        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Synced {} upgrades for client: {}", unlocked.size(),
+                unlocked);
+    }
+
+    /**
+     * Loads upgraded from the provided tag into the client-side cache
+     */
+    public void loadUpgradesFromTag(CompoundTag tag) {
+        if (tag.contains("clientUpgrades")) {
+            ListTag upgradesTag = tag.getList("clientUpgrades", Tag.TAG_STRING);
+            clientUpgrades.clear();
+            for (int i = 0; i < upgradesTag.size(); i++) {
+                clientUpgrades.add(upgradesTag.getString(i));
+            }
+            DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Loaded {} upgrades from tag: {}",
+                    clientUpgrades.size(), clientUpgrades);
+        } else {
+            // DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS, "Tag does not contain
+            // clientUpgrades");
+        }
     }
 
     /**
@@ -101,6 +144,11 @@ public class ClientSyncHelper {
                     LOGGER.error("Error loading client resource: {}", key, e);
                 }
             }
+        }
+
+        // Load population if present
+        if (tag.contains("clientPopulation")) {
+            clientPopulation = tag.getInt("clientPopulation");
         }
 
         // Load communal storage data (keep minimal)
@@ -351,6 +399,15 @@ public class ClientSyncHelper {
     }
 
     /**
+     * Gets the client-side cached upgrades
+     * 
+     * @return Set of upgrade IDs
+     */
+    public Set<String> getClientUpgrades() {
+        return Collections.unmodifiableSet(clientUpgrades);
+    }
+
+    /**
      * Gets the client-side cached personal storage items for a specific player
      * 
      * @param playerId UUID of the player
@@ -451,5 +508,12 @@ public class ClientSyncHelper {
 
         DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
                 "Sent slot-based buffer storage update for town {} to {} players", townId, level.players().size());
+    }
+
+    /**
+     * Gets the client-side cached population
+     */
+    public int getClientPopulation() {
+        return clientPopulation;
     }
 }

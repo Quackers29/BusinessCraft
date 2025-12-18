@@ -26,13 +26,6 @@ public class TownEconomyComponent implements TownComponent {
     }
 
     /**
-     * Legacy method for compatibility. Use addResource instead.
-     */
-    public void addBread(int count) {
-        addResource(Items.BREAD, count);
-    }
-
-    /**
      * Add a specific resource to the town and update population if applicable
      * 
      * @param item  The item resource to add
@@ -70,19 +63,6 @@ public class TownEconomyComponent implements TownComponent {
         // Actually add/remove the resource
         resources.addResource(item, count);
 
-        // Special handling for bread which still drives population
-        if (item == Items.BREAD && count > 0) {
-            int breadCount = resources.getResourceCount(Items.BREAD);
-            int popToAdd = breadCount / ConfigLoader.breadPerPop;
-
-            if (popToAdd > 0) {
-                // Consume the bread used for population
-                resources.consumeResource(Items.BREAD, popToAdd * ConfigLoader.breadPerPop);
-                this.population += popToAdd;
-                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Population increased by {} to {}", popToAdd,
-                        population);
-            }
-        }
     }
 
     /**
@@ -93,13 +73,6 @@ public class TownEconomyComponent implements TownComponent {
      */
     public int getResourceCount(Item item) {
         return resources.getResourceCount(item);
-    }
-
-    /**
-     * Legacy method for bread count
-     */
-    public int getBreadCount() {
-        return resources.getResourceCount(Items.BREAD);
     }
 
     /**
