@@ -10,50 +10,81 @@ import com.quackers29.businesscraft.debug.DebugConfig;
 
 public class TownEconomyComponent implements TownComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownEconomyComponent.class);
+    private final com.quackers29.businesscraft.town.Town town;
     private final TownResources resources = new TownResources();
     private int population;
-    
+
+    public TownEconomyComponent(com.quackers29.businesscraft.town.Town town) {
+        this.town = town;
+    }
+
+    /**
+     * Legacy constructor for compatibility if needed (should update all callers)
+     */
+    public TownEconomyComponent() {
+        this(null);
+    }
+
     /**
      * Legacy method for compatibility. Use addResource instead.
      */
     public void addBread(int count) {
         addResource(Items.BREAD, count);
     }
-    
+
     /**
      * Add a specific resource to the town and update population if applicable
      * 
-     * @param item The item resource to add
+     * @param item  The item resource to add
      * @param count The amount to add
      */
     public void addResource(Item item, int count) {
-        if (item == null) return;
-        
+        if (item == null)
+            return;
+
         // Special logging for emerald deductions
         boolean isEmerald = item == net.minecraft.world.item.Items.EMERALD;
-        
+
         // Log only significant emerald deductions (> 1)
         if (count < 0 && isEmerald && count <= -5) {
             LOGGER.info("Deducting {} emeralds from town economy", -count);
         }
-        
+
+        // Check storage caps if adding items
+        if (count > 0 && town != null) {
+            String itemId = com.quackers29.businesscraft.api.PlatformAccess.getRegistry().getItemKey(item).toString();
+            int current = resources.getResourceCount(item);
+            int cap = town.getStorageCap(itemId);
+
+            // Limit count to fit in cap
+            if (current + count > cap) {
+                count = Math.max(0, cap - current);
+                if (count == 0 && !isEmerald) {
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                            "Storage full for {}. Cap: {}, Current: {}", itemId, cap, current);
+                    return; // Full, add nothing
+                }
+            }
+        }
+
         // Actually add/remove the resource
         resources.addResource(item, count);
-        
+
         // Special handling for bread which still drives population
         if (item == Items.BREAD && count > 0) {
             int breadCount = resources.getResourceCount(Items.BREAD);
             int popToAdd = breadCount / ConfigLoader.breadPerPop;
-            
+
             if (popToAdd > 0) {
                 // Consume the bread used for population
                 resources.consumeResource(Items.BREAD, popToAdd * ConfigLoader.breadPerPop);
                 this.population += popToAdd;
-                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Population increased by {} to {}", popToAdd, population);
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Population increased by {} to {}", popToAdd,
+                        population);
             }
         }
     }
-    
+
     /**
      * Get a specific resource count
      * 
@@ -63,14 +94,14 @@ public class TownEconomyComponent implements TownComponent {
     public int getResourceCount(Item item) {
         return resources.getResourceCount(item);
     }
-    
+
     /**
      * Legacy method for bread count
      */
     public int getBreadCount() {
         return resources.getResourceCount(Items.BREAD);
     }
-    
+
     /**
      * Remove population from the town
      * 
@@ -81,7 +112,7 @@ public class TownEconomyComponent implements TownComponent {
             population -= amount;
         }
     }
-    
+
     /**
      * Set the population of the town directly
      * 
@@ -103,7 +134,7 @@ public class TownEconomyComponent implements TownComponent {
     public void save(CompoundTag tag) {
         // Save population separately
         tag.putInt("population", population);
-        
+
         // Save all resources using the TownResources
         resources.save(tag);
     }
@@ -112,14 +143,16 @@ public class TownEconomyComponent implements TownComponent {
     public void load(CompoundTag tag) {
         // Load population
         population = tag.getInt("population");
-        
+
         // Load resources
         resources.load(tag);
     }
 
     // Getters
-    public int getPopulation() { return population; }
-    
+    public int getPopulation() {
+        return population;
+    }
+
     /**
      * Get all resources in the town
      * 
@@ -128,4 +161,4 @@ public class TownEconomyComponent implements TownComponent {
     public TownResources getResources() {
         return resources;
     }
-} 
+}
