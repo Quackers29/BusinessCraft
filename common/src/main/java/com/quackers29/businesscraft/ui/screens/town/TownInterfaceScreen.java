@@ -284,6 +284,10 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
         return cacheManager.getCachedPopulation();
     }
 
+    public double getCachedHappiness() {
+        return cacheManager.getCachedHappiness();
+    }
+
     // Changed from private to public to allow access from tab implementations
     public Map<Item, Integer> getCachedResources() {
         return cacheManager.getCachedResources();

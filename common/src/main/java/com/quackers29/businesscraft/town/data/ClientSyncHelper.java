@@ -38,6 +38,7 @@ public class ClientSyncHelper {
     private final Set<String> clientUpgrades = new HashSet<>();
     private final Map<UUID, String> townNameCache = new HashMap<>();
     private int clientPopulation = 0;
+    private double clientHappiness = 0;
 
     /**
      * Adds resource data to the provided tag for client-side rendering
@@ -68,6 +69,9 @@ public class ClientSyncHelper {
 
         // Add population to the tag
         tag.putInt("clientPopulation", provider.getPopulation());
+
+        // Add happiness to the tag
+        tag.putDouble("clientHappiness", provider.getHappiness());
 
         // Add communal storage data
         CompoundTag communalTag = new CompoundTag();
@@ -149,6 +153,11 @@ public class ClientSyncHelper {
         // Load population if present
         if (tag.contains("clientPopulation")) {
             clientPopulation = tag.getInt("clientPopulation");
+        }
+
+        // Load happiness if present
+        if (tag.contains("clientHappiness")) {
+            clientHappiness = tag.getDouble("clientHappiness");
         }
 
         // Load communal storage data (keep minimal)
@@ -515,5 +524,12 @@ public class ClientSyncHelper {
      */
     public int getClientPopulation() {
         return clientPopulation;
+    }
+
+    /**
+     * Gets the client-side cached happiness
+     */
+    public double getClientHappiness() {
+        return clientHappiness;
     }
 }

@@ -18,7 +18,7 @@ public class TownProductionComponent implements TownComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownProductionComponent.class);
 
     private final Town town;
-    private int productionTickCounter = 0;
+    private final Map<String, Integer> productionProgress = new HashMap<>();
 
     public TownProductionComponent(Town town) {
         this.town = town;
@@ -26,19 +26,35 @@ public class TownProductionComponent implements TownComponent {
 
     @Override
     public void tick() {
-        productionTickCounter++;
-        if (productionTickCounter >= ConfigLoader.productionTickInterval) {
-            productionTickCounter = 0;
-            performProduction();
+        for (ProductionRecipe recipe : ProductionRegistry.getAll()) {
+            // Calculate target interval in ticks
+            int interval = (int) (recipe.baseCycleTimeDays * ConfigLoader.dailyTickInterval);
+            if (interval < 1)
+                interval = 1; // Minimum 1 tick
+
+            // Increment progress
+            int current = productionProgress.getOrDefault(recipe.id, 0);
+            current++;
+
+            if (current >= interval) {
+                if (canRunRecipe(recipe)) {
+                    runRecipe(recipe);
+                    productionProgress.put(recipe.id, 0); // Reset
+                }
+                // If condition fails, we cap at interval? Or keep incrementing?
+                // Standard behavior: wait until condition met.
+                // So we keep progress at interval.
+                else {
+                    productionProgress.put(recipe.id, interval);
+                }
+            } else {
+                productionProgress.put(recipe.id, current);
+            }
         }
     }
 
     private void performProduction() {
-        for (ProductionRecipe recipe : ProductionRegistry.getAll()) {
-            if (canRunRecipe(recipe)) {
-                runRecipe(recipe);
-            }
-        }
+        // Deprecated by per-recipe logic
     }
 
     private boolean canRunRecipe(ProductionRecipe recipe) {
@@ -219,13 +235,18 @@ public class TownProductionComponent implements TownComponent {
 
     @Override
     public void save(CompoundTag tag) {
-        // No state needed for generic production yet
-        // Unless we track recipe cooldowns/progress?
-        // Basic implementation: Instant production every tick interval.
+        CompoundTag progressTag = new CompoundTag();
+        productionProgress.forEach(progressTag::putInt);
+        tag.put("productionProgress", progressTag);
     }
 
     @Override
     public void load(CompoundTag tag) {
-        // No state
+        if (tag.contains("productionProgress")) {
+            CompoundTag progressTag = tag.getCompound("productionProgress");
+            for (String key : progressTag.getAllKeys()) {
+                productionProgress.put(key, progressTag.getInt(key));
+            }
+        }
     }
 }

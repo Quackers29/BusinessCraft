@@ -50,6 +50,13 @@ public class TownDataCache {
     }
 
     /**
+     * Get the town happiness, either from cache or from the provider
+     */
+    public double getHappiness() {
+        return getOrFetchValue("happiness", dataProvider::getHappiness, DEFAULT_TTL);
+    }
+
+    /**
      * Get the tourist count, either from cache or from the provider
      */
     public int getTouristCount() {
