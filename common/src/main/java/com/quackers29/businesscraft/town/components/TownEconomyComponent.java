@@ -12,60 +12,48 @@ public class TownEconomyComponent implements TownComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownEconomyComponent.class);
     private final TownResources resources = new TownResources();
     private int population;
-    private int happiness = 50; // Default 50%
-
+    
     /**
      * Legacy method for compatibility. Use addResource instead.
      */
     public void addBread(int count) {
         addResource(Items.BREAD, count);
     }
-
-    public int getHappiness() {
-        return happiness;
-    }
-
-    public void setHappiness(int happiness) {
-        this.happiness = Math.max(0, Math.min(100, happiness));
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Happiness set to {}", this.happiness);
-    }
-
+    
     /**
      * Add a specific resource to the town and update population if applicable
      * 
-     * @param item  The item resource to add
+     * @param item The item resource to add
      * @param count The amount to add
      */
     public void addResource(Item item, int count) {
-        if (item == null)
-            return;
-
+        if (item == null) return;
+        
         // Special logging for emerald deductions
         boolean isEmerald = item == net.minecraft.world.item.Items.EMERALD;
-
+        
         // Log only significant emerald deductions (> 1)
         if (count < 0 && isEmerald && count <= -5) {
             LOGGER.info("Deducting {} emeralds from town economy", -count);
         }
-
+        
         // Actually add/remove the resource
         resources.addResource(item, count);
-
+        
         // Special handling for bread which still drives population
         if (item == Items.BREAD && count > 0) {
             int breadCount = resources.getResourceCount(Items.BREAD);
             int popToAdd = breadCount / ConfigLoader.breadPerPop;
-
+            
             if (popToAdd > 0) {
                 // Consume the bread used for population
                 resources.consumeResource(Items.BREAD, popToAdd * ConfigLoader.breadPerPop);
                 this.population += popToAdd;
-                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Population increased by {} to {}", popToAdd,
-                        population);
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Population increased by {} to {}", popToAdd, population);
             }
         }
     }
-
+    
     /**
      * Get a specific resource count
      * 
@@ -75,14 +63,14 @@ public class TownEconomyComponent implements TownComponent {
     public int getResourceCount(Item item) {
         return resources.getResourceCount(item);
     }
-
+    
     /**
      * Legacy method for bread count
      */
     public int getBreadCount() {
         return resources.getResourceCount(Items.BREAD);
     }
-
+    
     /**
      * Remove population from the town
      * 
@@ -93,7 +81,7 @@ public class TownEconomyComponent implements TownComponent {
             population -= amount;
         }
     }
-
+    
     /**
      * Set the population of the town directly
      * 
@@ -115,8 +103,7 @@ public class TownEconomyComponent implements TownComponent {
     public void save(CompoundTag tag) {
         // Save population separately
         tag.putInt("population", population);
-        tag.putInt("happiness", happiness);
-
+        
         // Save all resources using the TownResources
         resources.save(tag);
     }
@@ -125,19 +112,14 @@ public class TownEconomyComponent implements TownComponent {
     public void load(CompoundTag tag) {
         // Load population
         population = tag.getInt("population");
-        if (tag.contains("happiness")) {
-            happiness = tag.getInt("happiness");
-        }
-
+        
         // Load resources
         resources.load(tag);
     }
 
     // Getters
-    public int getPopulation() {
-        return population;
-    }
-
+    public int getPopulation() { return population; }
+    
     /**
      * Get all resources in the town
      * 
@@ -146,4 +128,4 @@ public class TownEconomyComponent implements TownComponent {
     public TownResources getResources() {
         return resources;
     }
-}
+} 
