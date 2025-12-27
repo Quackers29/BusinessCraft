@@ -1,23 +1,26 @@
-
 package com.quackers29.businesscraft.town.components;
 
 import com.quackers29.businesscraft.config.ConfigLoader;
-import com.quackers29.businesscraft.config.registries.ItemRegistry;
-import com.quackers29.businesscraft.config.registries.ProductionRegistry;
-import com.quackers29.businesscraft.config.registries.ProductionRegistry.ProductionRecipe;
+import com.quackers29.businesscraft.economy.GlobalMarket;
+import com.quackers29.businesscraft.production.Upgrade;
+import com.quackers29.businesscraft.production.UpgradeRegistry;
 import com.quackers29.businesscraft.town.Town;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.item.Item;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class TownProductionComponent implements TownComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownProductionComponent.class);
 
     private final Town town;
+    private final List<String> activeUpgrades = new ArrayList<>();
     private int productionTickCounter = 0;
 
     public TownProductionComponent(Town town) {
@@ -34,198 +37,74 @@ public class TownProductionComponent implements TownComponent {
     }
 
     private void performProduction() {
-        for (ProductionRecipe recipe : ProductionRegistry.getAll()) {
-            if (canRunRecipe(recipe)) {
-                runRecipe(recipe);
-            }
-        }
-    }
+        // 1. Check for new upgrades
+        checkNewUpgrades();
 
-    private boolean canRunRecipe(ProductionRecipe recipe) {
-        // Check all inputs/conditions
-        for (String input : recipe.inputs) {
-            if (input == null || input.isEmpty())
+        // 2. Run production for each active upgrade
+        for (String upgradeId : activeUpgrades) {
+            Upgrade upgrade = UpgradeRegistry.get(upgradeId);
+            if (upgrade == null)
                 continue;
 
-            // Parse Condition
-            if (input.contains(">") || input.contains("<")) {
-                if (!checkCondition(input))
-                    return false;
-            } else if (input.startsWith("has_upgrade:")) {
-                String upgradeId = input.split(":")[1];
-                if (!town.hasUpgrade(upgradeId))
-                    return false;
-            } else {
-                // It's a resource cost
-                if (!checkResourceAvailable(input))
-                    return false;
+            // Check inputs
+            boolean hasInputs = true;
+            for (Map.Entry<String, Float> input : upgrade.getInputRates().entrySet()) {
+                float currentStock = town.getTrading().getStock(input.getKey());
+                if (currentStock < input.getValue()) {
+                    hasInputs = false;
+                    break;
+                }
             }
-        }
-        return true;
-    }
 
-    private boolean checkCondition(String condition) {
-        // Format: property:>value or property:<value
-        String[] parts = condition.split("(?=[><])|(?<=[><])");
-        if (parts.length < 3)
-            return false;
+            if (hasInputs) {
+                // Consume inputs
+                for (Map.Entry<String, Float> input : upgrade.getInputRates().entrySet()) {
+                    town.getTrading().adjustStock(input.getKey(), -input.getValue());
+                }
 
-        String property = parts[0].replace(":", "").trim();
-        String operator = parts[1];
-        String valueStr = parts[2].trim();
-
-        double value;
-        try {
-            // Handle special values
-            if (valueStr.equals("pop_cap"))
-                value = town.getPopulationCap();
-            else
-                value = Double.parseDouble(valueStr);
-        } catch (NumberFormatException e) {
-            return false;
-        }
-
-        double townValue = 0;
-        switch (property) {
-            case "happiness":
-                townValue = town.getHappiness();
-                break;
-            case "pop":
-            case "population":
-                townValue = town.getPopulation();
-                break;
-            default:
-                return false;
-        }
-
-        if (operator.equals(">"))
-            return townValue > value;
-        if (operator.equals("<"))
-            return townValue < value;
-
-        return false;
-    }
-
-    private boolean checkResourceAvailable(String input) {
-        // Format: [pop*]resource:amount
-        boolean perPop = input.startsWith("pop*");
-        String cleanInput = perPop ? input.substring(4) : input;
-
-        String[] parts = cleanInput.split(":");
-        if (parts.length < 2)
-            return false; // Invalid
-
-        String resourceId = parts[0];
-        int amount;
-        try {
-            amount = Integer.parseInt(parts[1]);
-        } catch (NumberFormatException e) {
-            return false;
-        }
-
-        if (perPop)
-            amount *= town.getPopulation();
-
-        // Check availability
-        ItemRegistry.ItemEntry entry = ItemRegistry.get(resourceId);
-        if (entry != null) {
-            Item item = entry.getItem();
-            if (item != null) {
-                return town.getResourceCount(item) >= amount;
-            }
-        }
-
-        return false; // Unknown resource
-    }
-
-    private void runRecipe(ProductionRecipe recipe) {
-        // Consume Inputs
-        for (String input : recipe.inputs) {
-            if (input == null || input.isEmpty())
-                continue;
-
-            // Skip conditions
-            if (input.contains(">") || input.contains("<") || input.startsWith("has_upgrade:"))
-                continue;
-
-            consumeInput(input);
-        }
-
-        // Produce Outputs
-        for (String output : recipe.outputs) {
-            if (output == null || output.isEmpty())
-                continue;
-            produceOutput(output);
-        }
-    }
-
-    private void consumeInput(String input) {
-        boolean perPop = input.startsWith("pop*");
-        String cleanInput = perPop ? input.substring(4) : input;
-        String[] parts = cleanInput.split(":");
-        String resourceId = parts[0];
-        int amount = Integer.parseInt(parts[1]);
-        if (perPop)
-            amount *= town.getPopulation();
-
-        ItemRegistry.ItemEntry entry = ItemRegistry.get(resourceId);
-        if (entry != null) {
-            Item item = entry.getItem();
-            if (item != null) {
-                town.addResource(item, -amount);
+                // Produce outputs
+                for (Map.Entry<String, Float> output : upgrade.getOutputRates().entrySet()) {
+                    town.getTrading().adjustStock(output.getKey(), output.getValue());
+                    // Record production in global market (as volume, though technically not a
+                    // trade)
+                    // Or maybe just log it?
+                }
             }
         }
     }
 
-    private void produceOutput(String output) {
-        boolean perPop = output.startsWith("pop*");
-        String cleanOutput = perPop ? output.substring(4) : output;
-        String[] parts = cleanOutput.split(":");
-        String resourceId = parts[0];
-        int amount = Integer.parseInt(parts[1]);
-        if (perPop)
-            amount *= town.getPopulation();
-
-        if (resourceId.equals("population")) {
-            // Increase population (handled via economy usually, but force here?)
-            // Town.addVisitor uses logic.
-            // Town contract uses bread.
-            // Direct manipulation:
-            // We need a method to safely add population or modify it.
-            // TownEconomyComponent.setPopulation is public.
-            // town.getEconomy().setPopulation(town.getPopulation() + amount);
-            // Wait, I cannot access getEconomy() from Town as it is private/protected?
-            // Town.getPopulation() exposes getEconomy().getPopulation().
-            // Town expects logic inside Town.
-            // I'll add logic to Town to modify population if needed, or assume TownEconomy
-            // handles if bread is added?
-            // But recipe might produce "population" directly (natural growth).
-            // Let's assume for now I can't touch population directly unless I expose a
-            // setter in Town.
-            // Town.addVisitor adds from tourists.
-            // I should probably skip population output for now or implement a setter in
-            // Town.
-            return;
-        }
-
-        ItemRegistry.ItemEntry entry = ItemRegistry.get(resourceId);
-        if (entry != null) {
-            Item item = entry.getItem();
-            if (item != null) {
-                town.addResource(item, amount);
+    private void checkNewUpgrades() {
+        int population = town.getPopulation();
+        for (Upgrade upgrade : UpgradeRegistry.getAll()) {
+            if (!activeUpgrades.contains(upgrade.getId()) && population >= upgrade.getPopulationReq()) {
+                activeUpgrades.add(upgrade.getId());
+                LOGGER.info("Town {} acquired new upgrade: {}", town.getName(), upgrade.getName());
+                town.markDirty();
             }
         }
+    }
+
+    public List<String> getActiveUpgrades() {
+        return activeUpgrades;
     }
 
     @Override
     public void save(CompoundTag tag) {
-        // No state needed for generic production yet
-        // Unless we track recipe cooldowns/progress?
-        // Basic implementation: Instant production every tick interval.
+        ListTag list = new ListTag();
+        for (String upgradeId : activeUpgrades) {
+            list.add(StringTag.valueOf(upgradeId));
+        }
+        tag.put("upgrades", list);
     }
 
     @Override
     public void load(CompoundTag tag) {
-        // No state
+        activeUpgrades.clear();
+        if (tag.contains("upgrades")) {
+            ListTag list = tag.getList("upgrades", Tag.TAG_STRING);
+            for (int i = 0; i < list.size(); i++) {
+                activeUpgrades.add(list.getString(i));
+            }
+        }
     }
 }

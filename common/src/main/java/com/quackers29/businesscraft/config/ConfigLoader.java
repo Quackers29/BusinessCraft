@@ -62,17 +62,6 @@ public class ConfigLoader {
     public static boolean productionEnabled = true;
     public static int productionTickInterval = 100;
 
-    // New Global Settings
-    public static int dailyTickInterval = 2400;
-    public static double touristSpawnRatePerPop = 0.01;
-    public static double snailMailSpeedMultiplier = 0.1;
-    public static int baseRewardPerItem = 5;
-    public static int baseRewardPerTourist = 20;
-    public static double timeBonusMultiplier = 2.0;
-    public static double expressCourierCut = 0.3;
-    public static int researchDaysPerNode = 5;
-    public static double researchChoiceRandomness = 0.3;
-
     public static final ConfigLoader INSTANCE = new ConfigLoader();
 
     private ConfigLoader() {
@@ -174,25 +163,6 @@ public class ConfigLoader {
             productionEnabled = Boolean.parseBoolean(props.getProperty("productionEnabled", "true"));
             productionTickInterval = Integer.parseInt(props.getProperty("productionTickInterval", "100"));
 
-            // Load new Global Settings
-            dailyTickInterval = Integer.parseInt(props.getProperty("dailyTickInterval", "2400"));
-            touristSpawnRatePerPop = Double.parseDouble(props.getProperty("touristSpawnRatePerPop", "0.01"));
-            snailMailSpeedMultiplier = Double.parseDouble(props.getProperty("snailMailSpeedMultiplier", "0.1"));
-            baseRewardPerItem = Integer.parseInt(props.getProperty("baseRewardPerItem", "5"));
-            baseRewardPerTourist = Integer.parseInt(props.getProperty("baseRewardPerTourist", "20"));
-            timeBonusMultiplier = Double.parseDouble(props.getProperty("timeBonusMultiplier", "2.0"));
-            expressCourierCut = Double.parseDouble(props.getProperty("expressCourierCut", "0.3"));
-            researchDaysPerNode = Integer.parseInt(props.getProperty("researchDaysPerNode", "5"));
-            researchChoiceRandomness = Double.parseDouble(props.getProperty("researchChoiceRandomness", "0.3"));
-
-            // LOAD REGISTRIES
-            LOGGER.info("Loading Data Registries...");
-            com.quackers29.businesscraft.config.registries.ItemRegistry.load();
-            com.quackers29.businesscraft.config.registries.ProductionRegistry.load();
-            com.quackers29.businesscraft.config.registries.UpgradeRegistry.load();
-            com.quackers29.businesscraft.config.registries.UpgradeRequirementRegistry.load();
-            com.quackers29.businesscraft.config.registries.BiomeRegistry.load();
-
         } catch (IOException e) {
             LOGGER.error("Failed to load config: {}", e.getMessage());
         }
@@ -269,17 +239,6 @@ public class ConfigLoader {
         // Save production config
         props.setProperty("productionEnabled", String.valueOf(productionEnabled));
         props.setProperty("productionTickInterval", String.valueOf(productionTickInterval));
-
-        // Save new Global Settings
-        props.setProperty("dailyTickInterval", String.valueOf(dailyTickInterval));
-        props.setProperty("touristSpawnRatePerPop", String.valueOf(touristSpawnRatePerPop));
-        props.setProperty("snailMailSpeedMultiplier", String.valueOf(snailMailSpeedMultiplier));
-        props.setProperty("baseRewardPerItem", String.valueOf(baseRewardPerItem));
-        props.setProperty("baseRewardPerTourist", String.valueOf(baseRewardPerTourist));
-        props.setProperty("timeBonusMultiplier", String.valueOf(timeBonusMultiplier));
-        props.setProperty("expressCourierCut", String.valueOf(expressCourierCut));
-        props.setProperty("researchDaysPerNode", String.valueOf(researchDaysPerNode));
-        props.setProperty("researchChoiceRandomness", String.valueOf(researchChoiceRandomness));
 
         try {
             Path configDir = com.quackers29.businesscraft.api.PlatformAccess.platform.getConfigDirectory();

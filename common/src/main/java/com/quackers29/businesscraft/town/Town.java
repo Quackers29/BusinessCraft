@@ -26,7 +26,7 @@ public class Town implements ITownDataProvider {
     private final UUID id;
     private final BlockPos position;
     private String name;
-    private final TownEconomyComponent economy;
+    private final TownEconomyComponent economy = new TownEconomyComponent();
     private final Map<UUID, Integer> visitors = new HashMap<>();
     private int touristCount = 0; // Track tourists separately from population
     private boolean touristSpawningEnabled;
@@ -47,34 +47,20 @@ public class Town implements ITownDataProvider {
     // Personal storage - individual storage for each player (UUID -> items)
     private final Map<UUID, Map<Item, Integer>> personalStorage = new HashMap<>();
 
-    // New Data Fields (Phase 2)
-    private double happiness = 50.0; // 0-100
-    private int populationCap = 0; // Modified by upgrades
-    private final Map<String, Integer> storageCaps = new HashMap<>(); // ItemID -> Cap
-    private String currentResearch = null; // Upgrade ID
-    private int researchProgress = 0; // Days accumulator
-    private final java.util.Set<String> unlockedUpgrades = new java.util.HashSet<>();
-
     public Town(UUID id, BlockPos pos, String name) {
         this.id = id;
         this.position = pos;
         this.name = name;
-        this.economy = new TownEconomyComponent(this);
         this.touristSpawningEnabled = true;
 
         // Initialize with default starting population
         economy.setPopulation(ConfigLoader.defaultStartingPopulation);
-
-        // Default storage cap (will be overridden by upgrades/biome kit later)
-        storageCaps.put("all", 100);
     }
 
     private final com.quackers29.businesscraft.town.components.TownTradingComponent trading = new com.quackers29.businesscraft.town.components.TownTradingComponent();
     private final com.quackers29.businesscraft.town.components.TownProductionComponent production = new com.quackers29.businesscraft.town.components.TownProductionComponent(
             this);
     private final com.quackers29.businesscraft.town.components.TownContractComponent contracts = new com.quackers29.businesscraft.town.components.TownContractComponent(
-            this);
-    private final com.quackers29.businesscraft.town.components.TownResearchComponent research = new com.quackers29.businesscraft.town.components.TownResearchComponent(
             this);
 
     public void tick() {
@@ -86,7 +72,6 @@ public class Town implements ITownDataProvider {
             production.tick();
         }
         contracts.tick(); // Always tick contracts
-        research.tick(); // Always tick research
     }
 
     public void addBread(int count) {
@@ -284,14 +269,6 @@ public class Town implements ITownDataProvider {
         economy.save(economyTag);
         tag.put("economy", economyTag);
 
-        CompoundTag capsTag = new CompoundTag();
-        storageCaps.forEach((k, v) -> capsTag.putInt(k, v));
-        tag.put("storageCaps", capsTag);
-
-        ListTag upgradesList = new ListTag();
-        unlockedUpgrades.forEach(u -> upgradesList.add(net.minecraft.nbt.StringTag.valueOf(u)));
-        tag.put("unlockedUpgrades", upgradesList);
-
         CompoundTag tradingTag = new CompoundTag();
         trading.save(tradingTag);
         tag.put("trading", tradingTag);
@@ -303,10 +280,6 @@ public class Town implements ITownDataProvider {
         CompoundTag contractsTag = new CompoundTag();
         contracts.save(contractsTag);
         tag.put("contracts", contractsTag);
-
-        CompoundTag researchTag = new CompoundTag();
-        research.save(researchTag);
-        tag.put("research", researchTag);
 
         if (pathStart != null) {
             CompoundTag startPos = new CompoundTag();
@@ -548,28 +521,6 @@ public class Town implements ITownDataProvider {
                     LOGGER.error("Error parsing player UUID for personal storage: {}", playerKey, e);
                 }
             });
-        }
-
-        // Load new Phase 2 data
-        if (tag.contains("happiness"))
-            town.happiness = tag.getDouble("happiness");
-        if (tag.contains("populationCap"))
-            town.populationCap = tag.getInt("populationCap");
-        if (tag.contains("currentResearch"))
-            town.currentResearch = tag.getString("currentResearch");
-        if (tag.contains("researchProgress"))
-            town.researchProgress = tag.getInt("researchProgress");
-
-        if (tag.contains("storageCaps")) {
-            CompoundTag capsTag = tag.getCompound("storageCaps");
-            capsTag.getAllKeys().forEach(key -> town.storageCaps.put(key, capsTag.getInt(key)));
-        }
-
-        if (tag.contains("unlockedUpgrades")) {
-            ListTag list = tag.getList("unlockedUpgrades", Tag.TAG_STRING);
-            for (int i = 0; i < list.size(); i++) {
-                town.unlockedUpgrades.add(list.getString(i));
-            }
         }
 
         return town;
@@ -853,66 +804,6 @@ public class Town implements ITownDataProvider {
         return playerStorage.getOrDefault(item, 0);
     }
 
-    public Map<UUID, Map<Item, Integer>> getPersonalStorage() {
-        return personalStorage;
-    }
-
-    // ================================
-    // Phase 2 Getters/Setters
-    // ================================
-    public double getHappiness() {
-        return happiness;
-    }
-
-    public void setHappiness(double happiness) {
-        this.happiness = Math.max(0, Math.min(100, happiness));
-    }
-
-    public int getPopulationCap() {
-        return populationCap;
-    }
-
-    public void setPopulationCap(int cap) {
-        this.populationCap = cap;
-    }
-
-    public String getCurrentResearch() {
-        return currentResearch;
-    }
-
-    public void setCurrentResearch(String research) {
-        this.currentResearch = research;
-    }
-
-    public int getResearchProgress() {
-        return researchProgress;
-    }
-
-    public void setResearchProgress(int progress) {
-        this.researchProgress = progress;
-    }
-
-    public int getStorageCap(String itemId) {
-        return storageCaps.getOrDefault(itemId, storageCaps.getOrDefault("all", 0));
-    }
-
-    public void setStorageCap(String itemId, int cap) {
-        storageCaps.put(itemId, cap);
-    }
-
-    public boolean hasUpgrade(String upgradeId) {
-        return unlockedUpgrades.contains(upgradeId);
-    }
-
-    public void addUpgrade(String upgradeId) {
-        unlockedUpgrades.add(upgradeId);
-        markDirty();
-    }
-
-    public java.util.Set<String> getUnlockedUpgrades() {
-        return java.util.Collections.unmodifiableSet(unlockedUpgrades);
-    }
-
     /**
      * Get all items in a player's personal storage
      * 
@@ -936,9 +827,5 @@ public class Town implements ITownDataProvider {
 
     public com.quackers29.businesscraft.town.components.TownProductionComponent getProduction() {
         return production;
-    }
-
-    public com.quackers29.businesscraft.town.components.TownResearchComponent getResearch() {
-        return research;
     }
 }
