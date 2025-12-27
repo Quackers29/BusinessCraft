@@ -15,6 +15,7 @@ import java.util.Map;
 public class TownTradingComponent implements TownComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownTradingComponent.class);
 
+    private final com.quackers29.businesscraft.town.Town town;
     private final Map<String, TradingStock> stocks = new HashMap<>();
 
     public static class TradingStock {
@@ -29,7 +30,8 @@ public class TownTradingComponent implements TownComponent {
         }
     }
 
-    public TownTradingComponent() {
+    public TownTradingComponent(com.quackers29.businesscraft.town.Town town) {
+        this.town = town;
         // Initialize default stocks for known resources
         // In a real scenario, this might be done lazily or based on town type
     }
@@ -58,9 +60,37 @@ public class TownTradingComponent implements TownComponent {
         }
 
         TradingStock stock = stocks.get(resourceId);
-        stock.current += amount;
-        if (stock.current < 0)
-            stock.current = 0;
+        float newAmount = stock.current + amount;
+
+        // Strict cap check for additions
+        if (amount > 0) {
+            float cap = getStorageCap(resourceId);
+            if (newAmount > cap) {
+                newAmount = cap;
+            }
+        }
+
+        if (newAmount < 0)
+            newAmount = 0;
+
+        stock.current = newAmount;
+    }
+
+    public float getStorageCap(String resourceId) {
+        if (town == null)
+            return 999999f;
+
+        float baseGlobal = 0f;
+        if (baseGlobal == 0)
+            baseGlobal = 50f;
+
+        com.quackers29.businesscraft.town.components.TownUpgradeComponent upgrades = town.getUpgrades();
+        if (upgrades != null) {
+            float globalMod = upgrades.getModifier("storage_cap_all");
+            float specificMod = upgrades.getModifier("storage_cap_" + resourceId);
+            return baseGlobal + globalMod + specificMod;
+        }
+        return baseGlobal;
     }
 
     @Override

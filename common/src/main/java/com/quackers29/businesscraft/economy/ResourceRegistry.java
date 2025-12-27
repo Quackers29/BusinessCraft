@@ -18,7 +18,7 @@ import java.util.Map;
 public class ResourceRegistry {
     private static final Logger LOGGER = LoggerFactory.getLogger(ResourceRegistry.class);
     private static final Map<String, ResourceType> RESOURCES = new HashMap<>();
-    private static final String CONFIG_FILE_NAME = "tradeable_items.csv";
+    private static final String CONFIG_FILE_NAME = "items.csv";
 
     public static void load() {
         RESOURCES.clear();
@@ -39,20 +39,27 @@ public class ResourceRegistry {
                 }
 
                 String[] parts = line.split(",");
-                if (parts.length >= 2) {
+                // Expecting: item_id,display_name,mc_item_id
+                if (parts.length >= 3) {
                     String id = parts[0].trim();
-                    String itemIdStr = parts[1].trim();
+                    String displayName = parts[1].trim();
+                    String mcItemIdStr = parts[2].trim();
 
-                    if (id.isEmpty() || itemIdStr.isEmpty())
+                    if (id.isEmpty() || mcItemIdStr.isEmpty())
                         continue;
 
                     try {
-                        ResourceLocation itemId = new ResourceLocation(itemIdStr);
+                        ResourceLocation itemId = new ResourceLocation(mcItemIdStr);
+                        // ResourceType constructor might need update or we keep it as is.
+                        // Original ResourceType(id, itemId).
                         ResourceType type = new ResourceType(id, itemId);
+                        // We might want to store display name too, but ResourceType might not support
+                        // it yet.
+                        // For now, adhere to existing constructor flexibility.
                         RESOURCES.put(id, type);
-                        LOGGER.info("Registered resource: {} -> {}", id, itemId);
+                        LOGGER.info("Registered item: {} -> {} ({})", id, itemId, displayName);
                     } catch (Exception e) {
-                        LOGGER.error("Invalid item ID in {}: {}", CONFIG_FILE_NAME, itemIdStr);
+                        LOGGER.error("Invalid item ID in {}: {}", CONFIG_FILE_NAME, mcItemIdStr);
                     }
                 }
             }
@@ -61,7 +68,6 @@ public class ResourceRegistry {
         }
 
         // Expand resources (find equivalents)
-        // This should be done after items are registered
         for (ResourceType type : RESOURCES.values()) {
             type.expand();
         }
@@ -69,12 +75,12 @@ public class ResourceRegistry {
 
     private static void createDefaultConfig(File file) {
         try (FileWriter writer = new FileWriter(file)) {
-            writer.write("resource_id,canonical_item_id\n");
-            writer.write("wood,minecraft:oak_log\n");
-            writer.write("iron,minecraft:iron_ingot\n");
-            writer.write("coal,minecraft:coal\n");
-            writer.write("food,minecraft:bread\n");
-            writer.write("emerald,minecraft:emerald\n");
+            writer.write("item_id,display_name,mc_item_id\n");
+            writer.write("wood,Wood,minecraft:oak_log\n");
+            writer.write("iron,Iron Ingot,minecraft:iron_ingot\n");
+            writer.write("coal,Coal,minecraft:coal\n");
+            writer.write("food,Food,minecraft:bread\n");
+            writer.write("money,Emeralds,minecraft:emerald\n");
         } catch (IOException e) {
             LOGGER.error("Failed to create default {}", CONFIG_FILE_NAME, e);
         }
@@ -88,10 +94,6 @@ public class ResourceRegistry {
         return RESOURCES.values();
     }
 
-    /**
-     * Finds the resource type for a given item.
-     * Returns null if the item is not a tradeable resource.
-     */
     public static ResourceType getFor(net.minecraft.world.item.Item item) {
         ResourceLocation itemId = PlatformAccess.getRegistry().getItemKey(item);
         for (ResourceType type : RESOURCES.values()) {

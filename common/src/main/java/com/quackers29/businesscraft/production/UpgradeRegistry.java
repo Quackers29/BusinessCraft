@@ -1,6 +1,9 @@
 package com.quackers29.businesscraft.production;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.data.parsers.DataParser;
+import com.quackers29.businesscraft.data.parsers.Effect;
+import com.quackers29.businesscraft.data.parsers.DataParser.ResourceAmount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,78 +13,130 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class UpgradeRegistry {
     private static final Logger LOGGER = LoggerFactory.getLogger(UpgradeRegistry.class);
-    private static final Map<String, Upgrade> UPGRADES = new HashMap<>();
-    private static final String CONFIG_FILE_NAME = "town_upgrades.csv";
+    private static final Map<String, UpgradeNode> NODES = new HashMap<>();
+    private static final String UPGRADES_FILE = "upgrades.csv";
+    private static final String REQ_FILE = "upgrade_requirements.csv";
 
     public static void load() {
-        UPGRADES.clear();
+        NODES.clear();
         Path configDir = PlatformAccess.platform.getConfigDirectory();
-        File configFile = configDir.resolve(CONFIG_FILE_NAME).toFile();
 
-        if (!configFile.exists()) {
-            createDefaultConfig(configFile);
-        }
+        loadNodes(configDir.resolve(UPGRADES_FILE).toFile());
+        loadRequirements(configDir.resolve(REQ_FILE).toFile());
+    }
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(configFile))) {
+    private static void loadNodes(File file) {
+        if (!file.exists())
+            createDefaultUpgrades(file);
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             boolean firstLine = true;
             while ((line = reader.readLine()) != null) {
                 if (firstLine) {
                     firstLine = false;
-                    continue; // Skip header
+                    continue;
                 }
 
+                // node_id,category,display_name,prereq_nodes,benefit_description,effects
                 String[] parts = line.split(",");
                 if (parts.length >= 6) {
-                    // id,name,pop_req,input_id,input_rate,output_id,output_rate
                     String id = parts[0].trim();
-                    String name = parts[1].trim();
-                    int popReq = Integer.parseInt(parts[2].trim());
+                    String category = parts[1].trim();
+                    String name = parts[2].trim();
+                    String prereqsRaw = parts[3].trim();
+                    String desc = parts[4].trim();
+                    String effectsRaw = parts[5].trim();
 
-                    Upgrade upgrade = UPGRADES.computeIfAbsent(id, k -> new Upgrade(k, name, popReq));
-
-                    String inputId = parts[3].trim();
-                    float inputRate = Float.parseFloat(parts[4].trim());
-                    if (!inputId.isEmpty() && !inputId.equals("none")) {
-                        upgrade.addInput(inputId, inputRate);
+                    List<String> prereqs = new ArrayList<>();
+                    if (!prereqsRaw.isEmpty()) {
+                        for (String p : prereqsRaw.split(";")) {
+                            if (!p.trim().isEmpty())
+                                prereqs.add(p.trim());
+                        }
                     }
 
-                    String outputId = parts[5].trim();
-                    float outputRate = Float.parseFloat(parts[6].trim());
-                    if (!outputId.isEmpty() && !outputId.equals("none")) {
-                        upgrade.addOutput(outputId, outputRate);
+                    List<Effect> effects = DataParser.parseEffects(effectsRaw);
+
+                    NODES.put(id, new UpgradeNode(id, category, name, prereqs, desc, effects));
+                    LOGGER.info("Registered upgrade node: {}", id);
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.error("Failed to load {}", UPGRADES_FILE, e);
+        }
+    }
+
+    private static void loadRequirements(File file) {
+        if (!file.exists())
+            createDefaultReqs(file);
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            boolean firstLine = true;
+            while ((line = reader.readLine()) != null) {
+                if (firstLine) {
+                    firstLine = false;
+                    continue;
+                }
+
+                // node_id,research_days,required_items
+                String[] parts = line.split(",");
+                if (parts.length >= 2) {
+                    String id = parts[0].trim();
+                    float days = 0;
+                    try {
+                        days = Float.parseFloat(parts[1].trim());
+                    } catch (NumberFormatException e) {
+                    }
+
+                    String itemsRaw = (parts.length > 2) ? parts[2].trim() : "";
+                    List<ResourceAmount> costs = DataParser.parseResources(itemsRaw);
+
+                    UpgradeNode node = NODES.get(id);
+                    if (node != null) {
+                        node.setRequirements(days, costs);
+                    } else {
+                        LOGGER.warn("Requirement found for unknown node: {}", id);
                     }
                 }
             }
-            LOGGER.info("Loaded {} town upgrades", UPGRADES.size());
-        } catch (Exception e) {
-            LOGGER.error("Failed to load {}", CONFIG_FILE_NAME, e);
-        }
-    }
-
-    private static void createDefaultConfig(File file) {
-        try (FileWriter writer = new FileWriter(file)) {
-            writer.write("id,name,pop_req,input_id,input_rate,output_id,output_rate\n");
-            writer.write("wheat_farm,Wheat Farm,10,none,0,food,1.0\n");
-            writer.write("bakery,Bakery,20,wheat,2.0,food,3.0\n");
-            writer.write("lumber_camp,Lumber Camp,15,none,0,wood,1.0\n");
-            writer.write("iron_mine,Iron Mine,30,wood,0.5,iron,0.5\n");
         } catch (IOException e) {
-            LOGGER.error("Failed to create default {}", CONFIG_FILE_NAME, e);
+            LOGGER.error("Failed to load {}", REQ_FILE, e);
         }
     }
 
-    public static Upgrade get(String id) {
-        return UPGRADES.get(id);
+    private static void createDefaultUpgrades(File file) {
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write("node_id,category,display_name,prereq_nodes,benefit_description,effects\n");
+            writer.write(
+                    "basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,pop_cap:10;storage_cap_all:200;happiness:50;population_maintenance;population_growth\n");
+            writer.write(
+                    "farming_basic,farming,Basic Farming,basic_settlement,,Starts food production,basic_farming\n");
+        } catch (IOException e) {
+            LOGGER.error("Failed to create {}", UPGRADES_FILE, e);
+        }
     }
 
-    public static Collection<Upgrade> getAll() {
-        return UPGRADES.values();
+    private static void createDefaultReqs(File file) {
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write("node_id,research_days,required_items\n");
+            writer.write("basic_settlement,0,\n");
+            writer.write("farming_basic,1,wood:10\n");
+        } catch (IOException e) {
+            LOGGER.error("Failed to create {}", REQ_FILE, e);
+        }
+    }
+
+    public static UpgradeNode get(String id) {
+        return NODES.get(id);
+    }
+
+    public static Collection<UpgradeNode> getAll() {
+        return NODES.values();
     }
 }

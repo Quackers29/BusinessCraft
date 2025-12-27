@@ -57,9 +57,25 @@ public class Town implements ITownDataProvider {
         economy.setPopulation(ConfigLoader.defaultStartingPopulation);
     }
 
-    private final com.quackers29.businesscraft.town.components.TownTradingComponent trading = new com.quackers29.businesscraft.town.components.TownTradingComponent();
+    private final com.quackers29.businesscraft.town.components.TownTradingComponent trading = new com.quackers29.businesscraft.town.components.TownTradingComponent(
+            this);
+    private final com.quackers29.businesscraft.town.components.TownUpgradeComponent upgrades = new com.quackers29.businesscraft.town.components.TownUpgradeComponent(
+            this);
     private final com.quackers29.businesscraft.town.components.TownProductionComponent production = new com.quackers29.businesscraft.town.components.TownProductionComponent(
             this);
+
+    // Stats
+    private float happiness = 50.0f; // 0-100
+    private float happinessModifier = 0f; // Calculated from upgrades
+
+    public com.quackers29.businesscraft.town.components.TownUpgradeComponent getUpgrades() {
+        return upgrades;
+    }
+
+    public float getHappiness() {
+        return happiness;
+    }
+
     private final com.quackers29.businesscraft.town.components.TownContractComponent contracts = new com.quackers29.businesscraft.town.components.TownContractComponent(
             this);
 
@@ -390,8 +406,14 @@ public class Town implements ITownDataProvider {
         if (tag.contains("production")) {
             town.production.load(tag.getCompound("production"));
         }
+        if (tag.contains("upgrades")) {
+            town.upgrades.load(tag.getCompound("upgrades"));
+        }
         if (tag.contains("contracts")) {
             town.contracts.load(tag.getCompound("contracts"));
+        }
+        if (tag.contains("happiness")) {
+            town.happiness = tag.getFloat("happiness");
         }
 
         if (tag.contains("PathStart")) {
@@ -545,6 +567,10 @@ public class Town implements ITownDataProvider {
 
     public int getPopulation() {
         return economy.getPopulation();
+    }
+
+    public void setPopulation(int population) {
+        economy.setPopulation(population);
     }
 
     public UUID getId() {
@@ -828,4 +854,5 @@ public class Town implements ITownDataProvider {
     public com.quackers29.businesscraft.town.components.TownProductionComponent getProduction() {
         return production;
     }
+
 }

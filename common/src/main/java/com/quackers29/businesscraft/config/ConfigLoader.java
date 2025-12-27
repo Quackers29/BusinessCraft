@@ -61,6 +61,7 @@ public class ConfigLoader {
     // Production config
     public static boolean productionEnabled = true;
     public static int productionTickInterval = 100;
+    public static int dailyTickInterval = 24000;
 
     public static final ConfigLoader INSTANCE = new ConfigLoader();
 
