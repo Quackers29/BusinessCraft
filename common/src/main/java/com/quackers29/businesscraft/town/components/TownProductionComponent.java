@@ -29,8 +29,8 @@ public class TownProductionComponent implements TownComponent {
         for (ProductionRecipe recipe : ProductionRegistry.getAll()) {
             // Calculate target interval in ticks
             int interval = (int) (recipe.baseCycleTimeDays * ConfigLoader.dailyTickInterval);
-            if (interval <= 0)
-                interval = ConfigLoader.dailyTickInterval; // Fallback
+            if (interval < 1)
+                interval = 1; // Minimum 1 tick
 
             // Increment progress
             int current = productionProgress.getOrDefault(recipe.id, 0);
