@@ -33,7 +33,6 @@ public class Town implements ITownDataProvider {
     private BlockPos pathStart;
     private BlockPos pathEnd;
     private int searchRadius = 10;
-    private long lastModifiedTime = 0;
 
     // Counter for tourists received since last population increase
     private int touristsReceivedCounter = 0;
@@ -93,7 +92,6 @@ public class Town implements ITownDataProvider {
     @Override
     public void addResource(Item item, int count) {
         economy.addResource(item, count);
-        markDirty(); // Trigger update
     }
 
     @Override
@@ -603,10 +601,6 @@ public class Town implements ITownDataProvider {
         return position;
     }
 
-    public long getLastModifiedTime() {
-        return lastModifiedTime;
-    }
-
     public void setTouristSpawningEnabled(boolean enabled) {
         LOGGER.info("TOGGLE [{}] - Changing from {} to {}",
                 id, touristSpawningEnabled, enabled);
@@ -686,9 +680,6 @@ public class Town implements ITownDataProvider {
                         this.name, this.id);
             }
         }
-
-        // Update modification timestamp
-        this.lastModifiedTime = System.currentTimeMillis();
 
         if (!foundInAnyLevel) {
             LOGGER.warn("Failed to mark town '{}' (id: {}) as dirty - not found in any loaded level",

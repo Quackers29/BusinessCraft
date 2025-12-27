@@ -22,9 +22,7 @@ public class TownDataCacheManager {
     private int cachedPopulation;
     private int cachedTourists;
     private int cachedMaxTourists;
-
     private int cachedSearchRadius;
-    private double cachedHappiness;
 
     /**
      * Creates a new cache manager.
@@ -47,9 +45,7 @@ public class TownDataCacheManager {
         this.cachedPopulation = getCachedPopulation();
         this.cachedTourists = getCachedTouristCount();
         this.cachedMaxTourists = getCachedMaxTourists();
-
         this.cachedSearchRadius = getCachedSearchRadius();
-        this.cachedHappiness = getCachedHappiness();
     }
 
     /**
@@ -74,18 +70,6 @@ public class TownDataCacheManager {
             return dataCache.getPopulation();
         }
         return menu.getTownPopulation();
-    }
-
-    /**
-     * Gets the cached happiness.
-     * 
-     * @return The happiness value
-     */
-    public double getCachedHappiness() {
-        if (dataCache != null) {
-            return dataCache.getHappiness();
-        }
-        return 0; // Fallback default
     }
 
     /**

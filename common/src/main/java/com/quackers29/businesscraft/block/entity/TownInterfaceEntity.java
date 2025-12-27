@@ -127,9 +127,7 @@ public class TownInterfaceEntity extends BlockEntity
             .addReadOnlyField("max_tourists", this::getMaxTouristsFromTown, "Maximum tourists allowed in town")
             .build();
     private static final Logger LOGGER = LoggerFactory.getLogger(TownInterfaceEntity.class);
-
     private Map<String, Integer> visitingPopulation = new HashMap<>();
-    private long lastSyncTime = 0;
     private BlockPos pathStart;
     private BlockPos pathEnd;
     private boolean isInPathCreationMode = false;
@@ -585,16 +583,9 @@ public class TownInterfaceEntity extends BlockEntity
         }
 
         if (!level.isClientSide && townId != null) {
-
             if (level instanceof ServerLevel sLevel1) {
                 Town town = TownManager.get(sLevel1).getTown(townId);
                 if (town != null) {
-                    // Check for town modifications and sync if needed
-                    if (town.getLastModifiedTime() > lastSyncTime) {
-                        lastSyncTime = town.getLastModifiedTime();
-                        setChanged();
-                        level.sendBlockUpdated(pos, state, state, 3);
-                    }
                     // Platform-based villager spawning
                     if (touristSpawningEnabled && town.canSpawnTourists() &&
                             platformManager.getPlatformCount() > 0 &&
@@ -1537,11 +1528,6 @@ public class TownInterfaceEntity extends BlockEntity
         @Override
         public int getPopulation() {
             return clientSyncHelper.getClientPopulation();
-        }
-
-        @Override
-        public double getHappiness() {
-            return clientSyncHelper.getClientHappiness();
         }
 
         @Override
