@@ -116,7 +116,7 @@ public class TownInterfaceEntity extends BlockEntity
 
     // Modular ContainerData system - replaces hardcoded indices with named fields
     private final ContainerDataHelper containerData = ContainerDataHelper.builder("TownBlock")
-
+            .addReadOnlyField("bread_count", this::getBreadCountFromTown, "Legacy bread count for compatibility")
             .addReadOnlyField("population", this::getPopulationFromTown, "Current town population")
             .addField("spawn_enabled", this::getTouristSpawningEnabledAsInt, this::setTouristSpawningEnabledFromInt,
                     "Tourist spawning enabled flag")
@@ -195,6 +195,13 @@ public class TownInterfaceEntity extends BlockEntity
     private static final String ANY_TOWN_NAME = "Any Town";
 
     // Helper methods for ContainerData integration
+    private int getBreadCountFromTown() {
+        if (townId != null && level instanceof ServerLevel sLevel) {
+            Town town = TownManager.get(sLevel).getTown(townId);
+            return town != null ? town.getBreadCount() : 0;
+        }
+        return 0;
+    }
 
     private int getPopulationFromTown() {
         if (townId != null && level instanceof ServerLevel sLevel) {
@@ -768,9 +775,6 @@ public class TownInterfaceEntity extends BlockEntity
 
         // Add visit history data
         clientSyncHelper.syncVisitHistoryForClient(tag, provider, level);
-
-        // Add upgrades data
-        clientSyncHelper.syncUpgradesForClient(tag, provider);
     }
 
     @Override
@@ -804,17 +808,11 @@ public class TownInterfaceEntity extends BlockEntity
         // Handle platform data updates using platform manager
         platformManager.updateClientPlatforms(tag);
 
-        if (tag.contains("clientResources")) {
-            clientSyncHelper.loadResourcesFromTag(tag);
-        }
+        // Load client resources data
+        loadResourcesFromTag(tag);
 
-        // Load visit history
-        if (tag.contains("visitHistory")) {
-            clientSyncHelper.loadVisitHistoryFromTag(tag);
-        }
-
-        // Load unlocked upgrades
-        clientSyncHelper.loadUpgradesFromTag(tag);
+        // Load visit history data
+        clientSyncHelper.loadVisitHistoryFromTag(tag);
     }
 
     /**
@@ -1062,14 +1060,10 @@ public class TownInterfaceEntity extends BlockEntity
      * Gets the town data provider, initializing it if needed
      */
     public ITownDataProvider getTownDataProvider() {
-        if (townDataProvider == null) {
-            if (townId != null && level instanceof ServerLevel sLevel) {
-                Town town = TownManager.get(sLevel).getTown(townId);
-                if (town != null) {
-                    townDataProvider = town;
-                }
-            } else if (level != null && level.isClientSide()) {
-                townDataProvider = new ClientTownDataProvider();
+        if (townDataProvider == null && townId != null && level instanceof ServerLevel sLevel) {
+            Town town = TownManager.get(sLevel).getTown(townId);
+            if (town != null) {
+                townDataProvider = town;
             }
         }
         return townDataProvider;
@@ -1227,19 +1221,6 @@ public class TownInterfaceEntity extends BlockEntity
     // Helper method to get town name from client cache or resolve from server
     public String getTownNameFromId(UUID townId) {
         return clientSyncHelper.getTownNameFromId(townId, level);
-    }
-
-    public java.util.Set<String> getUnlockedUpgrades() {
-        if (level != null && level.isClientSide()) {
-            return clientSyncHelper.getClientUpgrades();
-        }
-        if (townId != null && level instanceof ServerLevel sLevel) {
-            Town town = TownManager.get(sLevel).getTown(townId);
-            if (town != null) {
-                return town.getUnlockedUpgrades();
-            }
-        }
-        return Collections.emptySet();
     }
 
     // Platform management methods - delegated to PlatformManager
@@ -1461,168 +1442,6 @@ public class TownInterfaceEntity extends BlockEntity
                             town.getName(), sellAmount, resourceId, price, contract.getId());
                 }
             }
-        }
-    }
-
-    /**
-     * Client-side implementation of ITownDataProvider that delegates to
-     * ClientSyncHelper
-     * and local entity state.
-     */
-    private class ClientTownDataProvider implements ITownDataProvider {
-        @Override
-        public UUID getTownId() {
-            return townId;
-        }
-
-        @Override
-        public String getTownName() {
-            return TownInterfaceEntity.this.getTownName();
-        }
-
-        @Override
-        public void addResource(Item item, int count) {
-            // No-op on client
-        }
-
-        @Override
-        public int getResourceCount(Item item) {
-            return getClientResources().getOrDefault(item, 0);
-        }
-
-        @Override
-        public Map<Item, Integer> getAllResources() {
-            return getClientResources();
-        }
-
-        @Override
-        public boolean addToCommunalStorage(Item item, int count) {
-            return false;
-        }
-
-        @Override
-        public int getCommunalStorageCount(Item item) {
-            return getClientCommunalStorage().getOrDefault(item, 0);
-        }
-
-        @Override
-        public Map<Item, Integer> getAllCommunalStorageItems() {
-            return getClientCommunalStorage();
-        }
-
-        @Override
-        public boolean addToPersonalStorage(UUID playerId, Item item, int count) {
-            return false;
-        }
-
-        @Override
-        public int getPersonalStorageCount(UUID playerId, Item item) {
-            return getClientPersonalStorage(playerId).getOrDefault(item, 0);
-        }
-
-        @Override
-        public Map<Item, Integer> getPersonalStorageItems(UUID playerId) {
-            return getClientPersonalStorage(playerId);
-        }
-
-        @Override
-        public int getPopulation() {
-            return clientSyncHelper.getClientPopulation();
-        }
-
-        @Override
-        public int getTouristCount() {
-            return getTouristCountFromTown();
-        }
-
-        @Override
-        public int getMaxTourists() {
-            return getMaxTouristsFromTown();
-        }
-
-        @Override
-        public boolean canAddMoreTourists() {
-            return false;
-        }
-
-        @Override
-        public boolean isTouristSpawningEnabled() {
-            return getTouristSpawningEnabledAsInt() != 0;
-        }
-
-        @Override
-        public void setTouristSpawningEnabled(boolean enabled) {
-            // No-op on client
-        }
-
-        @Override
-        public BlockPos getPathStart() {
-            return pathStart;
-        }
-
-        @Override
-        public void setPathStart(BlockPos pos) {
-            // No-op on client
-        }
-
-        @Override
-        public BlockPos getPathEnd() {
-            return pathEnd;
-        }
-
-        @Override
-        public void setPathEnd(BlockPos pos) {
-            // No-op on client
-        }
-
-        @Override
-        public int getSearchRadius() {
-            return TownInterfaceEntity.this.getSearchRadius();
-        }
-
-        @Override
-        public void setSearchRadius(int radius) {
-            // No-op on client
-        }
-
-        @Override
-        public boolean canSpawnTourists() {
-            return getCanSpawnTouristsAsInt() == 1;
-        }
-
-        @Override
-        public void markDirty() {
-            // No-op on client
-        }
-
-        @Override
-        public BlockPos getPosition() {
-            return getBlockPos();
-        }
-
-        @Override
-        public void addVisitor(UUID fromTownId) {
-            // No-op on client
-        }
-
-        @Override
-        public int getTotalVisitors() {
-            return visitingPopulation.values().stream().mapToInt(Integer::intValue).sum();
-        }
-
-        @Override
-        public java.util.Set<String> getUnlockedUpgrades() {
-            return TownInterfaceEntity.this.getUnlockedUpgrades();
-        }
-
-        @Override
-        public void recordVisit(UUID originTownId, int count, BlockPos originPos) {
-            // No-op on client
-        }
-
-        @Override
-        public List<VisitHistoryRecord> getVisitHistory() {
-            return TownInterfaceEntity.this.getVisitHistory();
         }
     }
 }
