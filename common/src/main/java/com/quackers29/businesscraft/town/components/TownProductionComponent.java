@@ -172,13 +172,8 @@ public class TownProductionComponent implements TownComponent {
 
         currentProgress += tickIncrement;
 
-        // Aggressive logging for debugging
-        if (recipe.getId().equals("basic_farming") || tickCounter % 20 == 0) {
-            LOGGER.info(
-                    "Production Tick - ID: {}, Base: {}, Mod: {}, Effective: {}, Progress: {}, Increment: {}, Interval: {}",
-                    recipe.getId(), baseTime, timeMod, effectiveTime, currentProgress, tickIncrement,
-                    com.quackers29.businesscraft.config.ConfigLoader.dailyTickInterval);
-        }
+        if (shouldLog)
+            LOGGER.info("Recipe {} progress: {}/{}", recipe.getId(), currentProgress, effectiveTime);
 
         if (currentProgress >= effectiveTime) {
             // Complete Recipe
@@ -328,8 +323,8 @@ public class TownProductionComponent implements TownComponent {
                 // We use calculate effective time logic
                 float mod = town.getUpgrades().getModifier(id + "-time");
                 float effective = base + mod;
-                if (effective < 0.1f)
-                    effective = 0.1f;
+                if (effective < 0.000001f)
+                    effective = 0.000001f;
                 percentages.put(id, current / effective);
             } else {
                 percentages.put(id, 0f);
