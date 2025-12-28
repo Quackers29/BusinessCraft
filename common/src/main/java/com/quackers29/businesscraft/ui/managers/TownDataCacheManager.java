@@ -17,27 +17,27 @@ import java.util.Map;
 public class TownDataCacheManager {
     private final TownDataCache dataCache;
     private final TownInterfaceMenu menu;
-    
+
     // Cached values for UI updates
     private int cachedPopulation;
     private int cachedTourists;
     private int cachedMaxTourists;
     private int cachedSearchRadius;
-    
+
     /**
      * Creates a new cache manager.
      * 
      * @param dataCache The town data cache (can be null)
-     * @param menu The town interface menu for fallback data
+     * @param menu      The town interface menu for fallback data
      */
     public TownDataCacheManager(TownDataCache dataCache, TownInterfaceMenu menu) {
         this.dataCache = dataCache;
         this.menu = menu;
-        
+
         // Initialize cached values
         refreshCachedValues();
     }
-    
+
     /**
      * Refreshes all cached values from the cache or menu.
      */
@@ -47,7 +47,7 @@ public class TownDataCacheManager {
         this.cachedMaxTourists = getCachedMaxTourists();
         this.cachedSearchRadius = getCachedSearchRadius();
     }
-    
+
     /**
      * Gets the cached town name.
      * 
@@ -59,7 +59,7 @@ public class TownDataCacheManager {
         }
         return menu.getTownName();
     }
-    
+
     /**
      * Gets the cached population count.
      * 
@@ -71,7 +71,7 @@ public class TownDataCacheManager {
         }
         return menu.getTownPopulation();
     }
-    
+
     /**
      * Gets the cached tourist count.
      * 
@@ -83,7 +83,7 @@ public class TownDataCacheManager {
         }
         return menu.getCurrentTourists();
     }
-    
+
     /**
      * Gets the cached maximum tourists.
      * 
@@ -95,7 +95,7 @@ public class TownDataCacheManager {
         }
         return menu.getMaxTourists();
     }
-    
+
     /**
      * Gets the cached search radius.
      * 
@@ -107,7 +107,7 @@ public class TownDataCacheManager {
         }
         return menu.getSearchRadius();
     }
-    
+
     /**
      * Gets the cached resources map.
      * 
@@ -119,7 +119,7 @@ public class TownDataCacheManager {
         }
         return menu.getAllResources();
     }
-    
+
     /**
      * Gets the cached visit history.
      * 
@@ -131,7 +131,7 @@ public class TownDataCacheManager {
         }
         return Collections.emptyList(); // Fallback when cache is not available
     }
-    
+
     /**
      * Gets a formatted tourist string for display.
      * 
@@ -140,10 +140,11 @@ public class TownDataCacheManager {
     public String getTouristString() {
         int current = menu.getCurrentTourists();
         int max = getCachedMaxTourists();
-        if(current < 0) return "Loading...";
+        if (current < 0)
+            return "Loading...";
         return current + "/" + max;
     }
-    
+
     /**
      * Invalidates the cache if available.
      */
@@ -152,7 +153,7 @@ public class TownDataCacheManager {
             dataCache.invalidateAll();
         }
     }
-    
+
     /**
      * Updates the cached search radius value.
      * 
@@ -161,7 +162,7 @@ public class TownDataCacheManager {
     public void updateCachedSearchRadius(int newRadius) {
         this.cachedSearchRadius = newRadius;
     }
-    
+
     /**
      * Gets the locally cached population (for UI updates).
      * 
@@ -170,7 +171,7 @@ public class TownDataCacheManager {
     public int getLocalCachedPopulation() {
         return cachedPopulation;
     }
-    
+
     /**
      * Gets the locally cached tourist count (for UI updates).
      * 
@@ -179,7 +180,7 @@ public class TownDataCacheManager {
     public int getLocalCachedTourists() {
         return cachedTourists;
     }
-    
+
     /**
      * Gets the locally cached max tourists (for UI updates).
      * 
@@ -188,7 +189,7 @@ public class TownDataCacheManager {
     public int getLocalCachedMaxTourists() {
         return cachedMaxTourists;
     }
-    
+
     /**
      * Gets the locally cached search radius (for UI updates).
      * 
@@ -197,4 +198,61 @@ public class TownDataCacheManager {
     public int getLocalCachedSearchRadius() {
         return cachedSearchRadius;
     }
-} 
+
+    // --- Overview Data ---
+    private float cachedHappiness = 50f;
+    private String cachedBiome = "Unknown";
+    private String cachedCurrentResearch = "";
+    private float cachedResearchProgress = 0f;
+    private int cachedDailyTickInterval = 24000;
+    private Map<String, Float> cachedActiveProductions = Collections.emptyMap();
+    private java.util.Set<String> cachedUnlockedNodes = Collections.emptySet();
+
+    public void updateOverviewData(float happiness, String biome, String currentResearch, float researchProgress,
+            int dailyTickInterval, Map<String, Float> activeProductions, java.util.Collection<String> unlockedNodes) {
+        this.cachedHappiness = happiness;
+        if (biome != null && biome.startsWith("minecraft:")) {
+            this.cachedBiome = biome.substring(10);
+            // Capitalize first letter?
+            if (this.cachedBiome.length() > 0) {
+                this.cachedBiome = this.cachedBiome.substring(0, 1).toUpperCase() + this.cachedBiome.substring(1);
+            }
+        } else {
+            this.cachedBiome = biome != null ? biome : "Unknown";
+        }
+
+        this.cachedCurrentResearch = currentResearch;
+        this.cachedResearchProgress = researchProgress;
+        this.cachedDailyTickInterval = dailyTickInterval;
+        this.cachedActiveProductions = activeProductions;
+        this.cachedUnlockedNodes = new java.util.HashSet<>(unlockedNodes);
+    }
+
+    public float getCachedHappiness() {
+        return cachedHappiness;
+    }
+
+    public String getCachedBiome() {
+        return cachedBiome;
+    }
+
+    public String getCachedCurrentResearch() {
+        return cachedCurrentResearch;
+    }
+
+    public float getCachedResearchProgress() {
+        return cachedResearchProgress;
+    }
+
+    public int getCachedDailyTickInterval() {
+        return cachedDailyTickInterval;
+    }
+
+    public Map<String, Float> getCachedActiveProductions() {
+        return cachedActiveProductions;
+    }
+
+    public java.util.Set<String> getCachedUnlockedNodes() {
+        return cachedUnlockedNodes;
+    }
+}

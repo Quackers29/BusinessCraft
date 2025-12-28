@@ -211,6 +211,15 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
         return tabPanel;
     }
 
+    /**
+     * Gets the tab controller instance.
+     * 
+     * @return The tab controller
+     */
+    public TownTabController getTabController() {
+        return tabController;
+    }
+
     // CacheUpdateProvider implementation
     @Override
     public TownDataCacheManager getCacheManager() {

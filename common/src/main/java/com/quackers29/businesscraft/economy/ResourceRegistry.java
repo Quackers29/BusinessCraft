@@ -23,9 +23,10 @@ public class ResourceRegistry {
     public static void load() {
         RESOURCES.clear();
         Path configDir = PlatformAccess.platform.getConfigDirectory();
-        File configFile = configDir.resolve(CONFIG_FILE_NAME).toFile();
+        File configFile = configDir.resolve("businesscraft").resolve(CONFIG_FILE_NAME).toFile();
 
         if (!configFile.exists()) {
+            configFile.getParentFile().mkdirs();
             createDefaultConfig(configFile);
         }
 

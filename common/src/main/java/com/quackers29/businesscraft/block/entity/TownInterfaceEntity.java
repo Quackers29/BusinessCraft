@@ -579,8 +579,10 @@ public class TownInterfaceEntity extends BlockEntity
         processResourcesInSlot();
 
         // Sync town data from the provider
-        if (level.getGameTime() % 60 == 0) { // Every 3 seconds
+        if (level.getGameTime() % 10 == 0) { // Every 10 ticks (0.5 seconds) for snappier UI
             updateFromTownProvider();
+            setChanged(); // Force sync of resources to client
+
             // Delegate buffer synchronization to manager
             if (bufferManager != null) {
                 // Ensure buffer manager has level (safety check)

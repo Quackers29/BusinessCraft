@@ -1,5 +1,5 @@
 prod_id,display_name,base_cycle_time_days,inputs,outputs
 population_maintenance,Food Consumption,1,pop*food:1,
 population_growth,Natural Population Growth,10,happiness:>60;pop:<pop_cap,population:1
-basic_farming,Basic Wheat Farming,1,,food:4
+basic_farming,Basic Wheat Farming,0.000001,,food:4
 wood_to_planks,Wood to Planks,0.5,wood:4,planks:16

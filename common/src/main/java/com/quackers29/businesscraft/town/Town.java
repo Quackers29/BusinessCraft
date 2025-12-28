@@ -29,6 +29,7 @@ public class Town implements ITownDataProvider {
     private final TownEconomyComponent economy = new TownEconomyComponent();
     private final Map<UUID, Integer> visitors = new HashMap<>();
     private int touristCount = 0; // Track tourists separately from population
+    private String biome = "Unknown";
     private boolean touristSpawningEnabled;
     private BlockPos pathStart;
     private BlockPos pathEnd;
@@ -74,6 +75,10 @@ public class Town implements ITownDataProvider {
 
     public float getHappiness() {
         return happiness;
+    }
+
+    public void setHappiness(float happiness) {
+        this.happiness = happiness;
     }
 
     private final com.quackers29.businesscraft.town.components.TownContractComponent contracts = new com.quackers29.businesscraft.town.components.TownContractComponent(
@@ -275,6 +280,7 @@ public class Town implements ITownDataProvider {
         tag.putInt("posY", position.getY());
         tag.putInt("posZ", position.getZ());
         tag.putInt("touristCount", touristCount);
+        tag.putString("biome", biome);
         tag.putInt("touristsReceivedCounter", touristsReceivedCounter);
         CompoundTag visitorsTag = new CompoundTag();
         visitors.forEach((visitorId, count) -> {
@@ -292,6 +298,10 @@ public class Town implements ITownDataProvider {
         CompoundTag productionTag = new CompoundTag();
         production.save(productionTag);
         tag.put("production", productionTag);
+
+        CompoundTag upgradesTag = new CompoundTag();
+        upgrades.save(upgradesTag);
+        tag.put("upgrades", upgradesTag);
 
         CompoundTag contractsTag = new CompoundTag();
         contracts.save(contractsTag);
@@ -391,6 +401,10 @@ public class Town implements ITownDataProvider {
         // Load tourists received counter
         if (tag.contains("touristsReceivedCounter")) {
             town.touristsReceivedCounter = tag.getInt("touristsReceivedCounter");
+        }
+
+        if (tag.contains("biome")) {
+            town.biome = tag.getString("biome");
         }
 
         if (tag.contains("visitors")) {
@@ -641,6 +655,15 @@ public class Town implements ITownDataProvider {
         this.searchRadius = searchRadius;
     }
 
+    public String getBiome() {
+        return biome;
+    }
+
+    public void setBiome(String biome) {
+        this.biome = biome;
+        markDirty();
+    }
+
     @Override
     public UUID getTownId() {
         return id;
@@ -853,6 +876,10 @@ public class Town implements ITownDataProvider {
 
     public com.quackers29.businesscraft.town.components.TownProductionComponent getProduction() {
         return production;
+    }
+
+    public com.quackers29.businesscraft.town.components.TownEconomyComponent getEconomy() {
+        return economy;
     }
 
 }

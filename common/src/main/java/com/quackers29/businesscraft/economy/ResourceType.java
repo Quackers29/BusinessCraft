@@ -37,6 +37,10 @@ public class ResourceType {
         return canonicalItemId;
     }
 
+    public ResourceLocation getMcItemId() {
+        return canonicalItemId;
+    }
+
     public Map<ResourceLocation, Float> getEquivalents() {
         return equivalents;
     }

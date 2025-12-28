@@ -26,9 +26,11 @@ public class ProductionRegistry {
     public static void load() {
         RECIPES.clear();
         Path configDir = PlatformAccess.platform.getConfigDirectory();
-        File configFile = configDir.resolve(CONFIG_FILE_NAME).toFile();
+        File configFile = configDir.resolve("businesscraft").resolve(CONFIG_FILE_NAME).toFile();
 
         if (!configFile.exists()) {
+            // Create parent directory if needed
+            configFile.getParentFile().mkdirs();
             createDefaultConfig(configFile);
         }
 
@@ -77,70 +79,8 @@ public class ProductionRegistry {
                     String outputsRaw = parts[4].trim();
 
                     // Parse Mixed Inputs (Resources + Conditions)
-                    List<ResourceAmount> inputs = DataParser.parseResources(inputsRaw);
-                    List<Condition> conditions = DataParser.parseConditions(inputsRaw);
-                    // Wait, DataParser.parseResources ONLY parses "key:float".
-                    // DataParser.parseConditions parses "key:operator:value" or "key:value" (if
-                    // implicit equality).
-                    // "happiness:>60" -> Condition.
-                    // "wood:4" -> ResourceAmount (AND Condition? No).
-
-                    // We need a way to distinguish.
-                    // DataParser.parseResources ignores lines that fail parse?
-                    // My implementation of parseResources logs warning only if structure matches
-                    // key:value but float fails.
-                    // "happiness:>60" -> split(:) -> ["happiness", ">60"]. Float.parse(">60")
-                    // throws.
-                    // So parseResources will skip conditions.
-
-                    // parseConditions: "wood:4". op="=". val="4".
-                    // This creates a condition "wood=4". This is NOT what we want for consumption.
-                    // We want to consume wood:4.
-
-                    // The plan implies:
-                    // "Resource consumption: item_id:amount"
-                    // "Condition checks: happiness:>60"
-
-                    // Maybe we need a smarter parser that separates them?
-                    // Or we define that "Resources" are strictly items in ResourceRegistry?
-                    // But we haven't loaded ProductionRegistry 'after' ResourceRegistry necessarily
-                    // (though we should).
-
-                    // Let's keep it simple:
-                    // Any pair that parses as Key:Float is a Resource Input (to be consumed).
-                    // Any pair that has operators (<, >, <=, >=) is a Condition.
-                    // What about "pop:<=95%pop_cap"? That's a Condition.
-                    // What about "happiness:60"? Could be condition "happines == 60".
-                    // But typically resources are "wood", "stone". things that are tradeable.
-                    // "happiness" is a stat.
-
-                    // Refined Strategy:
-                    // 1. Parse everything as generic "Token".
-                    // 2. Filter Tokens:
-                    // If key exists in ResourceRegistry -> Resource Input.
-                    // Else -> Condition.
-
-                    // This requires ResourceRegistry to be loaded first.
-
-                    // Let's rely on ResourceRegistry.get(key) != null check.
-
-                    // But wait, "pop*food:1" - that's a dynamic input.
-                    // keys like "pop*food" won't be in ResourceRegistry (which has "food").
-                    // Plan says: "pop*item_id:amount".
-
-                    // OK, let's just parse all as Inputs first.
-                    // In `ProductionRecipe`, we can have separate lists.
-
-                    // I will execute parseResources, but supress warnings for things that don't
-                    // parse as float.
-                    // Actually, I can't easily suppress generic logger warnings from here.
-                    // I should probably improve DataParser to handle this mixed content or do
-                    // custom parsing here.
-
-                    // Let's do custom parsing loop here to be safe.
-
-                    List<ResourceAmount> inputResources = new java.util.ArrayList<>();
-                    List<Condition> inputConditions = new java.util.ArrayList<>();
+                    List<ResourceAmount> inputs = new java.util.ArrayList<>();
+                    List<Condition> conditions = new java.util.ArrayList<>();
 
                     String[] inputParts = inputsRaw.split(";");
                     for (String part : inputParts) {
@@ -151,41 +91,29 @@ public class ProductionRegistry {
                         // Check for operators
                         if (part.contains(">") || part.contains("<") || part.contains("=")) {
                             // It's a condition
-                            inputConditions.addAll(DataParser.parseConditions(part));
+                            conditions.addAll(DataParser.parseConditions(part));
                             continue;
                         }
-
-                        // Check for pop* prefix
-                        // "pop*food:1" -> Resource "food", scaled by pop.
-                        // We need to store this "scaled by pop" flag?
-                        // ResourceAmount class I made is simple (id, amount).
-                        // I might need to update ResourceAmount or handle "pop*food" as a special ID?
-                        // Let's treat "pop*food" as the resource ID for now, and handle logic in
-                        // Engine.
 
                         // Try parse as resource
                         try {
                             String[] kv = part.split(":");
                             if (kv.length == 2) {
                                 float val = Float.parseFloat(kv[1]);
-                                inputResources.add(new ResourceAmount(kv[0], val));
+                                inputs.add(new ResourceAmount(kv[0], val));
                             } else {
-                                // Maybe a condition without value? (boolean flag?)
-                                // Treat as condition.
-                                inputConditions.addAll(DataParser.parseConditions(part));
+                                conditions.addAll(DataParser.parseConditions(part));
                             }
                         } catch (Exception e) {
-                            // If float parse fails, treat as condition?
-                            // e.g. "somestate:true"
-                            inputConditions.addAll(DataParser.parseConditions(part));
+                            conditions.addAll(DataParser.parseConditions(part));
                         }
                     }
 
                     List<ResourceAmount> outputs = DataParser.parseResources(outputsRaw);
 
                     RECIPES.put(id,
-                            new ProductionRecipe(id, displayName, dayTime, inputResources, outputs, inputConditions));
-                    LOGGER.info("Registered production: {}", id);
+                            new ProductionRecipe(id, displayName, dayTime, inputs, outputs, conditions));
+                    LOGGER.info("Registered production: {} (Time: {})", id, dayTime);
                 }
             }
         } catch (IOException e) {

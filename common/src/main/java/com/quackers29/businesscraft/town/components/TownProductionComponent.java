@@ -25,26 +25,26 @@ public class TownProductionComponent implements TownComponent {
         this.town = town;
     }
 
+    private int tickCounter = 0;
+
     @Override
     public void tick() {
         // Iterate all registered recipes
-        // In the future, maybe we filter by "Unlocked" recipes?
-        // Plan says: "prod_id alone... unlocks the production recipe".
-        // But also said: "Towns automatically run unlocked production recipes".
-        // So I should check if it's unlocked.
-        // How to check unlock? TownUpgradeComponent has modifiers.
-        // Effect with NO colon is an unlock? `prod_id` -> generic unlock?
-        // TownUpgradeComponent.getModifier(prod_id) should return > 0 if unlocked?
-        // Wait, TownUpgradeComponent logic: `activeModifiers.merge(effect.getTarget(),
-        // effect.getValue(), Float::sum);`
-        // Effect(part, 1.0f, false) for unlock.
-        // So if getModifier(recipeId) > 0, it is unlocked.
-        // Default recipes (like population_maintenance) might not need unlock?
-        // Or they are unlocked by "basic_settlement" node which is given to everyone.
+        // ... comments ...
+
+        tickCounter++;
+        boolean shouldLog = (tickCounter % 100 == 0);
+
+        if (shouldLog)
+            LOGGER.info("TownProductionComponent.tick() - Town: {}, Upgrades: {}",
+                    town.getName(), town.getUpgrades().getUnlockedNodes());
 
         for (ProductionRecipe recipe : ProductionRegistry.getAll()) {
             // Check unlock status
             if (town.getUpgrades().getModifier(recipe.getId()) <= 0) {
+                if (shouldLog)
+                    LOGGER.info("Recipe {} is locked (Modifier: {})",
+                            recipe.getId(), town.getUpgrades().getModifier(recipe.getId()));
                 continue; // Locked
             }
 
@@ -53,13 +53,17 @@ public class TownProductionComponent implements TownComponent {
     }
 
     private void processRecipe(ProductionRecipe recipe) {
+        boolean shouldLog = (tickCounter % 100 == 0);
+
         // Check conditions
-        if (!checkConditions(recipe))
+        if (!checkConditions(recipe)) {
+            // LOGGER.debug("Recipe {} conditions not met", recipe.getId());
             return;
+        }
 
         // Calculate Cycle Time
         float baseTime = recipe.getBaseCycleTimeDays();
-        float timeMod = town.getUpgrades().getModifier(recipe.getId() + "-time"); // Additive? "input:-25%" -> -0.25
+        float timeMod = town.getUpgrades().getModifier(recipe.getId() + "-time");
         // If modifier is percentage?
         // My Effect parser stored percentage as separate flag but `getModifier` returns
         // flat sum.
@@ -79,8 +83,8 @@ public class TownProductionComponent implements TownComponent {
         // I'll proceed assuming flat values only for this iteration.
 
         float effectiveTime = baseTime + timeMod;
-        if (effectiveTime < 0.1f)
-            effectiveTime = 0.1f; // Min cap
+        if (effectiveTime < 0.000001f)
+            effectiveTime = 0.000001f; // Min cap lowered for testing
 
         // Calculate Inputs Required
         // Input logic? Plan: "prod_id-input (% on resource inputs)"
@@ -90,25 +94,42 @@ public class TownProductionComponent implements TownComponent {
         boolean hasInputs = true;
         for (ResourceAmount input : recipe.getInputs()) {
             float required = input.amount;
-            // Apply modifiers?
-
-            // Special case: "pop*food" -> dynamic amount.
-            // My parser treated "pop*food" as resourceId.
-            // I need to intercept this.
             String resourceId = input.resourceId;
-            float amount = input.amount;
 
             if (resourceId.startsWith("pop*")) {
-                String actualRes = resourceId.substring(4);
-                amount = amount * town.getPopulation(); // Dynamic requirement
-                resourceId = actualRes;
-            } else if (resourceId.equals("population")) {
-                // consuming population?
+                resourceId = resourceId.substring(4);
+                required = required * town.getPopulation();
             }
 
-            if (town.getTrading().getStock(resourceId) < amount) {
-                hasInputs = false;
-                break;
+            if (resourceId.equals("population")) {
+                // Population check? assumed fine or handled by conditions
+            } else {
+                // Resolve resourceId to Item
+                com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
+                        .get(resourceId);
+                if (type == null) {
+                    if (shouldLog)
+                        LOGGER.warn("Recipe {} input resource type not found: {}", recipe.getId(), resourceId);
+                    hasInputs = false;
+                    break;
+                }
+
+                net.minecraft.world.item.Item item = com.quackers29.businesscraft.api.PlatformAccess.getRegistry()
+                        .getItem(type.getMcItemId());
+                if (item == null) {
+                    if (shouldLog)
+                        LOGGER.warn("Recipe {} input item not found for type: {}", recipe.getId(), resourceId);
+                    hasInputs = false;
+                    break;
+                }
+
+                if (town.getResourceCount(item) < required) {
+                    if (shouldLog)
+                        LOGGER.info("Recipe {} missing input: {} (Need {}, Have {})",
+                                recipe.getId(), resourceId, required, town.getResourceCount(item));
+                    hasInputs = false;
+                    break;
+                }
             }
         }
 
@@ -121,14 +142,26 @@ public class TownProductionComponent implements TownComponent {
         for (ResourceAmount output : recipe.getOutputs()) {
             String resId = output.resourceId;
             if (resId.equals("population"))
-                continue; // Pop has its own cap but we check condition for that
+                continue;
 
-            float current = town.getTrading().getStock(resId);
+            // Resolve resourceId to Item for cap check (or use trading cap by ID string)
+            // Use trading logic for cap as it has the logic "storage_cap_ID"
+            float current = 0f;
+            com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
+                    .get(resId);
+            if (type != null) {
+                net.minecraft.world.item.Item item = com.quackers29.businesscraft.api.PlatformAccess.getRegistry()
+                        .getItem(type.getMcItemId());
+                if (item != null) {
+                    current = town.getResourceCount(item);
+                }
+            }
+
             float cap = town.getTrading().getStorageCap(resId);
 
-            // If full, stall.
-            // We can produce partial? No, recipe based.
             if (current + output.amount > cap) {
+                if (shouldLog)
+                    LOGGER.info("Recipe {} output full: {}", recipe.getId(), resId);
                 return; // Stall
             }
         }
@@ -139,8 +172,17 @@ public class TownProductionComponent implements TownComponent {
 
         currentProgress += tickIncrement;
 
+        // Aggressive logging for debugging
+        if (recipe.getId().equals("basic_farming") || tickCounter % 20 == 0) {
+            LOGGER.info(
+                    "Production Tick - ID: {}, Base: {}, Mod: {}, Effective: {}, Progress: {}, Increment: {}, Interval: {}",
+                    recipe.getId(), baseTime, timeMod, effectiveTime, currentProgress, tickIncrement,
+                    com.quackers29.businesscraft.config.ConfigLoader.dailyTickInterval);
+        }
+
         if (currentProgress >= effectiveTime) {
             // Complete Recipe
+            LOGGER.info("Recipe {} COMPLETED for town {}", recipe.getId(), town.getName());
             currentProgress = 0f;
             consumeAndProduce(recipe);
         }
@@ -160,7 +202,20 @@ public class TownProductionComponent implements TownComponent {
                 resourceId = actualRes;
             }
 
-            town.getTrading().adjustStock(resourceId, -amount);
+            if (resourceId.equals("population")) {
+                // consuming pop?
+                continue;
+            }
+
+            com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
+                    .get(resourceId);
+            if (type != null) {
+                net.minecraft.world.item.Item item = com.quackers29.businesscraft.api.PlatformAccess.getRegistry()
+                        .getItem(type.getMcItemId());
+                if (item != null) {
+                    town.addResource(item, -(int) amount);
+                }
+            }
         }
 
         // Produce Outputs
@@ -169,10 +224,17 @@ public class TownProductionComponent implements TownComponent {
             float amount = output.amount;
 
             if (resId.equals("population")) {
-                // Add population
-                town.setPopulation(town.getPopulation() + (int) amount); // Casting float to int
+                town.setPopulation(town.getPopulation() + (int) amount);
             } else {
-                town.getTrading().adjustStock(resId, amount);
+                com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
+                        .get(resId);
+                if (type != null) {
+                    net.minecraft.world.item.Item item = com.quackers29.businesscraft.api.PlatformAccess.getRegistry()
+                            .getItem(type.getMcItemId());
+                    if (item != null) {
+                        town.addResource(item, (int) amount);
+                    }
+                }
             }
         }
 
@@ -253,5 +315,26 @@ public class TownProductionComponent implements TownComponent {
                 recipeProgress.put(key, progressTag.getFloat(key));
             }
         }
+    }
+
+    public Map<String, Float> getActiveRecipes() {
+        Map<String, Float> percentages = new HashMap<>();
+        for (Map.Entry<String, Float> entry : recipeProgress.entrySet()) {
+            String id = entry.getKey();
+            float current = entry.getValue();
+            ProductionRecipe recipe = ProductionRegistry.get(id);
+            if (recipe != null) {
+                float base = recipe.getBaseCycleTimeDays();
+                // We use calculate effective time logic
+                float mod = town.getUpgrades().getModifier(id + "-time");
+                float effective = base + mod;
+                if (effective < 0.1f)
+                    effective = 0.1f;
+                percentages.put(id, current / effective);
+            } else {
+                percentages.put(id, 0f);
+            }
+        }
+        return percentages;
     }
 }

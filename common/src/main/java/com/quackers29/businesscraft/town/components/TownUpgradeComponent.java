@@ -25,6 +25,14 @@ public class TownUpgradeComponent implements TownComponent {
     private String currentResearchNode = null;
     private float researchProgress = 0; // days accumulated
 
+    public String getCurrentResearchNode() {
+        return currentResearchNode;
+    }
+
+    public float getResearchProgress() {
+        return researchProgress;
+    }
+
     public TownUpgradeComponent(Town town) {
         this.town = town;
     }
@@ -137,6 +145,10 @@ public class TownUpgradeComponent implements TownComponent {
 
     public boolean isUnlocked(String nodeId) {
         return unlockedNodes.contains(nodeId);
+    }
+
+    public Set<String> getUnlockedNodes() {
+        return Collections.unmodifiableSet(unlockedNodes);
     }
 
     @Override

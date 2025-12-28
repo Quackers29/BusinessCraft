@@ -247,5 +247,9 @@ public class PacketRegistry {
 
                 register(ContractSyncPacket.class, "contract_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
                                 ContractSyncPacket::decode, ContractSyncPacket::encode, ContractSyncPacket::handle);
+
+                register(TownOverviewSyncPacket.class, "town_overview_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
+                                TownOverviewSyncPacket::decode, TownOverviewSyncPacket::encode,
+                                TownOverviewSyncPacket::handle);
         }
 }

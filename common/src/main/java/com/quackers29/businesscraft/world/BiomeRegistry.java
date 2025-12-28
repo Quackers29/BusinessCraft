@@ -34,7 +34,7 @@ public class BiomeRegistry {
     public static void load() {
         KITS.clear();
         Path configDir = PlatformAccess.platform.getConfigDirectory();
-        File configFile = configDir.resolve(CONFIG_FILE_NAME).toFile();
+        File configFile = configDir.resolve("businesscraft").resolve(CONFIG_FILE_NAME).toFile();
 
         if (!configFile.exists()) {
             createDefaultConfig(configFile);

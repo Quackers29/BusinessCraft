@@ -164,6 +164,12 @@ public class ConfigLoader {
             productionEnabled = Boolean.parseBoolean(props.getProperty("productionEnabled", "true"));
             productionTickInterval = Integer.parseInt(props.getProperty("productionTickInterval", "100"));
 
+            // Load Registries
+            com.quackers29.businesscraft.economy.ResourceRegistry.load();
+            com.quackers29.businesscraft.production.ProductionRegistry.load();
+            com.quackers29.businesscraft.production.UpgradeRegistry.load();
+            com.quackers29.businesscraft.world.BiomeRegistry.load();
+
         } catch (IOException e) {
             LOGGER.error("Failed to load config: {}", e.getMessage());
         }

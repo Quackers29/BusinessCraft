@@ -137,6 +137,10 @@ public class BottomButtonManager {
                 configurePopulationButtons();
                 break;
 
+            case "production":
+                configureProductionButtons();
+                break;
+
             case "settings":
                 configureSettingsButtons();
                 break;
@@ -145,6 +149,17 @@ public class BottomButtonManager {
                 configureDefaultButtons();
                 break;
         }
+    }
+
+    /**
+     * Configures buttons for the Production tab.
+     */
+    private void configureProductionButtons() {
+        bottomButtonsGrid
+                .addButtonWithTooltip(0, 0, "Show Active", "View active research and production",
+                        v -> actionHandler.onGenericAction("view_active_production"), TownInterfaceTheme.PRIMARY_COLOR)
+                .addButtonWithTooltip(0, 1, "Show Upgrades", "View unlocked upgrades",
+                        v -> actionHandler.onGenericAction("view_upgrades"), TownInterfaceTheme.SECONDARY_COLOR);
     }
 
     /**

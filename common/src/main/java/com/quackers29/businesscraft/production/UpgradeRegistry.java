@@ -25,8 +25,12 @@ public class UpgradeRegistry {
         NODES.clear();
         Path configDir = PlatformAccess.platform.getConfigDirectory();
 
-        loadNodes(configDir.resolve(UPGRADES_FILE).toFile());
-        loadRequirements(configDir.resolve(REQ_FILE).toFile());
+        // Fix path to point to config/businesscraft/
+        File upgradesFile = configDir.resolve("businesscraft").resolve(UPGRADES_FILE).toFile();
+        File reqFile = configDir.resolve("businesscraft").resolve(REQ_FILE).toFile();
+
+        loadNodes(upgradesFile);
+        loadRequirements(reqFile);
     }
 
     private static void loadNodes(File file) {
@@ -51,6 +55,11 @@ public class UpgradeRegistry {
                     String prereqsRaw = parts[3].trim();
                     String desc = parts[4].trim();
                     String effectsRaw = parts[5].trim();
+                    if (parts.length >= 7) {
+                        // Adaptive fix for malformed CSV (7 columns instead of 6)
+                        desc = parts[5].trim();
+                        effectsRaw = parts[6].trim();
+                    }
 
                     List<String> prereqs = new ArrayList<>();
                     if (!prereqsRaw.isEmpty()) {
@@ -114,9 +123,9 @@ public class UpgradeRegistry {
         try (FileWriter writer = new FileWriter(file)) {
             writer.write("node_id,category,display_name,prereq_nodes,benefit_description,effects\n");
             writer.write(
-                    "basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,pop_cap:10;storage_cap_all:200;happiness:50;population_maintenance;population_growth\n");
+                    "basic_settlement,housing,Basic Settlement,,Unlocks basic survival,pop_cap:10;storage_cap_all:200;happiness:50;population_maintenance;population_growth\n");
             writer.write(
-                    "farming_basic,farming,Basic Farming,basic_settlement,,Starts food production,basic_farming\n");
+                    "farming_basic,farming,Basic Farming,basic_settlement,Starts food production,basic_farming\n");
         } catch (IOException e) {
             LOGGER.error("Failed to create {}", UPGRADES_FILE, e);
         }

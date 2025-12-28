@@ -202,6 +202,25 @@ public class ButtonActionCoordinator {
      */
     public void handleGenericAction(String action) {
         DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling generic action: {}", action);
+
+        // Try to delegate to active tab
+        try {
+            if (screen instanceof com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen townScreen) {
+                if (townScreen.getTabPanel() != null) {
+                    String activeTabId = townScreen.getTabPanel().getActiveTabId();
+                    if (activeTabId != null && townScreen.getTabController() != null) {
+                        Object tabObj = townScreen.getTabController().getTab(activeTabId);
+                        if (tabObj instanceof com.quackers29.businesscraft.ui.tabs.BaseTownTab) {
+                            ((com.quackers29.businesscraft.ui.tabs.BaseTownTab) tabObj).handleAction(action);
+                            return; // Delegated successfully
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Failed to delegate generic action", e);
+        }
+
         screen.sendChatMessage("Action: " + action);
     }
 

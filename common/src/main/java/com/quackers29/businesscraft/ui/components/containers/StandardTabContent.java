@@ -20,35 +20,35 @@ import com.quackers29.businesscraft.debug.DebugConfig;
  */
 public class StandardTabContent extends BCComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(StandardTabContent.class);
-    
+
     // Theme constants
     private static final int TEXT_COLOR = TownInterfaceTheme.TEXT_COLOR;
     private static final int TEXT_HIGHLIGHT = TownInterfaceTheme.TEXT_HIGHLIGHT;
     private static final int BACKGROUND_COLOR = TownInterfaceTheme.BACKGROUND_COLOR;
     private static final int BORDER_COLOR = TownInterfaceTheme.BORDER_COLOR;
-    
+
     // Content types
     public enum ContentType {
-        LABEL_VALUE_GRID,    // For Overview tab - animated label-value pairs
-        ITEM_LIST,           // For Resources tab - scrollable item list
-        CUSTOM_LIST,         // For Population tab - custom rendered list
-        BUTTON_GRID          // For Settings tab - label-button pairs
+        LABEL_VALUE_GRID, // For Overview tab - animated label-value pairs
+        ITEM_LIST, // For Resources tab - scrollable item list
+        CUSTOM_LIST, // For Population tab - custom rendered list
+        BUTTON_GRID, // For Settings tab - label-button pairs
+        PRODUCTION_LIST // For Production tab
     }
-    
+
     private final ContentType contentType;
     private final String title;
     private UIGridBuilder grid;
-    
-    
+
     // Data suppliers for different content types
     private Supplier<Map<String, String>> labelValueSupplier;
     private Supplier<Map<Item, Integer>> itemListSupplier;
     private Supplier<Object[]> customDataSupplier;
     private Supplier<Map<String, Object[]>> buttonGridSupplier;
-    
+
     // Custom click handler for button grids (for special cases like right-click)
     private java.util.function.Function<Integer, Boolean> customClickHandler;
-    
+
     /**
      * Creates a new standardized tab content component.
      */
@@ -57,7 +57,7 @@ public class StandardTabContent extends BCComponent {
         this.contentType = contentType;
         this.title = title;
     }
-    
+
     /**
      * Configure for label-value grid (Overview tab style)
      */
@@ -65,7 +65,7 @@ public class StandardTabContent extends BCComponent {
         this.labelValueSupplier = dataSupplier;
         return this;
     }
-    
+
     /**
      * Configure for item list (Resources tab style)
      */
@@ -73,15 +73,15 @@ public class StandardTabContent extends BCComponent {
         this.itemListSupplier = dataSupplier;
         return this;
     }
-    
+
     /**
-     * Configure for custom list (Population tab style)
+     * Configure for custom list (Population tab style) or Production list
      */
     public StandardTabContent withCustomData(Supplier<Object[]> dataSupplier) {
         this.customDataSupplier = dataSupplier;
         return this;
     }
-    
+
     /**
      * Configure for button grid (Settings tab style)
      */
@@ -89,15 +89,16 @@ public class StandardTabContent extends BCComponent {
         this.buttonGridSupplier = dataSupplier;
         return this;
     }
-    
+
     /**
-     * Configure custom click handler for button grids (for special cases like right-click)
+     * Configure custom click handler for button grids (for special cases like
+     * right-click)
      */
     public StandardTabContent withCustomClickHandler(java.util.function.Function<Integer, Boolean> clickHandler) {
         this.customClickHandler = clickHandler;
         return this;
     }
-    
+
     @Override
     protected void renderContent(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         switch (contentType) {
@@ -113,136 +114,205 @@ public class StandardTabContent extends BCComponent {
             case BUTTON_GRID:
                 renderButtonGrid(guiGraphics, mouseX, mouseY);
                 break;
+            case PRODUCTION_LIST:
+                renderProductionList(guiGraphics, mouseX, mouseY);
+                break;
         }
     }
-    
+
     /**
      * Render label-value grid (Overview tab style)
      */
     private void renderLabelValueGrid(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (labelValueSupplier != null) {
-            // Create/update the grid
             Map<String, String> data = labelValueSupplier.get();
-            grid = UIGridBuilder.createLabelValueGrid(
-                x, y, width, height,
-                TEXT_COLOR, TEXT_HIGHLIGHT,
-                data)
-                .withBackgroundColor(BACKGROUND_COLOR)
-                .withBorderColor(BORDER_COLOR)
-                .withMargins(15, 10)
-                .withSpacing(15, 10)
-                .drawBorder(true);
-            
+
+            // Create column data arrays
+            @SuppressWarnings("unchecked")
+            java.util.List<UIGridBuilder.GridContent>[] columnData = new java.util.List[2];
+            columnData[0] = new java.util.ArrayList<>(); // Label column
+            columnData[1] = new java.util.ArrayList<>(); // Value column
+
+            for (Map.Entry<String, String> entry : data.entrySet()) {
+                columnData[0].add(UIGridBuilder.GridContent.text(entry.getKey(), TEXT_COLOR));
+                columnData[1].add(UIGridBuilder.GridContent.text(entry.getValue(), TEXT_HIGHLIGHT));
+            }
+
+            // Create or update grid
+            if (grid == null) {
+                grid = UIGridBuilder.create(x, y, width, height, 2)
+                        .withRowHeight(26)
+                        .withBackgroundColor(BACKGROUND_COLOR)
+                        .withBorderColor(BORDER_COLOR)
+                        .withMargins(15, 10)
+                        .withSpacing(15, 10)
+                        .drawBorder(true)
+                        .withColumnData(columnData);
+            } else {
+                grid.updateColumnData(columnData);
+            }
+
             // Render the grid
             grid.render(guiGraphics, mouseX, mouseY);
         }
     }
-    
+
     /**
      * Render scrollable item list (Resources tab style)
      */
     private void renderItemList(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (itemListSupplier != null) {
             Map<Item, Integer> items = itemListSupplier.get();
-            
+
             // Create the grid only once to preserve scroll state
             if (grid == null) {
-                DebugConfig.debug(LOGGER, DebugConfig.UI_STANDARD_TAB_CONTENT, "Creating new UIGridBuilder for item list with {} items", items.size());
+                DebugConfig.debug(LOGGER, DebugConfig.UI_STANDARD_TAB_CONTENT,
+                        "Creating new UIGridBuilder for item list with {} items", items.size());
                 grid = UIGridBuilder.create(x, y, width, height, 2)
-                    .withBackgroundColor(BACKGROUND_COLOR)
-                    .withBorderColor(BORDER_COLOR)
-                    .withMargins(15, 10)
-                    .withSpacing(15, 10)
-                    .withRowHeight(14)
-                    .drawBorder(true);
-                
+                        .withBackgroundColor(BACKGROUND_COLOR)
+                        .withBorderColor(BORDER_COLOR)
+                        .withMargins(15, 10)
+                        .withSpacing(15, 10)
+                        .withRowHeight(14)
+                        .drawBorder(true);
+
                 // This method automatically enables scrolling if needed
                 grid.withItemQuantityPairs(items, TEXT_HIGHLIGHT);
-                DebugConfig.debug(LOGGER, DebugConfig.UI_STANDARD_TAB_CONTENT, "Grid created with scrolling enabled: {}", items.size() > 4);
+                DebugConfig.debug(LOGGER, DebugConfig.UI_STANDARD_TAB_CONTENT,
+                        "Grid created with scrolling enabled: {}", items.size() > 4);
             } else {
                 // Update existing grid with new data while preserving scroll state
                 grid.updateItemQuantityPairs(items, TEXT_HIGHLIGHT);
             }
-            
+
             // Render the grid (preserves scroll state)
             grid.render(guiGraphics, mouseX, mouseY);
         }
     }
-    
+
     /**
-     * Render custom list (Population tab style) - now uses UIGridBuilder's modular approach
+     * Render custom list (Population tab style) - now uses UIGridBuilder's modular
+     * approach
      */
     private void renderCustomList(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (customDataSupplier != null) {
             Object[] data = customDataSupplier.get();
-            
+
             // Extract data arrays from supplier
             String[] names = (String[]) data[0];
             String[] jobs = (String[]) data[1];
             int[] levels = (int[]) data[2];
-            
-            // Create column data arrays for 3 columns using UIGridBuilder's modular approach
+
+            // Create column data arrays for 3 columns using UIGridBuilder's modular
+            // approach
             @SuppressWarnings("unchecked")
             java.util.List<UIGridBuilder.GridContent>[] columnData = new java.util.List[3];
             columnData[0] = new java.util.ArrayList<>(); // Name column
-            columnData[1] = new java.util.ArrayList<>(); // Job column  
+            columnData[1] = new java.util.ArrayList<>(); // Job column
             columnData[2] = new java.util.ArrayList<>(); // Level column
-            
+
             // Populate column data
             for (int i = 0; i < names.length; i++) {
                 columnData[0].add(UIGridBuilder.GridContent.text(names[i], TEXT_HIGHLIGHT));
                 columnData[1].add(UIGridBuilder.GridContent.text(jobs[i], TEXT_COLOR));
                 columnData[2].add(UIGridBuilder.GridContent.text("Level " + levels[i], TEXT_COLOR));
             }
-            
+
             // Create the grid only once to preserve scroll state
             if (grid == null) {
-                DebugConfig.debug(LOGGER, DebugConfig.UI_STANDARD_TAB_CONTENT, "Creating new UIGridBuilder for population with {} citizens", names.length);
+                DebugConfig.debug(LOGGER, DebugConfig.UI_STANDARD_TAB_CONTENT,
+                        "Creating new UIGridBuilder for population with {} citizens", names.length);
                 grid = UIGridBuilder.create(x, y, width, height, 3)
-                    .withRowHeight(16) // Match PopulationTab's itemHeight
-                    .withMargins(8, 5) // Match PopulationTab's padding and verticalPadding
-                    .withSpacing(10, 0) // Horizontal spacing between columns
-                    .withBackgroundColor(BACKGROUND_COLOR)
-                    .withBorderColor(BORDER_COLOR)
-                    .drawBorder(true)
-                    .withColumnData(columnData);
-                
-                DebugConfig.debug(LOGGER, DebugConfig.UI_STANDARD_TAB_CONTENT, "Population grid created with scrolling enabled: {}", names.length > 4);
+                        .withRowHeight(16) // Match PopulationTab's itemHeight
+                        .withMargins(8, 5) // Match PopulationTab's padding and verticalPadding
+                        .withSpacing(10, 0) // Horizontal spacing between columns
+                        .withBackgroundColor(BACKGROUND_COLOR)
+                        .withBorderColor(BORDER_COLOR)
+                        .drawBorder(true)
+                        .withColumnData(columnData);
+
+                DebugConfig.debug(LOGGER, DebugConfig.UI_STANDARD_TAB_CONTENT,
+                        "Population grid created with scrolling enabled: {}", names.length > 4);
             } else {
                 // Update existing grid with new data while preserving scroll state
                 grid.updateColumnData(columnData);
             }
-            
+
             // Render the grid (preserves scroll state)
             grid.render(guiGraphics, mouseX, mouseY);
         }
     }
-    
+
+    /**
+     * Render production list (Production tab style)
+     */
+    private void renderProductionList(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        if (customDataSupplier != null) {
+            Object[] data = customDataSupplier.get();
+
+            // Extract data arrays from supplier
+            String[] names = (String[]) data[0];
+            String[] types = (String[]) data[1];
+            String[] progress = (String[]) data[2];
+
+            // Create column data arrays for 3 columns using UIGridBuilder's modular
+            // approach
+            @SuppressWarnings("unchecked")
+            java.util.List<UIGridBuilder.GridContent>[] columnData = new java.util.List[3];
+            columnData[0] = new java.util.ArrayList<>(); // Name column
+            columnData[1] = new java.util.ArrayList<>(); // Type column
+            columnData[2] = new java.util.ArrayList<>(); // Progress column
+
+            // Populate column data
+            for (int i = 0; i < names.length; i++) {
+                columnData[0].add(UIGridBuilder.GridContent.text(names[i], TEXT_HIGHLIGHT));
+                columnData[1].add(UIGridBuilder.GridContent.text(types[i], TEXT_COLOR));
+                columnData[2].add(UIGridBuilder.GridContent.text(progress[i], TEXT_COLOR));
+            }
+
+            // Create the grid only once to preserve scroll state
+            if (grid == null) {
+                grid = UIGridBuilder.create(x, y, width, height, 3)
+                        .withRowHeight(16)
+                        .withMargins(8, 5)
+                        .withSpacing(10, 0)
+                        .withBackgroundColor(BACKGROUND_COLOR)
+                        .withBorderColor(BORDER_COLOR)
+                        .drawBorder(true)
+                        .withColumnData(columnData);
+            } else {
+                // Update existing grid with new data while preserving scroll state
+                grid.updateColumnData(columnData);
+            }
+
+            // Render the grid (preserves scroll state)
+            grid.render(guiGraphics, mouseX, mouseY);
+        }
+    }
+
     /**
      * Render button grid (Settings tab style)
      */
     private void renderButtonGrid(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (buttonGridSupplier != null) {
             Map<String, Object[]> buttonData = buttonGridSupplier.get();
-            
+
             // Create/update the grid every time to ensure dynamic button text updates
             grid = UIGridBuilder.createLabelButtonGrid(
-                x, y, width, height,
-                TEXT_COLOR, TownInterfaceTheme.PRIMARY_COLOR,
-                buttonData)
-                .withBackgroundColor(BACKGROUND_COLOR)
-                .withBorderColor(BORDER_COLOR)
-                .withMargins(15, 10)
-                .withSpacing(15, 10)
-                .drawBorder(true);
-            
+                    x, y, width, height,
+                    TEXT_COLOR, TownInterfaceTheme.PRIMARY_COLOR,
+                    buttonData)
+                    .withBackgroundColor(BACKGROUND_COLOR)
+                    .withBorderColor(BORDER_COLOR)
+                    .withMargins(15, 10)
+                    .withSpacing(15, 10)
+                    .drawBorder(true);
+
             // Render the grid
             grid.render(guiGraphics, mouseX, mouseY);
         }
     }
-    
 
-    
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         // For button grids, check if we have a custom click handler first
@@ -251,13 +321,13 @@ public class StandardTabContent extends BCComponent {
                 return true; // Custom handler handled the click
             }
         }
-        
+
         if (grid != null) {
-            return grid.mouseClicked((int)mouseX, (int)mouseY, button);
+            return grid.mouseClicked((int) mouseX, (int) mouseY, button);
         }
         return false;
     }
-    
+
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (grid != null) {
@@ -265,7 +335,7 @@ public class StandardTabContent extends BCComponent {
         }
         return false;
     }
-    
+
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (grid != null) {
@@ -273,7 +343,7 @@ public class StandardTabContent extends BCComponent {
         }
         return false;
     }
-    
+
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (grid != null) {
@@ -281,7 +351,7 @@ public class StandardTabContent extends BCComponent {
         }
         return false;
     }
-    
+
     /**
      * Force refresh of the content (for external updates)
      */
@@ -289,4 +359,4 @@ public class StandardTabContent extends BCComponent {
         // Force grid recreation
         grid = null;
     }
-} 
+}
