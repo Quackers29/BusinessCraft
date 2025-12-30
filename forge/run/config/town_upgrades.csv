@@ -1,5 +1,0 @@
-id,name,pop_req,input_id,input_rate,output_id,output_rate
-wheat_farm,Wheat Farm,10,none,0,food,1.0
-bakery,Bakery,20,wheat,2.0,food,3.0
-lumber_camp,Lumber Camp,15,none,0,wood,1.0
-iron_mine,Iron Mine,30,wood,0.5,iron,0.5
