@@ -33,7 +33,7 @@ public class OverviewTab extends BaseTownTab {
         super(parentScreen, width, height);
 
         // Create a flow layout for the panel
-        panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 10));
+        panel.withLayout(new BCFlowLayout(BCFlowLayout.Direction.VERTICAL, 5));
     }
 
     @Override
@@ -50,6 +50,8 @@ public class OverviewTab extends BaseTownTab {
             Map<String, String> overviewData = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
             overviewData.put("Town Name:", parentScreen.getCachedTownName());
             overviewData.put("Population:", String.valueOf(parentScreen.getCachedPopulation()));
+            overviewData.put("Pop. Cap:",
+                    String.valueOf((int) parentScreen.getCacheManager().getCachedPopulationCap()));
             overviewData.put("Tourists:", parentScreen.getTouristString());
 
             // Add extended data

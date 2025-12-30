@@ -22,9 +22,11 @@ public class TownOverviewSyncPacket {
     private final int dailyTickInterval;
     private final Map<String, Float> activeProductions;
     private final List<String> unlockedNodes;
+    private final float populationCap;
 
     public TownOverviewSyncPacket(float happiness, String biome, String currentResearch, float researchProgress,
-            int dailyTickInterval, Map<String, Float> activeProductions, Collection<String> unlockedNodes) {
+            int dailyTickInterval, Map<String, Float> activeProductions, Collection<String> unlockedNodes,
+            float populationCap) {
         this.happiness = happiness;
         this.biome = biome;
         this.currentResearch = currentResearch != null ? currentResearch : "";
@@ -32,6 +34,7 @@ public class TownOverviewSyncPacket {
         this.dailyTickInterval = dailyTickInterval;
         this.activeProductions = activeProductions != null ? activeProductions : new HashMap<>();
         this.unlockedNodes = unlockedNodes != null ? new ArrayList<>(unlockedNodes) : new ArrayList<>();
+        this.populationCap = populationCap;
     }
 
     public TownOverviewSyncPacket(FriendlyByteBuf buf) {
@@ -40,6 +43,7 @@ public class TownOverviewSyncPacket {
         this.currentResearch = buf.readUtf();
         this.researchProgress = buf.readFloat();
         this.dailyTickInterval = buf.readInt();
+        this.populationCap = buf.readFloat();
 
         int size = buf.readInt();
         this.activeProductions = new HashMap<>(size);
@@ -62,6 +66,7 @@ public class TownOverviewSyncPacket {
         buf.writeUtf(currentResearch != null ? currentResearch : "");
         buf.writeFloat(researchProgress);
         buf.writeInt(dailyTickInterval);
+        buf.writeFloat(populationCap);
 
         buf.writeInt(activeProductions.size());
         for (Map.Entry<String, Float> entry : activeProductions.entrySet()) {
@@ -85,7 +90,7 @@ public class TownOverviewSyncPacket {
                 TownDataCacheManager cache = screen.getCacheManager();
                 if (cache != null) {
                     cache.updateOverviewData(happiness, biome, currentResearch, researchProgress, dailyTickInterval,
-                            activeProductions, unlockedNodes);
+                            activeProductions, unlockedNodes, populationCap);
                 }
             }
         });

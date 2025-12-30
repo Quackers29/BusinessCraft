@@ -207,9 +207,11 @@ public class TownDataCacheManager {
     private int cachedDailyTickInterval = 24000;
     private Map<String, Float> cachedActiveProductions = Collections.emptyMap();
     private java.util.Set<String> cachedUnlockedNodes = Collections.emptySet();
+    private float cachedPopulationCap = 0f;
 
     public void updateOverviewData(float happiness, String biome, String currentResearch, float researchProgress,
-            int dailyTickInterval, Map<String, Float> activeProductions, java.util.Collection<String> unlockedNodes) {
+            int dailyTickInterval, Map<String, Float> activeProductions, java.util.Collection<String> unlockedNodes,
+            float populationCap) {
         this.cachedHappiness = happiness;
         if (biome != null && biome.startsWith("minecraft:")) {
             this.cachedBiome = biome.substring(10);
@@ -226,6 +228,7 @@ public class TownDataCacheManager {
         this.cachedDailyTickInterval = dailyTickInterval;
         this.cachedActiveProductions = activeProductions;
         this.cachedUnlockedNodes = new java.util.HashSet<>(unlockedNodes);
+        this.cachedPopulationCap = populationCap;
     }
 
     public float getCachedHappiness() {
@@ -254,5 +257,9 @@ public class TownDataCacheManager {
 
     public java.util.Set<String> getCachedUnlockedNodes() {
         return cachedUnlockedNodes;
+    }
+
+    public float getCachedPopulationCap() {
+        return cachedPopulationCap;
     }
 }
