@@ -1,3 +1,3 @@
 node_id,category,display_name,prereq_nodes,benefit_description,effects
-basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,pop_cap:10;storage_cap_all:200;happiness:50;population_maintenance;population_growth
+basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,pop_cap:10;storage_cap_all:200;happiness:50;population_maintenance;population_growth;basic_taxes
 farming_basic,farming,Basic Farming,basic_settlement,,Starts food production,basic_farming
