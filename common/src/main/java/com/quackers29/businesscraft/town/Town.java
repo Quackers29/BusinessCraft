@@ -98,6 +98,7 @@ public class Town implements ITownDataProvider {
             production.tick();
         }
         contracts.tick(); // Always tick contracts
+        upgrades.tick(); // Always tick upgrades
     }
 
     @Override

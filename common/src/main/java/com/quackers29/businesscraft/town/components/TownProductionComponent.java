@@ -124,29 +124,7 @@ public class TownProductionComponent implements TownComponent {
         }
 
         // Calculate Cycle Time
-        float baseTime = recipe.getBaseCycleTimeDays();
-        float timeMod = town.getUpgrades().getModifier(recipe.getId() + "-time");
-        // If modifier is percentage?
-        // My Effect parser stored percentage as separate flag but `getModifier` returns
-        // flat sum.
-        // As discussed, I can't easily distinguish flat vs % from single float.
-        // Plan said: "prod_id-time:1 -> +1 day", "prod_id-time:-0.5 -> -0.5 day"
-        // Also "basic_farming-time:-30% -> x0.7".
-        // If I ignored the percentage flag in my parser (current impl just sums
-        // values), then a string "30%" became 30.0f or 0.3f.
-        // My parser: `valStr = valStr.substring(0, valStr.length() - 1); float val =
-        // Float.parseFloat(valStr);`
-        // So "30%" becomes 30.0.
-        // A flat time of "1" is 1.0.
-        // This is a collision. TownUpgradeComponent needs to handle flat vs pct.
-
-        // Given I didn't fix TownUpgradeComponent yet, I'll assume only additive/flat
-        // works correctly for now.
-        // I'll proceed assuming flat values only for this iteration.
-
-        float effectiveTime = baseTime + timeMod;
-        if (effectiveTime < 0.000001f)
-            effectiveTime = 0.000001f; // Min cap lowered for testing
+        float effectiveTime = getEffectiveCycleTime(recipe);
 
         // Calculate Inputs Required
         // Input logic? Plan: "prod_id-input (% on resource inputs)"
@@ -429,7 +407,7 @@ public class TownProductionComponent implements TownComponent {
         }
     }
 
-    private float getProductionRate(String resourceId) {
+    public float getProductionRate(String resourceId) {
         float totalPerDay = 0f;
         for (ProductionRecipe recipe : ProductionRegistry.getAll()) {
             // Check if unlocked
@@ -451,7 +429,7 @@ public class TownProductionComponent implements TownComponent {
         return totalPerDay;
     }
 
-    private float getConsumptionRate(String resourceId) {
+    public float getConsumptionRate(String resourceId) {
         float totalPerDay = 0f;
         for (ProductionRecipe recipe : ProductionRegistry.getAll()) {
             // Check if unlocked
@@ -533,10 +511,14 @@ public class TownProductionComponent implements TownComponent {
 
     private float getEffectiveCycleTime(ProductionRecipe recipe) {
         float baseTime = recipe.getBaseCycleTimeDays();
-        float timeMod = town.getUpgrades().getModifier(recipe.getId() + "-time");
-        float effectiveTime = baseTime + timeMod;
-        if (effectiveTime < 0.000001f)
-            effectiveTime = 0.000001f;
-        return effectiveTime;
+        float modifier = town.getUpgrades().getModifier(recipe.getId());
+
+        // Modifier acts as speed multiplier.
+        // 1.0 = Base Speed
+        // 2.0 = Double Speed (Half Time)
+        if (modifier <= 0.0001f)
+            return Float.MAX_VALUE; // Effectively stopped
+
+        return baseTime / modifier;
     }
 }

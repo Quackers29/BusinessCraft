@@ -21,6 +21,21 @@ public class DataParser {
                 continue;
 
             if (!part.contains(":")) {
+                // Check if it uses '*' syntax for modifier (e.g. "basic_farming*0.5")
+                if (part.contains("*")) {
+                    String[] kv = part.split("\\*");
+                    if (kv.length == 2) {
+                        String key = kv[0].trim();
+                        try {
+                            float val = Float.parseFloat(kv[1].trim());
+                            effects.add(new Effect(key, val, false));
+                            continue;
+                        } catch (NumberFormatException e) {
+                            LOGGER.warn("Invalid effect modifier value: {}", part);
+                        }
+                    }
+                }
+
                 // Special case: prod_id unlock (no value)
                 // Treat as value 1 (boolean true)
                 effects.add(new Effect(part, 1.0f, false));

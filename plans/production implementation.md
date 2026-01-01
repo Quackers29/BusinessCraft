@@ -122,3 +122,18 @@ Complete rewrite.
     - Check UI for "Research" tab (might need basic UI implementation or debug command).
     - Trigger an upgrade (e.g. `farming_improved`) via command or UI.
     - Verify `farming_basic` production speeds up or output increases.
+
+## Implementation Adjustments & Fixes (Post-Debugging)
+1.  **Town Ticking**: 
+    - Critical: `Town.tick()` **must** explicitly call `upgrades.tick()` alongside other components. Unlike `TownProductionComponent` which might be optional, upgrades drive the AI and stats.
+    - Added `upgrades.tick()` to the main loop to ensure research progress occurs.
+
+2.  **Resource Storage Bridging**: 
+    - Problem: `TownTradingComponent` maintained a "Virtual Stock" (`stocks` map) which was disconnected from the actual `TownEconomyComponent` resource storage (`TownResources`).
+    - Fix: `TownTradingComponent.getStock(id)` and `adjustStock(id)` were modified to check `ResourceRegistry`. If the ID maps to a real Minecraft item (e.g., `wood` -> `oak_log`), it directly accesses `TownEconomyComponent`'s inventory. This allows the Research AI to "see" and consume physical items collected by the town.
+
+3.  **UI Feedback**:
+    - Tooltips added to Production and Upgrade tabs to visualize:
+        - Research Progress.
+        - Production Cycle Times (Base vs Actual).
+        - Active Effects.

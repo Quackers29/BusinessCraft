@@ -254,6 +254,7 @@ public class StandardTabContent extends BCComponent {
             String[] names = (String[]) data[0];
             String[] types = (String[]) data[1];
             String[] progress = (String[]) data[2];
+            String[] tooltips = (data.length > 3) ? (String[]) data[3] : null;
 
             // Create column data arrays for 3 columns using UIGridBuilder's modular
             // approach
@@ -265,9 +266,12 @@ public class StandardTabContent extends BCComponent {
 
             // Populate column data
             for (int i = 0; i < names.length; i++) {
-                columnData[0].add(UIGridBuilder.GridContent.text(names[i], TEXT_HIGHLIGHT));
-                columnData[1].add(UIGridBuilder.GridContent.text(types[i], TEXT_COLOR));
-                columnData[2].add(UIGridBuilder.GridContent.text(progress[i], TEXT_COLOR));
+                String tooltip = (tooltips != null && i < tooltips.length) ? tooltips[i] : null;
+
+                // Add tooltip to the name column (or all if preferred)
+                columnData[0].add(UIGridBuilder.GridContent.text(names[i], TEXT_HIGHLIGHT).withTooltip(tooltip));
+                columnData[1].add(UIGridBuilder.GridContent.text(types[i], TEXT_COLOR).withTooltip(tooltip));
+                columnData[2].add(UIGridBuilder.GridContent.text(progress[i], TEXT_COLOR).withTooltip(tooltip));
             }
 
             // Create the grid only once to preserve scroll state

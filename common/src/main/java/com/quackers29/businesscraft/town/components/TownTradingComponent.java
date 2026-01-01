@@ -50,10 +50,33 @@ public class TownTradingComponent implements TownComponent {
     }
 
     public float getStock(String resourceId) {
+        // First check if this ID maps to a real item (Economy storage)
+        ResourceType type = ResourceRegistry.get(resourceId);
+        if (type != null && type.getMcItemId() != null) {
+            Object itemObj = com.quackers29.businesscraft.api.PlatformAccess.getRegistry().getItem(type.getMcItemId());
+            if (itemObj instanceof net.minecraft.world.item.Item item) {
+                return town.getResourceCount(item);
+            }
+        }
+
+        // Fallback to internal trading stock (for virtual resources?)
         return stocks.containsKey(resourceId) ? stocks.get(resourceId).current : 0.0f;
     }
 
     public void adjustStock(String resourceId, float amount) {
+        // 1. Update Real Economy Storage
+        ResourceType type = ResourceRegistry.get(resourceId);
+        if (type != null && type.getMcItemId() != null) {
+            Object itemObj = com.quackers29.businesscraft.api.PlatformAccess.getRegistry().getItem(type.getMcItemId());
+            if (itemObj instanceof net.minecraft.world.item.Item item) {
+                town.addResource(item, (int) amount);
+                // We return here because we don't want to double-count in the virtual stock
+                // effectively, if it's a real item, we ONLY use the real economy
+                return;
+            }
+        }
+
+        // 2. Fallback to Virtual/Internal Stock
         // Ensure stock exists
         if (!stocks.containsKey(resourceId)) {
             stocks.put(resourceId, new TradingStock(0, 100, ConfigLoader.tradingDefaultMaxStock));

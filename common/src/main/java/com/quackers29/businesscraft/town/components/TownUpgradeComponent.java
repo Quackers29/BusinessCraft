@@ -37,6 +37,8 @@ public class TownUpgradeComponent implements TownComponent {
         this.town = town;
     }
 
+    private int aiCheckCooldown = 0;
+
     @Override
     public void tick() {
         if (currentResearchNode != null) {
@@ -46,44 +48,43 @@ public class TownUpgradeComponent implements TownComponent {
                 return;
             }
 
-            // Simple logic: research progresses automatically if selected.
-            // Future requirement: consume research resources daily?
-            // "upgrade_requirements.csv" has "required_items" (setup cost?) and
-            // "research_days".
-            // Implementation: We assume "required_items" are paid UP FRONT to start.
-            // "research_days" is time to complete.
-
-            // Increment progress
-            // ConfigLoader.dailyTickInterval is how many ticks per day.
-            // We need a reference.
-            // Assuming this tick() runs every tick?
-            // Or only once per day?
-            // Town.tick() calls components. usually every tick.
-
-            // Let's assume tick() is every tick. We need to know day length.
-            // Hardcoded reference or config?
-            // ConfigLoader.dailyTickInterval is available.
-
+            // Research progress logic
             researchProgress += 1.0f / com.quackers29.businesscraft.config.ConfigLoader.dailyTickInterval;
 
             if (researchProgress >= node.getResearchDays()) {
                 completeResearch();
             }
+        } else {
+            // Idle - AI check
+            if (aiCheckCooldown-- <= 0) {
+                aiCheckCooldown = 200; // Check every ~10 seconds
+
+                String nextNode = com.quackers29.businesscraft.town.ai.TownResearchAI.selectNextResearch(town);
+                if (nextNode != null) {
+                    startResearch(nextNode);
+                }
+            }
         }
     }
 
     public void startResearch(String nodeId) {
-        if (unlockedNodes.contains(nodeId))
+        if (unlockedNodes.contains(nodeId)) {
+            LOGGER.debug("StartResearch failed: {} already unlocked", nodeId);
             return;
+        }
         UpgradeNode node = UpgradeRegistry.get(nodeId);
-        if (node == null)
+        if (node == null) {
+            LOGGER.error("StartResearch failed: {} not found in registry", nodeId);
             return;
+        }
 
         // check prereqs
         if (node.getPrereqNodes() != null) {
             for (String pre : node.getPrereqNodes()) {
-                if (!unlockedNodes.contains(pre))
+                if (!unlockedNodes.contains(pre)) {
+                    LOGGER.debug("StartResearch failed: {} missing prereq {}", nodeId, pre);
                     return; // Prereq missing
+                }
             }
         }
 
@@ -91,7 +92,10 @@ public class TownUpgradeComponent implements TownComponent {
         if (node.getCosts() != null && !node.getCosts().isEmpty()) {
             // Check if can afford
             for (ResourceAmount ra : node.getCosts()) {
-                if (town.getTrading().getStock(ra.resourceId) < ra.amount) {
+                float stock = town.getTrading().getStock(ra.resourceId);
+                if (stock < ra.amount) {
+                    LOGGER.debug("StartResearch failed: {} cannot afford {}. Has {}, needs {}",
+                            nodeId, ra.resourceId, stock, ra.amount);
                     return; // Cannot afford
                 }
             }
@@ -101,6 +105,7 @@ public class TownUpgradeComponent implements TownComponent {
             }
         }
 
+        LOGGER.info("Starting research: {} for town {}", nodeId, town.getName());
         this.currentResearchNode = nodeId;
         this.researchProgress = 0;
         town.markDirty();
