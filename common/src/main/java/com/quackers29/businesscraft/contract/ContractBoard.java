@@ -126,20 +126,24 @@ public class ContractBoard {
 
         if (sellerTown != null && buyerTown != null) {
             // Transfer Items (already escrowed from seller at auction start)
-            net.minecraft.world.item.Item item = null;
-            if ("wood".equals(sc.getResourceId()))
-                item = net.minecraft.world.item.Items.OAK_LOG;
-            else if ("iron".equals(sc.getResourceId()))
-                item = net.minecraft.world.item.Items.IRON_INGOT;
-            else if ("coal".equals(sc.getResourceId()))
-                item = net.minecraft.world.item.Items.COAL;
+            // Transfer Items (already escrowed from seller at auction start)
+            net.minecraft.world.item.Item item = com.quackers29.businesscraft.util.ContractItemHelper
+                    .getBaseItemForResource(sc.getResourceId());
 
-            if (item != null) {
-                // Just add to buyer (resources already deducted from seller at auction start)
-                buyerTown.addResource(item, sc.getQuantity());
+            if (item != null && item != net.minecraft.world.item.Items.PAPER) {
+                // Determine amount to deliver (total - already delivered by courier)
+                // For Snail Mail, deliveredAmount is 0, so we deliver full quantity.
+                // For Courier, deliveredAmount should equal quantity, so we deliver 0
+                // (preventing double add).
+                int amountRemaining = sc.getQuantity() - sc.getDeliveredAmount();
 
-                LOGGER.info("Delivered {} {} from {} to {} (escrowed resources transferred)",
-                        sc.getQuantity(), sc.getResourceId(), sellerTown.getName(), buyerTown.getName());
+                if (amountRemaining > 0) {
+                    // Just add to buyer (resources already deducted from seller at auction start)
+                    buyerTown.addResource(item, amountRemaining);
+
+                    LOGGER.info("Delivered {} {} from {} to {} (escrowed resources transferred)",
+                            amountRemaining, sc.getResourceId(), sellerTown.getName(), buyerTown.getName());
+                }
             }
 
             // Transfer Money (Emeralds already escrowed from buyer when they bid)
@@ -395,15 +399,10 @@ public class ContractBoard {
                         // ESCRO refund: Auction failed (no bids) - return resources to seller
                         com.quackers29.businesscraft.town.Town sellerTown = townManager.getTown(sc.getIssuerTownId());
                         if (sellerTown != null) {
-                            net.minecraft.world.item.Item item = null;
-                            if ("wood".equals(sc.getResourceId()))
-                                item = net.minecraft.world.item.Items.OAK_LOG;
-                            else if ("iron".equals(sc.getResourceId()))
-                                item = net.minecraft.world.item.Items.IRON_INGOT;
-                            else if ("coal".equals(sc.getResourceId()))
-                                item = net.minecraft.world.item.Items.COAL;
+                            net.minecraft.world.item.Item item = com.quackers29.businesscraft.util.ContractItemHelper
+                                    .getBaseItemForResource(sc.getResourceId());
 
-                            if (item != null) {
+                            if (item != null && item != net.minecraft.world.item.Items.PAPER) {
                                 sellerTown.addResource(item, sc.getQuantity());
                                 LOGGER.info("Refunded {} {} to town {} (auction {} had no bids)",
                                         sc.getQuantity(), sc.getResourceId(), sellerTown.getName(), sc.getId());
