@@ -163,6 +163,21 @@ public class ContractBoard {
             savedData.setDirty();
             broadcastUpdate();
 
+            // Add resources to destination town immediately upon delivery
+            com.quackers29.businesscraft.town.TownManager manager = com.quackers29.businesscraft.town.TownManager
+                    .get(level);
+            com.quackers29.businesscraft.town.Town destination = manager.getTown(sc.getWinningTownId());
+
+            if (destination != null && sc.getResourceId() != null) {
+                // Resolve item from resource ID
+                net.minecraft.world.item.Item resourceItem = com.quackers29.businesscraft.util.ContractItemHelper
+                        .getBaseItemForResource(sc.getResourceId());
+                if (resourceItem != net.minecraft.world.item.Items.PAPER) {
+                    destination.addResource(resourceItem, amount);
+                    // No log needed for every item, maybe debug?
+                }
+            }
+
             if (sc.isDeliveryComplete() && !sc.isCompleted()) {
                 // Delivery Complete!
                 sc.complete();
@@ -218,6 +233,20 @@ public class ContractBoard {
             cc.addDeliveredAmount(amount);
             savedData.setDirty();
             broadcastUpdate();
+
+            // Add resources to destination town immediately upon delivery
+            com.quackers29.businesscraft.town.TownManager manager = com.quackers29.businesscraft.town.TownManager
+                    .get(level);
+            com.quackers29.businesscraft.town.Town destination = manager.getTown(cc.getDestinationTownId());
+
+            if (destination != null && cc.getResourceId() != null) {
+                // Resolve item from resource ID
+                net.minecraft.world.item.Item resourceItem = com.quackers29.businesscraft.util.ContractItemHelper
+                        .getBaseItemForResource(cc.getResourceId());
+                if (resourceItem != net.minecraft.world.item.Items.PAPER) {
+                    destination.addResource(resourceItem, amount);
+                }
+            }
 
             if (cc.isDelivered()) {
                 // Contract Complete!

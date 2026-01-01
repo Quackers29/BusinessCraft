@@ -7,6 +7,10 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
+import com.quackers29.businesscraft.economy.ResourceRegistry;
+import com.quackers29.businesscraft.economy.ResourceType;
+import com.quackers29.businesscraft.api.PlatformAccess;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,12 +96,15 @@ public class ContractItemHelper {
      * Gets the base item for a resource type
      */
     public static Item getBaseItemForResource(String resourceType) {
-        return switch (resourceType.toLowerCase()) {
-            case "wood" -> Items.OAK_LOG;
-            case "iron" -> Items.IRON_INGOT;
-            case "coal" -> Items.COAL;
-            default -> Items.PAPER; // Fallback for unknown types
-        };
+        ResourceType type = ResourceRegistry.get(resourceType.toLowerCase());
+        if (type != null) {
+            ResourceLocation itemId = type.getCanonicalItemId();
+            Item item = (Item) PlatformAccess.getRegistry().getItem(itemId);
+            if (item != null && item != Items.AIR) {
+                return item;
+            }
+        }
+        return Items.PAPER; // Fallback for unknown types
     }
 
     /**
