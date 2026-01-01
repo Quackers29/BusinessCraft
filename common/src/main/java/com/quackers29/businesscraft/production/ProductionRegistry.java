@@ -57,9 +57,11 @@ public class ProductionRegistry {
                 // However, my `ProductionRecipe` class separates them.
                 // I should parse the 'inputs' column and split into Resources and Conditions.
 
-                String[] parts = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)"); // Split by comma but ignore quotes?
-                                                                                  // Simple split might suffice if no
-                                                                                  // commas in values.
+                String[] parts = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1); // Split by comma but ignore
+                                                                                      // quotes, preserve trailing
+                                                                                      // empties
+                // Simple split might suffice if no
+                // commas in values.
                 // CSVs usually imply simple split if no quotes used.
                 // Let's assume simple split for now, but packed strings use ; and : so commas
                 // are safe separators for columns.

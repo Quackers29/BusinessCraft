@@ -40,6 +40,13 @@ public class TownProductionComponent implements TownComponent {
                     town.getName(), town.getUpgrades().getUnlockedNodes());
 
         for (ProductionRecipe recipe : ProductionRegistry.getAll()) {
+            if (recipe.getId().equals("population_maintenance") && shouldLog) {
+                LOGGER.info(
+                        "DEBUG: population_maintenance check - Modifier: {}, Unlocked: {}",
+                        town.getUpgrades().getModifier(recipe.getId()),
+                        town.getUpgrades().getModifier(recipe.getId()) > 0);
+            }
+
             // Check unlock status
             if (town.getUpgrades().getModifier(recipe.getId()) <= 0) {
                 if (shouldLog)
@@ -134,7 +141,8 @@ public class TownProductionComponent implements TownComponent {
         }
 
         if (!hasInputs) {
-            // Can't run
+            // Can't run, report 0 progress
+            recipeProgress.put(recipe.getId(), 0f);
             return;
         }
 
@@ -162,6 +170,9 @@ public class TownProductionComponent implements TownComponent {
             if (current + output.amount > cap) {
                 if (shouldLog)
                     LOGGER.info("Recipe {} output full: {}", recipe.getId(), resId);
+                // Stall - ensure progress is tracked
+                float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
+                recipeProgress.put(recipe.getId(), currentProgress);
                 return; // Stall
             }
         }
@@ -193,7 +204,10 @@ public class TownProductionComponent implements TownComponent {
 
             if (resourceId.startsWith("pop*")) {
                 String actualRes = resourceId.substring(4);
+                float originalAmount = amount;
                 amount = amount * town.getPopulation();
+                LOGGER.info("DEBUG: Consuming {} for {}: Pop={}, Base={}, Calc={}",
+                        actualRes, recipe.getId(), town.getPopulation(), originalAmount, amount);
                 resourceId = actualRes;
             }
 
