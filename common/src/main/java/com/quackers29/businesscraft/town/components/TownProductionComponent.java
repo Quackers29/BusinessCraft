@@ -25,6 +25,57 @@ public class TownProductionComponent implements TownComponent {
         this.town = town;
     }
 
+    private record ResolvedResource(String id, float amount) {
+    }
+
+    private ResolvedResource resolveDynamicAmount(String rawId, String expression) {
+        String finalId = rawId;
+        String finalExpr = expression;
+
+        // Backward compatibility for pop* prefix in ID
+        if (finalId.startsWith("pop*")) {
+            finalId = finalId.substring(4);
+            finalExpr = finalExpr + "*pop";
+        } else if (finalId.endsWith("*pop")) {
+            finalId = finalId.substring(0, finalId.length() - 4);
+            finalExpr = finalExpr + "*pop";
+        }
+
+        float value = evaluateExpression(finalExpr);
+        return new ResolvedResource(finalId, value);
+    }
+
+    private float evaluateExpression(String expr) {
+        if (expr == null || expr.isEmpty())
+            return 0f;
+
+        float result = 1.0f;
+        String[] parts = expr.split("\\*");
+
+        for (String part : parts) {
+            part = part.trim();
+            if (part.isEmpty())
+                continue;
+
+            if (part.equalsIgnoreCase("pop")) {
+                result *= town.getPopulation();
+            } else if (part.equalsIgnoreCase("happiness")) {
+                result *= town.getHappiness();
+            } else {
+                try {
+                    result *= Float.parseFloat(part);
+                } catch (NumberFormatException e) {
+                    // Try as upgrade modifier (e.g. storage_cap_all)
+                    float mod = town.getUpgrades().getModifier(part);
+                    // If modifier not found, getModifier returns 0.
+                    // This is acceptable behavior for unknown variables (multiplier becomes 0).
+                    result *= mod;
+                }
+            }
+        }
+        return result;
+    }
+
     private int tickCounter = 0;
 
     @Override
@@ -104,13 +155,9 @@ public class TownProductionComponent implements TownComponent {
         // Check Stocks for Inputs
         boolean hasInputs = true;
         for (ResourceAmount input : recipe.getInputs()) {
-            float required = input.amount;
-            String resourceId = input.resourceId;
-
-            if (resourceId.startsWith("pop*")) {
-                resourceId = resourceId.substring(4);
-                required = required * town.getPopulation();
-            }
+            ResolvedResource resolved = resolveDynamicAmount(input.resourceId, input.amountExpression);
+            String resourceId = resolved.id();
+            float required = resolved.amount();
 
             if (resourceId.equals("population")) {
                 // Population check? assumed fine or handled by conditions
@@ -162,11 +209,8 @@ public class TownProductionComponent implements TownComponent {
 
                     // Partial Consumption Logic
                     for (ResourceAmount input : recipe.getInputs()) {
-                        String resourceId = input.resourceId;
-                        // Handle "pop*food" format
-                        if (resourceId.startsWith("pop*")) {
-                            resourceId = resourceId.substring(4);
-                        }
+                        ResolvedResource resolved = resolveDynamicAmount(input.resourceId, input.amountExpression);
+                        String resourceId = resolved.id();
                         com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
                                 .get(resourceId);
                         if (type != null) {
@@ -196,7 +240,10 @@ public class TownProductionComponent implements TownComponent {
 
         // Check Space for Outputs (Stalling logic)
         for (ResourceAmount output : recipe.getOutputs()) {
-            String resId = output.resourceId;
+            ResolvedResource resolved = resolveDynamicAmount(output.resourceId, output.amountExpression);
+            String resId = resolved.id();
+            float amount = resolved.amount();
+
             if (resId.equals("population"))
                 continue;
 
@@ -215,9 +262,9 @@ public class TownProductionComponent implements TownComponent {
 
             float cap = town.getTrading().getStorageCap(resId);
 
-            if (current + output.amount > cap) {
+            if (current + amount > cap) {
                 if (shouldLog)
-                    LOGGER.info("Recipe {} output full: {}", recipe.getId(), resId);
+                    LOGGER.info("Recipe {} output full: {} (Need space for {})", recipe.getId(), resId, amount);
                 // Stall - ensure progress is tracked
                 float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
                 recipeProgress.put(recipe.getId(), currentProgress);
@@ -247,16 +294,14 @@ public class TownProductionComponent implements TownComponent {
     private void consumeAndProduce(ProductionRecipe recipe) {
         // Consume Inputs
         for (ResourceAmount input : recipe.getInputs()) {
-            String resourceId = input.resourceId;
-            float amount = input.amount;
+            ResolvedResource resolved = resolveDynamicAmount(input.resourceId, input.amountExpression);
+            String resourceId = resolved.id();
+            float amount = resolved.amount();
 
-            if (resourceId.startsWith("pop*")) {
-                String actualRes = resourceId.substring(4);
-                float originalAmount = amount;
-                amount = amount * town.getPopulation();
-                LOGGER.info("DEBUG: Consuming {} for {}: Pop={}, Base={}, Calc={}",
-                        actualRes, recipe.getId(), town.getPopulation(), originalAmount, amount);
-                resourceId = actualRes;
+            if (input.resourceId.contains("*") || input.amountExpression.contains("*")) { // Log only dynamic
+                                                                                          // consumption
+                LOGGER.info("DEBUG: Consuming {} for {}: Pop={}, Expr={}, Calc={}",
+                        resourceId, recipe.getId(), town.getPopulation(), input.amountExpression, amount);
             }
 
             if (resourceId.equals("population")) {
@@ -277,8 +322,9 @@ public class TownProductionComponent implements TownComponent {
 
         // Produce Outputs
         for (ResourceAmount output : recipe.getOutputs()) {
-            String resId = output.resourceId;
-            float amount = output.amount;
+            ResolvedResource resolved = resolveDynamicAmount(output.resourceId, output.amountExpression);
+            String resId = resolved.id();
+            float amount = resolved.amount();
 
             if (resId.equals("population")) {
                 town.setPopulation(town.getPopulation() + (int) amount);
@@ -392,10 +438,12 @@ public class TownProductionComponent implements TownComponent {
 
             // Check outputs for resource
             for (ResourceAmount output : recipe.getOutputs()) {
-                if (output.resourceId.equals(resourceId)) {
+                ResolvedResource resolvedIndex = resolveDynamicAmount(output.resourceId, "0"); // Only ID matters here
+                if (resolvedIndex.id().equals(resourceId)) {
                     float cycleTime = getEffectiveCycleTime(recipe);
                     if (cycleTime > 0) {
-                        totalPerDay += (output.amount / cycleTime);
+                        ResolvedResource resolvedAmt = resolveDynamicAmount(output.resourceId, output.amountExpression);
+                        totalPerDay += (resolvedAmt.amount() / cycleTime);
                     }
                 }
             }
@@ -413,13 +461,12 @@ public class TownProductionComponent implements TownComponent {
             // Check inputs for resource
             for (ResourceAmount input : recipe.getInputs()) {
                 float amount = 0f;
+                // Resolve dynamic input
+                ResolvedResource resolved = resolveDynamicAmount(input.resourceId, input.amountExpression);
+
                 // Check direct match
-                if (input.resourceId.equals(resourceId)) {
-                    amount = input.amount;
-                }
-                // Check pop* match (e.g. pop*food matching food)
-                else if (input.resourceId.equals("pop*" + resourceId)) {
-                    amount = input.amount * town.getPopulation();
+                if (resolved.id().equals(resourceId)) {
+                    amount = resolved.amount();
                 }
 
                 if (amount > 0) {

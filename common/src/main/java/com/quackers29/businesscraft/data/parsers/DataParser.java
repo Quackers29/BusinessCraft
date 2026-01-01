@@ -114,14 +114,26 @@ public class DataParser {
         return conditions;
     }
 
-    // Parses "wood:4;iron:2"
+    // Parses "wood:4;iron:2" or "money:1*pop"
     public static class ResourceAmount {
         public String resourceId;
         public float amount;
+        public String amountExpression; // Stores dynamic expression
 
         public ResourceAmount(String r, float a) {
             this.resourceId = r;
             this.amount = a;
+            this.amountExpression = String.valueOf(a);
+        }
+
+        public ResourceAmount(String r, String expr) {
+            this.resourceId = r;
+            this.amountExpression = expr;
+            try {
+                this.amount = Float.parseFloat(expr);
+            } catch (NumberFormatException e) {
+                this.amount = 0f; // Dynamic
+            }
         }
     }
 
@@ -134,11 +146,8 @@ public class DataParser {
         for (String part : parts) {
             String[] kv = part.split(":");
             if (kv.length == 2) {
-                try {
-                    list.add(new ResourceAmount(kv[0].trim(), Float.parseFloat(kv[1].trim())));
-                } catch (NumberFormatException e) {
-                    LOGGER.warn("Invalid resource amount: {}", part);
-                }
+                // Store raw expression
+                list.add(new ResourceAmount(kv[0].trim(), kv[1].trim()));
             }
         }
         return list;

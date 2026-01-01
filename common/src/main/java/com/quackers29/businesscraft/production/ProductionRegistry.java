@@ -97,16 +97,22 @@ public class ProductionRegistry {
                             continue;
                         }
 
-                        // Try parse as resource
-                        try {
-                            String[] kv = part.split(":");
-                            if (kv.length == 2) {
-                                float val = Float.parseFloat(kv[1]);
-                                inputs.add(new ResourceAmount(kv[0], val));
-                            } else {
+                        // Try to disambiguate Resource vs Condition
+                        // Syntax: key:value
+                        String[] kv = part.split(":");
+                        if (kv.length == 2) {
+                            String key = kv[0].trim();
+                            String val = kv[1].trim();
+
+                            // Known condition keys
+                            if (key.equals("happiness") || key.equals("pop") || key.equals("surplus")) {
                                 conditions.addAll(DataParser.parseConditions(part));
+                            } else {
+                                // Assume Resource with potentially dynamic amount
+                                inputs.add(new ResourceAmount(key, val));
                             }
-                        } catch (Exception e) {
+                        } else {
+                            // Non-standard format, try condition parser
                             conditions.addAll(DataParser.parseConditions(part));
                         }
                     }
