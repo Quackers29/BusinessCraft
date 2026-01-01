@@ -131,8 +131,10 @@ base_reward_per_item = 5
 base_reward_per_tourist = 20
 time_bonus_multiplier = 2.0
 express_courier_cut = 0.3
-research_days_per_node = 5
 research_choice_randomness = 0.3
+production_tick_interval = 100
+min_stock_percent = 60
+excess_stock_percent = 80
 
 Why This Design Works
 

@@ -464,8 +464,20 @@ public class TownProductionComponent implements TownComponent {
                 if (cap < 1.0f)
                     cap = 1.0f;
 
-                float ratio = current / cap;
+                // User logic: 100% base happiness at "min stock level" (e.g. 60% of cap)
+                float minStockPct = com.quackers29.businesscraft.config.ConfigLoader.minStockPercent / 100.0f;
+                // Safety clamp to avoid divide by zero if user sets 0%
+                if (minStockPct < 0.01f)
+                    minStockPct = 0.01f;
+
+                float minStockLevel = cap * minStockPct;
+
+                float ratio = current / minStockLevel;
                 float baseHappiness = ratio * 50.0f;
+
+                // Clamp max base to 50 (reached at minStockLevel)
+                if (baseHappiness > 50.0f)
+                    baseHappiness = 50.0f;
 
                 town.setHappiness(baseHappiness);
             }

@@ -62,6 +62,8 @@ public class ConfigLoader {
     public static boolean productionEnabled = true;
     public static int productionTickInterval = 100;
     public static int dailyTickInterval = 24000;
+    public static int minStockPercent = 60;
+    public static int excessStockPercent = 80;
 
     public static final ConfigLoader INSTANCE = new ConfigLoader();
 
@@ -163,6 +165,8 @@ public class ConfigLoader {
             // Load production config
             productionEnabled = Boolean.parseBoolean(props.getProperty("productionEnabled", "true"));
             productionTickInterval = Integer.parseInt(props.getProperty("productionTickInterval", "100"));
+            minStockPercent = Integer.parseInt(props.getProperty("minStockPercent", "60"));
+            excessStockPercent = Integer.parseInt(props.getProperty("excessStockPercent", "80"));
 
             // Load Registries
             com.quackers29.businesscraft.economy.ResourceRegistry.load();
@@ -246,6 +250,8 @@ public class ConfigLoader {
         // Save production config
         props.setProperty("productionEnabled", String.valueOf(productionEnabled));
         props.setProperty("productionTickInterval", String.valueOf(productionTickInterval));
+        props.setProperty("minStockPercent", String.valueOf(minStockPercent));
+        props.setProperty("excessStockPercent", String.valueOf(excessStockPercent));
 
         try {
             Path configDir = com.quackers29.businesscraft.api.PlatformAccess.platform.getConfigDirectory();

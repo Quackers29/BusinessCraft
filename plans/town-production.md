@@ -60,7 +60,8 @@ town.upgrades.addAll(selected);
 Perf: Every `config.interval` ticks (default 20):
 
 #### A. Dynamic Happiness
-- **Formula**: `Base Happiness = (Food / FoodStorageCap) * 50`.
+- **Formula**: `Base Happiness = (Food / (FoodCap * MinStockPercent)) * 50`.
+- **MinStockPercent**: Configurable (default 60%). Reaching this level guarantees full base happiness (50).
 - **Total**: `Base + Upgrades`.
 - **Effect**: Controls unlock access and population growth eligibility.
 
