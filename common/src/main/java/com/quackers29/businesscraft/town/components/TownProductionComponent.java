@@ -39,6 +39,10 @@ public class TownProductionComponent implements TownComponent {
             LOGGER.info("TownProductionComponent.tick() - Town: {}, Upgrades: {}",
                     town.getName(), town.getUpgrades().getUnlockedNodes());
 
+        if (tickCounter % 20 == 0) {
+            updateHappiness();
+        }
+
         for (ProductionRecipe recipe : ProductionRegistry.getAll()) {
             if (recipe.getId().equals("population_maintenance") && shouldLog) {
                 LOGGER.info(
@@ -141,8 +145,52 @@ public class TownProductionComponent implements TownComponent {
         }
 
         if (!hasInputs) {
-            // Can't run, report 0 progress
-            recipeProgress.put(recipe.getId(), 0f);
+            if (recipe.getId().equals("population_maintenance")) {
+                // Starvation Logic: Advance progress anyway
+                float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
+                float tickIncrement = 1.0f / (float) com.quackers29.businesscraft.config.ConfigLoader.dailyTickInterval;
+                currentProgress += tickIncrement;
+
+                if (currentProgress >= effectiveTime) {
+                    LOGGER.info("STARVATION: Town {} missed {} cycle. No food available.", town.getName(),
+                            recipe.getId());
+
+                    // Apply Population Penalty
+                    if (town.getPopulation() > 0) {
+                        town.setPopulation(town.getPopulation() - 1);
+                    }
+
+                    // Partial Consumption Logic
+                    for (ResourceAmount input : recipe.getInputs()) {
+                        String resourceId = input.resourceId;
+                        // Handle "pop*food" format
+                        if (resourceId.startsWith("pop*")) {
+                            resourceId = resourceId.substring(4);
+                        }
+                        com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
+                                .get(resourceId);
+                        if (type != null) {
+                            net.minecraft.world.item.Item item = com.quackers29.businesscraft.api.PlatformAccess
+                                    .getRegistry().getItem(type.getMcItemId());
+                            if (item != null) {
+                                int available = town.getResourceCount(item);
+                                if (available > 0) {
+                                    town.addResource(item, -available); // Consume all
+                                    LOGGER.info("STARVATION: Consumed remaining partial stack of {} {}", available,
+                                            resourceId);
+                                }
+                            }
+                        }
+                    }
+
+                    currentProgress = 0f;
+                    town.markDirty();
+                }
+                recipeProgress.put(recipe.getId(), currentProgress);
+            } else {
+                // Can't run, report 0 progress
+                recipeProgress.put(recipe.getId(), 0f);
+            }
             return;
         }
 
@@ -345,5 +393,31 @@ public class TownProductionComponent implements TownComponent {
             }
         }
         return percentages;
+    }
+
+    private void updateHappiness() {
+        String foodId = "food";
+        com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
+                .get(foodId);
+        if (type != null) {
+            net.minecraft.world.item.Item item = com.quackers29.businesscraft.api.PlatformAccess.getRegistry()
+                    .getItem(type.getMcItemId());
+            if (item != null) {
+                float current = town.getResourceCount(item);
+                float cap = town.getTrading().getStorageCap(foodId);
+
+                // If cap is 0 or very small, handle gracefully
+                if (cap < 1.0f)
+                    cap = 1.0f;
+
+                float ratio = current / cap;
+                float baseHappiness = ratio * 50.0f;
+
+                // Set directly via setHappiness (base value)
+                // Note: user requested 0 at 0 food, 50 at 100% storage.
+                // Clamped to 0-50 logic is implied by logic math.
+                town.setHappiness(baseHappiness);
+            }
+        }
     }
 }

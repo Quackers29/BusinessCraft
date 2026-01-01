@@ -74,11 +74,16 @@ public class Town implements ITownDataProvider {
     }
 
     public float getHappiness() {
-        return happiness;
+        float modifier = upgrades.getModifier("happiness");
+        return Math.max(0.0f, Math.min(100.0f, this.happiness + modifier));
     }
 
     public void setHappiness(float happiness) {
         this.happiness = happiness;
+    }
+
+    public void adjustHappiness(float delta) {
+        this.happiness = Math.max(0.0f, Math.min(100.0f, this.happiness + delta));
     }
 
     private final com.quackers29.businesscraft.town.components.TownContractComponent contracts = new com.quackers29.businesscraft.town.components.TownContractComponent(
