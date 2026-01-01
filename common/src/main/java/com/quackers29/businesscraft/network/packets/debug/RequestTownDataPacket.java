@@ -21,7 +21,8 @@ import java.util.UUID;
 public class RequestTownDataPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestTownDataPacket.class);
 
-    public RequestTownDataPacket() {}
+    public RequestTownDataPacket() {
+    }
 
     public static RequestTownDataPacket decode(FriendlyByteBuf buf) {
         return new RequestTownDataPacket();
@@ -50,18 +51,16 @@ public class RequestTownDataPacket {
                 for (Map.Entry<UUID, Town> entry : towns.entrySet()) {
                     Town town = entry.getValue();
                     townDataList.add(new TownDebugOverlay.TownDebugData(
-                        town.getId().toString(),
-                        town.getName(),
-                        town.getPosition().toShortString(),
-                        town.getPopulation(),
-                        town.getBreadCount(),
-                        town.isTouristSpawningEnabled(),
-                        town.canSpawnTourists(),
-                        town.getPathStart() != null ? town.getPathStart().toShortString() : null,
-                        town.getPathEnd() != null ? town.getPathEnd().toShortString() : null,
-                        town.getSearchRadius(),
-                        town.getTotalVisitors()
-                    ));
+                            town.getId().toString(),
+                            town.getName(),
+                            town.getPosition().toShortString(),
+                            town.getPopulation(),
+                            town.isTouristSpawningEnabled(),
+                            town.canSpawnTourists(),
+                            town.getPathStart() != null ? town.getPathStart().toShortString() : null,
+                            town.getPathEnd() != null ? town.getPathEnd().toShortString() : null,
+                            town.getSearchRadius(),
+                            town.getTotalVisitors()));
                 }
             }
 
@@ -72,4 +71,3 @@ public class RequestTownDataPacket {
         PlatformAccess.getNetwork().setPacketHandled(context);
     }
 }
-

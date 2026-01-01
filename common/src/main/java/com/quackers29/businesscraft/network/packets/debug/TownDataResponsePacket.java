@@ -26,7 +26,7 @@ public class TownDataResponsePacket {
             String name = buf.readUtf();
             String position = buf.readUtf();
             int population = buf.readInt();
-            int breadCount = buf.readInt();
+
             boolean touristSpawningEnabled = buf.readBoolean();
             boolean canSpawnTourists = buf.readBoolean();
             String pathStart = buf.readBoolean() ? buf.readUtf() : null;
@@ -35,10 +35,9 @@ public class TownDataResponsePacket {
             int totalVisitors = buf.readInt();
 
             townData.add(new TownDebugOverlay.TownDebugData(
-                id, name, position, population, breadCount,
-                touristSpawningEnabled, canSpawnTourists,
-                pathStart, pathEnd, searchRadius, totalVisitors
-            ));
+                    id, name, position, population,
+                    touristSpawningEnabled, canSpawnTourists,
+                    pathStart, pathEnd, searchRadius, totalVisitors));
         }
     }
 
@@ -50,13 +49,15 @@ public class TownDataResponsePacket {
             buf.writeUtf(data.name);
             buf.writeUtf(data.position);
             buf.writeInt(data.population);
-            buf.writeInt(data.breadCount);
+
             buf.writeBoolean(data.touristSpawningEnabled);
             buf.writeBoolean(data.canSpawnTourists);
             buf.writeBoolean(data.pathStart != null);
-            if (data.pathStart != null) buf.writeUtf(data.pathStart);
+            if (data.pathStart != null)
+                buf.writeUtf(data.pathStart);
             buf.writeBoolean(data.pathEnd != null);
-            if (data.pathEnd != null) buf.writeUtf(data.pathEnd);
+            if (data.pathEnd != null)
+                buf.writeUtf(data.pathEnd);
             buf.writeInt(data.searchRadius);
             buf.writeInt(data.totalVisitors);
         }
@@ -75,4 +76,3 @@ public class TownDataResponsePacket {
         PlatformAccess.getNetwork().setPacketHandled(context);
     }
 }
-

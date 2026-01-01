@@ -14,13 +14,6 @@ public class TownEconomyComponent implements TownComponent {
     private int population;
 
     /**
-     * Legacy method for compatibility. Use addResource instead.
-     */
-    public void addBread(int count) {
-        addResource(Items.BREAD, count);
-    }
-
-    /**
      * Add a specific resource to the town and update population if applicable
      * 
      * @param item  The item resource to add
@@ -41,7 +34,6 @@ public class TownEconomyComponent implements TownComponent {
         // Actually add/remove the resource
         resources.addResource(item, count);
 
-        // Legacy bread logic removed - handled by Production System now
     }
 
     /**
@@ -52,13 +44,6 @@ public class TownEconomyComponent implements TownComponent {
      */
     public int getResourceCount(Item item) {
         return resources.getResourceCount(item);
-    }
-
-    /**
-     * Legacy method for bread count
-     */
-    public int getBreadCount() {
-        return resources.getResourceCount(Items.BREAD);
     }
 
     /**

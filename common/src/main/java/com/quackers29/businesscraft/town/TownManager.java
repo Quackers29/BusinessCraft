@@ -180,14 +180,6 @@ public class TownManager {
         return savedData.getTowns().get(id);
     }
 
-    public void updateResources(UUID townId, int breadCount) {
-        Town town = savedData.getTowns().get(townId);
-        if (town != null) {
-            town.addBread(breadCount);
-            savedData.setDirty();
-        }
-    }
-
     /**
      * Add a resource to a town
      * 

@@ -100,10 +100,6 @@ public class Town implements ITownDataProvider {
         contracts.tick(); // Always tick contracts
     }
 
-    public void addBread(int count) {
-        economy.addBread(count);
-    }
-
     @Override
     public void addResource(Item item, int count) {
         economy.addResource(item, count);
@@ -578,10 +574,6 @@ public class Town implements ITownDataProvider {
      */
     public void setName(String newName) {
         this.name = newName;
-    }
-
-    public int getBreadCount() {
-        return economy.getBreadCount();
     }
 
     public int getPopulation() {

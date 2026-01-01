@@ -26,7 +26,7 @@ public class ConfigLoader {
 
     // Town-related config
     public static List<String> townNames = new ArrayList<>();
-    public static int breadPerPop = 1;
+
     public static int minPopForTourists = 5;
     public static int minDistanceBetweenTowns = 100; // Minimum distance between towns in blocks
     public static int defaultStartingPopulation = 5; // Default starting population for new towns
@@ -124,7 +124,7 @@ public class ConfigLoader {
             minecartStopThreshold = Double.parseDouble(props.getProperty("minecartStopThreshold", "0.001"));
 
             // Town settings
-            breadPerPop = Integer.parseInt(props.getProperty("breadPerPop", "1"));
+
             minPopForTourists = Integer.parseInt(props.getProperty("minPopForTourists", "5"));
             minDistanceBetweenTowns = Integer.parseInt(props.getProperty("minDistanceBetweenTowns", "100"));
             defaultStartingPopulation = Integer.parseInt(props.getProperty("defaultStartingPopulation", "5"));
@@ -182,7 +182,7 @@ public class ConfigLoader {
         LOGGER.info("Enable Create Trains: {}", enableCreateTrains);
         LOGGER.info("Enable Minecarts: {}", enableMinecarts);
         LOGGER.info("Vehicle Search Radius: {}", vehicleSearchRadius);
-        LOGGER.info("Bread Per Pop: {}", breadPerPop);
+
         LOGGER.info("Min Pop For Tourists: {}", minPopForTourists);
         LOGGER.info("Min Distance Between Towns: {}", minDistanceBetweenTowns);
         LOGGER.info("Default Starting Population: {}", defaultStartingPopulation);
@@ -215,7 +215,7 @@ public class ConfigLoader {
         props.setProperty("minecartStopThreshold", String.valueOf(minecartStopThreshold));
 
         // Town settings
-        props.setProperty("breadPerPop", String.valueOf(breadPerPop));
+
         props.setProperty("minPopForTourists", String.valueOf(minPopForTourists));
         props.setProperty("minDistanceBetweenTowns", String.valueOf(minDistanceBetweenTowns));
         props.setProperty("defaultStartingPopulation", String.valueOf(defaultStartingPopulation));

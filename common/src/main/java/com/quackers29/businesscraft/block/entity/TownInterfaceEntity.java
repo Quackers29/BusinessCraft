@@ -116,7 +116,7 @@ public class TownInterfaceEntity extends BlockEntity
 
     // Modular ContainerData system - replaces hardcoded indices with named fields
     private final ContainerDataHelper containerData = ContainerDataHelper.builder("TownBlock")
-            .addReadOnlyField("bread_count", this::getBreadCountFromTown, "Legacy bread count for compatibility")
+
             .addReadOnlyField("population", this::getPopulationFromTown, "Current town population")
             .addField("spawn_enabled", this::getTouristSpawningEnabledAsInt, this::setTouristSpawningEnabledFromInt,
                     "Tourist spawning enabled flag")
@@ -195,13 +195,6 @@ public class TownInterfaceEntity extends BlockEntity
     private static final String ANY_TOWN_NAME = "Any Town";
 
     // Helper methods for ContainerData integration
-    private int getBreadCountFromTown() {
-        if (townId != null && level instanceof ServerLevel sLevel) {
-            Town town = TownManager.get(sLevel).getTown(townId);
-            return town != null ? town.getBreadCount() : 0;
-        }
-        return 0;
-    }
 
     private int getPopulationFromTown() {
         if (townId != null && level instanceof ServerLevel sLevel) {
