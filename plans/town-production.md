@@ -58,48 +58,30 @@ town.upgrades.addAll(selected);
 
 ### 4. Production Tick (in Town#tick())
 Perf: Every `config.interval` ticks (default 20):
-```java
-long now = level.getGameTime();
-if (now - last_prod_time < config.interval) return;
-last_prod_time = now;
 
-float popScale = Math.min(population / 100.0f, 2.0f);  // cap scaling
+#### A. Dynamic Happiness
+- **Formula**: `Base Happiness = (Food / FoodStorageCap) * 50`.
+- **Total**: `Base + Upgrades`.
+- **Effect**: Controls unlock access and population growth eligibility.
 
-// Upgrades
-for (String upId : upgrades) {
-  Upgrade up = UpgradeRegistry.get(upId);
-  if (population < up.pop_required) continue;
-  
-  // Check inputs available
-  boolean canRun = true;
-  for (var in : up.inputs.entrySet()) {
-    float need = -in.getValue() * up.base_rate * popScale;  // positive need
-    if (getStock(in.getKey()) < need) { canRun = false; break; }
-  }
-  if (!canRun) continue;
-
-  // Consume inputs
-  for (var in : up.inputs.entrySet()) {
-    float amt = in.getValue() * up.base_rate * popScale;
-    adjustStock(in.getKey(), amt);  // negative
-  }
-  
-  // Produce outputs
-  for (var out : up.outputs.entrySet()) {
-    float amt = out.getValue() * up.base_rate * popScale;
-    adjustStock(out.getKey(), amt);  // positive
-  }
-}
-
-// Population Growth
-float food = getStock("food");
-if (food > config.pop_food_threshold && population < max_population) {
-  float growth = config.pop_growth_rate * (food / 10.0f);
-  population += growth;
-  adjustStock("food", -growth * config.pop_food_cost);
-}
+#### B. Production Engine
+Iterates active recipes defined in `productions.csv`:
+```csv
+id,name,time,conditions,inputs,outputs
+population_growth,Growth,0.03,"surplus:food;happiness:>60;pop:<pop_cap",,"population:1"
 ```
-- `adjustStock`: Clamp to 0+, notify trading.
+- **Conditions**: 
+  - `surplus:<id>`: Passes if global production rate > consumption rate for item.
+  - `happiness:>X`, `pop:<limit>`.
+- **Execution**:
+  - If conditions met and inputs available → Progress increases.
+  - On completion → Inputs consumed, Outputs produced.
+
+#### C. Population Maintenance
+- **Recipe**: `population_maintenance` (always active).
+- **Input**: `pop*food:1`.
+- **Logic**: Consumes food scaling with population.
+- **Starvation**: If inputs missing, partial food is consumed, but happiness falls naturally due to the Dynamic Happiness formula (low food = low happiness).
 
 ### 5. Trading Integration
 - **Imbalances**: Farms build wood/food excess → trade for coal/iron.

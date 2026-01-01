@@ -80,8 +80,11 @@ Complete rewrite.
 - **State**:
   - `recipeProgress`: Map<String (prod_id), Float (days_accumulated)>
 - **Logic `tick()`**:
-  - Iterate all *unlocked* recipes (recipes are unlocked by specific `UpgradeNode` effects or default available? *Plan says: "prod_id alone... unlocks the production recipe"*. So recipes are locked by default).
-  - **Check Conditions**: `happiness`, `pop_cap` matches.
+  - Iterate all *unlocked* recipes.
+  - **Dynamic Happiness**: Every 20 ticks, update `baseHappiness = (food / food_cap) * 50`.
+  - **Check Conditions**: 
+    - `happiness`, `pop_cap` matches.
+    - `surplus:<resource>`: Checks if `ProductionRate(resource) > ConsumptionRate(resource)`.
   - **Check Inputs/Outputs**:
     - Calculate **Base Cycle Time** + `prod_id-time` modifier.
     - Calculate **Input Costs** + `prod_id-input` modifier.
@@ -89,7 +92,7 @@ Complete rewrite.
   - Check `TownResources` has inputs and space for outputs.
   - If all good: `progress += daily_tick_interval_fraction`.
   - If `progress >= cycle_time`:
-    - Consume inputs.
+    - Consume inputs (handle `pop*` scaling).
     - Produce outputs.
     - Reset progress.
 

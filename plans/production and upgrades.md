@@ -52,14 +52,14 @@ Columns: prod_id,display_name,base_cycle_time_days,inputs,outputs
 inputs and outputs: packed semicolon-separated list
 - Resource consumption: item_id:amount
 - Population scaling: pop*item_id:amount
-- Condition checks: happiness:>60 ; pop:<pop_cap ; pop:<=95%pop_cap
+- Condition checks: happiness:>60 ; pop:<pop_cap ; pop:<=95%pop_cap ; surplus:item_id
 
 Recipe runs only if all inputs/conditions satisfied.
 
 Example rows:
 prod_id,display_name,base_cycle_time_days,inputs,outputs
 population_maintenance,Food Consumption,1,pop*food:1,
-population_growth,Natural Population Growth,10,happiness:>60;pop:<pop_cap,population:1
+population_growth,Natural Population Growth,10,surplus:food;happiness:>60;pop:<pop_cap,population:1
 basic_farming,Basic Wheat Farming,1,,food:4
 advanced_farming,Advanced Wheat Farming,1,,food:8
 wood_to_planks,Wood to Planks,0.5,wood:4,planks:16

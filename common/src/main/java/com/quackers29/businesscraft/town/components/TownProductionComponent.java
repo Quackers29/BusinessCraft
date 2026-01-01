@@ -309,7 +309,18 @@ public class TownProductionComponent implements TownComponent {
                 targetValue = town.getHappiness();
             else if (target.equals("pop"))
                 targetValue = town.getPopulation();
-            else {
+            else if (target.equals("surplus")) {
+                // General surplus condition: target="surplus", value="resource_id"
+                String resourceId = valStr;
+
+                float prod = getProductionRate(resourceId);
+                float cons = getConsumptionRate(resourceId);
+
+                boolean pass = prod > cons;
+                if (!pass)
+                    return false;
+                continue;
+            } else {
                 // Maybe a resource amount?
                 continue;
             }
@@ -368,10 +379,58 @@ public class TownProductionComponent implements TownComponent {
         recipeProgress.clear();
         if (tag.contains("recipeProgress")) {
             CompoundTag progressTag = tag.getCompound("recipeProgress");
-            for (String key : progressTag.getAllKeys()) {
-                recipeProgress.put(key, progressTag.getFloat(key));
+            progressTag.getAllKeys().forEach(key -> recipeProgress.put(key, progressTag.getFloat(key)));
+        }
+    }
+
+    private float getProductionRate(String resourceId) {
+        float totalPerDay = 0f;
+        for (ProductionRecipe recipe : ProductionRegistry.getAll()) {
+            // Check if unlocked
+            if (town.getUpgrades().getModifier(recipe.getId()) <= 0)
+                continue;
+
+            // Check outputs for resource
+            for (ResourceAmount output : recipe.getOutputs()) {
+                if (output.resourceId.equals(resourceId)) {
+                    float cycleTime = getEffectiveCycleTime(recipe);
+                    if (cycleTime > 0) {
+                        totalPerDay += (output.amount / cycleTime);
+                    }
+                }
             }
         }
+        return totalPerDay;
+    }
+
+    private float getConsumptionRate(String resourceId) {
+        float totalPerDay = 0f;
+        for (ProductionRecipe recipe : ProductionRegistry.getAll()) {
+            // Check if unlocked
+            if (town.getUpgrades().getModifier(recipe.getId()) <= 0)
+                continue;
+
+            // Check inputs for resource
+            for (ResourceAmount input : recipe.getInputs()) {
+                float amount = 0f;
+                // Check direct match
+                if (input.resourceId.equals(resourceId)) {
+                    amount = input.amount;
+                }
+                // Check pop* match (e.g. pop*food matching food)
+                else if (input.resourceId.equals("pop*" + resourceId)) {
+                    amount = input.amount * town.getPopulation();
+                }
+
+                if (amount > 0) {
+                    float cycleTime = getEffectiveCycleTime(recipe);
+                    if (cycleTime > 0) {
+                        totalPerDay += (amount / cycleTime);
+                    }
+                }
+            }
+        }
+        return totalPerDay;
     }
 
     public Map<String, Float> getActiveRecipes() {
@@ -381,12 +440,7 @@ public class TownProductionComponent implements TownComponent {
             float current = entry.getValue();
             ProductionRecipe recipe = ProductionRegistry.get(id);
             if (recipe != null) {
-                float base = recipe.getBaseCycleTimeDays();
-                // We use calculate effective time logic
-                float mod = town.getUpgrades().getModifier(id + "-time");
-                float effective = base + mod;
-                if (effective < 0.000001f)
-                    effective = 0.000001f;
+                float effective = getEffectiveCycleTime(recipe);
                 percentages.put(id, current / effective);
             } else {
                 percentages.put(id, 0f);
@@ -413,11 +467,17 @@ public class TownProductionComponent implements TownComponent {
                 float ratio = current / cap;
                 float baseHappiness = ratio * 50.0f;
 
-                // Set directly via setHappiness (base value)
-                // Note: user requested 0 at 0 food, 50 at 100% storage.
-                // Clamped to 0-50 logic is implied by logic math.
                 town.setHappiness(baseHappiness);
             }
         }
+    }
+
+    private float getEffectiveCycleTime(ProductionRecipe recipe) {
+        float baseTime = recipe.getBaseCycleTimeDays();
+        float timeMod = town.getUpgrades().getModifier(recipe.getId() + "-time");
+        float effectiveTime = baseTime + timeMod;
+        if (effectiveTime < 0.000001f)
+            effectiveTime = 0.000001f;
+        return effectiveTime;
     }
 }
