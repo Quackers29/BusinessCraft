@@ -101,11 +101,52 @@ public class ProductionTab extends BaseTownTab {
                         // Tooltip for production
                         if (recipe != null) {
                             StringBuilder sb = new StringBuilder();
+
+                            // 1. Inputs & Conditions
+                            List<String> inputsList = new ArrayList<>();
+                            if (recipe.getInputs() != null) {
+                                for (com.quackers29.businesscraft.data.parsers.DataParser.ResourceAmount input : recipe
+                                        .getInputs()) {
+                                    String amtDisplay = input.amountExpression != null ? input.amountExpression
+                                            : String.valueOf(input.amount);
+                                    inputsList.add(input.resourceId + ": " + amtDisplay);
+                                }
+                            }
+                            if (recipe.getConditions() != null) {
+                                for (com.quackers29.businesscraft.data.parsers.Condition cond : recipe
+                                        .getConditions()) {
+                                    inputsList.add(cond.getTarget() + " " + cond.getOperator() + " " + cond.getValue());
+                                }
+                            }
+
+                            if (!inputsList.isEmpty()) {
+                                sb.append("Inputs/Reqs:\n");
+                                for (String s : inputsList)
+                                    sb.append(" - ").append(s).append("\n");
+                                sb.append("\n");
+                            }
+
+                            // 2. Outputs
+                            if (recipe.getOutputs() != null && !recipe.getOutputs().isEmpty()) {
+                                sb.append("Outputs:\n");
+                                for (com.quackers29.businesscraft.data.parsers.DataParser.ResourceAmount output : recipe
+                                        .getOutputs()) {
+                                    String amtDisplay = output.amountExpression != null ? output.amountExpression
+                                            : String.valueOf(output.amount);
+                                    sb.append(" - ").append(output.resourceId).append(": ").append(amtDisplay)
+                                            .append("\n");
+                                }
+                                sb.append("\n");
+                            }
+
+                            // 3. Cycle Time & Speed
                             sb.append("Base Cycle: ").append(recipe.getBaseCycleTimeDays()).append(" days\n");
 
-                            // Check modifier
+                            // Check active upgrades
                             java.util.Set<String> unlocked = cache.getCachedUnlockedNodes();
                             float modifier = 0f;
+                            List<String> activeEffects = new ArrayList<>();
+
                             if (unlocked != null) {
                                 for (String nodeId : unlocked) {
                                     UpgradeNode unode = UpgradeRegistry.get(nodeId);
@@ -113,16 +154,16 @@ public class ProductionTab extends BaseTownTab {
                                         for (com.quackers29.businesscraft.data.parsers.Effect eff : unode
                                                 .getEffects()) {
                                             if (eff.getTarget().equals(id)) {
-                                                // Scaling effect for repeatable upgrades?
-                                                // Assuming modifiers are passed as flattened "activeModifiers"?
-                                                // Wait, cache.getResourceStats/actives?
-                                                // DataParser effect value is static.
-                                                // Upgrade logic multiplies it.
-                                                // If I want accurate speed, I should fetch "activeModifiers" from cache
-                                                // if exposed? TownDataCacheManager doesn't expose activeModifiers map.
-                                                // For now, simple additive calc using level:
+                                                // Calculate effect magnitude
                                                 int lvl = cache.getCachedUpgradeLevel(nodeId);
-                                                modifier += eff.getValue() * lvl;
+                                                float val = eff.getValue() * lvl;
+                                                modifier += val;
+
+                                                // Format active effect line
+                                                String name = unode.getDisplayName();
+                                                if (unode.isRepeatable())
+                                                    name += " (" + lvl + ")";
+                                                activeEffects.add(name + ": +" + String.format("%.0f%%", val * 100));
                                             }
                                         }
                                     }
@@ -137,6 +178,15 @@ public class ProductionTab extends BaseTownTab {
                             } else {
                                 sb.append("Normal Speed (100%)");
                             }
+
+                            // 4. List Active Upgrades
+                            if (!activeEffects.isEmpty()) {
+                                sb.append("\n\nActive Upgrades:\n");
+                                for (String eff : activeEffects) {
+                                    sb.append(" - ").append(eff).append("\n");
+                                }
+                            }
+
                             tooltipList.add(sb.toString());
                         } else {
                             tooltipList.add(null);

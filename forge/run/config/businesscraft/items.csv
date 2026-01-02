@@ -2,6 +2,6 @@ item_id,display_name,mc_item_id
 wood,Wood,minecraft:oak_log
 iron,Iron Ingot,minecraft:iron_ingot
 coal,Coal,minecraft:coal
-food,Food,minecraft:wheat
+food,Food,minecraft:bread
 money,Emeralds,minecraft:emerald
 planks,Planks,minecraft:oak_planks
