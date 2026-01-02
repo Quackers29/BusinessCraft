@@ -10,6 +10,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.town.components.TownEconomyComponent;
+import com.quackers29.businesscraft.town.components.TownTradingComponent;
+import com.quackers29.businesscraft.town.components.TownProductionComponent;
+import com.quackers29.businesscraft.town.components.TownUpgradeComponent;
+import com.quackers29.businesscraft.town.components.TownContractComponent;
 import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.town.data.TownPaymentBoard;
@@ -21,7 +25,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import java.util.stream.Collectors;
 
-public class Town implements ITownDataProvider {
+public class Town implements ITownDataProvider, com.quackers29.businesscraft.town.ai.ITownState {
     private static final Logger LOGGER = LoggerFactory.getLogger(Town.class);
     private final UUID id;
     private final BlockPos position;
@@ -52,28 +56,35 @@ public class Town implements ITownDataProvider {
     // Personal storage - individual storage for each player (UUID -> items)
     private final Map<UUID, Map<Item, Integer>> personalStorage = new HashMap<>();
 
+    // ITownState specific fields
+    private String biomeNamespace = "minecraft:plains"; // Default biome for ITownState
+
+    // Components
+    private final TownTradingComponent trading;
+    private final TownProductionComponent production;
+    private final TownUpgradeComponent upgrades;
+    private final TownContractComponent contracts;
+
     public Town(UUID id, BlockPos pos, String name) {
         this.id = id;
         this.position = pos;
         this.name = name;
         this.touristSpawningEnabled = true;
 
+        this.trading = new TownTradingComponent(this);
+        this.production = new TownProductionComponent(this);
+        this.upgrades = new TownUpgradeComponent(this);
+        this.contracts = new TownContractComponent(this);
+
         // Initialize with default starting population
         economy.setPopulation(ConfigLoader.defaultStartingPopulation);
     }
-
-    private final com.quackers29.businesscraft.town.components.TownTradingComponent trading = new com.quackers29.businesscraft.town.components.TownTradingComponent(
-            this);
-    private final com.quackers29.businesscraft.town.components.TownUpgradeComponent upgrades = new com.quackers29.businesscraft.town.components.TownUpgradeComponent(
-            this);
-    private final com.quackers29.businesscraft.town.components.TownProductionComponent production = new com.quackers29.businesscraft.town.components.TownProductionComponent(
-            this);
 
     // Stats
     private float happiness = 50.0f; // 0-100
     private float happinessModifier = 0f; // Calculated from upgrades
 
-    public com.quackers29.businesscraft.town.components.TownUpgradeComponent getUpgrades() {
+    public TownUpgradeComponent getUpgrades() {
         return upgrades;
     }
 
@@ -90,8 +101,9 @@ public class Town implements ITownDataProvider {
         this.happiness = Math.max(0.0f, Math.min(100.0f, this.happiness + delta));
     }
 
-    private final com.quackers29.businesscraft.town.components.TownContractComponent contracts = new com.quackers29.businesscraft.town.components.TownContractComponent(
-            this);
+    public TownContractComponent getContracts() {
+        return contracts;
+    }
 
     public void tick() {
         economy.tick();
@@ -938,6 +950,27 @@ public class Town implements ITownDataProvider {
 
     public com.quackers29.businesscraft.town.components.TownEconomyComponent getEconomy() {
         return economy;
+    }
+
+    // --- ITownState Implementation ---
+    @Override
+    public float getStock(String resourceId) {
+        return trading.getStock(resourceId);
+    }
+
+    @Override
+    public float getStorageCap(String resourceId) {
+        return trading.getStorageCap(resourceId);
+    }
+
+    @Override
+    public float getProductionRate(String resourceId) {
+        return production.getProductionRate(resourceId);
+    }
+
+    @Override
+    public float getConsumptionRate(String resourceId) {
+        return production.getConsumptionRate(resourceId);
     }
 
 }

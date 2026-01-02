@@ -30,15 +30,35 @@ public class ProductionTab extends BaseTownTab {
     }
 
     private ViewMode viewMode = ViewMode.ACTIVE;
+    private long lastUpdateTimestamp = 0;
+    private static final long UPDATE_THROTTLE_MS = 2000; // 2 seconds
 
     @Override
     public void handleAction(String action) {
         if ("view_active_production".equals(action)) {
             viewMode = ViewMode.ACTIVE;
-            update();
+            forceUpdate(); // Immediate update on action
         } else if ("view_upgrades".equals(action)) {
             viewMode = ViewMode.UPGRADES;
-            update();
+            forceUpdate(); // Immediate update on action
+        }
+    }
+
+    private void forceUpdate() {
+        lastUpdateTimestamp = System.currentTimeMillis();
+        if (contentComponent != null) {
+            contentComponent.refresh();
+        }
+    }
+
+    @Override
+    public void update() {
+        long now = System.currentTimeMillis();
+        if (now - lastUpdateTimestamp >= UPDATE_THROTTLE_MS) {
+            lastUpdateTimestamp = now;
+            if (contentComponent != null) {
+                contentComponent.refresh();
+            }
         }
     }
 
@@ -121,57 +141,92 @@ public class ProductionTab extends BaseTownTab {
                     tooltipList.add(null);
                 }
             } else {
-                // Upgrades View (Research + Unlocked)
+                // Upgrades View (Research + Unlocked + Locked)
+                List<UpgradeNode> activeList = new ArrayList<>();
+                List<UpgradeNode> unlockedList = new ArrayList<>();
+                List<UpgradeNode> lockedList = new ArrayList<>();
 
-                // 1. Current Research
-                String currentResearch = cache.getCachedCurrentResearch();
-                if (currentResearch != null && !currentResearch.isEmpty()) {
-                    UpgradeNode node = UpgradeRegistry.get(currentResearch);
-                    String displayName = (node != null) ? node.getDisplayName() : currentResearch;
-                    names.add(displayName);
+                java.util.Set<String> unlockedIds = cache.getCachedUnlockedNodes();
+                String currentResearchId = cache.getCachedCurrentResearch();
+                UpgradeNode currentResearchNode = (currentResearchId != null && !currentResearchId.isEmpty())
+                        ? UpgradeRegistry.get(currentResearchId)
+                        : null;
 
-                    float currentDays = cache.getCachedResearchProgress();
-                    if (node != null && node.getResearchDays() > 0) {
-                        int pct = (int) ((currentDays / node.getResearchDays()) * 100);
+                if (currentResearchNode != null) {
+                    activeList.add(currentResearchNode);
+                }
+
+                // Categorize nodes
+                for (UpgradeNode node : UpgradeRegistry.getAll()) {
+                    if (currentResearchNode != null && node.getId().equals(currentResearchNode.getId())) {
+                        continue; // Already in active
+                    }
+                    if (unlockedIds != null && unlockedIds.contains(node.getId())) {
+                        unlockedList.add(node);
+                    } else {
+                        lockedList.add(node);
+                    }
+                }
+
+                // Sort Locked by AI Score
+                ClientTownState clientState = new ClientTownState(cache);
+                lockedList.sort((n1, n2) -> {
+                    double s1 = com.quackers29.businesscraft.town.ai.TownResearchAI.calculateScore(clientState, n1);
+                    double s2 = com.quackers29.businesscraft.town.ai.TownResearchAI.calculateScore(clientState, n2);
+                    return Double.compare(s2, s1); // Descending
+                });
+
+                // Helper to add node to lists
+                Consumer<UpgradeNode> addNode = (node) -> {
+                    names.add(node.getDisplayName());
+
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(node.getDisplayName()).append("\n");
+                    sb.append(node.getDescription()).append("\n\n");
+
+                    // Status specific info
+                    if (activeList.contains(node)) {
+                        float currentDays = cache.getCachedResearchProgress();
+                        int pct = (node.getResearchDays() > 0) ? (int) ((currentDays / node.getResearchDays()) * 100)
+                                : 0;
                         if (pct > 100)
                             pct = 100;
                         progress.add(pct + "%");
-
-                        StringBuilder sb = new StringBuilder();
-                        sb.append(displayName).append("\n");
-                        sb.append("Researching...").append("\n\n");
-                        sb.append(node.getDescription());
-                        tooltipList.add(sb.toString());
-                    } else {
-                        progress.add(String.format("%.1f d", currentDays));
-                        tooltipList.add(null);
-                    }
-                }
-
-                // 2. Unlocked Upgrades
-                java.util.Set<String> unlocked = cache.getCachedUnlockedNodes();
-                if (unlocked != null && !unlocked.isEmpty()) {
-                    for (String nodeId : unlocked) {
-                        UpgradeNode node = UpgradeRegistry.get(nodeId);
-                        String displayName = (node != null) ? node.getDisplayName() : nodeId;
-
-                        names.add(displayName);
+                        sb.append("Status: Researching...").append("\n");
+                    } else if (unlockedList.contains(node)) {
                         progress.add("Unlocked");
-
-                        if (node != null) {
-                            StringBuilder sb = new StringBuilder();
-                            sb.append(displayName).append("\n");
-                            sb.append(node.getDescription()).append("\n\n");
-                            sb.append("Effects:\n");
-                            for (com.quackers29.businesscraft.data.parsers.Effect eff : node.getEffects()) {
-                                sb.append(" ").append(eff.getTarget()).append(": ").append(eff.getValue()).append("\n");
-                            }
-                            tooltipList.add(sb.toString());
-                        } else {
-                            tooltipList.add(null);
-                        }
+                        sb.append("Status: Unlocked").append("\n");
+                    } else {
+                        progress.add("Locked");
+                        sb.append("Status: Locked").append("\n");
                     }
-                }
+
+                    // Requirements
+                    if (node.getCosts() != null && !node.getCosts().isEmpty()) {
+                        sb.append("\nCost:\n");
+                        node.getCosts().forEach(resAmt -> {
+                            sb.append(" - ").append(resAmt.resourceId).append(": ").append(resAmt.amount).append("\n");
+                        });
+                    }
+
+                    // AI Score (Town Priority)
+                    if (lockedList.contains(node)) {
+                        double score = com.quackers29.businesscraft.town.ai.TownResearchAI.calculateScore(clientState,
+                                node);
+                        sb.append("\nTown Priority: ").append(String.format("%.1f", score));
+                    }
+
+                    sb.append("\n\nEffects:\n");
+                    for (com.quackers29.businesscraft.data.parsers.Effect eff : node.getEffects()) {
+                        sb.append(" ").append(eff.getTarget()).append(": ").append(eff.getValue()).append("\n");
+                    }
+                    tooltipList.add(sb.toString());
+                };
+
+                // Add to main lists in order
+                activeList.forEach(addNode);
+                unlockedList.forEach(addNode);
+                lockedList.forEach(addNode);
 
                 if (names.isEmpty()) {
                     names.add("No Upgrades");
@@ -188,10 +243,78 @@ public class ProductionTab extends BaseTownTab {
         panel.addChild(contentComponent);
     }
 
-    @Override
-    public void update() {
-        if (contentComponent != null) {
-            contentComponent.refresh();
+    // Client-side implementation of local town state for AI scoring
+    private static class ClientTownState implements com.quackers29.businesscraft.town.ai.ITownState {
+        private final TownDataCacheManager cache;
+
+        public ClientTownState(TownDataCacheManager cache) {
+            this.cache = cache;
+        }
+
+        @Override
+        public float getStock(String resourceId) {
+            // Best effort from cache or 0
+            // resourceId is like "minecraft:wheat"
+            try {
+                net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(resourceId);
+                java.util.Map<net.minecraft.world.item.Item, Integer> resources = cache.getCachedResources();
+                if (resources != null) {
+                    for (Map.Entry<net.minecraft.world.item.Item, Integer> entry : resources.entrySet()) {
+                        // Simple string check is risky but item registry lookup is hard on client
+                        // thread without direct access sometimes
+                        // But we have ResourceLocation.
+                        if (com.quackers29.businesscraft.api.PlatformAccess.getRegistry().getItemKey(entry.getKey())
+                                .equals(loc)) {
+                            return entry.getValue();
+                        }
+                    }
+                }
+            } catch (Exception e) {
+            }
+            return 0;
+        }
+
+        @Override
+        public float getStorageCap(String resourceId) {
+            // We can check resource stats from synced cache
+            try {
+                net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(resourceId);
+                net.minecraft.world.item.Item item = (net.minecraft.world.item.Item) com.quackers29.businesscraft.api.PlatformAccess
+                        .getRegistry().getItem(loc);
+                float[] stats = cache.getResourceStats(item);
+                if (stats != null && stats.length >= 3)
+                    return stats[2];
+            } catch (Exception e) {
+            }
+            return 0;
+        }
+
+        @Override
+        public float getProductionRate(String resourceId) {
+            try {
+                net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(resourceId);
+                net.minecraft.world.item.Item item = (net.minecraft.world.item.Item) com.quackers29.businesscraft.api.PlatformAccess
+                        .getRegistry().getItem(loc);
+                float[] stats = cache.getResourceStats(item);
+                if (stats != null && stats.length >= 3)
+                    return stats[0];
+            } catch (Exception e) {
+            }
+            return 0;
+        }
+
+        @Override
+        public float getConsumptionRate(String resourceId) {
+            try {
+                net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(resourceId);
+                net.minecraft.world.item.Item item = (net.minecraft.world.item.Item) com.quackers29.businesscraft.api.PlatformAccess
+                        .getRegistry().getItem(loc);
+                float[] stats = cache.getResourceStats(item);
+                if (stats != null && stats.length >= 3)
+                    return stats[1];
+            } catch (Exception e) {
+            }
+            return 0;
         }
     }
 

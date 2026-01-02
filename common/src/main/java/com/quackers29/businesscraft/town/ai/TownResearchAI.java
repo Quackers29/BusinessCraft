@@ -52,9 +52,13 @@ public class TownResearchAI {
 
         for (UpgradeNode node : candidates) {
             double score = calculateScore(town, node);
-            LOGGER.debug("AI Candidate: {} Score: {}", node.getId(), score);
-            if (score > bestScore) {
-                bestScore = score;
+            // Random bias to prevent getting stuck (only applied for selection, not UI
+            // display)
+            double biasedScore = score + (Math.random() * 2.0);
+
+            LOGGER.debug("AI Candidate: {} Score: {} (Biased: {})", node.getId(), score, biasedScore);
+            if (biasedScore > bestScore) {
+                bestScore = biasedScore;
                 bestNode = node;
             }
         }
@@ -68,7 +72,7 @@ public class TownResearchAI {
         return null;
     }
 
-    private static double calculateScore(Town town, UpgradeNode node) {
+    public static double calculateScore(ITownState town, UpgradeNode node) {
         double score = 0.0;
 
         for (Effect effect : node.getEffects()) {
@@ -82,8 +86,8 @@ public class TownResearchAI {
                     double avgFullness = 0;
                     int count = 0;
                     for (ResourceType type : ResourceRegistry.getAll()) {
-                        float cap = town.getTrading().getStorageCap(type.getId());
-                        float current = town.getTrading().getStock(type.getId());
+                        float cap = town.getStorageCap(type.getId());
+                        float current = town.getStock(type.getId());
                         if (cap > 0) {
                             avgFullness += (current / cap);
                             count++;
@@ -98,8 +102,8 @@ public class TownResearchAI {
                 } else {
                     // Specific resource cap
                     String resId = target.substring("storage_cap_".length());
-                    float cap = town.getTrading().getStorageCap(resId);
-                    float current = town.getTrading().getStock(resId);
+                    float cap = town.getStorageCap(resId);
+                    float current = town.getStock(resId);
                     if (cap > 0) {
                         double fullness = current / cap;
                         if (fullness > 0.9)
@@ -120,8 +124,8 @@ public class TownResearchAI {
                 // Check if we need the outputs
                 for (var output : recipe.getOutputs()) {
                     // Estimate deficit
-                    float prod = town.getProduction().getProductionRate(output.resourceId);
-                    float cons = town.getProduction().getConsumptionRate(output.resourceId);
+                    float prod = town.getProductionRate(output.resourceId);
+                    float cons = town.getConsumptionRate(output.resourceId);
 
                     if (cons > prod) {
                         // Deficit!
@@ -133,17 +137,14 @@ public class TownResearchAI {
                     }
 
                     // Also check if low on stock
-                    float cap = town.getTrading().getStorageCap(output.resourceId);
-                    float current = town.getTrading().getStock(output.resourceId);
+                    float cap = town.getStorageCap(output.resourceId);
+                    float current = town.getStock(output.resourceId);
                     if (cap > 0 && (current / cap) < 0.2) {
                         score += 5.0; // Boost if low stock
                     }
                 }
             }
         }
-
-        // Random bias to prevent getting stuck
-        score += Math.random() * 2.0;
 
         return score;
     }
