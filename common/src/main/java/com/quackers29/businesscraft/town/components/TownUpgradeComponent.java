@@ -149,6 +149,10 @@ public class TownUpgradeComponent implements TownComponent {
             }
             // Deduct
             for (ResourceAmount ra : costs) {
+                // Do not consume stats like tourism_count
+                if (ra.resourceId.startsWith("tourism_"))
+                    continue;
+
                 float cost = ra.amount * multiplier;
                 town.getTrading().adjustStock(ra.resourceId, -cost);
             }

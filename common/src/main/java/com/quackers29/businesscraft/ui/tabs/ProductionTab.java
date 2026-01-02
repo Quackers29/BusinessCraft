@@ -238,12 +238,29 @@ public class ProductionTab extends BaseTownTab {
 
                     // Requirements / Costs (Scaled)
                     if (entry.node.getCosts() != null && !entry.node.getCosts().isEmpty()) {
-                        sb.append("\nCost:\n");
                         float costMult = (float) Math.pow(entry.node.getCostMultiplier(), entry.level - 1);
+
+                        List<String> costs = new ArrayList<>();
+                        List<String> reqs = new ArrayList<>();
+
                         entry.node.getCosts().forEach(resAmt -> {
-                            sb.append(" - ").append(resAmt.resourceId).append(": ")
-                                    .append(String.format("%.0f", resAmt.amount * costMult)).append("\n");
+                            float val = resAmt.amount * costMult;
+                            String line = resAmt.resourceId + ": " + String.format("%.0f", val);
+                            if (resAmt.resourceId.startsWith("tourism_") || resAmt.resourceId.equals("pop")) {
+                                reqs.add(line);
+                            } else {
+                                costs.add(line);
+                            }
                         });
+
+                        if (!costs.isEmpty()) {
+                            sb.append("\nCost:\n");
+                            costs.forEach(s -> sb.append(" - ").append(s).append("\n"));
+                        }
+                        if (!reqs.isEmpty()) {
+                            sb.append("\nRequires:\n");
+                            reqs.forEach(s -> sb.append(" - ").append(s).append("\n"));
+                        }
                     }
 
                     // AI Score (Town Priority) - only for locked
@@ -256,10 +273,28 @@ public class ProductionTab extends BaseTownTab {
                     sb.append("\n\nEffects:\n");
                     // Show base effects per level
                     for (com.quackers29.businesscraft.data.parsers.Effect eff : entry.node.getEffects()) {
-                        sb.append(" ").append(eff.getTarget()).append(": ").append(eff.getValue()).append("\n");
-                    }
-                    if (entry.level > 1 && entry.node.isRepeatable()) {
-                        sb.append(" (Cummulative: x").append(entry.level).append(")\n");
+                        String target = eff.getTarget();
+                        float val = eff.getValue(); // Base value per level
+
+                        // heuristic for formatting
+                        boolean isPercentage = false;
+                        if (com.quackers29.businesscraft.production.ProductionRegistry.get(target) != null) {
+                            isPercentage = true;
+                        }
+
+                        String valStr;
+                        if (isPercentage) {
+                            valStr = String.format("%+.0f%%", val * 100);
+                        } else {
+                            // integer check
+                            if (val == (long) val) {
+                                valStr = String.format("%+d", (long) val);
+                            } else {
+                                valStr = String.format("%+.1f", val);
+                            }
+                        }
+
+                        sb.append(" ").append(target).append(": ").append(valStr).append("\n");
                     }
 
                     tooltipList.add(sb.toString());

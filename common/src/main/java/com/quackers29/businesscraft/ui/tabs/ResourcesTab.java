@@ -12,6 +12,9 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
+import com.quackers29.businesscraft.ui.managers.TownDataCacheManager;
+import com.quackers29.businesscraft.economy.ResourceRegistry;
+import net.minecraft.world.item.Item;
 
 /**
  * Resources tab implementation for the Town Interface.
@@ -68,17 +71,105 @@ public class ResourcesTab extends BaseTownTab {
         contentComponent.withItemTooltipData(() -> {
             Map<Item, Integer> resources = parentScreen.getCachedResources();
             Map<Item, String> tooltips = new java.util.HashMap<>();
+            TownDataCacheManager cache = parentScreen.getCacheManager();
 
-            if (parentScreen.getCacheManager() != null) {
+            if (cache != null) {
+                java.util.Set<String> unlocked = cache.getCachedUnlockedNodes();
+
                 for (Item item : resources.keySet()) {
-                    float[] stats = parentScreen.getCacheManager().getResourceStats(item);
+                    StringBuilder sb = new StringBuilder();
+
+                    // Base stats
+                    float[] stats = cache.getResourceStats(item);
                     if (stats != null && stats.length >= 3) {
-                        // Format: [production, consumption, capacity]
-                        // Production and consumption are per hour
-                        String tooltip = String.format("Production: +%.1f/h\nConsumption: -%.1f/h\nCapacity: %.0f",
-                                stats[0], stats[1], stats[2]);
-                        tooltips.put(item, tooltip);
+                        sb.append(String.format("Production: +%.1f/h\nConsumption: -%.1f/h\nCapacity: %.0f",
+                                stats[0], stats[1], stats[2]));
                     }
+
+                    // Append relevant upgrade effects
+                    net.minecraft.resources.ResourceLocation itemLoc = com.quackers29.businesscraft.api.PlatformAccess
+                            .getRegistry().getItemKey(item);
+                    String itemStr = itemLoc.toString();
+
+                    if (unlocked != null) {
+                        boolean headerAdded = false;
+
+                        for (String nodeId : unlocked) {
+                            com.quackers29.businesscraft.production.UpgradeNode node = com.quackers29.businesscraft.production.UpgradeRegistry
+                                    .get(nodeId);
+                            if (node == null)
+                                continue;
+
+                            int lvl = cache.getCachedUpgradeLevel(nodeId);
+
+                            for (com.quackers29.businesscraft.data.parsers.Effect eff : node.getEffects()) {
+                                boolean matches = false;
+                                String type = "";
+
+                                String target = eff.getTarget();
+
+                                if (target.equals("storage_cap_all")) {
+                                    matches = true;
+                                    type = "Cap";
+                                } else if (target.equals("storage_cap_" + itemStr)) {
+                                    matches = true;
+                                    type = "Cap";
+                                } else {
+                                    // Check recipe outputs
+                                    com.quackers29.businesscraft.production.ProductionRecipe recipe = com.quackers29.businesscraft.production.ProductionRegistry
+                                            .get(target);
+                                    if (recipe != null) {
+                                        for (com.quackers29.businesscraft.data.parsers.DataParser.ResourceAmount out : recipe
+                                                .getOutputs()) {
+                                            // Check direct match
+                                            if (out.resourceId.equals(itemStr)) {
+                                                matches = true;
+                                                type = "Speed";
+                                                break;
+                                            }
+                                            // Check resolved match (e.g. food -> minecraft:wheat)
+                                            com.quackers29.businesscraft.economy.ResourceType resType = ResourceRegistry
+                                                    .get(out.resourceId);
+                                            if (resType != null) {
+                                                String resolvedKey = resType.getCanonicalItemId().toString();
+                                                if (resolvedKey.equals(itemStr)) {
+                                                    matches = true;
+                                                    type = "Speed";
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (matches) {
+                                    if (!headerAdded) {
+                                        sb.append("\n\nActive Effects:");
+                                        headerAdded = true;
+                                    }
+                                    float val = eff.getValue() * lvl;
+
+                                    String valStr;
+                                    if (type.equals("Speed")) {
+                                        valStr = String.format("%+.0f%%", val * 100);
+                                    } else {
+                                        if (val == (long) val) {
+                                            valStr = String.format("%+d", (long) val);
+                                        } else {
+                                            valStr = String.format("%+.1f", val);
+                                        }
+                                    }
+
+                                    String name = node.getDisplayName();
+                                    if (node.isRepeatable())
+                                        name += " (" + lvl + ")";
+
+                                    sb.append("\n ").append(name).append(": ").append(valStr).append(" ").append(type);
+                                }
+                            }
+                        }
+                    }
+                    tooltips.put(item, sb.toString());
                 }
             }
             return tooltips;
