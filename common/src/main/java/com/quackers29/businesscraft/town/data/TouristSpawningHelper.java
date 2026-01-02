@@ -110,8 +110,9 @@ public class TouristSpawningHelper {
                     }
 
                     // Spawn the tourist
-                    spawnTourist(level, spawnPos, town, platform, destinationTownId, destinationName);
-                    return true;
+                    if (spawnTourist(level, spawnPos, town, platform, destinationTownId, destinationName)) {
+                        return true;
+                    }
                 }
             }
         }
@@ -205,7 +206,7 @@ public class TouristSpawningHelper {
      * @param destinationTownId The destination town ID
      * @param destinationName   The destination town name
      */
-    private void spawnTourist(Level level, BlockPos pos, Town originTown, Platform platform,
+    private boolean spawnTourist(Level level, BlockPos pos, Town originTown, Platform platform,
             UUID destinationTownId, String destinationName) {
         if (level.getBlockState(pos).isAir() && level.getBlockState(pos.above()).isAir()) {
             // Create our custom TouristEntity instead of a regular Villager
@@ -226,15 +227,18 @@ public class TouristSpawningHelper {
             tourist.setExpiryTicks(expiryTicks);
 
             // Spawn the entity into the world
-            level.addFreshEntity(tourist);
+            boolean success = level.addFreshEntity(tourist);
 
-            // Log the tourist spawn
-            DebugConfig.debug(LOGGER, DebugConfig.TOURIST_SPAWNING, "Spawned tourist at {} from {} to {}", pos,
-                    originTown.getName(), destinationName);
+            if (success) {
+                // Log the tourist spawn
+                DebugConfig.debug(LOGGER, DebugConfig.TOURIST_SPAWNING, "Spawned tourist at {} from {} to {}", pos,
+                        originTown.getName(), destinationName);
 
-            // Update town stats
-            originTown.addTourist();
-
+                // Update town stats
+                originTown.addTourist();
+            }
+            return success;
         }
+        return false;
     }
 }

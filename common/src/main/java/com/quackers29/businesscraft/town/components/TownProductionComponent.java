@@ -259,7 +259,18 @@ public class TownProductionComponent implements TownComponent {
             // Special handling for tourist cap
             float cap;
             if (resId.equals("tourist")) {
-                current = town.getTouristCount();
+                // If spawning is disabled, treat as full
+                if (!town.isTouristSpawningEnabled()) {
+                    if (shouldLog)
+                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                                "Recipe {} tourist production stalled: Spawning Disabled", recipe.getId());
+                    // Stall
+                    float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
+                    recipeProgress.put(recipe.getId(), currentProgress);
+                    return;
+                }
+
+                current = town.getTouristCount() + town.getPendingTouristSpawns();
                 cap = town.getUpgrades().getModifier("tourist_cap");
             } else {
                 cap = town.getTrading().getStorageCap(resId);
