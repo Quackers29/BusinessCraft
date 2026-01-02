@@ -966,7 +966,12 @@ public class UIGridBuilder {
                 if (clientHelper != null) {
                     Object fontObj = clientHelper.getFont();
                     if (fontObj instanceof net.minecraft.client.gui.Font font) {
-                        graphics.renderTooltip(font, Component.literal(element.tooltip), mouseX, mouseY);
+                        String[] lines = element.tooltip.split("\n");
+                        List<Component> tooltipComponents = new ArrayList<>();
+                        for (String line : lines) {
+                            tooltipComponents.add(Component.literal(line));
+                        }
+                        graphics.renderComponentTooltip(font, tooltipComponents, mouseX, mouseY);
                         break; // Only show one tooltip at a time
                     }
                 }
