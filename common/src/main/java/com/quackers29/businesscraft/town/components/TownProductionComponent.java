@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.town.components;
 import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.data.parsers.Condition;
 import com.quackers29.businesscraft.data.parsers.DataParser.ResourceAmount;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.production.ProductionRecipe;
 import com.quackers29.businesscraft.production.ProductionRegistry;
 import com.quackers29.businesscraft.town.Town;
@@ -87,7 +88,7 @@ public class TownProductionComponent implements TownComponent {
         boolean shouldLog = (tickCounter % 100 == 0);
 
         if (shouldLog)
-            LOGGER.info("TownProductionComponent.tick() - Town: {}, Upgrades: {}",
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "TownProductionComponent.tick() - Town: {}, Upgrades: {}",
                     town.getName(), town.getUpgrades().getUnlockedNodes());
 
         if (tickCounter % 20 == 0) {
@@ -96,7 +97,7 @@ public class TownProductionComponent implements TownComponent {
 
         for (ProductionRecipe recipe : ProductionRegistry.getAll()) {
             if (recipe.getId().equals("population_maintenance") && shouldLog) {
-                LOGGER.info(
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
                         "DEBUG: population_maintenance check - Modifier: {}, Unlocked: {}",
                         town.getUpgrades().getModifier(recipe.getId()),
                         town.getUpgrades().getModifier(recipe.getId()) > 0);
@@ -105,7 +106,7 @@ public class TownProductionComponent implements TownComponent {
             // Check unlock status
             if (town.getUpgrades().getModifier(recipe.getId()) <= 0) {
                 if (shouldLog)
-                    LOGGER.info("Recipe {} is locked (Modifier: {})",
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Recipe {} is locked (Modifier: {})",
                             recipe.getId(), town.getUpgrades().getModifier(recipe.getId()));
                 continue; // Locked
             }
@@ -161,7 +162,7 @@ public class TownProductionComponent implements TownComponent {
 
                 if (town.getResourceCount(item) < required) {
                     if (shouldLog)
-                        LOGGER.info("Recipe {} missing input: {} (Need {}, Have {})",
+                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Recipe {} missing input: {} (Need {}, Have {})",
                                 recipe.getId(), resourceId, required, town.getResourceCount(item));
                     hasInputs = false;
                     break;
@@ -177,7 +178,7 @@ public class TownProductionComponent implements TownComponent {
                 currentProgress += tickIncrement;
 
                 if (currentProgress >= effectiveTime) {
-                    LOGGER.info("STARVATION: Town {} missed {} cycle. No food available.", town.getName(),
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "STARVATION: Town {} missed {} cycle. No food available.", town.getName(),
                             recipe.getId());
 
                     // Apply Population Penalty
@@ -210,7 +211,7 @@ public class TownProductionComponent implements TownComponent {
                                 int available = town.getResourceCount(item);
                                 if (available > 0) {
                                     town.addResource(item, -available); // Consume all
-                                    LOGGER.info("STARVATION: Consumed remaining partial stack of {} {}", available,
+                                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "STARVATION: Consumed remaining partial stack of {} {}", available,
                                             resourceId);
                                 }
                             }
@@ -254,7 +255,7 @@ public class TownProductionComponent implements TownComponent {
 
             if (current + amount > cap) {
                 if (shouldLog)
-                    LOGGER.info("Recipe {} output full: {} (Need space for {})", recipe.getId(), resId, amount);
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Recipe {} output full: {} (Need space for {})", recipe.getId(), resId, amount);
                 // Stall - ensure progress is tracked
                 float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
                 recipeProgress.put(recipe.getId(), currentProgress);
@@ -269,11 +270,11 @@ public class TownProductionComponent implements TownComponent {
         currentProgress += tickIncrement;
 
         if (shouldLog)
-            LOGGER.info("Recipe {} progress: {}/{}", recipe.getId(), currentProgress, effectiveTime);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Recipe {} progress: {}/{}", recipe.getId(), currentProgress, effectiveTime);
 
         if (currentProgress >= effectiveTime) {
             // Complete Recipe
-            LOGGER.info("Recipe {} COMPLETED for town {}", recipe.getId(), town.getName());
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Recipe {} COMPLETED for town {}", recipe.getId(), town.getName());
             currentProgress = 0f;
             consumeAndProduce(recipe);
         }
@@ -290,7 +291,7 @@ public class TownProductionComponent implements TownComponent {
 
             if (input.resourceId.contains("*") || input.amountExpression.contains("*")) { // Log only dynamic
                                                                                           // consumption
-                LOGGER.info("DEBUG: Consuming {} for {}: Pop={}, Expr={}, Calc={}",
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "DEBUG: Consuming {} for {}: Pop={}, Expr={}, Calc={}",
                         resourceId, recipe.getId(), town.getPopulation(), input.amountExpression, amount);
             }
 

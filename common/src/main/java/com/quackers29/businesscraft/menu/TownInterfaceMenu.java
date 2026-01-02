@@ -138,7 +138,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                         // Send Town Overview Sync Packet
                         float happiness = town.getHappiness();
                         String biome = town.getBiome();
-                        LOGGER.info("TownInterfaceMenu: sending biome '{}' for town '{}' (Unknown Check: {})",
+                        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "TownInterfaceMenu: sending biome '{}' for town '{}' (Unknown Check: {})",
                                 biome, town.getName(), (biome == null || "Unknown".equals(biome)));
                         boolean biomeUnknown = biome == null || "Unknown".equals(biome);
 

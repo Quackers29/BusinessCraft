@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.town.data;
 
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.platform.Platform;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -259,9 +260,9 @@ public class PlatformManager {
                 Platform platform = Platform.fromNBT(platformTag);
                 clientPlatforms.add(platform);
             }
-            LOGGER.info("[PLATFORM] Updated {} client platforms from NBT tag", clientPlatforms.size());
+            DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] Updated {} client platforms from NBT tag", clientPlatforms.size());
         } else {
-            LOGGER.info("[PLATFORM] No platforms in NBT tag");
+            DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] No platforms in NBT tag");
         }
     }
 

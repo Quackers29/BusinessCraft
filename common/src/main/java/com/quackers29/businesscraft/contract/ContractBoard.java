@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.contract;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.data.ContractSavedData;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -423,7 +424,7 @@ public class ContractBoard {
                     // Extend expiry for Snail Mail delivery (2x courier time = 2 * 4 min = 8 min)
                     sc.extendExpiry(480000L);
 
-                    LOGGER.info("Contract {} assigned to Snail Mail (courier acceptance expired)", sc.getId());
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Contract {} assigned to Snail Mail (courier acceptance expired)", sc.getId());
                     savedData.setDirty();
                     broadcastUpdate();
                 }

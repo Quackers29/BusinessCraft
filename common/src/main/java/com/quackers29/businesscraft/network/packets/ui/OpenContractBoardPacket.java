@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.network.packets.ui;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.menu.ContractBoardMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -75,7 +76,7 @@ public class OpenContractBoardPacket {
                                 new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(
                                         board.getContracts()),
                                 player);
-                        LOGGER.info("Sent initial contract sync to player {}", player.getName().getString());
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Sent initial contract sync to player {}", player.getName().getString());
                     } catch (Exception e) {
                         LOGGER.error("Failed to send initial contract sync", e);
                     }

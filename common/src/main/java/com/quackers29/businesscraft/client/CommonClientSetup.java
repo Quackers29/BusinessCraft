@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.client;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.client.renderer.TouristRenderer;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.event.ClientRenderEvents;
 import com.quackers29.businesscraft.init.CommonModEntityTypes;
 import com.quackers29.businesscraft.init.CommonModMenuTypes;
@@ -34,9 +35,11 @@ public class CommonClientSetup {
         LOGGER.info("Initializing Common Client Setup...");
 
         // Initialize key handlers
-        TownDebugKeyHandler.initialize();
+        if (DebugConfig.isEnabled(DebugConfig.DEBUG_OVERLAY)) {
+            TownDebugKeyHandler.initialize();
+            TownDebugOverlay.initialize();
+        }
         PlatformPathKeyHandler.initialize();
-        TownDebugOverlay.initialize();
 
         // Initialize client render events
         ClientRenderEvents.initialize();

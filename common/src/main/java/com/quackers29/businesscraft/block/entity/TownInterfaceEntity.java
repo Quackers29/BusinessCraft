@@ -690,14 +690,14 @@ public class TownInterfaceEntity extends BlockEntity
     public void setChanged() {
         super.setChanged();
         if (level != null && !level.isClientSide()) {
-            LOGGER.info("[PLATFORM] setChanged called on SERVER");
+            DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] setChanged called on SERVER");
             // Update client cache from town data before syncing to ensure latest data is
             // sent
             if (townId != null && level instanceof ServerLevel serverLevel) {
                 Town town = TownManager.get(serverLevel).getTown(townId);
                 if (town != null) {
                     clientSyncHelper.updateClientResourcesFromTown(town);
-                    LOGGER.info("[PLATFORM] Updated client resources from town, resource count: {}",
+                    DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] Updated client resources from town, resource count: {}",
                             town.getAllResources().size());
                 }
             }
@@ -706,7 +706,7 @@ public class TownInterfaceEntity extends BlockEntity
             refreshOpenMenus();
 
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
-            LOGGER.info("[PLATFORM] sendBlockUpdated called");
+            DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] sendBlockUpdated called");
         }
     }
 
@@ -734,7 +734,7 @@ public class TownInterfaceEntity extends BlockEntity
      */
     @Override
     public CompoundTag getUpdateTag() {
-        LOGGER.info("[PLATFORM] getUpdateTag called on SERVER");
+        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] getUpdateTag called on SERVER");
         CompoundTag tag = super.getUpdateTag();
         // Add town info
         if (townId != null) {
@@ -781,9 +781,9 @@ public class TownInterfaceEntity extends BlockEntity
     public void handleUpdateTag(CompoundTag tag) {
         super.handleUpdateTag(tag);
 
-        LOGGER.info("[PLATFORM] handleUpdateTag called on CLIENT, tag keys: {}", tag.getAllKeys());
-        LOGGER.info("[PLATFORM] tag contains platforms: {}", tag.contains("platforms"));
-        LOGGER.info("[PLATFORM] tag contains clientResources: {}", tag.contains("clientResources"));
+        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] handleUpdateTag called on CLIENT, tag keys: {}", tag.getAllKeys());
+        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] tag contains platforms: {}", tag.contains("platforms"));
+        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] tag contains clientResources: {}", tag.contains("clientResources"));
 
         // Handle name updates
         if (tag.contains("name")) {
@@ -820,7 +820,7 @@ public class TownInterfaceEntity extends BlockEntity
      * This centralizes our resource deserialization logic in one place
      */
     private void loadResourcesFromTag(CompoundTag tag) {
-        LOGGER.info("[PLATFORM] loadResourcesFromTag called");
+        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] loadResourcesFromTag called");
         clientSyncHelper.loadResourcesFromTag(tag);
         // Load stats
         clientSyncHelper.loadResourceStatsFromTag(tag);
@@ -828,7 +828,7 @@ public class TownInterfaceEntity extends BlockEntity
 
     @Override
     public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
-        LOGGER.info("[PLATFORM] onDataPacket called on CLIENT");
+        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] onDataPacket called on CLIENT");
         CompoundTag tag = pkt.getTag();
         if (tag != null) {
             handleUpdateTag(tag);
@@ -1209,9 +1209,9 @@ public class TownInterfaceEntity extends BlockEntity
      */
     @Override
     public Packet<ClientGamePacketListener> getUpdatePacket() {
-        LOGGER.info("[PLATFORM] getUpdatePacket called, creating packet");
+        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] getUpdatePacket called, creating packet");
         Packet<ClientGamePacketListener> packet = ClientboundBlockEntityDataPacket.create(this);
-        LOGGER.info("[PLATFORM] getUpdatePacket created packet: {}", packet != null);
+        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] getUpdatePacket created packet: {}", packet != null);
         return packet;
     }
 
@@ -1243,7 +1243,7 @@ public class TownInterfaceEntity extends BlockEntity
     public void updateClientPlatformsFromPacket(net.minecraft.nbt.CompoundTag tag) {
         if (level != null && level.isClientSide()) {
             platformManager.updateClientPlatforms(tag);
-            LOGGER.info("[PLATFORM] TownInterfaceEntity updated client platforms from packet");
+            DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] TownInterfaceEntity updated client platforms from packet");
         }
     }
 

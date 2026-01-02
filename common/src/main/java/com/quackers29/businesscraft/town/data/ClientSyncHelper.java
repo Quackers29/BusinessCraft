@@ -45,7 +45,7 @@ public class ClientSyncHelper {
         if (provider == null)
             return;
 
-        LOGGER.info("ClientSyncHelper.syncResourcesForClient - provider resources size: {}",
+        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "ClientSyncHelper.syncResourcesForClient - provider resources size: {}",
                 provider.getAllResources().size());
 
         // Create a resources tag

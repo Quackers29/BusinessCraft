@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.town.components;
 import com.quackers29.businesscraft.contract.Contract;
 import com.quackers29.businesscraft.contract.ContractBoard;
 import com.quackers29.businesscraft.contract.SellContract;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.town.Town;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.Item;
@@ -102,7 +103,7 @@ public class TownContractComponent implements TownComponent {
                     float maxBid = maxTotalBudget - courierCost;
 
                     if (bid > maxBid) {
-                        LOGGER.debug("Town {} skipping bid on {} - total cost too high (Bid {} + Courier {} > {})",
+                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Town {} skipping bid on {} - total cost too high (Bid {} + Courier {} > {})",
                                 town.getName(), sc.getId(), bid, courierCost, maxTotalBudget);
                         continue;
                     }
@@ -110,7 +111,7 @@ public class TownContractComponent implements TownComponent {
                     // ESCROW: Check if town has enough emeralds before bidding (Bid + Courier)
                     int emeraldCount = town.getResourceCount(Items.EMERALD);
                     if (emeraldCount < (bid + courierCost)) {
-                        LOGGER.debug(
+                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
                                 "Town {} cannot bid {} on contract {} - insufficient emeralds ({} available, need {})",
                                 town.getName(), bid, sc.getId(), emeraldCount, (int) (bid + courierCost));
                         continue;
@@ -118,7 +119,7 @@ public class TownContractComponent implements TownComponent {
 
                     // Place bid
                     board.addBid(sc.getId(), town.getId(), bid, level);
-                    LOGGER.info("Town {} bid {} on contract {} (after delay)",
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Town {} bid {} on contract {} (after delay)",
                             town.getName(), bid, sc.getId());
                 }
             }
@@ -308,7 +309,7 @@ public class TownContractComponent implements TownComponent {
                             !sc.isExpired());
 
             if (hasContract) {
-                LOGGER.debug("Town {} already has an active {} contract, skipping creation",
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Town {} already has an active {} contract, skipping creation",
                         town.getName(), resourceId);
                 return;
             }
@@ -316,7 +317,7 @@ public class TownContractComponent implements TownComponent {
             // Create a sell contract for excess resource
             int sellQuantity = (int) ((resourceCount - excessThreshold) / 2);
             if (sellQuantity <= 0) {
-                LOGGER.debug("Insufficient excess resources for {} ({} - {} = {}), skipping contract creation",
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Insufficient excess resources for {} ({} - {} = {}), skipping contract creation",
                         resourceId, resourceCount, excessThreshold, sellQuantity);
                 return;
             }
@@ -365,7 +366,7 @@ public class TownContractComponent implements TownComponent {
             // ESCROW: Immediately deduct resources from seller
             town.addResource(item, -sellQuantity);
 
-            LOGGER.info("Town {} created sell contract for {} {} (escrowed {} resources)",
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Town {} created sell contract for {} {} (escrowed {} resources)",
                     town.getName(), sellQuantity, resourceId, sellQuantity);
         }
     }

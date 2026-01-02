@@ -229,7 +229,7 @@ public class TownPlatformDataResponsePacket {
                                 // Update the platform manager with this data
                                 townEntity.updateClientPlatformsFromPacket(platformTag);
 
-                                LOGGER.info(
+                                DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM,
                                         "[PLATFORM] Updated TownInterfaceEntity at {} with {} platforms from packet",
                                         foundPos, platforms.size());
                             }
