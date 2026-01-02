@@ -131,13 +131,8 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                     // Initialize data values from town
                     updateDataSlots();
 
-                    // Force client cache sync on menu open (fixes reload visibility)
-                    // Uses platform-specific implementation - Fabric sends packet, Forge does
-                    // nothing
-                    PlatformAccess.getNetworkMessages().sendResourceSyncPacketIfSupported(pos,
-                            this.town.getAllResources(), inv.player);
-                    LOGGER.info("TownInterfaceMenu created - attempted ResourceSyncPacket send with {} resources",
-                            this.town.getAllResources().size());
+                    // Standard NBT sync handles resource data now
+                    // No explicit packet needed
 
                     if (level != null && !level.isClientSide()) {
                         // Send Town Overview Sync Packet
@@ -198,6 +193,10 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     @Override
     public boolean stillValid(Player player) {
         return player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) < 64;
+    }
+
+    public BlockEntity getBlockEntity() {
+        return level.getBlockEntity(pos);
     }
 
     @Override

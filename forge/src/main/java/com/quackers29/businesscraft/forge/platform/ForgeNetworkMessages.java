@@ -22,7 +22,7 @@ public class ForgeNetworkMessages implements NetworkMessages {
     @Override
     public void sendToAllTrackingChunk(Object message, Object level, Object pos) {
         if (level instanceof net.minecraft.world.level.Level mcLevel &&
-            pos instanceof net.minecraft.core.BlockPos mcPos) {
+                pos instanceof net.minecraft.core.BlockPos mcPos) {
             com.quackers29.businesscraft.forge.network.ForgeModMessages.sendToAllTrackingChunk(message, mcLevel, mcPos);
         }
     }

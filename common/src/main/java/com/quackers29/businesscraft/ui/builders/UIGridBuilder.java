@@ -446,6 +446,28 @@ public class UIGridBuilder {
     }
 
     /**
+     * Adds a label with a tooltip that spans multiple cells
+     * 
+     * @param row       Grid row
+     * @param column    Grid column
+     * @param rowSpan   Number of rows to span
+     * @param colSpan   Number of columns to span
+     * @param text      Label text
+     * @param tooltip   Tooltip text to show on hover
+     * @param textColor Text color
+     * @return This builder for chaining
+     */
+    public UIGridBuilder addLabelWithTooltip(int row, int column, int rowSpan, int colSpan,
+            String text, String tooltip, int textColor) {
+        UIGridElement element = new UIGridElement(UIElementType.LABEL, row, column, rowSpan, colSpan);
+        element.text = text;
+        element.tooltip = tooltip;
+        element.textColor = textColor;
+        elements.add(element);
+        return this;
+    }
+
+    /**
      * Adds a centered label to the grid
      */
     public UIGridBuilder addCenteredLabel(int row, int column, String text, int textColor) {
@@ -1884,10 +1906,12 @@ public class UIGridBuilder {
      * Utility method to create a grid from item-quantity pairs
      * 
      * @param itemQuantityPairs Map of items to their quantities
+     * @param tooltips          Map of items to their tooltip text (can be null)
      * @param textColor         Color for the item name text
      * @return This builder for chaining
      */
     public UIGridBuilder withItemQuantityPairs(Map<net.minecraft.world.item.Item, Integer> itemQuantityPairs,
+            Map<net.minecraft.world.item.Item, String> tooltips,
             int textColor) {
         // Clear existing elements
         this.elements.clear();
@@ -1931,17 +1955,27 @@ public class UIGridBuilder {
         // Add item elements
         for (int i = 0; i < sortedEntries.size(); i++) {
             Map.Entry<net.minecraft.world.item.Item, Integer> entry = sortedEntries.get(i);
+            net.minecraft.world.item.Item item = entry.getKey();
+
+            // Get tooltip if available
+            String tooltip = tooltips != null ? tooltips.get(item) : null;
 
             // Create a formatted item name
-            String itemName = formatItemName(entry.getKey().getDescriptionId());
+            String itemName = formatItemName(item.getDescriptionId());
 
             // Add label for item name (first column)
-            addLabel(i, 0, itemName, textColor);
+            UIGridElement labelElement = addLabel(i, 0, itemName, textColor).elements.get(elements.size() - 1);
+            if (tooltip != null) {
+                labelElement.tooltip = tooltip;
+            }
 
             // Add item with quantity (second column)
-            UIGridElement element = addItem(i, 1, entry.getKey(), entry.getValue(), null).elements
+            UIGridElement itemElement = addItem(i, 1, item, entry.getValue(), null).elements
                     .get(elements.size() - 1);
-            element.showQuantity = true; // Always show quantity
+            itemElement.showQuantity = true; // Always show quantity
+            if (tooltip != null) {
+                itemElement.tooltip = tooltip;
+            }
         }
 
         return this;
@@ -1952,10 +1986,12 @@ public class UIGridBuilder {
      * state
      * 
      * @param itemQuantityPairs Map of items to their quantities
+     * @param tooltips          Map of items to their tooltip text (can be null)
      * @param textColor         Color for the item name text
      * @return This builder for chaining
      */
     public UIGridBuilder updateItemQuantityPairs(Map<net.minecraft.world.item.Item, Integer> itemQuantityPairs,
+            Map<net.minecraft.world.item.Item, String> tooltips,
             int textColor) {
         // Store current scroll state
         int savedVerticalScrollOffset = this.verticalScrollOffset;
@@ -1979,35 +2015,57 @@ public class UIGridBuilder {
             return nameA.compareToIgnoreCase(nameB);
         });
 
-        // Calculate total rows needed
+        // Use the same row/column logic as withItemQuantityPairs
         int totalRows = sortedEntries.size();
-
-        // Adjust rows and columns based on data
         this.columns = 2; // Item and quantity
         this.rows = totalRows;
-        this.totalRows = totalRows;
+        this.totalRows = totalRows; // Update totalRows for scrolling calculations
 
-        // Restore scroll settings if they were enabled
+        // Add item elements
+        for (int i = 0; i < sortedEntries.size(); i++) {
+            Map.Entry<net.minecraft.world.item.Item, Integer> entry = sortedEntries.get(i);
+            net.minecraft.world.item.Item item = entry.getKey();
+
+            // Get tooltip if available
+            String tooltip = tooltips != null ? tooltips.get(item) : null;
+
+            // Create a formatted item name
+            String itemName = formatItemName(item.getDescriptionId());
+
+            // Add label for item name
+            UIGridElement labelElement = addLabel(i, 0, itemName, textColor).elements.get(elements.size() - 1);
+            if (tooltip != null) {
+                labelElement.tooltip = tooltip;
+            }
+
+            // Add item with quantity
+            UIGridElement itemElement = addItem(i, 1, item, entry.getValue(), null).elements
+                    .get(elements.size() - 1);
+            itemElement.showQuantity = true;
+            if (tooltip != null) {
+                itemElement.tooltip = tooltip;
+            }
+        }
+
+        // Restore scroll state
         if (wasVerticalScrollEnabled) {
             this.verticalScrollEnabled = true;
             this.visibleRows = savedVisibleRows;
-            this.maxVerticalScrollOffset = Math.max(0, totalRows - this.visibleRows);
-
-            // Restore scroll offset, but clamp it to the new max
+            // Recalculate max scroll based on new totalRows
+            this.maxVerticalScrollOffset = Math.max(0, this.totalRows - this.visibleRows);
+            // Clamp current scroll to the new valid range
             this.verticalScrollOffset = Math.min(savedVerticalScrollOffset, this.maxVerticalScrollOffset);
-        } else if (totalRows > 4) {
-            // Enable scrolling if we have more than 4 rows
+        } else if (totalRows > 4) { // If scrolling was not enabled but now needed
             int effectiveRowHeight = this.customRowHeight != null ? this.customRowHeight : 16;
             int availableHeight = this.height - (this.verticalMargin * 2);
             int calculatedVisibleRows = Math.max(4, availableHeight / (effectiveRowHeight + this.verticalSpacing));
-
             this.withVerticalScroll(true, calculatedVisibleRows);
             this.verticalScrollOffset = 0; // Start at top for new data
         }
 
         if (wasHorizontalScrollEnabled) {
             this.horizontalScrollEnabled = true;
-            this.maxHorizontalScrollOffset = savedMaxHorizontalScrollOffset;
+            this.maxHorizontalScrollOffset = savedMaxHorizontalScrollOffset; // Assuming horizontal columns don't change
             this.horizontalScrollOffset = Math.min(savedHorizontalScrollOffset, this.maxHorizontalScrollOffset);
         }
 

@@ -43,6 +43,7 @@ public class StandardTabContent extends BCComponent {
     // Data suppliers for different content types
     private Supplier<Map<String, String>> labelValueSupplier;
     private Supplier<Map<Item, Integer>> itemListSupplier;
+    private Supplier<Map<Item, String>> itemTooltipSupplier;
     private Supplier<Object[]> customDataSupplier;
     private Supplier<Map<String, Object[]>> buttonGridSupplier;
 
@@ -71,6 +72,14 @@ public class StandardTabContent extends BCComponent {
      */
     public StandardTabContent withItemListData(Supplier<Map<Item, Integer>> dataSupplier) {
         this.itemListSupplier = dataSupplier;
+        return this;
+    }
+
+    /**
+     * Configure tooltips for item list
+     */
+    public StandardTabContent withItemTooltipData(Supplier<Map<Item, String>> dataSupplier) {
+        this.itemTooltipSupplier = dataSupplier;
         return this;
     }
 
@@ -163,6 +172,7 @@ public class StandardTabContent extends BCComponent {
     private void renderItemList(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (itemListSupplier != null) {
             Map<Item, Integer> items = itemListSupplier.get();
+            Map<Item, String> tooltips = itemTooltipSupplier != null ? itemTooltipSupplier.get() : null;
 
             // Create the grid only once to preserve scroll state
             if (grid == null) {
@@ -177,12 +187,12 @@ public class StandardTabContent extends BCComponent {
                         .drawBorder(true);
 
                 // This method automatically enables scrolling if needed
-                grid.withItemQuantityPairs(items, TEXT_HIGHLIGHT);
+                grid.withItemQuantityPairs(items, tooltips, TEXT_HIGHLIGHT);
                 DebugConfig.debug(LOGGER, DebugConfig.UI_STANDARD_TAB_CONTENT,
                         "Grid created with scrolling enabled: {}", items.size() > 4);
             } else {
                 // Update existing grid with new data while preserving scroll state
-                grid.updateItemQuantityPairs(items, TEXT_HIGHLIGHT);
+                grid.updateItemQuantityPairs(items, tooltips, TEXT_HIGHLIGHT);
             }
 
             // Render the grid (preserves scroll state)
@@ -251,42 +261,55 @@ public class StandardTabContent extends BCComponent {
             Object[] data = customDataSupplier.get();
 
             // Extract data arrays from supplier
+            // Format: [Names, Progress/Status, Tooltips]
             String[] names = (String[]) data[0];
-            String[] types = (String[]) data[1];
-            String[] progress = (String[]) data[2];
-            String[] tooltips = (data.length > 3) ? (String[]) data[3] : null;
+            String[] progress = (String[]) data[1];
+            String[] tooltips = (data.length > 2) ? (String[]) data[2] : null;
 
-            // Create column data arrays for 3 columns using UIGridBuilder's modular
-            // approach
-            @SuppressWarnings("unchecked")
-            java.util.List<UIGridBuilder.GridContent>[] columnData = new java.util.List[3];
-            columnData[0] = new java.util.ArrayList<>(); // Name column
-            columnData[1] = new java.util.ArrayList<>(); // Type column
-            columnData[2] = new java.util.ArrayList<>(); // Progress column
-
-            // Populate column data
-            for (int i = 0; i < names.length; i++) {
-                String tooltip = (tooltips != null && i < tooltips.length) ? tooltips[i] : null;
-
-                // Add tooltip to the name column (or all if preferred)
-                columnData[0].add(UIGridBuilder.GridContent.text(names[i], TEXT_HIGHLIGHT).withTooltip(tooltip));
-                columnData[1].add(UIGridBuilder.GridContent.text(types[i], TEXT_COLOR).withTooltip(tooltip));
-                columnData[2].add(UIGridBuilder.GridContent.text(progress[i], TEXT_COLOR).withTooltip(tooltip));
-            }
+            int totalRows = names.length;
 
             // Create the grid only once to preserve scroll state
+            // Use 5 columns to simulate 80/20 split (4 cols for Name, 1 col for Status)
             if (grid == null) {
-                grid = UIGridBuilder.create(x, y, width, height, 3)
+                DebugConfig.debug(LOGGER, DebugConfig.UI_STANDARD_TAB_CONTENT,
+                        "Creating new UIGridBuilder for production list with {} items", totalRows);
+
+                grid = UIGridBuilder.create(x, y, width, height, 5) // 5 columns
                         .withRowHeight(16)
                         .withMargins(8, 5)
-                        .withSpacing(10, 0)
+                        .withSpacing(5, 0) // Reduced horizontal spacing
                         .withBackgroundColor(BACKGROUND_COLOR)
                         .withBorderColor(BORDER_COLOR)
-                        .drawBorder(true)
-                        .withColumnData(columnData);
+                        .drawBorder(true);
+
+                // Enable auto vertical scrolling
+                grid.withVerticalScrollAuto(true);
+
+                // Add content manually to use spans
+                for (int i = 0; i < totalRows; i++) {
+                    String tooltip = (tooltips != null && i < tooltips.length) ? tooltips[i] : null;
+
+                    // Name column: Span 4 (80%)
+                    grid.addLabelWithTooltip(i, 0, 1, 4, names[i], tooltip, TEXT_HIGHLIGHT);
+
+                    // Status/Progress column: Span 1 (20%)
+                    grid.addLabelWithTooltip(i, 4, 1, 1, progress[i], tooltip, TEXT_COLOR);
+                }
+
+                // Update internal row count for scrolling
+                grid.updateTotalRows(totalRows);
             } else {
-                // Update existing grid with new data while preserving scroll state
-                grid.updateColumnData(columnData);
+                // For updates, we clear elements and rebuild to preserve scroll state
+                // This is slightly less efficient than updateColumnData but necessary for
+                // custom spans
+                grid.clearElements();
+
+                for (int i = 0; i < totalRows; i++) {
+                    String tooltip = (tooltips != null && i < tooltips.length) ? tooltips[i] : null;
+                    grid.addLabelWithTooltip(i, 0, 1, 4, names[i], tooltip, TEXT_HIGHLIGHT);
+                    grid.addLabelWithTooltip(i, 4, 1, 1, progress[i], tooltip, TEXT_COLOR);
+                }
+                grid.updateTotalRows(totalRows);
             }
 
             // Render the grid (preserves scroll state)

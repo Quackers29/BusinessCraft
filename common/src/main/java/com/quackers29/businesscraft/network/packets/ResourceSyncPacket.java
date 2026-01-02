@@ -19,10 +19,12 @@ public class ResourceSyncPacket {
 
     private final BlockPos pos;
     private final Map<Item, Integer> resources;
+    private final Map<Item, float[]> resourceStats; // [production, consumption, capacity]
 
-    public ResourceSyncPacket(BlockPos pos, Map<Item, Integer> resources) {
+    public ResourceSyncPacket(BlockPos pos, Map<Item, Integer> resources, Map<Item, float[]> resourceStats) {
         this.pos = pos;
         this.resources = new HashMap<>(resources);
+        this.resourceStats = resourceStats != null ? new HashMap<>(resourceStats) : new HashMap<>();
     }
 
     public ResourceSyncPacket(FriendlyByteBuf buf) {
@@ -37,6 +39,19 @@ public class ResourceSyncPacket {
                 this.resources.put(item, count);
             }
         }
+
+        int statsSize = buf.readInt();
+        this.resourceStats = new HashMap<>();
+        for (int i = 0; i < statsSize; i++) {
+            var rl = buf.readResourceLocation();
+            var item = (Item) PlatformAccess.getRegistry().getItem(rl);
+            float prod = buf.readFloat();
+            float cons = buf.readFloat();
+            float cap = buf.readFloat();
+            if (item != null) {
+                this.resourceStats.put(item, new float[] { prod, cons, cap });
+            }
+        }
     }
 
     public void toBytes(FriendlyByteBuf buf) {
@@ -46,6 +61,15 @@ public class ResourceSyncPacket {
             var key = (net.minecraft.resources.ResourceLocation) PlatformAccess.getRegistry().getItemKey(item);
             buf.writeResourceLocation(key);
             buf.writeInt(count);
+        });
+
+        buf.writeInt(resourceStats.size());
+        resourceStats.forEach((item, stats) -> {
+            var key = (net.minecraft.resources.ResourceLocation) PlatformAccess.getRegistry().getItemKey(item);
+            buf.writeResourceLocation(key);
+            buf.writeFloat(stats[0]); // Production
+            buf.writeFloat(stats[1]); // Consumption
+            buf.writeFloat(stats[2]); // Capacity
         });
     }
 
@@ -59,26 +83,26 @@ public class ResourceSyncPacket {
 
     public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            LOGGER.info("[CLIENT] ResourceSyncPacket received for pos {}", pos);
+            // LOGGER.info("[CLIENT] ResourceSyncPacket received for pos {}", pos); //
+            // Reduced logging
             var mc = Minecraft.getInstance();
             var level = mc.level;
-            if (level == null) return;
+            if (level == null)
+                return;
 
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof TownInterfaceEntity entity) {
-                LOGGER.info("[CLIENT] Found BE at {}, updating clientResources with {} items", pos, resources.size());
                 var clientResources = entity.getClientSyncHelper().getClientResources();
                 clientResources.clear();
                 clientResources.putAll(resources);
-                LOGGER.info("[CLIENT] clientResources updated, new size: {}", clientResources.size());
+
+                // Update stats
+                entity.getClientSyncHelper().updateClientResourceStats(resourceStats);
 
                 // Refresh open UI if TownInterfaceScreen is active
                 if (mc.screen instanceof com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen screen) {
                     screen.getMenu().refreshDataSlots();
-                    LOGGER.info("[CLIENT] Refreshed open TownInterfaceScreen menu data slots");
                 }
-            } else {
-                LOGGER.warn("[CLIENT] No TownInterfaceEntity at {}", pos);
             }
         });
         PlatformAccess.getNetwork().setPacketHandled(context);

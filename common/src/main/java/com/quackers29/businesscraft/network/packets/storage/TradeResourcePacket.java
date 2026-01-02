@@ -190,12 +190,6 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
             // Force the TownManager to save changes
             townManager.markDirty();
 
-            // Send ResourceSyncPacket for immediate UI update
-            // Uses platform-specific implementation - Fabric sends packet, Forge does
-            // nothing
-            PlatformAccess.getNetworkMessages().sendResourceSyncPacketIfSupported(pos, town.getAllResources(), player);
-            LOGGER.info("TradeResourcePacket: Attempted ResourceSyncPacket send to {} with {} resources",
-                    player.getName().getString(), town.getAllResources().size());
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
     }

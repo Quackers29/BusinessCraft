@@ -60,47 +60,25 @@ public class ProductionTab extends BaseTownTab {
             List<String> tooltipList = new ArrayList<>();
 
             if (viewMode == ViewMode.ACTIVE) {
-                // Research
-                String currentResearch = cache.getCachedCurrentResearch();
-                if (currentResearch != null && !currentResearch.isEmpty()) {
-                    names.add(currentResearch);
-                    types.add("Research");
-
-                    float currentDays = cache.getCachedResearchProgress();
-                    UpgradeNode node = UpgradeRegistry.get(currentResearch);
-                    if (node != null && node.getResearchDays() > 0) {
-                        int pct = (int) ((currentDays / node.getResearchDays()) * 100);
-                        if (pct > 100)
-                            pct = 100;
-                        progress.add(pct + "%");
-
-                        // Tooltip for research
-                        StringBuilder sb = new StringBuilder();
-                        sb.append(node.getDisplayName()).append("\n");
-                        sb.append("Researching...").append("\n\n");
-                        sb.append(node.getDescription());
-                        tooltipList.add(sb.toString());
-                    } else {
-                        progress.add(String.format("%.1f d", currentDays));
-                        tooltipList.add(null);
-                    }
-                }
-
-                // Production
+                // Production Only
                 Map<String, Float> productions = cache.getCachedActiveProductions();
                 if (productions != null) {
                     for (Map.Entry<String, Float> entry : productions.entrySet()) {
                         String id = entry.getKey();
-                        names.add(id);
-                        types.add("Production");
+
+                        // Get nice name if possible
+                        com.quackers29.businesscraft.production.ProductionRecipe recipe = com.quackers29.businesscraft.production.ProductionRegistry
+                                .get(id);
+                        String displayName = (recipe != null) ? recipe.getDisplayName() : id;
+
+                        names.add(displayName);
+                        // Column 2: Percentage
                         int pct = (int) (entry.getValue() * 100);
                         if (pct > 100)
                             pct = 100;
                         progress.add(pct + "%");
 
                         // Tooltip for production
-                        com.quackers29.businesscraft.production.ProductionRecipe recipe = com.quackers29.businesscraft.production.ProductionRegistry
-                                .get(id);
                         if (recipe != null) {
                             StringBuilder sb = new StringBuilder();
                             sb.append("Base Cycle: ").append(recipe.getBaseCycleTimeDays()).append(" days\n");
@@ -139,20 +117,20 @@ public class ProductionTab extends BaseTownTab {
 
                 if (names.isEmpty()) {
                     names.add("No Active Production");
-                    types.add("-");
                     progress.add("-");
                     tooltipList.add(null);
                 }
             } else {
-                // Upgrades View
+                // Upgrades View (Research + Unlocked)
+
                 // 1. Current Research
                 String currentResearch = cache.getCachedCurrentResearch();
                 if (currentResearch != null && !currentResearch.isEmpty()) {
-                    names.add(currentResearch);
-                    types.add("Researching");
+                    UpgradeNode node = UpgradeRegistry.get(currentResearch);
+                    String displayName = (node != null) ? node.getDisplayName() : currentResearch;
+                    names.add(displayName);
 
                     float currentDays = cache.getCachedResearchProgress();
-                    UpgradeNode node = UpgradeRegistry.get(currentResearch);
                     if (node != null && node.getResearchDays() > 0) {
                         int pct = (int) ((currentDays / node.getResearchDays()) * 100);
                         if (pct > 100)
@@ -160,15 +138,12 @@ public class ProductionTab extends BaseTownTab {
                         progress.add(pct + "%");
 
                         StringBuilder sb = new StringBuilder();
-                        sb.append(node.getDisplayName()).append("\n");
-                        sb.append(node.getDescription()).append("\n\n");
-                        sb.append("Effects:\n");
-                        for (com.quackers29.businesscraft.data.parsers.Effect eff : node.getEffects()) {
-                            sb.append(" ").append(eff.getTarget()).append(": ").append(eff.getValue()).append("\n");
-                        }
+                        sb.append(displayName).append("\n");
+                        sb.append("Researching...").append("\n\n");
+                        sb.append(node.getDescription());
                         tooltipList.add(sb.toString());
                     } else {
-                        progress.add("0%");
+                        progress.add(String.format("%.1f d", currentDays));
                         tooltipList.add(null);
                     }
                 }
@@ -177,14 +152,15 @@ public class ProductionTab extends BaseTownTab {
                 java.util.Set<String> unlocked = cache.getCachedUnlockedNodes();
                 if (unlocked != null && !unlocked.isEmpty()) {
                     for (String nodeId : unlocked) {
-                        names.add(nodeId);
-                        types.add("Upgrade");
+                        UpgradeNode node = UpgradeRegistry.get(nodeId);
+                        String displayName = (node != null) ? node.getDisplayName() : nodeId;
+
+                        names.add(displayName);
                         progress.add("Unlocked");
 
-                        UpgradeNode node = UpgradeRegistry.get(nodeId);
                         if (node != null) {
                             StringBuilder sb = new StringBuilder();
-                            sb.append(node.getDisplayName()).append("\n");
+                            sb.append(displayName).append("\n");
                             sb.append(node.getDescription()).append("\n\n");
                             sb.append("Effects:\n");
                             for (com.quackers29.businesscraft.data.parsers.Effect eff : node.getEffects()) {
@@ -199,14 +175,14 @@ public class ProductionTab extends BaseTownTab {
 
                 if (names.isEmpty()) {
                     names.add("No Upgrades");
-                    types.add("-");
                     progress.add("-");
                     tooltipList.add(null);
                 }
             }
 
-            return new Object[] { names.toArray(new String[0]), types.toArray(new String[0]),
-                    progress.toArray(new String[0]), tooltipList.toArray(new String[0]) };
+            // Return 2 arrays + tooltips (Names, Progress/Status, Tooltips)
+            return new Object[] { names.toArray(new String[0]), progress.toArray(new String[0]),
+                    tooltipList.toArray(new String[0]) };
         });
 
         panel.addChild(contentComponent);

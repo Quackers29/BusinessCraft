@@ -262,4 +262,21 @@ public class TownDataCacheManager {
     public float getCachedPopulationCap() {
         return cachedPopulationCap;
     }
+
+    /**
+     * Gets the resource stats (production, consumption, capacity) for an item.
+     * 
+     * @param item The item to get stats for
+     * @return float array [production, consumption, capacity] or null if not
+     *         available
+     */
+    public float[] getResourceStats(Item item) {
+        if (menu != null) {
+            net.minecraft.world.level.block.entity.BlockEntity be = menu.getBlockEntity();
+            if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity entity) {
+                return entity.getClientSyncHelper().getClientResourceStats().get(item);
+            }
+        }
+        return null;
+    }
 }

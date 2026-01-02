@@ -156,9 +156,9 @@ public class BottomButtonManager {
      */
     private void configureProductionButtons() {
         bottomButtonsGrid
-                .addButtonWithTooltip(0, 0, "Show Active", "View active research and production",
+                .addButtonWithTooltip(0, 0, "Production", "View active production processes",
                         v -> actionHandler.onGenericAction("view_active_production"), TownInterfaceTheme.PRIMARY_COLOR)
-                .addButtonWithTooltip(0, 1, "Show Upgrades", "View unlocked upgrades",
+                .addButtonWithTooltip(0, 1, "Upgrades", "View town upgrades and research",
                         v -> actionHandler.onGenericAction("view_upgrades"), TownInterfaceTheme.SECONDARY_COLOR);
     }
 

@@ -766,6 +766,11 @@ public class TownInterfaceEntity extends BlockEntity
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
             clientSyncHelper.syncResourcesForClient(tag, provider);
+
+            // Add stats sync if provider is a Town
+            if (provider instanceof Town town) {
+                clientSyncHelper.syncResourceStatsToTag(tag, town);
+            }
         }
 
         // Add visit history data
@@ -817,6 +822,8 @@ public class TownInterfaceEntity extends BlockEntity
     private void loadResourcesFromTag(CompoundTag tag) {
         LOGGER.info("[PLATFORM] loadResourcesFromTag called");
         clientSyncHelper.loadResourcesFromTag(tag);
+        // Load stats
+        clientSyncHelper.loadResourceStatsFromTag(tag);
     }
 
     @Override
@@ -924,6 +931,9 @@ public class TownInterfaceEntity extends BlockEntity
                 Town town = TownManager.get(serverLevel).getTown(townId);
                 if (town != null) {
                     clientSyncHelper.updateClientResourcesFromTown(town);
+                    clientSyncHelper.updateClientResourcesFromTown(town);
+                    // Stats are now synced via NBT in getUpdateTag which is triggered by
+                    // sendBlockUpdated below
                 }
             }
 
@@ -1134,10 +1144,9 @@ public class TownInterfaceEntity extends BlockEntity
                         // Process just 1 item per tick
                         stack.shrink(1);
                         town.addResource(item, 1);
-                        setChanged();
 
-                        // Send update to clients when resources change
-                        level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
+                        // Sync fully to ensure tooltips and UI are updated
+                        syncTownData();
                     }
                 }
             }
