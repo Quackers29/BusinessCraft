@@ -38,7 +38,6 @@ public class ConfigLoader {
     public static double touristExpiryMinutes = 120.0; // Tourist expiry time in minutes (default: 120 = 2 hours)
     public static boolean enableTouristExpiry = true; // Whether tourist expiry is enabled
     public static boolean notifyOnTouristDeparture = true; // Whether to notify origin town when tourist quits or dies
-    public static int touristsPerPopulationIncrease = 2; // Number of tourists required to increase population by 1
 
     // Tourism economy config
     public static int metersPerEmerald = 50; // How many meters a tourist needs to travel to earn 1 emerald
@@ -136,7 +135,6 @@ public class ConfigLoader {
             touristExpiryMinutes = Double.parseDouble(props.getProperty("touristExpiryMinutes", "120.0"));
             enableTouristExpiry = Boolean.parseBoolean(props.getProperty("enableTouristExpiry", "true"));
             notifyOnTouristDeparture = Boolean.parseBoolean(props.getProperty("notifyOnTouristDeparture", "true"));
-            touristsPerPopulationIncrease = Integer.parseInt(props.getProperty("touristsPerPopulationIncrease", "2"));
 
             // Load tourism economy config
             metersPerEmerald = Integer.parseInt(props.getProperty("metersPerEmerald", "50"));
@@ -195,7 +193,7 @@ public class ConfigLoader {
         LOGGER.info("Tourist Expiry Minutes: {}", touristExpiryMinutes);
         LOGGER.info("Enable Tourist Expiry: {}", enableTouristExpiry);
         LOGGER.info("Notify On Tourist Departure: {}", notifyOnTouristDeparture);
-        LOGGER.info("Tourists Per Population Increase: {}", touristsPerPopulationIncrease);
+
         LOGGER.info("Meters Per Emerald: {}", metersPerEmerald);
         LOGGER.info("Enable Milestones: {}", enableMilestones);
         LOGGER.info("Milestone Rewards: {}", milestoneRewards.size() + " configured");
@@ -228,7 +226,6 @@ public class ConfigLoader {
         props.setProperty("touristExpiryMinutes", String.valueOf(touristExpiryMinutes));
         props.setProperty("enableTouristExpiry", String.valueOf(enableTouristExpiry));
         props.setProperty("notifyOnTouristDeparture", String.valueOf(notifyOnTouristDeparture));
-        props.setProperty("touristsPerPopulationIncrease", String.valueOf(touristsPerPopulationIncrease));
 
         // Save tourism economy config
         props.setProperty("metersPerEmerald", String.valueOf(metersPerEmerald));
