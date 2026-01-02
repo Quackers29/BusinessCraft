@@ -149,6 +149,9 @@ public class StandardTabContent extends BCComponent {
 
             // Create or update grid
             if (grid == null) {
+                // Calculate visible rows manually (matching Resource tab logic)
+                int visibleRows = Math.max(1, (height - 20) / 21); // (height - 2*margin) / (rowHeight + spacing)
+
                 grid = UIGridBuilder.create(x, y, width, height, 2)
                         .withRowHeight(16)
                         .withBackgroundColor(BACKGROUND_COLOR)
@@ -156,9 +159,13 @@ public class StandardTabContent extends BCComponent {
                         .withMargins(15, 10)
                         .withSpacing(15, 5)
                         .drawBorder(true)
-                        .withColumnData(columnData);
+                        .withColumnData(columnData)
+                        .withVerticalScroll(true, visibleRows);
             } else {
                 grid.updateColumnData(columnData);
+                // Re-calculate visible rows and enforce scroll settings
+                int visibleRows = Math.max(1, (height - 20) / 21);
+                grid.withVerticalScroll(true, visibleRows);
             }
 
             // Render the grid

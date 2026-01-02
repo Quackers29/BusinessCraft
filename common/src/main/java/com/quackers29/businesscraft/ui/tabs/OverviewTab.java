@@ -87,9 +87,10 @@ public class OverviewTab extends BaseTownTab {
     @Override
     public void update() {
         // This causes a refresh of the overview data when called
-        if (contentComponent != null) {
-            contentComponent.refresh();
-        }
+        // We don't want to refresh the grid here as it resets scroll state
+        // if (contentComponent != null) {
+        // contentComponent.refresh();
+        // }
     }
 
     @Override
