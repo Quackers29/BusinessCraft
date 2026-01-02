@@ -49,9 +49,23 @@ public class OverviewTab extends BaseTownTab {
         contentComponent.withLabelValueData(() -> {
             Map<String, String> overviewData = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
             overviewData.put("Town Name:", parentScreen.getCachedTownName());
-            overviewData.put("Population:", String.valueOf(parentScreen.getCachedPopulation()));
-            overviewData.put("Pop. Cap:",
-                    String.valueOf((int) parentScreen.getCacheManager().getCachedPopulationCap()));
+
+            // Population: 16 (40)
+            String popStr = parentScreen.getCachedPopulation() + " ("
+                    + (int) parentScreen.getCacheManager().getCachedPopulationCap() + ")";
+            overviewData.put("Population:", popStr);
+
+            // Happiness
+            float hap = parentScreen.getCacheManager().getCachedHappiness();
+            String hapStr = String.format("%.0f%%", hap);
+            if (hap >= 80)
+                hapStr += " (High)";
+            else if (hap <= 30)
+                hapStr += " (Low)";
+            else
+                hapStr += " (Normal)";
+            overviewData.put("Happiness:", hapStr);
+
             overviewData.put("Tourists:", parentScreen.getTouristString());
 
             // Add cumulative tourism stats
@@ -65,17 +79,6 @@ public class OverviewTab extends BaseTownTab {
             }
             overviewData.put("Tourism:", String.format("%d (%s)", totalTourists, distStr));
 
-            // Add extended data
-            float hap = parentScreen.getCacheManager().getCachedHappiness();
-            String hapStr = String.format("%.0f%%", hap);
-            if (hap >= 80)
-                hapStr += " (High)";
-            else if (hap <= 30)
-                hapStr += " (Low)";
-            else
-                hapStr += " (Normal)";
-
-            overviewData.put("Happiness:", hapStr);
             overviewData.put("Biome:", parentScreen.getCacheManager().getCachedBiome());
             return overviewData;
         });
