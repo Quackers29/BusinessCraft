@@ -50,6 +50,14 @@ public class TownTradingComponent implements TownComponent {
     }
 
     public float getStock(String resourceId) {
+        // Special non-consumable resources (Requirements)
+        if ("tourism_count".equals(resourceId)) {
+            return (float) town.getTotalTouristsArrived();
+        }
+        if ("tourism_distance".equals(resourceId)) {
+            return (float) town.getTotalTouristDistance();
+        }
+
         // First check if this ID maps to a real item (Economy storage)
         ResourceType type = ResourceRegistry.get(resourceId);
         if (type != null && type.getMcItemId() != null) {
@@ -64,6 +72,12 @@ public class TownTradingComponent implements TownComponent {
     }
 
     public void adjustStock(String resourceId, float amount) {
+        // Special non-consumable resources cannot be adjusted (they are read-only
+        // stats)
+        if ("tourism_count".equals(resourceId) || "tourism_distance".equals(resourceId)) {
+            return;
+        }
+
         // 1. Update Real Economy Storage
         ResourceType type = ResourceRegistry.get(resourceId);
         if (type != null && type.getMcItemId() != null) {

@@ -110,6 +110,11 @@ Example rows:
 basic_settlement,0,
 farming_improved,7,food:20;wood:20;stone:10
 
+Special Requirements (Non-consumable):
+- tourism_count:[number] -> Requires a total number of tourists to have arrived at the town.
+- tourism_distance:[number] -> Requires a total distance (in blocks) traveled by all tourists.
+Example: housing_advancement,5,wood:50;tourism_count:20;tourism_distance:2000
+
 5. biomes.csv — Starting kits and initial values (now simplified and consistent).
 Columns: biome_id,starting_nodes,starting_values
 

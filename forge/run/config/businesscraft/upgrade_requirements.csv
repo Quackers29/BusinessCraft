@@ -1,5 +1,5 @@
 node_id,research_days,required_items
 basic_settlement,0,
 farming_basic,1,wood:10
-cap_upgrade1,0.5,wood:25
-farming_advanced,0.1,wood:15
+cap_upgrade1,0.5,wood:25;tourism_count:10
+farming_advanced,0.1,wood:15;tourism_count:2
