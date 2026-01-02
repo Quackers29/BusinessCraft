@@ -165,7 +165,8 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                         com.quackers29.businesscraft.network.packets.ui.TownOverviewSyncPacket syncPacket = new com.quackers29.businesscraft.network.packets.ui.TownOverviewSyncPacket(
                                 happiness, biome, currentResearch, researchProgress, dailyTickInterval,
                                 activeProductions, town.getUpgrades().getUnlockedNodes(),
-                                town.getUpgrades().getModifier("pop_cap"));
+                                town.getUpgrades().getModifier("pop_cap"),
+                                town.getTotalTouristsArrived(), town.getTotalTouristDistance());
 
                         PlatformAccess.getNetworkMessages().sendToPlayer(syncPacket,
                                 (net.minecraft.server.level.ServerPlayer) inv.player);
@@ -234,7 +235,8 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
             com.quackers29.businesscraft.network.packets.ui.TownOverviewSyncPacket syncPacket = new com.quackers29.businesscraft.network.packets.ui.TownOverviewSyncPacket(
                     happiness, biome, currentResearch, researchProgress, dailyTickInterval,
                     activeProductions, town.getUpgrades().getUnlockedNodes(),
-                    town.getUpgrades().getModifier("pop_cap"));
+                    town.getUpgrades().getModifier("pop_cap"),
+                    town.getTotalTouristsArrived(), town.getTotalTouristDistance());
 
             if (this.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
                 PlatformAccess.getNetworkMessages().sendToPlayer(syncPacket, serverPlayer);

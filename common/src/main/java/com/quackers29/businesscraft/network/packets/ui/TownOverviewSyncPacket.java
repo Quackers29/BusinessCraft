@@ -23,10 +23,12 @@ public class TownOverviewSyncPacket {
     private final Map<String, Float> activeProductions;
     private final List<String> unlockedNodes;
     private final float populationCap;
+    private final int totalTouristsArrived;
+    private final double totalTouristDistance;
 
     public TownOverviewSyncPacket(float happiness, String biome, String currentResearch, float researchProgress,
             int dailyTickInterval, Map<String, Float> activeProductions, Collection<String> unlockedNodes,
-            float populationCap) {
+            float populationCap, int totalTouristsArrived, double totalTouristDistance) {
         this.happiness = happiness;
         this.biome = biome;
         this.currentResearch = currentResearch != null ? currentResearch : "";
@@ -35,6 +37,8 @@ public class TownOverviewSyncPacket {
         this.activeProductions = activeProductions != null ? activeProductions : new HashMap<>();
         this.unlockedNodes = unlockedNodes != null ? new ArrayList<>(unlockedNodes) : new ArrayList<>();
         this.populationCap = populationCap;
+        this.totalTouristsArrived = totalTouristsArrived;
+        this.totalTouristDistance = totalTouristDistance;
     }
 
     public TownOverviewSyncPacket(FriendlyByteBuf buf) {
@@ -44,6 +48,8 @@ public class TownOverviewSyncPacket {
         this.researchProgress = buf.readFloat();
         this.dailyTickInterval = buf.readInt();
         this.populationCap = buf.readFloat();
+        this.totalTouristsArrived = buf.readInt();
+        this.totalTouristDistance = buf.readDouble();
 
         int size = buf.readInt();
         this.activeProductions = new HashMap<>(size);
@@ -67,6 +73,8 @@ public class TownOverviewSyncPacket {
         buf.writeFloat(researchProgress);
         buf.writeInt(dailyTickInterval);
         buf.writeFloat(populationCap);
+        buf.writeInt(totalTouristsArrived);
+        buf.writeDouble(totalTouristDistance);
 
         buf.writeInt(activeProductions.size());
         for (Map.Entry<String, Float> entry : activeProductions.entrySet()) {
@@ -90,7 +98,8 @@ public class TownOverviewSyncPacket {
                 TownDataCacheManager cache = screen.getCacheManager();
                 if (cache != null) {
                     cache.updateOverviewData(happiness, biome, currentResearch, researchProgress, dailyTickInterval,
-                            activeProductions, unlockedNodes, populationCap);
+                            activeProductions, unlockedNodes, populationCap, totalTouristsArrived,
+                            totalTouristDistance);
                 }
             }
         });

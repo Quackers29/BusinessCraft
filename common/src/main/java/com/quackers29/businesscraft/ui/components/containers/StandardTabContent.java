@@ -150,11 +150,11 @@ public class StandardTabContent extends BCComponent {
             // Create or update grid
             if (grid == null) {
                 grid = UIGridBuilder.create(x, y, width, height, 2)
-                        .withRowHeight(26)
+                        .withRowHeight(16)
                         .withBackgroundColor(BACKGROUND_COLOR)
                         .withBorderColor(BORDER_COLOR)
                         .withMargins(15, 10)
-                        .withSpacing(15, 10)
+                        .withSpacing(15, 5)
                         .drawBorder(true)
                         .withColumnData(columnData);
             } else {

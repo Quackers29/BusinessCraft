@@ -38,6 +38,10 @@ public class Town implements ITownDataProvider {
     // Counter for tourists received since last population increase
     private int touristsReceivedCounter = 0;
 
+    // Cumulative tourism stats
+    private int totalTouristsArrived = 0;
+    private double totalTouristDistance = 0.0;
+
     // Visit history storage - moved from TownBlockEntity
     private final List<VisitHistoryRecord> visitHistory = new ArrayList<>();
     private static final int MAX_HISTORY_SIZE = 50; // Maximum history entries to keep
@@ -284,6 +288,8 @@ public class Town implements ITownDataProvider {
         tag.putInt("touristCount", touristCount);
         tag.putString("biome", biome);
         tag.putInt("touristsReceivedCounter", touristsReceivedCounter);
+        tag.putInt("totalTouristsArrived", totalTouristsArrived);
+        tag.putDouble("totalTouristDistance", totalTouristDistance);
         CompoundTag visitorsTag = new CompoundTag();
         visitors.forEach((visitorId, count) -> {
             visitorsTag.putInt(visitorId.toString(), count);
@@ -400,9 +406,16 @@ public class Town implements ITownDataProvider {
             town.touristCount = tag.getInt("touristCount");
         }
 
-        // Load tourists received counter
         if (tag.contains("touristsReceivedCounter")) {
             town.touristsReceivedCounter = tag.getInt("touristsReceivedCounter");
+        }
+
+        if (tag.contains("totalTouristsArrived")) {
+            town.totalTouristsArrived = tag.getInt("totalTouristsArrived");
+        }
+
+        if (tag.contains("totalTouristDistance")) {
+            town.totalTouristDistance = tag.getDouble("totalTouristDistance");
         }
 
         if (tag.contains("biome")) {
@@ -625,6 +638,14 @@ public class Town implements ITownDataProvider {
         return visitors.values().stream().mapToInt(Integer::intValue).sum();
     }
 
+    public int getTotalTouristsArrived() {
+        return totalTouristsArrived;
+    }
+
+    public double getTotalTouristDistance() {
+        return totalTouristDistance;
+    }
+
     public boolean isTouristSpawningEnabled() {
         return touristSpawningEnabled;
     }
@@ -707,6 +728,14 @@ public class Town implements ITownDataProvider {
         // Trim if we exceed the maximum history size
         while (visitHistory.size() > MAX_HISTORY_SIZE) {
             visitHistory.remove(visitHistory.size() - 1);
+        }
+
+        // Update cumulative stats
+        this.totalTouristsArrived += count;
+
+        if (originPos != null && originPos != BlockPos.ZERO) {
+            double distance = Math.sqrt(this.position.distSqr(originPos));
+            this.totalTouristDistance += distance * count; // Weighted by visitor count
         }
 
         // Mark as dirty to ensure it's saved

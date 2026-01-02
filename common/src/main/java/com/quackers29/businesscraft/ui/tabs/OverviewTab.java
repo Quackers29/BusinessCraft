@@ -54,6 +54,17 @@ public class OverviewTab extends BaseTownTab {
                     String.valueOf((int) parentScreen.getCacheManager().getCachedPopulationCap()));
             overviewData.put("Tourists:", parentScreen.getTouristString());
 
+            // Add cumulative tourism stats
+            int totalTourists = parentScreen.getCacheManager().getCachedTotalTouristsArrived();
+            double totalDist = parentScreen.getCacheManager().getCachedTotalTouristDistance();
+            String distStr;
+            if (totalDist >= 1000) {
+                distStr = String.format("%.1fkm", totalDist / 1000.0);
+            } else {
+                distStr = String.format("%dm", (int) totalDist);
+            }
+            overviewData.put("Tourism:", String.format("%d (%s)", totalTourists, distStr));
+
             // Add extended data
             float hap = parentScreen.getCacheManager().getCachedHappiness();
             String hapStr = String.format("%.0f%%", hap);
