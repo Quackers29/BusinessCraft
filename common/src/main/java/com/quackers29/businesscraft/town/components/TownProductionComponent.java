@@ -183,6 +183,18 @@ public class TownProductionComponent implements TownComponent {
                     // Apply Population Penalty
                     if (town.getPopulation() > 0) {
                         town.setPopulation(town.getPopulation() - 1);
+
+                        // Notification
+                        net.minecraft.server.level.ServerLevel level = com.quackers29.businesscraft.town.utils.TownNotificationUtils
+                                .getLevelForTown(town);
+                        if (level != null) {
+                            net.minecraft.network.chat.Component message = net.minecraft.network.chat.Component
+                                    .literal("WARNING: A villager has died of starvation!")
+                                    .withStyle(net.minecraft.ChatFormatting.RED, net.minecraft.ChatFormatting.BOLD);
+
+                            com.quackers29.businesscraft.town.utils.TownNotificationUtils.broadcastToTown(level, town,
+                                    message);
+                        }
                     }
 
                     // Partial Consumption Logic

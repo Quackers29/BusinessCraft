@@ -108,14 +108,48 @@ public class TownUpgradeComponent implements TownComponent {
         LOGGER.info("Starting research: {} for town {}", nodeId, town.getName());
         this.currentResearchNode = nodeId;
         this.researchProgress = 0;
+
+        // Notification
+        net.minecraft.server.level.ServerLevel level = com.quackers29.businesscraft.town.utils.TownNotificationUtils
+                .getLevelForTown(town);
+        if (level != null) {
+            net.minecraft.network.chat.Component message = net.minecraft.network.chat.Component
+                    .literal("Research started: ")
+                    .withStyle(net.minecraft.ChatFormatting.BLUE)
+                    .append(net.minecraft.network.chat.Component.literal(node.getDisplayName())
+                            .withStyle(net.minecraft.ChatFormatting.WHITE));
+
+            com.quackers29.businesscraft.town.utils.TownNotificationUtils.broadcastToTown(level, town, message);
+        }
+
         town.markDirty();
     }
 
     public void completeResearch() {
         if (currentResearchNode != null) {
+            String nodeId = currentResearchNode;
+
+            // Notification setup
+            com.quackers29.businesscraft.production.UpgradeNode node = com.quackers29.businesscraft.production.UpgradeRegistry
+                    .get(nodeId);
+            String displayName = (node != null) ? node.getDisplayName() : nodeId;
+
             unlockNode(currentResearchNode);
             currentResearchNode = null;
             researchProgress = 0;
+
+            net.minecraft.server.level.ServerLevel level = com.quackers29.businesscraft.town.utils.TownNotificationUtils
+                    .getLevelForTown(town);
+            if (level != null) {
+                net.minecraft.network.chat.Component message = net.minecraft.network.chat.Component
+                        .literal("Research completed: ")
+                        .withStyle(net.minecraft.ChatFormatting.GOLD, net.minecraft.ChatFormatting.BOLD)
+                        .append(net.minecraft.network.chat.Component.literal(displayName)
+                                .withStyle(net.minecraft.ChatFormatting.WHITE));
+
+                com.quackers29.businesscraft.town.utils.TownNotificationUtils.broadcastToTown(level, town, message);
+            }
+
             town.markDirty();
         }
     }

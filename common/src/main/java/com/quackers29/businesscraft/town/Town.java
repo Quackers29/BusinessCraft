@@ -137,6 +137,37 @@ public class Town implements ITownDataProvider {
     }
 
     /**
+     * Checks if a position is within the town's boundary
+     * 
+     * @param pos The position to check
+     * @return true if the position is inside the town's radius
+     */
+    public boolean isPositionInside(BlockPos pos) {
+        if (pos == null)
+            return false;
+
+        // Simple distance check (cylindrical or spherical? typically cylindrical for
+        // towns)
+        // Using cylindrical distance (ignoring Y) for now as it's more standard for
+        // town claims,
+        // but spherical (distSqr) is easier and matches `wouldOverlapWith`.
+        // Let's match `wouldOverlapWith` logic which uses 3D distance by default
+        // distSqr on BlockPos.
+
+        // Actually, for player detection, 2D (horizontal) radius is often better so
+        // players
+        // strictly above/below are still included, but let's stick to simple 3D
+        // distance
+        // first as it's safe.
+        // WAIT: `wouldOverlapWith` uses `this.position.distSqr(otherTown.position)`.
+
+        double distanceSqr = this.position.distSqr(pos);
+        int radius = getBoundaryRadius();
+
+        return distanceSqr <= (radius * radius);
+    }
+
+    /**
      * Checks if this town's boundary would overlap with another town's boundary
      * 
      * @param otherTown The other town to check against
