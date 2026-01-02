@@ -4,3 +4,4 @@ farming_basic,1,wood:10
 cap_upgrade,0.5,wood:25;tourism_count:10
 farming_advanced,0.1,wood:15;tourism_count:2
 pop_cap_upgrade,0.05,wood:20
+tourism,0.05,money:10

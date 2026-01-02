@@ -1,6 +1,7 @@
 node_id,category,display_name,repeat,prereq_nodes,benefit_description,effects
-basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,pop_cap:10;storage_cap_all:200;happiness:50;population_maintenance;population_growth;basic_taxes
+basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,pop_cap:10;tourist_cap:2;storage_cap_all:200;happiness:50;population_maintenance;population_growth;basic_taxes
 farming_basic,farming,Basic Farming,,basic_settlement,Starts food production,basic_farming
 cap_upgrade,general,Cap upgrade 1,5:1.1,,,storage_cap_all:400
 farming_advanced,farming,Farming Advanced,5:1.2,farming_basic,Improved food production,basic_farming*0.5
 pop_cap_upgrade,general,Pop Cap Upgrade,5:1.2,basic_settlement,Improved Pop Cap,pop_cap:10
+tourism,general,Tourism,,basic_settlement,Tourism,tourists

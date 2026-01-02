@@ -38,6 +38,8 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     private BlockPos pathStart;
     private BlockPos pathEnd;
     private int searchRadius = 10;
+    // Pending tourist spawns buffer (accumulated from production)
+    private int pendingTouristSpawns = 0;
 
     // Cumulative tourism stats
     private int totalTouristsArrived = 0;
@@ -372,6 +374,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         }
 
         tag.putInt("searchRadius", searchRadius);
+        tag.putInt("pendingTouristSpawns", pendingTouristSpawns);
         tag.putBoolean("touristSpawningEnabled", touristSpawningEnabled);
 
         // Save visit history
@@ -498,6 +501,10 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         }
 
         town.searchRadius = tag.contains("searchRadius") ? tag.getInt("searchRadius") : 10;
+
+        if (tag.contains("pendingTouristSpawns")) {
+            town.pendingTouristSpawns = tag.getInt("pendingTouristSpawns");
+        }
 
         town.touristSpawningEnabled = !tag.contains("touristSpawningEnabled") ||
                 tag.getBoolean("touristSpawningEnabled");
@@ -650,6 +657,20 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
 
     public void addVisitor(UUID fromTownId) {
         visitors.merge(fromTownId, 1, Integer::sum);
+    }
+
+    public int getPendingTouristSpawns() {
+        return pendingTouristSpawns;
+    }
+
+    public void setPendingTouristSpawns(int count) {
+        this.pendingTouristSpawns = count;
+        markDirty();
+    }
+
+    public void addPendingTouristSpawns(int count) {
+        this.pendingTouristSpawns += count;
+        markDirty();
     }
 
     public int getTotalVisitors() {

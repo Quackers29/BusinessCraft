@@ -88,7 +88,8 @@ public class TownProductionComponent implements TownComponent {
         boolean shouldLog = (tickCounter % 100 == 0);
 
         if (shouldLog)
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "TownProductionComponent.tick() - Town: {}, Upgrades: {}",
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                    "TownProductionComponent.tick() - Town: {}, Upgrades: {}",
                     town.getName(), town.getUpgrades().getUnlockedNodes());
 
         if (tickCounter % 20 == 0) {
@@ -121,6 +122,7 @@ public class TownProductionComponent implements TownComponent {
         // Check conditions
         if (!checkConditions(recipe)) {
             // LOGGER.debug("Recipe {} conditions not met", recipe.getId());
+            recipeProgress.put(recipe.getId(), 0f);
             return;
         }
 
@@ -162,7 +164,8 @@ public class TownProductionComponent implements TownComponent {
 
                 if (town.getResourceCount(item) < required) {
                     if (shouldLog)
-                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Recipe {} missing input: {} (Need {}, Have {})",
+                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                                "Recipe {} missing input: {} (Need {}, Have {})",
                                 recipe.getId(), resourceId, required, town.getResourceCount(item));
                     hasInputs = false;
                     break;
@@ -178,7 +181,8 @@ public class TownProductionComponent implements TownComponent {
                 currentProgress += tickIncrement;
 
                 if (currentProgress >= effectiveTime) {
-                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "STARVATION: Town {} missed {} cycle. No food available.", town.getName(),
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                            "STARVATION: Town {} missed {} cycle. No food available.", town.getName(),
                             recipe.getId());
 
                     // Apply Population Penalty
@@ -211,7 +215,8 @@ public class TownProductionComponent implements TownComponent {
                                 int available = town.getResourceCount(item);
                                 if (available > 0) {
                                     town.addResource(item, -available); // Consume all
-                                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "STARVATION: Consumed remaining partial stack of {} {}", available,
+                                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                                            "STARVATION: Consumed remaining partial stack of {} {}", available,
                                             resourceId);
                                 }
                             }
@@ -251,11 +256,19 @@ public class TownProductionComponent implements TownComponent {
                 }
             }
 
-            float cap = town.getTrading().getStorageCap(resId);
+            // Special handling for tourist cap
+            float cap;
+            if (resId.equals("tourist")) {
+                current = town.getTouristCount();
+                cap = town.getUpgrades().getModifier("tourist_cap");
+            } else {
+                cap = town.getTrading().getStorageCap(resId);
+            }
 
             if (current + amount > cap) {
                 if (shouldLog)
-                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Recipe {} output full: {} (Need space for {})", recipe.getId(), resId, amount);
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                            "Recipe {} output full: {} (Need space for {})", recipe.getId(), resId, amount);
                 // Stall - ensure progress is tracked
                 float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
                 recipeProgress.put(recipe.getId(), currentProgress);
@@ -270,11 +283,13 @@ public class TownProductionComponent implements TownComponent {
         currentProgress += tickIncrement;
 
         if (shouldLog)
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Recipe {} progress: {}/{}", recipe.getId(), currentProgress, effectiveTime);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Recipe {} progress: {}/{}", recipe.getId(),
+                    currentProgress, effectiveTime);
 
         if (currentProgress >= effectiveTime) {
             // Complete Recipe
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Recipe {} COMPLETED for town {}", recipe.getId(), town.getName());
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Recipe {} COMPLETED for town {}", recipe.getId(),
+                    town.getName());
             currentProgress = 0f;
             consumeAndProduce(recipe);
         }
@@ -291,7 +306,8 @@ public class TownProductionComponent implements TownComponent {
 
             if (input.resourceId.contains("*") || input.amountExpression.contains("*")) { // Log only dynamic
                                                                                           // consumption
-                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "DEBUG: Consuming {} for {}: Pop={}, Expr={}, Calc={}",
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                        "DEBUG: Consuming {} for {}: Pop={}, Expr={}, Calc={}",
                         resourceId, recipe.getId(), town.getPopulation(), input.amountExpression, amount);
             }
 
@@ -319,6 +335,8 @@ public class TownProductionComponent implements TownComponent {
 
             if (resId.equals("population")) {
                 town.setPopulation(town.getPopulation() + (int) amount);
+            } else if (resId.equals("tourist")) {
+                town.addPendingTouristSpawns((int) amount);
             } else {
                 com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
                         .get(resId);

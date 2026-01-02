@@ -1,6 +1,7 @@
 prod_id,display_name,base_cycle_time_days,inputs,outputs
 population_maintenance,Food Consumption,0.02,pop*food:1,
-population_growth,Natural Population Growth,0.03,happiness:>60;pop:<pop_cap;surplus:food,population:1
+population_growth,Natural Population Growth,0.03,happiness:>60;surplus:food,population:1
+tourists,Tourist Generation,0.01,happiness:>70;food:1;money:1,tourist:1
 basic_farming,Basic Wheat Farming,0.01,,food:4
 wood_to_planks,Wood to Planks,0.5,wood:4,planks:16
 basic_taxes,Basic tax on Population,0.02,,money:0.5*pop
