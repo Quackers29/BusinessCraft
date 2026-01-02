@@ -21,10 +21,8 @@ public class TownResearchAI {
         List<UpgradeNode> candidates = new ArrayList<>();
 
         // Find available upgrades
+        // Find available upgrades
         for (UpgradeNode node : UpgradeRegistry.getAll()) {
-            if (unlocked.contains(node.getId()))
-                continue;
-
             // Check prereqs
             boolean prereqsMet = true;
             if (node.getPrereqNodes() != null) {
@@ -35,7 +33,8 @@ public class TownResearchAI {
                     }
                 }
             }
-            if (prereqsMet) {
+
+            if (prereqsMet && town.getUpgrades().canAffordResearch(node.getId())) {
                 candidates.add(node);
             }
         }

@@ -207,12 +207,13 @@ public class TownDataCacheManager {
     private int cachedDailyTickInterval = 24000;
     private Map<String, Float> cachedActiveProductions = Collections.emptyMap();
     private java.util.Set<String> cachedUnlockedNodes = Collections.emptySet();
+    private Map<String, Integer> cachedUpgradeLevels = Collections.emptyMap();
     private float cachedPopulationCap = 0f;
     private int cachedTotalTouristsArrived = 0;
     private double cachedTotalTouristDistance = 0.0;
 
     public void updateOverviewData(float happiness, String biome, String currentResearch, float researchProgress,
-            int dailyTickInterval, Map<String, Float> activeProductions, java.util.Collection<String> unlockedNodes,
+            int dailyTickInterval, Map<String, Float> activeProductions, Map<String, Integer> upgradeLevels,
             float populationCap, int totalTouristsArrived, double totalTouristDistance) {
         this.cachedHappiness = happiness;
         if (biome != null && biome.startsWith("minecraft:")) {
@@ -229,7 +230,9 @@ public class TownDataCacheManager {
         this.cachedResearchProgress = researchProgress;
         this.cachedDailyTickInterval = dailyTickInterval;
         this.cachedActiveProductions = activeProductions;
-        this.cachedUnlockedNodes = new java.util.HashSet<>(unlockedNodes);
+        this.cachedUpgradeLevels = upgradeLevels != null ? new java.util.HashMap<>(upgradeLevels)
+                : new java.util.HashMap<>();
+        this.cachedUnlockedNodes = this.cachedUpgradeLevels.keySet();
         this.cachedPopulationCap = populationCap;
         this.cachedTotalTouristsArrived = totalTouristsArrived;
         this.cachedTotalTouristDistance = totalTouristDistance;
@@ -269,6 +272,10 @@ public class TownDataCacheManager {
 
     public java.util.Set<String> getCachedUnlockedNodes() {
         return cachedUnlockedNodes;
+    }
+
+    public int getCachedUpgradeLevel(String nodeId) {
+        return cachedUpgradeLevels.getOrDefault(nodeId, 0);
     }
 
     public float getCachedPopulationCap() {

@@ -46,20 +46,20 @@ public class UpgradeRegistry {
                     continue;
                 }
 
-                // node_id,category,display_name,prereq_nodes,benefit_description,effects
+                // node_id,category,display_name,repeat,prereq_nodes,benefit_description,effects
                 String[] parts = line.split(",");
-                if (parts.length >= 6) {
+                if (parts.length >= 7) {
                     String id = parts[0].trim();
                     String category = parts[1].trim();
                     String name = parts[2].trim();
-                    String prereqsRaw = parts[3].trim();
-                    String desc = parts[4].trim();
-                    String effectsRaw = parts[5].trim();
-                    if (parts.length >= 7) {
-                        // Adaptive fix for malformed CSV (7 columns instead of 6)
-                        desc = parts[5].trim();
-                        effectsRaw = parts[6].trim();
-                    }
+                    String repeat = parts[3].trim();
+                    String prereqsRaw = parts[4].trim();
+                    String desc = parts[5].trim();
+                    String effectsRaw = parts[6].trim();
+                    // Handle case where desc or effects might be split due to internal commas?
+                    // Assuming simple split for now based on user request "make this generic".
+                    // If description contains comma, this split handles it poorly, but existing
+                    // logic did too.
 
                     List<String> prereqs = new ArrayList<>();
                     if (!prereqsRaw.isEmpty()) {
@@ -71,7 +71,7 @@ public class UpgradeRegistry {
 
                     List<Effect> effects = DataParser.parseEffects(effectsRaw);
 
-                    NODES.put(id, new UpgradeNode(id, category, name, prereqs, desc, effects));
+                    NODES.put(id, new UpgradeNode(id, category, name, repeat, prereqs, desc, effects));
                     LOGGER.info("Registered upgrade node: {}", id);
                 }
             }
@@ -121,11 +121,11 @@ public class UpgradeRegistry {
 
     private static void createDefaultUpgrades(File file) {
         try (FileWriter writer = new FileWriter(file)) {
-            writer.write("node_id,category,display_name,prereq_nodes,benefit_description,effects\n");
+            writer.write("node_id,category,display_name,repeat,prereq_nodes,benefit_description,effects\n");
             writer.write(
-                    "basic_settlement,housing,Basic Settlement,,Unlocks basic survival,pop_cap:10;storage_cap_all:200;happiness:50;population_maintenance;population_growth\n");
+                    "basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,pop_cap:10;storage_cap_all:200;happiness:50;population_maintenance;population_growth\n");
             writer.write(
-                    "farming_basic,farming,Basic Farming,basic_settlement,Starts food production,basic_farming\n");
+                    "farming_basic,farming,Basic Farming,,basic_settlement,Starts food production,basic_farming\n");
         } catch (IOException e) {
             LOGGER.error("Failed to create {}", UPGRADES_FILE, e);
         }

@@ -113,7 +113,16 @@ public class ProductionTab extends BaseTownTab {
                                         for (com.quackers29.businesscraft.data.parsers.Effect eff : unode
                                                 .getEffects()) {
                                             if (eff.getTarget().equals(id)) {
-                                                modifier += eff.getValue(); // additive speed
+                                                // Scaling effect for repeatable upgrades?
+                                                // Assuming modifiers are passed as flattened "activeModifiers"?
+                                                // Wait, cache.getResourceStats/actives?
+                                                // DataParser effect value is static.
+                                                // Upgrade logic multiplies it.
+                                                // If I want accurate speed, I should fetch "activeModifiers" from cache
+                                                // if exposed? TownDataCacheManager doesn't expose activeModifiers map.
+                                                // For now, simple additive calc using level:
+                                                int lvl = cache.getCachedUpgradeLevel(nodeId);
+                                                modifier += eff.getValue() * lvl;
                                             }
                                         }
                                     }
@@ -142,91 +151,124 @@ public class ProductionTab extends BaseTownTab {
                 }
             } else {
                 // Upgrades View (Research + Unlocked + Locked)
-                List<UpgradeNode> activeList = new ArrayList<>();
-                List<UpgradeNode> unlockedList = new ArrayList<>();
-                List<UpgradeNode> lockedList = new ArrayList<>();
+                List<UpgradeDisplayEntry> activeList = new ArrayList<>();
+                List<UpgradeDisplayEntry> unlockedList = new ArrayList<>();
+                List<UpgradeDisplayEntry> lockedList = new ArrayList<>();
 
                 java.util.Set<String> unlockedIds = cache.getCachedUnlockedNodes();
                 String currentResearchId = cache.getCachedCurrentResearch();
-                UpgradeNode currentResearchNode = (currentResearchId != null && !currentResearchId.isEmpty())
-                        ? UpgradeRegistry.get(currentResearchId)
-                        : null;
 
-                if (currentResearchNode != null) {
-                    activeList.add(currentResearchNode);
-                }
-
-                // Categorize nodes
                 for (UpgradeNode node : UpgradeRegistry.getAll()) {
-                    if (currentResearchNode != null && node.getId().equals(currentResearchNode.getId())) {
-                        continue; // Already in active
+                    int lvl = cache.getCachedUpgradeLevel(node.getId());
+
+                    // Add Unlocked Entries
+                    for (int i = 1; i <= lvl; i++) {
+                        unlockedList.add(new UpgradeDisplayEntry(node, i, "Unlocked"));
                     }
-                    if (unlockedIds != null && unlockedIds.contains(node.getId())) {
-                        unlockedList.add(node);
+
+                    // Check Next Level (Researching or Locked)
+                    boolean isMaxed = false;
+                    if (!node.isRepeatable()) {
+                        if (lvl >= 1)
+                            isMaxed = true;
                     } else {
-                        lockedList.add(node);
+                        if (node.getMaxRepeats() != -1 && lvl >= node.getMaxRepeats())
+                            isMaxed = true;
+                    }
+
+                    if (!isMaxed) {
+                        int nextLvl = lvl + 1;
+                        if (currentResearchId != null && node.getId().equals(currentResearchId)) {
+                            activeList.add(new UpgradeDisplayEntry(node, nextLvl, "Researching..."));
+                        } else {
+                            // Check prereqs
+                            boolean prereqsMet = true;
+                            if (node.getPrereqNodes() != null) {
+                                for (String pre : node.getPrereqNodes()) {
+                                    if (unlockedIds == null || !unlockedIds.contains(pre)) {
+                                        prereqsMet = false;
+                                        break;
+                                    }
+                                }
+                            }
+                            // Show locked if prereqs met OR if it's a repeat (implies prereqs met)
+                            // Repeated upgrades (lvl > 0) have met prereqs by definition.
+                            if (lvl > 0 || prereqsMet) {
+                                lockedList.add(new UpgradeDisplayEntry(node, nextLvl, "Locked"));
+                            }
+                        }
                     }
                 }
 
                 // Sort Locked by AI Score
                 ClientTownState clientState = new ClientTownState(cache);
-                lockedList.sort((n1, n2) -> {
-                    double s1 = com.quackers29.businesscraft.town.ai.TownResearchAI.calculateScore(clientState, n1);
-                    double s2 = com.quackers29.businesscraft.town.ai.TownResearchAI.calculateScore(clientState, n2);
+                lockedList.sort((e1, e2) -> {
+                    // Use level 1 scoring for simplicity or implement advanced scoring
+                    double s1 = com.quackers29.businesscraft.town.ai.TownResearchAI.calculateScore(clientState,
+                            e1.node);
+                    double s2 = com.quackers29.businesscraft.town.ai.TownResearchAI.calculateScore(clientState,
+                            e2.node);
                     return Double.compare(s2, s1); // Descending
                 });
 
                 // Helper to add node to lists
-                Consumer<UpgradeNode> addNode = (node) -> {
-                    names.add(node.getDisplayName());
+                Consumer<UpgradeDisplayEntry> addEntry = (entry) -> {
+                    String name = entry.node.getDisplayName();
+                    if (entry.node.isRepeatable()) {
+                        name += " (" + entry.level + ")";
+                    }
+                    names.add(name);
 
                     StringBuilder sb = new StringBuilder();
-                    sb.append(node.getDisplayName()).append("\n");
-                    sb.append(node.getDescription()).append("\n\n");
+                    sb.append(name).append("\n");
+                    sb.append(entry.node.getDescription()).append("\n\n");
+                    sb.append("Status: ").append(entry.status).append("\n");
 
-                    // Status specific info
-                    if (activeList.contains(node)) {
+                    if (entry.status.equals("Researching...")) {
                         float currentDays = cache.getCachedResearchProgress();
-                        int pct = (node.getResearchDays() > 0) ? (int) ((currentDays / node.getResearchDays()) * 100)
+                        int pct = (entry.node.getResearchDays() > 0)
+                                ? (int) ((currentDays / entry.node.getResearchDays()) * 100)
                                 : 0;
                         if (pct > 100)
                             pct = 100;
                         progress.add(pct + "%");
-                        sb.append("Status: Researching...").append("\n");
-                    } else if (unlockedList.contains(node)) {
-                        progress.add("Unlocked");
-                        sb.append("Status: Unlocked").append("\n");
                     } else {
-                        progress.add("Locked");
-                        sb.append("Status: Locked").append("\n");
+                        progress.add(entry.status);
                     }
 
-                    // Requirements
-                    if (node.getCosts() != null && !node.getCosts().isEmpty()) {
+                    // Requirements / Costs (Scaled)
+                    if (entry.node.getCosts() != null && !entry.node.getCosts().isEmpty()) {
                         sb.append("\nCost:\n");
-                        node.getCosts().forEach(resAmt -> {
-                            sb.append(" - ").append(resAmt.resourceId).append(": ").append(resAmt.amount).append("\n");
+                        float costMult = (float) Math.pow(entry.node.getCostMultiplier(), entry.level - 1);
+                        entry.node.getCosts().forEach(resAmt -> {
+                            sb.append(" - ").append(resAmt.resourceId).append(": ")
+                                    .append(String.format("%.0f", resAmt.amount * costMult)).append("\n");
                         });
                     }
 
-                    // AI Score (Town Priority)
-                    if (lockedList.contains(node)) {
+                    // AI Score (Town Priority) - only for locked
+                    if (entry.status.equals("Locked")) {
                         double score = com.quackers29.businesscraft.town.ai.TownResearchAI.calculateScore(clientState,
-                                node);
+                                entry.node);
                         sb.append("\nTown Priority: ").append(String.format("%.1f", score));
                     }
 
                     sb.append("\n\nEffects:\n");
-                    for (com.quackers29.businesscraft.data.parsers.Effect eff : node.getEffects()) {
+                    // Show base effects per level
+                    for (com.quackers29.businesscraft.data.parsers.Effect eff : entry.node.getEffects()) {
                         sb.append(" ").append(eff.getTarget()).append(": ").append(eff.getValue()).append("\n");
                     }
+                    if (entry.level > 1 && entry.node.isRepeatable()) {
+                        sb.append(" (Cummulative: x").append(entry.level).append(")\n");
+                    }
+
                     tooltipList.add(sb.toString());
                 };
 
                 // Add to main lists in order
-                activeList.forEach(addNode);
-                unlockedList.forEach(addNode);
-                lockedList.forEach(addNode);
+                activeList.forEach(addEntry);
+                unlockedList.forEach(addEntry);
+                lockedList.forEach(addEntry);
 
                 if (names.isEmpty()) {
                     names.add("No Upgrades");
@@ -241,6 +283,18 @@ public class ProductionTab extends BaseTownTab {
         });
 
         panel.addChild(contentComponent);
+    }
+
+    private static class UpgradeDisplayEntry {
+        UpgradeNode node;
+        int level;
+        String status;
+
+        public UpgradeDisplayEntry(UpgradeNode node, int level, String status) {
+            this.node = node;
+            this.level = level;
+            this.status = status;
+        }
     }
 
     // Client-side implementation of local town state for AI scoring

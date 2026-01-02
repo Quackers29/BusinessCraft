@@ -58,3 +58,14 @@ storage_cap_all:200;basic_farming*1.5;happiness:10
 pop:>=20;tourism_count:>2
 ```
 *Requires population at least 20 and at least 3 tourist arrivals.*
+
+### Repeatable Upgrades
+The `upgrades.csv` file includes a dedicated column for repeatability configuration (index 3, after Category).
+
+*   **Format:** `[max_repeats]:[cost_multiplier]`
+*   **Default:** `1` (One-time upgrade, no multiplier).
+*   **Fixed Repeats:** Enter a number, e.g., `10`. The upgrade can be researched up to this level.
+*   **Infinite:** Use keyword `infinite` for no limit.
+*   **Cost Multiplier:** Append `:value` to specify how much the cost increases per level. Cost is calculated as `BaseCost * Multiplier^(Level-1)`.
+    *   *Example:* `infinite:1.2` (Infinite repeats, 20% cost increase per level).
+    *   *Example:* `5:2.0` (Max 5 levels, cost doubles each level).

@@ -21,13 +21,13 @@ public class TownOverviewSyncPacket {
     private final float researchProgress; // days
     private final int dailyTickInterval;
     private final Map<String, Float> activeProductions;
-    private final List<String> unlockedNodes;
+    private final Map<String, Integer> upgradeLevels;
     private final float populationCap;
     private final int totalTouristsArrived;
     private final double totalTouristDistance;
 
     public TownOverviewSyncPacket(float happiness, String biome, String currentResearch, float researchProgress,
-            int dailyTickInterval, Map<String, Float> activeProductions, Collection<String> unlockedNodes,
+            int dailyTickInterval, Map<String, Float> activeProductions, Map<String, Integer> upgradeLevels,
             float populationCap, int totalTouristsArrived, double totalTouristDistance) {
         this.happiness = happiness;
         this.biome = biome;
@@ -35,7 +35,7 @@ public class TownOverviewSyncPacket {
         this.researchProgress = researchProgress;
         this.dailyTickInterval = dailyTickInterval;
         this.activeProductions = activeProductions != null ? activeProductions : new HashMap<>();
-        this.unlockedNodes = unlockedNodes != null ? new ArrayList<>(unlockedNodes) : new ArrayList<>();
+        this.upgradeLevels = upgradeLevels != null ? new HashMap<>(upgradeLevels) : new HashMap<>();
         this.populationCap = populationCap;
         this.totalTouristsArrived = totalTouristsArrived;
         this.totalTouristDistance = totalTouristDistance;
@@ -59,10 +59,12 @@ public class TownOverviewSyncPacket {
             this.activeProductions.put(key, val);
         }
 
-        int unlockedSize = buf.readInt();
-        this.unlockedNodes = new ArrayList<>(unlockedSize);
-        for (int i = 0; i < unlockedSize; i++) {
-            this.unlockedNodes.add(buf.readUtf());
+        int upgradesSize = buf.readInt();
+        this.upgradeLevels = new HashMap<>(upgradesSize);
+        for (int i = 0; i < upgradesSize; i++) {
+            String key = buf.readUtf();
+            int lvl = buf.readInt();
+            this.upgradeLevels.put(key, lvl);
         }
     }
 
@@ -82,9 +84,10 @@ public class TownOverviewSyncPacket {
             buf.writeFloat(entry.getValue());
         }
 
-        buf.writeInt(unlockedNodes.size());
-        for (String node : unlockedNodes) {
-            buf.writeUtf(node);
+        buf.writeInt(upgradeLevels.size());
+        for (Map.Entry<String, Integer> entry : upgradeLevels.entrySet()) {
+            buf.writeUtf(entry.getKey());
+            buf.writeInt(entry.getValue());
         }
     }
 
@@ -98,7 +101,7 @@ public class TownOverviewSyncPacket {
                 TownDataCacheManager cache = screen.getCacheManager();
                 if (cache != null) {
                     cache.updateOverviewData(happiness, biome, currentResearch, researchProgress, dailyTickInterval,
-                            activeProductions, unlockedNodes, populationCap, totalTouristsArrived,
+                            activeProductions, upgradeLevels, populationCap, totalTouristsArrived,
                             totalTouristDistance);
                 }
             }

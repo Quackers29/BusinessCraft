@@ -164,7 +164,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
 
                         com.quackers29.businesscraft.network.packets.ui.TownOverviewSyncPacket syncPacket = new com.quackers29.businesscraft.network.packets.ui.TownOverviewSyncPacket(
                                 happiness, biome, currentResearch, researchProgress, dailyTickInterval,
-                                activeProductions, town.getUpgrades().getUnlockedNodes(),
+                                activeProductions, town.getUpgrades().getUpgradeLevels(),
                                 town.getUpgrades().getModifier("pop_cap"),
                                 town.getTotalTouristsArrived(), town.getTotalTouristDistance());
 
@@ -234,7 +234,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
 
             com.quackers29.businesscraft.network.packets.ui.TownOverviewSyncPacket syncPacket = new com.quackers29.businesscraft.network.packets.ui.TownOverviewSyncPacket(
                     happiness, biome, currentResearch, researchProgress, dailyTickInterval,
-                    activeProductions, town.getUpgrades().getUnlockedNodes(),
+                    activeProductions, town.getUpgrades().getUpgradeLevels(),
                     town.getUpgrades().getModifier("pop_cap"),
                     town.getTotalTouristsArrived(), town.getTotalTouristDistance());
 
