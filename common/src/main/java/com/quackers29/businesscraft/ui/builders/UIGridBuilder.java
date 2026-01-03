@@ -789,6 +789,10 @@ public class UIGridBuilder {
 
         // Apply vertical scroll offset if scrolling is enabled
         if (verticalScrollEnabled) {
+            // Check if the row is actually visible
+            if (rowIndex < verticalScrollOffset || rowIndex >= verticalScrollOffset + visibleRows) {
+                return false;
+            }
             rowY -= (verticalScrollOffset * (rowHeight + verticalSpacing));
         }
 
