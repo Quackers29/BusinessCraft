@@ -131,8 +131,8 @@ public class TownResearchAI {
                     score += 100.0 * (maxFullness * maxFullness);
 
                 } else if (target.equals("pop_cap")) {
-                    float cap = town.getStorageCap("population");
-                    float current = town.getStock("population");
+                    float cap = town.getStorageCap("pop");
+                    float current = town.getStock("pop");
                     if (cap > 0) {
                         double ratio = current / cap;
                         score += 100.0 * (ratio * ratio);
@@ -181,7 +181,7 @@ public class TownResearchAI {
                     // These aren't consumed in a flow, but accumulated to a cap.
                     // We want to fill them as fast as possible -> Priority increases as we are
                     // emptier.
-                    if (output.resourceId.equals("tourist") || output.resourceId.equals("population")) {
+                    if (output.resourceId.equals("tourist") || output.resourceId.equals("pop")) {
                         // Score = 100 * (1.0 - Fullness)
                         if (cap > 0) {
                             priority = 100.0 * (1.0 - (current / cap));

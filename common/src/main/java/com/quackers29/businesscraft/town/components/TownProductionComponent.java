@@ -140,7 +140,7 @@ public class TownProductionComponent implements TownComponent {
             String resourceId = resolved.id();
             float required = resolved.amount();
 
-            if (resourceId.equals("population")) {
+            if (resourceId.equals("pop")) {
                 // Population check? assumed fine or handled by conditions
             } else {
                 // Resolve resourceId to Item
@@ -240,7 +240,7 @@ public class TownProductionComponent implements TownComponent {
             String resId = resolved.id();
             float amount = resolved.amount();
 
-            if (resId.equals("population"))
+            if (resId.equals("pop"))
                 continue;
 
             // Resolve resourceId to Item for cap check (or use trading cap by ID string)
@@ -322,7 +322,7 @@ public class TownProductionComponent implements TownComponent {
                         resourceId, recipe.getId(), town.getPopulation(), input.amountExpression, amount);
             }
 
-            if (resourceId.equals("population")) {
+            if (resourceId.equals("pop")) {
                 // consuming pop?
                 continue;
             }
@@ -344,7 +344,7 @@ public class TownProductionComponent implements TownComponent {
             String resId = resolved.id();
             float amount = resolved.amount();
 
-            if (resId.equals("population")) {
+            if (resId.equals("pop")) {
                 town.setPopulation(town.getPopulation() + (int) amount);
             } else if (resId.equals("tourist")) {
                 town.addPendingTouristSpawns((int) amount);

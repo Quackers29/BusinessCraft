@@ -50,15 +50,28 @@ public class TownTradingComponent implements TownComponent {
     }
 
     public float getStock(String resourceId) {
-        // Special non-consumable resources (Requirements)
-        if ("tourism_count".equals(resourceId)) {
+        // "pop" = Current Population
+        if ("pop".equals(resourceId)) {
+            return (float) town.getPopulation();
+        }
+        if ("happiness".equals(resourceId)) {
+            return town.getHappiness();
+        }
+
+        // "tourist" = Current Active Tourists (Active + Pending Spawns)
+        // Used for production capping
+        if ("tourist".equals(resourceId)) {
+            return town.getTouristCount() + town.getPendingTouristSpawns();
+        }
+
+        // "tourism" = Cumulative Tourists Arrived (Requirement)
+        if ("tourism".equals(resourceId)) {
             return (float) town.getTotalTouristsArrived();
         }
-        if ("tourism_distance".equals(resourceId)) {
+
+        // "tourism_dist" = Cumulative Distance (Requirement)
+        if ("tourism_dist".equals(resourceId)) {
             return (float) town.getTotalTouristDistance();
-        }
-        if ("population".equals(resourceId)) {
-            return (float) town.getPopulation();
         }
 
         // First check if this ID maps to a real item (Economy storage)
@@ -75,10 +88,16 @@ public class TownTradingComponent implements TownComponent {
     }
 
     public void adjustStock(String resourceId, float amount) {
-        // Special non-consumable resources cannot be adjusted (they are read-only
-        // stats)
-        if ("tourism_count".equals(resourceId) || "tourism_distance".equals(resourceId)
-                || "population".equals(resourceId)) {
+        // Special non-consumable resources cannot be adjusted via simple stock methods
+        if ("tourism".equals(resourceId) || "tourism_dist".equals(resourceId)
+                || "pop".equals(resourceId)) {
+            return;
+        }
+
+        if ("tourist".equals(resourceId)) {
+            if (amount > 0) {
+                town.addPendingTouristSpawns((int) amount);
+            }
             return;
         }
 
@@ -88,8 +107,6 @@ public class TownTradingComponent implements TownComponent {
             Object itemObj = com.quackers29.businesscraft.api.PlatformAccess.getRegistry().getItem(type.getMcItemId());
             if (itemObj instanceof net.minecraft.world.item.Item item) {
                 town.addResource(item, (int) amount);
-                // We return here because we don't want to double-count in the virtual stock
-                // effectively, if it's a real item, we ONLY use the real economy
                 return;
             }
         }
@@ -121,9 +138,18 @@ public class TownTradingComponent implements TownComponent {
         if (town == null)
             return 999999f;
 
-        // Population has its own distinct cap logic (modifier only, no base global)
-        if ("population".equals(resourceId)) {
+        // Population Cap
+        if ("pop".equals(resourceId)) {
             return town.getUpgrades().getModifier("pop_cap");
+        }
+        // Tourist Cap
+        if ("tourist".equals(resourceId)) {
+            return town.getUpgrades().getModifier("tourist_cap");
+        }
+
+        // Historical stats have no cap
+        if ("tourism".equals(resourceId) || "tourism_dist".equals(resourceId)) {
+            return Float.MAX_VALUE;
         }
 
         float baseGlobal = 0f;

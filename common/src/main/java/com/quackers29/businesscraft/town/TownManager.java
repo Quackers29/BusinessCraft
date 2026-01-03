@@ -115,8 +115,8 @@ public class TownManager {
                 if (kit.startingValues != null) {
                     // Check existing town population vs starting? Usually new town has defaults.
                     // Apply money, happiness, resources
-                    if (kit.startingValues.containsKey("population")) {
-                        town.setPopulation(kit.startingValues.get("population").intValue());
+                    if (kit.startingValues.containsKey("pop")) {
+                        town.setPopulation(kit.startingValues.get("pop").intValue());
                     }
                     if (kit.startingValues.containsKey("happiness")) {
                         town.setHappiness(kit.startingValues.get("happiness"));

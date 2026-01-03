@@ -59,7 +59,7 @@ Recipe runs only if all inputs/conditions satisfied.
 Example rows:
 prod_id,display_name,base_cycle_time_days,inputs,outputs
 population_maintenance,Food Consumption,1,pop*food:1,
-population_growth,Natural Population Growth,10,surplus:food;happiness:>60;pop:<pop_cap,population:1
+population_growth,Natural Population Growth,10,surplus:food;happiness:>60;pop:<pop_cap,pop:1
 basic_farming,Basic Wheat Farming,1,,food:4
 advanced_farming,Advanced Wheat Farming,1,,food:8
 wood_to_planks,Wood to Planks,0.5,wood:4,planks:16
@@ -111,9 +111,9 @@ basic_settlement,0,
 farming_improved,7,food:20;wood:20;stone:10
 
 Special Requirements (Non-consumable):
-- tourism_count:[number] -> Requires a total number of tourists to have arrived at the town.
-- tourism_distance:[number] -> Requires a total distance (in blocks) traveled by all tourists.
-Example: housing_advancement,5,wood:50;tourism_count:20;tourism_distance:2000
+- tourism:[number] -> Requires a total number of tourists to have arrived at the town.
+- tourism_dist:[number] -> Requires a total distance (in blocks) traveled by all tourists.
+Example: housing_advancement,5,wood:50;tourism:20;tourism_dist:2000
 
 5. biomes.csv — Starting kits and initial values (now simplified and consistent).
 Columns: biome_id,starting_nodes,starting_values
@@ -121,10 +121,10 @@ Columns: biome_id,starting_nodes,starting_values
 starting_values format: packed key:amount list (population, happiness, and all initial stockpiles)
 
 Example rows:
-minecraft:plains,basic_settlement;farming_basic,population:5;food:120;wood:60;money:60;happiness:70
-minecraft:forest,basic_settlement;wood_processing,population:8;food:80;wood:150;money:50;happiness:65
-minecraft:mountains,basic_settlement,population:6;food:40;wood:80;stone:80;iron:50;money:70;happiness:60
-minecraft:nether_wastes,,population:3;coal:200;money:100;happiness:50
+minecraft:plains,basic_settlement;farming_basic,pop:5;food:120;wood:60;money:60;happiness:70
+minecraft:forest,basic_settlement;wood_processing,pop:8;food:80;wood:150;money:50;happiness:65
+minecraft:mountains,basic_settlement,pop:6;food:40;wood:80;stone:80;iron:50;money:70;happiness:60
+minecraft:nether_wastes,,pop:3;coal:200;money:100;happiness:50
 
 (Note: pop_cap and storage_caps start at 0 and are granted by starting_nodes effects, e.g., basic_settlement gives initial pop_cap and storage_cap_all.)
 

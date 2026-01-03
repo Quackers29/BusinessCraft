@@ -30,20 +30,25 @@ Costs can use simple math or references to stats.
     *   *Example:* `storage_cap_minecraft:wheat:500`
 
 ### Tourism
-These are special calculated stats that can be used as requirements or costs.
-*   `tourism_count`: The number of valid "tourist" blocks (e.g., Hotels) in the town.
-*   `tourism_distance`: The cumulative distance score of tourism blocks from the town center.
+These are special calculated stats that can be used as **requirements**.
+*   `tourism`: The total number of tourists that have *historically* arrived at the town.
+    *   *Note: This is different from the `tourist` production output, which increases current active count.*
+*   `tourism_dist`: The cumulative distance score of tourism blocks / travel distance.
 
 ### Production & Recipes
 *   **Recipe Unlocks:** Use the `recipe_id` as an effect key (without value) to unlock that recipe for the town.
     *   *Example:* `population_maintenance`
 *   **Speed Multipliers:** use `recipe_id*multiplier` to change the speed of a recipe.
-    *   *Example:* `basic_farming*0.5` (Reduces cycle time by half / doubles speed? *Note: Implementation adds to a modifier, so higher is faster.*) 
+    *   *Example:* `basic_farming*0.5` (Reduces cycle time by half / doubles speed).
+*   **Special Outputs:**
+    *   `tourist`: Adds to the active tourist count (accumulates until `tourist_cap`).
 
 ### Town Stats
 *   `happiness`: Modifies town happiness.
 *   `pop`: Refers to current population count.
 *   `pop_cap`: Refers to/modifies population capacity.
+*   `tourist`: Refers to current active tourist count.
+*   `tourist_cap`: Refers to tourist capacity.
 
 ## Examples
 
@@ -55,9 +60,9 @@ storage_cap_all:200;basic_farming*1.5;happiness:10
 
 **Upgrade Requirement (Prerequisite):**
 ```csv
-pop:>=20;tourism_count:>2
+pop:>=20;tourism:>50
 ```
-*Requires population at least 20 and at least 3 tourist arrivals.*
+*Requires population at least 20 and at least 50 tourists to have arrived historically.*
 
 ### Repeatable Upgrades
 The `upgrades.csv` file includes a dedicated column for repeatability configuration (index 3, after Category).

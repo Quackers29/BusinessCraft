@@ -161,8 +161,19 @@ public class DataParser {
         for (String part : parts) {
             String[] kv = part.split(":");
             if (kv.length == 2) {
+                String key = kv[0].trim();
+                // Standardize keys
+                if (key.equals("population"))
+                    key = "pop";
+                else if (key.equals("population_cap"))
+                    key = "pop_cap";
+                else if (key.equals("tourist_count"))
+                    key = "tourist"; // assuming user wants shorter
+                // 'tourist' in user request might refer to the resource key, which is usually
+                // 'tourist' anyway.
+
                 // Store raw expression
-                list.add(new ResourceAmount(kv[0].trim(), kv[1].trim()));
+                list.add(new ResourceAmount(key, kv[1].trim()));
             }
         }
         return list;
