@@ -17,6 +17,7 @@ import java.util.Collection;
 public class TownOverviewSyncPacket {
     private final float happiness;
     private final String biome;
+    private final String biomeVariant;
     private final String currentResearch;
     private final float researchProgress; // days
     private final int dailyTickInterval;
@@ -27,11 +28,13 @@ public class TownOverviewSyncPacket {
     private final double totalTouristDistance;
     private final Map<String, Float> aiScores;
 
-    public TownOverviewSyncPacket(float happiness, String biome, String currentResearch, float researchProgress,
+    public TownOverviewSyncPacket(float happiness, String biome, String biomeVariant, String currentResearch,
+            float researchProgress,
             int dailyTickInterval, Map<String, Float> activeProductions, Map<String, Integer> upgradeLevels,
             float populationCap, int totalTouristsArrived, double totalTouristDistance, Map<String, Float> aiScores) {
         this.happiness = happiness;
         this.biome = biome;
+        this.biomeVariant = biomeVariant;
         this.currentResearch = currentResearch != null ? currentResearch : "";
         this.researchProgress = researchProgress;
         this.dailyTickInterval = dailyTickInterval;
@@ -46,6 +49,7 @@ public class TownOverviewSyncPacket {
     public TownOverviewSyncPacket(FriendlyByteBuf buf) {
         this.happiness = buf.readFloat();
         this.biome = buf.readUtf();
+        this.biomeVariant = buf.readUtf();
         this.currentResearch = buf.readUtf();
         this.researchProgress = buf.readFloat();
         this.dailyTickInterval = buf.readInt();
@@ -81,6 +85,7 @@ public class TownOverviewSyncPacket {
     public void encode(FriendlyByteBuf buf) {
         buf.writeFloat(happiness);
         buf.writeUtf(biome != null ? biome : "Unknown");
+        buf.writeUtf(biomeVariant != null ? biomeVariant : "Unknown");
         buf.writeUtf(currentResearch != null ? currentResearch : "");
         buf.writeFloat(researchProgress);
         buf.writeInt(dailyTickInterval);
@@ -116,7 +121,8 @@ public class TownOverviewSyncPacket {
             if (Minecraft.getInstance().screen instanceof TownInterfaceScreen screen) {
                 TownDataCacheManager cache = screen.getCacheManager();
                 if (cache != null) {
-                    cache.updateOverviewData(happiness, biome, currentResearch, researchProgress, dailyTickInterval,
+                    cache.updateOverviewData(happiness, biome, biomeVariant, currentResearch, researchProgress,
+                            dailyTickInterval,
                             activeProductions, upgradeLevels, populationCap, totalTouristsArrived,
                             totalTouristDistance, aiScores);
                 }

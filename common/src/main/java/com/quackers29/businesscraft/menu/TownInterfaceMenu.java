@@ -163,8 +163,10 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                         // Get active productions
                         Map<String, Float> activeProductions = town.getProduction().getActiveRecipes();
 
+                        String biomeVariant = town.getBiomeVariant();
+
                         com.quackers29.businesscraft.network.packets.ui.TownOverviewSyncPacket syncPacket = new com.quackers29.businesscraft.network.packets.ui.TownOverviewSyncPacket(
-                                happiness, biome, currentResearch, researchProgress, dailyTickInterval,
+                                happiness, biome, biomeVariant, currentResearch, researchProgress, dailyTickInterval,
                                 activeProductions, town.getUpgrades().getUpgradeLevels(),
                                 town.getUpgrades().getModifier("pop_cap"),
                                 town.getTotalTouristsArrived(), town.getTotalTouristDistance(),
@@ -234,8 +236,10 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
             // Get active productions
             Map<String, Float> activeProductions = town.getProduction().getActiveRecipes();
 
+            String biomeVariant = town.getBiomeVariant();
+
             com.quackers29.businesscraft.network.packets.ui.TownOverviewSyncPacket syncPacket = new com.quackers29.businesscraft.network.packets.ui.TownOverviewSyncPacket(
-                    happiness, biome, currentResearch, researchProgress, dailyTickInterval,
+                    happiness, biome, biomeVariant, currentResearch, researchProgress, dailyTickInterval,
                     activeProductions, town.getUpgrades().getUpgradeLevels(),
                     town.getUpgrades().getModifier("pop_cap"),
                     town.getTotalTouristsArrived(), town.getTotalTouristDistance(),

@@ -79,7 +79,13 @@ public class OverviewTab extends BaseTownTab {
             }
             overviewData.put("Tourism:", String.format("%d (%s)", totalTourists, distStr));
 
-            overviewData.put("Biome:", parentScreen.getCacheManager().getCachedBiome());
+            String biome = parentScreen.getCacheManager().getCachedBiome();
+            String variant = parentScreen.getCacheManager().getCachedBiomeVariant();
+            if (!variant.equals("Unknown")) {
+                overviewData.put("Biome:", variant + " (" + biome + ")");
+            } else {
+                overviewData.put("Biome:", biome);
+            }
             return overviewData;
         });
 

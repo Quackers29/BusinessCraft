@@ -104,6 +104,8 @@ public class TownManager {
             }
 
             if (kit != null) {
+                town.setBiomeVariant(kit.variantName);
+
                 // Apply starting nodes
                 if (kit.startingNodes != null) {
                     for (String node : kit.startingNodes) {

@@ -202,6 +202,7 @@ public class TownDataCacheManager {
     // --- Overview Data ---
     private float cachedHappiness = 50f;
     private String cachedBiome = "Unknown";
+    private String cachedBiomeVariant = "Unknown";
     private String cachedCurrentResearch = "";
     private float cachedResearchProgress = 0f;
     private int cachedDailyTickInterval = 24000;
@@ -213,7 +214,8 @@ public class TownDataCacheManager {
     private double cachedTotalTouristDistance = 0.0;
     private Map<String, Float> cachedAiScores = Collections.emptyMap();
 
-    public void updateOverviewData(float happiness, String biome, String currentResearch, float researchProgress,
+    public void updateOverviewData(float happiness, String biome, String biomeVariant, String currentResearch,
+            float researchProgress,
             int dailyTickInterval, Map<String, Float> activeProductions, Map<String, Integer> upgradeLevels,
             float populationCap, int totalTouristsArrived, double totalTouristDistance, Map<String, Float> aiScores) {
         this.cachedHappiness = happiness;
@@ -226,6 +228,8 @@ public class TownDataCacheManager {
         } else {
             this.cachedBiome = biome != null ? biome : "Unknown";
         }
+
+        this.cachedBiomeVariant = biomeVariant != null ? biomeVariant : "Unknown";
 
         this.cachedCurrentResearch = currentResearch;
         this.cachedResearchProgress = researchProgress;
@@ -258,6 +262,10 @@ public class TownDataCacheManager {
 
     public String getCachedBiome() {
         return cachedBiome;
+    }
+
+    public String getCachedBiomeVariant() {
+        return cachedBiomeVariant;
     }
 
     public String getCachedCurrentResearch() {

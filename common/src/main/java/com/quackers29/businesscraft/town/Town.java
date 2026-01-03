@@ -34,6 +34,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     private final Map<UUID, Integer> visitors = new HashMap<>();
     private int touristCount = 0; // Track tourists separately from population
     private String biome = "Unknown";
+    private String biomeVariant = "Unknown";
     private boolean touristSpawningEnabled;
     private BlockPos pathStart;
     private BlockPos pathEnd;
@@ -328,7 +329,9 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         tag.putInt("posY", position.getY());
         tag.putInt("posZ", position.getZ());
         tag.putInt("touristCount", touristCount);
+        tag.putInt("touristCount", touristCount);
         tag.putString("biome", biome);
+        tag.putString("biomeVariant", biomeVariant);
 
         tag.putInt("totalTouristsArrived", totalTouristsArrived);
         tag.putDouble("totalTouristDistance", totalTouristDistance);
@@ -459,6 +462,9 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
 
         if (tag.contains("biome")) {
             town.biome = tag.getString("biome");
+        }
+        if (tag.contains("biomeVariant")) {
+            town.biomeVariant = tag.getString("biomeVariant");
         }
 
         if (tag.contains("visitors")) {
@@ -719,6 +725,15 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
 
     public void setBiome(String biome) {
         this.biome = biome;
+        markDirty();
+    }
+
+    public String getBiomeVariant() {
+        return biomeVariant;
+    }
+
+    public void setBiomeVariant(String biomeVariant) {
+        this.biomeVariant = biomeVariant;
         markDirty();
     }
 
