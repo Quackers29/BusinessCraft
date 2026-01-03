@@ -4,9 +4,11 @@ import com.quackers29.businesscraft.ui.managers.TownDataCacheManager;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
 import com.quackers29.businesscraft.ui.layout.BCFlowLayout;
 import com.quackers29.businesscraft.ui.components.containers.StandardTabContent;
+import com.quackers29.businesscraft.ui.components.basic.BCLabel;
 import com.quackers29.businesscraft.production.UpgradeRegistry;
 import com.quackers29.businesscraft.production.UpgradeNode;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +21,7 @@ import java.util.function.Consumer;
 public class ProductionTab extends BaseTownTab {
 
     private StandardTabContent contentComponent;
+    private BCLabel headerLabel;
 
     public ProductionTab(TownInterfaceScreen parentScreen, int width, int height) {
         super(parentScreen, width, height);
@@ -46,8 +49,16 @@ public class ProductionTab extends BaseTownTab {
 
     private void forceUpdate() {
         lastUpdateTimestamp = System.currentTimeMillis();
+        updateHeader();
         if (contentComponent != null) {
             contentComponent.refresh();
+        }
+    }
+
+    private void updateHeader() {
+        if (headerLabel != null) {
+            String title = (viewMode == ViewMode.ACTIVE) ? "PRODUCTION" : "UPGRADES";
+            headerLabel.setText(Component.literal(title));
         }
     }
 
@@ -56,6 +67,7 @@ public class ProductionTab extends BaseTownTab {
         long now = System.currentTimeMillis();
         if (now - lastUpdateTimestamp >= UPDATE_THROTTLE_MS) {
             lastUpdateTimestamp = now;
+            updateHeader();
             if (contentComponent != null) {
                 contentComponent.refresh();
             }
@@ -64,7 +76,8 @@ public class ProductionTab extends BaseTownTab {
 
     @Override
     public void init(Consumer<Button> registerWidget) {
-        panel.addChild(createHeaderLabel("PRODUCTION / UPGRADES"));
+        headerLabel = createHeaderLabel("PRODUCTION");
+        panel.addChild(headerLabel);
 
         contentComponent = createStandardContent(
                 StandardTabContent.ContentType.PRODUCTION_LIST,

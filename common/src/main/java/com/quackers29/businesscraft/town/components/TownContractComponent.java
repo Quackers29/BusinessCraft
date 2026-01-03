@@ -103,7 +103,8 @@ public class TownContractComponent implements TownComponent {
                     float maxBid = maxTotalBudget - courierCost;
 
                     if (bid > maxBid) {
-                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Town {} skipping bid on {} - total cost too high (Bid {} + Courier {} > {})",
+                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                                "Town {} skipping bid on {} - total cost too high (Bid {} + Courier {} > {})",
                                 town.getName(), sc.getId(), bid, courierCost, maxTotalBudget);
                         continue;
                     }
@@ -119,7 +120,8 @@ public class TownContractComponent implements TownComponent {
 
                     // Place bid
                     board.addBid(sc.getId(), town.getId(), bid, level);
-                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Town {} bid {} on contract {} (after delay)",
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                            "Town {} bid {} on contract {} (after delay)",
                             town.getName(), bid, sc.getId());
                 }
             }
@@ -309,16 +311,23 @@ public class TownContractComponent implements TownComponent {
                             !sc.isExpired());
 
             if (hasContract) {
-                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Town {} already has an active {} contract, skipping creation",
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                        "Town {} already has an active {} contract, skipping creation",
                         town.getName(), resourceId);
                 return;
             }
 
             // Create a sell contract for excess resource
-            int sellQuantity = (int) ((resourceCount - excessThreshold) / 2);
+            // Target stock is halfway between Minimum Required and Excess Threshold
+            float minThreshold = cap * (com.quackers29.businesscraft.config.ConfigLoader.minStockPercent / 100.0f);
+            float targetStock = minThreshold + ((excessThreshold - minThreshold) / 2);
+
+            int sellQuantity = (int) (resourceCount - targetStock);
+
             if (sellQuantity <= 0) {
-                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Insufficient excess resources for {} ({} - {} = {}), skipping contract creation",
-                        resourceId, resourceCount, excessThreshold, sellQuantity);
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                        "Insufficient excess resources for {} (Count: {} - Target: {} = {}), skipping contract creation",
+                        resourceId, resourceCount, targetStock, sellQuantity);
                 return;
             }
             float marketPrice = board.getMarketPrice(resourceId);
@@ -366,7 +375,8 @@ public class TownContractComponent implements TownComponent {
             // ESCROW: Immediately deduct resources from seller
             town.addResource(item, -sellQuantity);
 
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Town {} created sell contract for {} {} (escrowed {} resources)",
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                    "Town {} created sell contract for {} {} (escrowed {} resources)",
                     town.getName(), sellQuantity, resourceId, sellQuantity);
         }
     }

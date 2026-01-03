@@ -6,6 +6,8 @@ import com.quackers29.businesscraft.economy.ResourceType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,6 +158,7 @@ public class TownTradingComponent implements TownComponent {
         if (baseGlobal == 0)
             baseGlobal = 50f;
 
+        com.quackers29.businesscraft.town.components.TownUpgradeComponent upgrades = town.getUpgrades();
         if (upgrades != null) {
             float globalMod = upgrades.getModifier("storage_cap_all");
 
@@ -168,7 +171,8 @@ public class TownTradingComponent implements TownComponent {
                     net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(
                             resourceId);
                     Object itemObj = com.quackers29.businesscraft.api.PlatformAccess.getRegistry().getItem(loc);
-                    if (itemObj instanceof net.minecraft.world.item.Item item) {
+                    if (itemObj instanceof net.minecraft.world.item.Item) {
+                        net.minecraft.world.item.Item item = (net.minecraft.world.item.Item) itemObj;
                         ResourceType mapped = ResourceRegistry.getFor(item);
                         if (mapped != null) {
                             capKey = mapped.getId();

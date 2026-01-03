@@ -19,6 +19,9 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.core.Holder;
 import net.minecraft.world.item.Items;
+import com.quackers29.businesscraft.town.utils.TownNotificationUtils;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
 
 public class TownManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/TownManager");
@@ -177,6 +180,16 @@ public class TownManager {
         }
 
         savedData.setDirty();
+
+        // Notify players in the new town boundary
+        if (level != null) {
+            String variant = town.getBiomeVariant() != null ? town.getBiomeVariant() : "Unknown";
+            Component msg = Component.literal("New Settlement Established: " + town.getName())
+                    .withStyle(ChatFormatting.GOLD)
+                    .append(Component.literal(" (" + variant + ")").withStyle(ChatFormatting.YELLOW));
+            TownNotificationUtils.broadcastToTown(level, town, msg);
+        }
+
         return townId;
     }
 
