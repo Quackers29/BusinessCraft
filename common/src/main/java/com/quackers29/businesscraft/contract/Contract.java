@@ -155,5 +155,10 @@ public abstract class Contract {
 
     protected abstract void loadAdditional(CompoundTag tag);
 
+    public String getFullDateTimeDisplay() {
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MM/dd HH:mm");
+        return sdf.format(new java.util.Date(this.expiryTime));
+    }
+
     public abstract String getType();
 }

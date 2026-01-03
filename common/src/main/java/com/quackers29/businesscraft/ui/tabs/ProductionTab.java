@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 
 /**
  * Production tab implementation (replaces Population tab).
@@ -89,7 +90,7 @@ public class ProductionTab extends BaseTownTab {
 
             List<String> names = new ArrayList<>();
             List<String> types = new ArrayList<>();
-            List<String> progress = new ArrayList<>();
+            List<Object> progress = new ArrayList<>();
             List<String> tooltipList = new ArrayList<>();
 
             if (viewMode == ViewMode.ACTIVE) {
@@ -226,7 +227,7 @@ public class ProductionTab extends BaseTownTab {
 
                     // Add Unlocked Entries
                     for (int i = 1; i <= lvl; i++) {
-                        unlockedList.add(new UpgradeDisplayEntry(node, i, "Unlocked"));
+                        unlockedList.add(new UpgradeDisplayEntry(node, i, UIGridBuilder.StatusSymbol.UNLOCKED));
                     }
 
                     // Check Next Level (Researching or Locked)
@@ -257,7 +258,8 @@ public class ProductionTab extends BaseTownTab {
                             // Show locked if prereqs met OR if it's a repeat (implies prereqs met)
                             // Repeated upgrades (lvl > 0) have met prereqs by definition.
                             if (lvl > 0 || prereqsMet) {
-                                lockedList.add(new UpgradeDisplayEntry(node, nextLvl, "Locked"));
+                                lockedList
+                                        .add(new UpgradeDisplayEntry(node, nextLvl, UIGridBuilder.StatusSymbol.LOCKED));
                             }
                         }
                     }
@@ -281,9 +283,14 @@ public class ProductionTab extends BaseTownTab {
                     StringBuilder sb = new StringBuilder();
                     sb.append(name).append("\n");
                     sb.append(entry.node.getDescription()).append("\n\n");
-                    sb.append("Status: ").append(entry.status).append("\n");
 
-                    if (entry.status.equals("Researching...")) {
+                    if (entry.status instanceof com.quackers29.businesscraft.ui.builders.UIGridBuilder.StatusSymbol) {
+                        sb.append("Status: ").append(entry.status.toString()).append("\n");
+                    } else {
+                        sb.append("Status: ").append(entry.status).append("\n");
+                    }
+
+                    if ("Researching...".equals(entry.status)) {
                         float currentMinutes = cache.getCachedResearchProgress();
                         int pct = (entry.node.getResearchMinutes() > 0)
                                 ? (int) ((currentMinutes / entry.node.getResearchMinutes()) * 100)
@@ -323,7 +330,7 @@ public class ProductionTab extends BaseTownTab {
                     }
 
                     // AI Score (Town Priority) - only for locked
-                    if (entry.status.equals("Locked")) {
+                    if (UIGridBuilder.StatusSymbol.LOCKED.equals(entry.status)) {
                         double score = cache.getCachedAiScore(entry.node.getId());
                         sb.append("\nTown Priority: ").append(String.format("%.1f", score));
                     }
@@ -371,7 +378,8 @@ public class ProductionTab extends BaseTownTab {
             }
 
             // Return 2 arrays + tooltips (Names, Progress/Status, Tooltips)
-            return new Object[] { names.toArray(new String[0]), progress.toArray(new String[0]),
+            // progress is now Object[]
+            return new Object[] { names.toArray(new String[0]), progress.toArray(),
                     tooltipList.toArray(new String[0]) };
         });
 
@@ -381,9 +389,9 @@ public class ProductionTab extends BaseTownTab {
     private static class UpgradeDisplayEntry {
         UpgradeNode node;
         int level;
-        String status;
+        Object status; // Changed from String to Object
 
-        public UpgradeDisplayEntry(UpgradeNode node, int level, String status) {
+        public UpgradeDisplayEntry(UpgradeNode node, int level, Object status) {
             this.node = node;
             this.level = level;
             this.status = status;

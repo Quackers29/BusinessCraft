@@ -950,6 +950,9 @@ public class UIGridBuilder {
                 case STATUS_INDICATOR:
                     renderStatusIndicator(graphics, element, elementX, elementY, elementWidth, elementHeight);
                     break;
+                case STATUS_ICON:
+                    renderStatusIcon(graphics, element, elementX, elementY, elementWidth, elementHeight);
+                    break;
             }
         }
 
@@ -1229,8 +1232,8 @@ public class UIGridBuilder {
                 String quantityText = formatNumber(element.quantity);
 
                 // Calculate the multiplier (x) position - center in remaining space
-                String multiplier = "x"; // Use simple ASCII "x" instead of Unicode
-                int multiplierWidth = font.width(multiplier);
+                String multiplier = ""; // Removed "x"
+                int multiplierWidth = 0;
                 int contentWidth = width - 10 - itemSize; // Total width minus item and padding
                 int multiplierX = itemX + itemSize + 5
                         + (contentWidth - multiplierWidth - font.width(quantityText)) / 2;
@@ -1325,7 +1328,12 @@ public class UIGridBuilder {
         TOGGLE,
         ITEM, // Single Minecraft item with quantity indicator
         MULTI_ITEM, // Multiple overlapping Minecraft items
-        STATUS_INDICATOR // Large centered status indicator
+        STATUS_INDICATOR, // Large centered status indicator
+        STATUS_ICON // Icon based status indicator (Checkmark, Lock, etc)
+    }
+
+    public enum StatusSymbol {
+        UNLOCKED, LOCKED, CHECKMARK, CROSS, INFO, WARNING
     }
 
     /**
@@ -1366,12 +1374,81 @@ public class UIGridBuilder {
         int indicatorSize = 12; // Size of status indicator in pixels
         boolean isTruncated = false; // Track if text was truncated during rendering
 
+        // Status Icon specific fields
+        StatusSymbol statusSymbol;
+
         public UIGridElement(UIElementType type, int row, int column, int rowSpan, int colSpan) {
             this.type = type;
             this.row = row;
             this.column = column;
             this.rowSpan = rowSpan;
             this.colSpan = colSpan;
+        }
+    }
+
+    /**
+     * Adds a status icon to the grid
+     */
+    public UIGridBuilder addStatusIcon(int row, int column, StatusSymbol symbol) {
+        UIGridElement element = new UIGridElement(UIElementType.STATUS_ICON, row, column, 1, 1);
+        element.statusSymbol = symbol;
+        elements.add(element);
+        return this;
+    }
+
+    /**
+     * Handles mouse clicks on the grid elements
+     * 
+     * @return true if a click was handled
+     */
+    private void renderStatusIcon(GuiGraphics graphics, UIGridElement element, int x, int y, int width, int height) {
+        if (element.statusSymbol == null)
+            return;
+
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null)
+            return;
+
+        Object fontObj = clientHelper.getFont();
+        if (!(fontObj instanceof net.minecraft.client.gui.Font font))
+            return;
+
+        int centerX = x + width / 2;
+        int centerY = y + height / 2;
+
+        // Use Minecraft font for status icons
+        // UNLOCKED/CHECKMARK = Green Check
+        // LOCKED/CROSS = Red Cross/Lock
+
+        String symbol = "";
+        int color = 0xFFFFFFFF;
+
+        switch (element.statusSymbol) {
+            case UNLOCKED:
+            case CHECKMARK:
+                symbol = "✔"; // Checkmark
+                color = 0xFF55FF55; // Green
+                break;
+            case LOCKED:
+                symbol = "🔒"; // Padlock
+                color = 0xFFFF5555; // Red
+                break;
+            case CROSS:
+                symbol = "✖"; // Cross
+                color = 0xFFFF5555; // Red
+                break;
+            case INFO:
+                symbol = "ℹ"; // Info
+                color = 0xFF55FFFF; // Aqua
+                break;
+            case WARNING:
+                symbol = "⚠"; // Warning
+                color = 0xFFFFAA00; // Gold
+                break;
+        }
+
+        if (!symbol.isEmpty()) {
+            graphics.drawCenteredString(font, symbol, centerX, centerY - 4, color);
         }
     }
 

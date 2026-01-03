@@ -126,7 +126,7 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     }
 
     private List<Contract> filterContractsByTab() {
-        return currentContracts.stream().filter(c -> {
+        List<Contract> filtered = currentContracts.stream().filter(c -> {
             switch (selectedTab) {
                 case 0: // Auction - SellContracts where auction is NOT closed (no winner yet)
                     return c instanceof SellContract sc && !sc.isAuctionClosed() && !c.isExpired();
@@ -141,6 +141,17 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
             }
             return false;
         }).collect(Collectors.toList());
+
+        // Sort contracts
+        if (selectedTab == 2) {
+            // History: Latest first (Descending expiry)
+            filtered.sort((c1, c2) -> Long.compare(c2.getExpiryTime(), c1.getExpiryTime()));
+        } else {
+            // Active/Auction: Expiring first (Ascending expiry)
+            filtered.sort((c1, c2) -> Long.compare(c1.getExpiryTime(), c2.getExpiryTime()));
+        }
+
+        return filtered;
     }
 
     private void populateGrid(List<Contract> contracts) {
@@ -163,11 +174,21 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
                 townName = "Unknown";
             contractGrid.addLabelWithTooltip(i, 1, truncate(townName, 12), getContractTooltip(c), TEXT_COLOR);
 
-            // Col 2: Time (Seconds left)
-            long currentTime = System.currentTimeMillis();
-            long millisLeft = c.getExpiryTime() - currentTime;
-            String time = millisLeft > 0 ? (millisLeft / 1000) + "s" : "Expired";
-            contractGrid.addLabel(i, 2, time, TEXT_COLOR);
+            // Col 2: Time (Seconds left) or Date (History)
+            if (selectedTab == 2) { // History
+                // Use full date/time for history
+                String dateText = c.getFullDateTimeDisplay();
+                // If the contract has a specific completion/expiration time, use that,
+                // otherwise use expiry
+                // For now, getFullDateTimeDisplay seems appropriate as it likely uses the
+                // relevant timestamp
+                contractGrid.addLabelWithTooltip(i, 2, dateText, dateText, TEXT_COLOR);
+            } else {
+                long currentTime = System.currentTimeMillis();
+                long millisLeft = c.getExpiryTime() - currentTime;
+                String time = millisLeft > 0 ? (millisLeft / 1000) + "s" : "Expired";
+                contractGrid.addLabel(i, 2, time, TEXT_COLOR);
+            }
 
             // Col 3: Action button
             // Always show "View" button which opens details
@@ -231,8 +252,18 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
 
     private String getContractTooltip(Contract c) {
         if (c instanceof SellContract sc) {
-            return String.format("Selling %d %s for %.2f Emeralds",
-                    sc.getQuantity(), sc.getResourceId(), sc.getPricePerUnit() * sc.getQuantity());
+            String originTown = sc.getIssuerTownName() != null ? sc.getIssuerTownName() : "Unknown";
+            String targetTown = "Any"; // TODO: If contracts have specific targets, use that. currently open market.
+            // Format: "town x selling x for x to town y"
+            // Since currently contracts are mostly open market, "to town y" might be "to
+            // market" or generic.
+            // User requested: "town x selling x for x to town y"
+
+            // Round emeralds to integer
+            int totalPrice = Math.round(sc.getPricePerUnit() * sc.getQuantity());
+
+            return String.format("%s selling %d %s for %d Emeralds",
+                    originTown, sc.getQuantity(), sc.getResourceId(), totalPrice);
         }
         return "ID: " + c.getId();
     }

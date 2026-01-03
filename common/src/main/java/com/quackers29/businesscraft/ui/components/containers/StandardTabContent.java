@@ -270,7 +270,7 @@ public class StandardTabContent extends BCComponent {
             // Extract data arrays from supplier
             // Format: [Names, Progress/Status, Tooltips]
             String[] names = (String[]) data[0];
-            String[] progress = (String[]) data[1];
+            Object[] progress = (Object[]) data[1]; // Can be String[] or StatusSymbol[] or Object[]
             String[] tooltips = (data.length > 2) ? (String[]) data[2] : null;
 
             int totalRows = names.length;
@@ -300,7 +300,13 @@ public class StandardTabContent extends BCComponent {
                     grid.addLabelWithTooltip(i, 0, 1, 4, names[i], tooltip, TEXT_HIGHLIGHT);
 
                     // Status/Progress column: Span 1 (20%)
-                    grid.addLabelWithTooltip(i, 4, 1, 1, progress[i], tooltip, TEXT_COLOR);
+                    Object statusObj = (i < progress.length) ? progress[i] : "-";
+
+                    if (statusObj instanceof UIGridBuilder.StatusSymbol symbol) {
+                        grid.addStatusIcon(i, 4, symbol);
+                    } else {
+                        grid.addLabelWithTooltip(i, 4, 1, 1, String.valueOf(statusObj), tooltip, TEXT_COLOR);
+                    }
                 }
 
                 // Update internal row count for scrolling
@@ -314,7 +320,14 @@ public class StandardTabContent extends BCComponent {
                 for (int i = 0; i < totalRows; i++) {
                     String tooltip = (tooltips != null && i < tooltips.length) ? tooltips[i] : null;
                     grid.addLabelWithTooltip(i, 0, 1, 4, names[i], tooltip, TEXT_HIGHLIGHT);
-                    grid.addLabelWithTooltip(i, 4, 1, 1, progress[i], tooltip, TEXT_COLOR);
+
+                    Object statusObj = (i < progress.length) ? progress[i] : "-";
+
+                    if (statusObj instanceof UIGridBuilder.StatusSymbol symbol) {
+                        grid.addStatusIcon(i, 4, symbol);
+                    } else {
+                        grid.addLabelWithTooltip(i, 4, 1, 1, String.valueOf(statusObj), tooltip, TEXT_COLOR);
+                    }
                 }
                 grid.updateTotalRows(totalRows);
             }
