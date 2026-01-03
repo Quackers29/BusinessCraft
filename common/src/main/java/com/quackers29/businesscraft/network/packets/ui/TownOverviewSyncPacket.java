@@ -25,10 +25,11 @@ public class TownOverviewSyncPacket {
     private final float populationCap;
     private final int totalTouristsArrived;
     private final double totalTouristDistance;
+    private final Map<String, Float> aiScores;
 
     public TownOverviewSyncPacket(float happiness, String biome, String currentResearch, float researchProgress,
             int dailyTickInterval, Map<String, Float> activeProductions, Map<String, Integer> upgradeLevels,
-            float populationCap, int totalTouristsArrived, double totalTouristDistance) {
+            float populationCap, int totalTouristsArrived, double totalTouristDistance, Map<String, Float> aiScores) {
         this.happiness = happiness;
         this.biome = biome;
         this.currentResearch = currentResearch != null ? currentResearch : "";
@@ -39,6 +40,7 @@ public class TownOverviewSyncPacket {
         this.populationCap = populationCap;
         this.totalTouristsArrived = totalTouristsArrived;
         this.totalTouristDistance = totalTouristDistance;
+        this.aiScores = aiScores != null ? aiScores : new HashMap<>();
     }
 
     public TownOverviewSyncPacket(FriendlyByteBuf buf) {
@@ -66,6 +68,14 @@ public class TownOverviewSyncPacket {
             int lvl = buf.readInt();
             this.upgradeLevels.put(key, lvl);
         }
+
+        int scoresSize = buf.readInt();
+        this.aiScores = new HashMap<>(scoresSize);
+        for (int i = 0; i < scoresSize; i++) {
+            String key = buf.readUtf();
+            float val = buf.readFloat();
+            this.aiScores.put(key, val);
+        }
     }
 
     public void encode(FriendlyByteBuf buf) {
@@ -89,6 +99,12 @@ public class TownOverviewSyncPacket {
             buf.writeUtf(entry.getKey());
             buf.writeInt(entry.getValue());
         }
+
+        buf.writeInt(aiScores.size());
+        for (Map.Entry<String, Float> entry : aiScores.entrySet()) {
+            buf.writeUtf(entry.getKey());
+            buf.writeFloat(entry.getValue());
+        }
     }
 
     public static TownOverviewSyncPacket decode(FriendlyByteBuf buf) {
@@ -102,7 +118,7 @@ public class TownOverviewSyncPacket {
                 if (cache != null) {
                     cache.updateOverviewData(happiness, biome, currentResearch, researchProgress, dailyTickInterval,
                             activeProductions, upgradeLevels, populationCap, totalTouristsArrived,
-                            totalTouristDistance);
+                            totalTouristDistance, aiScores);
                 }
             }
         });

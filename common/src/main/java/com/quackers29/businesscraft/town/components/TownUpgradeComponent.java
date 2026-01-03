@@ -21,6 +21,11 @@ public class TownUpgradeComponent implements TownComponent {
     private final Set<String> unlockedNodes = new HashSet<>();
     private final Map<String, Integer> upgradeLevels = new HashMap<>(); // node -> level
     private final Map<String, Float> activeModifiers = new HashMap<>(); // target -> value
+    private final Map<String, Float> aiScores = new HashMap<>();
+
+    public Map<String, Float> getAiScores() {
+        return Collections.unmodifiableMap(aiScores);
+    }
 
     // Research tracking
     private String currentResearchNode = null;
@@ -39,6 +44,7 @@ public class TownUpgradeComponent implements TownComponent {
     }
 
     private int aiCheckCooldown = 0;
+    private long idleTicks = 0;
 
     @Override
     public void tick() {
@@ -57,10 +63,20 @@ public class TownUpgradeComponent implements TownComponent {
             }
         } else {
             // Idle - AI check
+            idleTicks++;
             if (aiCheckCooldown-- <= 0) {
                 aiCheckCooldown = 200; // Check every ~10 seconds
 
-                String nextNode = com.quackers29.businesscraft.town.ai.TownResearchAI.selectNextResearch(town);
+                // Update scores
+                Map<String, Float> scores = com.quackers29.businesscraft.town.ai.TownResearchAI
+                        .calculatePriorities(town);
+                this.aiScores.clear();
+                this.aiScores.putAll(scores);
+
+                // Pick best
+                String nextNode = com.quackers29.businesscraft.town.ai.TownResearchAI.selectBestResearch(town, scores,
+                        idleTicks);
+
                 if (nextNode != null) {
                     startResearch(nextNode);
                 }
@@ -161,6 +177,7 @@ public class TownUpgradeComponent implements TownComponent {
         LOGGER.info("Starting research: {} (Lvl {}) for town {}", nodeId, currentLevel + 1, town.getName());
         this.currentResearchNode = nodeId;
         this.researchProgress = 0;
+        this.idleTicks = 0;
 
         // Notification
         net.minecraft.server.level.ServerLevel level = com.quackers29.businesscraft.town.utils.TownNotificationUtils
@@ -278,6 +295,8 @@ public class TownUpgradeComponent implements TownComponent {
         if (currentResearchNode != null) {
             tag.putString("currentResearch", currentResearchNode);
             tag.putFloat("researchProgress", researchProgress);
+        } else {
+            tag.putLong("idleTicks", idleTicks);
         }
     }
 
@@ -308,9 +327,11 @@ public class TownUpgradeComponent implements TownComponent {
         if (tag.contains("currentResearch")) {
             currentResearchNode = tag.getString("currentResearch");
             researchProgress = tag.getFloat("researchProgress");
+            idleTicks = 0;
         } else {
             currentResearchNode = null;
             researchProgress = 0;
+            idleTicks = tag.getLong("idleTicks");
         }
         recalculateModifiers();
     }

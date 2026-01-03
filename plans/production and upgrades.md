@@ -154,3 +154,53 @@ Why This Design Works
 - Excel-friendly packed strings throughout.
 
 This is the absolute final, consistent, and production-ready design.
+
+7. Research & AI Prioritization (Standardized 0-100 Scale)
+    
+The Town AI uses a smart, continuous scoring system to select its next research project. All scores are standardized to a **0-100 priority scale** (where 100 is Max Urgency/Desire) to allow the AI to fairly weigh different needs against each other.
+    
+**Priority Drivers:**
+    
+1.  **Storage Urgency (Capacity Logic):**
+    *   **Goal:** Expand capacity only when running out of space.
+    *   **Logic:** Scores increase quadratically as storage fills.
+    *   **Formula:** `Score = 100 * (Occupied / Cap)^2`
+    *   **Effect:**
+        - 0% Full = **0 Priority**.
+        - 50% Full = **25 Priority**.
+        - 90% Full = **81 Priority**.
+        - 100% Full = **100 Priority** (Urgent).
+    
+2.  **Production Speed (Deficit Logic):**
+    *   **Goal:** Speed up production to meet consumption demands.
+    *   **Logic:** Compares Production Rate vs Consumption Rate.
+    *   **Formula:** `Score = 50 * (2.0 - (Production / Consumption))` (Clamped 0-100).
+    *   **Effect:**
+        - **Critical Deficit** (0 Prod / Has Cons) = **100 Priority**.
+        - **Balanced** (Prod == Cons) = **50 Priority**.
+        - **Safe Surplus** (Prod >= 2x Cons) = **0 Priority**.
+    
+3.  **Accumulation Speed (Fill Rate Logic):**
+    *   **Used For:** **Population** and **Tourists** (Resources that produce but don't consume).
+    *   **Goal:** Fill the available capacity as fast as possible.
+    *   **Logic:** Scores inversely to fullness (Empty = High Priority).
+    *   **Formula:** `Score = 100 * (1.0 - (Current / Cap))`
+    *   **Effect:**
+        - 0/10 Tourists = **100 Priority** (Need Marketing/Spawns!).
+        - 5/10 Tourists = **50 Priority**.
+        - 10/10 Tourists = **0 Priority**.
+    
+4.  **Quality of Life:**
+    *   **Goal:** Maintain high Happiness and Tourism stats.
+    *   **Formula:** `Score = 100 * (1.0 - (Current / Max))`
+    *   **Effect:** 0% Happiness = 100 Priority.
+    
+**AI Patience Logic:**
+*   **Problem:** Low-cost upgrades could "snipe" resources while the AI was saving for a specific high-priority expensive upgrade.
+*   **Solution:** The AI calculates a "Patience Threshold" based on the highest priority score available.
+*   **Behavior:** It will idle/wait for up to 1 in-game day to afford the best upgrade. If the day passes (or if a cheap upgrade has a score > threshold), it buys what it can.
+
+**How to Influence AI:**
+*   **Force Storage:** Fill their inventory.
+*   **Force Production:** Create a deficit (buy out their stock or add consumption).
+*   **Force Marketing/Growth:** Raise their caps so they feel "empty" (e.g. build housing to urge population growth).

@@ -211,10 +211,11 @@ public class TownDataCacheManager {
     private float cachedPopulationCap = 0f;
     private int cachedTotalTouristsArrived = 0;
     private double cachedTotalTouristDistance = 0.0;
+    private Map<String, Float> cachedAiScores = Collections.emptyMap();
 
     public void updateOverviewData(float happiness, String biome, String currentResearch, float researchProgress,
             int dailyTickInterval, Map<String, Float> activeProductions, Map<String, Integer> upgradeLevels,
-            float populationCap, int totalTouristsArrived, double totalTouristDistance) {
+            float populationCap, int totalTouristsArrived, double totalTouristDistance, Map<String, Float> aiScores) {
         this.cachedHappiness = happiness;
         if (biome != null && biome.startsWith("minecraft:")) {
             this.cachedBiome = biome.substring(10);
@@ -236,6 +237,11 @@ public class TownDataCacheManager {
         this.cachedPopulationCap = populationCap;
         this.cachedTotalTouristsArrived = totalTouristsArrived;
         this.cachedTotalTouristDistance = totalTouristDistance;
+        this.cachedAiScores = aiScores != null ? new java.util.HashMap<>(aiScores) : Collections.emptyMap();
+    }
+
+    public float getCachedAiScore(String nodeId) {
+        return cachedAiScores.getOrDefault(nodeId, 0f);
     }
 
     public int getCachedTotalTouristsArrived() {
@@ -297,5 +303,26 @@ public class TownDataCacheManager {
             }
         }
         return null;
+    }
+
+    public Map<String, String> getCachedTownStats() {
+        if (dataCache != null) {
+            // dataCache might not have a generic stats map, but we can construct it or
+            // check if it has one.
+            // Assuming dataCache has access to basic stats.
+            // If not, we use the cached fields in this manager.
+            // Map keys expected by ClientTownState: "Population"
+            java.util.LinkedHashMap<String, String> stats = new java.util.LinkedHashMap<>();
+            stats.put("Population", getCachedPopulation() + " (" + (int) getCachedPopulationCap() + ")");
+            return stats;
+        }
+        return Collections.emptyMap();
+    }
+
+    public Map<String, String> getTourismStats() {
+        java.util.LinkedHashMap<String, String> stats = new java.util.LinkedHashMap<>();
+        stats.put("Current Tourists", String.valueOf(getCachedTouristCount()));
+        // Add others if needed
+        return stats;
     }
 }

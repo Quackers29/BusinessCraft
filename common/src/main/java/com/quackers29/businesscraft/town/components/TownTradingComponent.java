@@ -57,6 +57,9 @@ public class TownTradingComponent implements TownComponent {
         if ("tourism_distance".equals(resourceId)) {
             return (float) town.getTotalTouristDistance();
         }
+        if ("population".equals(resourceId)) {
+            return (float) town.getPopulation();
+        }
 
         // First check if this ID maps to a real item (Economy storage)
         ResourceType type = ResourceRegistry.get(resourceId);
@@ -74,7 +77,8 @@ public class TownTradingComponent implements TownComponent {
     public void adjustStock(String resourceId, float amount) {
         // Special non-consumable resources cannot be adjusted (they are read-only
         // stats)
-        if ("tourism_count".equals(resourceId) || "tourism_distance".equals(resourceId)) {
+        if ("tourism_count".equals(resourceId) || "tourism_distance".equals(resourceId)
+                || "population".equals(resourceId)) {
             return;
         }
 
@@ -116,6 +120,11 @@ public class TownTradingComponent implements TownComponent {
     public float getStorageCap(String resourceId) {
         if (town == null)
             return 999999f;
+
+        // Population has its own distinct cap logic (modifier only, no base global)
+        if ("population".equals(resourceId)) {
+            return town.getUpgrades().getModifier("pop_cap");
+        }
 
         float baseGlobal = 0f;
         if (baseGlobal == 0)

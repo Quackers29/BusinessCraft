@@ -250,14 +250,10 @@ public class ProductionTab extends BaseTownTab {
                     }
                 }
 
-                // Sort Locked by AI Score
-                ClientTownState clientState = new ClientTownState(cache);
+                // Sort Locked by AI Score (Synced from server)
                 lockedList.sort((e1, e2) -> {
-                    // Use level 1 scoring for simplicity or implement advanced scoring
-                    double s1 = com.quackers29.businesscraft.town.ai.TownResearchAI.calculateScore(clientState,
-                            e1.node);
-                    double s2 = com.quackers29.businesscraft.town.ai.TownResearchAI.calculateScore(clientState,
-                            e2.node);
+                    double s1 = cache.getCachedAiScore(e1.node.getId());
+                    double s2 = cache.getCachedAiScore(e2.node.getId());
                     return Double.compare(s2, s1); // Descending
                 });
 
@@ -315,8 +311,7 @@ public class ProductionTab extends BaseTownTab {
 
                     // AI Score (Town Priority) - only for locked
                     if (entry.status.equals("Locked")) {
-                        double score = com.quackers29.businesscraft.town.ai.TownResearchAI.calculateScore(clientState,
-                                entry.node);
+                        double score = cache.getCachedAiScore(entry.node.getId());
                         sb.append("\nTown Priority: ").append(String.format("%.1f", score));
                     }
 
@@ -382,80 +377,14 @@ public class ProductionTab extends BaseTownTab {
         }
     }
 
-    // Client-side implementation of local town state for AI scoring
-    private static class ClientTownState implements com.quackers29.businesscraft.town.ai.ITownState {
-        private final TownDataCacheManager cache;
-
-        public ClientTownState(TownDataCacheManager cache) {
-            this.cache = cache;
-        }
-
-        @Override
-        public float getStock(String resourceId) {
-            // Best effort from cache or 0
-            // resourceId is like "minecraft:wheat"
-            try {
-                net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(resourceId);
-                java.util.Map<net.minecraft.world.item.Item, Integer> resources = cache.getCachedResources();
-                if (resources != null) {
-                    for (Map.Entry<net.minecraft.world.item.Item, Integer> entry : resources.entrySet()) {
-                        // Simple string check is risky but item registry lookup is hard on client
-                        // thread without direct access sometimes
-                        // But we have ResourceLocation.
-                        if (com.quackers29.businesscraft.api.PlatformAccess.getRegistry().getItemKey(entry.getKey())
-                                .equals(loc)) {
-                            return entry.getValue();
-                        }
-                    }
-                }
-            } catch (Exception e) {
-            }
-            return 0;
-        }
-
-        @Override
-        public float getStorageCap(String resourceId) {
-            // We can check resource stats from synced cache
-            try {
-                net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(resourceId);
-                net.minecraft.world.item.Item item = (net.minecraft.world.item.Item) com.quackers29.businesscraft.api.PlatformAccess
-                        .getRegistry().getItem(loc);
-                float[] stats = cache.getResourceStats(item);
-                if (stats != null && stats.length >= 3)
-                    return stats[2];
-            } catch (Exception e) {
-            }
-            return 0;
-        }
-
-        @Override
-        public float getProductionRate(String resourceId) {
-            try {
-                net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(resourceId);
-                net.minecraft.world.item.Item item = (net.minecraft.world.item.Item) com.quackers29.businesscraft.api.PlatformAccess
-                        .getRegistry().getItem(loc);
-                float[] stats = cache.getResourceStats(item);
-                if (stats != null && stats.length >= 3)
-                    return stats[0];
-            } catch (Exception e) {
-            }
-            return 0;
-        }
-
-        @Override
-        public float getConsumptionRate(String resourceId) {
-            try {
-                net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(resourceId);
-                net.minecraft.world.item.Item item = (net.minecraft.world.item.Item) com.quackers29.businesscraft.api.PlatformAccess
-                        .getRegistry().getItem(loc);
-                float[] stats = cache.getResourceStats(item);
-                if (stats != null && stats.length >= 3)
-                    return stats[1];
-            } catch (Exception e) {
-            }
-            return 0;
-        }
-    }
+    // Client-side implementation of local town state for AI scoring - REMOVED
+    // (Centralized on Server)
+    /*
+     * private static class ClientTownState implements
+     * com.quackers29.businesscraft.town.ai.ITownState {
+     * // Removed to prevent duplication.
+     * }
+     */
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {

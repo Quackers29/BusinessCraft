@@ -16,59 +16,93 @@ import java.util.*;
 public class TownResearchAI {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownResearchAI.class);
 
-    public static String selectNextResearch(Town town) {
+    /**
+     * Calculates priorities for all relevant upgrades.
+     * Returns a map of NodeID -> Score.
+     * Includes all upgrades that are not maxed out.
+     */
+    public static Map<String, Float> calculatePriorities(Town town) {
+        Map<String, Float> scores = new HashMap<>();
         Set<String> unlocked = town.getUpgrades().getUnlockedNodes();
-        List<UpgradeNode> candidates = new ArrayList<>();
 
-        // Find available upgrades
-        // Find available upgrades
         for (UpgradeNode node : UpgradeRegistry.getAll()) {
-            // Check prereqs
-            boolean prereqsMet = true;
-            if (node.getPrereqNodes() != null) {
-                for (String pre : node.getPrereqNodes()) {
-                    if (!unlocked.contains(pre)) {
-                        prereqsMet = false;
-                        break;
+            // Check if maxed
+            boolean isMaxed = false;
+            int lvl = town.getUpgrades().getUpgradeLevel(node.getId());
+            if (!node.isRepeatable()) {
+                if (lvl >= 1)
+                    isMaxed = true;
+            } else {
+                if (node.getMaxRepeats() != -1 && lvl >= node.getMaxRepeats())
+                    isMaxed = true;
+            }
+
+            if (!isMaxed) {
+                // Check prereqs
+                boolean prereqsMet = true;
+                if (node.getPrereqNodes() != null) {
+                    for (String pre : node.getPrereqNodes()) {
+                        if (!unlocked.contains(pre)) {
+                            prereqsMet = false;
+                            break;
+                        }
                     }
                 }
-            }
 
-            if (prereqsMet && town.getUpgrades().canAffordResearch(node.getId())) {
-                candidates.add(node);
-            }
-        }
-
-        if (candidates.isEmpty()) {
-            // Log occasionally or verbose
-            // LOGGER.debug("AI: No candidates for town {}", town.getName());
-            return null;
-        }
-
-        // Score candidates
-        UpgradeNode bestNode = null;
-        double bestScore = -1.0;
-
-        for (UpgradeNode node : candidates) {
-            double score = calculateScore(town, node);
-            // Random bias to prevent getting stuck (only applied for selection, not UI
-            // display)
-            double biasedScore = score + (Math.random() * 2.0);
-
-            LOGGER.debug("AI Candidate: {} Score: {} (Biased: {})", node.getId(), score, biasedScore);
-            if (biasedScore > bestScore) {
-                bestScore = biasedScore;
-                bestNode = node;
+                // We calculate score if prereqs met (or even if not, but prioritized low? No,
+                // strict prereq tree).
+                // Actually, UI shows "Locked" for next steps.
+                // Let's only score nodes where prereqs are met (Available to research or
+                // available soon).
+                if (prereqsMet) {
+                    double score = calculateScore(town, node);
+                    scores.put(node.getId(), (float) score);
+                }
             }
         }
+        return scores;
+    }
 
-        if (bestNode != null) {
-            LOGGER.info("AI selected research: {} (Score: {}) for town {}", bestNode.getId(),
-                    String.format("%.2f", bestScore), town.getName());
-            return bestNode.getId();
+    public static String selectBestResearch(Town town, Map<String, Float> scores, long idleTicks) {
+        // 1. Find the absolute best score (unaffordable included) to set the bar
+        float maxPossibleScore = 0f;
+        for (float s : scores.values()) {
+            if (s > maxPossibleScore)
+                maxPossibleScore = s;
         }
 
-        return null;
+        // 2. Calculate Patience Threshold
+        // We wait up to 1 day for resources to accumulate
+        // Threshold decays from MaxScore down to 0 over 1 day.
+        float waitProgress = (float) idleTicks
+                / (float) com.quackers29.businesscraft.config.ConfigLoader.dailyTickInterval;
+        if (waitProgress > 1.0f)
+            waitProgress = 1.0f;
+
+        float threshold = maxPossibleScore * (1.0f - waitProgress);
+
+        String bestNode = null;
+        double bestBiasedScore = -1.0;
+
+        for (Map.Entry<String, Float> entry : scores.entrySet()) {
+            String id = entry.getKey();
+            float rawScore = entry.getValue();
+
+            // Patience: Don't settle for low-score upgrades if we are "saving up"
+            // But if the upgrade itself is High Score (>= threshold), we take it.
+            if (rawScore < threshold)
+                continue;
+
+            if (town.getUpgrades().canAffordResearch(id)) {
+                // Bias
+                double biased = rawScore + (Math.random() * 2.0);
+                if (biased > bestBiasedScore) {
+                    bestBiasedScore = biased;
+                    bestNode = id;
+                }
+            }
+        }
+        return bestNode;
     }
 
     public static double calculateScore(ITownState town, UpgradeNode node) {
@@ -78,73 +112,125 @@ public class TownResearchAI {
             String target = effect.getTarget();
             float value = effect.getValue();
 
-            // 1. Storage Capacity Upgrades
-            if (target.startsWith("storage_cap_")) {
+            // 1. Capacity Upgrades (0 to 100 Priority)
+            // 100% Full = 100 Priority
+            // 0% Full = 0 Priority
+            if (target.contains("_cap")) {
                 if (target.equals("storage_cap_all")) {
-                    // Check average fullness across important resources
-                    double avgFullness = 0;
-                    int count = 0;
+                    double maxFullness = 0;
                     for (ResourceType type : ResourceRegistry.getAll()) {
                         float cap = town.getStorageCap(type.getId());
                         float current = town.getStock(type.getId());
                         if (cap > 0) {
-                            avgFullness += (current / cap);
-                            count++;
+                            double ratio = current / cap;
+                            if (ratio > maxFullness)
+                                maxFullness = ratio;
                         }
                     }
-                    if (count > 0)
-                        avgFullness /= count;
+                    // Quadratic: 100 * ratio^2
+                    score += 100.0 * (maxFullness * maxFullness);
 
-                    if (avgFullness > 0.8)
-                        score += 10.0; // High priority if things are generally full
-                    score += avgFullness * 5.0;
-                } else {
-                    // Specific resource cap
+                } else if (target.equals("pop_cap")) {
+                    float cap = town.getStorageCap("population");
+                    float current = town.getStock("population");
+                    if (cap > 0) {
+                        double ratio = current / cap;
+                        score += 100.0 * (ratio * ratio);
+                    }
+                } else if (target.equals("tourist_cap")) {
+                    float cap = town.getStorageCap("tourist");
+                    float current = town.getStock("tourist");
+                    if (cap > 0) {
+                        double ratio = current / cap;
+                        score += 100.0 * (ratio * ratio);
+                    }
+                } else if (target.startsWith("storage_cap_")) {
                     String resId = target.substring("storage_cap_".length());
                     float cap = town.getStorageCap(resId);
                     float current = town.getStock(resId);
                     if (cap > 0) {
-                        double fullness = current / cap;
-                        if (fullness > 0.9)
-                            score += 20.0; // Critical priority
-                        else if (fullness > 0.75)
-                            score += 10.0;
-                        score += fullness * 5.0;
+                        double ratio = current / cap;
+                        score += 100.0 * (ratio * ratio);
                     }
                 }
             }
 
             // 2. Production Upgrades (Speed)
-            // Target is likely a production recipe ID
+            // 0 Prod / >0 Cons = 100 Priority (Critical Deficit)
+            // Prod == Cons = 50 Priority (Balanced)
+            // Prod >= 2*Cons = 0 Priority (Surplus)
             ProductionRecipe recipe = ProductionRegistry.get(target);
             if (recipe != null) {
-                // This upgrade improves/unlocks this recipe
+                double recipeScore = 0.0;
+                boolean allFull = true;
 
-                // Check if we need the outputs
                 for (var output : recipe.getOutputs()) {
-                    // Estimate deficit
+                    float cap = town.getStorageCap(output.resourceId);
+                    float current = town.getStock(output.resourceId);
+                    double fullness = (cap > 0) ? (current / cap) : 0;
+                    if (fullness < 0.95) {
+                        allFull = false;
+                    }
+
                     float prod = town.getProductionRate(output.resourceId);
                     float cons = town.getConsumptionRate(output.resourceId);
 
-                    if (cons > prod) {
-                        // Deficit!
-                        score += 15.0;
-                        score += (cons - prod) * 2.0; // Proportional to deficit
+                    double priority = 50.0; // Baseline
+
+                    // Special Handling for "Accumulation" resources (Tourists, Population)
+                    // These aren't consumed in a flow, but accumulated to a cap.
+                    // We want to fill them as fast as possible -> Priority increases as we are
+                    // emptier.
+                    if (output.resourceId.equals("tourist") || output.resourceId.equals("population")) {
+                        // Score = 100 * (1.0 - Fullness)
+                        if (cap > 0) {
+                            priority = 100.0 * (1.0 - (current / cap));
+                        } else {
+                            priority = 50.0; // No cap? Balanced.
+                        }
+                    } else if (cons <= 0.0001f) {
+                        // No consumption (and not an accumulation resource)
+                        if (prod > 0) {
+                            // Surplus -> 0 Priority
+                            priority = 0.0;
+                        } else {
+                            // No prod, no cons -> Balanced -> 50 Priority
+                            priority = 50.0;
+                        }
                     } else {
-                        // Surplus
-                        score += 1.0; // Low priority
+                        // Has consumption
+                        double ratio = prod / cons;
+                        // Score = 50 * (2.0 - Ratio)
+                        // Ratio 0 -> 100
+                        // Ratio 1 -> 50
+                        // Ratio 2 -> 0
+                        priority = 50.0 * (2.0 - ratio);
                     }
 
-                    // Also check if low on stock
-                    float cap = town.getStorageCap(output.resourceId);
-                    float current = town.getStock(output.resourceId);
-                    if (cap > 0 && (current / cap) < 0.2) {
-                        score += 5.0; // Boost if low stock
-                    }
+                    // Clamp
+                    if (priority < 0)
+                        priority = 0;
+                    if (priority > 100)
+                        priority = 100;
+
+                    recipeScore += priority;
+                }
+
+                // Average the score across outputs if multiple?
+                // Or just sum? Previously we summed deficit scores.
+                // But now we have a 0-100 scale per output.
+                // If a recipe produces 2 items, and both are in deficit, is it 200 priority?
+                // Probably yes. Speeding up a multi-output recipe is very valuable.
+
+                if (allFull) {
+                    // Deprioritize significantly if storage is full (redundant production)
+                    score -= 50.0;
+                } else {
+                    score += recipeScore;
                 }
             }
         }
 
-        return score;
+        return Math.max(0.0, score);
     }
 }

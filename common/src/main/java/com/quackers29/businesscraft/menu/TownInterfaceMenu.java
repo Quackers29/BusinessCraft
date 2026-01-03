@@ -138,7 +138,8 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                         // Send Town Overview Sync Packet
                         float happiness = town.getHappiness();
                         String biome = town.getBiome();
-                        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "TownInterfaceMenu: sending biome '{}' for town '{}' (Unknown Check: {})",
+                        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS,
+                                "TownInterfaceMenu: sending biome '{}' for town '{}' (Unknown Check: {})",
                                 biome, town.getName(), (biome == null || "Unknown".equals(biome)));
                         boolean biomeUnknown = biome == null || "Unknown".equals(biome);
 
@@ -166,7 +167,8 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                                 happiness, biome, currentResearch, researchProgress, dailyTickInterval,
                                 activeProductions, town.getUpgrades().getUpgradeLevels(),
                                 town.getUpgrades().getModifier("pop_cap"),
-                                town.getTotalTouristsArrived(), town.getTotalTouristDistance());
+                                town.getTotalTouristsArrived(), town.getTotalTouristDistance(),
+                                town.getUpgrades().getAiScores());
 
                         PlatformAccess.getNetworkMessages().sendToPlayer(syncPacket,
                                 (net.minecraft.server.level.ServerPlayer) inv.player);
@@ -236,7 +238,8 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                     happiness, biome, currentResearch, researchProgress, dailyTickInterval,
                     activeProductions, town.getUpgrades().getUpgradeLevels(),
                     town.getUpgrades().getModifier("pop_cap"),
-                    town.getTotalTouristsArrived(), town.getTotalTouristDistance());
+                    town.getTotalTouristsArrived(), town.getTotalTouristDistance(),
+                    town.getUpgrades().getAiScores());
 
             if (this.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
                 PlatformAccess.getNetworkMessages().sendToPlayer(syncPacket, serverPlayer);

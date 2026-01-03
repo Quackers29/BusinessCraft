@@ -137,3 +137,8 @@ Complete rewrite.
         - Research Progress.
         - Production Cycle Times (Base vs Actual).
         - Active Effects.
+
+4.  **AI Standardization**:
+    - Scoring logic unified to a 0-100 scale.
+    - Added "Patience" logic to prevent impulse buying of cheap upgrades.
+    - Differentiated "Deficit" logic (for consumables) from "Accumulation" logic (for Population/Tourists).
