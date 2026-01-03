@@ -155,8 +155,6 @@ public class TownTradingComponent implements TownComponent {
         }
 
         float baseGlobal = 0f;
-        if (baseGlobal == 0)
-            baseGlobal = 50f;
 
         com.quackers29.businesscraft.town.components.TownUpgradeComponent upgrades = town.getUpgrades();
         if (upgrades != null) {

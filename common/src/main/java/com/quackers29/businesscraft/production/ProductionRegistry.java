@@ -43,7 +43,7 @@ public class ProductionRegistry {
                     continue;
                 }
 
-                // prod_id,display_name,base_cycle_time_days,inputs,outputs,conditions
+                // prod_id,display_name,base_cycle_time_minutes,inputs,outputs,conditions
                 // Note: The plan had "inputs,outputs" earlier, but let's check parsing.
                 // Plan: prod_id,display_name,base_cycle_time_days,inputs,outputs
                 // And inputs contains conditions?
@@ -70,9 +70,9 @@ public class ProductionRegistry {
                     String id = parts[0].trim();
                     String displayName = parts[1].trim();
 
-                    float dayTime = 1.0f;
+                    float cycleTime = 1.0f;
                     try {
-                        dayTime = Float.parseFloat(parts[2].trim());
+                        cycleTime = Float.parseFloat(parts[2].trim());
                     } catch (NumberFormatException e) {
                         LOGGER.error("Invalid cycle time for {}: {}", id, parts[2]);
                     }
@@ -120,8 +120,8 @@ public class ProductionRegistry {
                     List<ResourceAmount> outputs = DataParser.parseResources(outputsRaw);
 
                     RECIPES.put(id,
-                            new ProductionRecipe(id, displayName, dayTime, inputs, outputs, conditions));
-                    LOGGER.info("Registered production: {} (Time: {})", id, dayTime);
+                            new ProductionRecipe(id, displayName, cycleTime, inputs, outputs, conditions));
+                    LOGGER.info("Registered production: {} (Time: {})", id, cycleTime);
                 }
             }
         } catch (IOException e) {
@@ -131,7 +131,7 @@ public class ProductionRegistry {
 
     private static void createDefaultConfig(File file) {
         try (FileWriter writer = new FileWriter(file)) {
-            writer.write("prod_id,display_name,base_cycle_time_days,inputs,outputs\n");
+            writer.write("prod_id,display_name,base_cycle_time_minutes,inputs,outputs\n");
             writer.write("population_maintenance,Food Consumption,1,pop*food:1,\n");
             writer.write("population_growth,Natural Population Growth,10,happiness:>60;pop:<pop_cap,population:1\n");
             writer.write("basic_farming,Basic Wheat Farming,1,,food:4\n");

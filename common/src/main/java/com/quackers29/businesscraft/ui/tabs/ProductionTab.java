@@ -153,7 +153,7 @@ public class ProductionTab extends BaseTownTab {
                             }
 
                             // 3. Cycle Time & Speed
-                            sb.append("Base Cycle: ").append(recipe.getBaseCycleTimeDays()).append(" days\n");
+                            sb.append("Base Cycle: ").append(recipe.getBaseCycleTimeMinutes()).append(" mins\n");
 
                             // Check active upgrades
                             java.util.Set<String> unlocked = cache.getCachedUnlockedNodes();
@@ -184,9 +184,9 @@ public class ProductionTab extends BaseTownTab {
                             }
 
                             if (modifier > 0) {
-                                float currentCycle = recipe.getBaseCycleTimeDays() / modifier;
+                                float currentCycle = recipe.getBaseCycleTimeMinutes() / modifier;
                                 sb.append("Current Cycle: ").append(String.format("%.2f", currentCycle))
-                                        .append(" days\n");
+                                        .append(" mins\n");
                                 sb.append("Speed: ").append(String.format("%.0f%%", modifier * 100));
                             } else {
                                 sb.append("Normal Speed (100%)");
@@ -284,9 +284,9 @@ public class ProductionTab extends BaseTownTab {
                     sb.append("Status: ").append(entry.status).append("\n");
 
                     if (entry.status.equals("Researching...")) {
-                        float currentDays = cache.getCachedResearchProgress();
-                        int pct = (entry.node.getResearchDays() > 0)
-                                ? (int) ((currentDays / entry.node.getResearchDays()) * 100)
+                        float currentMinutes = cache.getCachedResearchProgress();
+                        int pct = (entry.node.getResearchMinutes() > 0)
+                                ? (int) ((currentMinutes / entry.node.getResearchMinutes()) * 100)
                                 : 0;
                         if (pct > 100)
                             pct = 100;

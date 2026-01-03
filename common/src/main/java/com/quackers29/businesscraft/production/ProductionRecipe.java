@@ -7,17 +7,17 @@ import java.util.List;
 public class ProductionRecipe {
     private final String id;
     private final String displayName;
-    private final float baseCycleTimeDays;
+    private final float baseCycleTimeMinutes;
     private final List<ResourceAmount> inputs;
     private final List<ResourceAmount> outputs;
     private final List<Condition> conditions;
 
-    public ProductionRecipe(String id, String displayName, float baseCycleTimeDays,
+    public ProductionRecipe(String id, String displayName, float baseCycleTimeMinutes,
             List<ResourceAmount> inputs, List<ResourceAmount> outputs,
             List<Condition> conditions) {
         this.id = id;
         this.displayName = displayName;
-        this.baseCycleTimeDays = baseCycleTimeDays;
+        this.baseCycleTimeMinutes = baseCycleTimeMinutes;
         this.inputs = inputs;
         this.outputs = outputs;
         this.conditions = conditions;
@@ -31,8 +31,8 @@ public class ProductionRecipe {
         return displayName;
     }
 
-    public float getBaseCycleTimeDays() {
-        return baseCycleTimeDays;
+    public float getBaseCycleTimeMinutes() {
+        return baseCycleTimeMinutes;
     }
 
     public List<ResourceAmount> getInputs() {

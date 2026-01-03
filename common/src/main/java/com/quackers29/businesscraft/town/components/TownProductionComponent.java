@@ -177,7 +177,7 @@ public class TownProductionComponent implements TownComponent {
             if (recipe.getId().equals("population_maintenance")) {
                 // Starvation Logic: Advance progress anyway
                 float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
-                float tickIncrement = 1.0f / (float) com.quackers29.businesscraft.config.ConfigLoader.dailyTickInterval;
+                float tickIncrement = 1.0f / 1200.0f;
                 currentProgress += tickIncrement;
 
                 if (currentProgress >= effectiveTime) {
@@ -289,7 +289,7 @@ public class TownProductionComponent implements TownComponent {
 
         // Advance Progress
         float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
-        float tickIncrement = 1.0f / (float) com.quackers29.businesscraft.config.ConfigLoader.dailyTickInterval;
+        float tickIncrement = 1.0f / 1200.0f;
 
         currentProgress += tickIncrement;
 
@@ -552,7 +552,7 @@ public class TownProductionComponent implements TownComponent {
     }
 
     private float getEffectiveCycleTime(ProductionRecipe recipe) {
-        float baseTime = recipe.getBaseCycleTimeDays();
+        float baseTime = recipe.getBaseCycleTimeMinutes();
         float modifier = town.getUpgrades().getModifier(recipe.getId());
 
         // Modifier acts as speed multiplier.

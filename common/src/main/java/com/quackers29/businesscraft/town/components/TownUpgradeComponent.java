@@ -56,9 +56,9 @@ public class TownUpgradeComponent implements TownComponent {
             }
 
             // Research progress logic
-            researchProgress += 1.0f / com.quackers29.businesscraft.config.ConfigLoader.dailyTickInterval;
+            researchProgress += 1.0f / 1200.0f;
 
-            if (researchProgress >= node.getResearchDays()) {
+            if (researchProgress >= node.getResearchMinutes()) {
                 completeResearch();
             }
         } else {

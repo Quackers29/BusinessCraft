@@ -1,7 +1,7 @@
-prod_id,display_name,base_cycle_time_days,inputs,outputs
-population_maintenance,Food Consumption,0.02,pop*food:1,
-population_growth,Natural Population Growth,0.03,happiness:>60;surplus:food,pop:1
-tourism,Tourist Generation,0.01,happiness:>70;food:1;money:1,tourist:1
-farming,Basic Wheat Farming,0.01,,food:40
-woodcutting,Woodcutting,0.5,,wood:20
-taxes,Taxes,0.02,,money:5*pop
+prod_id,display_name,base_cycle_time_minutes,inputs,outputs
+population_maintenance,Food Consumption,0.4,food:1*pop,
+population_growth,Natural Population Growth,0.6,happiness:>60;surplus:food,pop:1
+tourism,Tourist Generation,0.2,happiness:>70;food:10;money:10,tourist:1
+farming,Basic Wheat Farming,0.2,,food:40
+woodcutting,Woodcutting,2,,wood:20
+taxes,Taxes,0.4,,money:1*pop

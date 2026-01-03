@@ -45,7 +45,7 @@ public class UpgradeRegistry {
                 }
 
                 // New Schema:
-                // node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_days,required_items,effects
+                // node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_minutes,required_items,effects
                 // 0 1 2 3 4 5 6 7 8
                 String[] parts = line.split(",");
                 if (parts.length >= 9) {
@@ -57,7 +57,7 @@ public class UpgradeRegistry {
                         String prereqsRaw = parts[4].trim();
                         String desc = parts[5].trim();
 
-                        String daysRaw = parts[6].trim();
+                        String minutesRaw = parts[6].trim();
                         String costsRaw = parts[7].trim();
                         String effectsRaw = parts[8].trim();
 
@@ -71,17 +71,17 @@ public class UpgradeRegistry {
 
                         List<Effect> effects = DataParser.parseEffects(effectsRaw);
 
-                        float days = 0;
+                        float minutes = 0;
                         try {
-                            if (!daysRaw.isEmpty())
-                                days = Float.parseFloat(daysRaw);
+                            if (!minutesRaw.isEmpty())
+                                minutes = Float.parseFloat(minutesRaw);
                         } catch (NumberFormatException e) {
-                            LOGGER.warn("Invalid research days for node {}: {}", id, daysRaw);
+                            LOGGER.warn("Invalid research minutes for node {}: {}", id, minutesRaw);
                         }
                         List<ResourceAmount> costs = DataParser.parseResources(costsRaw);
 
                         UpgradeNode node = new UpgradeNode(id, category, name, repeat, prereqs, desc, effects);
-                        node.setRequirements(days, costs);
+                        node.setRequirements(minutes, costs);
                         NODES.put(id, node);
 
                         LOGGER.info("Registered upgrade node: {}", id);
@@ -98,7 +98,7 @@ public class UpgradeRegistry {
     private static void createDefaultUpgrades(File file) {
         try (FileWriter writer = new FileWriter(file)) {
             writer.write(
-                    "node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_days,required_items,effects\n");
+                    "node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_minutes,required_items,effects\n");
             writer.write(
                     "basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,0,,pop_cap:10;tourist_cap:2;storage_cap_all:200;happiness:50;population_maintenance;population_growth;basic_taxes\n");
             writer.write(

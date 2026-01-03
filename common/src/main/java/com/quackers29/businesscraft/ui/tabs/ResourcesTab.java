@@ -82,7 +82,7 @@ public class ResourcesTab extends BaseTownTab {
                     // Base stats
                     float[] stats = cache.getResourceStats(item);
                     if (stats != null && stats.length >= 3) {
-                        sb.append(String.format("Production: +%.1f/h\nConsumption: -%.1f/h\nCapacity: %.0f",
+                        sb.append(String.format("Production: +%.1f/m\nConsumption: -%.1f/m\nCapacity: %.0f",
                                 stats[0], stats[1], stats[2]));
                     }
 

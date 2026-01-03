@@ -13,7 +13,7 @@ public class UpgradeNode {
     private final List<Effect> effects;
 
     // Requirements from upgrade_requirements.csv
-    private float researchDays = 0;
+    private float researchMinutes = 0;
     private List<ResourceAmount> costs = null;
     // Repeat logic
     private int maxRepeats = 0; // 0 or 1 = once, >1 = repeats, -1 = infinite
@@ -59,8 +59,8 @@ public class UpgradeNode {
         }
     }
 
-    public void setRequirements(float researchDays, List<ResourceAmount> costs) {
-        this.researchDays = researchDays;
+    public void setRequirements(float researchMinutes, List<ResourceAmount> costs) {
+        this.researchMinutes = researchMinutes;
         this.costs = costs;
     }
 
@@ -100,8 +100,8 @@ public class UpgradeNode {
         return effects;
     }
 
-    public float getResearchDays() {
-        return researchDays;
+    public float getResearchMinutes() {
+        return researchMinutes;
     }
 
     public List<ResourceAmount> getCosts() {
