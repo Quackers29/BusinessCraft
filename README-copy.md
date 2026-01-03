@@ -1,10 +1,6 @@
-# BusinessCraft - Advanced Town Management Mod
+# BusinessCraft - Town Management Mod
 
-**A comprehensive Minecraft Forge 1.20.1 mod featuring advanced town management and tourism economy systems.**
-
-> *Built with clean code architecture, extensive feature set (95%+ complete), and well-organized codebase spanning 100+ Java files across 15+ packages.*
-
----
+**A Minecraft Forge 1.20.1 mod featuring town management and tourism economy systems.**
 
 ## 🏙️ Core Systems Overview
 

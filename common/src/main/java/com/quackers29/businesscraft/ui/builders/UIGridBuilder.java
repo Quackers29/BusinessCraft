@@ -959,14 +959,19 @@ public class UIGridBuilder {
         }
 
         // Render tooltips for hovered elements
+        // Render tooltips for hovered elements
         for (UIGridElement element : elements) {
-            if (element.isHovered && element.tooltip != null && !element.tooltip.isEmpty()) {
+            boolean hasTooltip = element.tooltip != null && !element.tooltip.isEmpty();
+            boolean showTooltip = element.isHovered && (hasTooltip || element.isTruncated);
+
+            if (showTooltip) {
                 // Use Minecraft's tooltip rendering (converted to Component)
                 com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
                 if (clientHelper != null) {
                     Object fontObj = clientHelper.getFont();
                     if (fontObj instanceof net.minecraft.client.gui.Font font) {
-                        String[] lines = element.tooltip.split("\n");
+                        String tooltipText = hasTooltip ? element.tooltip : element.text;
+                        String[] lines = tooltipText.split("\n");
                         List<Component> tooltipComponents = new ArrayList<>();
                         for (String line : lines) {
                             tooltipComponents.add(Component.literal(line));
@@ -1027,8 +1032,23 @@ public class UIGridBuilder {
         if (!(fontObj instanceof net.minecraft.client.gui.Font font))
             return;
 
-        // Use the text as provided (truncation should be done before adding to grid)
+        // Truncation logic
         String displayText = element.text;
+        int padding = 4; // 2px on each side
+        int availableWidth = Math.max(0, width - padding);
+
+        element.isTruncated = false;
+        if (font.width(displayText) > availableWidth) {
+            element.isTruncated = true;
+            String ellipsis = "...";
+            int ellipsisWidth = font.width(ellipsis);
+            if (availableWidth > ellipsisWidth) {
+                displayText = font.plainSubstrByWidth(displayText, availableWidth - ellipsisWidth) + ellipsis;
+            } else {
+                // Too small for even ellipsis, just cut
+                displayText = font.plainSubstrByWidth(displayText, availableWidth);
+            }
+        }
 
         // Calculate text position based on alignment
         int textX;
@@ -1340,6 +1360,7 @@ public class UIGridBuilder {
 
         // Status indicator specific fields
         int indicatorSize = 12; // Size of status indicator in pixels
+        boolean isTruncated = false; // Track if text was truncated during rendering
 
         public UIGridElement(UIElementType type, int row, int column, int rowSpan, int colSpan) {
             this.type = type;
