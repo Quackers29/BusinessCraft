@@ -1,5 +1,5 @@
 prod_id,display_name,base_cycle_time_days,inputs,outputs
-population_maintenance,Food Consumption,0.02,pop*food:10,
+population_maintenance,Food Consumption,0.02,pop*food:1,
 population_growth,Natural Population Growth,0.03,happiness:>60;surplus:food,pop:1
 tourism,Tourist Generation,0.01,happiness:>70;food:1;money:1,tourist:1
 farming,Basic Wheat Farming,0.01,,food:40

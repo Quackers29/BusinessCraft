@@ -1449,8 +1449,8 @@ public class TownInterfaceEntity extends BlockEntity
 
                 if (!hasContract) {
                     // Create new contract
-                    // Duration: 3 game days = 72000 ticks * 50ms = 3,600,000 ms (1 hour)
-                    long duration = 72000L * 50L;
+                    // Duration: 1 minute = 60000 ms
+                    long duration = 60000L;
                     float price = 1.0f; // Default price
 
                     SellContract contract = new SellContract(town.getId(), town.getName(), duration, resourceId,

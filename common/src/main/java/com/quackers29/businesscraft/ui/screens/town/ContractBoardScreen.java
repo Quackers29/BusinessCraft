@@ -353,6 +353,11 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     }
 
     @Override
+    protected void renderLabels(GuiGraphics g, int mx, int my) {
+        // Do nothing to prevent "Inventory" and title from being drawn by super
+    }
+
+    @Override
     protected void renderBg(GuiGraphics g, float pt, int mx, int my) {
         int x = (width - imageWidth) / 2, y = (height - imageHeight) / 2;
         g.fill(x, y, x + imageWidth, y + imageHeight, InventoryRenderer.BACKGROUND_COLOR);
