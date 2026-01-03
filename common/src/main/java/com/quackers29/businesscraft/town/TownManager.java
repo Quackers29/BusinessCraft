@@ -140,8 +140,9 @@ public class TownManager {
                             town.setPopulation((int) value);
                         } else if (key.equals("happiness")) {
                             town.setHappiness(value);
-                        } else if (key.equals("tourist") || key.equals("tourist_count") || key.equals("tourists")) {
-                            town.setTouristCount((int) value);
+                        } else if (key.equals("tourist")) {
+                            // Add to pending spawns so they actually appear in the world
+                            town.addPendingTouristSpawns((int) value);
                         } else if (key.endsWith("_cap") || key.endsWith("_modifier")) {
                             // Apply as a permanent flat modifier to the upgrade component
                             town.getUpgrades().addFlatModifier(key, value);

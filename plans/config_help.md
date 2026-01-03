@@ -26,8 +26,9 @@ Costs can use simple math or references to stats.
 ### Storage
 *   `storage_cap_all`: Adds to the storage capacity of **all** resources.
     *   *Example:* `storage_cap_all:200` (Adds 200 to every resource's cap)
-*   `storage_cap_[resource_id]`: Adds to the storage capacity of a **specific** resource.
-    *   *Example:* `storage_cap_minecraft:wheat:500`
+*   `storage_cap_[resource_id]`: Adds to the storage capacity of a **specific** resource (or resource group).
+    *   *Example:* `storage_cap_food:300` (Sets the cap for all items mapped to "food", like wheat, bread, etc.).
+    *   *Note:* The game prioritizes the ID defined in `items.csv` (e.g. `food`). If an item is not in that file, use its direct ID (e.g. `minecraft:dirt`).
 
 ### Tourism
 These are special calculated stats that can be used as **requirements**.
@@ -37,18 +38,29 @@ These are special calculated stats that can be used as **requirements**.
 
 ### Production & Recipes
 *   **Recipe Unlocks:** Use the `recipe_id` as an effect key (without value) to unlock that recipe for the town.
-    *   *Example:* `population_maintenance`
+    *   *Example:* `population_maintenance` - Core recipe for population upkeep.
+    *   *Example:* `population_growth` - Core recipe for population growth.
+    *   *Example:* `taxes` - Recipes that generate income from population.
 *   **Speed Multipliers:** use `recipe_id*multiplier` to change the speed of a recipe.
     *   *Example:* `basic_farming*0.5` (Reduces cycle time by half / doubles speed).
 *   **Special Outputs:**
     *   `tourist`: Adds to the active tourist count (accumulates until `tourist_cap`).
 
-### Town Stats
-*   `happiness`: Modifies town happiness.
+### Town Stats & Modifiers
+*   `happiness`: Modifies town happiness (0-100).
 *   `pop`: Refers to current population count.
-*   `pop_cap`: Refers to/modifies population capacity.
-*   `tourist`: Refers to current active tourist count.
-*   `tourist_cap`: Refers to tourist capacity.
+*   `pop_cap`: Modifies population capacity.
+*   `tourist`: Refers to current active tourist count (Note: `tourism` usually refers to historical visitation).
+*   `tourist_cap`: Modifies tourist capacity.
+
+### Biome Configuration (Starting Values)
+These keys are specific to the `starting_values` column in `biomes.csv`.
+*   `pop` or `population`: Sets the initial population count.
+*   `happiness`: Sets the initial happiness level.
+*   `tourist`: Adds directly to the "Pending Tourist Spawn" buffer. These tourists will spawn shortly after town creation.
+    *   *Note: Do not use `tourist_count`, use `tourist`.*
+*   `*_cap` (e.g. `pop_cap`, `tourist_cap`): Applies a **permanent** flat modifier to the town's stats (e.g. `pop_cap:10` permanently adds +10 capacity).
+*   **Resources**: Any key matching an item in `items.csv` (e.g. `wood`, `food`, `money`) will add that amount to the town's starting storage.
 
 ## Examples
 

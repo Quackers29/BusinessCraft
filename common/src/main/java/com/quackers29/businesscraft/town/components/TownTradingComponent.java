@@ -156,10 +156,29 @@ public class TownTradingComponent implements TownComponent {
         if (baseGlobal == 0)
             baseGlobal = 50f;
 
-        com.quackers29.businesscraft.town.components.TownUpgradeComponent upgrades = town.getUpgrades();
         if (upgrades != null) {
             float globalMod = upgrades.getModifier("storage_cap_all");
-            float specificMod = upgrades.getModifier("storage_cap_" + resourceId);
+
+            // Resolve alias if possible (e.g. minecraft:bread -> "food")
+            String capKey = resourceId;
+            // Check if it's already a registered resource ID
+            if (ResourceRegistry.get(resourceId) == null) {
+                // Not a direct ID, check if it maps to one
+                try {
+                    net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(
+                            resourceId);
+                    Object itemObj = com.quackers29.businesscraft.api.PlatformAccess.getRegistry().getItem(loc);
+                    if (itemObj instanceof net.minecraft.world.item.Item item) {
+                        ResourceType mapped = ResourceRegistry.getFor(item);
+                        if (mapped != null) {
+                            capKey = mapped.getId();
+                        }
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+
+            float specificMod = upgrades.getModifier("storage_cap_" + capKey);
             return baseGlobal + globalMod + specificMod;
         }
         return baseGlobal;
