@@ -28,7 +28,7 @@ public class ContractDetailScreen extends Screen {
     private boolean showBidInput = false;
 
     private int scrollOffset = 0;
-    private static final int MAX_VISIBLE_BIDS = 5;
+    private static final int MAX_VISIBLE_BIDS = 2;
 
     public ContractDetailScreen(Contract contract, Screen parentScreen, int tabIndex) {
         super(Component.literal("Contract Details"));

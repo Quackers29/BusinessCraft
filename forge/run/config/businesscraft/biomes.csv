@@ -1,17 +1,17 @@
 biome_ids,variant_id,variant_name,description,weight,starting_nodes,starting_values
 # === Plains variants ===
-minecraft:plains,farming,Farming Village,"Strong farming - most common in plains",60,basic_settlement;farming_advanced:2,pop:6;food:140;wood:70;money:60;happiness:72
-minecraft:plains,tourism,Tourist Gateway,"Early tourism focus",20,basic_settlement;tourism_basic,pop:5;tourist_cap:3;tourist:2;food:90;wood:60;money:90;happiness:78
-minecraft:plains,balanced,Balanced Hamlet,"Well-rounded option",15,basic_settlement,pop:7;food:110;wood:90;money:70;happiness:70
-minecraft:plains,lumber,Lumber Camp,"Classic wood-focused town",70,basic_settlement;woodcutting_basic,pop:8;food:80;wood:180;money:50;happiness:65
+minecraft:plains,farming,Farming Village,"Strong farming - most common in plains",60,basic_settlement;farming_advanced:2,pop:6;food:1400;wood:700;money:600;happiness:72
+minecraft:plains,tourism,Tourist Gateway,"Early tourism focus",20,basic_settlement;tourism_basic,pop:5;tourist_cap:3;tourist:2;food:900;wood:600;money:900;happiness:78
+minecraft:plains,balanced,Balanced Hamlet,"Well-rounded option",15,basic_settlement,pop:7;food:1100;wood:900;money:700;happiness:70
+minecraft:plains,lumber,Lumber Camp,"Classic wood-focused town",70,basic_settlement;woodcutting_basic,pop:8;food:800;wood:1800;money:500;happiness:65
 
 # === Forest variants ===
-minecraft:forest;minecraft:dark_forest;minecraft:flower_forest,lumber,Lumber Camp,"Classic wood-focused forest town",70,basic_settlement;woodcutting_basic,pop:8;food:80;wood:180;money:50;happiness:65
-minecraft:forest;minecraft:dark_forest;minecraft:flower_forest,mystic,Mystic Glade,"Beautiful tourist attraction",25,basic_settlement;tourism_basic,pop:6;food:100;wood:120;money:70;happiness:82
+minecraft:forest;minecraft:dark_forest;minecraft:flower_forest,lumber,Lumber Camp,"Classic wood-focused forest town",70,basic_settlement;woodcutting_basic,pop:8;food:800;wood:1800;money:500;happiness:65
+minecraft:forest;minecraft:dark_forest;minecraft:flower_forest,mystic,Mystic Glade,"Beautiful tourist attraction",25,basic_settlement;tourism_basic,pop:6;food:1000;wood:1200;money:700;happiness:82
 
 # === Desert ===
-minecraft:desert,oasis,Oasis Settlement,"Tourism in the desert",80,basic_settlement;tourism_basic,pop:4;food:50;wood:20;money:100;happiness:60
+minecraft:desert,oasis,Oasis Settlement,"Tourism in the desert",80,basic_settlement;tourism_basic,pop:4;food:500;wood:200;money:1000;happiness:60
 
 # === Global options - available in EVERY biome ===
-*,standard,Standard Settlement,"Safe, balanced start - available everywhere",30,basic_settlement,pop:5;food:100;wood:60;money:60;happiness:70
-*,rare_exotic,Rare Exotic Haven,"Very rare lucky start with big bonuses - can appear anywhere!",5,basic_settlement;tourism_basic,pop:5;food:100;wood:80;money:150;happiness:90;tourist_cap:5
+*,standard,Standard Settlement,"Safe, balanced start - available everywhere",30,basic_settlement,pop:5;food:1000;wood:600;money:600;happiness:70
+*,rare_exotic,Rare Exotic Haven,"Very rare lucky start with big bonuses - can appear anywhere!",5,basic_settlement;tourism_basic,pop:5;food:1000;wood:800;money:1500;happiness:90;tourist_cap:5
