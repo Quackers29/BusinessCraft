@@ -265,9 +265,23 @@ public class TownUpgradeComponent implements TownComponent {
         town.markDirty();
     }
 
-    // Recalculates all active modifiers based on unlocked nodes
+    private final Map<String, Float> flatModifiers = new HashMap<>(); // Permanent modifiers (e.g. from Biome)
+
+    // ... existing ...
+
+    public void addFlatModifier(String key, float value) {
+        flatModifiers.put(key, value);
+        recalculateModifiers();
+        town.markDirty();
+    }
+
+    // Recalculates all active modifiers based on unlocked nodes and flat modifiers
     private void recalculateModifiers() {
         activeModifiers.clear();
+
+        // Add flat modifiers first
+        activeModifiers.putAll(flatModifiers);
+
         for (Map.Entry<String, Integer> entry : upgradeLevels.entrySet()) {
             String nodeId = entry.getKey();
             int level = entry.getValue();
@@ -282,6 +296,8 @@ public class TownUpgradeComponent implements TownComponent {
             }
         }
     }
+
+    // ... getters ...
 
     public float getModifier(String target) {
         return activeModifiers.getOrDefault(target, 0f);
@@ -301,6 +317,7 @@ public class TownUpgradeComponent implements TownComponent {
 
     @Override
     public void save(CompoundTag tag) {
+        // ... existing save logic ...
         ListTag list = new ListTag();
         for (Map.Entry<String, Integer> entry : upgradeLevels.entrySet()) {
             CompoundTag nodeTag = new CompoundTag();
@@ -308,15 +325,6 @@ public class TownUpgradeComponent implements TownComponent {
             nodeTag.putInt("lvl", entry.getValue());
             list.add(nodeTag);
         }
-        tag.put("unlockedNodes", list); // Reuse key but different format?
-        // Wait, backward compatibility. If I change format, old saves might break or
-        // fail to load.
-        // Old format: List<String>. New format: List<CompoundTag>.
-        // Tag types are distinct. list.getString(i) vs getCompound(i).
-        // ListTag stores a type.
-        // Let's use a new key "upgradeLevels" and fallback to "unlockedNodes" for
-        // legacy.
-
         tag.put("upgradeLevels", list);
 
         if (currentResearchNode != null) {
@@ -325,13 +333,20 @@ public class TownUpgradeComponent implements TownComponent {
         } else {
             tag.putLong("idleTicks", idleTicks);
         }
+
+        // Save flat modifiers
+        CompoundTag flatTag = new CompoundTag();
+        flatModifiers.forEach(flatTag::putFloat);
+        tag.put("flatModifiers", flatTag);
     }
 
     @Override
     public void load(CompoundTag tag) {
         unlockedNodes.clear();
         upgradeLevels.clear();
+        flatModifiers.clear();
 
+        // ... existing load logic for upgradeLevels ...
         if (tag.contains("upgradeLevels")) {
             ListTag list = tag.getList("upgradeLevels", Tag.TAG_COMPOUND);
             for (int i = 0; i < list.size(); i++) {
@@ -360,6 +375,14 @@ public class TownUpgradeComponent implements TownComponent {
             researchProgress = 0;
             idleTicks = tag.getLong("idleTicks");
         }
+
+        if (tag.contains("flatModifiers")) {
+            CompoundTag flatTag = tag.getCompound("flatModifiers");
+            for (String key : flatTag.getAllKeys()) {
+                flatModifiers.put(key, flatTag.getFloat(key));
+            }
+        }
+
         recalculateModifiers();
     }
 }

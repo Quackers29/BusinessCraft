@@ -130,29 +130,47 @@ public class TownManager {
                     }
                 }
 
-                // Apply starting values if applicable
+                // Apply starting values
                 if (kit.startingValues != null) {
-                    // Check existing town population vs starting? Usually new town has defaults.
-                    // Apply money, happiness, resources
-                    if (kit.startingValues.containsKey("pop")) {
-                        town.setPopulation(kit.startingValues.get("pop").intValue());
+                    for (Map.Entry<String, Float> entry : kit.startingValues.entrySet()) {
+                        String key = entry.getKey();
+                        float value = entry.getValue();
+
+                        if (key.equals("pop") || key.equals("population")) {
+                            town.setPopulation((int) value);
+                        } else if (key.equals("happiness")) {
+                            town.setHappiness(value);
+                        } else if (key.equals("tourist") || key.equals("tourist_count") || key.equals("tourists")) {
+                            town.setTouristCount((int) value);
+                        } else if (key.endsWith("_cap") || key.endsWith("_modifier")) {
+                            // Apply as a permanent flat modifier to the upgrade component
+                            town.getUpgrades().addFlatModifier(key, value);
+                        } else {
+                            // Try to treat as a resource
+                            if (key.equals("money") || key.equals("coins")) {
+                                // Special case for money if not in registry (though it is usually)
+                                // Add directly via trading/economy which handles currency
+                                // Assuming "money" ResourceType exists as seen in ResourceRegistry default
+                            }
+
+                            com.quackers29.businesscraft.economy.ResourceType rt = com.quackers29.businesscraft.economy.ResourceRegistry
+                                    .get(key);
+                            if (rt != null) {
+                                net.minecraft.resources.ResourceLocation loc = rt.getCanonicalItemId();
+                                net.minecraft.world.item.Item item = (net.minecraft.world.item.Item) com.quackers29.businesscraft.api.PlatformAccess
+                                        .getRegistry().getItem(loc);
+                                if (item != null) {
+                                    town.addResource(item, (int) value);
+                                } else {
+                                    LOGGER.warn("TownManager: Item not found for resource '{}'", key);
+                                }
+                            } else {
+                                // If not a known resource, maybe a custom stat?
+                                // For now, log warning if not recognized
+                                LOGGER.warn("TownManager: Unrecognized starting value key '{}'", key);
+                            }
+                        }
                     }
-                    if (kit.startingValues.containsKey("happiness")) {
-                        town.setHappiness(kit.startingValues.get("happiness"));
-                        // Update TownInterfaceMenu if open?
-                    }
-                    // Add other resources...
-                    // Wait, kit values are simple map. We need to implement full application logic
-                    // if not present.
-                    // For now, assume previous logic is enough.
-                    // Wait, I am REPLACING the block. I need to make sure I don't lose logic.
-                    // Existing logic (Step 514):
-                    /*
-                     * if (kit != null) {
-                     * for (String node : kit.startingNodes) town.getUpgrades().unlockNode(node);
-                     * // It didn't apply values in Step 514 view?
-                     * // Let's check Step 514 view again.
-                     */
                 }
             }
         }
