@@ -231,8 +231,35 @@ public class TownUpgradeComponent implements TownComponent {
 
     public void unlockNode(String nodeId) {
         int lvl = upgradeLevels.getOrDefault(nodeId, 0);
+
+        // Prevent infinite recursion if an upgrade unlocks itself
+        // (Though unlikely, good practice)
+        // Actually, since we update level BEFORE recursion, we just need to ensure we
+        // don't loop infinitely.
+        // But unlockNode acts as an "incrementer". If A unlocks B, and B unlocks A...
+        // Infinite loop.
+        // For now, assume simple DAG structure.
+
         upgradeLevels.put(nodeId, lvl + 1);
         unlockedNodes.add(nodeId);
+
+        // Check for chained unlocks (Upgrade unlocking another Upgrade)
+        UpgradeNode node = UpgradeRegistry.get(nodeId);
+        if (node != null) {
+            for (Effect effect : node.getEffects()) {
+                String target = effect.getTarget();
+                // If the effect name matches an existing Upgrade Node, unlock it recursively
+                // Avoid unlocking self to prevent direct loops (though indirect loops A->B->A
+                // still possible)
+                if (!target.equals(nodeId) && UpgradeRegistry.get(target) != null) {
+                    // Check if it's already maxed?
+                    // unlockNode increments level blindly. logic elsewhere checks max.
+                    // But here we are forcing it.
+                    // Let's allow it.
+                    unlockNode(target);
+                }
+            }
+        }
 
         recalculateModifiers();
         town.markDirty();

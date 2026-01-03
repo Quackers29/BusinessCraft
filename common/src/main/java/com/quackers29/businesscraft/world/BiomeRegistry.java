@@ -84,10 +84,10 @@ public class BiomeRegistry {
                     String biomeIdsRaw = parts[0].trim();
                     String variantId = parts[1].trim();
                     String variantName = parts[2].trim();
-                    int weight = parseWeight(parts[3].trim());
-                    String nodesRaw = parts[4].trim();
-                    String valuesRaw = parts[5].trim();
-                    String desc = parts[6].trim().replace("\"", "");
+                    String desc = parts[3].trim().replace("\"", "");
+                    int weight = parseWeight(parts[4].trim());
+                    String nodesRaw = parts[5].trim();
+                    String valuesRaw = parts[6].trim();
 
                     List<String> biomeIds = new ArrayList<>();
                     if (biomeIdsRaw.equals("*")) {
