@@ -1,3 +1,7 @@
-node_id,category,display_name,repeat,prereq_nodes,benefit_description,effects
-basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,pop_cap:10;toruist_cap:2;storage_cap_all:200;happiness:50;population_maintenance;population_growth;basic_taxes;tourists
-farming_basic,farming,Basic Farming,,basic_settlement,Starts food production,basic_farming
+node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_days,required_items,effects
+basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,0,,pop_cap:10;tourist_cap:2;storage_cap_all:200;happiness:50;population_maintenance;population_growth;taxes
+farming_basic,farming,Basic Farming,,basic_settlement,Starts food production,1,wood:10,farming
+cap_upgrade,general,Cap upgrade 1,5:1.1,,,0.5,wood:25;tourism:10,storage_cap_all:400
+farming_advanced,farming,Farming Advanced,infinite:1.2,farming_basic,Improved food production,0.1,wood:15;tourism:2,farming*0.5
+pop_cap_upgrade,general,Pop Cap Upgrade,5:1.2,basic_settlement,Improved Pop Cap,0.05,wood:20,pop_cap:10
+tourism,general,Tourism,,basic_settlement,Tourism,0.05,money:10,tourism

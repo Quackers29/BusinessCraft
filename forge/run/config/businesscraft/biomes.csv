@@ -1,16 +1,16 @@
 biome_ids,variant_id,variant_name,description,weight,starting_nodes,starting_values
 # === Plains variants ===
-minecraft:plains,farming,Farming Village,"Strong farming - most common in plains",60,basic_settlement;farming_basic,pop:6;food:140;wood:70;money:60;happiness:72
-minecraft:plains,tourism,Tourist Gateway,"Early tourism focus",20,basic_settlement;farming_basic;tourism,pop:5;food:90;wood:60;money:90;happiness:78
-minecraft:plains,balanced,Balanced Hamlet,"Well-rounded option",15,basic_settlement;farming_basic,pop:7;food:110;wood:90;money:70;happiness:70
+minecraft:plains,farming,Farming Village,"Strong farming - most common in plains",60,basic_settlement;farming,pop:6;food:140;wood:70;money:60;happiness:72
+minecraft:plains,tourism,Tourist Gateway,"Early tourism focus",20,basic_settlement;farming;tourism,pop:5;food:90;wood:60;money:90;happiness:78
+minecraft:plains,balanced,Balanced Hamlet,"Well-rounded option",15,basic_settlement;farming,pop:7;food:110;wood:90;money:70;happiness:70
 
 # === Forest variants ===
-minecraft:forest;minecraft:dark_forest;minecraft:flower_forest,lumber,Lumber Camp,"Classic wood-focused forest town",70,basic_settlement;wood_processing,pop:8;food:80;wood:180;money:50;happiness:65
+minecraft:forest;minecraft:dark_forest;minecraft:flower_forest,lumber,Lumber Camp,"Classic wood-focused forest town",70,basic_settlement;woodcutting,pop:8;food:80;wood:180;money:50;happiness:65
 minecraft:forest;minecraft:dark_forest;minecraft:flower_forest,mystic,Mystic Glade,"Beautiful tourist attraction",25,basic_settlement;tourism,pop:6;food:100;wood:120;money:70;happiness:82
 
 # === Desert ===
 minecraft:desert,oasis,Oasis Settlement,"Tourism in the desert",80,basic_settlement;tourism,pop:4;food:50;wood:20;money:100;happiness:60
 
 # === Global options - available in EVERY biome ===
-*,standard,Standard Settlement,"Safe, balanced start - available everywhere",30,basic_settlement;farming_basic,pop:5;food:100;wood:60;money:60;happiness:70
+*,standard,Standard Settlement,"Safe, balanced start - available everywhere",30,basic_settlement;farming,pop:5;food:100;wood:60;money:60;happiness:70
 *,rare_exotic,Rare Exotic Haven,"Very rare lucky start with big bonuses - can appear anywhere!",5,basic_settlement;tourism,pop:5;food:100;wood:80;money:150;happiness:90;tourist_cap:5
