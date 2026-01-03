@@ -26,3 +26,4 @@ java_pid29391.hprof
 /fabric/run/config/fabric
 /fabric/run/logs
 /common/build
+/.agent
