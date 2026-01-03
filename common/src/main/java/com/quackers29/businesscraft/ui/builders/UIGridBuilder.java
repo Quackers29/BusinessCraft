@@ -1157,18 +1157,12 @@ public class UIGridBuilder {
     private String formatNumber(int number) {
         if (number < 1000) {
             return String.valueOf(number);
-        } else if (number < 10000) {
-            // 1000-9999 -> #.#K (1.2K, 9.9K)
-            return String.format("%.1fK", number / 1000.0).replace(".0K", "K");
         } else if (number < 1000000) {
-            // 10000-999999 -> ##K (10K, 999K)
-            return Math.round(number / 1000.0) + "K";
-        } else if (number < 10000000) {
-            // 1000000-9999999 -> #.#M (1.2M, 9.9M)
-            return String.format("%.1fM", number / 1000000.0).replace(".0M", "M");
+            // 1000-999999 -> #.#K (1.2K, 10.1K, 500.5K)
+            return String.format("%.1fK", number / 1000.0).replace(".0K", "K");
         } else if (number < 1000000000) {
-            // 10000000-999999999 -> ##M (10M, 999M)
-            return Math.round(number / 1000000.0) + "M";
+            // 1000000-999999999 -> #.#M (1.2M, 10.5M)
+            return String.format("%.1fM", number / 1000000.0).replace(".0M", "M");
         } else {
             // 1000000000+ -> #.#B (1.2B, 9.9B)
             return String.format("%.1fB", number / 1000000000.0).replace(".0B", "B");

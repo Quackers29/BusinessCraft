@@ -105,7 +105,7 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
 
     private void createContractGrid() {
         contractGrid = UIGridBuilder
-                .create(CONTRACT_GRID_X, CONTRACT_GRID_Y + 5, CONTRACT_GRID_WIDTH - 8, CONTRACT_GRID_HEIGHT - 6, 5)
+                .create(CONTRACT_GRID_X, CONTRACT_GRID_Y + 5, CONTRACT_GRID_WIDTH - 8, CONTRACT_GRID_HEIGHT - 6, 4)
                 .withRowHeight(18)
                 .withSpacing(8, 2)
                 .drawBackground(false)
@@ -147,8 +147,15 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
         for (int i = 0; i < contracts.size(); i++) {
             Contract c = contracts.get(i);
             // Col 0: Icon with tooltip
+            // Col 0: Icon with tooltip
             ItemStack icon = getResourceIcon(c);
-            contractGrid.addItemStackWithTooltip(i, 0, icon, getContractTooltip(c), null);
+            int quantity = 0;
+            if (c instanceof SellContract sc)
+                quantity = sc.getQuantity();
+            else if (c instanceof CourierContract cc)
+                quantity = cc.getQuantity();
+
+            contractGrid.addItemWithTooltip(i, 0, icon.getItem(), quantity, getContractTooltip(c), null);
 
             // Col 1: Town Name
             String townName = c.getIssuerTownName();
@@ -156,19 +163,15 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
                 townName = "Unknown";
             contractGrid.addLabelWithTooltip(i, 1, truncate(townName, 12), getContractTooltip(c), TEXT_COLOR);
 
-            // Col 2: Details
-            String details = getContractDetails(c);
-            contractGrid.addLabel(i, 2, truncate(details, 12), TEXT_COLOR);
-
-            // Col 3: Time (Seconds left)
+            // Col 2: Time (Seconds left)
             long currentTime = System.currentTimeMillis();
             long millisLeft = c.getExpiryTime() - currentTime;
             String time = millisLeft > 0 ? (millisLeft / 1000) + "s" : "Expired";
-            contractGrid.addLabel(i, 3, time, TEXT_COLOR);
+            contractGrid.addLabel(i, 2, time, TEXT_COLOR);
 
-            // Col 4: Action button
+            // Col 3: Action button
             // Always show "View" button which opens details
-            contractGrid.addButtonWithTooltip(i, 4, "View", "View contract details",
+            contractGrid.addButtonWithTooltip(i, 3, "View", "View contract details",
                     (Consumer<Void>) v -> openContractDetails(c), 0xFF666666);
         }
         if (contracts.isEmpty()) {
@@ -178,9 +181,9 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
 
     private String getContractDetails(Contract c) {
         if (c instanceof SellContract sc)
-            return sc.getQuantity() + " " + sc.getResourceId();
+            return sc.getResourceId();
         if (c instanceof CourierContract cc)
-            return cc.getQuantity() + " " + cc.getResourceId();
+            return cc.getResourceId();
         return "Contract";
     }
 
