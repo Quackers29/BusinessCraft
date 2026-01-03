@@ -27,10 +27,8 @@ public class UpgradeRegistry {
 
         // Fix path to point to config/businesscraft/
         File upgradesFile = configDir.resolve("businesscraft").resolve(UPGRADES_FILE).toFile();
-        File reqFile = configDir.resolve("businesscraft").resolve(REQ_FILE).toFile();
 
         loadNodes(upgradesFile);
-        loadRequirements(reqFile);
     }
 
     private static void loadNodes(File file) {
@@ -46,33 +44,50 @@ public class UpgradeRegistry {
                     continue;
                 }
 
-                // node_id,category,display_name,repeat,prereq_nodes,benefit_description,effects
+                // New Schema:
+                // node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_days,required_items,effects
+                // 0 1 2 3 4 5 6 7 8
                 String[] parts = line.split(",");
-                if (parts.length >= 7) {
-                    String id = parts[0].trim();
-                    String category = parts[1].trim();
-                    String name = parts[2].trim();
-                    String repeat = parts[3].trim();
-                    String prereqsRaw = parts[4].trim();
-                    String desc = parts[5].trim();
-                    String effectsRaw = parts[6].trim();
-                    // Handle case where desc or effects might be split due to internal commas?
-                    // Assuming simple split for now based on user request "make this generic".
-                    // If description contains comma, this split handles it poorly, but existing
-                    // logic did too.
+                if (parts.length >= 9) {
+                    try {
+                        String id = parts[0].trim();
+                        String category = parts[1].trim();
+                        String name = parts[2].trim();
+                        String repeat = parts[3].trim();
+                        String prereqsRaw = parts[4].trim();
+                        String desc = parts[5].trim();
 
-                    List<String> prereqs = new ArrayList<>();
-                    if (!prereqsRaw.isEmpty()) {
-                        for (String p : prereqsRaw.split(";")) {
-                            if (!p.trim().isEmpty())
-                                prereqs.add(p.trim());
+                        String daysRaw = parts[6].trim();
+                        String costsRaw = parts[7].trim();
+                        String effectsRaw = parts[8].trim();
+
+                        List<String> prereqs = new ArrayList<>();
+                        if (!prereqsRaw.isEmpty()) {
+                            for (String p : prereqsRaw.split(";")) {
+                                if (!p.trim().isEmpty())
+                                    prereqs.add(p.trim());
+                            }
                         }
+
+                        List<Effect> effects = DataParser.parseEffects(effectsRaw);
+
+                        float days = 0;
+                        try {
+                            if (!daysRaw.isEmpty())
+                                days = Float.parseFloat(daysRaw);
+                        } catch (NumberFormatException e) {
+                            LOGGER.warn("Invalid research days for node {}: {}", id, daysRaw);
+                        }
+                        List<ResourceAmount> costs = DataParser.parseResources(costsRaw);
+
+                        UpgradeNode node = new UpgradeNode(id, category, name, repeat, prereqs, desc, effects);
+                        node.setRequirements(days, costs);
+                        NODES.put(id, node);
+
+                        LOGGER.info("Registered upgrade node: {}", id);
+                    } catch (Exception e) {
+                        LOGGER.error("Error parsing upgrade line: {}", line, e);
                     }
-
-                    List<Effect> effects = DataParser.parseEffects(effectsRaw);
-
-                    NODES.put(id, new UpgradeNode(id, category, name, repeat, prereqs, desc, effects));
-                    LOGGER.info("Registered upgrade node: {}", id);
                 }
             }
         } catch (IOException e) {
@@ -80,64 +95,16 @@ public class UpgradeRegistry {
         }
     }
 
-    private static void loadRequirements(File file) {
-        if (!file.exists())
-            createDefaultReqs(file);
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
-            boolean firstLine = true;
-            while ((line = reader.readLine()) != null) {
-                if (firstLine) {
-                    firstLine = false;
-                    continue;
-                }
-
-                // node_id,research_days,required_items
-                String[] parts = line.split(",");
-                if (parts.length >= 2) {
-                    String id = parts[0].trim();
-                    float days = 0;
-                    try {
-                        days = Float.parseFloat(parts[1].trim());
-                    } catch (NumberFormatException e) {
-                    }
-
-                    String itemsRaw = (parts.length > 2) ? parts[2].trim() : "";
-                    List<ResourceAmount> costs = DataParser.parseResources(itemsRaw);
-
-                    UpgradeNode node = NODES.get(id);
-                    if (node != null) {
-                        node.setRequirements(days, costs);
-                    } else {
-                        LOGGER.warn("Requirement found for unknown node: {}", id);
-                    }
-                }
-            }
-        } catch (IOException e) {
-            LOGGER.error("Failed to load {}", REQ_FILE, e);
-        }
-    }
-
     private static void createDefaultUpgrades(File file) {
         try (FileWriter writer = new FileWriter(file)) {
-            writer.write("node_id,category,display_name,repeat,prereq_nodes,benefit_description,effects\n");
             writer.write(
-                    "basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,pop_cap:10;storage_cap_all:200;happiness:50;population_maintenance;population_growth\n");
+                    "node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_days,required_items,effects\n");
             writer.write(
-                    "farming_basic,farming,Basic Farming,,basic_settlement,Starts food production,basic_farming\n");
+                    "basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,0,,pop_cap:10;tourist_cap:2;storage_cap_all:200;happiness:50;population_maintenance;population_growth;basic_taxes\n");
+            writer.write(
+                    "farming_basic,farming,Basic Farming,,basic_settlement,Starts food production,1,wood:10,basic_farming\n");
         } catch (IOException e) {
             LOGGER.error("Failed to create {}", UPGRADES_FILE, e);
-        }
-    }
-
-    private static void createDefaultReqs(File file) {
-        try (FileWriter writer = new FileWriter(file)) {
-            writer.write("node_id,research_days,required_items\n");
-            writer.write("basic_settlement,0,\n");
-            writer.write("farming_basic,1,wood:10\n");
-        } catch (IOException e) {
-            LOGGER.error("Failed to create {}", REQ_FILE, e);
         }
     }
 
