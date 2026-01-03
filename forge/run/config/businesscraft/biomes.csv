@@ -1,6 +1,6 @@
 biome_ids,variant_id,variant_name,description,weight,starting_nodes,starting_values
 # === Plains variants ===
-minecraft:plains,farming,Farming Village,"Strong farming - most common in plains",60,basic_settlement,pop:6;food:140;wood:70;money:60;happiness:72
+minecraft:plains,farming,Farming Village,"Strong farming - most common in plains",60,basic_settlement;farming_advanced:2,pop:6;food:140;wood:70;money:60;happiness:72
 minecraft:plains,tourism,Tourist Gateway,"Early tourism focus",20,basic_settlement;tourism_basic,pop:5;food:90;wood:60;money:90;happiness:78
 minecraft:plains,balanced,Balanced Hamlet,"Well-rounded option",15,basic_settlement,pop:7;food:110;wood:90;money:70;happiness:70
 

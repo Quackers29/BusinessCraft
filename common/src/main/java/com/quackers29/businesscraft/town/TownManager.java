@@ -109,7 +109,24 @@ public class TownManager {
                 // Apply starting nodes
                 if (kit.startingNodes != null) {
                     for (String node : kit.startingNodes) {
-                        town.getUpgrades().unlockNode(node);
+                        String nodeId = node;
+                        int level = 1;
+                        if (node.contains(":")) {
+                            String[] parts = node.split(":");
+                            nodeId = parts[0];
+                            try {
+                                level = Integer.parseInt(parts[1]);
+                            } catch (NumberFormatException e) {
+                                LOGGER.warn("Invalid level format in starting node: {}", node);
+                            }
+                        }
+
+                        // Unlock the node 'level' times to reach the desired level
+                        // This handles both setting the level and triggering any recursive
+                        // unlocks/effects
+                        for (int i = 0; i < level; i++) {
+                            town.getUpgrades().unlockNode(nodeId);
+                        }
                     }
                 }
 
