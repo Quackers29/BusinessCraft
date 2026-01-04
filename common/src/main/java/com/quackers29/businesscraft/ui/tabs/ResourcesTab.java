@@ -108,9 +108,15 @@ public class ResourcesTab extends BaseTownTab {
                         sb.append("\n");
                     }
 
-                    // GPI
+                    // Quantity (Line 1)
+                    int quantity = resources.getOrDefault(item, 0);
+                    sb.append(String.format("Quantity: %d", quantity));
+                    sb.append("\n");
+
+                    // GPI & Wealth (Line 2)
                     float gpi = com.quackers29.businesscraft.client.ClientGlobalMarket.get().getPrice(item);
-                    sb.append(String.format("§6GPI: %.2f", gpi));
+                    float totalWealth = gpi * quantity;
+                    sb.append(String.format("§6GPI: %.2f (~%.0f)", gpi, totalWealth));
                     sb.append("\n");
 
                     // Base stats

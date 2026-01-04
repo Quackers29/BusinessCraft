@@ -64,6 +64,12 @@ public class ConfigLoader {
     public static int minStockPercent = 60;
     public static int excessStockPercent = 80;
 
+    // Contract Timing Config
+    public static double contractAuctionDurationMinutes = 1.0;
+    public static double contractCourierAcceptanceMinutes = 2.0;
+    public static double contractCourierDeliveryMinutesPerMeter = 0.05;
+    public static double contractSnailMailDeliveryMinutesPerMeter = 0.1;
+
     public static final ConfigLoader INSTANCE = new ConfigLoader();
 
     private ConfigLoader() {
@@ -164,7 +170,18 @@ public class ConfigLoader {
             productionEnabled = Boolean.parseBoolean(props.getProperty("productionEnabled", "true"));
             productionTickInterval = Integer.parseInt(props.getProperty("productionTickInterval", "100"));
             minStockPercent = Integer.parseInt(props.getProperty("minStockPercent", "60"));
+            minStockPercent = Integer.parseInt(props.getProperty("minStockPercent", "60"));
             excessStockPercent = Integer.parseInt(props.getProperty("excessStockPercent", "80"));
+
+            // Load contract timing config
+            contractAuctionDurationMinutes = Double
+                    .parseDouble(props.getProperty("contractAuctionDurationMinutes", "1.0"));
+            contractCourierAcceptanceMinutes = Double
+                    .parseDouble(props.getProperty("contractCourierAcceptanceMinutes", "2.0"));
+            contractCourierDeliveryMinutesPerMeter = Double
+                    .parseDouble(props.getProperty("contractCourierDeliveryMinutesPerMeter", "0.05"));
+            contractSnailMailDeliveryMinutesPerMeter = Double
+                    .parseDouble(props.getProperty("contractSnailMailDeliveryMinutesPerMeter", "0.1"));
 
             // Load Registries
             com.quackers29.businesscraft.economy.ResourceRegistry.load();
@@ -178,6 +195,9 @@ public class ConfigLoader {
 
         // Log settings
         LOGGER.info("Enable Create Trains: {}", enableCreateTrains);
+        LOGGER.info("Contract Timings: Auction={}m, CourierAccept={}m, CourierSpeed={}m/m, SnailSpeed={}m/m",
+                contractAuctionDurationMinutes, contractCourierAcceptanceMinutes,
+                contractCourierDeliveryMinutesPerMeter, contractSnailMailDeliveryMinutesPerMeter);
         LOGGER.info("Enable Minecarts: {}", enableMinecarts);
         LOGGER.info("Vehicle Search Radius: {}", vehicleSearchRadius);
 
@@ -249,6 +269,14 @@ public class ConfigLoader {
         props.setProperty("productionTickInterval", String.valueOf(productionTickInterval));
         props.setProperty("minStockPercent", String.valueOf(minStockPercent));
         props.setProperty("excessStockPercent", String.valueOf(excessStockPercent));
+
+        // Save contract timing config
+        props.setProperty("contractAuctionDurationMinutes", String.valueOf(contractAuctionDurationMinutes));
+        props.setProperty("contractCourierAcceptanceMinutes", String.valueOf(contractCourierAcceptanceMinutes));
+        props.setProperty("contractCourierDeliveryMinutesPerMeter",
+                String.valueOf(contractCourierDeliveryMinutesPerMeter));
+        props.setProperty("contractSnailMailDeliveryMinutesPerMeter",
+                String.valueOf(contractSnailMailDeliveryMinutesPerMeter));
 
         try {
             Path configDir = com.quackers29.businesscraft.api.PlatformAccess.platform.getConfigDirectory();

@@ -24,15 +24,17 @@ NewPrice = (OldPrice * (1.0 - Alpha)) + (TransactionPrice * Alpha)
 ## 2. When does the GPI Update?
 The GPI updates in two scenarios:
 
-### 1. Successful Transaction (Courier Delivery)
-*   **Trigger**: When a courier delivers the items for a completed contract.
-*   **Calculation**: Weighted average using the **Transaction Price**.
+### 1. Successful Auction (Winning Bid)
+*   **Trigger**: When an auction closes and a winning bidder is found (after the listing duration expires).
+*   **Calculation**: Weighted average using the **Winning Bid Price**.
+    *   The price updates *before* delivery and payment finalization.
 
 ### 2. Failed Auction (Market Rejection)
 *   **Trigger**: When a Sell Contract expires with **0 Bids**.
     *   This indicates the listing price was too high for the market.
 *   **Calculation**: The system simulates a transaction at an "Implied Value" to drive prices down.
-    *   `ImpliedValue = ListingPrice * 0.8` (80% of asking price).
+    *   `ImpliedValue = Min(currentGPI, ListingPrice) * 0.8` (80% of the lower of the two).
+    *   This ensures that failed auctions *always* exert downward pressure on the market price, regardless of how high the listing price was.
     *   The GPI updates towards this lower value using the standard Alpha (10%).
 
 ## 3. Automated Town Pricing

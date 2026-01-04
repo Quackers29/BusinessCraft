@@ -50,14 +50,15 @@ public class ClientGlobalMarket {
             String id = type.getId();
             if (prices.containsKey(id)) {
                 float p = prices.get(id);
-                // If we find a price that is NOT default 1.0, prioritize it.
-                // If multiple are non-default, take the highest.
-                if (Math.abs(p - 1.0f) > 0.001f) {
-                    if (!foundAny || p > maxPrice) {
-                        maxPrice = p;
-                    }
-                    foundAny = true;
+                // Trust the price in the map. If we find any valid price, use it.
+                // If multiple types map to prices, take the highest one to be safe (or could
+                // average?)
+                // Taking max ensures we don't accidentally show a lower price if a specific
+                // item is valued higher.
+                if (!foundAny || p > maxPrice) {
+                    maxPrice = p;
                 }
+                foundAny = true;
             }
         }
 

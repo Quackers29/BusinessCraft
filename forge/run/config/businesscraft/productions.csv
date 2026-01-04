@@ -3,5 +3,5 @@ population_maintenance,Food Consumption,0.4,food:1*pop,
 population_growth,Natural Population Growth,0.6,happiness:>60;surplus:food,pop:1
 tourism,Tourist Generation,0.2,happiness:>70;food:10;money:10,tourist:1
 farming,Basic Wheat Farming,0.2,,food:40
-woodcutting,Woodcutting,2,,wood:20
+woodcutting,Woodcutting,0.5,,wood:50
 taxes,Taxes,0.4,,money:1*pop

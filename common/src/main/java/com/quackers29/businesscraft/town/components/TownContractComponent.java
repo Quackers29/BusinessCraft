@@ -377,7 +377,7 @@ public class TownContractComponent implements TownComponent {
             SellContract contract = new SellContract(
                     town.getId(),
                     town.getName(),
-                    60000L,
+                    (long) (com.quackers29.businesscraft.config.ConfigLoader.contractAuctionDurationMinutes * 60000L),
                     resourceId,
                     sellQuantity,
                     pricePerUnit);

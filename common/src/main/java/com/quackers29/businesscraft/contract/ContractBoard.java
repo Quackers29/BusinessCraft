@@ -194,11 +194,11 @@ public class ContractBoard {
                 savedData.setDirty();
                 broadcastUpdate();
 
-                // Update Global Price Index
-                if (sc.getQuantity() > 0 && sc.getHighestBid() > 0) {
-                    float transactionPrice = sc.getHighestBid() / (float) sc.getQuantity();
-                    updateMarketPrice(sc.getResourceId(), transactionPrice);
-                }
+                // Update Global Price Index - MOVED to closeAuctions
+                // if (sc.getQuantity() > 0 && sc.getHighestBid() > 0) {
+                // float transactionPrice = sc.getHighestBid() / (float) sc.getQuantity();
+                // updateMarketPrice(sc.getResourceId(), transactionPrice);
+                // }
 
                 // Payout Reward to courier
                 com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
@@ -325,8 +325,18 @@ public class ContractBoard {
         sc.setCourierId(courierId);
         sc.setCourierAcceptedTime(System.currentTimeMillis());
 
-        // Extend expiry for delivery (4 minutes)
-        sc.extendExpiry(240000L);
+        sc.setCourierAcceptedTime(System.currentTimeMillis());
+
+        // Calculate delivery time based on distance
+        double distance = 0;
+        com.quackers29.businesscraft.town.Town destTown = townManager.getTown(sc.getWinningTownId());
+        if (destTown != null) {
+            distance = Math.sqrt(sellerTown.getPosition().distSqr(destTown.getPosition()));
+        }
+        long deliveryDuration = (long) (distance
+                * com.quackers29.businesscraft.config.ConfigLoader.contractCourierDeliveryMinutesPerMeter * 60000L);
+
+        sc.extendExpiry(deliveryDuration);
 
         // Create contract items and add to seller town's payment board
         String destTownName = sc.getWinningTownName() != null ? sc.getWinningTownName() : "Unknown";
@@ -393,11 +403,20 @@ public class ContractBoard {
                             int courierCost = calculateCourierCost(winnerTown, sellerTown);
                             sc.setCourierReward(courierCost);
 
-                            // Extend expiry for courier acceptance (3 min)
-                            sc.extendExpiry(180000L);
+                            // Extend expiry for courier acceptance
+                            sc.extendExpiry(
+                                    (long) (com.quackers29.businesscraft.config.ConfigLoader.contractCourierAcceptanceMinutes
+                                            * 60000L));
 
                             LOGGER.info("Auction closed for contract {}: Winner={}, Bid={}, CourierReward={}",
                                     sc.getId(), highestBidder, highestBid, sc.getCourierReward());
+
+                            // UPDATE MARKET PRICE upon Auction Close (Winning Bid = Accepted Market Value)
+                            if (sc.getQuantity() > 0 && highestBid > 0) {
+                                float transactionPrice = highestBid / (float) sc.getQuantity();
+                                updateMarketPrice(sc.getResourceId(), transactionPrice);
+                            }
+
                             savedData.setDirty();
                         }
                     } else {
@@ -411,14 +430,20 @@ public class ContractBoard {
                                 sellerTown.addResource(item, sc.getQuantity());
 
                                 // UPDATE MARKET PRICE via Implied Value (Failed Auction = Price Too High)
+                                float currentGPI = getMarketPrice(sc.getResourceId());
                                 float listingPrice = sc.getPricePerUnit();
-                                float impliedValue = listingPrice * 0.8f; // Assume market value is ~20% lower
+
+                                // Prevent upward drift: Implied value cannot be higher than current GPI or
+                                // listing price
+                                float baseline = Math.min(currentGPI, listingPrice);
+                                float impliedValue = baseline * 0.8f;
+
                                 updateMarketPrice(sc.getResourceId(), impliedValue);
 
                                 LOGGER.info(
-                                        "Refunded {} {} to town {} (auction {} had no bids). Lowered GPI to reflect failed sale (Implied: {}).",
+                                        "Refunded {} {} to town {} (auction {} had no bids). Lowered GPI (Implied: {}, Base: {}, List: {}).",
                                         sc.getQuantity(), sc.getResourceId(), sellerTown.getName(), sc.getId(),
-                                        impliedValue);
+                                        impliedValue, baseline, listingPrice);
                             }
                         }
                         // DELETE contract instead of moving to history
@@ -433,8 +458,18 @@ public class ContractBoard {
                     sc.setCourierId(SellContract.SNAIL_MAIL_UUID);
                     sc.setCourierAcceptedTime(System.currentTimeMillis());
 
-                    // Extend expiry for Snail Mail delivery (2x courier time = 2 * 4 min = 8 min)
-                    sc.extendExpiry(480000L);
+                    // Extend expiry for Snail Mail delivery
+                    double distance = 0;
+                    com.quackers29.businesscraft.town.Town seller = townManager.getTown(sc.getIssuerTownId());
+                    com.quackers29.businesscraft.town.Town winner = townManager.getTown(sc.getWinningTownId());
+                    if (seller != null && winner != null) {
+                        distance = Math.sqrt(seller.getPosition().distSqr(winner.getPosition()));
+                    }
+                    long smDuration = (long) (distance
+                            * com.quackers29.businesscraft.config.ConfigLoader.contractSnailMailDeliveryMinutesPerMeter
+                            * 60000L);
+
+                    sc.extendExpiry(smDuration);
 
                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
                             "Contract {} assigned to Snail Mail (courier acceptance expired)", sc.getId());
@@ -549,15 +584,23 @@ public class ContractBoard {
                     cc.setCourierId(bidder);
                     cc.setAcceptedTime(System.currentTimeMillis());
 
-                    // Update expiry to 4 minutes from now for delivery
-                    cc.extendExpiry(240000L); // 4 minutes
+                    // Update expiry based on distance for delivery
+                    double distance = 0;
+                    com.quackers29.businesscraft.town.Town destTown = townManager.getTown(cc.getDestinationTownId());
+                    if (destTown != null) {
+                        distance = Math.sqrt(sellerTown.getPosition().distSqr(destTown.getPosition()));
+                    }
+                    long deliveryDuration = (long) (distance
+                            * com.quackers29.businesscraft.config.ConfigLoader.contractCourierDeliveryMinutesPerMeter
+                            * 60000L);
+
+                    cc.extendExpiry(deliveryDuration);
 
                     // Transfer items to Seller Town's Payment Buffer
                     if (cc.getResourceId() != null) {
                         // Get town names for lore
                         String destTownName = "Unknown";
-                        com.quackers29.businesscraft.town.Town destTown = townManager
-                                .getTown(cc.getDestinationTownId());
+                        // destTown is already fetched above for distance calculation
                         if (destTown != null) {
                             destTownName = destTown.getName();
                         }
