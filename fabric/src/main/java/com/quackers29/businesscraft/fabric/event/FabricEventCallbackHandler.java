@@ -150,7 +150,7 @@ public class FabricEventCallbackHandler {
         net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback.EVENT
                 .register((dispatcher, registryAccess, environment) -> {
                     com.quackers29.businesscraft.command.ClearTownsCommand.register(dispatcher);
-                    com.quackers29.businesscraft.command.AddContractCommand.register(dispatcher);
+
                     com.quackers29.businesscraft.command.ClearContractsCommand.register(dispatcher);
                 });
     }
