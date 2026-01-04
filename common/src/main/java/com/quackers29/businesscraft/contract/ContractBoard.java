@@ -67,6 +67,10 @@ public class ContractBoard {
         return savedData.getMarketPrices().getOrDefault(resourceId, 1.0f);
     }
 
+    public Map<String, Float> getAllMarketPrices() {
+        return Collections.unmodifiableMap(savedData.getMarketPrices());
+    }
+
     public void updateMarketPrice(String resourceId, float transactionPrice) {
         float currentPrice = getMarketPrice(resourceId);
         float alpha = 0.1f; // Learning rate (10% influence)
@@ -405,8 +409,16 @@ public class ContractBoard {
 
                             if (item != null && item != net.minecraft.world.item.Items.PAPER) {
                                 sellerTown.addResource(item, sc.getQuantity());
-                                LOGGER.info("Refunded {} {} to town {} (auction {} had no bids)",
-                                        sc.getQuantity(), sc.getResourceId(), sellerTown.getName(), sc.getId());
+
+                                // UPDATE MARKET PRICE via Implied Value (Failed Auction = Price Too High)
+                                float listingPrice = sc.getPricePerUnit();
+                                float impliedValue = listingPrice * 0.8f; // Assume market value is ~20% lower
+                                updateMarketPrice(sc.getResourceId(), impliedValue);
+
+                                LOGGER.info(
+                                        "Refunded {} {} to town {} (auction {} had no bids). Lowered GPI to reflect failed sale (Implied: {}).",
+                                        sc.getQuantity(), sc.getResourceId(), sellerTown.getName(), sc.getId(),
+                                        impliedValue);
                             }
                         }
                         // DELETE contract instead of moving to history
@@ -424,7 +436,8 @@ public class ContractBoard {
                     // Extend expiry for Snail Mail delivery (2x courier time = 2 * 4 min = 8 min)
                     sc.extendExpiry(480000L);
 
-                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Contract {} assigned to Snail Mail (courier acceptance expired)", sc.getId());
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                            "Contract {} assigned to Snail Mail (courier acceptance expired)", sc.getId());
                     savedData.setDirty();
                     broadcastUpdate();
                 }
@@ -602,7 +615,7 @@ public class ContractBoard {
             if (PlatformAccess.getNetworkMessages() != null) {
                 PlatformAccess.getNetworkMessages().sendToAllPlayers(
                         new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(
-                                savedData.getContracts()));
+                                savedData.getContracts(), savedData.getMarketPrices()));
             }
         } catch (Exception e) {
             LOGGER.error("Failed to broadcast contract update", e);

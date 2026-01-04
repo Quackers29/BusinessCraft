@@ -1,8 +1,8 @@
 node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_minutes,required_items,effects
 basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,0,,pop_cap:100;tourist_cap:2;storage_cap_all:2000;happiness:50;population_maintenance;population_growth;taxes;farming_basic
 farming_basic,farming,Farming,,basic_settlement,Starts food production,2,food:100,farming
-woodcutting_basic,woodcutting,Woodcutting,,basic_settlement,Starts wood production,2,food:100,woodcutting
-cap_upgrade,general,Cap upgrade,5:1.1,,,5,wood:250;tourism:10,storage_cap_all:4000
-farming_advanced,farming,Farming Advanced,5:1.2,farming_basic,Improved food production,2,wood:150;tourism:2,farming*0.5
-pop_cap_upgrade,general,Pop Cap Upgrade,5:1.2,basic_settlement,Improved Pop Cap,1,wood:200,pop_cap:100
+woodcutting_basic,woodcutting,Woodcutting,,basic_settlement,Starts wood production,2,food:3000,woodcutting
+cap_upgrade,general,Cap upgrade,5:1.1,,,5,wood:250,storage_cap_all:4000
+farming_advanced,farming,Farming Advanced,5:1.2,farming_basic,Improved food production,2,wood:150,farming*0.5
+pop_cap_upgrade,general,Pop Cap Upgrade,infinite:1.2,basic_settlement,Improved Pop Cap,1,wood:200;tourism:2,pop_cap:100
 tourism_basic,general,Tourism,,basic_settlement,Tourism,1,money:100,tourism

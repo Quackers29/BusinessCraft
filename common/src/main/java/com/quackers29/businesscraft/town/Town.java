@@ -105,6 +105,9 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         return contracts;
     }
 
+    private final Map<Item, Integer> wantedResources = new HashMap<>();
+    private int wantCalculationCooldown = 0;
+
     public void tick() {
         economy.tick();
         if (ConfigLoader.tradingEnabled) {
@@ -115,6 +118,54 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         }
         contracts.tick(); // Always tick contracts
         upgrades.tick(); // Always tick upgrades
+
+        if (wantCalculationCooldown-- <= 0) {
+            wantCalculationCooldown = 20; // Check every 1 second
+            calculateWants();
+        }
+    }
+
+    public void calculateWants() {
+        wantedResources.clear();
+        String bestNodeId = com.quackers29.businesscraft.town.ai.TownResearchAI.getBestUpgradeTarget(this);
+
+        // If we are already researching the best target, we don't "want" resources for
+        // it (we already paid)
+        if (bestNodeId != null && bestNodeId.equals(upgrades.getCurrentResearchNode())) {
+            bestNodeId = null;
+        }
+
+        if (bestNodeId != null) {
+            List<com.quackers29.businesscraft.data.parsers.DataParser.ResourceAmount> costs = upgrades
+                    .getUpgradeCost(bestNodeId);
+            for (com.quackers29.businesscraft.data.parsers.DataParser.ResourceAmount ra : costs) {
+                // Skip non-consumable stats like tourism
+                if (ra.resourceId.startsWith("tourism_"))
+                    continue;
+
+                com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
+                        .get(ra.resourceId);
+                if (type == null)
+                    continue;
+
+                net.minecraft.resources.ResourceLocation itemLoc = type.getCanonicalItemId();
+                Object itemObj = PlatformAccess.getRegistry().getItem(itemLoc);
+                if (itemObj instanceof Item item) {
+                    float stored = trading.getStock(ra.resourceId);
+                    int needed = (int) Math.ceil(ra.amount);
+                    if (stored < needed) {
+                        // Store as negative value representing the deficit (Want: -100 means we need
+                        // 100 more)
+                        int deficit = (int) (stored - needed);
+                        wantedResources.put(item, deficit);
+                    }
+                }
+            }
+        }
+    }
+
+    public Map<Item, Integer> getWantedResources() {
+        return Collections.unmodifiableMap(wantedResources);
     }
 
     @Override
@@ -435,6 +486,16 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
 
             tag.put("personalStorage", personalTag);
         }
+
+        // Save wanted resources
+        if (!wantedResources.isEmpty()) {
+            CompoundTag wantsTag = new CompoundTag();
+            wantedResources.forEach((item, amount) -> {
+                String itemKey = PlatformAccess.getRegistry().getItemKey(item).toString();
+                wantsTag.putInt(itemKey, amount);
+            });
+            tag.put("wantedResources", wantsTag);
+        }
     }
 
     public static Town load(CompoundTag tag) {
@@ -619,6 +680,22 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
                     }
                 } catch (Exception e) {
                     LOGGER.error("Error parsing player UUID for personal storage: {}", playerKey, e);
+                }
+            });
+        }
+
+        if (tag.contains("wantedResources")) {
+            CompoundTag wantsTag = tag.getCompound("wantedResources");
+            wantsTag.getAllKeys().forEach(key -> {
+                try {
+                    net.minecraft.resources.ResourceLocation itemId = new net.minecraft.resources.ResourceLocation(key);
+                    Object itemObj = PlatformAccess.getRegistry().getItem(itemId);
+                    if (itemObj instanceof Item item) {
+                        int amount = wantsTag.getInt(key);
+                        town.wantedResources.put(item, amount);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error loading wanted resource: {}", key, e);
                 }
             });
         }

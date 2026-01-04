@@ -104,4 +104,15 @@ public class ResourceRegistry {
         }
         return null;
     }
+
+    public static java.util.List<ResourceType> getAllFor(net.minecraft.world.item.Item item) {
+        java.util.List<ResourceType> matching = new java.util.ArrayList<>();
+        ResourceLocation itemId = PlatformAccess.getRegistry().getItemKey(item);
+        for (ResourceType type : RESOURCES.values()) {
+            if (type.getEquivalents().containsKey(itemId)) {
+                matching.add(type);
+            }
+        }
+        return matching;
+    }
 }

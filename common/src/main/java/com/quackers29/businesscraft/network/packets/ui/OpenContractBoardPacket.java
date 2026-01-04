@@ -74,9 +74,10 @@ public class OpenContractBoardPacket {
                                 .get(level);
                         PlatformAccess.getNetworkMessages().sendToPlayer(
                                 new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(
-                                        board.getContracts()),
+                                        board.getContracts(), board.getAllMarketPrices()),
                                 player);
-                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Sent initial contract sync to player {}", player.getName().getString());
+                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                                "Sent initial contract sync to player {}", player.getName().getString());
                     } catch (Exception e) {
                         LOGGER.error("Failed to send initial contract sync", e);
                     }

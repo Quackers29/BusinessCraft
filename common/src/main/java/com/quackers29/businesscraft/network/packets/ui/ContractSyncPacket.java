@@ -23,9 +23,11 @@ public class ContractSyncPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(ContractSyncPacket.class);
 
     private final List<Contract> contracts;
+    private final java.util.Map<String, Float> marketPrices;
 
-    public ContractSyncPacket(List<Contract> contracts) {
+    public ContractSyncPacket(List<Contract> contracts, java.util.Map<String, Float> marketPrices) {
         this.contracts = contracts;
+        this.marketPrices = marketPrices;
     }
 
     public ContractSyncPacket(FriendlyByteBuf buf) {
@@ -46,6 +48,12 @@ public class ContractSyncPacket {
                 this.contracts.add(contract);
             }
         }
+
+        this.marketPrices = new java.util.HashMap<>();
+        int mapSize = buf.readInt();
+        for (int i = 0; i < mapSize; i++) {
+            this.marketPrices.put(buf.readUtf(), buf.readFloat());
+        }
     }
 
     public void toBytes(FriendlyByteBuf buf) {
@@ -56,6 +64,12 @@ public class ContractSyncPacket {
             c.save(tag);
             buf.writeNbt(tag);
         }
+
+        buf.writeInt(marketPrices.size());
+        marketPrices.forEach((k, v) -> {
+            buf.writeUtf(k);
+            buf.writeFloat(v);
+        });
     }
 
     // Static methods for Forge network registration
@@ -74,6 +88,7 @@ public class ContractSyncPacket {
             if (player != null && player.containerMenu instanceof ContractBoardMenu menu) {
                 menu.setContracts(contracts);
             }
+            com.quackers29.businesscraft.client.ClientGlobalMarket.get().setPrices(marketPrices);
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
         return true;
@@ -84,5 +99,6 @@ public class ContractSyncPacket {
         if (mc.screen instanceof ContractBoardScreen screen) {
             screen.updateContracts(contracts);
         }
+        com.quackers29.businesscraft.client.ClientGlobalMarket.get().setPrices(marketPrices);
     }
 }

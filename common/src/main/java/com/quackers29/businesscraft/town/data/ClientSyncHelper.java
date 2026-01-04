@@ -141,6 +141,51 @@ public class ClientSyncHelper {
         }
     }
 
+    private final Map<Item, Integer> clientWantedResources = new HashMap<>();
+
+    public Map<Item, Integer> getClientWantedResources() {
+        return Collections.unmodifiableMap(clientWantedResources);
+    }
+
+    public void syncWantedResourcesForClient(CompoundTag tag, Town town) {
+        if (town == null)
+            return;
+
+        Map<Item, Integer> wants = town.getWantedResources();
+        // Always send the tag, even if empty, to ensure client clears old data
+        CompoundTag wantsTag = new CompoundTag();
+
+        if (!wants.isEmpty()) {
+            wants.forEach((item, count) -> {
+                Object keyObj = PlatformAccess.getRegistry().getItemKey(item);
+                if (keyObj != null) {
+                    wantsTag.putInt(keyObj.toString(), count);
+                }
+            });
+        }
+        tag.put("clientWantedResources", wantsTag);
+    }
+
+    public void loadWantedResourcesFromTag(CompoundTag tag) {
+        if (tag.contains("clientWantedResources")) {
+            CompoundTag wantsTag = tag.getCompound("clientWantedResources");
+            clientWantedResources.clear();
+
+            for (String key : wantsTag.getAllKeys()) {
+                try {
+                    ResourceLocation resourceLocation = new ResourceLocation(key);
+                    Object itemObj = PlatformAccess.getRegistry().getItem(resourceLocation);
+                    if (itemObj instanceof net.minecraft.world.item.Item item) {
+                        int count = wantsTag.getInt(key);
+                        clientWantedResources.put(item, count);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error loading client wanted resource: {}", key, e);
+                }
+            }
+        }
+    }
+
     /**
      * Adds visit history data to the provided tag for client-side rendering
      */

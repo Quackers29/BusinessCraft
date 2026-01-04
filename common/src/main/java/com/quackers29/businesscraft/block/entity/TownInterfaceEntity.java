@@ -583,6 +583,11 @@ public class TownInterfaceEntity extends BlockEntity
                 clientSyncHelper.loadVisitHistoryFromTag(tag);
             }
 
+            // Check for and load wanted resources if present
+            if (tag.contains("clientWantedResources")) {
+                clientSyncHelper.loadWantedResourcesFromTag(tag);
+            }
+
             // Check for platform updates
             if (tag.contains("platforms")) {
                 platformManager.updateClientPlatforms(tag);
@@ -798,14 +803,14 @@ public class TownInterfaceEntity extends BlockEntity
         if (provider != null) {
             clientSyncHelper.syncResourcesForClient(tag, provider);
 
-            // Add stats sync if provider is a Town
             if (provider instanceof Town town) {
                 clientSyncHelper.syncResourceStatsToTag(tag, town);
+                clientSyncHelper.syncWantedResourcesForClient(tag, town);
             }
-        }
 
-        // Add visit history data
-        clientSyncHelper.syncVisitHistoryForClient(tag, provider, level);
+            // Sync visit history as well since we have the provider
+            clientSyncHelper.syncVisitHistoryForClient(tag, provider, level);
+        }
     }
 
     @Override

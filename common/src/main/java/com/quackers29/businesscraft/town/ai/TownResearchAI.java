@@ -64,6 +64,40 @@ public class TownResearchAI {
     }
 
     public static String selectBestResearch(Town town, Map<String, Float> scores, long idleTicks) {
+        return getBestUpgradeTarget(town, scores, idleTicks);
+    }
+
+    /**
+     * Identifies the best upgrade target for the town based on priorities.
+     * Used by both the AI (to start research) and the Want System (to identify
+     * resource needs).
+     */
+    public static String getBestUpgradeTarget(Town town) {
+        // Calculate fresh scores
+        Map<String, Float> scores = calculatePriorities(town);
+        // Assume 0 idle ticks for "current status" check - we want the absolute best
+        // option right now
+        // or should we check patience?
+        // For "Wants", we probably want the thing the town *would* pick if it had the
+        // resources.
+        // So we should ignore patience thresholds that might mask high-cost items?
+        // Actually, selectBestResearch logic filters OUT items below threshold.
+        // But for WANTED resources, we specifically want items we CAN'T afford yet.
+        // So let's just pick the highest score that isn't maxed.
+
+        String bestNode = null;
+        float maxScore = -1.0f;
+
+        for (Map.Entry<String, Float> entry : scores.entrySet()) {
+            if (entry.getValue() > maxScore) {
+                maxScore = entry.getValue();
+                bestNode = entry.getKey();
+            }
+        }
+        return bestNode;
+    }
+
+    public static String getBestUpgradeTarget(Town town, Map<String, Float> scores, long idleTicks) {
         // 1. Find the absolute best score (unaffordable included) to set the bar
         float maxPossibleScore = 0f;
         for (float s : scores.values()) {

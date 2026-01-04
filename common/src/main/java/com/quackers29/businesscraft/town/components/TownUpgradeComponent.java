@@ -88,6 +88,25 @@ public class TownUpgradeComponent implements TownComponent {
         return upgradeLevels.getOrDefault(nodeId, 0);
     }
 
+    public List<ResourceAmount> getUpgradeCost(String nodeId) {
+        UpgradeNode node = UpgradeRegistry.get(nodeId);
+        if (node == null)
+            return Collections.emptyList();
+
+        int currentLevel = getUpgradeLevel(nodeId);
+        List<ResourceAmount> costs = node.getCosts();
+        if (costs == null || costs.isEmpty())
+            return Collections.emptyList();
+
+        float multiplier = (float) Math.pow(node.getCostMultiplier(), currentLevel);
+        List<ResourceAmount> effectiveCosts = new ArrayList<>();
+
+        for (ResourceAmount ra : costs) {
+            effectiveCosts.add(new ResourceAmount(ra.resourceId, (int) Math.ceil(ra.amount * multiplier)));
+        }
+        return effectiveCosts;
+    }
+
     public boolean canAffordResearch(String nodeId) {
         UpgradeNode node = UpgradeRegistry.get(nodeId);
         if (node == null)
@@ -104,15 +123,11 @@ public class TownUpgradeComponent implements TownComponent {
                 return false;
         }
 
-        List<ResourceAmount> costs = node.getCosts();
-        if (costs != null && !costs.isEmpty()) {
-            float multiplier = (float) Math.pow(node.getCostMultiplier(), currentLevel);
-            for (ResourceAmount ra : costs) {
-                float cost = ra.amount * multiplier;
-                float stock = town.getTrading().getStock(ra.resourceId);
-                if (stock < cost)
-                    return false;
-            }
+        List<ResourceAmount> costs = getUpgradeCost(nodeId);
+        for (ResourceAmount ra : costs) {
+            float stock = town.getTrading().getStock(ra.resourceId);
+            if (stock < ra.amount)
+                return false;
         }
         return true;
     }

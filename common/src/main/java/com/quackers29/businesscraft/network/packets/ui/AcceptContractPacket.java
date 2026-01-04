@@ -58,7 +58,7 @@ public class AcceptContractPacket {
                         // Sync back to client so UI updates
                         PlatformAccess.getNetworkMessages().sendToPlayer(
                                 new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(
-                                        board.getContracts()),
+                                        board.getContracts(), board.getAllMarketPrices()),
                                 player);
                     } else {
                         LOGGER.warn("Player {} tried to accept already assigned contract {}",

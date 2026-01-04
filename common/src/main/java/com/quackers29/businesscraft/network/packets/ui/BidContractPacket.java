@@ -85,7 +85,7 @@ public class BidContractPacket {
                 }
                 // Sync updated contracts
                 PlatformAccess.getNetworkMessages().sendToPlayer(
-                        new ContractSyncPacket(board.getContracts()), player);
+                        new ContractSyncPacket(board.getContracts(), board.getAllMarketPrices()), player);
             }
         });
         PlatformAccess.getNetwork().setPacketHandled(context);

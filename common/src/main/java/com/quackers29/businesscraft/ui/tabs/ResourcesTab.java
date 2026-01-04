@@ -57,7 +57,22 @@ public class ResourcesTab extends BaseTownTab {
         // Configure the data supplier for the resource information
         contentComponent.withItemListData(() -> {
             // Get resources from the parent screen using the public getter
-            Map<Item, Integer> resources = parentScreen.getCachedResources();
+            Map<Item, Integer> resources = new java.util.HashMap<>(parentScreen.getCachedResources());
+
+            // Merge in wanted resources (deficits)
+            com.quackers29.businesscraft.block.entity.TownInterfaceEntity te = parentScreen.getMenu()
+                    .getTownInterfaceEntity();
+            if (te != null) {
+                Map<Item, Integer> wanted = te.getClientSyncHelper().getClientWantedResources();
+                wanted.forEach((item, amount) -> {
+                    // Ensure wanted items are visible in the list even if stock is 0
+                    if (!resources.containsKey(item)) {
+                        resources.put(item, 0);
+                    }
+                    // Do not overwrite existing stock with deficit
+                });
+            }
+
             DebugConfig.debug(LOGGER, DebugConfig.UI_RESOURCES_TAB,
                     "Resources Tab: Providing {} items to content component", resources.size());
 
@@ -75,9 +90,28 @@ public class ResourcesTab extends BaseTownTab {
 
             if (cache != null) {
                 java.util.Set<String> unlocked = cache.getCachedUnlockedNodes();
+                Map<Item, Integer> wanted = java.util.Collections.emptyMap();
+
+                com.quackers29.businesscraft.block.entity.TownInterfaceEntity te = parentScreen.getMenu()
+                        .getTownInterfaceEntity();
+                if (te != null) {
+                    wanted = te.getClientSyncHelper().getClientWantedResources();
+                }
 
                 for (Item item : resources.keySet()) {
                     StringBuilder sb = new StringBuilder();
+
+                    // Wanted status
+                    if (wanted.containsKey(item)) {
+                        int deficit = wanted.get(item);
+                        sb.append(String.format("§cWANTED: Deficit %d", deficit)); // Negative value
+                        sb.append("\n");
+                    }
+
+                    // GPI
+                    float gpi = com.quackers29.businesscraft.client.ClientGlobalMarket.get().getPrice(item);
+                    sb.append(String.format("§6GPI: %.2f", gpi));
+                    sb.append("\n");
 
                     // Base stats
                     float[] stats = cache.getResourceStats(item);

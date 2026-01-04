@@ -184,17 +184,19 @@ public class TownContractComponent implements TownComponent {
                 net.minecraft.resources.ResourceLocation itemLoc = resourceType.getCanonicalItemId();
                 Object itemObj = com.quackers29.businesscraft.api.PlatformAccess.getRegistry().getItem(itemLoc);
 
-                if (!(itemObj instanceof Item)) {
+                if (!(itemObj instanceof Item item)) {
                     continue;
                 }
 
-                Item item = (Item) itemObj;
                 int currentCount = town.getResourceCount(item);
-
                 float cap = town.getTrading().getStorageCap(resourceId);
                 float needThreshold = cap * (com.quackers29.businesscraft.config.ConfigLoader.minStockPercent / 100.0f);
 
-                if (item != null && currentCount < needThreshold) {
+                boolean isWanted = town.getWantedResources().containsKey(item);
+                int wantedDeficit = town.getWantedResources().getOrDefault(item, 0); // Negative value
+
+                // Bid if stock is low OR if we explicitly want it for an upgrade
+                if (item != null && (currentCount < needThreshold || isWanted)) {
                     // Check if already the highest bidder
                     if (town.getId().equals(sc.getHighestBidder())) {
                         continue;
@@ -212,8 +214,18 @@ public class TownContractComponent implements TownComponent {
 
                     float projectedBid = (float) Math.ceil((currentHighest > 0 ? currentHighest : basePrice) * 1.1f);
 
-                    // Check max bid limit (Total budget = 3x base price)
-                    float maxTotalBudget = basePrice * MAX_BID_MULTIPLIER;
+                    // Check max bid limit (Total budget = 3x base price normally, 5x if wanted)
+                    float multiplier = isWanted ? 5.0f : MAX_BID_MULTIPLIER;
+                    float maxTotalBudget = basePrice * multiplier;
+
+                    // If wanted, we can also add a flat bonus to the budget based on urgency?
+                    // Or just rely on the higher multiplier allowing us to win more auctions.
+                    // User said "current resource status is -100 in bidding terms".
+                    // This implies we should treat our "effective stock" as lower, making us
+                    // willing to pay more?
+                    // Actually, just increasing the multiplier allows us to outbid others who are
+                    // capped at 3x.
+
                     float maxBid = maxTotalBudget - courierCost;
 
                     if (projectedBid > maxBid) {

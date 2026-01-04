@@ -33,7 +33,8 @@ public class ContractBoardMenu extends AbstractContainerMenu {
             com.quackers29.businesscraft.contract.ContractBoard board = com.quackers29.businesscraft.contract.ContractBoard
                     .get(level);
             PlatformAccess.getNetworkMessages().sendToPlayer(
-                    new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(board.getContracts()),
+                    new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(board.getContracts(),
+                            board.getAllMarketPrices()),
                     serverPlayer);
         }
     }
