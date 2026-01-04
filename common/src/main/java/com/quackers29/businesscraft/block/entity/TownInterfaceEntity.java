@@ -564,6 +564,30 @@ public class TownInterfaceEntity extends BlockEntity
         }
 
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Loaded NBT data: {}", result.getSummary());
+
+        // CRITICAL FOR FABRIC SYNC:
+        // On Fabric, block entity updates via packets also call load(), not just
+        // handleUpdateTag() or onDataPacket()
+        // We must ensure client sync data is processed here if present
+        if (level != null && level.isClientSide()) {
+            DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM,
+                    "[PLATFORM] load() called on CLIENT - checking for sync data");
+
+            // Check for and load resources if present
+            if (tag.contains("clientResources")) {
+                loadResourcesFromTag(tag);
+            }
+
+            // Check for and load visit history if present
+            if (tag.contains("visitHistory")) {
+                clientSyncHelper.loadVisitHistoryFromTag(tag);
+            }
+
+            // Check for platform updates
+            if (tag.contains("platforms")) {
+                platformManager.updateClientPlatforms(tag);
+            }
+        }
     }
 
     @Override

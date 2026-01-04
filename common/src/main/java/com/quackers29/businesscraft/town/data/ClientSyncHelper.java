@@ -45,7 +45,8 @@ public class ClientSyncHelper {
         if (provider == null)
             return;
 
-        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "ClientSyncHelper.syncResourcesForClient - provider resources size: {}",
+        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM,
+                "ClientSyncHelper.syncResourcesForClient - provider resources size: {}",
                 provider.getAllResources().size());
 
         // Create a resources tag
@@ -84,6 +85,8 @@ public class ClientSyncHelper {
     public void loadResourcesFromTag(CompoundTag tag) {
         if (tag.contains("clientResources")) {
             CompoundTag resourcesTag = tag.getCompound("clientResources");
+            DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
+                    "ClientSyncHelper: Loading resources from NBT. Keys: {}", resourcesTag.getAllKeys().size());
 
             clientResources.clear();
 
@@ -96,12 +99,23 @@ public class ClientSyncHelper {
                         if (item != null && item != Items.AIR) {
                             int count = resourcesTag.getInt(key);
                             clientResources.put(item, count);
+                            DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
+                                    "  - Loaded resource: {} = {}", key, count);
+                        } else {
+                            LOGGER.warn("  - Item resolved to null or AIR for key: {}", key);
                         }
+                    } else {
+                        LOGGER.warn("  - Item registry object is not an Item for key: {}", key);
                     }
                 } catch (Exception e) {
                     LOGGER.error("Error loading client resource: {}", key, e);
                 }
             }
+            DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
+                    "ClientSyncHelper: Finished loading. Total resources: {}", clientResources.size());
+        } else {
+            DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
+                    "ClientSyncHelper: No 'clientResources' tag found in update");
         }
 
         // Load communal storage data (keep minimal)

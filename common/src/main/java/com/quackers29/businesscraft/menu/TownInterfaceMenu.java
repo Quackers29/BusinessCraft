@@ -132,9 +132,13 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                     updateDataSlots();
 
                     // Standard NBT sync handles resource data now
-                    // No explicit packet needed
-
+                    // Force a sync to ensure client has latest data when opening menu
                     if (level != null && !level.isClientSide()) {
+                        BlockEntity be = level.getBlockEntity(pos);
+                        if (be instanceof TownInterfaceEntity entity) {
+                            entity.setChanged(); // Triggers sendBlockUpdated -> getUpdateTag -> ClientSyncHelper
+                        }
+
                         // Send Town Overview Sync Packet
                         float happiness = town.getHappiness();
                         String biome = town.getBiome();
