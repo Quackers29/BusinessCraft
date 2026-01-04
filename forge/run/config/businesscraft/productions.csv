@@ -4,4 +4,5 @@ population_growth,Natural Population Growth,0.6,happiness:>60;surplus:food,pop:1
 tourism,Tourist Generation,0.2,happiness:>70;food:10;money:10,tourist:1
 farming,Basic Wheat Farming,0.2,,food:40
 woodcutting,Woodcutting,0.5,,wood:50
+sawmill,Sawmill,0.1,wood:25;min;money:1,planks:100
 taxes,Taxes,0.4,,money:1*pop

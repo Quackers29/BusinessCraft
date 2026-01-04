@@ -93,12 +93,27 @@ public class TownUpgradeComponent implements TownComponent {
         if (node == null)
             return Collections.emptyList();
 
-        int currentLevel = getUpgradeLevel(nodeId);
+        int currentLevel = getUpgradeLevel(nodeId); // Logic usually asks for cost of *next* level.
+        // If current is 0, cost is for Level 1.
+        // If current is 5, cost is for Level 6.
+        // Code uses `currentLevel` to calc multiplier.
+        // For Level 1 (current=0), mult should be 1.0.
+
         List<ResourceAmount> costs = node.getCosts();
         if (costs == null || costs.isEmpty())
             return Collections.emptyList();
 
-        float multiplier = (float) Math.pow(node.getCostMultiplier(), currentLevel);
+        float multiplier;
+        if (node.isCostExponential()) {
+            // Exponential: Base * Mult^0, Base * Mult^1...
+            multiplier = (float) Math.pow(node.getCostMultiplier(), currentLevel);
+        } else {
+            // Linear: Base * (1 + (rate * currentLevel))
+            // e.g. Mult 1.2 (+20%). Lvl 0: 1.0. Lvl 1: 1.2. Lvl 2: 1.4.
+            float rate = node.getCostMultiplier() - 1.0f;
+            multiplier = 1.0f + (rate * currentLevel);
+        }
+
         List<ResourceAmount> effectiveCosts = new ArrayList<>();
 
         for (ResourceAmount ra : costs) {
@@ -164,29 +179,24 @@ public class TownUpgradeComponent implements TownComponent {
         }
 
         // Calculate dynamic costs
-        List<ResourceAmount> costs = node.getCosts();
-        if (costs != null && !costs.isEmpty()) {
-            float multiplier = (float) Math.pow(node.getCostMultiplier(), currentLevel);
+        List<ResourceAmount> costs = getUpgradeCost(nodeId); // Use helper
 
-            // Check if can afford
-            for (ResourceAmount ra : costs) {
-                float cost = ra.amount * multiplier;
-                float stock = town.getTrading().getStock(ra.resourceId);
-                if (stock < cost) {
-                    LOGGER.debug("StartResearch failed: {} cannot afford {}. Has {}, needs {}",
-                            nodeId, ra.resourceId, stock, cost);
-                    return; // Cannot afford
-                }
+        // Check if can afford
+        for (ResourceAmount ra : costs) {
+            float stock = town.getTrading().getStock(ra.resourceId);
+            if (stock < ra.amount) {
+                LOGGER.debug("StartResearch failed: {} cannot afford {}. Has {}, needs {}",
+                        nodeId, ra.resourceId, stock, ra.amount);
+                return; // Cannot afford
             }
-            // Deduct
-            for (ResourceAmount ra : costs) {
-                // Do not consume stats like tourism_count
-                if (ra.resourceId.startsWith("tourism_"))
-                    continue;
+        }
+        // Deduct
+        for (ResourceAmount ra : costs) {
+            // Do not consume stats like tourism_count
+            if (ra.resourceId.startsWith("tourism_"))
+                continue;
 
-                float cost = ra.amount * multiplier;
-                town.getTrading().adjustStock(ra.resourceId, -cost);
-            }
+            town.getTrading().adjustStock(ra.resourceId, -ra.amount);
         }
 
         LOGGER.info("Starting research: {} (Lvl {}) for town {}", nodeId, currentLevel + 1, town.getName());
@@ -247,14 +257,6 @@ public class TownUpgradeComponent implements TownComponent {
     public void unlockNode(String nodeId) {
         int lvl = upgradeLevels.getOrDefault(nodeId, 0);
 
-        // Prevent infinite recursion if an upgrade unlocks itself
-        // (Though unlikely, good practice)
-        // Actually, since we update level BEFORE recursion, we just need to ensure we
-        // don't loop infinitely.
-        // But unlockNode acts as an "incrementer". If A unlocks B, and B unlocks A...
-        // Infinite loop.
-        // For now, assume simple DAG structure.
-
         upgradeLevels.put(nodeId, lvl + 1);
         unlockedNodes.add(nodeId);
 
@@ -267,10 +269,10 @@ public class TownUpgradeComponent implements TownComponent {
                 // Avoid unlocking self to prevent direct loops (though indirect loops A->B->A
                 // still possible)
                 if (!target.equals(nodeId) && UpgradeRegistry.get(target) != null) {
-                    // Check if it's already maxed?
-                    // unlockNode increments level blindly. logic elsewhere checks max.
-                    // But here we are forcing it.
-                    // Let's allow it.
+                    // Chained unlocks trigger a level up for that node too?
+                    // Or typically just "unlock level 1".
+                    // The 'unlockNode' function bumps the level.
+                    // Let's assume chained unlocks bump level.
                     unlockNode(target);
                 }
             }
@@ -281,8 +283,6 @@ public class TownUpgradeComponent implements TownComponent {
     }
 
     private final Map<String, Float> flatModifiers = new HashMap<>(); // Permanent modifiers (e.g. from Biome)
-
-    // ... existing ...
 
     public void addFlatModifier(String key, float value) {
         flatModifiers.put(key, value);
@@ -305,9 +305,21 @@ public class TownUpgradeComponent implements TownComponent {
             if (node == null)
                 continue;
 
+            float benefitMult = node.getBenefitMultiplier();
+            boolean useExponentialBenefit = Math.abs(benefitMult - 1.0f) > 0.0001f;
+
             for (Effect effect : node.getEffects()) {
-                // Effects are multiplied by level for repeated upgrades
-                activeModifiers.merge(effect.getTarget(), effect.getValue() * level, Float::sum);
+                float value;
+                if (useExponentialBenefit) {
+                    // Exponential: Val * Mult^level
+                    // e.g. 1.01^1, 1.01^2... (Compound growth)
+                    // Note: Level is 1-based here.
+                    value = effect.getValue() * (float) Math.pow(benefitMult, level);
+                } else {
+                    // Linear: Val * Level (Additive accumulation)
+                    value = effect.getValue() * level;
+                }
+                activeModifiers.merge(effect.getTarget(), value, Float::sum);
             }
         }
     }

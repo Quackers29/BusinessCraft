@@ -179,6 +179,20 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                         PlatformAccess.getNetworkMessages().sendToPlayer(syncPacket,
                                 (net.minecraft.server.level.ServerPlayer) inv.player);
 
+                        // --- FIX: Sync Contract/Market Data for GPI Display ---
+                        com.quackers29.businesscraft.contract.ContractBoard board = com.quackers29.businesscraft.contract.ContractBoard
+                                .get((ServerLevel) level);
+                        if (board != null) {
+                            PlatformAccess.getNetworkMessages().sendToPlayer(
+                                    new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(
+                                            board.getContracts(),
+                                            board.getAllMarketPrices()),
+                                    (net.minecraft.server.level.ServerPlayer) inv.player);
+                            DebugConfig.debug(LOGGER, DebugConfig.SMART_GPI_DEBUG,
+                                    "TownInterfaceMenu: Synced market prices to {}", inv.player.getName().getString());
+                        }
+                        // --------------------------------------------------------
+
                         broadcastChanges();
                     }
                 }

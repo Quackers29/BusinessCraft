@@ -64,16 +64,38 @@ public class ContractBoard {
     }
 
     public float getMarketPrice(String resourceId) {
-        return savedData.getMarketPrices().getOrDefault(resourceId, 1.0f);
+        if (savedData.getMarketPrices().containsKey(resourceId)) {
+            return savedData.getMarketPrices().get(resourceId);
+        }
+        return com.quackers29.businesscraft.production.ProductionRegistry.getEstimatedValue(resourceId);
     }
 
     public Map<String, Float> getAllMarketPrices() {
-        return Collections.unmodifiableMap(savedData.getMarketPrices());
+        // Start with estimates
+        Map<String, Float> merged = new HashMap<>(
+                com.quackers29.businesscraft.production.ProductionRegistry.getAllEstimatedValues());
+        // Overlay actual market history
+        merged.putAll(savedData.getMarketPrices());
+        return Collections.unmodifiableMap(merged);
     }
 
     public void updateMarketPrice(String resourceId, float transactionPrice) {
         float currentPrice = getMarketPrice(resourceId);
-        float alpha = 0.1f; // Learning rate (10% influence)
+        float baseAlpha = 0.1f; // Base learning rate
+
+        // Scale alpha by effort: High effort = low alpha (resistance to change)
+        float effort = com.quackers29.businesscraft.production.ProductionRegistry.getEffort(resourceId);
+        if (effort < 0.01f)
+            effort = 0.01f; // Prevent div by zero
+
+        float alpha = baseAlpha / effort;
+
+        // Clamp alpha to reasonable bounds
+        if (alpha > 1.0f)
+            alpha = 1.0f;
+        if (alpha < 0.001f)
+            alpha = 0.001f; // Minimum 0.1% change
+
         float newPrice = (currentPrice * (1.0f - alpha)) + (transactionPrice * alpha);
 
         // Ensure price doesn't drop too low
@@ -82,8 +104,8 @@ public class ContractBoard {
 
         savedData.getMarketPrices().put(resourceId, newPrice);
         savedData.setDirty();
-        LOGGER.info("Updated market price for {}: {} -> {} (Transaction: {})", resourceId, currentPrice, newPrice,
-                transactionPrice);
+        LOGGER.info("Updated market price for {}: {} -> {} (Transaction: {}, Effort: {}, Alpha: {})",
+                resourceId, currentPrice, newPrice, transactionPrice, effort, alpha);
     }
 
     public void tick(ServerLevel level) {
@@ -145,6 +167,8 @@ public class ContractBoard {
                 if (amountRemaining > 0) {
                     // Just add to buyer (resources already deducted from seller at auction start)
                     buyerTown.addResource(item, amountRemaining);
+                    // ESCROW: Release from seller's escrow
+                    sellerTown.removeEscrowResource(item, amountRemaining);
 
                     LOGGER.info("Delivered {} {} from {} to {} (escrowed resources transferred)",
                             amountRemaining, sc.getResourceId(), sellerTown.getName(), buyerTown.getName());
@@ -156,6 +180,8 @@ public class ContractBoard {
             if (cost > 0) {
                 // Just add to seller (emeralds already deducted from buyer when they won)
                 sellerTown.addResource(net.minecraft.world.item.Items.EMERALD, cost);
+                // ESCROW: Release from buyer's escrow
+                buyerTown.removeEscrowResource(net.minecraft.world.item.Items.EMERALD, cost);
 
                 LOGGER.info("Delivered {} emeralds from {} to {} (escrowed emeralds transferred)",
                         cost, buyerTown.getName(), sellerTown.getName());
@@ -428,6 +454,7 @@ public class ContractBoard {
 
                             if (item != null && item != net.minecraft.world.item.Items.PAPER) {
                                 sellerTown.addResource(item, sc.getQuantity());
+                                sellerTown.removeEscrowResource(item, sc.getQuantity());
 
                                 // UPDATE MARKET PRICE via Implied Value (Failed Auction = Price Too High)
                                 float currentGPI = getMarketPrice(sc.getResourceId());
@@ -533,6 +560,7 @@ public class ContractBoard {
 
                 // ESCROW: Deduct total cost (Bid + Courier) from new bidder
                 bidderTown.addResource(net.minecraft.world.item.Items.EMERALD, -totalCost);
+                bidderTown.addEscrowResource(net.minecraft.world.item.Items.EMERALD, totalCost);
                 LOGGER.info("Escrowed {} emeralds ({} bid + {} courier) from town {} for contract {}",
                         totalCost, (int) roundedAmount, courierCost, bidderTown.getName(), contractId);
 
@@ -545,6 +573,7 @@ public class ContractBoard {
                         int refundAmount = prevBid + prevCourierCost;
 
                         previousTown.addResource(net.minecraft.world.item.Items.EMERALD, refundAmount);
+                        previousTown.removeEscrowResource(net.minecraft.world.item.Items.EMERALD, refundAmount);
                         LOGGER.info("Refunded {} emeralds ({} bid + {} courier) to town {} (outbid on contract {})",
                                 refundAmount, prevBid, prevCourierCost, previousTown.getName(), contractId);
                     }
@@ -656,9 +685,13 @@ public class ContractBoard {
     private void broadcastUpdate() {
         try {
             if (PlatformAccess.getNetworkMessages() != null) {
+                Map<String, Float> prices = getAllMarketPrices();
+                if (DebugConfig.isEnabled(DebugConfig.SMART_GPI_DEBUG)) {
+                    LOGGER.info("[SmartGPI] Broadcasting prices: {}", prices);
+                }
                 PlatformAccess.getNetworkMessages().sendToAllPlayers(
                         new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(
-                                savedData.getContracts(), savedData.getMarketPrices()));
+                                savedData.getContracts(), prices));
             }
         } catch (Exception e) {
             LOGGER.error("Failed to broadcast contract update", e);

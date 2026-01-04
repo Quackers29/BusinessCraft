@@ -34,6 +34,7 @@ public class ClientSyncHelper {
     private final Map<Item, Integer> clientResources = new HashMap<>();
     private final Map<Item, Integer> clientCommunalStorage = new HashMap<>();
     private final Map<UUID, Map<Item, Integer>> clientPersonalStorage = new HashMap<>();
+    private final Map<Item, Integer> clientEscrowedResources = new HashMap<>();
     private final List<ITownDataProvider.VisitHistoryRecord> clientVisitHistory = new ArrayList<>();
     private final Map<UUID, String> townNameCache = new HashMap<>();
 
@@ -136,6 +137,45 @@ public class ClientSyncHelper {
                     }
                 } catch (Exception e) {
                     LOGGER.error("Error loading client communal storage item: {}", key, e);
+                }
+            }
+        }
+    }
+
+    public void syncEscrowedResourcesForClient(CompoundTag tag, Town town) {
+        if (town == null)
+            return;
+
+        Map<Item, Integer> escrow = town.getEscrowedResources(); // You need to ensure this public method exists in
+                                                                 // Town.java
+        CompoundTag escrowTag = new CompoundTag();
+
+        if (!escrow.isEmpty()) {
+            escrow.forEach((item, count) -> {
+                Object keyObj = PlatformAccess.getRegistry().getItemKey(item);
+                if (keyObj != null) {
+                    escrowTag.putInt(keyObj.toString(), count);
+                }
+            });
+        }
+        tag.put("clientEscrowedResources", escrowTag);
+    }
+
+    public void loadEscrowedResourcesFromTag(CompoundTag tag) {
+        if (tag.contains("clientEscrowedResources")) {
+            CompoundTag escrowTag = tag.getCompound("clientEscrowedResources");
+            clientEscrowedResources.clear();
+
+            for (String key : escrowTag.getAllKeys()) {
+                try {
+                    ResourceLocation resourceLocation = new ResourceLocation(key);
+                    Object itemObj = PlatformAccess.getRegistry().getItem(resourceLocation);
+                    if (itemObj instanceof net.minecraft.world.item.Item item) {
+                        int count = escrowTag.getInt(key);
+                        clientEscrowedResources.put(item, count);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error loading client escrowed resource: {}", key, e);
                 }
             }
         }
@@ -410,6 +450,10 @@ public class ClientSyncHelper {
         return clientCommunalStorage;
     }
 
+    public Map<Item, Integer> getClientEscrowedResources() {
+        return Collections.unmodifiableMap(clientEscrowedResources);
+    }
+
     /**
      * Gets the client-side cached personal storage items for a specific player
      * 
@@ -447,6 +491,7 @@ public class ClientSyncHelper {
     public void clearAll() {
         clientResources.clear();
         clientCommunalStorage.clear();
+        clientEscrowedResources.clear();
         clientPersonalStorage.clear();
         clientVisitHistory.clear();
         townNameCache.clear();

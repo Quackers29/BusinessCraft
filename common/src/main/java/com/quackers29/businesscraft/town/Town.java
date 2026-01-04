@@ -59,6 +59,9 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     // ITownState specific fields
     private String biomeNamespace = "minecraft:plains"; // Default biome for ITownState
 
+    // Escrow storage - resources locked in auctions
+    private final Map<Item, Integer> escrowedResources = new HashMap<>();
+
     // Components
     private final TownTradingComponent trading;
     private final TownProductionComponent production;
@@ -181,6 +184,33 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     @Override
     public Map<Item, Integer> getAllResources() {
         return economy.getResources().getAllResources();
+    }
+
+    public Map<Item, Integer> getEscrowedResources() {
+        return Collections.unmodifiableMap(escrowedResources);
+    }
+
+    public void addEscrowResource(Item item, int count) {
+        if (count == 0)
+            return;
+        escrowedResources.merge(item, count, Integer::sum);
+        // Remove entry if 0
+        if (escrowedResources.get(item) <= 0) {
+            escrowedResources.remove(item);
+        }
+        markDirty();
+    }
+
+    public void removeEscrowResource(Item item, int count) {
+        addEscrowResource(item, -count);
+    }
+
+    public int getEscrowResourceCount(Item item) {
+        return escrowedResources.getOrDefault(item, 0);
+    }
+
+    public int getTotalResourceCount(Item item) {
+        return getResourceCount(item) + getEscrowResourceCount(item);
     }
 
     // ================================
@@ -488,6 +518,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         }
 
         // Save wanted resources
+        // Save wanted resources
         if (!wantedResources.isEmpty()) {
             CompoundTag wantsTag = new CompoundTag();
             wantedResources.forEach((item, amount) -> {
@@ -495,6 +526,16 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
                 wantsTag.putInt(itemKey, amount);
             });
             tag.put("wantedResources", wantsTag);
+        }
+
+        // Save escrowed resources
+        if (!escrowedResources.isEmpty()) {
+            CompoundTag escrowTag = new CompoundTag();
+            escrowedResources.forEach((item, count) -> {
+                String itemKey = PlatformAccess.getRegistry().getItemKey(item).toString();
+                escrowTag.putInt(itemKey, count);
+            });
+            tag.put("escrowedResources", escrowTag);
         }
     }
 
@@ -683,7 +724,6 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
                 }
             });
         }
-
         if (tag.contains("wantedResources")) {
             CompoundTag wantsTag = tag.getCompound("wantedResources");
             wantsTag.getAllKeys().forEach(key -> {
@@ -700,6 +740,21 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
             });
         }
 
+        if (tag.contains("escrowedResources")) {
+            CompoundTag escrowTag = tag.getCompound("escrowedResources");
+            escrowTag.getAllKeys().forEach(key -> {
+                try {
+                    net.minecraft.resources.ResourceLocation itemId = new net.minecraft.resources.ResourceLocation(key);
+                    Object itemObj = PlatformAccess.getRegistry().getItem(itemId);
+                    if (itemObj instanceof Item item) {
+                        int amount = escrowTag.getInt(key);
+                        town.escrowedResources.put(item, amount);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error loading escrowed resource: {}", key, e);
+                }
+            });
+        }
         return town;
     }
 

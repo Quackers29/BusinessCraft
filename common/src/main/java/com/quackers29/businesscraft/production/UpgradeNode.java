@@ -18,6 +18,8 @@ public class UpgradeNode {
     // Repeat logic
     private int maxRepeats = 0; // 0 or 1 = once, >1 = repeats, -1 = infinite
     private float costMultiplier = 1.0f;
+    private boolean isCostExponential = false;
+    private float benefitMultiplier = 1.0f;
 
     public UpgradeNode(String id, String category, String displayName, String repeatConfig, List<String> prereqNodes,
             String description, List<Effect> effects) {
@@ -51,10 +53,24 @@ public class UpgradeNode {
         }
 
         if (parts.length > 1) {
+            String costStr = parts[1].trim();
+            if (costStr.startsWith("^")) {
+                this.isCostExponential = true;
+                costStr = costStr.substring(1);
+            }
             try {
-                this.costMultiplier = Float.parseFloat(parts[1].trim());
+                this.costMultiplier = Float.parseFloat(costStr);
             } catch (NumberFormatException e) {
                 this.costMultiplier = 1.0f;
+            }
+        }
+
+        if (parts.length > 2) {
+            String benefitStr = parts[2].trim();
+            try {
+                this.benefitMultiplier = Float.parseFloat(benefitStr);
+            } catch (NumberFormatException e) {
+                this.benefitMultiplier = 1.0f;
             }
         }
     }
@@ -86,6 +102,14 @@ public class UpgradeNode {
 
     public float getCostMultiplier() {
         return costMultiplier;
+    }
+
+    public boolean isCostExponential() {
+        return isCostExponential;
+    }
+
+    public float getBenefitMultiplier() {
+        return benefitMultiplier;
     }
 
     public List<String> getPrereqNodes() {

@@ -252,7 +252,7 @@ public class TownProductionComponent implements TownComponent {
                 net.minecraft.world.item.Item item = com.quackers29.businesscraft.api.PlatformAccess.getRegistry()
                         .getItem(type.getMcItemId());
                 if (item != null) {
-                    current = town.getResourceCount(item);
+                    current = town.getTotalResourceCount(item);
                 }
             }
 
@@ -387,22 +387,73 @@ public class TownProductionComponent implements TownComponent {
                     return false;
                 continue;
             } else {
-                // Maybe a resource amount?
-                continue;
+                // Check if it's a resource
+                com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
+                        .get(target);
+
+                if (type != null) {
+                    net.minecraft.world.item.Item item = com.quackers29.businesscraft.api.PlatformAccess.getRegistry()
+                            .getItem(type.getMcItemId());
+                    if (item != null) {
+                        targetValue = town.getResourceCount(item);
+                    } else {
+                        continue; // Invalid item mapping
+                    }
+                } else {
+                    continue; // Unknown target
+                }
             }
 
             float threshold = 0f;
-            // Parse valStr. Might be "pop_cap" variable.
-            if (valStr.contains("pop_cap")) {
-                float popCap = town.getUpgrades().getModifier("pop_cap"); // Base?
-                // Plan: "pop_cap starts at 0 and granted by starting_nodes".
-                // So getModifier("pop_cap") IS the max pop.
+            float cap = 0f;
+            boolean useCap = false;
 
-                // If valStr is "95%pop_cap"
+            // Determine if we need cap context
+            if (valStr.equalsIgnoreCase("min") || valStr.equalsIgnoreCase("excess") || valStr.endsWith("%")
+                    || valStr.contains("pop_cap")) {
+                useCap = true;
+                if (target.equals("pop")) {
+                    cap = town.getUpgrades().getModifier("pop_cap");
+                } else if (target.equals("happiness")) {
+                    cap = 100f; // Max happiness
+                } else {
+                    // Assume resource
+                    cap = town.getTrading().getStorageCap(target);
+                }
+            }
+
+            if (valStr.equalsIgnoreCase("min")) {
+                float minPct = com.quackers29.businesscraft.config.ConfigLoader.minStockPercent / 100.0f;
+                threshold = cap * minPct;
+            } else if (valStr.equalsIgnoreCase("excess")) {
+                float excessPct = com.quackers29.businesscraft.config.ConfigLoader.excessStockPercent / 100.0f;
+                threshold = cap * excessPct;
+            } else if (valStr.endsWith("%")) {
+                // e.g. 10%
+                try {
+                    String pctStr = valStr.replace("%", "").trim();
+                    // If it was "95%pop_cap", old logic handles it. But here we simplify:
+                    // If pure percentage "10%", use derived cap.
+                    // If complex "95%pop_cap", existing logic handles pop_cap key in valStr.
+                    // My check `valStr.endsWith("%")` catches both if they end in %.
+                    // But "95%pop_cap" ends with "cap". "pop_cap" detection handles it.
+                    // Here we handle purely "10%".
+                    float pct = Float.parseFloat(pctStr);
+                    threshold = cap * (pct / 100.0f);
+                } catch (NumberFormatException e) {
+                    LOGGER.warn("Invalid percentage condition: {}", valStr);
+                }
+            } else if (valStr.contains("pop_cap")) {
+                // Legacy explicit "95%pop_cap"
+                // ... (existing logic for explicit reference)
+                float popCap = town.getUpgrades().getModifier("pop_cap");
                 if (valStr.contains("%")) {
-                    valStr = valStr.replace("pop_cap", "").replace("%", "").trim();
-                    float pct = Float.parseFloat(valStr);
-                    threshold = (pct / 100f) * popCap;
+                    String clean = valStr.replace("pop_cap", "").replace("%", "").trim();
+                    try {
+                        float pct = Float.parseFloat(clean);
+                        threshold = (pct / 100f) * popCap;
+                    } catch (NumberFormatException e) {
+                    }
                 } else {
                     threshold = popCap;
                 }
@@ -410,7 +461,7 @@ public class TownProductionComponent implements TownComponent {
                 try {
                     threshold = Float.parseFloat(valStr);
                 } catch (NumberFormatException e) {
-                    continue;
+                    continue; // Skip invalid
                 }
             }
 

@@ -111,6 +111,14 @@ public class ResourcesTab extends BaseTownTab {
                     // Quantity (Line 1)
                     int quantity = resources.getOrDefault(item, 0);
                     sb.append(String.format("Quantity: %d", quantity));
+
+                    // Add Escrow info
+                    if (te != null) {
+                        Map<Item, Integer> escrow = te.getClientSyncHelper().getClientEscrowedResources();
+                        if (escrow.containsKey(item) && escrow.get(item) > 0) {
+                            sb.append(String.format(" (+%d Escrow)", escrow.get(item)));
+                        }
+                    }
                     sb.append("\n");
 
                     // GPI & Wealth (Line 2)

@@ -634,11 +634,6 @@ public class TownInterfaceEntity extends BlockEntity
                         }
                     }
 
-                    // Contract generation
-                    if (level.getGameTime() % 100 == 0) { // Every 5 seconds
-                        tickContractGeneration(town);
-                    }
-
                     // Check for visitors using helper
                     if (level.getGameTime() % 40 == 0) {
                         visitorProcessingHelper.processVisitors(
@@ -806,6 +801,7 @@ public class TownInterfaceEntity extends BlockEntity
             if (provider instanceof Town town) {
                 clientSyncHelper.syncResourceStatsToTag(tag, town);
                 clientSyncHelper.syncWantedResourcesForClient(tag, town);
+                clientSyncHelper.syncEscrowedResourcesForClient(tag, town);
             }
 
             // Sync visit history as well since we have the provider
@@ -862,6 +858,7 @@ public class TownInterfaceEntity extends BlockEntity
     private void loadResourcesFromTag(CompoundTag tag) {
         DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] loadResourcesFromTag called");
         clientSyncHelper.loadResourcesFromTag(tag);
+        clientSyncHelper.loadEscrowedResourcesFromTag(tag);
         // Load stats
         clientSyncHelper.loadResourceStatsFromTag(tag);
     }
@@ -1430,66 +1427,4 @@ public class TownInterfaceEntity extends BlockEntity
      * Gets the visit history for client-side display
      */
 
-    private void tickContractGeneration(Town town) {
-        if (!ConfigLoader.tradingEnabled)
-            return;
-
-        // Only generate contracts on server side
-        if (level.isClientSide)
-            return;
-
-        Map<Item, Integer> resources = town.getAllResources();
-
-        // Threshold for selling (e.g. keep 1000, sell excess)
-        // Ideally this should be configurable per resource or global
-        int keepThreshold = 1000;
-        int sellAmount = 64; // Stack size
-
-        for (Map.Entry<Item, Integer> entry : resources.entrySet()) {
-            Item item = entry.getKey();
-            int count = entry.getValue();
-
-            // Skip emeralds - they are the currency
-            if (item == Items.EMERALD) {
-                continue;
-            }
-
-            if (count > keepThreshold) {
-                // Look up the resource type from ResourceRegistry
-                com.quackers29.businesscraft.economy.ResourceType resourceType = com.quackers29.businesscraft.economy.ResourceRegistry
-                        .getFor(item);
-
-                // Only create contracts for registered resources
-                if (resourceType == null) {
-                    continue;
-                }
-
-                String resourceId = resourceType.getId(); // Use the resource ID like "wood", "iron", etc.
-
-                // Get ServerLevel
-                net.minecraft.server.level.ServerLevel serverLevel = (net.minecraft.server.level.ServerLevel) level;
-
-                // Check if we already have a contract for this item
-                boolean hasContract = ContractBoard.get(serverLevel).getContracts().stream()
-                        .filter(c -> c instanceof SellContract)
-                        .map(c -> (SellContract) c)
-                        .anyMatch(
-                                c -> c.getIssuerTownId().equals(town.getId()) && c.getResourceId().equals(resourceId));
-
-                if (!hasContract) {
-                    // Create new contract
-                    // Duration: 1 minute = 60000 ms
-                    long duration = 60000L;
-                    float price = 1.0f; // Default price
-
-                    SellContract contract = new SellContract(town.getId(), town.getName(), duration, resourceId,
-                            sellAmount, price);
-                    ContractBoard.get(serverLevel).addContract(contract);
-
-                    LOGGER.info("[DEBUG] Generated SellContract for town {}: {}x {} at {} (ID: {})",
-                            town.getName(), sellAmount, resourceId, price, contract.getId());
-                }
-            }
-        }
-    }
 }

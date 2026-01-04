@@ -309,7 +309,8 @@ public class TownContractComponent implements TownComponent {
             return;
         }
 
-        int resourceCount = town.getResourceCount(item);
+        // Use TOTAL count (Available + Escrow) for decision making
+        int resourceCount = town.getTotalResourceCount(item);
 
         float cap = town.getTrading().getStorageCap(resourceId);
         float excessThreshold = cap * (com.quackers29.businesscraft.config.ConfigLoader.excessStockPercent / 100.0f);
@@ -384,12 +385,13 @@ public class TownContractComponent implements TownComponent {
 
             board.addContract(contract);
 
-            // ESCROW: Immediately deduct resources from seller
+            // ESCROW: Move items from Available to Escrow
             town.addResource(item, -sellQuantity);
+            town.addEscrowResource(item, sellQuantity);
 
             DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
-                    "Town {} created sell contract for {} {} (escrowed {} resources)",
-                    town.getName(), sellQuantity, resourceId, sellQuantity);
+                    "Town {} created sell contract for {} {} (moved to escrow)",
+                    town.getName(), sellQuantity, resourceId);
         }
     }
 
