@@ -143,7 +143,13 @@ public class UpgradeNode {
         boolean useExponentialBenefit = Math.abs(benefitMultiplier - 1.0f) > 0.0001f;
 
         if (useExponentialBenefit) {
-            return effect.getValue() * (float) Math.pow(benefitMultiplier, level - 1);
+            // Geometric Series Sum: S_n = a * (r^n - 1) / (r - 1)
+            // a = Base Value (First term at Level 1)
+            // r = Multiplier
+            // n = Level
+            float numerator = (float) Math.pow(benefitMultiplier, level) - 1.0f;
+            float denominator = benefitMultiplier - 1.0f;
+            return effect.getValue() * (numerator / denominator);
         } else {
             // Linear: Base * Level (Accumulation)
             // Note: Use simple level multiplication for Linear as requested previously?

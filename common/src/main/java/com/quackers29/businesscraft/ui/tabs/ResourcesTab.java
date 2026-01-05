@@ -195,7 +195,7 @@ public class ResourcesTab extends BaseTownTab {
                                         sb.append("\n\nActive Effects:");
                                         headerAdded = true;
                                     }
-                                    float val = eff.getValue() * lvl;
+                                    float val = node.calculateEffectValue(eff, lvl);
 
                                     String valStr;
                                     if (type.equals("Speed")) {
