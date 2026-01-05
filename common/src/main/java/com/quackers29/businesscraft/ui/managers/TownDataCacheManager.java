@@ -255,6 +255,60 @@ public class TownDataCacheManager {
         return cachedAiScores.getOrDefault(nodeId, 0f);
     }
 
+    /**
+     * Calculates the current research speed multiplier based on cached upgrade
+     * levels.
+     */
+    public float getCachedResearchSpeed() {
+        float speed = 1.0f;
+        if (cachedUnlockedNodes != null) {
+            for (String uid : cachedUnlockedNodes) {
+                com.quackers29.businesscraft.production.UpgradeNode unode = com.quackers29.businesscraft.production.UpgradeRegistry
+                        .get(uid);
+                if (unode != null) {
+                    int ulvl = getCachedUpgradeLevel(uid);
+                    for (com.quackers29.businesscraft.data.parsers.Effect eff : unode.getEffects()) {
+                        if ("research".equals(eff.getTarget())) {
+                            speed += unode.calculateEffectValue(eff, ulvl);
+                        }
+                    }
+                }
+            }
+        }
+        return Math.max(0.1f, speed);
+    }
+
+    /**
+     * Generates a tooltip string detailing the research speed breakdown.
+     */
+    public String getResearchSpeedTooltip() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Base Speed: 100%");
+
+        if (cachedUnlockedNodes != null) {
+            for (String uid : cachedUnlockedNodes) {
+                com.quackers29.businesscraft.production.UpgradeNode unode = com.quackers29.businesscraft.production.UpgradeRegistry
+                        .get(uid);
+                if (unode != null) {
+                    int ulvl = getCachedUpgradeLevel(uid);
+                    for (com.quackers29.businesscraft.data.parsers.Effect eff : unode.getEffects()) {
+                        if ("research".equals(eff.getTarget())) {
+                            float val = unode.calculateEffectValue(eff, ulvl);
+                            if (val != 0) {
+                                sb.append("\n");
+                                String name = unode.getDisplayName();
+                                if (unode.isRepeatable())
+                                    name += " (" + ulvl + ")";
+                                sb.append(name).append(": ").append(String.format("%+.0f%%", val * 100));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return sb.toString();
+    }
+
     public int getCachedTotalTouristsArrived() {
         return cachedTotalTouristsArrived;
     }

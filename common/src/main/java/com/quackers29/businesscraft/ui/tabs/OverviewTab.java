@@ -46,6 +46,7 @@ public class OverviewTab extends BaseTownTab {
         contentComponent = createStandardContent(StandardTabContent.ContentType.LABEL_VALUE_GRID, "TOWN OVERVIEW");
 
         // Configure the data supplier for the overview information
+        // Configure the data supplier for the overview information
         contentComponent.withLabelValueData(() -> {
             Map<String, String> overviewData = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
             overviewData.put("Town Name:", parentScreen.getCachedTownName());
@@ -70,6 +71,10 @@ public class OverviewTab extends BaseTownTab {
             float border = parentScreen.getCacheManager().getCachedBorderRadius();
             overviewData.put("Border Radius:", String.format("%.0fm", border));
 
+            // Research Speed
+            float resSpeed = parentScreen.getCacheManager().getCachedResearchSpeed();
+            overviewData.put("Research Speed:", String.format("%.0f%%", resSpeed * 100));
+
             overviewData.put("Tourists:", parentScreen.getTouristString());
 
             // Add cumulative tourism stats
@@ -91,6 +96,10 @@ public class OverviewTab extends BaseTownTab {
                 overviewData.put("Biome:", biome);
             }
             return overviewData;
+        }).withLabelValueTooltipData(() -> {
+            Map<String, String> tooltips = new java.util.HashMap<>();
+            tooltips.put("Research Speed:", parentScreen.getCacheManager().getResearchSpeedTooltip());
+            return tooltips;
         });
 
         // Add the content component to the panel

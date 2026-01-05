@@ -42,6 +42,7 @@ public class StandardTabContent extends BCComponent {
 
     // Data suppliers for different content types
     private Supplier<Map<String, String>> labelValueSupplier;
+    private Supplier<Map<String, String>> labelValueTooltipSupplier;
     private Supplier<Map<Item, Integer>> itemListSupplier;
     private Supplier<Map<Item, String>> itemTooltipSupplier;
     private Supplier<Object[]> customDataSupplier;
@@ -64,6 +65,14 @@ public class StandardTabContent extends BCComponent {
      */
     public StandardTabContent withLabelValueData(Supplier<Map<String, String>> dataSupplier) {
         this.labelValueSupplier = dataSupplier;
+        return this;
+    }
+
+    /**
+     * Configure tooltips for label-value grid
+     */
+    public StandardTabContent withLabelValueTooltipData(Supplier<Map<String, String>> dataSupplier) {
+        this.labelValueTooltipSupplier = dataSupplier;
         return this;
     }
 
@@ -135,22 +144,14 @@ public class StandardTabContent extends BCComponent {
     private void renderLabelValueGrid(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (labelValueSupplier != null) {
             Map<String, String> data = labelValueSupplier.get();
+            Map<String, String> tooltips = labelValueTooltipSupplier != null ? labelValueTooltipSupplier.get() : null;
 
-            // Create column data arrays
-            @SuppressWarnings("unchecked")
-            java.util.List<UIGridBuilder.GridContent>[] columnData = new java.util.List[2];
-            columnData[0] = new java.util.ArrayList<>(); // Label column
-            columnData[1] = new java.util.ArrayList<>(); // Value column
-
-            for (Map.Entry<String, String> entry : data.entrySet()) {
-                columnData[0].add(UIGridBuilder.GridContent.text(entry.getKey(), TEXT_COLOR));
-                columnData[1].add(UIGridBuilder.GridContent.text(entry.getValue(), TEXT_HIGHLIGHT));
-            }
+            int totalRows = data.size();
 
             // Create or update grid
             if (grid == null) {
-                // Calculate visible rows manually (matching Resource tab logic)
-                int visibleRows = Math.max(1, (height - 20) / 21); // (height - 2*margin) / (rowHeight + spacing)
+                // Calculate visible rows manually
+                int visibleRows = Math.max(1, (height - 20) / 21); // (height - margin) / (rowHeight + spacing)
 
                 grid = UIGridBuilder.create(x, y, width, height, 2)
                         .withRowHeight(16)
@@ -159,10 +160,30 @@ public class StandardTabContent extends BCComponent {
                         .withMargins(15, 10)
                         .withSpacing(15, 5)
                         .drawBorder(true)
-                        .withColumnData(columnData)
                         .withVerticalScroll(true, visibleRows);
+
+                // Add content manually
+                int i = 0;
+                for (Map.Entry<String, String> entry : data.entrySet()) {
+                    String tooltip = tooltips != null ? tooltips.get(entry.getKey()) : null;
+                    grid.addLabelWithTooltip(i, 0, entry.getKey(), tooltip, TEXT_COLOR);
+                    grid.addLabelWithTooltip(i, 1, entry.getValue(), tooltip, TEXT_HIGHLIGHT);
+                    i++;
+                }
+                grid.updateTotalRows(totalRows);
+
             } else {
-                grid.updateColumnData(columnData);
+                grid.clearElements();
+
+                int i = 0;
+                for (Map.Entry<String, String> entry : data.entrySet()) {
+                    String tooltip = tooltips != null ? tooltips.get(entry.getKey()) : null;
+                    grid.addLabelWithTooltip(i, 0, entry.getKey(), tooltip, TEXT_COLOR);
+                    grid.addLabelWithTooltip(i, 1, entry.getValue(), tooltip, TEXT_HIGHLIGHT);
+                    i++;
+                }
+                grid.updateTotalRows(totalRows);
+
                 // Re-calculate visible rows and enforce scroll settings
                 int visibleRows = Math.max(1, (height - 20) / 21);
                 grid.withVerticalScroll(true, visibleRows);

@@ -187,6 +187,82 @@ public class TownResearchAI {
                         score += 100.0 * (ratio * ratio);
                     }
                 }
+            } else if (target.equals("research")) {
+                // Research Speed: Priority based on AVERAGE of TOP 50% Priority Upgrades (Time)
+                // User Request: "make it the top half of the research priorities"
+                // We calculate the priority of everything else, take the top half, and average
+                // *their* research times.
+
+                List<Map.Entry<Double, Double>> weightedTimes = new ArrayList<>(); // Key: Score, Value: ScaledTime
+
+                for (UpgradeNode potential : UpgradeRegistry.getAll()) {
+                    // 1. Ignore Research Speed upgrades to avoid recursion
+                    boolean isResearchUpgrade = false;
+                    for (Effect e : potential.getEffects()) {
+                        if ("research".equals(e.getTarget())) {
+                            isResearchUpgrade = true;
+                            break;
+                        }
+                    }
+                    if (isResearchUpgrade)
+                        continue;
+
+                    // 2. Check availability (Prereqs met, Not Maxed)
+                    // We only "want" things we can actually research.
+                    int currentLevel = town.getUpgradeLevel(potential.getId());
+                    boolean isMaxed = false;
+                    if (!potential.isRepeatable()) {
+                        if (currentLevel >= 1)
+                            isMaxed = true;
+                    } else {
+                        if (potential.getMaxRepeats() != -1 && currentLevel >= potential.getMaxRepeats())
+                            isMaxed = true;
+                    }
+
+                    if (isMaxed)
+                        continue;
+
+                    // Check prereqs
+                    boolean prereqsMet = true;
+                    if (potential.getPrereqNodes() != null) {
+                        for (String pre : potential.getPrereqNodes()) {
+                            if (!town.isUnlocked(pre)) {
+                                prereqsMet = false;
+                                break;
+                            }
+                        }
+                    }
+                    if (!prereqsMet)
+                        continue;
+
+                    // 3. Calculate Priority for this upgrade
+                    double pScore = calculateScore(town, potential);
+
+                    // 4. Calculate Time for NEXT level
+                    float baseMins = potential.getResearchMinutes();
+                    double scaledMins = baseMins;
+                    if (baseMins > 0) {
+                        if (potential.isRepeatable() && currentLevel > 0) {
+                            scaledMins *= Math.pow(potential.getCostMultiplier(), currentLevel);
+                        }
+                        weightedTimes.add(new AbstractMap.SimpleEntry<>(pScore, scaledMins));
+                    }
+                }
+
+                // 5. Sort by Priority (Score) Descending
+                weightedTimes.sort((e1, e2) -> Double.compare(e2.getKey(), e1.getKey()));
+
+                // 6. Take Top 50%
+                if (!weightedTimes.isEmpty()) {
+                    int countToTake = (int) Math.ceil(weightedTimes.size() / 2.0);
+                    double sumTime = 0;
+
+                    for (int i = 0; i < countToTake; i++) {
+                        sumTime += weightedTimes.get(i).getValue();
+                    }
+
+                    score += sumTime / countToTake;
+                }
             }
 
             // 2. Production Upgrades (Speed)
@@ -222,6 +298,8 @@ public class TownResearchAI {
                         } else {
                             priority = 50.0; // No cap? Balanced.
                         }
+                    } else if (output.resourceId.equals("border")) {
+                        priority = calculateBorderPriority(town);
                     } else if (cons <= 0.0001f) {
                         // No consumption (and not an accumulation resource)
                         if (prod > 0) {
@@ -262,9 +340,66 @@ public class TownResearchAI {
                 } else {
                     score += recipeScore;
                 }
+            } else if (target.equals("border")) {
+                score += calculateBorderPriority(town);
             }
         }
 
         return Math.max(0.0, score);
+    }
+
+    private static double calculateBorderPriority(ITownState townState) {
+        // Border Expansion:
+        // Logic based on Density vs Baseline Density
+        double priority = 0.0;
+        if (townState instanceof com.quackers29.businesscraft.town.Town t) {
+            String biomeId = t.getBiome();
+            String variant = t.getBiomeVariant();
+            var kit = com.quackers29.businesscraft.world.BiomeRegistry.getSpecificKit(biomeId, variant);
+
+            float startPop = com.quackers29.businesscraft.config.ConfigLoader.defaultStartingPopulation;
+            float startBorder = 10f;
+            if (kit != null && kit.startingValues != null) {
+                if (kit.startingValues.containsKey("pop")) {
+                    startPop = kit.startingValues.get("pop");
+                }
+                startBorder = kit.startingValues.getOrDefault("border", 10f);
+            }
+            // Avoid div by zero
+            if (startBorder < 1)
+                startBorder = 1;
+
+            // Area Density = Pop / (R * R)
+            // (Pi cancels out in ratio)
+            double baselineDensity = startPop / (startBorder * startBorder);
+
+            float currentPop = townState.getStock("pop");
+            float currentBorder = townState.getBoundaryRadius();
+            if (currentBorder < 1)
+                currentBorder = 1;
+
+            double currentDensity = currentPop / (currentBorder * currentBorder);
+
+            // Ratio > 1 means more crowded than baseline
+            double crowding = currentDensity / baselineDensity;
+
+            // User requested: "want of a town border that is still at its original starter
+            // stats ... should be 0"
+            // So if Crowding == 1.0, Priority == 0.
+            // "as the pop increases the border want will go up but in proportion of the
+            // area increase"
+
+            if (crowding <= 1.0) {
+                priority = 0.0;
+            } else {
+                // Crowding > 1.0
+                // If Pop Doubles (Crowding 2.0), we want High Priority (e.g. 100).
+                priority = (crowding - 1.0) * 100.0;
+            }
+        } else {
+            // Fallback
+            priority = 0.0;
+        }
+        return Math.min(100.0, Math.max(0.0, priority));
     }
 }

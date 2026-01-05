@@ -248,6 +248,16 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         return radius;
     }
 
+    @Override
+    public boolean isUnlocked(String nodeId) {
+        return upgrades.getUnlockedNodes().contains(nodeId);
+    }
+
+    @Override
+    public int getUpgradeLevel(String nodeId) {
+        return upgrades.getUpgradeLevel(nodeId);
+    }
+
     /**
      * Checks if a position is within the town's boundary
      * 

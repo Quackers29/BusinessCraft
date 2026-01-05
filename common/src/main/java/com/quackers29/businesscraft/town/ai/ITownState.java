@@ -12,4 +12,10 @@ public interface ITownState {
     float getProductionRate(String resourceId);
 
     float getConsumptionRate(String resourceId);
+
+    int getBoundaryRadius();
+
+    boolean isUnlocked(String nodeId);
+
+    int getUpgradeLevel(String nodeId);
 }

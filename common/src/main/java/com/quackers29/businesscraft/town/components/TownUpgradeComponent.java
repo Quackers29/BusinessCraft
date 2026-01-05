@@ -56,9 +56,14 @@ public class TownUpgradeComponent implements TownComponent {
             }
 
             // Research progress logic
-            researchProgress += 1.0f / 1200.0f;
+            // Research progress logic
+            float speedModifier = 1.0f + getModifier("research");
+            if (speedModifier < 0.1f)
+                speedModifier = 0.1f; // min speed 10%
 
-            if (researchProgress >= node.getResearchMinutes()) {
+            researchProgress += speedModifier / 1200.0f; // 1200 ticks per minute
+
+            if (researchProgress >= getScaledResearchMinutes(currentResearchNode)) {
                 completeResearch();
             }
         } else {
@@ -141,6 +146,17 @@ public class TownUpgradeComponent implements TownComponent {
                 return false;
         }
         return true;
+    }
+
+    public float getScaledResearchMinutes(String nodeId) {
+        UpgradeNode node = UpgradeRegistry.get(nodeId);
+        if (node == null)
+            return 0;
+
+        int currentLevel = getUpgradeLevel(nodeId);
+        // Cost multiplier also applies to Time as per user request.
+        float multiplier = (float) Math.pow(node.getCostMultiplier(), currentLevel);
+        return node.getResearchMinutes() * multiplier;
     }
 
     public void startResearch(String nodeId) {

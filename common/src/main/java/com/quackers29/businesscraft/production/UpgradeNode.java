@@ -143,20 +143,16 @@ public class UpgradeNode {
         boolean useExponentialBenefit = Math.abs(benefitMultiplier - 1.0f) > 0.0001f;
 
         if (useExponentialBenefit) {
-            // Geometric Series Sum: S_n = a * (r^n - 1) / (r - 1)
-            // a = Base Value (First term at Level 1)
-            // r = Multiplier
-            // n = Level
-            float numerator = (float) Math.pow(benefitMultiplier, level) - 1.0f;
-            float denominator = benefitMultiplier - 1.0f;
-            return effect.getValue() * (numerator / denominator);
+            // User requested explicit sequence: 2, 4, 8 for Base 2, Mult 2.
+            // This corresponds to Base * Mult^(Level - 1).
+            // Current Level replaces previous level's effect value.
+            return effect.getValue() * (float) Math.pow(benefitMultiplier, level - 1);
         } else {
             // Linear: Base * Level (Accumulation)
-            // Note: Use simple level multiplication for Linear as requested previously?
-            // "Linear (Default, No 3rd param): Base * Level"
-            // If we want consistent "Level 1 = Base", then Linear should just be Base *
-            // Level.
-            // (1 * Base = Base). So this logic remains fine.
+            // e.g. Base 10.
+            // L1: 10
+            // L2: 20
+            // L3: 30
             return effect.getValue() * level;
         }
     }

@@ -222,6 +222,25 @@ public class ProductionTab extends BaseTownTab {
                 java.util.Set<String> unlockedIds = cache.getCachedUnlockedNodes();
                 String currentResearchId = cache.getCachedCurrentResearch();
 
+                // Calculate research speed client-side
+                float researchSpeedCalc = 1.0f;
+                if (unlockedIds != null) {
+                    for (String uid : unlockedIds) {
+                        UpgradeNode unode = UpgradeRegistry.get(uid);
+                        if (unode != null) {
+                            int ulvl = cache.getCachedUpgradeLevel(uid);
+                            for (com.quackers29.businesscraft.data.parsers.Effect eff : unode.getEffects()) {
+                                if ("research".equals(eff.getTarget())) {
+                                    researchSpeedCalc += unode.calculateEffectValue(eff, ulvl);
+                                }
+                            }
+                        }
+                    }
+                }
+                if (researchSpeedCalc < 0.1f)
+                    researchSpeedCalc = 0.1f;
+                final float finalResearchSpeed = researchSpeedCalc;
+
                 for (UpgradeNode node : UpgradeRegistry.getAll()) {
                     int lvl = cache.getCachedUpgradeLevel(node.getId());
 
@@ -282,6 +301,13 @@ public class ProductionTab extends BaseTownTab {
 
                     StringBuilder sb = new StringBuilder();
                     sb.append(name).append("\n");
+
+                    if (entry.node.isRepeatable()) {
+                        String maxStr = (entry.node.getMaxRepeats() == -1) ? "Infinite"
+                                : String.valueOf(entry.node.getMaxRepeats());
+                        sb.append("Max Level: ").append(maxStr).append("\n");
+                    }
+
                     sb.append(entry.node.getDescription()).append("\n\n");
 
                     if (entry.status instanceof com.quackers29.businesscraft.ui.builders.UIGridBuilder.StatusSymbol) {
@@ -292,14 +318,44 @@ public class ProductionTab extends BaseTownTab {
 
                     if ("Researching...".equals(entry.status)) {
                         float currentMinutes = cache.getCachedResearchProgress();
-                        int pct = (entry.node.getResearchMinutes() > 0)
-                                ? (int) ((currentMinutes / entry.node.getResearchMinutes()) * 100)
+
+                        // Calculate Scaled Duration
+                        float scaledDuration = entry.node.getResearchMinutes();
+                        if (entry.node.isRepeatable() && entry.level > 1) {
+                            float multiplier = (float) Math.pow(entry.node.getCostMultiplier(), entry.level - 1);
+                            scaledDuration *= multiplier;
+                        }
+
+                        int pct = (scaledDuration > 0)
+                                ? (int) ((currentMinutes / scaledDuration) * 100)
                                 : 0;
                         if (pct > 100)
                             pct = 100;
                         progress.add(pct + "%");
                     } else {
                         progress.add(entry.status);
+                    }
+
+                    // Research Time
+                    if (entry.node.getResearchMinutes() > 0) {
+                        float baseMins = entry.node.getResearchMinutes();
+
+                        // Apply scaling for repeatable upgrades based on user request
+                        // Same multiplier as costs
+                        float levelMult = (float) Math.pow(entry.node.getCostMultiplier(), entry.level - 1);
+                        float scaledMins = baseMins * levelMult;
+
+                        float activeMins = scaledMins / finalResearchSpeed;
+
+                        sb.append("Research Time: ").append(String.format("%.1f", activeMins)).append("m");
+                        if (finalResearchSpeed != 1.0f || levelMult != 1.0f) {
+                            if (levelMult != 1.0f) {
+                                sb.append(String.format(" (Base: %.1fm)", scaledMins));
+                            } else {
+                                sb.append(String.format(" (Base: %.1fm)", baseMins));
+                            }
+                        }
+                        sb.append("\n");
                     }
 
                     // Requirements / Costs (Scaled)
@@ -345,7 +401,8 @@ public class ProductionTab extends BaseTownTab {
 
                         // heuristic for formatting
                         boolean isPercentage = false;
-                        if (com.quackers29.businesscraft.production.ProductionRegistry.get(target) != null) {
+                        if (com.quackers29.businesscraft.production.ProductionRegistry.get(target) != null
+                                || "research".equals(target)) {
                             isPercentage = true;
                         }
 

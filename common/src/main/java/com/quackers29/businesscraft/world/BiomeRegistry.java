@@ -187,4 +187,30 @@ public class BiomeRegistry {
 
         return candidates.get(0); // Fallback
     }
+
+    /**
+     * Retrieves a specific BiomeKit matching the biome and variant name.
+     * Used for retrieving starting stats for AI calculations.
+     */
+    public static BiomeKit getSpecificKit(String biomeId, String variantName) {
+        // 1. Check specific variants
+        if (GEN_KITS.containsKey(biomeId)) {
+            for (BiomeKit kit : GEN_KITS.get(biomeId)) {
+                if (kit.variantName.equals(variantName)) {
+                    return kit;
+                }
+            }
+        }
+
+        // 2. Check global kits
+        for (BiomeKit kit : GLOBAL_KITS) {
+            if (kit.variantName.equals(variantName)) {
+                return kit;
+            }
+        }
+
+        // 3. Fallback: If variant name not found (e.g. migration issue or rename), use
+        // default random get
+        return get(biomeId);
+    }
 }

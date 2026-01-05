@@ -36,14 +36,18 @@ Defines the tech tree.
 In `upgrades.csv` (Column 4), you can define complex scaling for upgrades.
 *   **Format:** `[Max Repeats]:[Cost Scaler]:[Benefit Scaler]`
 *   **Examples:**
-    *   `10:1.2` -> Max 10 levels, Cost multiplies by 1.2 (+20%) each level.
-    *   `infinite:1.5:1.01` -> Infinite levels, Cost x1.5 per level, Benefit x1.01 per level.
-*   **Cost Logic:**
+    *   `10:1.2` -> Max 10 levels, Cost & Time multiplies by 1.2 (+20%) each level.
+    *   `infinite:1.5:1.01` -> Infinite levels, Cost & Time x1.5 per level, Benefit x1.01 per level.
+*   **Cost & Time Logic:**
     *   **Compound (Standard)**: `Base * Scaler^Level`.
     *   The `^` syntax is no longer required or supported. All multipliers are treated as Compound multipliers.
+    *   Note: The Cost Scaler now scales **both** the Resource Cost and the Research Time.
 *   **Benefit Logic:**
     *   **Linear (Default, No 3rd param)**: `Base * Level`. (Adds base value each level).
-    *   **Exponential (If 3rd param != 1.0)**: `Base * Scaler^Level`. (Compounds value).
+    *   **Exponential (If 3rd param != 1.0)**: `Base * Scaler^(Level-1)`. (Replaces previous value with new exponential value).
+        *   Level 1: Base
+        *   Level 2: Base * Scaler
+        *   Level 3: Base * Scaler^2
 
 ### Effects
 Effects modify town stats or unlock capabilities.
@@ -102,6 +106,11 @@ Used for upgrade costs or recipe inputs.
 *   `[recipe_id]-input`: Modifies input cost.
 *   `[recipe_id]-output`: Modifies output amount.
 
+### Research
+*   `research`: Multiplier for research progress (Default: 1.0).
+    *   `research:0.5` -> Adds +50% speed (Total 1.5x).
+    *   Effect is additive: `1.0 + Unlocks`.
+
 ### Production Stats Output
 You can make a recipe output a stat change instead of an item by using the stat key (e.g. `happiness`, `border`) in the `outputs` column.
 *   **Additive Only**: These outputs add to the flat modifier of the stat per cycle.
@@ -120,3 +129,51 @@ Keys used in `biomes.csv` to set starting values.
 *   `happiness`: Starting happiness.
 *   `[item_id]`: Starting resource amount (e.g., `wood:100`).
 *   `[stat]_cap`: Permanent modifier to caps (e.g., `pop_cap:10`).
+
+## 6. AI Wants Logic
+
+Starting around version 3.0, the AI uses dynamic logic to prioritize (Want) certain upgrades.
+
+### Research Speed
+The AI calculates a "Want" (Priority 0-100) for Research Speed upgrades based on the **Average Time for Top 3 Next Level (Scaled)**.
+*   **Formula**: `Average(Top 3 Longest Available Researches)`.
+*   **Inclusions**: Scaled time for the *next level* of all available non-maxed upgrades.
+*   **Exclusions**: Upgrades that provide Research Speed themselves (to avoid circular dependence).
+*   **Behavior**:
+    *   Focuses heavily on the most expensive researches available.
+    *   If you have one 100m research and many 1m researches, the average will be weighted significantly by the 100m one (e.g. `(100+1+1)/3 = 34` vs `(100+50+1s)/52` previously).
+    *   100 minutes average = ~100 Priority (Max).
+
+### Border Expansion
+The AI prioritizes Border Expansion based on **Population Density (Area) relative to Starting Density**.
+*   **Formula**: `Priority = (CrowdingRatio - 1.0) * 100`.
+*   **Crowding Ratio**: `CurrentAreaDensity / BaselineAreaDensity`.
+    *   **Area Density**: `Pop / (BorderRadius^2)`.
+*   **Behavior**:
+    *   If density matches start (Ratio 1.0), Priority is 0 (Balanced).
+    *   If population doubles while border stays same (Ratio 2.0), Priority is 100 (Urgent).
+    *   The "Want" scales proportionally with Area Increase requirements.
+
+### Population / Tourists
+The AI prioritizes these "Accumulation" stats inversely to how full they are.
+*   **Formula**: `100 * (1.0 - Fullness)`.
+*   **Fullness**: `Current / Cap`.
+*   **Behavior**: Empty capacity = High Priority. Full capacity = Low Priority.
+
+### Storage Capacity
+The AI prioritizes increasing storage capacity when current storage is nearing full.
+*   **Formula**: `100 * (Current / Cap)^2`.
+*   **Behavior**:
+    *   If storage is full (100%), Priority is 100 (Urgent).
+    *   If storage is half full (50%), Priority is 25 (Low).
+    *   This ensures the AI doesn't waste resources upgrading storage it isn't using.
+
+### Production Speed (Supply vs Demand)
+For standard production recipes, the AI balances Production against Consumption.
+*   **Formula**: `50 * (2.0 - Ratio)`.
+*   **Ratio**: `ProductionRate / ConsumptionRate`.
+*   **Behavior**:
+    *   **Critical Deficit** (Ratio 0): If consuming but not producing, Priority is 100.
+    *   **Balanced** (Ratio 1): If production matches consumption, Priority is 50.
+    *   **Surplus** (Ratio >= 2): If producing 2x consumption, Priority is 0.
+*   **Special Case**: If storage is full (>95%), Priority is penalized (-50) to avoid overproduction.
