@@ -128,4 +128,30 @@ public class UpgradeNode {
     public List<ResourceAmount> getCosts() {
         return costs;
     }
+
+    /**
+     * Calculates the value of an effect at a specific level.
+     * Centralizes logic to ensure UI and Server consistency.
+     */
+    public float calculateEffectValue(Effect effect, int level) {
+        if (level <= 0)
+            return 0f;
+
+        // Exponential/Compound: Base * Mult^(Level - 1)
+        // Level 1: Mult^0 = 1.0 -> Base Value
+        // Level 2: Mult^1 = 1.1 -> Base * 1.1 etc.
+        boolean useExponentialBenefit = Math.abs(benefitMultiplier - 1.0f) > 0.0001f;
+
+        if (useExponentialBenefit) {
+            return effect.getValue() * (float) Math.pow(benefitMultiplier, level - 1);
+        } else {
+            // Linear: Base * Level (Accumulation)
+            // Note: Use simple level multiplication for Linear as requested previously?
+            // "Linear (Default, No 3rd param): Base * Level"
+            // If we want consistent "Level 1 = Base", then Linear should just be Base *
+            // Level.
+            // (1 * Base = Base). So this logic remains fine.
+            return effect.getValue() * level;
+        }
+    }
 }

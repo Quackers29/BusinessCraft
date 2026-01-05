@@ -339,7 +339,9 @@ public class ProductionTab extends BaseTownTab {
                     // Show base effects per level
                     for (com.quackers29.businesscraft.data.parsers.Effect eff : entry.node.getEffects()) {
                         String target = eff.getTarget();
-                        float val = eff.getValue(); // Base value per level
+
+                        // Calculate Scaled Value for this level
+                        float val = entry.node.calculateEffectValue(eff, entry.level);
 
                         // heuristic for formatting
                         boolean isPercentage = false;

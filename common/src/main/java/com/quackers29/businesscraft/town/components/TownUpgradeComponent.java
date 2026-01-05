@@ -301,20 +301,8 @@ public class TownUpgradeComponent implements TownComponent {
             if (node == null)
                 continue;
 
-            float benefitMult = node.getBenefitMultiplier();
-            boolean useExponentialBenefit = Math.abs(benefitMult - 1.0f) > 0.0001f;
-
             for (Effect effect : node.getEffects()) {
-                float value;
-                if (useExponentialBenefit) {
-                    // Exponential: Val * Mult^level
-                    // e.g. 1.01^1, 1.01^2... (Compound growth)
-                    // Note: Level is 1-based here.
-                    value = effect.getValue() * (float) Math.pow(benefitMult, level);
-                } else {
-                    // Linear: Val * Level (Additive accumulation)
-                    value = effect.getValue() * level;
-                }
+                float value = node.calculateEffectValue(effect, level);
                 activeModifiers.merge(effect.getTarget(), value, Float::sum);
             }
         }
