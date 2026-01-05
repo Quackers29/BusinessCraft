@@ -66,6 +66,10 @@ public class OverviewTab extends BaseTownTab {
                 hapStr += " (Normal)";
             overviewData.put("Happiness:", hapStr);
 
+            // Border Radius
+            float border = parentScreen.getCacheManager().getCachedBorderRadius();
+            overviewData.put("Border Radius:", String.format("%.0fm", border));
+
             overviewData.put("Tourists:", parentScreen.getTouristString());
 
             // Add cumulative tourism stats

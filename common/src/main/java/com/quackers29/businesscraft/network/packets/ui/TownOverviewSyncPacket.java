@@ -26,12 +26,14 @@ public class TownOverviewSyncPacket {
     private final float populationCap;
     private final int totalTouristsArrived;
     private final double totalTouristDistance;
+    private final float borderRadius;
     private final Map<String, Float> aiScores;
 
     public TownOverviewSyncPacket(float happiness, String biome, String biomeVariant, String currentResearch,
             float researchProgress,
             int dailyTickInterval, Map<String, Float> activeProductions, Map<String, Integer> upgradeLevels,
-            float populationCap, int totalTouristsArrived, double totalTouristDistance, Map<String, Float> aiScores) {
+            float populationCap, int totalTouristsArrived, double totalTouristDistance, float borderRadius,
+            Map<String, Float> aiScores) {
         this.happiness = happiness;
         this.biome = biome;
         this.biomeVariant = biomeVariant;
@@ -43,6 +45,7 @@ public class TownOverviewSyncPacket {
         this.populationCap = populationCap;
         this.totalTouristsArrived = totalTouristsArrived;
         this.totalTouristDistance = totalTouristDistance;
+        this.borderRadius = borderRadius;
         this.aiScores = aiScores != null ? aiScores : new HashMap<>();
     }
 
@@ -56,6 +59,7 @@ public class TownOverviewSyncPacket {
         this.populationCap = buf.readFloat();
         this.totalTouristsArrived = buf.readInt();
         this.totalTouristDistance = buf.readDouble();
+        this.borderRadius = buf.readFloat();
 
         int size = buf.readInt();
         this.activeProductions = new HashMap<>(size);
@@ -92,6 +96,7 @@ public class TownOverviewSyncPacket {
         buf.writeFloat(populationCap);
         buf.writeInt(totalTouristsArrived);
         buf.writeDouble(totalTouristDistance);
+        buf.writeFloat(borderRadius);
 
         buf.writeInt(activeProductions.size());
         for (Map.Entry<String, Float> entry : activeProductions.entrySet()) {
@@ -124,7 +129,7 @@ public class TownOverviewSyncPacket {
                     cache.updateOverviewData(happiness, biome, biomeVariant, currentResearch, researchProgress,
                             dailyTickInterval,
                             activeProductions, upgradeLevels, populationCap, totalTouristsArrived,
-                            totalTouristDistance, aiScores);
+                            totalTouristDistance, borderRadius, aiScores);
                 }
             }
         });

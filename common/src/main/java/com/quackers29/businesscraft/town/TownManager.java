@@ -146,7 +146,7 @@ public class TownManager {
                         } else if (key.equals("tourist")) {
                             // Add to pending spawns so they actually appear in the world
                             town.addPendingTouristSpawns((int) value);
-                        } else if (key.endsWith("_cap") || key.endsWith("_modifier")) {
+                        } else if (key.endsWith("_cap") || key.endsWith("_modifier") || key.equals("border")) {
                             // Apply as a permanent flat modifier to the upgrade component
                             town.getUpgrades().addFlatModifier(key, value);
                         } else {

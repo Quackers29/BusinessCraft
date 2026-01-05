@@ -254,6 +254,13 @@ public class TownProductionComponent implements TownComponent {
                 if (item != null) {
                     current = town.getTotalResourceCount(item);
                 }
+            } else {
+                // If type is null (not a registered resource, pop, or tourist), assume it is a
+                // stat (like border, happiness, etc.)
+                // Stats do not have a "storage cap" in the inventory sense that stalls
+                // production.
+                // Continue to next output.
+                continue;
             }
 
             // Special handling for tourist cap
@@ -357,6 +364,10 @@ public class TownProductionComponent implements TownComponent {
                     if (item != null) {
                         town.addResource(item, (int) amount);
                     }
+                } else {
+                    // Generic Stat Output (e.g. border, etc.)
+                    // Use accumulateFlatModifier to safely add to the existing value
+                    town.getUpgrades().accumulateFlatModifier(resId, amount);
                 }
             }
         }
@@ -400,7 +411,9 @@ public class TownProductionComponent implements TownComponent {
                         continue; // Invalid item mapping
                     }
                 } else {
-                    continue; // Unknown target
+                    // Not a known resource/pop/happiness/tourist.
+                    // Check against generic upgrade modifiers (stats like 'border')
+                    targetValue = town.getUpgrades().getModifier(target);
                 }
             }
 

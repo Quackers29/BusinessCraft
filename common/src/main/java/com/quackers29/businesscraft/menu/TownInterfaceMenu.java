@@ -174,6 +174,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                                 activeProductions, town.getUpgrades().getUpgradeLevels(),
                                 town.getUpgrades().getModifier("pop_cap"),
                                 town.getTotalTouristsArrived(), town.getTotalTouristDistance(),
+                                town.getBoundaryRadius(),
                                 town.getUpgrades().getAiScores());
 
                         PlatformAccess.getNetworkMessages().sendToPlayer(syncPacket,
@@ -261,6 +262,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                     activeProductions, town.getUpgrades().getUpgradeLevels(),
                     town.getUpgrades().getModifier("pop_cap"),
                     town.getTotalTouristsArrived(), town.getTotalTouristDistance(),
+                    town.getBoundaryRadius(),
                     town.getUpgrades().getAiScores());
 
             if (this.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {

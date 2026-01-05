@@ -212,12 +212,14 @@ public class TownDataCacheManager {
     private float cachedPopulationCap = 0f;
     private int cachedTotalTouristsArrived = 0;
     private double cachedTotalTouristDistance = 0.0;
+    private float cachedBorderRadius = 50f;
     private Map<String, Float> cachedAiScores = Collections.emptyMap();
 
     public void updateOverviewData(float happiness, String biome, String biomeVariant, String currentResearch,
             float researchProgress,
             int dailyTickInterval, Map<String, Float> activeProductions, Map<String, Integer> upgradeLevels,
-            float populationCap, int totalTouristsArrived, double totalTouristDistance, Map<String, Float> aiScores) {
+            float populationCap, int totalTouristsArrived, double totalTouristDistance, float borderRadius,
+            Map<String, Float> aiScores) {
         this.cachedHappiness = happiness;
         if (biome != null && biome.startsWith("minecraft:")) {
             this.cachedBiome = biome.substring(10);
@@ -241,7 +243,12 @@ public class TownDataCacheManager {
         this.cachedPopulationCap = populationCap;
         this.cachedTotalTouristsArrived = totalTouristsArrived;
         this.cachedTotalTouristDistance = totalTouristDistance;
+        this.cachedBorderRadius = borderRadius;
         this.cachedAiScores = aiScores != null ? new java.util.HashMap<>(aiScores) : Collections.emptyMap();
+    }
+
+    public float getCachedBorderRadius() {
+        return cachedBorderRadius;
     }
 
     public float getCachedAiScore(String nodeId) {

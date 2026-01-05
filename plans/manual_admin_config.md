@@ -94,12 +94,25 @@ Used for upgrade costs or recipe inputs.
 *   `tourist`: Current active Tourist count.
 *   `tourist_cap`: Tourist Capacity.
 *   `tourism`: Historical total of tourists (Only used in Conditions).
+*   `border`: Town boundary radius in blocks (Default: 50).
 
 ### Production Modifiers
 *   `[recipe_id]*[val]`: Modifies recipe cycle time (Speed).
     *   `farming*0.8` = 20% Faster.
 *   `[recipe_id]-input`: Modifies input cost.
 *   `[recipe_id]-output`: Modifies output amount.
+
+### Production Stats Output
+You can make a recipe output a stat change instead of an item by using the stat key (e.g. `happiness`, `border`) in the `outputs` column.
+*   **Additive Only**: These outputs add to the flat modifier of the stat per cycle.
+*   **Example**: `border:1` -> Adds +1 Block to border radius every time the recipe completes.
+*   **Dynamic**: `border:border*0.1` -> Adds 10% of current border to the flat modifier (Exponential growth).
+
+> [!WARNING]
+> **Naming Collisions**
+> Do not name a Production Recipe ID the same as a Stat Key (e.g. `border`).
+> If a Stat (like `border`) has a value > 0, the system may misinterpret it as "Recipe Unlocked" if they share the same ID.
+> **Best Practice**: Use `border_expansion` for the recipe ID, and `border` for the output/stat key.
 
 ### Biome Configuration
 Keys used in `biomes.csv` to set starting values.

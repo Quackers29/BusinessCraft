@@ -286,6 +286,13 @@ public class TownUpgradeComponent implements TownComponent {
         town.markDirty();
     }
 
+    public void accumulateFlatModifier(String key, float delta) {
+        float current = flatModifiers.getOrDefault(key, 0f);
+        flatModifiers.put(key, current + delta);
+        recalculateModifiers();
+        town.markDirty();
+    }
+
     // Recalculates all active modifiers based on unlocked nodes and flat modifiers
     private void recalculateModifiers() {
         activeModifiers.clear();

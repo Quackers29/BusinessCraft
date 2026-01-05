@@ -223,10 +223,29 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
      * @return The boundary radius in blocks
      */
     public int getBoundaryRadius() {
-        int populationRadius = getPopulation();
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Town {} boundary radius: {} (population: {})",
-                name, populationRadius, getPopulation());
-        return populationRadius;
+        // Use "border" modifier from upgrades/starting stats
+        float borderMod = upgrades.getModifier("border");
+
+        // Fallback for legacy towns that might not have the modifier yet
+        if (borderMod <= 0) {
+            // Fallback to population-based (legacy behavior) or a safe default
+            // The user requested removing the tie, but for safety in existing worlds
+            // without migration logic,
+            // we might want to default to 50 if population is small, or keep population as
+            // fallback?
+            // Since we are decoupling, let's just make sure it's at least 50.
+            // But if we return 50, old towns (pop 5) which expect 5 will suddenly jump to
+            // 50.
+            // That's acceptable as per "starting 'border:50'".
+            borderMod = 50;
+        }
+
+        int radius = (int) borderMod;
+
+        // Debugging rarely needed here unless issues arise
+        // DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Town {} boundary
+        // radius: {}", name, radius);
+        return radius;
     }
 
     /**
