@@ -13,10 +13,10 @@ The **Contract Board** is your gateway to the Global Market. Access it via the "
 ### Escrow System (Safe Trading)
 To prevent fraud and "ghost" items, BusinessCraft uses an **Escrow System**:
 -   **Sellers**: When an auction is created, the items are **removed** from your Available storage and placed in "Escrow". They are safe, but you can't use them for production while they are for sale.
-    -   *If the auction succeeds*: The items go to the buyer.
+    -   *If the auction succeeds*: The items are released from your Escrow immediately (held in "transit" for delivery).
     -   *If the auction fails*: The items are returned to your Available storage.
 -   **Buyers**: When you bid, the Emeralds are immediately deducted and held in Escrow.
-    -   *If you win*: The Emeralds go to the seller.
+    -   *If you win*: The Emeralds are paid to the seller immediately.
     -   *If you are outbid*: Your Emeralds are immediately refunded to your account.
 
 *Tip: Hover over items in the Resources Tab to see how many are currently in Escrow.*

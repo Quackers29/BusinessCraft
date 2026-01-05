@@ -134,61 +134,6 @@ public class ContractBoard {
         }
     }
 
-    private void processContractDelivery(SellContract sc, ServerLevel level) {
-        // Mark as delivered so we don't process again
-        sc.setDelivered(true);
-        savedData.setDirty();
-
-        com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
-                .get(level);
-
-        // If there is no winning town (e.g. failed auction), we don't need to do any
-        // delivery
-        if (sc.getWinningTownId() == null) {
-            return;
-        }
-
-        com.quackers29.businesscraft.town.Town sellerTown = townManager.getTown(sc.getIssuerTownId());
-        com.quackers29.businesscraft.town.Town buyerTown = townManager.getTown(sc.getWinningTownId());
-
-        if (sellerTown != null && buyerTown != null) {
-            // Transfer Items (already escrowed from seller at auction start)
-            // Transfer Items (already escrowed from seller at auction start)
-            net.minecraft.world.item.Item item = com.quackers29.businesscraft.util.ContractItemHelper
-                    .getBaseItemForResource(sc.getResourceId());
-
-            if (item != null && item != net.minecraft.world.item.Items.PAPER) {
-                // Determine amount to deliver (total - already delivered by courier)
-                // For Snail Mail, deliveredAmount is 0, so we deliver full quantity.
-                // For Courier, deliveredAmount should equal quantity, so we deliver 0
-                // (preventing double add).
-                int amountRemaining = sc.getQuantity() - sc.getDeliveredAmount();
-
-                if (amountRemaining > 0) {
-                    // Just add to buyer (resources already deducted from seller at auction start)
-                    buyerTown.addResource(item, amountRemaining);
-                    // ESCROW: Release from seller's escrow
-                    sellerTown.removeEscrowResource(item, amountRemaining);
-
-                    LOGGER.info("Delivered {} {} from {} to {} (escrowed resources transferred)",
-                            amountRemaining, sc.getResourceId(), sellerTown.getName(), buyerTown.getName());
-                }
-            }
-
-            // Transfer Money (Emeralds already escrowed from buyer when they bid)
-            int cost = (int) sc.getAcceptedBid();
-            if (cost > 0) {
-                // Just add to seller (emeralds already deducted from buyer when they won)
-                sellerTown.addResource(net.minecraft.world.item.Items.EMERALD, cost);
-                // ESCROW: Release from buyer's escrow
-                buyerTown.removeEscrowResource(net.minecraft.world.item.Items.EMERALD, cost);
-
-                LOGGER.info("Delivered {} emeralds from {} to {} (escrowed emeralds transferred)",
-                        cost, buyerTown.getName(), sellerTown.getName());
-            }
-        }
-    }
-
     public void processCourierDelivery(UUID contractId, int amount) {
         Contract contract = getContract(contractId);
 
@@ -422,10 +367,43 @@ public class ContractBoard {
                             // DON'T complete yet - needs courier & delivery
                             // sc.complete(); // REMOVED
 
-                            // Set courier reward (Distance based)
-                            // We need to get the seller town again as we are inside the loop
+                            // UPDATE MARKET PRICE upon Auction Close (Winning Bid = Accepted Market Value)
+                            if (sc.getQuantity() > 0 && highestBid > 0) {
+                                float transactionPrice = highestBid / (float) sc.getQuantity();
+                                updateMarketPrice(sc.getResourceId(), transactionPrice);
+                            }
+
+                            // IMMEDIATE PAYMENT & ESCROW RELEASE
+                            // 1. Transfer Money: Buyer Escrow -> Seller Stock
+                            // We already have winnerTown and sellerTown (fetched earlier or need fetching)
+                            // sellerTown is fetched below for courier cost, so let's reuse/move it up.
                             com.quackers29.businesscraft.town.Town sellerTown = townManager
                                     .getTown(sc.getIssuerTownId());
+
+                            if (winnerTown != null && sellerTown != null) {
+                                int cost = (int) highestBid;
+                                if (cost > 0) {
+                                    // Add to seller
+                                    sellerTown.addResource(net.minecraft.world.item.Items.EMERALD, cost);
+                                    // ESCROW: Release from buyer's escrow
+                                    winnerTown.removeEscrowResource(net.minecraft.world.item.Items.EMERALD, cost);
+
+                                    LOGGER.info("Auction Won: Transferred {} emeralds from {} (Escrow) to {}",
+                                            cost, winnerTown.getName(), sellerTown.getName());
+                                }
+
+                                // 2. Release Seller Item Escrow (Items considered "in transit" or "reserved for
+                                // delivery")
+                                net.minecraft.world.item.Item item = com.quackers29.businesscraft.util.ContractItemHelper
+                                        .getBaseItemForResource(sc.getResourceId());
+                                if (item != null && item != net.minecraft.world.item.Items.PAPER) {
+                                    sellerTown.removeEscrowResource(item, sc.getQuantity());
+                                    LOGGER.info("Auction Won: Released {} {} from {} Escrow (prepared for delivery)",
+                                            sc.getQuantity(), sc.getResourceId(), sellerTown.getName());
+                                }
+                            }
+
+                            // Set courier reward (Distance based)
                             int courierCost = calculateCourierCost(winnerTown, sellerTown);
                             sc.setCourierReward(courierCost);
 
@@ -436,12 +414,6 @@ public class ContractBoard {
 
                             LOGGER.info("Auction closed for contract {}: Winner={}, Bid={}, CourierReward={}",
                                     sc.getId(), highestBidder, highestBid, sc.getCourierReward());
-
-                            // UPDATE MARKET PRICE upon Auction Close (Winning Bid = Accepted Market Value)
-                            if (sc.getQuantity() > 0 && highestBid > 0) {
-                                float transactionPrice = highestBid / (float) sc.getQuantity();
-                                updateMarketPrice(sc.getResourceId(), transactionPrice);
-                            }
 
                             savedData.setDirty();
                         }
@@ -510,6 +482,46 @@ public class ContractBoard {
                     LOGGER.info("Contract {} completed via Snail Mail delivery", sc.getId());
                     savedData.setDirty();
                     broadcastUpdate();
+                }
+            }
+        }
+    }
+
+    private void processContractDelivery(SellContract sc, ServerLevel level) {
+        // Mark as delivered so we don't process again
+        sc.setDelivered(true);
+        savedData.setDirty();
+
+        com.quackers29.businesscraft.town.TownManager townManager = com.quackers29.businesscraft.town.TownManager
+                .get(level);
+
+        // If there is no winning town (e.g. failed auction), we don't need to do any
+        // delivery
+        if (sc.getWinningTownId() == null) {
+            return;
+        }
+
+        com.quackers29.businesscraft.town.Town buyerTown = townManager.getTown(sc.getWinningTownId());
+
+        if (buyerTown != null) {
+            // Transfer Items (Items were released from Seller Escrow at Auction Close to
+            // "Transit")
+            net.minecraft.world.item.Item item = com.quackers29.businesscraft.util.ContractItemHelper
+                    .getBaseItemForResource(sc.getResourceId());
+
+            if (item != null && item != net.minecraft.world.item.Items.PAPER) {
+                // Determine amount to deliver (total - already delivered by courier)
+                // For Snail Mail, deliveredAmount is 0, so we deliver full quantity.
+                // For Courier, deliveredAmount should equal quantity, so we deliver 0
+                // (preventing double add).
+                int amountRemaining = sc.getQuantity() - sc.getDeliveredAmount();
+
+                if (amountRemaining > 0) {
+                    // Just add to buyer (Money and Seller Escrow logic moved to closeAuctions)
+                    buyerTown.addResource(item, amountRemaining);
+
+                    LOGGER.info("Delivered {} {} to {} (arrived from transit)",
+                            amountRemaining, sc.getResourceId(), buyerTown.getName());
                 }
             }
         }
