@@ -18,7 +18,7 @@ public class UpgradeNode {
     // Repeat logic
     private int maxRepeats = 0; // 0 or 1 = once, >1 = repeats, -1 = infinite
     private float costMultiplier = 1.0f;
-    private boolean isCostExponential = false;
+
     private float benefitMultiplier = 1.0f;
 
     public UpgradeNode(String id, String category, String displayName, String repeatConfig, List<String> prereqNodes,
@@ -54,11 +54,12 @@ public class UpgradeNode {
 
         if (parts.length > 1) {
             String costStr = parts[1].trim();
-            if (costStr.startsWith("^")) {
-                this.isCostExponential = true;
-                costStr = costStr.substring(1);
-            }
             try {
+                // Determine multiplier (Always exponential/compound now)
+                // Remove optional caret if user left it in legacy config to avoid crashing
+                if (costStr.startsWith("^")) {
+                    costStr = costStr.substring(1);
+                }
                 this.costMultiplier = Float.parseFloat(costStr);
             } catch (NumberFormatException e) {
                 this.costMultiplier = 1.0f;
@@ -102,10 +103,6 @@ public class UpgradeNode {
 
     public float getCostMultiplier() {
         return costMultiplier;
-    }
-
-    public boolean isCostExponential() {
-        return isCostExponential;
     }
 
     public float getBenefitMultiplier() {

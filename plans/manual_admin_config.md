@@ -36,12 +36,11 @@ Defines the tech tree.
 In `upgrades.csv` (Column 4), you can define complex scaling for upgrades.
 *   **Format:** `[Max Repeats]:[Cost Scaler]:[Benefit Scaler]`
 *   **Examples:**
-    *   `10:1.2` -> Max 10 levels, Cost increases +20% (Linear) per level.
-    *   `10:^1.2` -> Max 10 levels, Cost multiplies by 1.2 (Exponential) per level.
-    *   `infinite:^1.5:1.01` -> Infinite levels, Cost x1.5 per level, Benefit x1.01 per level.
+    *   `10:1.2` -> Max 10 levels, Cost multiplies by 1.2 (+20%) each level.
+    *   `infinite:1.5:1.01` -> Infinite levels, Cost x1.5 per level, Benefit x1.01 per level.
 *   **Cost Logic:**
-    *   **Linear (Default)**: `Base * (1 + (Scaler-1) * Level)`. (e.g. 1.2 = +20% each level).
-    *   **Exponential (`^`)**: `Base * Scaler^Level`.
+    *   **Compound (Standard)**: `Base * Scaler^Level`.
+    *   The `^` syntax is no longer required or supported. All multipliers are treated as Compound multipliers.
 *   **Benefit Logic:**
     *   **Linear (Default, No 3rd param)**: `Base * Level`. (Adds base value each level).
     *   **Exponential (If 3rd param != 1.0)**: `Base * Scaler^Level`. (Compounds value).

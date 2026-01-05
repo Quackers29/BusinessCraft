@@ -103,16 +103,12 @@ public class TownUpgradeComponent implements TownComponent {
         if (costs == null || costs.isEmpty())
             return Collections.emptyList();
 
-        float multiplier;
-        if (node.isCostExponential()) {
-            // Exponential: Base * Mult^0, Base * Mult^1...
-            multiplier = (float) Math.pow(node.getCostMultiplier(), currentLevel);
-        } else {
-            // Linear: Base * (1 + (rate * currentLevel))
-            // e.g. Mult 1.2 (+20%). Lvl 0: 1.0. Lvl 1: 1.2. Lvl 2: 1.4.
-            float rate = node.getCostMultiplier() - 1.0f;
-            multiplier = 1.0f + (rate * currentLevel);
-        }
+        // Always use Exponential/Geometric scaling for costs (Simpler configuration)
+        // Multiplier 1.1 means "Multiply by 1.1 each level" (Compound)
+        // Level 0: 1.0
+        // Level 1: 1.1
+        // Level 2: 1.21
+        float multiplier = (float) Math.pow(node.getCostMultiplier(), currentLevel);
 
         List<ResourceAmount> effectiveCosts = new ArrayList<>();
 
