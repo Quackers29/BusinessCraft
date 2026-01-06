@@ -18,4 +18,8 @@ public interface ITownState {
     boolean isUnlocked(String nodeId);
 
     int getUpgradeLevel(String nodeId);
+
+    int getWorkUnits();
+
+    int getWorkUnitCap();
 }

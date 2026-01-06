@@ -42,6 +42,45 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     // Pending tourist spawns buffer (accumulated from production)
     private int pendingTouristSpawns = 0;
 
+    // Work Units (WU) - Special resource
+    private int workUnits = 0;
+
+    @Override
+    public int getWorkUnits() {
+        return workUnits;
+    }
+
+    public void setWorkUnits(int amount) {
+        this.workUnits = Math.max(0, amount);
+        markDirty();
+    }
+
+    /**
+     * Adds work units to the town. Can be negative to remove.
+     * Clamps to 0 and Cap.
+     */
+    public void addWorkUnits(int amount) {
+        int cap = getWorkUnitCap();
+        try {
+            this.workUnits = Math.addExact(this.workUnits, amount);
+        } catch (ArithmeticException e) {
+            this.workUnits = amount > 0 ? Integer.MAX_VALUE : 0;
+        }
+
+        if (this.workUnits < 0)
+            this.workUnits = 0;
+        if (cap > 0 && this.workUnits > cap)
+            this.workUnits = cap;
+
+        markDirty();
+    }
+
+    @Override
+    public int getWorkUnitCap() {
+        // Cap determined by upgrades
+        return (int) upgrades.getModifier("wu_cap");
+    }
+
     // Cumulative tourism stats
     private int totalTouristsArrived = 0;
     private double totalTouristDistance = 0.0;
@@ -193,10 +232,24 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     public void addEscrowResource(Item item, int count) {
         if (count == 0)
             return;
-        escrowedResources.merge(item, count, Integer::sum);
-        // Remove entry if 0
-        if (escrowedResources.get(item) <= 0) {
-            escrowedResources.remove(item);
+
+        int current = escrowedResources.getOrDefault(item, 0);
+
+        if (count > 0) {
+            try {
+                int result = Math.addExact(current, count);
+                escrowedResources.put(item, result);
+            } catch (ArithmeticException e) {
+                escrowedResources.put(item, Integer.MAX_VALUE);
+            }
+        } else {
+            // Subtraction / removing from escrow
+            int newAmount = Math.max(0, current + count);
+            if (newAmount == 0) {
+                escrowedResources.remove(item);
+            } else {
+                escrowedResources.put(item, newAmount);
+            }
         }
         markDirty();
     }
@@ -211,6 +264,14 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
 
     public int getTotalResourceCount(Item item) {
         return getResourceCount(item) + getEscrowResourceCount(item);
+    }
+
+    public int getInTransitResourceCount(Item item) {
+        com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
+                .getFor(item);
+        if (type == null)
+            return 0;
+        return getContracts().getInTransitResourceCount(type.getId());
     }
 
     // ================================
@@ -443,6 +504,8 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         tag.putString("biome", biome);
         tag.putString("biomeVariant", biomeVariant);
 
+        tag.putInt("workUnits", workUnits);
+
         tag.putInt("totalTouristsArrived", totalTouristsArrived);
         tag.putDouble("totalTouristDistance", totalTouristDistance);
         CompoundTag visitorsTag = new CompoundTag();
@@ -596,6 +659,11 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         }
         if (tag.contains("biomeVariant")) {
             town.biomeVariant = tag.getString("biomeVariant");
+        }
+
+        if (tag.contains("workUnits")) {
+            int val = tag.getInt("workUnits");
+            town.workUnits = Math.max(0, val); // Sanitize negative values
         }
 
         if (tag.contains("visitors")) {
@@ -769,15 +837,21 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
             });
         }
 
-        if (tag.contains("escrowedResources")) {
-            CompoundTag escrowTag = tag.getCompound("escrowedResources");
+        if (tag.contains("escrow")) {
+            CompoundTag escrowTag = tag.getCompound("escrow");
             escrowTag.getAllKeys().forEach(key -> {
                 try {
-                    net.minecraft.resources.ResourceLocation itemId = new net.minecraft.resources.ResourceLocation(key);
-                    Object itemObj = PlatformAccess.getRegistry().getItem(itemId);
-                    if (itemObj instanceof Item item) {
+                    net.minecraft.resources.ResourceLocation resourceLocation = new net.minecraft.resources.ResourceLocation(
+                            key);
+                    Object itemObj = PlatformAccess.getRegistry().getItem(resourceLocation);
+                    if (itemObj instanceof net.minecraft.world.item.Item item) {
                         int amount = escrowTag.getInt(key);
-                        town.escrowedResources.put(item, amount);
+                        // Sanitize negative values
+                        if (amount < 0)
+                            amount = 0;
+                        if (amount > 0) {
+                            town.escrowedResources.put(item, amount);
+                        }
                     }
                 } catch (Exception e) {
                     LOGGER.error("Error loading escrowed resource: {}", key, e);

@@ -9,3 +9,5 @@ pop_cap_upgrade,general,Pop Cap Upgrade,infinite:1.2,basic_settlement,Improved P
 tourism_basic,general,Tourism,,basic_settlement,Tourism,0.5,money:100,tourism
 border_expansion,general,Border Expansion,infinite:2:2,basic_settlement,Expand border,0.5,wood:2,border:2
 research_basic,general,Research Basic,,basic_settlement,Research speed boost,0.25,wood:2000,research:0.25
+work_units,general,Work Unit Production,,basic_settlement,Work Unit Production,0.5,wood:3000,work_unit_production;wu_cap:1000
+work_unit_upgrade,general,Work Unit Upgrade,5:1.2:1.2,work_units,Work Unit Upgrade,0.5,wood:200,work_unit_production*0.2;wu_cap:1000

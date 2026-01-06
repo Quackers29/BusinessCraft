@@ -30,8 +30,12 @@ public class SellContract extends Contract {
             float pricePerUnit) {
         super(issuerTownId, issuerTownName, duration);
         this.resourceId = resourceId;
-        this.quantity = quantity;
-        this.pricePerUnit = pricePerUnit;
+        // Clamp quantity to valid range and sanity limit (e.g. 1M) to prevent
+        // overflow/exploits
+        this.quantity = Math.max(1, Math.min(1_000_000, quantity));
+        // Clamp price
+        this.pricePerUnit = Math.max(0.01f, Math.min(1_000_000f, pricePerUnit));
+
         this.buyerTownId = null;
         this.winningTownId = null;
         this.winningTownName = null;
@@ -194,8 +198,10 @@ public class SellContract extends Contract {
     @Override
     protected void loadAdditional(CompoundTag tag) {
         resourceId = tag.getString("resourceId");
-        quantity = tag.getInt("quantity");
-        pricePerUnit = tag.getFloat("pricePerUnit");
+        int loadedQty = tag.getInt("quantity");
+        this.quantity = Math.max(1, Math.min(1_000_000, loadedQty)); // Sanitize loaded quantity
+        float loadedPrice = tag.getFloat("pricePerUnit");
+        this.pricePerUnit = Math.max(0.01f, Math.min(1_000_000f, loadedPrice));
         if (tag.hasUUID("buyerTownId")) {
             buyerTownId = tag.getUUID("buyerTownId");
         }

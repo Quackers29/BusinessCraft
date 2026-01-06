@@ -45,6 +45,11 @@ public interface ITownDataProvider {
 
     boolean canAddMoreTourists();
 
+    // Work Units
+    int getWorkUnits();
+
+    int getWorkUnitCap();
+
     // Other town data
     boolean isTouristSpawningEnabled();
 

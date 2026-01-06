@@ -92,6 +92,16 @@ public class StandardTabContent extends BCComponent {
         return this;
     }
 
+    private Supplier<Map<Item, String>> itemNamesSupplier;
+
+    /**
+     * Configure name overrides for item list
+     */
+    public StandardTabContent withItemNameData(Supplier<Map<Item, String>> dataSupplier) {
+        this.itemNamesSupplier = dataSupplier;
+        return this;
+    }
+
     /**
      * Configure for custom list (Population tab style) or Production list
      */
@@ -201,6 +211,7 @@ public class StandardTabContent extends BCComponent {
         if (itemListSupplier != null) {
             Map<Item, Integer> items = itemListSupplier.get();
             Map<Item, String> tooltips = itemTooltipSupplier != null ? itemTooltipSupplier.get() : null;
+            Map<Item, String> names = itemNamesSupplier != null ? itemNamesSupplier.get() : null;
 
             // Create the grid only once to preserve scroll state
             if (grid == null) {
@@ -215,12 +226,12 @@ public class StandardTabContent extends BCComponent {
                         .drawBorder(true);
 
                 // This method automatically enables scrolling if needed
-                grid.withItemQuantityPairs(items, tooltips, TEXT_HIGHLIGHT);
+                grid.withItemQuantityPairs(items, tooltips, names, TEXT_HIGHLIGHT);
                 DebugConfig.debug(LOGGER, DebugConfig.UI_STANDARD_TAB_CONTENT,
                         "Grid created with scrolling enabled: {}", items.size() > 4);
             } else {
                 // Update existing grid with new data while preserving scroll state
-                grid.updateItemQuantityPairs(items, tooltips, TEXT_HIGHLIGHT);
+                grid.updateItemQuantityPairs(items, tooltips, names, TEXT_HIGHLIGHT);
             }
 
             // Render the grid (preserves scroll state)

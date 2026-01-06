@@ -168,6 +168,15 @@ The AI prioritizes increasing storage capacity when current storage is nearing f
     *   If storage is half full (50%), Priority is 25 (Low).
     *   This ensures the AI doesn't waste resources upgrading storage it isn't using.
 
+### Work Units (WU)
+*   **Key**: `wu`
+*   **Description**: A special intangible resource used for labor or processing tracking.
+*   **Behavior**: Hidden by default (0/0). Visible if the town has any Work Units or Capacity > 0.
+*   **Usage**: Can be produced/consumed in recipes like any other resource.
+    *   **Production**: Output `wu`.
+    *   **Consumption**: Input `wu`.
+*   **Capacity**: Set by `wu_cap` upgrade modifier.
+
 ### Production Speed (Supply vs Demand)
 For standard production recipes, the AI balances Production against Consumption.
 *   **Formula**: `50 * (2.0 - Ratio)`.

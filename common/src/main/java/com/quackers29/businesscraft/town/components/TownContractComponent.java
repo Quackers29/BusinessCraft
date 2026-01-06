@@ -22,6 +22,24 @@ public class TownContractComponent implements TownComponent {
     private static final int CHECK_INTERVAL = 100; // Check every 100 ticks (5 seconds)
     private static final int MAX_ACTIVE_CONTRACTS = 3;
 
+    // Helper to check if we are currently selling a resource (Active Sell Contract)
+    private boolean isSellingResource(String resourceId, ContractBoard board) {
+        return board.getContracts().stream()
+                .anyMatch(c -> c instanceof SellContract sc &&
+                        sc.getIssuerTownId().equals(town.getId()) &&
+                        resourceId.equals(sc.getResourceId()) &&
+                        !sc.isExpired() && !sc.isCompleted());
+    }
+
+    // Helper to check if we are currently buying a resource (Highest Bidder)
+    private boolean isBuyingResource(String resourceId, ContractBoard board) {
+        return board.getContracts().stream()
+                .anyMatch(c -> c instanceof SellContract sc &&
+                        town.getId().equals(sc.getHighestBidder()) &&
+                        resourceId.equals(sc.getResourceId()) &&
+                        !sc.isExpired() && !sc.isCompleted());
+    }
+
     public TownContractComponent(Town town) {
         this.town = town;
     }
@@ -175,6 +193,11 @@ public class TownContractComponent implements TownComponent {
                 com.quackers29.businesscraft.economy.ResourceType resourceType = com.quackers29.businesscraft.economy.ResourceRegistry
                         .get(resourceId);
 
+                // Avoid conflict: Don't BID if we are currently SELLING this resource
+                if (isSellingResource(resourceId, board)) {
+                    continue;
+                }
+
                 // Skip if resource not found in registry
                 if (resourceType == null) {
                     continue;
@@ -317,15 +340,18 @@ public class TownContractComponent implements TownComponent {
 
         if (resourceCount > excessThreshold) {
             // Check if town already has an active contract for this resource
-            boolean hasContract = board.getContracts().stream()
-                    .anyMatch(c -> c instanceof SellContract sc &&
-                            sc.getIssuerTownId().equals(town.getId()) &&
-                            resourceId.equals(sc.getResourceId()) &&
-                            !sc.isExpired());
-
-            if (hasContract) {
+            if (isSellingResource(resourceId, board)) {
                 DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
                         "Town {} already has an active {} contract, skipping creation",
+                        town.getName(), resourceId);
+                return;
+            }
+
+            // Avoid conflict: Don't SELL if we are currently BUYING this resource (Highest
+            // Bidder)
+            if (isBuyingResource(resourceId, board)) {
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                        "Town {} is currently buying {}, skipping contract creation (Mutual Exclusion)",
                         town.getName(), resourceId);
                 return;
             }
@@ -336,10 +362,24 @@ public class TownContractComponent implements TownComponent {
             float targetStock = minThreshold + ((excessThreshold - minThreshold) / 2);
 
             int sellQuantity = (int) (resourceCount - targetStock);
+            // Cap sell quantity to prevent massive dumps and potential overflow issues
+            if (sellQuantity > 10000) {
+                sellQuantity = 10000;
+            }
+
+            // CRITICAL FIX: Ensure we actually have these items AVAILABLE (not just in
+            // Total/Escrow)
+            // If we assume we have them but they are all in escrow, addResource will clamp
+            // to 0
+            // but addEscrow will add them, creating infinite resources.
+            int availableCount = town.getResourceCount(item);
+            if (sellQuantity > availableCount) {
+                sellQuantity = availableCount;
+            }
 
             if (sellQuantity <= 0) {
                 DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
-                        "Insufficient excess resources for {} (Count: {} - Target: {} = {}), skipping contract creation",
+                        "Insufficient available resources for {} (Count: {} - Target: {} = {}), skipping contract creation",
                         resourceId, resourceCount, targetStock, sellQuantity);
                 return;
             }
@@ -403,5 +443,41 @@ public class TownContractComponent implements TownComponent {
     @Override
     public void load(CompoundTag tag) {
         lastContractCheckTime = tag.getLong("lastContractCheckTime");
+    }
+
+    public int getInTransitResourceCount(String resourceId) {
+        // Need to find the server level to get the board
+        net.minecraft.server.level.ServerLevel level = null;
+        for (com.quackers29.businesscraft.town.TownManager manager : com.quackers29.businesscraft.town.TownManager
+                .getAllInstances()) {
+            if (manager.getTown(town.getId()) != null) {
+                level = manager.getLevel();
+                break;
+            }
+        }
+
+        if (level == null) {
+            return 0;
+        }
+
+        ContractBoard board = ContractBoard.get(level);
+        // Sum up quantities of SellContracts where:
+        // 1. We are the winner (active or delivered-but-not-fully)
+        // 2. !isDelivered (completely) OR deliveredAmount < quantity
+        // Actually simplest is: SellContract where winningTownId == town.id AND
+        // !isDelivered
+        // Logic:
+        // - Auction Closed (We won)
+        // - Courier Assigned (or not yet)
+        // - Delivered = false (Not fully delivered)
+
+        return board.getContracts().stream()
+                .filter(c -> c instanceof SellContract sc &&
+                        town.getId().equals(sc.getWinningTownId()) &&
+                        resourceId.equals(sc.getResourceId()) &&
+                        !sc.isExpired() &&
+                        !sc.isDelivered()) // isDelivered check covers "fully delivered"
+                .mapToInt(c -> ((SellContract) c).getQuantity() - ((SellContract) c).getDeliveredAmount())
+                .sum();
     }
 }

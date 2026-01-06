@@ -48,8 +48,9 @@ public class ResourceSyncPacket {
             float prod = buf.readFloat();
             float cons = buf.readFloat();
             float cap = buf.readFloat();
+            float inTransit = buf.readFloat();
             if (item != null) {
-                this.resourceStats.put(item, new float[] { prod, cons, cap });
+                this.resourceStats.put(item, new float[] { prod, cons, cap, inTransit });
             }
         }
     }
@@ -70,6 +71,7 @@ public class ResourceSyncPacket {
             buf.writeFloat(stats[0]); // Production
             buf.writeFloat(stats[1]); // Consumption
             buf.writeFloat(stats[2]); // Capacity
+            buf.writeFloat(stats.length > 3 ? stats[3] : 0f); // In Transit (safety check for old arrays)
         });
     }
 

@@ -56,10 +56,30 @@ public class ResourcesTab extends BaseTownTab {
 
         // Configure the data supplier for the resource information
         contentComponent.withItemListData(() -> {
-            // Get resources from the parent screen using the public getter
-            Map<Item, Integer> resources = new java.util.HashMap<>(parentScreen.getCachedResources());
+            // Use LinkedHashMap to preserve order (WU first)
+            java.util.LinkedHashMap<Item, Integer> resources = new java.util.LinkedHashMap<>();
 
-            // Merge in wanted resources (deficits)
+            // 1. Add Work Units (Process as a virtual resource)
+            com.quackers29.businesscraft.menu.TownInterfaceMenu menu = parentScreen.getMenu();
+            if (menu != null) {
+                int wu = menu.getWorkUnits();
+                int cap = menu.getWorkUnitCap();
+                // Show if we have WU or capacity for it
+                if (wu > 0 || cap > 0) {
+                    // Use AIR as the placeholder for Work Units (Invisible)
+                    // The name will be overridden to "Work Units"
+                    resources.put(net.minecraft.world.item.Items.AIR, wu);
+                }
+            }
+
+            // 2. Add standard resources
+            // Get resources from the parent screen using the public getter
+            Map<Item, Integer> cachedResources = parentScreen.getCachedResources();
+            // Sort by amount desc or name? The cache might be unordered.
+            // We'll just add them.
+            resources.putAll(cachedResources);
+
+            // 3. Merge in wanted resources (deficits)
             com.quackers29.businesscraft.block.entity.TownInterfaceEntity te = parentScreen.getMenu()
                     .getTownInterfaceEntity();
             if (te != null) {
@@ -74,12 +94,19 @@ public class ResourcesTab extends BaseTownTab {
             }
 
             DebugConfig.debug(LOGGER, DebugConfig.UI_RESOURCES_TAB,
-                    "Resources Tab: Providing {} items to content component", resources.size());
+                    "Resources Tab: Providing {} items to content component (includes WU)", resources.size());
 
             // Check for resource changes and trigger refresh if needed
-            checkForResourceChanges(resources);
+            checkForResourceChanges(cachedResources);
 
             return resources;
+        });
+
+        // Configure name overrides
+        contentComponent.withItemNameData(() -> {
+            Map<Item, String> names = new java.util.HashMap<>();
+            names.put(net.minecraft.world.item.Items.AIR, "Work Units");
+            return names;
         });
 
         // Configure tooltips for resource information
@@ -96,6 +123,22 @@ public class ResourcesTab extends BaseTownTab {
                         .getTownInterfaceEntity();
                 if (te != null) {
                     wanted = te.getClientSyncHelper().getClientWantedResources();
+                }
+
+                // Add tooltip for Work Units (AIR)
+                com.quackers29.businesscraft.menu.TownInterfaceMenu menu = parentScreen.getMenu();
+                if (menu != null && (menu.getWorkUnits() > 0 || menu.getWorkUnitCap() > 0)) {
+                    StringBuilder sb = new StringBuilder();
+                    int wu = menu.getWorkUnits();
+                    int cap = menu.getWorkUnitCap();
+                    sb.append("§eWork Units§r\n");
+                    sb.append(String.format("Available: %d\n", wu));
+                    sb.append(String.format("Capacity: %d\n", cap));
+
+                    sb.append("§7Used for production tasks.\n");
+                    sb.append("§7Regenerates over time.");
+
+                    tooltips.put(net.minecraft.world.item.Items.AIR, sb.toString());
                 }
 
                 for (Item item : resources.keySet()) {
@@ -132,6 +175,10 @@ public class ResourcesTab extends BaseTownTab {
                     if (stats != null && stats.length >= 3) {
                         sb.append(String.format("Production: +%.1f/m\nConsumption: -%.1f/m\nCapacity: %.0f",
                                 stats[0], stats[1], stats[2]));
+                        // Check for In-Transit (Index 3)
+                        if (stats.length >= 4 && stats[3] > 0) {
+                            sb.append(String.format("\nIn Transit: %.0f", stats[3]));
+                        }
                     }
 
                     // Append relevant upgrade effects

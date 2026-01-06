@@ -46,6 +46,8 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     private static final int DATA_TOURIST_COUNT = 1;
     private static final int DATA_MAX_TOURISTS = 2;
     private static final int DATA_POPULATION = 3;
+    private static final int DATA_WORK_UNITS = 4;
+    private static final int DATA_WORK_UNIT_CAP = 5;
     private SimpleContainerData data;
 
     // Town properties for UI display (fallbacks)
@@ -57,6 +59,10 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     // Tourism data (fallbacks)
     private int currentTourists = 0;
     private int maxTourists = 5;
+
+    // WU data (fallbacks)
+    private int workUnits = 0;
+    private int workUnitCap = 0;
 
     // Economy data
     private int goldCoins = 0;
@@ -80,17 +86,19 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         this.level = inv.player.level();
         this.player = inv.player;
 
-        // Initialize container data with 4 slots and sensible defaults
-        this.data = new SimpleContainerData(4);
+        // Initialize container data with 6 slots and sensible defaults
+        this.data = new SimpleContainerData(6);
         // Set default values to avoid returning 0 when data isn't synced yet
         this.data.set(DATA_SEARCH_RADIUS, 10); // Default search radius
         this.data.set(DATA_POPULATION, 5); // Default population
         this.data.set(DATA_TOURIST_COUNT, 0); // Default tourist count
         this.data.set(DATA_MAX_TOURISTS, 5); // Default max tourists
+        this.data.set(DATA_WORK_UNITS, 0);
+        this.data.set(DATA_WORK_UNIT_CAP, 0);
         addDataSlots(this.data);
 
         if (level.isClientSide()) {
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 6; i++)
                 data.set(i, -1);
         } else {
             // Get town from TownManager
@@ -632,6 +640,8 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
             data.set(DATA_TOURIST_COUNT, town.getTouristCount());
             data.set(DATA_MAX_TOURISTS, town.getMaxTourists());
             data.set(DATA_SEARCH_RADIUS, townSearchRadius);
+            data.set(DATA_WORK_UNITS, town.getWorkUnits());
+            data.set(DATA_WORK_UNIT_CAP, town.getWorkUnitCap());
         } else if (level != null && level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
             // Try to get values from TownBlockEntity if town is not available
             // First try to get town data through the entity's town provider
@@ -643,6 +653,8 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                 data.set(DATA_TOURIST_COUNT, provider.getTouristCount());
                 data.set(DATA_MAX_TOURISTS, provider.getMaxTourists());
                 data.set(DATA_SEARCH_RADIUS, provider.getSearchRadius());
+                data.set(DATA_WORK_UNITS, provider.getWorkUnits());
+                data.set(DATA_WORK_UNIT_CAP, provider.getWorkUnitCap());
             } else {
                 // Fallback to entity methods if no provider available
                 int entitySearchRadius = townEntity.getSearchRadius();
@@ -652,10 +664,30 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                 data.set(DATA_TOURIST_COUNT, 0);
                 data.set(DATA_MAX_TOURISTS, 5);
                 data.set(DATA_SEARCH_RADIUS, entitySearchRadius);
+                data.set(DATA_WORK_UNITS, 0);
+                data.set(DATA_WORK_UNIT_CAP, 0);
             }
         } else {
             DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "updateDataSlots() no data source available");
         }
+    }
+
+    public int getWorkUnits() {
+        int val = data.get(DATA_WORK_UNITS);
+        if (val >= 0)
+            return val;
+        if (town != null)
+            return town.getWorkUnits();
+        return workUnits;
+    }
+
+    public int getWorkUnitCap() {
+        int val = data.get(DATA_WORK_UNIT_CAP);
+        if (val >= 0)
+            return val;
+        if (town != null)
+            return town.getWorkUnitCap();
+        return workUnitCap;
     }
 
     /**

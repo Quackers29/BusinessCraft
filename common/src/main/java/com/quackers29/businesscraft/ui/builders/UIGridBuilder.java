@@ -2094,6 +2094,13 @@ public class UIGridBuilder {
     public UIGridBuilder updateItemQuantityPairs(Map<net.minecraft.world.item.Item, Integer> itemQuantityPairs,
             Map<net.minecraft.world.item.Item, String> tooltips,
             int textColor) {
+        return updateItemQuantityPairs(itemQuantityPairs, tooltips, null, textColor);
+    }
+
+    public UIGridBuilder updateItemQuantityPairs(Map<net.minecraft.world.item.Item, Integer> itemQuantityPairs,
+            Map<net.minecraft.world.item.Item, String> tooltips,
+            Map<net.minecraft.world.item.Item, String> nameOverrides,
+            int textColor) {
         // Store current scroll state
         int savedVerticalScrollOffset = this.verticalScrollOffset;
         int savedHorizontalScrollOffset = this.horizontalScrollOffset;
@@ -2131,7 +2138,12 @@ public class UIGridBuilder {
             String tooltip = tooltips != null ? tooltips.get(item) : null;
 
             // Create a formatted item name
-            String itemName = formatItemName(item.getDescriptionId());
+            String itemName;
+            if (nameOverrides != null && nameOverrides.containsKey(item)) {
+                itemName = nameOverrides.get(item);
+            } else {
+                itemName = formatItemName(item.getDescriptionId());
+            }
 
             // Add label for item name
             UIGridElement labelElement = addLabel(i, 0, itemName, textColor).elements.get(elements.size() - 1);
@@ -2164,26 +2176,76 @@ public class UIGridBuilder {
             this.verticalScrollOffset = 0; // Start at top for new data
         }
 
+        return this;
+    }
+
+    /**
+     * Populates the grid with item-quantity pairs with custom names
+     */
+    public UIGridBuilder withItemQuantityPairs(Map<net.minecraft.world.item.Item, Integer> items,
+            Map<net.minecraft.world.item.Item, String> tooltips,
+            Map<net.minecraft.world.item.Item, String> nameOverrides,
+            int textColor) {
+        if (items == null)
+            return this;
+
+        // Store max columns for scrolling
+        int totalItems = items.size();
+        this.totalRows = totalItems; // One item per row currently (Label | Item+Qty)
+
+        // Clear existing elements
+        this.elements.clear();
+
+        boolean wasHorizontalScrollEnabled = this.horizontalScrollEnabled;
+        int savedHorizontalScrollOffset = this.horizontalScrollOffset;
+        int savedMaxHorizontalScrollOffset = this.maxHorizontalScrollOffset;
+
+        // Reset scroll state if columns changed significantly or if forced
+        if (this.visibleRows == 0 || this.autoVisibleRows) {
+            this.autoVisibleRows = true;
+            int effectiveRowHeight = this.customRowHeight != null ? this.customRowHeight : 16;
+            int availableHeight = this.height - (this.verticalMargin * 2);
+            int calculatedVisibleRows = Math.max(4, availableHeight / (effectiveRowHeight + this.verticalSpacing));
+            this.withVerticalScroll(true, calculatedVisibleRows);
+            this.verticalScrollOffset = 0; // Start at top for new data
+        }
+
         if (wasHorizontalScrollEnabled) {
             this.horizontalScrollEnabled = true;
             this.maxHorizontalScrollOffset = savedMaxHorizontalScrollOffset; // Assuming horizontal columns don't change
             this.horizontalScrollOffset = Math.min(savedHorizontalScrollOffset, this.maxHorizontalScrollOffset);
         }
 
+        // Sort items? No, assume map is ordered (e.g. LinkedHashMap)
+        List<Map.Entry<net.minecraft.world.item.Item, Integer>> sortedEntries = new ArrayList<>(items.entrySet());
+
         // Add item elements
         for (int i = 0; i < sortedEntries.size(); i++) {
             Map.Entry<net.minecraft.world.item.Item, Integer> entry = sortedEntries.get(i);
+            net.minecraft.world.item.Item item = entry.getKey();
 
             // Create a formatted item name
-            String itemName = formatItemName(entry.getKey().getDescriptionId());
+            String itemName;
+            if (nameOverrides != null && nameOverrides.containsKey(item)) {
+                itemName = nameOverrides.get(item);
+            } else {
+                itemName = formatItemName(item.getDescriptionId());
+            }
+
+            // Determine tooltip
+            String tooltip = tooltips != null ? tooltips.get(item) : null;
 
             // Add label for item name (first column)
-            addLabel(i, 0, itemName, textColor);
+            // Fix: Add tooltip to the name label as well for better UX
+            addLabelWithTooltip(i, 0, itemName, tooltip, textColor);
 
             // Add item with quantity (second column)
-            UIGridElement element = addItem(i, 1, entry.getKey(), entry.getValue(), null).elements
+            UIGridElement element = addItem(i, 1, item, entry.getValue(), null).elements
                     .get(elements.size() - 1);
             element.showQuantity = true; // Always show quantity
+            if (tooltip != null) {
+                element.tooltip = tooltip;
+            }
         }
 
         DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER,

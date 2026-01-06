@@ -606,7 +606,10 @@ public class ClientSyncHelper {
                 // Get capacity
                 float capacity = town.getTrading().getStorageCap(resId);
 
-                stats.put(item, new float[] { prodPerHour, consPerHour, capacity });
+                // Get In-Transit (Incoming)
+                float inTransit = town.getInTransitResourceCount(item);
+
+                stats.put(item, new float[] { prodPerHour, consPerHour, capacity, inTransit });
             }
         }
         return stats;
@@ -653,10 +656,13 @@ public class ClientSyncHelper {
                         if (item != null && item != Items.AIR) {
                             ListTag list = statsTag.getList(key, Tag.TAG_FLOAT);
                             if (list.size() >= 3) {
-                                float[] arr = new float[3];
+                                float[] arr = new float[4]; // Resized to 4
                                 arr[0] = list.getFloat(0);
                                 arr[1] = list.getFloat(1);
                                 arr[2] = list.getFloat(2);
+                                if (list.size() >= 4) {
+                                    arr[3] = list.getFloat(3);
+                                }
                                 clientResourceStats.put(item, arr);
                             }
                         }

@@ -66,11 +66,15 @@ public class TownProductionComponent implements TownComponent {
                 try {
                     result *= Float.parseFloat(part);
                 } catch (NumberFormatException e) {
-                    // Try as upgrade modifier (e.g. storage_cap_all)
-                    float mod = town.getUpgrades().getModifier(part);
-                    // If modifier not found, getModifier returns 0.
-                    // This is acceptable behavior for unknown variables (multiplier becomes 0).
-                    result *= mod;
+                    if (part.equalsIgnoreCase("wu")) {
+                        result *= town.getWorkUnits();
+                    } else {
+                        // Try as upgrade modifier (e.g. storage_cap_all)
+                        float mod = town.getUpgrades().getModifier(part);
+                        // If modifier not found, getModifier returns 0.
+                        // This is acceptable behavior for unknown variables (multiplier becomes 0).
+                        result *= mod;
+                    }
                 }
             }
         }
@@ -142,6 +146,15 @@ public class TownProductionComponent implements TownComponent {
 
             if (resourceId.equals("pop")) {
                 // Population check? assumed fine or handled by conditions
+            } else if (resourceId.equals("wu")) {
+                if (town.getWorkUnits() < required) {
+                    if (shouldLog)
+                        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                                "Recipe {} missing input: {} (Need {}, Have {})",
+                                recipe.getId(), resourceId, required, town.getWorkUnits());
+                    hasInputs = false;
+                    break;
+                }
             } else {
                 // Resolve resourceId to Item
                 com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
@@ -252,7 +265,8 @@ public class TownProductionComponent implements TownComponent {
                 net.minecraft.world.item.Item item = com.quackers29.businesscraft.api.PlatformAccess.getRegistry()
                         .getItem(type.getMcItemId());
                 if (item != null) {
-                    current = town.getTotalResourceCount(item);
+                    // Current = Hand + Escrow + InTransit (Incoming)
+                    current = town.getTotalResourceCount(item) + town.getInTransitResourceCount(item);
                 }
             } else {
                 // If type is null (not a registered resource, pop, or tourist), assume it is a
@@ -278,7 +292,11 @@ public class TownProductionComponent implements TownComponent {
                 }
 
                 current = town.getTouristCount() + town.getPendingTouristSpawns();
+                current = town.getTouristCount() + town.getPendingTouristSpawns();
                 cap = town.getUpgrades().getModifier("tourist_cap");
+            } else if (resId.equals("wu")) {
+                current = town.getWorkUnits();
+                cap = town.getUpgrades().getModifier("wu_cap");
             } else {
                 cap = town.getTrading().getStorageCap(resId);
             }
@@ -332,6 +350,9 @@ public class TownProductionComponent implements TownComponent {
             if (resourceId.equals("pop")) {
                 // consuming pop?
                 continue;
+            } else if (resourceId.equals("wu")) {
+                town.addWorkUnits(-(int) amount);
+                continue;
             }
 
             com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
@@ -355,6 +376,8 @@ public class TownProductionComponent implements TownComponent {
                 town.setPopulation(town.getPopulation() + (int) amount);
             } else if (resId.equals("tourist")) {
                 town.addPendingTouristSpawns((int) amount);
+            } else if (resId.equals("wu")) {
+                town.addWorkUnits((int) amount);
             } else {
                 com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
                         .get(resId);
@@ -429,6 +452,8 @@ public class TownProductionComponent implements TownComponent {
                     cap = town.getUpgrades().getModifier("pop_cap");
                 } else if (target.equals("happiness")) {
                     cap = 100f; // Max happiness
+                } else if (target.equals("wu")) {
+                    cap = town.getUpgrades().getModifier("wu_cap");
                 } else {
                     // Assume resource
                     cap = town.getTrading().getStorageCap(target);
