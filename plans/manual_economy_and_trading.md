@@ -47,3 +47,25 @@ Contracts are distinct from simple resource trades. They represent **Missions** 
 -   **Watch the Market**: Buy low, sell high. If Wood is cheap, stockpile it. If Iron is expensive, focus your production on it!
 -   **Don't Overextend**: Remember that items in Escrow don't count towards your production inputs. Don't sell all your seeds if you need them to grow next season's crop!
 -   **Reputation**: Fulfilling contracts quickly and reliably improves your town's standing (Future Feature).
+
+## 5. Trading Limits
+-   **Technical Limit**: The hard limit for any resource in a single stack is **2,147,483,647** (2.1 Billion). This is the maximum value a 32-bit integer can hold.
+-   **Practical Limit**: Your town is limited by its **Storage Cap**.
+    -   You cannot *produce* items beyond your storage cap.
+    -   However, you can *buy* items that exceed your cap (though production will halt until you consume them).
+    -   Storage caps can be increased via **Upgrades**.
+
+> [!NOTE]
+> **Developer Note: Increasing Limits Beyond 2.1 Billion**
+> To support values larger than 2.1 billion, the codebase would need to undergo a migration from 32-bit `int` to 64-bit `long`. This involves:
+> 1.  Changing `Map<Item, Integer>` to `Map<Item, Long>` in `Town.java`, `TownContractComponent.java`, and sync helpers.
+> 2.  Updating NBT serialization to use `putLong`/`getLong`.
+> 3.  Updating Network Packets to use `writeLong`/`readLong`.
+> 4.  Updating the UI to format large numbers (e.g. "9.2Q" or "9.2E18").
+> This would effectively increase the limit to ~9 Quintillion.
+>
+> **Q: Does this cause lag?**
+> A: **No.** Modern 64-bit processors handle `long` operations as efficiently as `int`. The memory overhead (4 extra bytes per resource type) is negligible.
+>
+> **Q: How do other mods do it?**
+> A: Many tech mods (e.g., *Mekanism*, *Applied Energistics 2*, *Storage Drawers*) use `long` for mass storage. Some even use `BigInteger` (arbitrary precision) for effectively infinite storage, though that does come with a slight performance cost. For *BusinessCraft*, `long` is the industry standard recommendation for high-volume economy mods.

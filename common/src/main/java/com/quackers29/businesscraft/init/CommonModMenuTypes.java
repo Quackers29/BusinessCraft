@@ -16,6 +16,7 @@ public class CommonModMenuTypes {
         public static Supplier<MenuType<StorageMenu>> STORAGE_MENU;
         public static Supplier<MenuType<PaymentBoardMenu>> PAYMENT_BOARD_MENU;
         public static Supplier<MenuType<ContractBoardMenu>> CONTRACT_BOARD_MENU;
+        public static Supplier<MenuType<com.quackers29.businesscraft.menu.TouristMenu>> TOURIST_MENU;
 
         public static void register() {
                 TOWN_INTERFACE_MENU = PlatformAccess.getRegistry().registerExtendedMenuType("town_interface",
@@ -32,5 +33,8 @@ public class CommonModMenuTypes {
 
                 CONTRACT_BOARD_MENU = PlatformAccess.getRegistry().registerExtendedMenuType("contract_board_menu",
                                 ContractBoardMenu::new);
+
+                TOURIST_MENU = PlatformAccess.getRegistry().registerExtendedMenuType("tourist_menu",
+                                com.quackers29.businesscraft.menu.TouristMenu::new);
         }
 }

@@ -460,4 +460,52 @@ public class TouristEntity extends Villager {
         // Call the parent implementation to actually set the position
         super.setPos(x, y, z);
     }
+
+    @Override
+    public net.minecraft.world.InteractionResult mobInteract(Player player, net.minecraft.world.InteractionHand hand) {
+        if (!this.level().isClientSide) {
+            if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                PlatformAccess.getNetwork().openScreen(serverPlayer, new net.minecraft.world.MenuProvider() {
+                    @Override
+                    public Component getDisplayName() {
+                        return TouristEntity.this.getDisplayName();
+                    }
+
+                    @Override
+                    public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int windowId,
+                            net.minecraft.world.entity.player.Inventory inventory, Player player) {
+                        return new com.quackers29.businesscraft.menu.TouristMenu(windowId, inventory,
+                                new net.minecraft.world.inventory.ContainerData() {
+                                    @Override
+                                    public int get(int index) {
+                                        switch (index) {
+                                            case 0:
+                                                // Journey Age (ticks)
+                                                return (int) (TouristEntity.this.level().getGameTime()
+                                                        - TouristEntity.this.spawnTime);
+                                            case 1:
+                                                // Time Left (ticks)
+                                                return TouristEntity.this.expiryTicks;
+                                            default:
+                                                return 0;
+                                        }
+                                    }
+
+                                    @Override
+                                    public void set(int index, int value) {
+                                        // Read-only
+                                    }
+
+                                    @Override
+                                    public int getCount() {
+                                        return 2;
+                                    }
+                                });
+                    }
+                });
+            }
+            return net.minecraft.world.InteractionResult.CONSUME;
+        }
+        return net.minecraft.world.InteractionResult.sidedSuccess(this.level().isClientSide);
+    }
 }
