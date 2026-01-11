@@ -100,6 +100,11 @@ import com.quackers29.businesscraft.town.data.TouristSpawningHelper;
 import com.quackers29.businesscraft.town.data.PlatformManager;
 import com.quackers29.businesscraft.town.data.VisitorProcessingHelper;
 import com.quackers29.businesscraft.town.data.ClientSyncHelper;
+import com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel;
+import com.quackers29.businesscraft.town.viewmodel.TownResourceViewModelBuilder;
+import com.quackers29.businesscraft.network.packets.ResourceViewModelSyncPacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import com.quackers29.businesscraft.town.data.NBTDataHelper;
 import com.quackers29.businesscraft.town.data.ContainerDataHelper;
 import com.quackers29.businesscraft.town.data.TownBufferManager;
@@ -164,6 +169,60 @@ public class TownInterfaceEntity extends BlockEntity
 
     public ClientSyncHelper getClientSyncHelper() {
         return clientSyncHelper;
+    }
+
+    // Client-side resource view-model cache (for the new server-authoritative architecture)
+    private TownResourceViewModel cachedResourceViewModel = null;
+
+    /**
+     * Updates the client-side resource view-model cache.
+     * This method is called by ResourceViewModelSyncPacket to implement the
+     * "dumb terminal" pattern where client only displays pre-calculated data.
+     */
+    public void updateResourceViewModel(TownResourceViewModel viewModel) {
+        this.cachedResourceViewModel = viewModel;
+    }
+
+    /**
+     * Gets the cached resource view-model for client-side display.
+     * Returns null if no view-model has been received from server yet.
+     */
+    public TownResourceViewModel getCachedResourceViewModel() {
+        return cachedResourceViewModel;
+    }
+
+    /**
+     * SERVER-SIDE: Sends updated resource view-model to a specific player.
+     * This implements the server-authoritative architecture by sending 
+     * pre-calculated display data instead of raw numbers.
+     */
+    public void syncResourceViewModelToPlayer(ServerPlayer player) {
+        if (level == null || level.isClientSide()) return;
+        
+        Town town = this.getTown();
+        if (town == null) return;
+        
+        // Build view-model on server (contains ALL calculations)
+        TownResourceViewModel viewModel = TownResourceViewModelBuilder.buildResourceViewModel(town);
+        
+        // Send view-model to client (client performs ZERO calculations)
+        ResourceViewModelSyncPacket packet = new ResourceViewModelSyncPacket(getBlockPos(), viewModel);
+        PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
+        
+        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
+            "Sent resource view-model to player {} - {} resources, status: {}",
+            player.getName().getString(), viewModel.getResourceCount(), viewModel.getOverallStatus());
+    }
+
+    /**
+     * SERVER-SIDE: Sends updated resource view-model to all nearby players.
+     */
+    public void syncResourceViewModelToNearbyPlayers() {
+        if (level == null || level.isClientSide()) return;
+        if (!(level instanceof ServerLevel serverLevel)) return;
+        
+        // Send to all players in the area
+        serverLevel.players().forEach(this::syncResourceViewModelToPlayer);
     }
 
     // Platform management (handles platform storage and operations)
@@ -604,6 +663,11 @@ public class TownInterfaceEntity extends BlockEntity
         if (level.getGameTime() % 10 == 0) { // Every 10 ticks (0.5 seconds) for snappier UI
             updateFromTownProvider();
             setChanged(); // Force sync of resources to client
+
+            // NEW: Sync resource view-model to clients (server-authoritative architecture)
+            if (!level.isClientSide && level instanceof ServerLevel) {
+                syncResourceViewModelToNearbyPlayers();
+            }
 
             // Delegate buffer synchronization to manager
             if (bufferManager != null) {

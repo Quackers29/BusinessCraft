@@ -9,6 +9,7 @@ import com.quackers29.businesscraft.network.packets.misc.PaymentResultPacket;
 import com.quackers29.businesscraft.network.packets.debug.RequestTownDataPacket;
 import com.quackers29.businesscraft.network.packets.debug.TownDataResponsePacket;
 import com.quackers29.businesscraft.network.packets.ResourceSyncPacket;
+import com.quackers29.businesscraft.network.packets.ResourceViewModelSyncPacket;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
@@ -244,6 +245,10 @@ public class PacketRegistry {
 
                 register(ResourceSyncPacket.class, "resource_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
                                 ResourceSyncPacket::decode, ResourceSyncPacket::encode, ResourceSyncPacket::handle);
+
+                // NEW: Server-authoritative resource view-model sync packet
+                register(ResourceViewModelSyncPacket.class, "resource_view_model_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
+                                ResourceViewModelSyncPacket::decode, ResourceViewModelSyncPacket::encode, ResourceViewModelSyncPacket::handle);
 
                 register(ContractSyncPacket.class, "contract_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
                                 ContractSyncPacket::decode, ContractSyncPacket::encode, ContractSyncPacket::handle);

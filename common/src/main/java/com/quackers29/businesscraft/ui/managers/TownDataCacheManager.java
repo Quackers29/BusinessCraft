@@ -360,15 +360,53 @@ public class TownDataCacheManager {
     /**
      * Gets the resource stats (production, consumption, capacity) for an item.
      * 
+     * DEPRECATED: Use getResourceDisplayInfo() for the new view-model approach
      * @param item The item to get stats for
      * @return float array [production, consumption, capacity] or null if not
      *         available
      */
+    @Deprecated
     public float[] getResourceStats(Item item) {
         if (menu != null) {
             net.minecraft.world.level.block.entity.BlockEntity be = menu.getBlockEntity();
             if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity entity) {
                 return entity.getClientSyncHelper().getClientResourceStats().get(item);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * NEW: Gets resource display information from the server-authoritative view-model.
+     * This contains pre-calculated display strings, eliminating client-side calculations.
+     * 
+     * @param item The item to get display info for
+     * @return The display info containing formatted strings and status, or null if not available
+     */
+    public com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel.ResourceDisplayInfo getResourceDisplayInfo(Item item) {
+        if (menu != null) {
+            net.minecraft.world.level.block.entity.BlockEntity be = menu.getBlockEntity();
+            if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity entity) {
+                com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel viewModel = entity.getCachedResourceViewModel();
+                if (viewModel != null) {
+                    return viewModel.getResourceDisplay(item);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * NEW: Gets the complete resource view-model containing all display data.
+     * This provides access to overall town status and economic trends.
+     * 
+     * @return The complete view-model, or null if not available
+     */
+    public com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel getResourceViewModel() {
+        if (menu != null) {
+            net.minecraft.world.level.block.entity.BlockEntity be = menu.getBlockEntity();
+            if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity entity) {
+                return entity.getCachedResourceViewModel();
             }
         }
         return null;
