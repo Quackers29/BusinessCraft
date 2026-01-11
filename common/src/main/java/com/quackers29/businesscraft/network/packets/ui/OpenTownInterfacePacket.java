@@ -21,17 +21,17 @@ import com.quackers29.businesscraft.menu.TownInterfaceMenu;
  */
 public class OpenTownInterfacePacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenTownInterfacePacket.class);
-    
+
     private final BlockPos blockPos;
-    
+
     public OpenTownInterfacePacket(BlockPos blockPos) {
         this.blockPos = blockPos;
     }
-    
+
     public OpenTownInterfacePacket(FriendlyByteBuf buf) {
         this.blockPos = buf.readBlockPos();
     }
-    
+
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeBlockPos(blockPos);
     }
@@ -44,7 +44,7 @@ public class OpenTownInterfacePacket {
     public static OpenTownInterfacePacket decode(FriendlyByteBuf buf) {
         return new OpenTownInterfacePacket(buf);
     }
-    
+
     public boolean handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
@@ -52,7 +52,8 @@ public class OpenTownInterfacePacket {
                 // Get the block entity to ensure all town data is accessible
                 BlockEntity entity = player.level().getBlockEntity(blockPos);
                 if (entity instanceof TownInterfaceEntity townInterface) {
-                    // Open the TownInterfaceScreen using PlatformAccess for platform-agnostic screen opening
+                    // Open the TownInterfaceScreen using PlatformAccess for platform-agnostic
+                    // screen opening
                     PlatformAccess.getNetwork().openScreen(player, new MenuProvider() {
                         @Override
                         public Component getDisplayName() {
@@ -73,4 +74,4 @@ public class OpenTownInterfacePacket {
         PlatformAccess.getNetwork().setPacketHandled(context);
         return true;
     }
-} 
+}
