@@ -8,7 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
-import com.quackers29.businesscraft.ui.screens.platform.PlatformManagementScreenV2;
+
 import com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache;
 import com.quackers29.businesscraft.debug.DebugConfig;
 
@@ -94,15 +94,11 @@ public class RefreshPlatformsPacket {
                     }
 
                     // If the PlatformManagementScreenV2 is open, force refresh with BE-synced data
-                    Object currentScreen = clientHelper.getCurrentScreen();
-                    if (currentScreen instanceof PlatformManagementScreenV2 screenV2) {
-                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                            "PlatformManagementScreenV2 open at {}, forcing refreshPlatformData(true)", pos);
-                        screenV2.refreshPlatformData(true);  // Force bypass toggle protection
-                    } else {
-                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                            "PlatformManagementScreenV2 is open, fresh data will be applied when response arrives");
-                    }
+                    clientHelper.refreshPlatformScreen(true);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                            "Requested platform screen refresh via ClientHelper");
+
+                    // Additional handling for other screens can be added here if needed
                     // Additional handling for other screens can be added here if needed
                 } else {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,

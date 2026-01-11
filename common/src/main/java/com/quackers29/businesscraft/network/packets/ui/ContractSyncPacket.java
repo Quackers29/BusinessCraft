@@ -5,8 +5,7 @@ import com.quackers29.businesscraft.contract.Contract;
 import com.quackers29.businesscraft.contract.CourierContract;
 import com.quackers29.businesscraft.contract.SellContract;
 import com.quackers29.businesscraft.menu.ContractBoardMenu;
-import com.quackers29.businesscraft.ui.screens.town.ContractBoardScreen;
-import net.minecraft.client.Minecraft;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
@@ -95,9 +94,9 @@ public class ContractSyncPacket {
     }
 
     // Client handler
-    public void handleClient(Minecraft mc) {
-        if (mc.screen instanceof ContractBoardScreen screen) {
-            screen.updateContracts(contracts);
+    public void handleClient(Object client) { // ClientHelper instance
+        if (client instanceof com.quackers29.businesscraft.api.ClientHelper helper) {
+            helper.updateContractBoard(contracts);
         }
         com.quackers29.businesscraft.client.ClientGlobalMarket.get().setPrices(marketPrices);
     }

@@ -14,7 +14,16 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 @Mod.EventBusSubscriber(modid = "businesscraft", bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public class ForgeClientSetup {
 
+    @SubscribeEvent
     public static void init(FMLClientSetupEvent event) {
+        // Initialize client helper only on client side
+        com.quackers29.businesscraft.api.PlatformAccess.client = new com.quackers29.businesscraft.forge.platform.ForgeClientHelper();
+        com.quackers29.businesscraft.api.PlatformAccess.render = new com.quackers29.businesscraft.forge.platform.ForgeRenderHelper();
+
+        // Register render helper for overlay handling
+        com.quackers29.businesscraft.forge.platform.ForgeRenderHelper.ForgeOverlayRegistry.setRenderHelper(
+                (com.quackers29.businesscraft.forge.platform.ForgeRenderHelper) com.quackers29.businesscraft.api.PlatformAccess.render);
+
         // Initialize common client setup (key handlers, render events)
         event.enqueueWork(() -> {
             CommonClientSetup.init();

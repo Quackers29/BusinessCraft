@@ -13,8 +13,6 @@ import com.quackers29.businesscraft.api.MenuTypeHelper;
 import com.quackers29.businesscraft.api.ItemHandlerHelper;
 import com.quackers29.businesscraft.api.NetworkMessages;
 import com.quackers29.businesscraft.api.PlatformAccess;
-import com.quackers29.businesscraft.api.ClientHelper;
-import com.quackers29.businesscraft.api.RenderHelper;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.fabric.init.FabricModBlocks;
 import com.quackers29.businesscraft.fabric.init.FabricModEntityTypes;
@@ -49,10 +47,10 @@ public class BusinessCraftFabric implements ModInitializer {
     public static final MenuTypeHelper MENU_TYPES = new FabricMenuTypeHelper();
     public static final ItemHandlerHelper ITEM_HANDLERS = new FabricItemHandlerHelper();
     public static final NetworkMessages NETWORK_MESSAGES = new FabricNetworkMessages();
-    // Client-side only helpers - initialized in client setup
-    public static final ClientHelper CLIENT = new FabricClientHelper();
-    // RenderHelper uses reflection to avoid compile-time GuiGraphics dependency
-    public static final RenderHelper RENDER = new FabricRenderHelper();
+
+    // CLIENT and RENDER are initialized in FabricClientSetup (client-side only) to
+    // prevent server crashes
+
     public static final com.quackers29.businesscraft.api.ITouristHelper TOURIST_HELPER = new FabricTouristHelper();
 
     @Override

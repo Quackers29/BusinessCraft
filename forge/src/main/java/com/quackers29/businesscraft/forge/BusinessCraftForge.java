@@ -10,8 +10,7 @@ import com.quackers29.businesscraft.forge.platform.ForgeBlockEntityHelper;
 import com.quackers29.businesscraft.forge.platform.ForgeMenuTypeHelper;
 import com.quackers29.businesscraft.forge.platform.ForgeItemHandlerHelper;
 import com.quackers29.businesscraft.forge.platform.ForgeNetworkMessages;
-import com.quackers29.businesscraft.forge.platform.ForgeClientHelper;
-import com.quackers29.businesscraft.forge.platform.ForgeRenderHelper;
+
 import com.quackers29.businesscraft.forge.platform.ForgeTouristHelper;
 import com.quackers29.businesscraft.forge.init.ForgeModBlocks;
 import com.quackers29.businesscraft.forge.init.ForgeModEntityTypes;
@@ -19,7 +18,6 @@ import com.quackers29.businesscraft.forge.init.ForgeModBlockEntities;
 import com.quackers29.businesscraft.forge.init.ForgeModMenuTypes;
 import com.quackers29.businesscraft.forge.network.ForgeModMessages;
 import com.quackers29.businesscraft.forge.event.ForgeModEvents;
-import com.quackers29.businesscraft.forge.client.ForgeClientSetup;
 import com.quackers29.businesscraft.api.PlatformHelper;
 import com.quackers29.businesscraft.api.RegistryHelper;
 import com.quackers29.businesscraft.api.EventHelper;
@@ -72,8 +70,9 @@ public class BusinessCraftForge {
     public static final com.quackers29.businesscraft.api.MenuTypeHelper MENU_TYPES = new ForgeMenuTypeHelper();
     public static final com.quackers29.businesscraft.api.ItemHandlerHelper ITEM_HANDLERS = new ForgeItemHandlerHelper();
     public static final com.quackers29.businesscraft.api.NetworkMessages NETWORK_MESSAGES = new ForgeNetworkMessages();
-    public static final ClientHelper CLIENT = new ForgeClientHelper(); // Client-side only
-    public static final RenderHelper RENDER = new ForgeRenderHelper(); // Client-side only
+
+    // CLIENT and RENDER are initialized in ForgeClientSetup (client-side only) to
+    // prevent server crashes
     public static final com.quackers29.businesscraft.api.ITouristHelper TOURIST_HELPER = new ForgeTouristHelper();
 
     static {
@@ -99,11 +98,6 @@ public class BusinessCraftForge {
         System.out.println("DEBUG: BusinessCraft Forge mod starting up!");
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
-        // ClientHelper and RenderHelper will be initialized in clientSetup() - only
-        // available on client side
-        // But we need to set the renderHelper reference early for overlay registration
-        ForgeRenderHelper.ForgeOverlayRegistry.setRenderHelper((ForgeRenderHelper) RENDER);
-
         // Register DeferredRegisters with the mod event bus
         System.out.println("DEBUG: About to register DeferredRegisters with mod event bus");
         ((ForgeRegistryHelper) REGISTRY).register(modEventBus);
@@ -118,7 +112,6 @@ public class BusinessCraftForge {
         // Register our mod's event handlers
         System.out.println("DEBUG: Registering event listeners");
         modEventBus.addListener(this::commonSetup);
-        modEventBus.addListener(this::clientSetup);
         System.out.println("DEBUG: Event listeners registered");
 
         // Initialize networking
@@ -156,21 +149,6 @@ public class BusinessCraftForge {
         com.quackers29.businesscraft.event.PlatformPathHandler.initialize();
 
         LOGGER.info("BusinessCraft Forge common setup complete.");
-    }
-
-    private void clientSetup(final FMLClientSetupEvent event) {
-        LOGGER.info("BusinessCraft Forge client setup starting");
-
-        // Initialize client helper only on client side
-        PlatformAccess.client = CLIENT;
-        PlatformAccess.render = RENDER;
-
-        // RenderHelper reference already set in constructor for overlay registration
-
-        // Client-side setup handled by ForgeClientSetup
-        ForgeClientSetup.init(event);
-
-        LOGGER.info("BusinessCraft Forge client setup complete");
     }
 
     @SubscribeEvent

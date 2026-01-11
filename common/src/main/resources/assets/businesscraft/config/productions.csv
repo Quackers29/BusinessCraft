@@ -1,0 +1,10 @@
+prod_id,display_name,base_cycle_time_minutes,inputs,outputs
+population_maintenance,Food Consumption,0.4,food:1*pop,
+population_growth,Natural Population Growth,0.6,happiness:>60;surplus:food,pop:1
+tourism,Tourist Generation,0.2,happiness:>70;food:10;money:10,tourist:1
+farming,Basic Wheat Farming,0.02,,food:40
+woodcutting,Woodcutting,0.05,,wood:50
+sawmill,Sawmill,0.01,wu:20;wood:25;wood:>min;money:1,planks:100
+taxes,Taxes,0.4,,money:1*pop
+border_expansion_production,Expand Border,0.5,,border:1
+work_unit_production,Work Units,0.1,,wu:1*pop

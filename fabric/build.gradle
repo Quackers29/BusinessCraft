@@ -43,7 +43,7 @@ loom {
 }
 
 // Include common module source directly to allow compilation
-// sourceSets.main.java.srcDirs += project(':common').sourceSets.main.java.srcDirs
+sourceSets.main.java.srcDirs += project(':common').sourceSets.main.java.srcDirs
 
 // No excludes - we want full common module visibility
 

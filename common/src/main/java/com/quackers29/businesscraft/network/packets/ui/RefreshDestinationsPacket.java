@@ -15,7 +15,6 @@ import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
-import com.quackers29.businesscraft.ui.screens.platform.DestinationsScreenV2;
 
 /**
  * Packet sent from server to client to refresh the destinations UI
@@ -121,18 +120,14 @@ public class RefreshDestinationsPacket {
                     }
 
                     if (platform != null) {
-                        Object minecraft = clientHelper.getMinecraft();
-                        if (minecraft instanceof net.minecraft.client.Minecraft mc) {
-                            // Open destinations screen V2 (using BC UI framework)
-                            mc.setScreen(new DestinationsScreenV2(
-                                    pos,
-                                    platformId,
-                                    platform.getName(),
-                                    townNames,
-                                    enabledState,
-                                    townDistances,
-                                    townDirections));
-                        }
+                        clientHelper.openDestinationsScreen(
+                                pos,
+                                platformId,
+                                platform.getName(),
+                                townNames,
+                                enabledState,
+                                townDistances,
+                                townDirections);
                     }
                 }
             }

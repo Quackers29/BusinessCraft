@@ -25,70 +25,70 @@ import java.util.List;
  */
 @Mod.EventBusSubscriber(modid = "businesscraft", bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ForgeEventCallbackHandler {
-    
+
     // Server-side callbacks
     private static final List<EventCallbacks.PlayerTickCallback> playerTickCallbacks = new ArrayList<>();
     private static final List<EventCallbacks.PlayerLoginCallback> playerLoginCallbacks = new ArrayList<>();
     private static final List<EventCallbacks.PlayerLogoutCallback> playerLogoutCallbacks = new ArrayList<>();
     private static final List<EventCallbacks.RightClickBlockCallback> rightClickBlockCallbacks = new ArrayList<>();
-    
+
     // Client-side callbacks
     private static final List<EventCallbacks.ClientTickCallback> clientTickCallbacks = new ArrayList<>();
     private static final List<EventCallbacks.KeyInputCallback> keyInputCallbacks = new ArrayList<>();
     private static final List<EventCallbacks.MouseScrollCallback> mouseScrollCallbacks = new ArrayList<>();
     private static final List<EventCallbacks.RenderLevelCallback> renderLevelCallbacks = new ArrayList<>();
     private static final List<EventCallbacks.LevelUnloadCallback> levelUnloadCallbacks = new ArrayList<>();
-    
+
     // Server-side event handlers
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.side.isClient() || event.phase != TickEvent.Phase.END) {
             return;
         }
-        
+
         if (event.player instanceof ServerPlayer serverPlayer) {
             net.minecraft.server.level.ServerLevel serverLevel = serverPlayer.serverLevel();
             BlockPos position = serverPlayer.blockPosition();
-            
+
             for (EventCallbacks.PlayerTickCallback callback : playerTickCallbacks) {
                 callback.onPlayerTick(serverPlayer, serverLevel, position);
             }
         }
     }
-    
+
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
             net.minecraft.server.level.ServerLevel serverLevel = serverPlayer.serverLevel();
             BlockPos position = serverPlayer.blockPosition();
-            
+
             for (EventCallbacks.PlayerLoginCallback callback : playerLoginCallbacks) {
                 callback.onPlayerLogin(serverPlayer, serverLevel, position);
             }
         }
     }
-    
+
     @SubscribeEvent
     public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             ServerPlayer serverPlayer = (ServerPlayer) player;
-            
+
             for (EventCallbacks.PlayerLogoutCallback callback : playerLogoutCallbacks) {
                 callback.onPlayerLogout(serverPlayer);
             }
         }
     }
-    
+
     @SubscribeEvent
     public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         if (event.getLevel().isClientSide()) {
             return;
         }
-        
+
         Player player = event.getEntity();
         Level level = event.getLevel();
         BlockPos clickedPos = event.getPos();
-        
+
         for (EventCallbacks.RightClickBlockCallback callback : rightClickBlockCallbacks) {
             if (callback.onRightClickBlock(player, level, clickedPos)) {
                 event.setCanceled(true);
@@ -96,7 +96,7 @@ public class ForgeEventCallbackHandler {
             }
         }
     }
-    
+
     @SubscribeEvent
     public static void onLevelUnload(LevelEvent.Unload event) {
         if (event.getLevel() instanceof Level level) {
@@ -105,7 +105,7 @@ public class ForgeEventCallbackHandler {
             }
         }
     }
-    
+
     // Client-side event handlers
     @Mod.EventBusSubscriber(modid = "businesscraft", bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class Client {
@@ -117,7 +117,7 @@ public class ForgeEventCallbackHandler {
                 }
             }
         }
-        
+
         @SubscribeEvent
         public static void onKeyInput(InputEvent.Key event) {
             for (EventCallbacks.KeyInputCallback callback : keyInputCallbacks) {
@@ -127,7 +127,7 @@ public class ForgeEventCallbackHandler {
                 }
             }
         }
-        
+
         @SubscribeEvent
         public static void onMouseScroll(InputEvent.MouseScrollingEvent event) {
             for (EventCallbacks.MouseScrollCallback callback : mouseScrollCallbacks) {
@@ -137,7 +137,7 @@ public class ForgeEventCallbackHandler {
                 }
             }
         }
-        
+
         @SubscribeEvent
         public static void onRenderLevelStage(RenderLevelStageEvent event) {
             // Normalize stage name: remove "minecraft:" prefix and convert to uppercase
@@ -147,49 +147,48 @@ public class ForgeEventCallbackHandler {
             }
             String stageName = stageStr.toUpperCase();
             float partialTick = event.getPartialTick();
-            
+
             // Invoke all registered callbacks for this stage
             for (EventCallbacks.RenderLevelCallback callback : renderLevelCallbacks) {
                 callback.onRenderLevel(stageName, partialTick, event);
             }
         }
     }
-    
+
     // Registration methods (called by ForgeEventHelper)
     public static void registerPlayerTickCallback(EventCallbacks.PlayerTickCallback callback) {
         playerTickCallbacks.add(callback);
     }
-    
+
     public static void registerPlayerLoginCallback(EventCallbacks.PlayerLoginCallback callback) {
         playerLoginCallbacks.add(callback);
     }
-    
+
     public static void registerPlayerLogoutCallback(EventCallbacks.PlayerLogoutCallback callback) {
         playerLogoutCallbacks.add(callback);
     }
-    
+
     public static void registerRightClickBlockCallback(EventCallbacks.RightClickBlockCallback callback) {
         rightClickBlockCallbacks.add(callback);
     }
-    
+
     public static void registerClientTickCallback(EventCallbacks.ClientTickCallback callback) {
         clientTickCallbacks.add(callback);
     }
-    
+
     public static void registerKeyInputCallback(EventCallbacks.KeyInputCallback callback) {
         keyInputCallbacks.add(callback);
     }
-    
+
     public static void registerMouseScrollCallback(EventCallbacks.MouseScrollCallback callback) {
         mouseScrollCallbacks.add(callback);
     }
-    
+
     public static void registerRenderLevelCallback(EventCallbacks.RenderLevelCallback callback) {
         renderLevelCallbacks.add(callback);
     }
-    
+
     public static void registerLevelUnloadCallback(EventCallbacks.LevelUnloadCallback callback) {
         levelUnloadCallbacks.add(callback);
     }
 }
-

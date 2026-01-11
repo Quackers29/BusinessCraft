@@ -809,48 +809,6 @@ public class TownInterfaceEntity extends BlockEntity
         }
     }
 
-    @Override
-
-    public void handleUpdateTag(CompoundTag tag) {
-        super.handleUpdateTag(tag);
-
-        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM,
-                "[PLATFORM] handleUpdateTag called on CLIENT, tag keys: {}", tag.getAllKeys());
-        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] tag contains platforms: {}",
-                tag.contains("platforms"));
-        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] tag contains clientResources: {}",
-                tag.contains("clientResources"));
-
-        // Handle name updates
-        if (tag.contains("name")) {
-            String newName = tag.getString("name");
-            if (!newName.equals(name)) {
-                DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Updating town name from {} to {}", name,
-                        newName);
-                name = newName;
-            }
-        }
-
-        // Handle search radius updates
-        if (tag.contains("searchRadius")) {
-            int newSearchRadius = tag.getInt("searchRadius");
-            if (newSearchRadius != this.searchRadius) {
-                DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Client updating search radius from {} to {}",
-                        this.searchRadius, newSearchRadius);
-                this.searchRadius = newSearchRadius;
-            }
-        }
-
-        // Handle platform data updates using platform manager
-        platformManager.updateClientPlatforms(tag);
-
-        // Load client resources data
-        loadResourcesFromTag(tag);
-
-        // Load visit history data
-        clientSyncHelper.loadVisitHistoryFromTag(tag);
-    }
-
     /**
      * Loads resources from the provided tag into the client-side cache
      * This centralizes our resource deserialization logic in one place
@@ -861,15 +819,6 @@ public class TownInterfaceEntity extends BlockEntity
         clientSyncHelper.loadEscrowedResourcesFromTag(tag);
         // Load stats
         clientSyncHelper.loadResourceStatsFromTag(tag);
-    }
-
-    @Override
-    public void onDataPacket(Connection net, ClientboundBlockEntityDataPacket pkt) {
-        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] onDataPacket called on CLIENT");
-        CompoundTag tag = pkt.getTag();
-        if (tag != null) {
-            handleUpdateTag(tag);
-        }
     }
 
     public ContainerData getContainerData() {

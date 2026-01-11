@@ -2,8 +2,7 @@ package com.quackers29.businesscraft.network.packets.ui;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.ui.managers.TownDataCacheManager;
-import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
-import net.minecraft.client.Minecraft;
+
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 
@@ -123,14 +122,12 @@ public class TownOverviewSyncPacket {
 
     public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            if (Minecraft.getInstance().screen instanceof TownInterfaceScreen screen) {
-                TownDataCacheManager cache = screen.getCacheManager();
-                if (cache != null) {
-                    cache.updateOverviewData(happiness, biome, biomeVariant, currentResearch, researchProgress,
-                            dailyTickInterval,
-                            activeProductions, upgradeLevels, populationCap, totalTouristsArrived,
-                            totalTouristDistance, borderRadius, aiScores);
-                }
+            com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+            if (clientHelper != null) {
+                clientHelper.updateTownOverviewData(happiness, biome, biomeVariant, currentResearch, researchProgress,
+                        dailyTickInterval,
+                        activeProductions, upgradeLevels, populationCap, totalTouristsArrived,
+                        totalTouristDistance, borderRadius, aiScores);
             }
         });
         PlatformAccess.getNetwork().setPacketHandled(context);

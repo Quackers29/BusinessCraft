@@ -24,8 +24,9 @@ public class FabricClientSetup implements ClientModInitializer {
             registerClientPackets();
 
             // Initialize client-side platform helpers
-            PlatformAccess.client = BusinessCraftFabric.CLIENT;
-            PlatformAccess.render = BusinessCraftFabric.RENDER;
+            // Initialize client-side platform helpers
+            PlatformAccess.client = new com.quackers29.businesscraft.fabric.platform.FabricClientHelper();
+            PlatformAccess.render = new com.quackers29.businesscraft.fabric.platform.FabricRenderHelper();
 
             // Register client-side events
             try {

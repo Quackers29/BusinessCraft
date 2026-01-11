@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.api;
 
+import net.minecraft.core.BlockPos;
+
 /**
  * Platform-agnostic interface for client-side operations.
  * Provides access to Minecraft client instance and common client operations.
@@ -69,4 +71,28 @@ public interface ClientHelper {
     default Object getPlayer() {
         return getClientPlayer();
     }
+
+    void openDestinationsScreen(
+            BlockPos pos,
+            java.util.UUID platformId,
+            String platformName,
+            java.util.Map<java.util.UUID, String> townNames,
+            java.util.Map<java.util.UUID, Boolean> enabledState,
+            java.util.Map<java.util.UUID, Integer> townDistances,
+            java.util.Map<java.util.UUID, String> townDirections);
+
+    void invalidateTownScreenCache();
+
+    void refreshPlatformScreen(boolean force);
+
+    void updateTownOverviewData(
+            float happiness, String biome, String biomeVariant, String currentResearch,
+            float researchProgress, int dailyTickInterval,
+            java.util.Map<String, Float> activeProductions,
+            java.util.Map<String, Integer> upgradeLevels,
+            float populationCap, int totalTouristsArrived,
+            double totalTouristDistance, float borderRadius,
+            java.util.Map<String, Float> aiScores);
+
+    void updateContractBoard(java.util.List<com.quackers29.businesscraft.contract.Contract> contracts);
 }
