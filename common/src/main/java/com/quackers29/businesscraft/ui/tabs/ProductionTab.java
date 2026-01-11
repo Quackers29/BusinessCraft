@@ -100,10 +100,9 @@ public class ProductionTab extends BaseTownTab {
                     for (Map.Entry<String, Float> entry : productions.entrySet()) {
                         String id = entry.getKey();
 
-                        // Get nice name if possible
-                        com.quackers29.businesscraft.production.ProductionRecipe recipe = com.quackers29.businesscraft.production.ProductionRegistry
-                                .get(id);
-                        String displayName = (recipe != null) ? recipe.getDisplayName() : id;
+                        // Get nice name from server view-model (no client config access!)
+                        var recipeInfo = cache.getProductionRecipeInfo(id);
+                        String displayName = (recipeInfo != null) ? recipeInfo.getDisplayName() : id;
 
                         names.add(displayName);
                         // Column 2: Percentage
@@ -112,94 +111,25 @@ public class ProductionTab extends BaseTownTab {
                             pct = 100;
                         progress.add(pct + "%");
 
-                        // Tooltip for production
-                        if (recipe != null) {
+                        // Tooltip for production (using server view-model data, no client config!)
+                        if (recipeInfo != null) {
                             StringBuilder sb = new StringBuilder();
 
-                            // 1. Inputs & Conditions
-                            List<String> inputsList = new ArrayList<>();
-                            if (recipe.getInputs() != null) {
-                                for (com.quackers29.businesscraft.data.parsers.DataParser.ResourceAmount input : recipe
-                                        .getInputs()) {
-                                    String amtDisplay = input.amountExpression != null ? input.amountExpression
-                                            : String.valueOf(input.amount);
-                                    inputsList.add(input.resourceId + ": " + amtDisplay);
-                                }
-                            }
-                            if (recipe.getConditions() != null) {
-                                for (com.quackers29.businesscraft.data.parsers.Condition cond : recipe
-                                        .getConditions()) {
-                                    inputsList.add(cond.getTarget() + " " + cond.getOperator() + " " + cond.getValue());
-                                }
-                            }
+                            // Use pre-formatted strings from server view-model
+                            sb.append("Status: ").append(recipeInfo.getStatusText()).append("\n");
+                            sb.append("Progress: ").append(recipeInfo.getProgressText()).append("\n\n");
 
-                            if (!inputsList.isEmpty()) {
-                                sb.append("Inputs/Reqs:\n");
-                                for (String s : inputsList)
-                                    sb.append(" - ").append(s).append("\n");
-                                sb.append("\n");
-                            }
+                            // Server-calculated display strings (no client formulas!)
+                            sb.append("Inputs: ").append(recipeInfo.getInputsText()).append("\n");
+                            sb.append("Outputs: ").append(recipeInfo.getOutputsText()).append("\n\n");
 
-                            // 2. Outputs
-                            if (recipe.getOutputs() != null && !recipe.getOutputs().isEmpty()) {
-                                sb.append("Outputs:\n");
-                                for (com.quackers29.businesscraft.data.parsers.DataParser.ResourceAmount output : recipe
-                                        .getOutputs()) {
-                                    String amtDisplay = output.amountExpression != null ? output.amountExpression
-                                            : String.valueOf(output.amount);
-                                    sb.append(" - ").append(output.resourceId).append(": ").append(amtDisplay)
-                                            .append("\n");
-                                }
-                                sb.append("\n");
-                            }
+                            // Server-calculated cycle time and rate
+                            sb.append("Cycle Time: ").append(recipeInfo.getCycleTimeText()).append("\n");
+                            sb.append("Production Rate: ").append(recipeInfo.getProductionRateText()).append("\n");
 
-                            // 3. Cycle Time & Speed
-                            sb.append("Base Cycle: ").append(recipe.getBaseCycleTimeMinutes()).append(" mins\n");
-
-                            // Check active upgrades
-                            java.util.Set<String> unlocked = cache.getCachedUnlockedNodes();
-                            float modifier = 0f;
-                            List<String> activeEffects = new ArrayList<>();
-
-                            if (unlocked != null) {
-                                for (String nodeId : unlocked) {
-                                    UpgradeNode unode = UpgradeRegistry.get(nodeId);
-                                    if (unode != null) {
-                                        for (com.quackers29.businesscraft.data.parsers.Effect eff : unode
-                                                .getEffects()) {
-                                            if (eff.getTarget().equals(id)) {
-                                                // Calculate effect magnitude
-                                                int lvl = cache.getCachedUpgradeLevel(nodeId);
-                                                float val = eff.getValue() * lvl;
-                                                modifier += val;
-
-                                                // Format active effect line
-                                                String name = unode.getDisplayName();
-                                                if (unode.isRepeatable())
-                                                    name += " (" + lvl + ")";
-                                                activeEffects.add(name + ": +" + String.format("%.0f%%", val * 100));
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (modifier > 0) {
-                                float currentCycle = recipe.getBaseCycleTimeMinutes() / modifier;
-                                sb.append("Current Cycle: ").append(String.format("%.2f", currentCycle))
-                                        .append(" mins\n");
-                                sb.append("Speed: ").append(String.format("%.0f%%", modifier * 100));
-                            } else {
-                                sb.append("Normal Speed (100%)");
-                            }
-
-                            // 4. List Active Upgrades
-                            if (!activeEffects.isEmpty()) {
-                                sb.append("\n\nActive Upgrades:\n");
-                                for (String eff : activeEffects) {
-                                    sb.append(" - ").append(eff).append("\n");
-                                }
-                            }
+                            // TODO: Server-authoritative upgrade effects view-model needed
+                            // For now, simplified tooltip without client-side upgrade calculations
+                            // Full implementation requires server to include "active upgrades affecting this recipe" in view-model
 
                             tooltipList.add(sb.toString());
                         } else {
@@ -399,9 +329,10 @@ public class ProductionTab extends BaseTownTab {
                         // Calculate Scaled Value for this level
                         float val = entry.node.calculateEffectValue(eff, entry.level);
 
-                        // heuristic for formatting
+                        // heuristic for formatting (no client config access!)
                         boolean isPercentage = false;
-                        if (com.quackers29.businesscraft.production.ProductionRegistry.get(target) != null
+                        var productionViewModel = cache.getProductionViewModel();
+                        if ((productionViewModel != null && productionViewModel.hasRecipe(target))
                                 || "research".equals(target)) {
                             isPercentage = true;
                         }

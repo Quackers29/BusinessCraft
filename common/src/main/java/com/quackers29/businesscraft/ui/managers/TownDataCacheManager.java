@@ -412,6 +412,37 @@ public class TownDataCacheManager {
         return null;
     }
 
+    /**
+     * NEW: Gets the complete production view-model containing all production recipe display data.
+     * This eliminates client-side ProductionRegistry access and config file reading.
+     *
+     * @return The complete production view-model, or null if not available
+     */
+    public com.quackers29.businesscraft.town.viewmodel.ProductionStatusViewModel getProductionViewModel() {
+        if (menu != null) {
+            net.minecraft.world.level.block.entity.BlockEntity be = menu.getBlockEntity();
+            if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity entity) {
+                return entity.getCachedProductionViewModel();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * NEW: Gets production recipe display info by recipe ID from the server-authoritative view-model.
+     * This replaces ProductionRegistry.get() calls that violated the server-authoritative pattern.
+     *
+     * @param recipeId The recipe ID to get display info for
+     * @return The display info containing recipe name and details, or null if not available
+     */
+    public com.quackers29.businesscraft.town.viewmodel.ProductionStatusViewModel.ProductionRecipeInfo getProductionRecipeInfo(String recipeId) {
+        var viewModel = getProductionViewModel();
+        if (viewModel != null) {
+            return viewModel.getRecipeInfo(recipeId);
+        }
+        return null;
+    }
+
     public Map<String, String> getCachedTownStats() {
         if (dataCache != null) {
             // dataCache might not have a generic stats map, but we can construct it or

@@ -184,9 +184,12 @@ public class ConfigLoader {
                     .parseDouble(props.getProperty("contractSnailMailDeliveryMinutesPerMeter", "0.1"));
 
             // Load Registries
+            // TODO: These should ONLY load on server, not client!
+            // With the new view-model architecture, client should never access these registries
+            // For now, they load on both sides, but UI code has been updated to use view-models instead
             com.quackers29.businesscraft.economy.ResourceRegistry.load();
-            com.quackers29.businesscraft.production.ProductionRegistry.load();
-            com.quackers29.businesscraft.production.UpgradeRegistry.load();
+            com.quackers29.businesscraft.production.ProductionRegistry.load(); // SERVER-ONLY eventually!
+            com.quackers29.businesscraft.production.UpgradeRegistry.load();    // SERVER-ONLY eventually!
             com.quackers29.businesscraft.world.BiomeRegistry.load();
 
         } catch (IOException e) {

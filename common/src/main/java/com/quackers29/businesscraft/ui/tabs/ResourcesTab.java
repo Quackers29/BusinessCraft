@@ -210,30 +210,19 @@ public class ResourcesTab extends BaseTownTab {
                                     matches = true;
                                     type = "Cap";
                                 } else {
-                                    // Check recipe outputs
-                                    com.quackers29.businesscraft.production.ProductionRecipe recipe = com.quackers29.businesscraft.production.ProductionRegistry
-                                            .get(target);
-                                    if (recipe != null) {
-                                        for (com.quackers29.businesscraft.data.parsers.DataParser.ResourceAmount out : recipe
-                                                .getOutputs()) {
-                                            // Check direct match
-                                            if (out.resourceId.equals(itemStr)) {
-                                                matches = true;
-                                                type = "Speed";
-                                                break;
-                                            }
-                                            // Check resolved match (e.g. food -> minecraft:wheat)
-                                            com.quackers29.businesscraft.economy.ResourceType resType = ResourceRegistry
-                                                    .get(out.resourceId);
-                                            if (resType != null) {
-                                                String resolvedKey = resType.getCanonicalItemId().toString();
-                                                if (resolvedKey.equals(itemStr)) {
-                                                    matches = true;
-                                                    type = "Speed";
-                                                    break;
-                                                }
-                                            }
-                                        }
+                                    // TODO: Server-authoritative implementation needed
+                                    // This requires a more complex view-model that includes upgrade effect applicability
+                                    // For now, simplified to prevent client ProductionRegistry access
+                                    // Original logic checked recipe outputs to match upgrade effects to resources
+
+                                    // Simplified check: if target looks like a recipe ID, assume it might match
+                                    // The proper fix requires server-side calculation of "which upgrades affect this resource"
+                                    var productionViewModel = cache.getProductionViewModel();
+                                    if (productionViewModel != null && productionViewModel.hasRecipe(target)) {
+                                        // Conservative assumption: recipe might produce this resource
+                                        // Full implementation requires server to send "affects resource X" in view-model
+                                        matches = false; // Disabled for now to prevent false positives
+                                        type = "Speed";
                                     }
                                 }
 

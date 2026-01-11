@@ -102,7 +102,10 @@ import com.quackers29.businesscraft.town.data.VisitorProcessingHelper;
 import com.quackers29.businesscraft.town.data.ClientSyncHelper;
 import com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel;
 import com.quackers29.businesscraft.town.viewmodel.TownResourceViewModelBuilder;
+import com.quackers29.businesscraft.town.viewmodel.ProductionStatusViewModel;
+import com.quackers29.businesscraft.town.viewmodel.ProductionStatusViewModelBuilder;
 import com.quackers29.businesscraft.network.packets.ResourceViewModelSyncPacket;
+import com.quackers29.businesscraft.network.packets.ProductionViewModelSyncPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import com.quackers29.businesscraft.town.data.NBTDataHelper;
@@ -220,9 +223,63 @@ public class TownInterfaceEntity extends BlockEntity
     public void syncResourceViewModelToNearbyPlayers() {
         if (level == null || level.isClientSide()) return;
         if (!(level instanceof ServerLevel serverLevel)) return;
-        
+
         // Send to all players in the area
         serverLevel.players().forEach(this::syncResourceViewModelToPlayer);
+    }
+
+    // Client-side production view-model cache (for the new server-authoritative architecture)
+    private ProductionStatusViewModel cachedProductionViewModel = null;
+
+    /**
+     * Updates the client-side production view-model cache.
+     * This method is called by ProductionViewModelSyncPacket to implement the
+     * "dumb terminal" pattern where client only displays pre-calculated production data.
+     */
+    public void updateProductionViewModel(ProductionStatusViewModel viewModel) {
+        this.cachedProductionViewModel = viewModel;
+    }
+
+    /**
+     * Gets the cached production view-model for client-side display.
+     * Returns null if no view-model has been received from server yet.
+     */
+    public ProductionStatusViewModel getCachedProductionViewModel() {
+        return cachedProductionViewModel;
+    }
+
+    /**
+     * SERVER-SIDE: Sends updated production view-model to a specific player.
+     * This implements the server-authoritative architecture by sending
+     * pre-calculated production data from server config files.
+     */
+    public void syncProductionViewModelToPlayer(ServerPlayer player) {
+        if (level == null || level.isClientSide()) return;
+
+        Town town = this.getTown();
+        if (town == null) return;
+
+        // Build view-model on server (contains ALL production config data and calculations)
+        ProductionStatusViewModel viewModel = ProductionStatusViewModelBuilder.buildProductionViewModel(town);
+
+        // Send view-model to client (client performs ZERO config access or calculations)
+        ProductionViewModelSyncPacket packet = new ProductionViewModelSyncPacket(getBlockPos(), viewModel);
+        PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
+
+        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
+            "Sent production view-model to player {} - {} recipes, status: {}",
+            player.getName().getString(), viewModel.getRecipeCount(), viewModel.getOverallStatus());
+    }
+
+    /**
+     * SERVER-SIDE: Sends updated production view-model to all nearby players.
+     */
+    public void syncProductionViewModelToNearbyPlayers() {
+        if (level == null || level.isClientSide()) return;
+        if (!(level instanceof ServerLevel serverLevel)) return;
+
+        // Send to all players in the area
+        serverLevel.players().forEach(this::syncProductionViewModelToPlayer);
     }
 
     // Platform management (handles platform storage and operations)
@@ -667,6 +724,8 @@ public class TownInterfaceEntity extends BlockEntity
             // NEW: Sync resource view-model to clients (server-authoritative architecture)
             if (!level.isClientSide && level instanceof ServerLevel) {
                 syncResourceViewModelToNearbyPlayers();
+                // NEW: Sync production view-model to clients (eliminates ProductionRegistry access on client)
+                syncProductionViewModelToNearbyPlayers();
             }
 
             // Delegate buffer synchronization to manager
