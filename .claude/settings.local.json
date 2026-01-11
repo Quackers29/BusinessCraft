@@ -16,7 +16,9 @@
       "Bash(rg:*)",
       "Bash(printf:*)",
       "Bash(cp:*)",
-      "Bash(wsl:*)"
+      "Bash(wsl:*)",
+      "Bash(./gradlew :common:compileJava:*)",
+      "Bash(powershell.exe -Command \"[console]::beep\\(800,200\\); Start-Sleep -Milliseconds 200; [console]::beep\\(800,200\\); Start-Sleep -Milliseconds 200; [console]::beep\\(800,200\\)\")"
     ],
     "deny": []
   }
