@@ -185,11 +185,22 @@ public class ConfigLoader {
 
             // Load Registries
             // TODO: These should ONLY load on server, not client!
-            // With the new view-model architecture, client should never access these registries
-            // For now, they load on both sides, but UI code has been updated to use view-models instead
+            // With the new view-model architecture, client should never access these
+            // registries
+            // For now, they load on both sides, but UI code has been updated to use
+            // view-models instead
             com.quackers29.businesscraft.economy.ResourceRegistry.load();
-            com.quackers29.businesscraft.production.ProductionRegistry.load(); // SERVER-ONLY eventually!
-            com.quackers29.businesscraft.production.UpgradeRegistry.load();    // SERVER-ONLY eventually!
+
+            // SERVER-SIDE ONLY REGISTRIES
+            // Note: These must be loaded even on physical client to support Integrated
+            // Server (Single Player).
+            // The "Server-Authoritative" architectural constraint is that Client UI code
+            // must not access these directly,
+            // but the classes must be present and populated for the internal server logic
+            // to function.
+            com.quackers29.businesscraft.production.ProductionRegistry.load();
+            com.quackers29.businesscraft.production.UpgradeRegistry.load();
+
             com.quackers29.businesscraft.world.BiomeRegistry.load();
 
         } catch (IOException e) {

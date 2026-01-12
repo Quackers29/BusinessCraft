@@ -15,6 +15,7 @@ import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.ui.managers.TownDataCacheManager;
 import com.quackers29.businesscraft.economy.ResourceRegistry;
 import net.minecraft.world.item.Item;
+import com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel;
 
 /**
  * Resources tab implementation for the Town Interface.
@@ -181,78 +182,26 @@ public class ResourcesTab extends BaseTownTab {
                         }
                     }
 
-                    // Append relevant upgrade effects
-                    net.minecraft.resources.ResourceLocation itemLoc = com.quackers29.businesscraft.api.PlatformAccess
-                            .getRegistry().getItemKey(item);
-                    String itemStr = itemLoc.toString();
+                    // Append relevant upgrade effects from ViewModel (server-authoritative)
+                    // Use ViewModel active effects if available to avoid client-side
+                    // UpgradeRegistry access
+                    TownResourceViewModel.ResourceDisplayInfo info = cache != null
+                            && cache.getResourceViewModel() != null
+                                    ? cache.getResourceViewModel().getResourceDisplay(item)
+                                    : null;
 
-                    if (unlocked != null) {
-                        boolean headerAdded = false;
-
-                        for (String nodeId : unlocked) {
-                            com.quackers29.businesscraft.production.UpgradeNode node = com.quackers29.businesscraft.production.UpgradeRegistry
-                                    .get(nodeId);
-                            if (node == null)
-                                continue;
-
-                            int lvl = cache.getCachedUpgradeLevel(nodeId);
-
-                            for (com.quackers29.businesscraft.data.parsers.Effect eff : node.getEffects()) {
-                                boolean matches = false;
-                                String type = "";
-
-                                String target = eff.getTarget();
-
-                                if (target.equals("storage_cap_all")) {
-                                    matches = true;
-                                    type = "Cap";
-                                } else if (target.equals("storage_cap_" + itemStr)) {
-                                    matches = true;
-                                    type = "Cap";
-                                } else {
-                                    // TODO: Server-authoritative implementation needed
-                                    // This requires a more complex view-model that includes upgrade effect applicability
-                                    // For now, simplified to prevent client ProductionRegistry access
-                                    // Original logic checked recipe outputs to match upgrade effects to resources
-
-                                    // Simplified check: if target looks like a recipe ID, assume it might match
-                                    // The proper fix requires server-side calculation of "which upgrades affect this resource"
-                                    var productionViewModel = cache.getProductionViewModel();
-                                    if (productionViewModel != null && productionViewModel.hasRecipe(target)) {
-                                        // Conservative assumption: recipe might produce this resource
-                                        // Full implementation requires server to send "affects resource X" in view-model
-                                        matches = false; // Disabled for now to prevent false positives
-                                        type = "Speed";
-                                    }
-                                }
-
-                                if (matches) {
-                                    if (!headerAdded) {
-                                        sb.append("\n\nActive Effects:");
-                                        headerAdded = true;
-                                    }
-                                    float val = node.calculateEffectValue(eff, lvl);
-
-                                    String valStr;
-                                    if (type.equals("Speed")) {
-                                        valStr = String.format("%+.0f%%", val * 100);
-                                    } else {
-                                        if (val == (long) val) {
-                                            valStr = String.format("%+d", (long) val);
-                                        } else {
-                                            valStr = String.format("%+.1f", val);
-                                        }
-                                    }
-
-                                    String name = node.getDisplayName();
-                                    if (node.isRepeatable())
-                                        name += " (" + lvl + ")";
-
-                                    sb.append("\n ").append(name).append(": ").append(valStr).append(" ").append(type);
-                                }
-                            }
+                    if (info != null && info.getActiveEffects() != null && !info.getActiveEffects().isEmpty()) {
+                        sb.append("\n\nActive Effects:");
+                        for (String effect : info.getActiveEffects()) {
+                            sb.append("\n ").append(effect);
                         }
                     }
+
+                    /*
+                     * DEPRECATED: Client-side calculation removed to enforce Phase 1.2 View-Model
+                     * architecture
+                     * Logic moved to TownResourceViewModelBuilder (server-side)
+                     */
                     tooltips.put(item, sb.toString());
                 }
             }
