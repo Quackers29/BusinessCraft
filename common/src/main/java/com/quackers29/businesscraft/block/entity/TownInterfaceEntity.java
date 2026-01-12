@@ -106,6 +106,9 @@ import com.quackers29.businesscraft.town.viewmodel.ProductionStatusViewModel;
 import com.quackers29.businesscraft.town.viewmodel.ProductionStatusViewModelBuilder;
 import com.quackers29.businesscraft.network.packets.ResourceViewModelSyncPacket;
 import com.quackers29.businesscraft.network.packets.ProductionViewModelSyncPacket;
+import com.quackers29.businesscraft.network.packets.MarketViewModelSyncPacket;
+import com.quackers29.businesscraft.town.viewmodel.MarketViewModel;
+import com.quackers29.businesscraft.town.viewmodel.MarketViewModelBuilder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import com.quackers29.businesscraft.town.data.NBTDataHelper;
@@ -280,6 +283,47 @@ public class TownInterfaceEntity extends BlockEntity
 
         // Send to all players in the area
         serverLevel.players().forEach(this::syncProductionViewModelToPlayer);
+    }
+
+    // GLOBAL market sync tracking (market prices are global, not per-town)
+    private static long lastGlobalMarketSyncTime = 0;
+    private static final long MARKET_SYNC_INTERVAL = 100; // Sync every 100 ticks (5 seconds)
+
+    /**
+     * SERVER-SIDE: Sends updated market view-model to all online players.
+     *
+     * IMPORTANT: Market prices are GLOBAL (not per-town or per-block-entity).
+     * This method uses static tracking to ensure market view-model is only sent
+     * once per sync interval, regardless of how many TownInterfaceEntities exist.
+     *
+     * This implements server-authoritative market pricing by sending pre-calculated
+     * prices that eliminate client-side item-to-resource resolution and price calculations.
+     */
+    public void syncMarketViewModelToAllPlayers() {
+        if (level == null || level.isClientSide()) return;
+        if (!(level instanceof ServerLevel serverLevel)) return;
+
+        // Check if enough time has passed since last global sync
+        long currentTime = level.getGameTime();
+        if (currentTime - lastGlobalMarketSyncTime < MARKET_SYNC_INTERVAL) {
+            return; // Skip sync, too soon since last one
+        }
+
+        // Update last sync time (prevents duplicate syncs from multiple TownInterfaceEntities)
+        lastGlobalMarketSyncTime = currentTime;
+
+        // Build global market view-model (contains ALL item prices)
+        MarketViewModel viewModel = MarketViewModelBuilder.buildMarketViewModel();
+
+        // Send to ALL online players (market is global, not per-location)
+        MarketViewModelSyncPacket packet = new MarketViewModelSyncPacket(viewModel);
+        serverLevel.players().forEach(player -> {
+            PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
+        });
+
+        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
+            "Sent market view-model to all players - {} items with known prices, status: {}",
+            viewModel.getTotalPricedItems(), viewModel.getMarketStatus());
     }
 
     // Platform management (handles platform storage and operations)
@@ -726,6 +770,8 @@ public class TownInterfaceEntity extends BlockEntity
                 syncResourceViewModelToNearbyPlayers();
                 // NEW: Sync production view-model to clients (eliminates ProductionRegistry access on client)
                 syncProductionViewModelToNearbyPlayers();
+                // NEW: Sync market view-model to clients (eliminates client price calculations)
+                syncMarketViewModelToAllPlayers();
             }
 
             // Delegate buffer synchronization to manager

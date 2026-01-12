@@ -11,6 +11,7 @@ import com.quackers29.businesscraft.network.packets.debug.TownDataResponsePacket
 import com.quackers29.businesscraft.network.packets.ResourceSyncPacket;
 import com.quackers29.businesscraft.network.packets.ResourceViewModelSyncPacket;
 import com.quackers29.businesscraft.network.packets.ProductionViewModelSyncPacket;
+import com.quackers29.businesscraft.network.packets.MarketViewModelSyncPacket;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
@@ -254,6 +255,10 @@ public class PacketRegistry {
                 // NEW: Server-authoritative production view-model sync packet (eliminates client ProductionRegistry access)
                 register(ProductionViewModelSyncPacket.class, "production_view_model_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
                                 ProductionViewModelSyncPacket::decode, ProductionViewModelSyncPacket::encode, ProductionViewModelSyncPacket::handle);
+
+                // NEW: Server-authoritative market price view-model sync packet (eliminates client price calculations)
+                register(MarketViewModelSyncPacket.class, "market_view_model_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
+                                MarketViewModelSyncPacket::decode, MarketViewModelSyncPacket::encode, MarketViewModelSyncPacket::handle);
 
                 register(ContractSyncPacket.class, "contract_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
                                 ContractSyncPacket::decode, ContractSyncPacket::encode, ContractSyncPacket::handle);
