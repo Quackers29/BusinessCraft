@@ -145,220 +145,121 @@ public class ProductionTab extends BaseTownTab {
                 }
             } else {
                 // Upgrades View (Research + Unlocked + Locked)
-                List<UpgradeDisplayEntry> activeList = new ArrayList<>();
-                List<UpgradeDisplayEntry> unlockedList = new ArrayList<>();
-                List<UpgradeDisplayEntry> lockedList = new ArrayList<>();
-
-                java.util.Set<String> unlockedIds = cache.getCachedUnlockedNodes();
-                String currentResearchId = cache.getCachedCurrentResearch();
-
-                // Calculate research speed client-side
-                float researchSpeedCalc = 1.0f;
-                if (unlockedIds != null) {
-                    for (String uid : unlockedIds) {
-                        UpgradeNode unode = UpgradeRegistry.get(uid);
-                        if (unode != null) {
-                            int ulvl = cache.getCachedUpgradeLevel(uid);
-                            for (com.quackers29.businesscraft.data.parsers.Effect eff : unode.getEffects()) {
-                                if ("research".equals(eff.getTarget())) {
-                                    researchSpeedCalc += unode.calculateEffectValue(eff, ulvl);
-                                }
-                            }
-                        }
-                    }
+                // NEW: Use server-authoritative view-model instead of UpgradeRegistry
+                var upgradeViewModel = cache.getUpgradeViewModel();
+                
+                if (upgradeViewModel == null) {
+                    // Fallback if view-model not yet received from server
+                    names.add("Loading upgrades...");
+                    tooltipList.add("Waiting for server data...");
+                    progress.add("");
+                    return new Object[] { names.toArray(new String[0]), progress.toArray(), 
+                                         tooltipList.toArray(new String[0]) };
                 }
-                if (researchSpeedCalc < 0.1f)
-                    researchSpeedCalc = 0.1f;
-                final float finalResearchSpeed = researchSpeedCalc;
 
-                for (UpgradeNode node : UpgradeRegistry.getAll()) {
-                    int lvl = cache.getCachedUpgradeLevel(node.getId());
-
-                    // Add Unlocked Entries
-                    for (int i = 1; i <= lvl; i++) {
-                        unlockedList.add(new UpgradeDisplayEntry(node, i, UIGridBuilder.StatusSymbol.UNLOCKED));
+                // NEW: Build display from server-calculated view-model data (NO CLIENT CALCULATIONS)
+                // Helper to add upgrades to display
+                java.util.function.BiConsumer<com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel.UpgradeDisplayInfo, Integer> addUpgrade = (info, level) -> {
+                    // ALL DATA FROM SERVER VIEW-MODEL (NO CLIENT CALCULATIONS)
+                    String displayName = info.getDisplayName();
+                    if (info.isRepeatable()) {
+                        displayName += " (" + level + ")";
                     }
+                    names.add(displayName);
 
-                    // Check Next Level (Researching or Locked)
-                    boolean isMaxed = false;
-                    if (!node.isRepeatable()) {
-                        if (lvl >= 1)
-                            isMaxed = true;
+                    // Use server-calculated status and progress
+                    if (info.isCurrentResearch()) {
+                        int pct = (int) (info.getProgressPercentage() * 100);
+                        progress.add(pct + "%");
+                    } else if (info.isUnlocked() && level <= info.getCurrentLevel()) {
+                        progress.add(UIGridBuilder.StatusSymbol.UNLOCKED);
                     } else {
-                        if (node.getMaxRepeats() != -1 && lvl >= node.getMaxRepeats())
-                            isMaxed = true;
+                        progress.add(UIGridBuilder.StatusSymbol.LOCKED);
                     }
 
-                    if (!isMaxed) {
-                        int nextLvl = lvl + 1;
-                        if (currentResearchId != null && node.getId().equals(currentResearchId)) {
-                            activeList.add(new UpgradeDisplayEntry(node, nextLvl, "Researching..."));
-                        } else {
-                            // Check prereqs
-                            boolean prereqsMet = true;
-                            if (node.getPrereqNodes() != null) {
-                                for (String pre : node.getPrereqNodes()) {
-                                    if (unlockedIds == null || !unlockedIds.contains(pre)) {
-                                        prereqsMet = false;
-                                        break;
-                                    }
-                                }
-                            }
-                            // Show locked if prereqs met OR if it's a repeat (implies prereqs met)
-                            // Repeated upgrades (lvl > 0) have met prereqs by definition.
-                            if (lvl > 0 || prereqsMet) {
-                                lockedList
-                                        .add(new UpgradeDisplayEntry(node, nextLvl, UIGridBuilder.StatusSymbol.LOCKED));
-                            }
-                        }
-                    }
-                }
-
-                // Sort Locked by AI Score (Synced from server)
-                lockedList.sort((e1, e2) -> {
-                    double s1 = cache.getCachedAiScore(e1.node.getId());
-                    double s2 = cache.getCachedAiScore(e2.node.getId());
-                    return Double.compare(s2, s1); // Descending
-                });
-
-                // Helper to add node to lists
-                Consumer<UpgradeDisplayEntry> addEntry = (entry) -> {
-                    String name = entry.node.getDisplayName();
-                    if (entry.node.isRepeatable()) {
-                        name += " (" + entry.level + ")";
-                    }
-                    names.add(name);
-
+                    // Build tooltip from SERVER-PROVIDED STRINGS (NO CALCULATIONS)
                     StringBuilder sb = new StringBuilder();
-                    sb.append(name).append("\n");
+                    sb.append(displayName).append("\n");
 
-                    if (entry.node.isRepeatable()) {
-                        String maxStr = (entry.node.getMaxRepeats() == -1) ? "Infinite"
-                                : String.valueOf(entry.node.getMaxRepeats());
+                    if (info.isRepeatable()) {
+                        String maxStr = (info.getMaxLevel() == -1) ? "Infinite" : String.valueOf(info.getMaxLevel());
                         sb.append("Max Level: ").append(maxStr).append("\n");
                     }
 
-                    sb.append(entry.node.getDescription()).append("\n\n");
+                    sb.append(info.getDescription()).append("\n\n");
+                    sb.append("Status: ").append(info.getStatusText()).append("\n");
 
-                    if (entry.status instanceof com.quackers29.businesscraft.ui.builders.UIGridBuilder.StatusSymbol) {
-                        sb.append("Status: ").append(entry.status.toString()).append("\n");
-                    } else {
-                        sb.append("Status: ").append(entry.status).append("\n");
+                    if (info.isCurrentResearch()) {
+                        sb.append("Progress: ").append(info.getProgressText()).append("\n");
                     }
 
-                    if ("Researching...".equals(entry.status)) {
-                        float currentMinutes = cache.getCachedResearchProgress();
-
-                        // Calculate Scaled Duration
-                        float scaledDuration = entry.node.getResearchMinutes();
-                        if (entry.node.isRepeatable() && entry.level > 1) {
-                            float multiplier = (float) Math.pow(entry.node.getCostMultiplier(), entry.level - 1);
-                            scaledDuration *= multiplier;
-                        }
-
-                        int pct = (scaledDuration > 0)
-                                ? (int) ((currentMinutes / scaledDuration) * 100)
-                                : 0;
-                        if (pct > 100)
-                            pct = 100;
-                        progress.add(pct + "%");
-                    } else {
-                        progress.add(entry.status);
-                    }
-
-                    // Research Time
-                    if (entry.node.getResearchMinutes() > 0) {
-                        float baseMins = entry.node.getResearchMinutes();
-
-                        // Apply scaling for repeatable upgrades based on user request
-                        // Same multiplier as costs
-                        float levelMult = (float) Math.pow(entry.node.getCostMultiplier(), entry.level - 1);
-                        float scaledMins = baseMins * levelMult;
-
-                        float activeMins = scaledMins / finalResearchSpeed;
-
-                        sb.append("Research Time: ").append(String.format("%.1f", activeMins)).append("m");
-                        if (finalResearchSpeed != 1.0f || levelMult != 1.0f) {
-                            if (levelMult != 1.0f) {
-                                sb.append(String.format(" (Base: %.1fm)", scaledMins));
-                            } else {
-                                sb.append(String.format(" (Base: %.1fm)", baseMins));
-                            }
+                    // All these strings are PRE-CALCULATED by server
+                    if (!info.getResearchTimeText().isEmpty()) {
+                        sb.append("Research Time: ").append(info.getResearchTimeText());
+                        if (!info.getBaseResearchTimeText().isEmpty()) {
+                            sb.append(" ").append(info.getBaseResearchTimeText());
                         }
                         sb.append("\n");
                     }
 
-                    // Requirements / Costs (Scaled)
-                    if (entry.node.getCosts() != null && !entry.node.getCosts().isEmpty()) {
-                        float costMult = (float) Math.pow(entry.node.getCostMultiplier(), entry.level - 1);
-
-                        List<String> costs = new ArrayList<>();
-                        List<String> reqs = new ArrayList<>();
-
-                        entry.node.getCosts().forEach(resAmt -> {
-                            float val = resAmt.amount * costMult;
-                            String line = resAmt.resourceId + ": " + String.format("%.0f", val);
-                            if (resAmt.resourceId.startsWith("tourism_") || resAmt.resourceId.equals("pop")) {
-                                reqs.add(line);
-                            } else {
-                                costs.add(line);
-                            }
-                        });
-
-                        if (!costs.isEmpty()) {
-                            sb.append("\nCost:\n");
-                            costs.forEach(s -> sb.append(" - ").append(s).append("\n"));
-                        }
-                        if (!reqs.isEmpty()) {
-                            sb.append("\nRequires:\n");
-                            reqs.forEach(s -> sb.append(" - ").append(s).append("\n"));
-                        }
+                    if (!info.getCostsText().equals("None")) {
+                        sb.append("\nCost:\n - ").append(info.getCostsText().replace(", ", "\n - ")).append("\n");
                     }
 
-                    // AI Score (Town Priority) - only for locked
-                    if (UIGridBuilder.StatusSymbol.LOCKED.equals(entry.status)) {
-                        double score = cache.getCachedAiScore(entry.node.getId());
-                        sb.append("\nTown Priority: ").append(String.format("%.1f", score));
+                    if (!info.getRequirementsText().equals("None")) {
+                        sb.append("\nRequires:\n - ").append(info.getRequirementsText().replace(", ", "\n - ")).append("\n");
                     }
 
-                    sb.append("\n\nEffects:\n");
-                    // Show base effects per level
-                    for (com.quackers29.businesscraft.data.parsers.Effect eff : entry.node.getEffects()) {
-                        String target = eff.getTarget();
+                    if (!info.getPrerequisitesText().equals("None")) {
+                        sb.append("\nPrerequisites: ").append(info.getPrerequisitesText()).append("\n");
+                    }
 
-                        // Calculate Scaled Value for this level
-                        float val = entry.node.calculateEffectValue(eff, entry.level);
+                    // AI Score from server
+                    if (!info.isUnlocked() && info.getAiScore() > 0) {
+                        sb.append("\nTown Priority: ").append(String.format("%.1f", info.getAiScore())).append("\n");
+                    }
 
-                        // heuristic for formatting (no client config access!)
-                        boolean isPercentage = false;
-                        var productionViewModel = cache.getProductionViewModel();
-                        if ((productionViewModel != null && productionViewModel.hasRecipe(target))
-                                || "research".equals(target)) {
-                            isPercentage = true;
-                        }
-
-                        String valStr;
-                        if (isPercentage) {
-                            valStr = String.format("%+.0f%%", val * 100);
-                        } else {
-                            // integer check
-                            if (val == (long) val) {
-                                valStr = String.format("%+d", (long) val);
-                            } else {
-                                valStr = String.format("%+.1f", val);
-                            }
-                        }
-
-                        sb.append(" ").append(target).append(": ").append(valStr).append("\n");
+                    if (!info.getEffectsText().equals("None")) {
+                        sb.append("\nEffects:\n - ").append(info.getEffectsText().replace(", ", "\n - ")).append("\n");
                     }
 
                     tooltipList.add(sb.toString());
                 };
 
-                // Add to main lists in order
-                activeList.forEach(addEntry);
-                unlockedList.forEach(addEntry);
-                lockedList.forEach(addEntry);
+                // Process unlocked upgrades (all levels)
+                for (String nodeId : upgradeViewModel.getUnlockedUpgradeIds()) {
+                    var info = upgradeViewModel.getUpgradeInfo(nodeId);
+                    if (info == null) continue;
+                    
+                    for (int lv = 1; lv <= info.getCurrentLevel(); lv++) {
+                        addUpgrade.accept(info, lv);
+                    }
+                }
+
+                // Process current research
+                for (String nodeId : upgradeViewModel.getResearchableUpgradeIds()) {
+                    var info = upgradeViewModel.getUpgradeInfo(nodeId);
+                    if (info != null && info.isCurrentResearch()) {
+                        addUpgrade.accept(info, info.getCurrentLevel() + 1);
+                        break;
+                    }
+                }
+
+                // Process researchable/locked upgrades (already sorted by AI score on server)
+                for (String nodeId : upgradeViewModel.getResearchableUpgradeIds()) {
+                    var info = upgradeViewModel.getUpgradeInfo(nodeId);
+                    if (info != null && !info.isCurrentResearch()) {
+                        addUpgrade.accept(info, info.getCurrentLevel() + 1);
+                    }
+                }
+
+                // Process locked upgrades (prerequisites not met)
+                for (String nodeId : upgradeViewModel.getLockedUpgradeIds()) {
+                    var info = upgradeViewModel.getUpgradeInfo(nodeId);
+                    if (info != null) {
+                        addUpgrade.accept(info, info.getCurrentLevel() + 1);
+                    }
+                }
 
                 if (names.isEmpty()) {
                     names.add("No Upgrades");

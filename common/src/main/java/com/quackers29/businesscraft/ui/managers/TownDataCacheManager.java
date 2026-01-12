@@ -256,10 +256,22 @@ public class TownDataCacheManager {
     }
 
     /**
-     * Calculates the current research speed multiplier based on cached upgrade
-     * levels.
+     * DEPRECATED: Use getUpgradeViewModel().getResearchSpeedMultiplier() instead.
+     * 
+     * This method violated server-authoritative architecture by accessing UpgradeRegistry
+     * and performing business logic calculations on the client.
+     * 
+     * @deprecated Replaced by server-calculated research speed in UpgradeStatusViewModel
      */
+    @Deprecated
     public float getCachedResearchSpeed() {
+        // NEW: Use server-authoritative view-model instead of client-side calculations
+        var upgradeViewModel = getUpgradeViewModel();
+        if (upgradeViewModel != null) {
+            return upgradeViewModel.getResearchSpeedMultiplier();
+        }
+        
+        // Fallback for backward compatibility (should rarely be used)
         float speed = 1.0f;
         if (cachedUnlockedNodes != null) {
             for (String uid : cachedUnlockedNodes) {
@@ -279,9 +291,22 @@ public class TownDataCacheManager {
     }
 
     /**
-     * Generates a tooltip string detailing the research speed breakdown.
+     * DEPRECATED: Use getUpgradeViewModel().getResearchSpeedTooltip() instead.
+     * 
+     * This method violated server-authoritative architecture by accessing UpgradeRegistry
+     * and performing business logic calculations on the client.
+     * 
+     * @deprecated Replaced by server-calculated research speed tooltip in UpgradeStatusViewModel
      */
+    @Deprecated
     public String getResearchSpeedTooltip() {
+        // NEW: Use server-authoritative view-model instead of client-side calculations
+        var upgradeViewModel = getUpgradeViewModel();
+        if (upgradeViewModel != null) {
+            return upgradeViewModel.getResearchSpeedTooltip();
+        }
+        
+        // Fallback for backward compatibility (should rarely be used)
         StringBuilder sb = new StringBuilder();
         sb.append("Base Speed: 100%");
 
@@ -439,6 +464,45 @@ public class TownDataCacheManager {
         var viewModel = getProductionViewModel();
         if (viewModel != null) {
             return viewModel.getRecipeInfo(recipeId);
+        }
+        return null;
+    }
+
+    /**
+     * NEW: Gets the complete upgrade view-model containing all upgrade display data.
+     * This eliminates client-side UpgradeRegistry access and config file reading.
+     *
+     * REPLACES:
+     * - UpgradeRegistry.get() calls in ProductionTab (lines 159, 174)
+     * - UpgradeRegistry.getAll() calls in ProductionTab (line 174)
+     * - Client-side research speed calculations (lines 155-172 in ProductionTab)
+     * - Client-side cost multiplier calculations (lines 253-310 in ProductionTab)
+     * - getCachedResearchSpeed() calculations (above)
+     * - getResearchSpeedTooltip() calculations (above)
+     *
+     * @return The complete upgrade view-model, or null if not available
+     */
+    public com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel getUpgradeViewModel() {
+        if (menu != null) {
+            net.minecraft.world.level.block.entity.BlockEntity be = menu.getBlockEntity();
+            if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity entity) {
+                return entity.getCachedUpgradeViewModel();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * NEW: Gets upgrade display info by node ID from the server-authoritative view-model.
+     * This replaces UpgradeRegistry.get() calls that violated the server-authoritative pattern.
+     *
+     * @param nodeId The upgrade node ID to get display info for
+     * @return The display info containing upgrade name, costs, effects, etc., or null if not available
+     */
+    public com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel.UpgradeDisplayInfo getUpgradeInfo(String nodeId) {
+        var viewModel = getUpgradeViewModel();
+        if (viewModel != null) {
+            return viewModel.getUpgradeInfo(nodeId);
         }
         return null;
     }
