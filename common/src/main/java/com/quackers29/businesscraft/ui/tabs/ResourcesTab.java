@@ -60,24 +60,25 @@ public class ResourcesTab extends BaseTownTab {
             // Use LinkedHashMap to preserve order (WU first)
             java.util.LinkedHashMap<Item, Integer> resources = new java.util.LinkedHashMap<>();
 
-            // 1. Add Work Units (Process as a virtual resource)
-            com.quackers29.businesscraft.menu.TownInterfaceMenu menu = parentScreen.getMenu();
-            if (menu != null) {
-                int wu = menu.getWorkUnits();
-                int cap = menu.getWorkUnitCap();
-                // Show if we have WU or capacity for it
-                if (wu > 0 || cap > 0) {
-                    // Use AIR as the placeholder for Work Units (Invisible)
-                    // The name will be overridden to "Work Units"
-                    resources.put(net.minecraft.world.item.Items.AIR, wu);
+            // Get the resource view-model from cache (server-authoritative)
+            TownDataCacheManager cache = parentScreen.getCacheManager();
+            TownResourceViewModel resourceViewModel = cache != null ? cache.getResourceViewModel() : null;
+
+            // 1. Check if work units should be displayed (from view-model)
+            if (resourceViewModel != null) {
+                Map<Item, TownResourceViewModel.ResourceDisplayInfo> displayData = resourceViewModel.getResourceDisplayData();
+                
+                // Work units should be first if present (Items.AIR key)
+                if (displayData.containsKey(net.minecraft.world.item.Items.AIR)) {
+                    TownResourceViewModel.ResourceDisplayInfo wuInfo = displayData.get(net.minecraft.world.item.Items.AIR);
+                    // Parse the current amount from the display string
+                    int amount = parseAmount(wuInfo.getCurrentAmount());
+                    resources.put(net.minecraft.world.item.Items.AIR, amount);
                 }
             }
 
-            // 2. Add standard resources
-            // Get resources from the parent screen using the public getter
+            // 2. Add standard resources from cached data
             Map<Item, Integer> cachedResources = parentScreen.getCachedResources();
-            // Sort by amount desc or name? The cache might be unordered.
-            // We'll just add them.
             resources.putAll(cachedResources);
 
             // 3. Merge in wanted resources (deficits)
@@ -126,20 +127,23 @@ public class ResourcesTab extends BaseTownTab {
                     wanted = te.getClientSyncHelper().getClientWantedResources();
                 }
 
-                // Add tooltip for Work Units (AIR)
-                com.quackers29.businesscraft.menu.TownInterfaceMenu menu = parentScreen.getMenu();
-                if (menu != null && (menu.getWorkUnits() > 0 || menu.getWorkUnitCap() > 0)) {
-                    StringBuilder sb = new StringBuilder();
-                    int wu = menu.getWorkUnits();
-                    int cap = menu.getWorkUnitCap();
-                    sb.append("§eWork Units§r\n");
-                    sb.append(String.format("Available: %d\n", wu));
-                    sb.append(String.format("Capacity: %d\n", cap));
+                // Add tooltip for Work Units (AIR) from view-model
+                TownResourceViewModel resourceViewModel = cache.getResourceViewModel();
+                if (resourceViewModel != null) {
+                    Map<Item, TownResourceViewModel.ResourceDisplayInfo> displayData = resourceViewModel.getResourceDisplayData();
+                    if (displayData.containsKey(net.minecraft.world.item.Items.AIR)) {
+                        TownResourceViewModel.ResourceDisplayInfo wuInfo = displayData.get(net.minecraft.world.item.Items.AIR);
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("§e").append(wuInfo.getDisplayName()).append("§r\n");
+                        sb.append("Available: ").append(wuInfo.getCurrentAmount()).append("\n");
+                        sb.append("Capacity: ").append(wuInfo.getCapacity()).append("\n");
+                        sb.append("Production: ").append(wuInfo.getProductionRate()).append("\n");
+                        sb.append("Consumption: ").append(wuInfo.getConsumptionRate()).append("\n");
+                        sb.append("Status: ").append(wuInfo.getStatusIndicator()).append("\n");
+                        sb.append("§7Used for production tasks.");
 
-                    sb.append("§7Used for production tasks.\n");
-                    sb.append("§7Regenerates over time.");
-
-                    tooltips.put(net.minecraft.world.item.Items.AIR, sb.toString());
+                        tooltips.put(net.minecraft.world.item.Items.AIR, sb.toString());
+                    }
                 }
 
                 for (Item item : resources.keySet()) {
@@ -319,5 +323,30 @@ public class ResourcesTab extends BaseTownTab {
         // Update tracking
         lastKnownResources = parentScreen.getCachedResources();
         refreshCounter = 0; // Reset counter
+    }
+
+    /**
+     * Parse integer amount from display string (e.g., "250", "1.5K" -> 1500)
+     */
+    private int parseAmount(String amountStr) {
+        if (amountStr == null || amountStr.isEmpty()) {
+            return 0;
+        }
+        
+        try {
+            // Handle "K" suffix (thousands)
+            if (amountStr.endsWith("K")) {
+                String numPart = amountStr.substring(0, amountStr.length() - 1);
+                float value = Float.parseFloat(numPart);
+                return (int) (value * 1000);
+            }
+            
+            // Handle plain integer
+            return Integer.parseInt(amountStr);
+        } catch (NumberFormatException e) {
+            DebugConfig.debug(LOGGER, DebugConfig.UI_RESOURCES_TAB,
+                    "Failed to parse amount string: {}", amountStr);
+            return 0;
+        }
     }
 }

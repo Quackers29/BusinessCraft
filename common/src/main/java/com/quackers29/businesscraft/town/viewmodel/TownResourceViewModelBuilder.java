@@ -43,7 +43,16 @@ public class TownResourceViewModelBuilder {
         int shortageCount = 0;
         int fullCapacityCount = 0;
 
-        // Process each resource (ALL CALCULATIONS HAPPEN HERE)
+        // FIRST: Process Work Units as a special resource (not in regular resources map)
+        int workUnits = town.getWorkUnits();
+        int workUnitCap = town.getWorkUnitCap();
+        if (workUnits > 0 || workUnitCap > 0) {
+            displayData.put(net.minecraft.world.item.Items.AIR, createWorkUnitsDisplayInfo(
+                    workUnits, workUnitCap, hourFactor, town));
+            // Note: Work units don't contribute to shortage/fullCapacity counts
+        }
+
+        // Process each regular resource (ALL CALCULATIONS HAPPEN HERE)
         for (Map.Entry<Item, Integer> entry : resources.entrySet()) {
             Item item = entry.getKey();
             int currentAmount = entry.getValue();
@@ -111,6 +120,41 @@ public class TownResourceViewModelBuilder {
                 "No Resources",
                 "No Data",
                 "Unknown");
+    }
+
+    /**
+     * Creates display info for Work Units (special resource not stored in regular resources map)
+     */
+    private static TownResourceViewModel.ResourceDisplayInfo createWorkUnitsDisplayInfo(
+            int workUnits, int workUnitCap, float hourFactor, Town town) {
+        
+        // Work units are a special resource - get production/consumption rates
+        float prodPerDay = town.getProduction().getProductionRate("wu");
+        float consPerDay = town.getProduction().getConsumptionRate("wu");
+        float prodPerHour = prodPerDay * hourFactor;
+        float consPerHour = consPerDay * hourFactor;
+        
+        // Format display strings
+        String displayName = "Work Units";
+        String currentAmountStr = formatAmount(workUnits);
+        String productionRateStr = formatProductionRate(prodPerHour);
+        String consumptionRateStr = formatConsumptionRate(consPerHour);
+        String capacityStr = formatCapacity(workUnitCap);
+        String capacityPercentageStr = formatCapacityPercentage(workUnits, workUnitCap);
+        String inTransitStr = ""; // Work units don't have in-transit
+        
+        // Calculate status
+        boolean isShortage = isResourceShortage(workUnits, consPerHour, prodPerHour);
+        boolean isCapacityFull = isCapacityFull(workUnits, workUnitCap);
+        String statusIndicator = calculateStatusIndicator(prodPerHour, consPerHour, isShortage, isCapacityFull);
+        
+        // Work units typically don't have upgrade effects displayed separately
+        java.util.List<String> activeEffects = new java.util.ArrayList<>();
+        
+        return new TownResourceViewModel.ResourceDisplayInfo(
+                displayName, currentAmountStr, productionRateStr, consumptionRateStr,
+                capacityStr, capacityPercentageStr, inTransitStr, statusIndicator,
+                isShortage, isCapacityFull, activeEffects);
     }
 
     private static String getItemDisplayName(Item item) {
