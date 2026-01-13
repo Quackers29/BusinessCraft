@@ -63,9 +63,13 @@ public class ContractSavedData extends SavedData {
         if (tag.contains("marketPrices")) {
             CompoundTag pricesTag = tag.getCompound("marketPrices");
             for (String key : pricesTag.getAllKeys()) {
-                data.marketPrices.put(key, pricesTag.getFloat(key));
+                float price = pricesTag.getFloat(key);
+                data.marketPrices.put(key, price);
+                // MIGRATION: Push to GlobalMarket
+                // This ensures old auction prices are preserved in the new unified system
+                com.quackers29.businesscraft.economy.GlobalMarket.get().setPrice(key, price);
             }
-            LOGGER.info("Loaded market prices for {} items", data.marketPrices.size());
+            LOGGER.info("Loaded market prices for {} items and migrated to GlobalMarket", data.marketPrices.size());
         }
 
         return data;
@@ -84,13 +88,11 @@ public class ContractSavedData extends SavedData {
 
         tag.put("contracts", list);
 
-        CompoundTag pricesTag = new CompoundTag();
-        for (java.util.Map.Entry<String, Float> entry : marketPrices.entrySet()) {
-            pricesTag.putFloat(entry.getKey(), entry.getValue());
-        }
-        tag.put("marketPrices", pricesTag);
+        // MARKET PRICES ARE NOW MANAGED BY GlobalMarket AND SAVED VIA TownSavedData
+        // We no longer save them here to enforce the single source of truth.
+        // Existing data was migrated in load().
 
-        LOGGER.debug("Saved {} contracts and {} market prices", activeContracts.size(), marketPrices.size());
+        LOGGER.debug("Saved {} contracts", activeContracts.size());
 
         return tag;
     }

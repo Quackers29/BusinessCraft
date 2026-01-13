@@ -538,21 +538,6 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                 String currencyName = "Emeralds";
 
                 TradingViewModel vm = getTradingViewModel();
-                if (vm != null) {
-                    currencyName = vm.getCurrencyName();
-                    com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
-                            .getFor(inputStack.getItem());
-                    if (type != null) {
-                        var info = vm.getResourceInfo().get(type.getId());
-                        if (info != null) {
-                            earnings = (int) (itemCount * info.pricePerUnit());
-                        }
-                    }
-                } else {
-                    earnings = Math.max(1, itemCount / 10);
-                }
-
-                // Calculate earnings and rate
                 float pricePerUnit = 0;
                 String statusText = "Unknown Item";
                 String stockDisplay = "???";
@@ -560,43 +545,33 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
 
                 if (vm != null) {
                     currencyName = vm.getCurrencyName();
+
+                    // Unified ID Lookup Logic
+                    String resourceId = null;
                     com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
                             .getFor(inputStack.getItem());
-                    if (type != null) { // Type found in registry
-                        isRegistered = true;
-                        var info = vm.getResourceInfo().get(type.getId());
-                        if (info != null) { // Info found in ViewModel
+
+                    if (type != null) {
+                        resourceId = type.getId();
+                    } else {
+                        resourceId = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(inputStack.getItem())
+                                .toString();
+                    }
+
+                    if (resourceId != null) {
+                        var info = vm.getResourceInfo().get(resourceId);
+                        if (info != null) {
+                            isRegistered = true;
                             pricePerUnit = info.pricePerUnit();
                             earnings = (int) (itemCount * pricePerUnit);
                             stockDisplay = info.stockDisplay();
                             statusText = info.statusText();
-
-                            // Add detailed tooltip
-                            String tooltipText = String.format("Action: Sell %s\n\n" +
-                                    "Get: %d %s\n" +
-                                    "Rate: %.2f %s/item\n" +
-                                    "Town Stock: %s\n" +
-                                    "Status: %s",
-                                    inputStack.getHoverName().getString(),
-                                    earnings, currencyName,
-                                    pricePerUnit, currencyName,
-                                    stockDisplay,
-                                    statusText);
-
-                            java.util.List<Component> tooltipComponents = new java.util.ArrayList<>();
-                            for (String line : tooltipText.split("\n")) {
-                                tooltipComponents.add(Component.literal(line));
-                            }
-                            guiGraphics.renderComponentTooltip(this.font, tooltipComponents, mouseX, mouseY);
-                            return; // Exit here to avoid fallback tooltip
                         }
                     }
-                } else {
-                    // Legacy fallback
-                    earnings = Math.max(1, itemCount / 10);
                 }
 
-                if (vm != null && !isRegistered) {
+                if (!isRegistered) {
+                    // Legacy fallback if not found in VM
                     earnings = itemCount; // 1:1 fallback
                     pricePerUnit = 1.0f;
                     statusText = "Unregistered Item (1:1)";

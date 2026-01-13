@@ -192,30 +192,30 @@
   - [x] Update `BCModalInventoryScreen` to use ViewModel ✅
   - [x] Ensure UI displays correct prices, currency, and stock ✅
 
-### **2.5 Global Market Unification** 🔧 **HIGH PRIORITY**
+### **2.5 Global Market Unification** 🔧 **HIGH PRIORITY** - ✅ **COMPLETED**
 **Context**: Currently, the system has split market logic. `ContractBoard` maintains persistent market prices for auctions, while `GlobalMarket` is ephemeral and unused by the Trade UI. Unregistered items (like `Town Interface`) lack GPI tracking.
 
 #### **2.5.1 Single Source of Truth**
-- [ ] **Create `GlobalMarketSavedData`**:
-  - Centralize market price and volume persistence.
-  - Migrate `ContractSavedData` market prices to this new store.
-  - Ensure lifecycle is managed by `TownManager`.
-- [ ] **Unify Pricing Logic**:
-  - Deprecate `ContractBoard.getMarketPrice()`.
-  - Redirect all pricing queries (Trade UI, Auctions) to `GlobalMarket`.
-  - Implement "Dynamic Item Registration" to automatically track unregistered items (using ResourceLocation as key).
+- [x] **Create `GlobalMarketSavedData`**:
+  - Centralize market price and volume persistence. ✅
+  - Migrate `ContractSavedData` market prices to this new store. ✅
+  - Ensure lifecycle is managed by `TownManager`. ✅
+- [x] **Unify Pricing Logic**:
+  - Deprecate `ContractBoard.getMarketPrice()`. ✅
+  - Redirect all pricing queries (Trade UI, Auctions) to `GlobalMarket`. ✅
+  - Implement "Dynamic Item Registration" to automatically track unregistered items (using ResourceLocation as key). ✅
 
 #### **2.5.2 Trade Integration**
-- [ ] **Update `TradeResourcePacket`**:
-  - Record every trade to `GlobalMarket`.
-  - Ensure immediate price updates based on supply/demand.
-- [ ] **Update `TradingViewModelBuilder`**:
-  - Use `GlobalMarket` prices instead of static CSV base values.
-  - Iterate all `Town` inventory items to catch unregistered resources.
+- [x] **Update `TradeResourcePacket`**:
+  - Record every trade to `GlobalMarket`. ✅
+  - Ensure immediate price updates based on supply/demand. ✅
+- [x] **Update `TradingViewModelBuilder`**:
+  - Use `GlobalMarket` prices instead of static CSV base values. ✅
+  - Iterate all `Town` inventory items to catch unregistered resources. ✅
 
 #### **2.5.3 Data Migration**
-- [ ] **Migrate existing auction data**:
-  - Ensure current auction prices are preserved in the new `GlobalMarketSavedData`.
+- [x] **Migrate existing auction data**:
+  - Ensure current auction prices are preserved in the new `GlobalMarketSavedData`. ✅
 
 ---
 
@@ -336,8 +336,9 @@
 - **✅ COMPLETED**: Production formula view-model (Phase 1.2)
 - **✅ COMPLETED**: Market price view-model (Phase 1.3)
 - **✅ COMPLETED**: Upgrade registry view-model (Phase 2.1) 🎉
+- **✅ COMPLETED**: Global Market Unification (Phase 2.5) 🔧
 - **⚠️ REMAINING**: Menu fallbacks & trading logic (Phase 2.3-2.4)
-- **📊 Overall**: ~90% compliant with target architecture (PHASE 2.1 COMPLETE! Up from 85%!)
+- **📊 Overall**: ~92% compliant with target architecture (PHASE 2.5 COMPLETE!)
 
 ### **Development Guidelines**
 - **Before Changes**: Verify current Forge functionality works correctly
@@ -368,83 +369,3 @@
 **Decision:** Continue with current pattern through all remaining phases. Current approach scales perfectly to 6-8 view-models. Don't over-engineer - YAGNI principle applies.
 
 ---
-
-## 📊 **PHASE 1.2 COMPLETION SUMMARY**
-
-### **What Was Accomplished**
-✅ **Production View-Model System** - Complete server-authoritative production display architecture
-✅ **Eliminated ProductionRegistry Client Access** - UI no longer reads production CSV configs
-✅ **Created 3 New Classes** - 860+ lines of view-model infrastructure (ProductionStatusViewModel, Builder, Sync Packet)
-✅ **Updated 4 Existing Classes** - TownInterfaceEntity, TownDataCacheManager, ProductionTab, ResourcesTab
-✅ **Server Tick Integration** - Production data syncs every 10 ticks alongside resources
-✅ **Build Verification** - All platforms compile cleanly with zero errors
-
-### **Key Achievements**
-- **Client ProductionRegistry Calls**: Reduced from 3 locations to 0 🎯
-- **Server-Side Formula Evaluation**: 100% server-authoritative ✅
-- **Display String Generation**: All production data pre-formatted on server ✅
-- **Tooltip System**: Upgraded to use server-calculated display strings ✅
-
-### **Technical Impact**
-- **Code Quality**: Eliminated 35+ lines of potential client-side duplication
-- **Security**: Client can no longer access or manipulate production formulas
-- **Consistency**: Single source of truth for production calculations
-- **Performance**: Client rendering simplified to pure display operations
-
----
-
----
-
-## 📊 **PHASE 1.3 COMPLETION SUMMARY**
-
-### **What Was Accomplished**
-✅ **Market View-Model System** - Complete server-authoritative market pricing architecture
-✅ **Eliminated Client Price Calculations** - ClientGlobalMarket.getPrice(Item) reduced from 38 lines to 1 line
-✅ **Created 3 New Classes** - 310+ lines of view-model infrastructure (MarketViewModel, Builder, Sync Packet)
-✅ **Updated 3 Existing Classes** - TownInterfaceEntity, ClientGlobalMarket, PacketRegistry
-✅ **Global Sync Integration** - Market data syncs every 100 ticks (5 seconds) with static tracking
-✅ **Build Verification** - All platforms compile cleanly with zero errors
-
-### **Key Achievements**
-- **Client Item-to-Resource Mapping**: ELIMINATED - No more ResourceRegistry.getAllFor() on client 🎯
-- **Client Max-Price Logic**: ELIMINATED - All multi-type item pricing calculated server-side ✅
-- **Display String Generation**: All market prices pre-formatted on server ✅
-- **Global Market State**: Single authoritative source on server, replicated to all clients ✅
-
-### **Technical Impact**
-- **Code Quality**: Eliminated 38 lines of complex client-side business logic
-- **Security**: Client can no longer access or manipulate price calculations
-- **Consistency**: Single source of truth for all market pricing
-- **Performance**: Client rendering simplified to pure data display operations
-
----
-
-## 📊 **PHASE 2.1 COMPLETION SUMMARY**
-
-### **What Was Accomplished**
-✅ **Upgrade View-Model System** - Complete server-authoritative upgrade display architecture
-✅ **Eliminated UpgradeRegistry Client Access** - UI no longer reads upgrade CSV configs
-✅ **Eliminated Client Research Speed Calculations** - Replaced getCachedResearchSpeed() and getResearchSpeedTooltip()
-✅ **Created 3 New Classes** - 775+ lines of view-model infrastructure (UpgradeStatusViewModel, Builder, Sync Packet)
-✅ **Updated 4 Existing Classes** - TownInterfaceEntity, TownDataCacheManager, ProductionTab, PacketRegistry
-✅ **Server Tick Integration** - Upgrade data syncs every 10 ticks alongside production and resources
-✅ **Build Verification** - All platforms compile cleanly with zero errors
-
-### **Key Achievements**
-- **Client UpgradeRegistry Calls**: Reduced from 3 locations in UI to 0 🎯
-- **Client Research Speed Calculations**: ELIMINATED - Now 100% server-authoritative ✅
-- **Client Cost Multiplier Calculations**: ELIMINATED - All scaling done server-side ✅
-- **Client Prerequisite Checks**: ELIMINATED - Server determines upgrade availability ✅
-- **Display String Generation**: All upgrade data pre-formatted on server ✅
-- **AI Score Display**: Server-calculated priorities sent to client ✅
-
-### **Technical Impact**
-- **Code Quality**: Eliminated 155+ lines of client-side business logic calculations
-- **Security**: Client can no longer access or manipulate upgrade configs or formulas
-- **Consistency**: Single source of truth for all upgrade calculations
-- **Performance**: Client rendering simplified to pure display operations
-- **Architecture Compliance**: ~90% server-authoritative (up from 85%!)
-
----
-
-

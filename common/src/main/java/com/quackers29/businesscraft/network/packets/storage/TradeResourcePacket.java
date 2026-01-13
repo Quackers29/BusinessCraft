@@ -146,13 +146,26 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
                 LOGGER.error("Failed to parse currency item '{}', defaulting to Emerald", currencyId, e);
             }
 
+            // Determine Resource ID and Market Price
+            String resourceId;
+            com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
+                    .getFor(itemToTrade.getItem());
+            if (type != null) {
+                resourceId = type.getId();
+            } else {
+                resourceId = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(itemToTrade.getItem())
+                        .toString();
+            }
+
+            float unitPrice = com.quackers29.businesscraft.economy.GlobalMarket.get().getPrice(resourceId);
+
             // Get current currency count before calculation
             int currentCurrency = town.getResourceCount(currencyItem);
             DebugConfig.debug(LOGGER, DebugConfig.TRADE_OPERATIONS, "BEFORE TRADE: Town {} has {} currency ({})",
                     town.getName(), currentCurrency, currencyItem);
 
             // Calculate paymentAmt to give based on the trade
-            int paymentAmt = calculatePayment(itemToTrade, town, currencyItem);
+            int paymentAmt = calculatePayment(itemToTrade, town, currencyItem, unitPrice);
 
             // Create payment item
             ItemStack payment = ItemStack.EMPTY;
@@ -188,6 +201,10 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
                 player.sendSystemMessage(
                         Component.literal("§6" + paymentAmt + " " + currencyItem.getDescription().getString()
                                 + " were deducted from town resources."));
+
+                // Record the trade in the Global Market
+                com.quackers29.businesscraft.economy.GlobalMarket.get().recordTrade(resourceId, itemCount, unitPrice);
+
             } else {
                 // Send feedback that no payment was given
                 player.sendSystemMessage(Component.literal("Traded " + itemCount + " " +
@@ -215,27 +232,12 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
     /**
      * Calculate payment based on the trade amount and item value
      */
-    private int calculatePayment(ItemStack itemToTrade, Town town, Item currencyItem) {
+    private int calculatePayment(ItemStack itemToTrade, Town town, Item currencyItem, float unitPrice) {
         int itemCount = itemToTrade.getCount();
 
         // distinct from "emeralds", we call it payment units
-        float baseValue = 1.0f;
-
-        // Find the resource type for this item to get its base value
-        com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
-                .getFor(itemToTrade.getItem());
-
-        if (type != null) {
-            baseValue = type.getBaseValue();
-        } else {
-            // If not registered, check if custom logic is needed or just default to 1.0 (or
-            // 0 to disable?)
-            // For now, default to 1.0 so everything is tradable by default unless
-            // specifically blacklisted?
-            // Or maybe better to default to 0.0 to prevent exploit with cheap items?
-            // Let's use 1.0 for now as per plan, but log warning
-            // Actually, the plan said "Default price will be 1.0", so 1.0 is correct.
-        }
+        // Use the passed unitPrice (from GlobalMarket)
+        float baseValue = unitPrice;
 
         // Calculation: Total Value = Item Count * Base Value
         // We cast to int, so fractional values might be lost if not accummulated.

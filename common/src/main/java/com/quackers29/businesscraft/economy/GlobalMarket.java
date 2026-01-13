@@ -29,6 +29,10 @@ public class GlobalMarket {
         prices.put(resourceId, price);
     }
 
+    public Map<String, Float> getPrices() {
+        return java.util.Collections.unmodifiableMap(prices);
+    }
+
     public void recordTrade(String resourceId, float quantity, float unitPrice) {
         // Update volume
         long currentVol = totalVolume.getOrDefault(resourceId, 0L);

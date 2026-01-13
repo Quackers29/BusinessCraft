@@ -43,21 +43,22 @@ public class TradingViewModelBuilder {
         } catch (Exception ignored) {
         }
 
-        // Iterate through all known resources in the registry
+        // Create a set to track processed resource IDs
+        java.util.Set<String> processedIds = new java.util.HashSet<>();
+
+        // 1. Iterate through all REGISTERED resources (from CSV)
+        // This ensures we show items that might have 0 stock but are "known" to the
+        // system
         for (ResourceType type : ResourceRegistry.getAll()) {
             String id = type.getId();
-
-            // Skip "special" types that aren't items if any (like population logic handled
-            // separately?)
-            // But TownTradingComponent handles "pop", "tourist" etc.
-            // ResourceRegistry usually contains actual items (wood, iron, etc)
+            processedIds.add(id);
 
             float stock = trading.getStock(id);
             float cap = trading.getStorageCap(id);
-            float price = type.getBaseValue();
+            // Use GlobalMarket price instead of static base value
+            float price = com.quackers29.businesscraft.economy.GlobalMarket.get().getPrice(id);
 
-            String displayName = type.getId(); // Fallback
-            // Try to get nice display name from item
+            String displayName = type.getId();
             if (type.getMcItemId() != null) {
                 Item item = BuiltInRegistries.ITEM.get(type.getMcItemId());
                 if (item != Items.AIR) {
@@ -65,57 +66,83 @@ public class TradingViewModelBuilder {
                 }
             }
 
-            // Calculate status
-            boolean canBuy = true; // Player can buy FROM town? (Town sells) -> Town needs stock
-            boolean canSell = true; // Player can sell TO town? (Town buys) -> Town needs space + money
-
-            // Logic:
-            // "Buy" means Player buys from Town. Town needs Stock > 0.
-            // "Sell" means Player sells to Town. Town needs Space < Cap AND Money >= Price.
-
-            if (stock <= 0)
-                canBuy = false;
-
-            if (stock >= cap)
-                canSell = false;
-
-            float townCurrency = town.getResourceCount(currencyItem);
-            if (townCurrency < price)
-                canSell = false; // Town cant afford to pay player
-
-            String statusText = "Available";
-            if (stock <= 0)
-                statusText = "Out of Stock";
-            else if (stock >= cap)
-                statusText = "Storage Full";
-            else if (townCurrency < price)
-                statusText = "Town Broke";
-
-            String stockDisplay = STOCK_FORMAT.format(stock) + " / " + STOCK_FORMAT.format(cap);
-            String priceDisplay = PRICE_FORMAT.format(price) + " " + currencyName;
-
-            String tooltip = String.format("Stock: %.0f\nCap: %.0f\nPrice: %.2f %s\nStatus: %s",
-                    stock, cap, price, currencyName, statusText);
-
-            infoMap.put(id, new TradingViewModel.TradingResourceInfo(
-                    id,
-                    displayName,
-                    stockDisplay,
-                    stock,
-                    cap,
-                    price,
-                    priceDisplay,
-                    canBuy,
-                    canSell,
-                    statusText,
-                    tooltip));
+            addResourceInfo(infoMap, id, displayName, stock, cap, price, currencyName, town, currencyItem);
         }
 
-        // Also add special resources if needed, but usually trading UI is mainly for
-        // items.
-        // If we want to show population caps etc here, we could, but let's stick to
-        // ResourceRegistry for now.
+        // 2. Iterate through all ACTUAL resources in the town
+        // This ensures we catch unregistered items (e.g. Town Interface, Mod Items)
+        Map<Item, Integer> allResources = town.getAllResources();
+        for (Map.Entry<Item, Integer> entry : allResources.entrySet()) {
+            Item item = entry.getKey();
+            if (item == currencyItem)
+                continue; // Skip currency itself
+
+            // Check if this item maps to a registered resource we already processed
+            ResourceType registeredType = ResourceRegistry.getFor(item);
+            if (registeredType != null) {
+                if (processedIds.contains(registeredType.getId())) {
+                    continue; // Already processed
+                }
+            }
+
+            // This is an unregistered item (or not yet processed)
+            String id = BuiltInRegistries.ITEM.getKey(item).toString();
+            if (processedIds.contains(id))
+                continue;
+
+            processedIds.add(id);
+
+            float stock = entry.getValue();
+            float cap = trading.getStorageCap(id);
+            float price = com.quackers29.businesscraft.economy.GlobalMarket.get().getPrice(id);
+            String displayName = item.getDescription().getString();
+
+            addResourceInfo(infoMap, id, displayName, stock, cap, price, currencyName, town, currencyItem);
+        }
 
         return new TradingViewModel(infoMap, currencyName, "Updated: " + java.time.LocalTime.now().toString());
+    }
+
+    private static void addResourceInfo(Map<String, TradingViewModel.TradingResourceInfo> infoMap,
+            String id, String displayName, float stock, float cap, float price,
+            String currencyName, Town town, Item currencyItem) {
+
+        // Logic:
+        // "Buy" means Player buys from Town. Town needs Stock > 0.
+        // "Sell" means Player sells to Town. Town needs Space < Cap AND Money >= Price.
+
+        boolean canBuy = stock > 0;
+        boolean canSell = stock < cap;
+
+        float townCurrency = town.getResourceCount(currencyItem);
+        if (townCurrency < price)
+            canSell = false; // Town cant afford to pay player
+
+        String statusText = "Available";
+        if (stock <= 0)
+            statusText = "Out of Stock";
+        else if (stock >= cap)
+            statusText = "Storage Full";
+        else if (townCurrency < price)
+            statusText = "Town Broke";
+
+        String stockDisplay = STOCK_FORMAT.format(stock) + " / " + STOCK_FORMAT.format(cap);
+        String priceDisplay = PRICE_FORMAT.format(price) + " " + currencyName;
+
+        String tooltip = String.format("Stock: %.0f\nCap: %.0f\nPrice: %.2f %s\nStatus: %s",
+                stock, cap, price, currencyName, statusText);
+
+        infoMap.put(id, new TradingViewModel.TradingResourceInfo(
+                id,
+                displayName,
+                stockDisplay,
+                stock,
+                cap,
+                price,
+                priceDisplay,
+                canBuy,
+                canSell,
+                statusText,
+                tooltip));
     }
 }

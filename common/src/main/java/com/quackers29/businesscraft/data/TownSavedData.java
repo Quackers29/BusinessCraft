@@ -11,13 +11,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class TownSavedData extends SavedData {
     public static final String NAME = PlatformAccess.getPlatform().getModId() + "_towns";
-    
+
     private final Map<UUID, Town> towns = new ConcurrentHashMap<>();
-    
+
     public Map<UUID, Town> getTowns() {
         return towns;
     }
-    
+
     @Override
     public CompoundTag save(CompoundTag tag) {
         CompoundTag townsTag = new CompoundTag();
@@ -27,9 +27,13 @@ public class TownSavedData extends SavedData {
             townsTag.put(id.toString(), townTag);
         });
         tag.put("towns", townsTag);
+
+        // Save Global Market data
+        com.quackers29.businesscraft.economy.GlobalMarket.get().save(tag);
+
         return tag;
     }
-    
+
     public void loadFromNbt(CompoundTag tag) {
         towns.clear();
         if (tag.contains("towns")) {
@@ -39,15 +43,18 @@ public class TownSavedData extends SavedData {
                 towns.put(id, Town.load(townsTag.getCompound(key)));
             });
         }
+
+        // Load Global Market data
+        com.quackers29.businesscraft.economy.GlobalMarket.get().load(tag);
     }
-    
+
     public static TownSavedData create() {
         return new TownSavedData();
     }
-    
+
     public static TownSavedData load(CompoundTag tag) {
         TownSavedData data = create();
         data.loadFromNbt(tag);
         return data;
     }
-} 
+}

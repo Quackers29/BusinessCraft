@@ -33,7 +33,8 @@ public class MarketViewModelBuilder {
     /**
      * Builds a complete market view-model with pre-calculated prices for all items.
      *
-     * This method replicates the exact logic from ClientGlobalMarket.getPrice(Item):
+     * This method replicates the exact logic from
+     * ClientGlobalMarket.getPrice(Item):
      * 1. Resolves items to resource types using ResourceRegistry.getAllFor()
      * 2. Gets prices from GlobalMarket.get().getPrice()
      * 3. Implements max-price logic for items with multiple resource types
@@ -52,11 +53,13 @@ public class MarketViewModelBuilder {
 
         int pricedItems = 0;
         for (Item item : allItems) {
-            if (item == null) continue;
+            if (item == null)
+                continue;
 
             // Get item's resource location for debugging
             ResourceLocation itemKey = PlatformAccess.getRegistry().getItemKey(item);
-            if (itemKey == null) continue;
+            if (itemKey == null)
+                continue;
 
             String itemKeyStr = itemKey.toString();
 
@@ -100,11 +103,10 @@ public class MarketViewModelBuilder {
 
             // Create price info
             MarketViewModel.MarketPriceInfo priceInfo = new MarketViewModel.MarketPriceInfo(
-                priceDisplay,
-                maxPrice,
-                resourceTypeUsed,
-                foundAny
-            );
+                    priceDisplay,
+                    maxPrice,
+                    resourceTypeUsed,
+                    foundAny);
 
             itemPrices.put(item, priceInfo);
 
@@ -170,7 +172,8 @@ public class MarketViewModelBuilder {
         float avgPrice = sumPrices / knownPrices;
         float priceRange = maxPrice - minPrice;
 
-        // Simple heuristic: if price range is large relative to average, market is volatile
+        // Simple heuristic: if price range is large relative to average, market is
+        // volatile
         if (priceRange > avgPrice * 2.0f) {
             return "Volatile";
         } else {

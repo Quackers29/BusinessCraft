@@ -64,48 +64,31 @@ public class ContractBoard {
     }
 
     public float getMarketPrice(String resourceId) {
-        if (savedData.getMarketPrices().containsKey(resourceId)) {
-            return savedData.getMarketPrices().get(resourceId);
-        }
-        return com.quackers29.businesscraft.production.ProductionRegistry.getEstimatedValue(resourceId);
+        // Delegate to unified Global Market
+        return com.quackers29.businesscraft.economy.GlobalMarket.get().getPrice(resourceId);
     }
 
     public Map<String, Float> getAllMarketPrices() {
         // Start with estimates
         Map<String, Float> merged = new HashMap<>(
                 com.quackers29.businesscraft.production.ProductionRegistry.getAllEstimatedValues());
-        // Overlay actual market history
-        merged.putAll(savedData.getMarketPrices());
+        // Overlay unified Global Market prices
+        merged.putAll(com.quackers29.businesscraft.economy.GlobalMarket.get().getPrices());
         return Collections.unmodifiableMap(merged);
     }
 
+    public void updateMarketPrice(String resourceId, float quantity, float transactionPrice) {
+        // Delegate to Global Market to record the trade and update price
+        com.quackers29.businesscraft.economy.GlobalMarket.get().recordTrade(resourceId, quantity, transactionPrice);
+        LOGGER.info("Recorded trade for {} x{} @ {} in Global Market", resourceId, quantity, transactionPrice);
+    }
+
+    /**
+     * @deprecated Use updateMarketPrice(String, float, float) instead
+     */
+    @Deprecated
     public void updateMarketPrice(String resourceId, float transactionPrice) {
-        float currentPrice = getMarketPrice(resourceId);
-        float baseAlpha = 0.1f; // Base learning rate
-
-        // Scale alpha by effort: High effort = low alpha (resistance to change)
-        float effort = com.quackers29.businesscraft.production.ProductionRegistry.getEffort(resourceId);
-        if (effort < 0.01f)
-            effort = 0.01f; // Prevent div by zero
-
-        float alpha = baseAlpha / effort;
-
-        // Clamp alpha to reasonable bounds
-        if (alpha > 1.0f)
-            alpha = 1.0f;
-        if (alpha < 0.001f)
-            alpha = 0.001f; // Minimum 0.1% change
-
-        float newPrice = (currentPrice * (1.0f - alpha)) + (transactionPrice * alpha);
-
-        // Ensure price doesn't drop too low
-        if (newPrice < 0.1f)
-            newPrice = 0.1f;
-
-        savedData.getMarketPrices().put(resourceId, newPrice);
-        savedData.setDirty();
-        LOGGER.info("Updated market price for {}: {} -> {} (Transaction: {}, Effort: {}, Alpha: {})",
-                resourceId, currentPrice, newPrice, transactionPrice, effort, alpha);
+        updateMarketPrice(resourceId, 1.0f, transactionPrice);
     }
 
     public void tick(ServerLevel level) {
@@ -370,7 +353,7 @@ public class ContractBoard {
                             // UPDATE MARKET PRICE upon Auction Close (Winning Bid = Accepted Market Value)
                             if (sc.getQuantity() > 0 && highestBid > 0) {
                                 float transactionPrice = highestBid / (float) sc.getQuantity();
-                                updateMarketPrice(sc.getResourceId(), transactionPrice);
+                                updateMarketPrice(sc.getResourceId(), (float) sc.getQuantity(), transactionPrice);
                             }
 
                             // IMMEDIATE PAYMENT & ESCROW RELEASE
@@ -437,7 +420,7 @@ public class ContractBoard {
                                 float baseline = Math.min(currentGPI, listingPrice);
                                 float impliedValue = baseline * 0.8f;
 
-                                updateMarketPrice(sc.getResourceId(), impliedValue);
+                                updateMarketPrice(sc.getResourceId(), (float) sc.getQuantity(), impliedValue);
 
                                 LOGGER.info(
                                         "Refunded {} {} to town {} (auction {} had no bids). Lowered GPI (Implied: {}, Base: {}, List: {}).",
