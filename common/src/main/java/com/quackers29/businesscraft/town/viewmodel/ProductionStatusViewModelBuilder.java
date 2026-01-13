@@ -24,7 +24,8 @@ public class ProductionStatusViewModelBuilder {
 
     /**
      * Builds a complete production status view-model for the client.
-     * Contains ALL calculations and formatting logic - client performs ZERO operations.
+     * Contains ALL calculations and formatting logic - client performs ZERO
+     * operations.
      *
      * @param town The town to generate view-model for
      * @return Complete view-model ready for client display
@@ -43,41 +44,42 @@ public class ProductionStatusViewModelBuilder {
 
         // Process each production recipe from the server's config
         for (ProductionRecipe recipe : ProductionRegistry.getAll()) {
-            if (recipe == null) continue;
+            if (recipe == null)
+                continue;
 
             String recipeId = recipe.getId();
 
             // SERVER-SIDE CALCULATIONS (client never sees these)
-            float progress = townProgress.getOrDefault(recipeId, 0f);
-            float cycleTime = recipe.getBaseCycleTimeMinutes() / (24f * 60f); // Convert minutes to days
+            // NOTE: town.getProduction().getActiveRecipes() returns normalized progress
+            // (0.0 to 1.0)
+            float progressPercent = townProgress.getOrDefault(recipeId, 0f);
+            float cycleTimeDays = recipe.getBaseCycleTimeMinutes() / (24f * 60f); // Convert minutes to days
 
             // Calculate if recipe is active and has requirements met
             boolean hasRequirements = checkRequirementsMet(town, recipe);
-            boolean isActive = progress > 0 && hasRequirements;
+            boolean isActive = progressPercent > 0 && hasRequirements;
 
             if (isActive) {
                 activeCount++;
-            } else if (!hasRequirements && progress > 0) {
+            } else if (!hasRequirements && progressPercent > 0) {
                 stalledCount++;
             }
 
             // FORMAT ALL VALUES AS DISPLAY STRINGS (client receives these ready-to-display)
             String displayName = recipe.getDisplayName(); // From server CSV
-            String statusText = formatStatusText(isActive, hasRequirements, progress);
-            String progressText = formatProgressText(progress, cycleTime);
-            String cycleTimeText = formatCycleTime(cycleTime);
+            String statusText = formatStatusText(isActive, hasRequirements, progressPercent);
+            String progressText = formatProgressText(progressPercent);
+            String cycleTimeText = formatCycleTime(cycleTimeDays);
             String inputsText = formatResourceAmounts(recipe.getInputs());
             String outputsText = formatResourceAmounts(recipe.getOutputs());
-            String productionRateText = formatProductionRate(town, recipe, cycleTime);
-            float progressPercentage = calculateProgressPercentage(progress, cycleTime);
+            String productionRateText = formatProductionRate(town, recipe, cycleTimeDays);
+            float finalProgress = Math.min(Math.max(progressPercent, 0f), 1f);
 
             // Create display info (all calculations complete)
-            ProductionStatusViewModel.ProductionRecipeInfo info =
-                new ProductionStatusViewModel.ProductionRecipeInfo(
+            ProductionStatusViewModel.ProductionRecipeInfo info = new ProductionStatusViewModel.ProductionRecipeInfo(
                     recipeId, displayName, statusText, progressText, cycleTimeText,
                     inputsText, outputsText, productionRateText, isActive,
-                    hasRequirements, progressPercentage
-                );
+                    hasRequirements, finalProgress);
 
             productionInfo.put(recipeId, info);
         }
@@ -88,24 +90,25 @@ public class ProductionStatusViewModelBuilder {
         String economicOutput = calculateEconomicOutput(town);
 
         return new ProductionStatusViewModel(productionInfo, totalActiveProductions,
-                                            overallStatus, economicOutput);
+                overallStatus, economicOutput);
     }
 
     // ===== PRIVATE HELPER METHODS (SERVER-SIDE CALCULATIONS) =====
 
     private static ProductionStatusViewModel createEmptyViewModel() {
         return new ProductionStatusViewModel(
-            new HashMap<>(),
-            "No Productions",
-            "Inactive",
-            "No Output"
-        );
+                new HashMap<>(),
+                "No Productions",
+                "Inactive",
+                "No Output");
     }
 
     private static boolean checkRequirementsMet(Town town, ProductionRecipe recipe) {
-        // Simplified check - actual condition evaluation is complex and handled by TownProductionComponent
+        // Simplified check - actual condition evaluation is complex and handled by
+        // TownProductionComponent
         // For the view-model, we provide a basic assessment
-        // If there are conditions, assume they need to be checked (the town production component handles this)
+        // If there are conditions, assume they need to be checked (the town production
+        // component handles this)
 
         // For now, return true as a conservative estimate
         // The actual production component will handle detailed requirement checking
@@ -126,17 +129,16 @@ public class ProductionStatusViewModelBuilder {
         }
     }
 
-    private static String formatProgressText(float progress, float cycleTime) {
-        if (progress <= 0) {
+    private static String formatProgressText(float percentage) {
+        if (percentage <= 0) {
             return "Not Started";
         }
 
-        float percentage = (progress / cycleTime) * 100f;
-        if (percentage >= 100f) {
+        if (percentage >= 1.0f) {
             return "Completed";
         }
 
-        return String.format("%.0f%% Complete", percentage);
+        return String.format("%.0f%% Complete", percentage * 100f);
     }
 
     private static String formatCycleTime(float cycleTimeDays) {
@@ -180,7 +182,7 @@ public class ProductionStatusViewModelBuilder {
                 sb.append(" ");
             }
             sb.append(part.substring(0, 1).toUpperCase())
-              .append(part.substring(1).toLowerCase());
+                    .append(part.substring(1).toLowerCase());
         }
         return sb.toString();
     }
@@ -213,14 +215,7 @@ public class ProductionStatusViewModelBuilder {
         return String.format("+%.1f/hr", outputPerHour);
     }
 
-    private static float calculateProgressPercentage(float progress, float cycleTime) {
-        if (cycleTime <= 0) {
-            return 0f;
-        }
-
-        float percentage = progress / cycleTime;
-        return Math.min(Math.max(percentage, 0f), 1f); // Clamp to [0, 1]
-    }
+    // calculateProgressPercentage removed as input is already a percentage
 
     private static String formatTotalProductions(int activeCount) {
         if (activeCount == 0) {

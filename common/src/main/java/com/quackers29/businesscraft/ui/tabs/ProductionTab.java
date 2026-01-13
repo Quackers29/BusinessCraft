@@ -95,47 +95,39 @@ public class ProductionTab extends BaseTownTab {
 
             if (viewMode == ViewMode.ACTIVE) {
                 // Production Only
-                Map<String, Float> productions = cache.getCachedActiveProductions();
-                if (productions != null) {
-                    for (Map.Entry<String, Float> entry : productions.entrySet()) {
-                        String id = entry.getKey();
+                // NEW: Use server-authoritative view-model directly
+                var productionViewModel = cache.getProductionViewModel();
 
-                        // Get nice name from server view-model (no client config access!)
-                        var recipeInfo = cache.getProductionRecipeInfo(id);
-                        String displayName = (recipeInfo != null) ? recipeInfo.getDisplayName() : id;
+                if (productionViewModel != null) {
+                    for (com.quackers29.businesscraft.town.viewmodel.ProductionStatusViewModel.ProductionRecipeInfo info : productionViewModel
+                            .getProductionInfo().values()) {
+                        // All display strings come from server view-model
+                        names.add(info.getDisplayName());
 
-                        names.add(displayName);
                         // Column 2: Percentage
-                        int pct = (int) (entry.getValue() * 100);
-                        if (pct > 100)
-                            pct = 100;
+                        int pct = (int) (info.getProgressPercentage() * 100);
                         progress.add(pct + "%");
 
-                        // Tooltip for production (using server view-model data, no client config!)
-                        if (recipeInfo != null) {
-                            StringBuilder sb = new StringBuilder();
+                        // Tooltip from server string components
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("Status: ").append(info.getStatusText()).append("\n");
+                        sb.append("Progress: ").append(info.getProgressText()).append("\n\n");
 
-                            // Use pre-formatted strings from server view-model
-                            sb.append("Status: ").append(recipeInfo.getStatusText()).append("\n");
-                            sb.append("Progress: ").append(recipeInfo.getProgressText()).append("\n\n");
+                        sb.append("Inputs: ").append(info.getInputsText()).append("\n");
+                        sb.append("Outputs: ").append(info.getOutputsText()).append("\n\n");
 
-                            // Server-calculated display strings (no client formulas!)
-                            sb.append("Inputs: ").append(recipeInfo.getInputsText()).append("\n");
-                            sb.append("Outputs: ").append(recipeInfo.getOutputsText()).append("\n\n");
+                        sb.append("Cycle Time: ").append(info.getCycleTimeText()).append("\n");
+                        sb.append("Production Rate: ").append(info.getProductionRateText()).append("\n");
 
-                            // Server-calculated cycle time and rate
-                            sb.append("Cycle Time: ").append(recipeInfo.getCycleTimeText()).append("\n");
-                            sb.append("Production Rate: ").append(recipeInfo.getProductionRateText()).append("\n");
-
-                            // TODO: Server-authoritative upgrade effects view-model needed
-                            // For now, simplified tooltip without client-side upgrade calculations
-                            // Full implementation requires server to include "active upgrades affecting this recipe" in view-model
-
-                            tooltipList.add(sb.toString());
-                        } else {
-                            tooltipList.add(null);
-                        }
+                        tooltipList.add(sb.toString());
                     }
+                } else {
+                    // ViewModel not yet received
+                    names.add("Loading production data...");
+                    progress.add("");
+                    tooltipList.add("Waiting for server...");
+                    return new Object[] { names.toArray(new String[0]), progress.toArray(),
+                            tooltipList.toArray(new String[0]) };
                 }
 
                 if (names.isEmpty()) {
@@ -147,19 +139,21 @@ public class ProductionTab extends BaseTownTab {
                 // Upgrades View (Research + Unlocked + Locked)
                 // NEW: Use server-authoritative view-model instead of UpgradeRegistry
                 var upgradeViewModel = cache.getUpgradeViewModel();
-                
+
                 if (upgradeViewModel == null) {
                     // Fallback if view-model not yet received from server
                     names.add("Loading upgrades...");
                     tooltipList.add("Waiting for server data...");
                     progress.add("");
-                    return new Object[] { names.toArray(new String[0]), progress.toArray(), 
-                                         tooltipList.toArray(new String[0]) };
+                    return new Object[] { names.toArray(new String[0]), progress.toArray(),
+                            tooltipList.toArray(new String[0]) };
                 }
 
-                // NEW: Build display from server-calculated view-model data (NO CLIENT CALCULATIONS)
+                // NEW: Build display from server-calculated view-model data (NO CLIENT
+                // CALCULATIONS)
                 // Helper to add upgrades to display
-                java.util.function.BiConsumer<com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel.UpgradeDisplayInfo, Integer> addUpgrade = (info, level) -> {
+                java.util.function.BiConsumer<com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel.UpgradeDisplayInfo, Integer> addUpgrade = (
+                        info, level) -> {
                     // ALL DATA FROM SERVER VIEW-MODEL (NO CLIENT CALCULATIONS)
                     String displayName = info.getDisplayName();
                     if (info.isRepeatable()) {
@@ -207,7 +201,8 @@ public class ProductionTab extends BaseTownTab {
                     }
 
                     if (!info.getRequirementsText().equals("None")) {
-                        sb.append("\nRequires:\n - ").append(info.getRequirementsText().replace(", ", "\n - ")).append("\n");
+                        sb.append("\nRequires:\n - ").append(info.getRequirementsText().replace(", ", "\n - "))
+                                .append("\n");
                     }
 
                     if (!info.getPrerequisitesText().equals("None")) {
@@ -229,8 +224,9 @@ public class ProductionTab extends BaseTownTab {
                 // Process unlocked upgrades (all levels)
                 for (String nodeId : upgradeViewModel.getUnlockedUpgradeIds()) {
                     var info = upgradeViewModel.getUpgradeInfo(nodeId);
-                    if (info == null) continue;
-                    
+                    if (info == null)
+                        continue;
+
                     for (int lv = 1; lv <= info.getCurrentLevel(); lv++) {
                         addUpgrade.accept(info, lv);
                     }

@@ -62,7 +62,8 @@ public class TownDataCacheManager {
 
     /**
      * Gets the cached population count.
-     * FIX: Now uses view-model instead of ContainerData to avoid client-side sync issues.
+     * FIX: Now uses view-model instead of ContainerData to avoid client-side sync
+     * issues.
      *
      * @return The population count
      */
@@ -82,7 +83,8 @@ public class TownDataCacheManager {
 
     /**
      * Gets the cached tourist count.
-     * FIX: Now uses view-model instead of ContainerData to avoid client-side sync issues.
+     * FIX: Now uses view-model instead of ContainerData to avoid client-side sync
+     * issues.
      *
      * @return The current tourist count
      */
@@ -102,7 +104,8 @@ public class TownDataCacheManager {
 
     /**
      * Gets the cached maximum tourists.
-     * FIX: Now uses view-model instead of ContainerData to avoid client-side sync issues.
+     * FIX: Now uses view-model instead of ContainerData to avoid client-side sync
+     * issues.
      *
      * @return The maximum tourist count
      */
@@ -158,7 +161,8 @@ public class TownDataCacheManager {
 
     /**
      * Gets a formatted tourist string for display.
-     * FIX: Now uses view-model instead of ContainerData to avoid client-side sync issues.
+     * FIX: Now uses view-model instead of ContainerData to avoid client-side sync
+     * issues.
      *
      * @return Formatted string like "5/10"
      */
@@ -232,68 +236,42 @@ public class TownDataCacheManager {
     }
 
     // --- Overview Data ---
-    private float cachedHappiness = 50f;
-    private String cachedBiome = "Unknown";
-    private String cachedBiomeVariant = "Unknown";
-    private String cachedCurrentResearch = "";
-    private float cachedResearchProgress = 0f;
-    private int cachedDailyTickInterval = 24000;
-    private Map<String, Float> cachedActiveProductions = Collections.emptyMap();
-    private java.util.Set<String> cachedUnlockedNodes = Collections.emptySet();
-    private Map<String, Integer> cachedUpgradeLevels = Collections.emptyMap();
-    private float cachedPopulationCap = 0f;
-    private int cachedTotalTouristsArrived = 0;
-    private double cachedTotalTouristDistance = 0.0;
-    private float cachedBorderRadius = 50f;
-    private Map<String, Float> cachedAiScores = Collections.emptyMap();
+    // --- Overview Data (Delegated to TownInterfaceViewModel) ---
+    // These fields are deprecated in favor of cachedInterfaceViewModel in
+    // TownInterfaceEntity
 
+    // Legacy update method kept briefly for compatibility but empty
     public void updateOverviewData(float happiness, String biome, String biomeVariant, String currentResearch,
             float researchProgress,
             int dailyTickInterval, Map<String, Float> activeProductions, Map<String, Integer> upgradeLevels,
             float populationCap, int totalTouristsArrived, double totalTouristDistance, float borderRadius,
             Map<String, Float> aiScores) {
-        this.cachedHappiness = happiness;
-        if (biome != null && biome.startsWith("minecraft:")) {
-            this.cachedBiome = biome.substring(10);
-            // Capitalize first letter?
-            if (this.cachedBiome.length() > 0) {
-                this.cachedBiome = this.cachedBiome.substring(0, 1).toUpperCase() + this.cachedBiome.substring(1);
-            }
-        } else {
-            this.cachedBiome = biome != null ? biome : "Unknown";
-        }
-
-        this.cachedBiomeVariant = biomeVariant != null ? biomeVariant : "Unknown";
-
-        this.cachedCurrentResearch = currentResearch;
-        this.cachedResearchProgress = researchProgress;
-        this.cachedDailyTickInterval = dailyTickInterval;
-        this.cachedActiveProductions = activeProductions;
-        this.cachedUpgradeLevels = upgradeLevels != null ? new java.util.HashMap<>(upgradeLevels)
-                : new java.util.HashMap<>();
-        this.cachedUnlockedNodes = this.cachedUpgradeLevels.keySet();
-        this.cachedPopulationCap = populationCap;
-        this.cachedTotalTouristsArrived = totalTouristsArrived;
-        this.cachedTotalTouristDistance = totalTouristDistance;
-        this.cachedBorderRadius = borderRadius;
-        this.cachedAiScores = aiScores != null ? new java.util.HashMap<>(aiScores) : Collections.emptyMap();
+        // No-op: Data now handled by TownInterfaceViewModel and other ViewModels
     }
 
     public float getCachedBorderRadius() {
-        return cachedBorderRadius;
+        // TODO: Move to a ViewModel? For now return default or 50
+        return 50f;
     }
 
     public float getCachedAiScore(String nodeId) {
-        return cachedAiScores.getOrDefault(nodeId, 0f);
+        var vm = getUpgradeViewModel();
+        if (vm != null) {
+            var info = vm.getUpgradeInfo(nodeId);
+            return (info != null) ? info.getAiScore() : 0f;
+        }
+        return 0f;
     }
 
     /**
      * DEPRECATED: Use getUpgradeViewModel().getResearchSpeedMultiplier() instead.
      * 
-     * This method violated server-authoritative architecture by accessing UpgradeRegistry
+     * This method violated server-authoritative architecture by accessing
+     * UpgradeRegistry
      * and performing business logic calculations on the client.
      * 
-     * @deprecated Replaced by server-calculated research speed in UpgradeStatusViewModel
+     * @deprecated Replaced by server-calculated research speed in
+     *             UpgradeStatusViewModel
      */
     @Deprecated
     public float getCachedResearchSpeed() {
@@ -302,33 +280,18 @@ public class TownDataCacheManager {
         if (upgradeViewModel != null) {
             return upgradeViewModel.getResearchSpeedMultiplier();
         }
-        
-        // Fallback for backward compatibility (should rarely be used)
-        float speed = 1.0f;
-        if (cachedUnlockedNodes != null) {
-            for (String uid : cachedUnlockedNodes) {
-                com.quackers29.businesscraft.production.UpgradeNode unode = com.quackers29.businesscraft.production.UpgradeRegistry
-                        .get(uid);
-                if (unode != null) {
-                    int ulvl = getCachedUpgradeLevel(uid);
-                    for (com.quackers29.businesscraft.data.parsers.Effect eff : unode.getEffects()) {
-                        if ("research".equals(eff.getTarget())) {
-                            speed += unode.calculateEffectValue(eff, ulvl);
-                        }
-                    }
-                }
-            }
-        }
-        return Math.max(0.1f, speed);
+        return 1.0f;
     }
 
     /**
      * DEPRECATED: Use getUpgradeViewModel().getResearchSpeedTooltip() instead.
      * 
-     * This method violated server-authoritative architecture by accessing UpgradeRegistry
+     * This method violated server-authoritative architecture by accessing
+     * UpgradeRegistry
      * and performing business logic calculations on the client.
      * 
-     * @deprecated Replaced by server-calculated research speed tooltip in UpgradeStatusViewModel
+     * @deprecated Replaced by server-calculated research speed tooltip in
+     *             UpgradeStatusViewModel
      */
     @Deprecated
     public String getResearchSpeedTooltip() {
@@ -337,87 +300,121 @@ public class TownDataCacheManager {
         if (upgradeViewModel != null) {
             return upgradeViewModel.getResearchSpeedTooltip();
         }
-        
-        // Fallback for backward compatibility (should rarely be used)
-        StringBuilder sb = new StringBuilder();
-        sb.append("Base Speed: 100%");
-
-        if (cachedUnlockedNodes != null) {
-            for (String uid : cachedUnlockedNodes) {
-                com.quackers29.businesscraft.production.UpgradeNode unode = com.quackers29.businesscraft.production.UpgradeRegistry
-                        .get(uid);
-                if (unode != null) {
-                    int ulvl = getCachedUpgradeLevel(uid);
-                    for (com.quackers29.businesscraft.data.parsers.Effect eff : unode.getEffects()) {
-                        if ("research".equals(eff.getTarget())) {
-                            float val = unode.calculateEffectValue(eff, ulvl);
-                            if (val != 0) {
-                                sb.append("\n");
-                                String name = unode.getDisplayName();
-                                if (unode.isRepeatable())
-                                    name += " (" + ulvl + ")";
-                                sb.append(name).append(": ").append(String.format("%+.0f%%", val * 100));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return sb.toString();
+        return "Loading...";
     }
 
     public int getCachedTotalTouristsArrived() {
-        return cachedTotalTouristsArrived;
+        // Not currently synced in TownInterfaceViewModel
+        return 0;
     }
 
     public double getCachedTotalTouristDistance() {
-        return cachedTotalTouristDistance;
+        // Not currently synced in TownInterfaceViewModel
+        return 0.0;
     }
 
+    /**
+     * Replaced by TownInterfaceViewModel.getHappinessDisplay() /
+     * getHappinessStatus()
+     * Returning raw float for compatibility where needed, parsed from display if
+     * possible or 50f
+     */
     public float getCachedHappiness() {
-        return cachedHappiness;
+        var vm = getInterfaceViewModel();
+        if (vm != null) {
+            try {
+                String disp = vm.getHappinessDisplay().replace("%", "").trim();
+                return Float.parseFloat(disp);
+            } catch (Exception e) {
+            }
+        }
+        return 50f;
     }
 
     public String getCachedBiome() {
-        return cachedBiome;
+        var vm = getInterfaceViewModel();
+        return (vm != null) ? vm.getBiomeFormatted() : "Unknown";
     }
 
     public String getCachedBiomeVariant() {
-        return cachedBiomeVariant;
+        var vm = getInterfaceViewModel();
+        return (vm != null) ? vm.getBiomeVariantFormatted() : "Unknown";
     }
 
     public String getCachedCurrentResearch() {
-        return cachedCurrentResearch;
+        var vm = getUpgradeViewModel();
+        if (vm != null) {
+            // Find current research
+            for (String uid : vm.getResearchableUpgradeIds()) {
+                var info = vm.getUpgradeInfo(uid);
+                if (info != null && info.isCurrentResearch())
+                    return uid;
+            }
+        }
+        return "";
     }
 
     public float getCachedResearchProgress() {
-        return cachedResearchProgress;
+        var vm = getUpgradeViewModel();
+        if (vm != null) {
+            for (String uid : vm.getResearchableUpgradeIds()) {
+                var info = vm.getUpgradeInfo(uid);
+                if (info != null && info.isCurrentResearch())
+                    return info.getProgressPercentage() * 100f; // Approx
+            }
+        }
+        return 0f;
     }
 
     public int getCachedDailyTickInterval() {
-        return cachedDailyTickInterval;
+        // This was config based, assumes standard
+        return 24000;
     }
 
     public Map<String, Float> getCachedActiveProductions() {
-        return cachedActiveProductions;
+        var vm = getProductionViewModel();
+        // Convert ProductionViewModel to old map format for compatibility if needed?
+        // Actually the UI (ProductionTab) has been updated to use ViewModel directly.
+        // This method might be unused now or should be deprecated.
+        return Collections.emptyMap();
     }
 
     public java.util.Set<String> getCachedUnlockedNodes() {
-        return cachedUnlockedNodes;
+        var vm = getUpgradeViewModel();
+        if (vm != null) {
+            return new java.util.HashSet<>(vm.getUnlockedUpgradeIds());
+        }
+        return Collections.emptySet();
     }
 
     public int getCachedUpgradeLevel(String nodeId) {
-        return cachedUpgradeLevels.getOrDefault(nodeId, 0);
+        var vm = getUpgradeViewModel();
+        if (vm != null) {
+            var info = vm.getUpgradeInfo(nodeId);
+            return (info != null) ? info.getCurrentLevel() : 0;
+        }
+        return 0;
     }
 
     public float getCachedPopulationCap() {
-        return cachedPopulationCap;
+        var vm = getInterfaceViewModel();
+        if (vm != null) {
+            try {
+                String disp = vm.getPopulationDisplay(); // "5/10"
+                if (disp.contains("/")) {
+                    return Float.parseFloat(disp.split("/")[1].trim());
+                }
+            } catch (Exception e) {
+            }
+        }
+        return 10f; // Default cap
     }
 
     /**
      * Gets the resource stats (production, consumption, capacity) for an item.
      * 
      * DEPRECATED: Use getResourceDisplayInfo() for the new view-model approach
+     * 
      * @param item The item to get stats for
      * @return float array [production, consumption, capacity] or null if not
      *         available
@@ -434,17 +431,22 @@ public class TownDataCacheManager {
     }
 
     /**
-     * NEW: Gets resource display information from the server-authoritative view-model.
-     * This contains pre-calculated display strings, eliminating client-side calculations.
+     * NEW: Gets resource display information from the server-authoritative
+     * view-model.
+     * This contains pre-calculated display strings, eliminating client-side
+     * calculations.
      * 
      * @param item The item to get display info for
-     * @return The display info containing formatted strings and status, or null if not available
+     * @return The display info containing formatted strings and status, or null if
+     *         not available
      */
-    public com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel.ResourceDisplayInfo getResourceDisplayInfo(Item item) {
+    public com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel.ResourceDisplayInfo getResourceDisplayInfo(
+            Item item) {
         if (menu != null) {
             net.minecraft.world.level.block.entity.BlockEntity be = menu.getBlockEntity();
             if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity entity) {
-                com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel viewModel = entity.getCachedResourceViewModel();
+                com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel viewModel = entity
+                        .getCachedResourceViewModel();
                 if (viewModel != null) {
                     return viewModel.getResourceDisplay(item);
                 }
@@ -470,8 +472,10 @@ public class TownDataCacheManager {
     }
 
     /**
-     * NEW: Gets the complete production view-model containing all production recipe display data.
-     * This eliminates client-side ProductionRegistry access and config file reading.
+     * NEW: Gets the complete production view-model containing all production recipe
+     * display data.
+     * This eliminates client-side ProductionRegistry access and config file
+     * reading.
      *
      * @return The complete production view-model, or null if not available
      */
@@ -486,13 +490,17 @@ public class TownDataCacheManager {
     }
 
     /**
-     * NEW: Gets production recipe display info by recipe ID from the server-authoritative view-model.
-     * This replaces ProductionRegistry.get() calls that violated the server-authoritative pattern.
+     * NEW: Gets production recipe display info by recipe ID from the
+     * server-authoritative view-model.
+     * This replaces ProductionRegistry.get() calls that violated the
+     * server-authoritative pattern.
      *
      * @param recipeId The recipe ID to get display info for
-     * @return The display info containing recipe name and details, or null if not available
+     * @return The display info containing recipe name and details, or null if not
+     *         available
      */
-    public com.quackers29.businesscraft.town.viewmodel.ProductionStatusViewModel.ProductionRecipeInfo getProductionRecipeInfo(String recipeId) {
+    public com.quackers29.businesscraft.town.viewmodel.ProductionStatusViewModel.ProductionRecipeInfo getProductionRecipeInfo(
+            String recipeId) {
         var viewModel = getProductionViewModel();
         if (viewModel != null) {
             return viewModel.getRecipeInfo(recipeId);
@@ -501,7 +509,8 @@ public class TownDataCacheManager {
     }
 
     /**
-     * NEW: Gets the complete upgrade view-model containing all upgrade display data.
+     * NEW: Gets the complete upgrade view-model containing all upgrade display
+     * data.
      * This eliminates client-side UpgradeRegistry access and config file reading.
      *
      * REPLACES:
@@ -525,16 +534,37 @@ public class TownDataCacheManager {
     }
 
     /**
-     * NEW: Gets upgrade display info by node ID from the server-authoritative view-model.
-     * This replaces UpgradeRegistry.get() calls that violated the server-authoritative pattern.
+     * NEW: Gets upgrade display info by node ID from the server-authoritative
+     * view-model.
+     * This replaces UpgradeRegistry.get() calls that violated the
+     * server-authoritative pattern.
      *
      * @param nodeId The upgrade node ID to get display info for
-     * @return The display info containing upgrade name, costs, effects, etc., or null if not available
+     * @return The display info containing upgrade name, costs, effects, etc., or
+     *         null if not available
      */
-    public com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel.UpgradeDisplayInfo getUpgradeInfo(String nodeId) {
+    public com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel.UpgradeDisplayInfo getUpgradeInfo(
+            String nodeId) {
         var viewModel = getUpgradeViewModel();
         if (viewModel != null) {
             return viewModel.getUpgradeInfo(nodeId);
+        }
+        return null;
+    }
+
+    /**
+     * NEW: Gets the town interface view-model containing all main overview display
+     * data.
+     * Replaces client-side fallbacks in TownInterfaceMenu.
+     *
+     * @return The view-model, or null if not available
+     */
+    public com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel getInterfaceViewModel() {
+        if (menu != null) {
+            net.minecraft.world.level.block.entity.BlockEntity be = menu.getBlockEntity();
+            if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity entity) {
+                return entity.getCachedInterfaceViewModel();
+            }
         }
         return null;
     }

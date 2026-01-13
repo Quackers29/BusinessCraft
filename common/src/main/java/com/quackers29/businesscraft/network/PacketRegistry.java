@@ -13,6 +13,7 @@ import com.quackers29.businesscraft.network.packets.ResourceViewModelSyncPacket;
 import com.quackers29.businesscraft.network.packets.ProductionViewModelSyncPacket;
 import com.quackers29.businesscraft.network.packets.UpgradeViewModelSyncPacket;
 import com.quackers29.businesscraft.network.packets.MarketViewModelSyncPacket;
+import com.quackers29.businesscraft.network.packets.TownInterfaceViewModelSyncPacket;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
@@ -250,20 +251,37 @@ public class PacketRegistry {
                                 ResourceSyncPacket::decode, ResourceSyncPacket::encode, ResourceSyncPacket::handle);
 
                 // NEW: Server-authoritative resource view-model sync packet
-                register(ResourceViewModelSyncPacket.class, "resource_view_model_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
-                                ResourceViewModelSyncPacket::decode, ResourceViewModelSyncPacket::encode, ResourceViewModelSyncPacket::handle);
+                register(ResourceViewModelSyncPacket.class, "resource_view_model_sync_packet",
+                                NetworkDirection.PLAY_TO_CLIENT,
+                                ResourceViewModelSyncPacket::decode, ResourceViewModelSyncPacket::encode,
+                                ResourceViewModelSyncPacket::handle);
 
-                // NEW: Server-authoritative production view-model sync packet (eliminates client ProductionRegistry access)
-                register(ProductionViewModelSyncPacket.class, "production_view_model_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
-                                ProductionViewModelSyncPacket::decode, ProductionViewModelSyncPacket::encode, ProductionViewModelSyncPacket::handle);
+                // NEW: Server-authoritative production view-model sync packet (eliminates
+                // client ProductionRegistry access)
+                register(ProductionViewModelSyncPacket.class, "production_view_model_sync_packet",
+                                NetworkDirection.PLAY_TO_CLIENT,
+                                ProductionViewModelSyncPacket::decode, ProductionViewModelSyncPacket::encode,
+                                ProductionViewModelSyncPacket::handle);
 
-                // NEW: Server-authoritative upgrade view-model sync packet (eliminates client UpgradeRegistry access)
-                register(UpgradeViewModelSyncPacket.class, "upgrade_view_model_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
-                                UpgradeViewModelSyncPacket::decode, UpgradeViewModelSyncPacket::encode, UpgradeViewModelSyncPacket::handle);
+                // NEW: Server-authoritative upgrade view-model sync packet (eliminates client
+                // UpgradeRegistry access)
+                register(UpgradeViewModelSyncPacket.class, "upgrade_view_model_sync_packet",
+                                NetworkDirection.PLAY_TO_CLIENT,
+                                UpgradeViewModelSyncPacket::decode, UpgradeViewModelSyncPacket::encode,
+                                UpgradeViewModelSyncPacket::handle);
 
-                // NEW: Server-authoritative market price view-model sync packet (eliminates client price calculations)
-                register(MarketViewModelSyncPacket.class, "market_view_model_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
-                                MarketViewModelSyncPacket::decode, MarketViewModelSyncPacket::encode, MarketViewModelSyncPacket::handle);
+                // NEW: Server-authoritative market price view-model sync packet (eliminates
+                // client price calculations)
+                register(MarketViewModelSyncPacket.class, "market_view_model_sync_packet",
+                                NetworkDirection.PLAY_TO_CLIENT,
+                                MarketViewModelSyncPacket::decode, MarketViewModelSyncPacket::encode,
+                                MarketViewModelSyncPacket::handle);
+
+                // NEW: Server-authoritative town interface view-model sync packet (Phase 2.3)
+                register(TownInterfaceViewModelSyncPacket.class, "town_interface_view_model_sync_packet",
+                                NetworkDirection.PLAY_TO_CLIENT,
+                                TownInterfaceViewModelSyncPacket::decode, TownInterfaceViewModelSyncPacket::encode,
+                                TownInterfaceViewModelSyncPacket::handle);
 
                 register(ContractSyncPacket.class, "contract_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
                                 ContractSyncPacket::decode, ContractSyncPacket::encode, ContractSyncPacket::handle);

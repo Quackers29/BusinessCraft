@@ -87,19 +87,14 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         this.player = inv.player;
 
         // Initialize container data with 6 slots and sensible defaults
-        this.data = new SimpleContainerData(6);
-        // Set default values to avoid returning 0 when data isn't synced yet
-        this.data.set(DATA_SEARCH_RADIUS, 10); // Default search radius
-        this.data.set(DATA_POPULATION, 5); // Default population
-        this.data.set(DATA_TOURIST_COUNT, 0); // Default tourist count
-        this.data.set(DATA_MAX_TOURISTS, 5); // Default max tourists
-        this.data.set(DATA_WORK_UNITS, 0);
-        this.data.set(DATA_WORK_UNIT_CAP, 0);
+        // Initialize container data - NOW UNUSED/EMPTY as we use ViewModel syncing
+        this.data = new SimpleContainerData(0);
         addDataSlots(this.data);
 
+        // Client side: initialize with default values if needed, but ViewModel should
+        // take over
         if (level.isClientSide()) {
-            for (int i = 0; i < 6; i++)
-                data.set(i, -1);
+            // No-op
         } else {
             // Get town from TownManager
             if (level instanceof ServerLevel serverLevel) {
@@ -147,46 +142,15 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                             entity.setChanged(); // Triggers sendBlockUpdated -> getUpdateTag -> ClientSyncHelper
                         }
 
-                        // Send Town Overview Sync Packet
-                        float happiness = town.getHappiness();
-                        String biome = town.getBiome();
-                        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS,
-                                "TownInterfaceMenu: sending biome '{}' for town '{}' (Unknown Check: {})",
-                                biome, town.getName(), (biome == null || "Unknown".equals(biome)));
-                        boolean biomeUnknown = biome == null || "Unknown".equals(biome);
-
-                        // If biome is unknown, calculate it and update the town
-                        if (biomeUnknown && level instanceof ServerLevel sLevel && town.getPosition() != null) {
-                            net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> biomeHolder = sLevel
-                                    .getBiome(town.getPosition());
-                            biome = biomeHolder.unwrapKey().map(key -> key.location().toString()).orElse("Unknown");
-
-                            // Update town if we found a valid biome
-                            if (!"Unknown".equals(biome)) {
-                                town.setBiome(biome);
-                                LOGGER.info("Updated town {} biome to {}", town.getName(), biome);
-                            }
+                        // --- REPLACED BY TownInterfaceViewModelSyncPacket (Phase 2.3) ---
+                        // Town stats are now synced via updateTownInterfaceViewModel in
+                        // TownInterfaceEntity
+                        // which is triggered by ticks or events, minimizing packet spam.
+                        // Force a sync of the view model to this player right now
+                        if (be instanceof TownInterfaceEntity entity
+                                && inv.player instanceof net.minecraft.server.level.ServerPlayer sp) {
+                            entity.syncInterfaceViewModelToPlayer(sp);
                         }
-
-                        String currentResearch = town.getUpgrades().getCurrentResearchNode();
-                        float researchProgress = town.getUpgrades().getResearchProgress();
-                        int dailyTickInterval = com.quackers29.businesscraft.config.ConfigLoader.dailyTickInterval;
-
-                        // Get active productions
-                        Map<String, Float> activeProductions = town.getProduction().getActiveRecipes();
-
-                        String biomeVariant = town.getBiomeVariant();
-
-                        com.quackers29.businesscraft.network.packets.ui.TownOverviewSyncPacket syncPacket = new com.quackers29.businesscraft.network.packets.ui.TownOverviewSyncPacket(
-                                happiness, biome, biomeVariant, currentResearch, researchProgress, dailyTickInterval,
-                                activeProductions, town.getUpgrades().getUpgradeLevels(),
-                                town.getUpgrades().getModifier("pop_cap"),
-                                town.getTotalTouristsArrived(), town.getTotalTouristDistance(),
-                                town.getBoundaryRadius(),
-                                town.getUpgrades().getAiScores());
-
-                        PlatformAccess.getNetworkMessages().sendToPlayer(syncPacket,
-                                (net.minecraft.server.level.ServerPlayer) inv.player);
 
                         // --- FIX: Sync Contract/Market Data for GPI Display ---
                         com.quackers29.businesscraft.contract.ContractBoard board = com.quackers29.businesscraft.contract.ContractBoard
@@ -300,69 +264,65 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     }
 
     public int getTownPopulation() {
-        // First try to get from our ContainerData which is synced between server and
-        // client
-        int populationFromData = data.get(DATA_POPULATION);
-        if (populationFromData > 0) {
-            return populationFromData;
+        // CLIENT SIDE: Use cached ViewModel if available
+        if (level != null && level.isClientSide()) {
+            if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
+                var vm = townEntity.getCachedInterfaceViewModel();
+                if (vm != null) {
+                    try {
+                        String disp = vm.getPopulationDisplay(); // e.g. "5 / 10"
+                        if (disp.contains("/")) {
+                            return Integer.parseInt(disp.split("/")[0].trim());
+                        }
+                        return Integer.parseInt(disp.trim());
+                    } catch (NumberFormatException e) {
+                        return 0;
+                    }
+                }
+            }
+            return 0; // Fallback if no VM yet
         }
 
-        // If data isn't available yet or we're on server side
+        // SERVER SIDE: Direct access
         if (town != null) {
             return town.getPopulation();
         }
 
-        // Try to get population from town entity
-        if (level != null) {
-            if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
-                // Get population directly from the entity
-                UUID entityTownId = townEntity.getTownId();
-                if (entityTownId != null && level instanceof ServerLevel serverLevel) {
-                    Town townFromEntity = TownManager.get(serverLevel).getTown(entityTownId);
-                    if (townFromEntity != null) {
-                        return townFromEntity.getPopulation();
-                    }
-                }
-                return townEntity.getPopulation();
-            }
-        }
-
-        return townPopulation; // Default fallback is 5
+        return 0;
     }
 
     /**
      * Gets the current number of tourists in this town
      */
+    /**
+     * Gets the current number of tourists in this town
+     */
     public int getCurrentTourists() {
-        // First try to get from our ContainerData which is synced between server and
-        // client
-        int touristsFromData = data.get(DATA_TOURIST_COUNT);
-        if (touristsFromData < 0)
-            return -1;
-        if (touristsFromData >= 0) { // Tourist count can be 0
-            return touristsFromData;
+        // CLIENT SIDE: Use cached ViewModel if available
+        if (level != null && level.isClientSide()) {
+            if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
+                var vm = townEntity.getCachedInterfaceViewModel();
+                if (vm != null) {
+                    try {
+                        String disp = vm.getTouristsDisplay(); // e.g. "2 / 5"
+                        if (disp.contains("/")) {
+                            return Integer.parseInt(disp.split("/")[0].trim());
+                        }
+                        return Integer.parseInt(disp.trim());
+                    } catch (NumberFormatException e) {
+                        return 0;
+                    }
+                }
+            }
+            return 0;
         }
 
-        // If data isn't available yet or we're on server side
+        // SERVER SIDE
         if (town != null) {
             return town.getTouristCount();
         }
 
-        // Try to get tourist count from town entity
-        if (level != null) {
-            if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
-                // In TownBlockEntity, we need to get the Town and then get the tourist count
-                UUID entityTownId = townEntity.getTownId();
-                if (entityTownId != null && level instanceof ServerLevel serverLevel) {
-                    Town townFromEntity = TownManager.get(serverLevel).getTown(entityTownId);
-                    if (townFromEntity != null) {
-                        return townFromEntity.getTouristCount();
-                    }
-                }
-            }
-        }
-
-        return currentTourists; // Default fallback
+        return 0;
     }
 
     /**
@@ -441,44 +401,32 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      * 
      * @return the search radius value
      */
+    /**
+     * Gets the search radius for this town
+     * 
+     * @return the search radius value
+     */
     public int getSearchRadius() {
-        // Try to get search radius from town entity first (most up-to-date)
-        if (level != null) {
+        // CLIENT SIDE
+        if (level != null && level.isClientSide()) {
+            // Priority 1: Check block entity for latest ViewModel
             if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
-                int entityRadius = townEntity.getSearchRadius();
-                // Update cache for consistency
-                this.clientSearchRadius = entityRadius;
-                data.set(DATA_SEARCH_RADIUS, entityRadius);
-                DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU,
-                        "getSearchRadius() returning entity value: {}", entityRadius);
-                return entityRadius;
+                var vm = townEntity.getCachedInterfaceViewModel();
+                if (vm != null) {
+                    return vm.getSearchRadius();
+                }
             }
+            // Priority 2: Use client cache as fallback
+            return clientSearchRadius;
         }
 
-        // If block entity isn't available, try town object
+        // SERVER SIDE
         if (town != null) {
-            int townRadius = town.getSearchRadius();
-            // Update cache for consistency
-            this.clientSearchRadius = townRadius;
-            data.set(DATA_SEARCH_RADIUS, townRadius);
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "getSearchRadius() returning town value: {}",
-                    townRadius);
-            return townRadius;
+            return town.getSearchRadius();
         }
 
-        // Then try our ContainerData as fallback
-        int radiusFromData = data.get(DATA_SEARCH_RADIUS);
-        if (radiusFromData > 0 && radiusFromData <= 100) {
-            this.clientSearchRadius = radiusFromData;
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "getSearchRadius() returning data value: {}",
-                    radiusFromData);
-            return radiusFromData;
-        }
-
-        // Last resort - return cached value or default
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "getSearchRadius() returning cached value: {}",
-                clientSearchRadius);
-        return clientSearchRadius;
+        // Fallback
+        return 10;
     }
 
     /**
@@ -631,63 +579,62 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         return Collections.emptyMap();
     }
 
-    private void updateDataSlots() {
-        if (town != null) {
-            int townSearchRadius = town.getSearchRadius();
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU,
-                    "updateDataSlots() setting town search radius: {}", townSearchRadius);
-            data.set(DATA_POPULATION, town.getPopulation());
-            data.set(DATA_TOURIST_COUNT, town.getTouristCount());
-            data.set(DATA_MAX_TOURISTS, town.getMaxTourists());
-            data.set(DATA_SEARCH_RADIUS, townSearchRadius);
-            data.set(DATA_WORK_UNITS, town.getWorkUnits());
-            data.set(DATA_WORK_UNIT_CAP, town.getWorkUnitCap());
-        } else if (level != null && level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
-            // Try to get values from TownBlockEntity if town is not available
-            // First try to get town data through the entity's town provider
-            ITownDataProvider provider = townEntity.getTownDataProvider();
-            if (provider != null) {
-                DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU,
-                        "updateDataSlots() using data provider from entity");
-                data.set(DATA_POPULATION, provider.getPopulation());
-                data.set(DATA_TOURIST_COUNT, provider.getTouristCount());
-                data.set(DATA_MAX_TOURISTS, provider.getMaxTourists());
-                data.set(DATA_SEARCH_RADIUS, provider.getSearchRadius());
-                data.set(DATA_WORK_UNITS, provider.getWorkUnits());
-                data.set(DATA_WORK_UNIT_CAP, provider.getWorkUnitCap());
-            } else {
-                // Fallback to entity methods if no provider available
-                int entitySearchRadius = townEntity.getSearchRadius();
-                DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU,
-                        "updateDataSlots() using entity fallback, search radius: {}", entitySearchRadius);
-                data.set(DATA_POPULATION, townEntity.getPopulation());
-                data.set(DATA_TOURIST_COUNT, 0);
-                data.set(DATA_MAX_TOURISTS, 5);
-                data.set(DATA_SEARCH_RADIUS, entitySearchRadius);
-                data.set(DATA_WORK_UNITS, 0);
-                data.set(DATA_WORK_UNIT_CAP, 0);
-            }
-        } else {
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_INTERFACE_MENU, "updateDataSlots() no data source available");
-        }
-    }
-
     public int getWorkUnits() {
-        int val = data.get(DATA_WORK_UNITS);
-        if (val >= 0)
-            return val;
+        // CLIENT SIDE
+        if (level != null && level.isClientSide()) {
+            if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
+                var vm = townEntity.getCachedInterfaceViewModel();
+                if (vm != null) {
+                    try {
+                        String disp = vm.getWorkUnitsDisplay(); // e.g. "10 / 20"
+                        if (disp.contains("/")) {
+                            return Integer.parseInt(disp.split("/")[0].trim());
+                        }
+                        return Integer.parseInt(disp.trim());
+                    } catch (NumberFormatException e) {
+                        return 0;
+                    }
+                }
+            }
+            return 0;
+        }
+
+        // SERVER SIDE
         if (town != null)
             return town.getWorkUnits();
+
         return workUnits;
     }
 
     public int getWorkUnitCap() {
-        int val = data.get(DATA_WORK_UNIT_CAP);
-        if (val >= 0)
-            return val;
+        // CLIENT SIDE
+        if (level != null && level.isClientSide()) {
+            if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
+                var vm = townEntity.getCachedInterfaceViewModel();
+                if (vm != null) {
+                    try {
+                        String disp = vm.getWorkUnitsDisplay(); // e.g. "10 / 20"
+                        if (disp.contains("/")) {
+                            return Integer.parseInt(disp.split("/")[1].trim());
+                        }
+                        return 0;
+                    } catch (NumberFormatException e) {
+                        return 0;
+                    }
+                }
+            }
+            return 0;
+        }
+
+        // SERVER SIDE
         if (town != null)
             return town.getWorkUnitCap();
+
         return workUnitCap;
+    }
+
+    private void updateDataSlots() {
+        // No-op: Data now synced via TownInterfaceViewModelSyncPacket
     }
 
     /**
@@ -711,11 +658,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      * This should be called when the search radius is updated on the server.
      */
     public void refreshSearchRadius() {
-        if (town != null) {
-            data.set(DATA_SEARCH_RADIUS, town.getSearchRadius());
-        } else if (level != null && level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
-            data.set(DATA_SEARCH_RADIUS, townEntity.getSearchRadius());
-        }
+        // No-op: handled by ViewModel sync
     }
 
     /**
