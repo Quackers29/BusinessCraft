@@ -109,7 +109,13 @@ public class TownResourceViewModelBuilder {
         String overallStatus = calculateOverallStatus(shortageCount, fullCapacityCount, resources.size());
         String economicTrend = calculateEconomicTrend(town);
 
-        return new TownResourceViewModel(displayData, totalResourcesDisplay, overallStatus, economicTrend);
+        // FIX: Include overview stats in view-model to avoid ContainerData issues
+        int population = town.getPopulation();
+        int touristCount = town.getTouristCount();
+        int maxTourists = town.getMaxTourists();
+
+        return new TownResourceViewModel(displayData, totalResourcesDisplay, overallStatus, economicTrend,
+                population, touristCount, maxTourists);
     }
 
     // ===== PRIVATE HELPER METHODS (SERVER-SIDE CALCULATIONS) =====
@@ -119,7 +125,11 @@ public class TownResourceViewModelBuilder {
                 new HashMap<>(),
                 "No Resources",
                 "No Data",
-                "Unknown");
+                "Unknown",
+                0, // population
+                0, // touristCount
+                0  // maxTourists
+        );
     }
 
     /**

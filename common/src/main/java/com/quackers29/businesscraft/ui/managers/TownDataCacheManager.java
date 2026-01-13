@@ -62,10 +62,18 @@ public class TownDataCacheManager {
 
     /**
      * Gets the cached population count.
-     * 
+     * FIX: Now uses view-model instead of ContainerData to avoid client-side sync issues.
+     *
      * @return The population count
      */
     public int getCachedPopulation() {
+        // NEW: Use resource view-model which syncs reliably
+        var viewModel = getResourceViewModel();
+        if (viewModel != null) {
+            return viewModel.getPopulation();
+        }
+
+        // FALLBACK: Legacy data sources (should rarely be used)
         if (dataCache != null) {
             return dataCache.getPopulation();
         }
@@ -74,10 +82,18 @@ public class TownDataCacheManager {
 
     /**
      * Gets the cached tourist count.
-     * 
+     * FIX: Now uses view-model instead of ContainerData to avoid client-side sync issues.
+     *
      * @return The current tourist count
      */
     public int getCachedTouristCount() {
+        // NEW: Use resource view-model which syncs reliably
+        var viewModel = getResourceViewModel();
+        if (viewModel != null) {
+            return viewModel.getTouristCount();
+        }
+
+        // FALLBACK: Legacy data sources (should rarely be used)
         if (dataCache != null) {
             return dataCache.getTouristCount();
         }
@@ -86,10 +102,18 @@ public class TownDataCacheManager {
 
     /**
      * Gets the cached maximum tourists.
-     * 
+     * FIX: Now uses view-model instead of ContainerData to avoid client-side sync issues.
+     *
      * @return The maximum tourist count
      */
     public int getCachedMaxTourists() {
+        // NEW: Use resource view-model which syncs reliably
+        var viewModel = getResourceViewModel();
+        if (viewModel != null) {
+            return viewModel.getMaxTourists();
+        }
+
+        // FALLBACK: Legacy data sources (should rarely be used)
         if (dataCache != null) {
             return dataCache.getMaxTourists();
         }
@@ -134,10 +158,18 @@ public class TownDataCacheManager {
 
     /**
      * Gets a formatted tourist string for display.
-     * 
+     * FIX: Now uses view-model instead of ContainerData to avoid client-side sync issues.
+     *
      * @return Formatted string like "5/10"
      */
     public String getTouristString() {
+        // NEW: Use resource view-model which syncs reliably
+        var viewModel = getResourceViewModel();
+        if (viewModel != null) {
+            return viewModel.getTouristString();
+        }
+
+        // FALLBACK: Legacy approach (should rarely be used)
         int current = menu.getCurrentTourists();
         int max = getCachedMaxTourists();
         if (current < 0)

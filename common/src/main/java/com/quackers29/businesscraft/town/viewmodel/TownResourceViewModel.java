@@ -148,14 +148,25 @@ public class TownResourceViewModel {
     private final String overallStatus; // "Healthy Economy", "Resource Crisis", etc.
     private final String economicTrend; // "Growing", "Stable", "Declining"
 
+    // Overview stats (FIX: Synced with view-model to avoid ContainerData issues)
+    private final int population; // Current population count
+    private final int touristCount; // Current tourist count
+    private final int maxTourists; // Maximum tourists allowed
+
     public TownResourceViewModel(Map<Item, ResourceDisplayInfo> resourceDisplayData,
             String totalResourcesDisplay,
             String overallStatus,
-            String economicTrend) {
+            String economicTrend,
+            int population,
+            int touristCount,
+            int maxTourists) {
         this.resourceDisplayData = new HashMap<>(resourceDisplayData);
         this.totalResourcesDisplay = totalResourcesDisplay;
         this.overallStatus = overallStatus;
         this.economicTrend = economicTrend;
+        this.population = population;
+        this.touristCount = touristCount;
+        this.maxTourists = maxTourists;
     }
 
     public TownResourceViewModel(FriendlyByteBuf buf) {
@@ -176,6 +187,11 @@ public class TownResourceViewModel {
         this.totalResourcesDisplay = buf.readUtf();
         this.overallStatus = buf.readUtf();
         this.economicTrend = buf.readUtf();
+
+        // Read overview stats
+        this.population = buf.readInt();
+        this.touristCount = buf.readInt();
+        this.maxTourists = buf.readInt();
     }
 
     public void toBytes(FriendlyByteBuf buf) {
@@ -192,6 +208,11 @@ public class TownResourceViewModel {
         buf.writeUtf(totalResourcesDisplay);
         buf.writeUtf(overallStatus);
         buf.writeUtf(economicTrend);
+
+        // Write overview stats
+        buf.writeInt(population);
+        buf.writeInt(touristCount);
+        buf.writeInt(maxTourists);
     }
 
     // Client-side getters (NO CALCULATIONS)
@@ -221,5 +242,22 @@ public class TownResourceViewModel {
 
     public int getResourceCount() {
         return resourceDisplayData.size();
+    }
+
+    // Overview stats getters (FIX: No more ContainerData issues)
+    public int getPopulation() {
+        return population;
+    }
+
+    public int getTouristCount() {
+        return touristCount;
+    }
+
+    public int getMaxTourists() {
+        return maxTourists;
+    }
+
+    public String getTouristString() {
+        return touristCount + "/" + maxTourists;
     }
 }
