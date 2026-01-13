@@ -484,6 +484,11 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
     }
 
     private TradingViewModel getTradingViewModel() {
+        // Try to get from static cache first (primary sync mechanism)
+        TradingViewModel vm = TownDataCacheManager.getTradingViewModel();
+        if (vm != null)
+            return vm;
+
         if (this.minecraft != null && this.minecraft.level != null && menu instanceof TradeMenu tradeMenu) {
             if (this.minecraft.level
                     .getBlockEntity(tradeMenu.getTownBlockPos()) instanceof TownInterfaceEntity townEntity) {
@@ -547,11 +552,75 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                     earnings = Math.max(1, itemCount / 10);
                 }
 
-                String tooltipText = String.format("Click to trade!\nGet: %d %s",
-                        earnings, currencyName);
-                guiGraphics.renderTooltip(this.font, Component.literal(tooltipText), mouseX, mouseY);
+                // Calculate earnings and rate
+                float pricePerUnit = 0;
+                String statusText = "Unknown Item";
+                String stockDisplay = "???";
+                boolean isRegistered = false;
+
+                if (vm != null) {
+                    currencyName = vm.getCurrencyName();
+                    com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
+                            .getFor(inputStack.getItem());
+                    if (type != null) { // Type found in registry
+                        isRegistered = true;
+                        var info = vm.getResourceInfo().get(type.getId());
+                        if (info != null) { // Info found in ViewModel
+                            pricePerUnit = info.pricePerUnit();
+                            earnings = (int) (itemCount * pricePerUnit);
+                            stockDisplay = info.stockDisplay();
+                            statusText = info.statusText();
+
+                            // Add detailed tooltip
+                            String tooltipText = String.format("Action: Sell %s\n\n" +
+                                    "Get: %d %s\n" +
+                                    "Rate: %.2f %s/item\n" +
+                                    "Town Stock: %s\n" +
+                                    "Status: %s",
+                                    inputStack.getHoverName().getString(),
+                                    earnings, currencyName,
+                                    pricePerUnit, currencyName,
+                                    stockDisplay,
+                                    statusText);
+
+                            java.util.List<Component> tooltipComponents = new java.util.ArrayList<>();
+                            for (String line : tooltipText.split("\n")) {
+                                tooltipComponents.add(Component.literal(line));
+                            }
+                            guiGraphics.renderComponentTooltip(this.font, tooltipComponents, mouseX, mouseY);
+                            return; // Exit here to avoid fallback tooltip
+                        }
+                    }
+                } else {
+                    // Legacy fallback
+                    earnings = Math.max(1, itemCount / 10);
+                }
+
+                if (vm != null && !isRegistered) {
+                    earnings = itemCount; // 1:1 fallback
+                    pricePerUnit = 1.0f;
+                    statusText = "Unregistered Item (1:1)";
+                }
+
+                // Fallback tooltip if VM or info is missing
+                String tooltipText = String.format("Action: Sell %s\n\n" +
+                        "Get: %d %s\n" +
+                        "Rate: %.2f %s/item\n" +
+                        "Town Stock: %s\n" +
+                        "Status: %s",
+                        inputStack.getHoverName().getString(),
+                        earnings, currencyName,
+                        pricePerUnit, currencyName,
+                        stockDisplay,
+                        statusText);
+
+                java.util.List<Component> tooltipComponents = new java.util.ArrayList<>();
+                for (String line : tooltipText.split("\n")) {
+                    tooltipComponents.add(Component.literal(line));
+                }
+                guiGraphics.renderComponentTooltip(this.font, tooltipComponents, mouseX, mouseY);
             } else {
-                guiGraphics.renderTooltip(this.font, Component.literal("Add items first"), mouseX, mouseY);
+                guiGraphics.renderTooltip(this.font, Component.literal("Add items to sell"), mouseX, mouseY);
             }
         }
 

@@ -192,6 +192,31 @@
   - [x] Update `BCModalInventoryScreen` to use ViewModel ✅
   - [x] Ensure UI displays correct prices, currency, and stock ✅
 
+### **2.5 Global Market Unification** 🔧 **HIGH PRIORITY**
+**Context**: Currently, the system has split market logic. `ContractBoard` maintains persistent market prices for auctions, while `GlobalMarket` is ephemeral and unused by the Trade UI. Unregistered items (like `Town Interface`) lack GPI tracking.
+
+#### **2.5.1 Single Source of Truth**
+- [ ] **Create `GlobalMarketSavedData`**:
+  - Centralize market price and volume persistence.
+  - Migrate `ContractSavedData` market prices to this new store.
+  - Ensure lifecycle is managed by `TownManager`.
+- [ ] **Unify Pricing Logic**:
+  - Deprecate `ContractBoard.getMarketPrice()`.
+  - Redirect all pricing queries (Trade UI, Auctions) to `GlobalMarket`.
+  - Implement "Dynamic Item Registration" to automatically track unregistered items (using ResourceLocation as key).
+
+#### **2.5.2 Trade Integration**
+- [ ] **Update `TradeResourcePacket`**:
+  - Record every trade to `GlobalMarket`.
+  - Ensure immediate price updates based on supply/demand.
+- [ ] **Update `TradingViewModelBuilder`**:
+  - Use `GlobalMarket` prices instead of static CSV base values.
+  - Iterate all `Town` inventory items to catch unregistered resources.
+
+#### **2.5.3 Data Migration**
+- [ ] **Migrate existing auction data**:
+  - Ensure current auction prices are preserved in the new `GlobalMarketSavedData`.
+
 ---
 
 ## 🟢 **PHASE 3: CONFIGURATION & CLEANUP**
@@ -422,26 +447,4 @@
 
 ---
 
-## 📊 **PHASE 2.4 COMPLETION SUMMARY**
 
-### **What Was Accomplished**
-✅ **Trading View-Model System** - Complete server-authoritative trading (stock/price) architecture
-✅ **Configurable Currency** - Added `currencyItem` to `businesscraft.properties` (ConfigLoader)
-✅ **Dynamic Pricing** - Added `base_price` parsing to `items.csv` (ResourceRegistry)
-✅ **Abolished Legacy Conversion** - Removed hardcoded 10:1 item-to-emerald logic
-✅ **Created 3 New Classes** - 500+ lines of view-model infrastructure (TradingViewModel, Builder, Sync Packet)
-✅ **Updated 6 Existing Classes** - TownInterfaceEntity, TownDataCacheManager, BCModalInventoryScreen, TradeResourcePacket, ResourceRegistry/Type
-✅ **Build Verification** - All platforms compile cleanly with zero errors
-
-### **Key Achievements**
-- **Client Price Calculations**: ELIMINATED - Prices pre-calculated on server ✅
-- **Server-Authoritative Stock**: ELIMINATED - Client receives formatted stock/cap strings ✅
-- **Currency Flexibility**: Support for any item as currency defined in config ✅
-- **Display String Generation**: All trade data pre-formatted on server ✅
-- **Legacy Logic Removal**: Successfully removed the hardcoded 10:1 trade conversion ✅
-
-### **Technical Impact**
-- **Code Quality**: Centralized all trading logic in `TradingViewModelBuilder`
-- **Security**: Client can no longer manipulate prices or stock checks
-- **Consistency**: Single source of truth for all trading operations
-- **Architecture Compliance**: ~95% server-authoritative (PHASE 2.4 COMPLETE!)

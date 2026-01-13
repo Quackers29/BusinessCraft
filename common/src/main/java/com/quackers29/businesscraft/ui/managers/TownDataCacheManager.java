@@ -607,7 +607,7 @@ public class TownDataCacheManager {
      *
      * @return The trading view-model, or null if not available
      */
-    public TradingViewModel getTradingViewModel() {
+    public static TradingViewModel getTradingViewModel() {
         // Return globally synced view-model
         return globalTradingViewModel;
     }
