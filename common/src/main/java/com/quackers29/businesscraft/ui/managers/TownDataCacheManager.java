@@ -4,6 +4,7 @@ import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
 import com.quackers29.businesscraft.data.cache.TownDataCache;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
+import com.quackers29.businesscraft.town.viewmodel.TradingViewModel;
 import net.minecraft.world.item.Item;
 
 import java.util.Collections;
@@ -23,6 +24,17 @@ public class TownDataCacheManager {
     private int cachedTourists;
     private int cachedMaxTourists;
     private int cachedSearchRadius;
+
+    // Static cache for trading view-model (Global sync)
+    private static TradingViewModel globalTradingViewModel;
+
+    /**
+     * Updates the global trading view-model.
+     * Called by TradingViewModelSyncPacket.
+     */
+    public static void updateTradingViewModel(TradingViewModel viewModel) {
+        globalTradingViewModel = viewModel;
+    }
 
     /**
      * Creates a new cache manager.
@@ -586,7 +598,18 @@ public class TownDataCacheManager {
     public Map<String, String> getTourismStats() {
         java.util.LinkedHashMap<String, String> stats = new java.util.LinkedHashMap<>();
         stats.put("Current Tourists", String.valueOf(getCachedTouristCount()));
-        // Add others if needed
         return stats;
     }
+
+    /**
+     * NEW: Gets the complete trading view-model.
+     * Replaces manual stock calculations in TradeModalManager.
+     *
+     * @return The trading view-model, or null if not available
+     */
+    public TradingViewModel getTradingViewModel() {
+        // Return globally synced view-model
+        return globalTradingViewModel;
+    }
+
 }

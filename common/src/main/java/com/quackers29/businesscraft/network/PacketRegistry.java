@@ -14,6 +14,7 @@ import com.quackers29.businesscraft.network.packets.ProductionViewModelSyncPacke
 import com.quackers29.businesscraft.network.packets.UpgradeViewModelSyncPacket;
 import com.quackers29.businesscraft.network.packets.MarketViewModelSyncPacket;
 import com.quackers29.businesscraft.network.packets.TownInterfaceViewModelSyncPacket;
+import com.quackers29.businesscraft.network.packets.TradingViewModelSyncPacket;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
@@ -282,6 +283,12 @@ public class PacketRegistry {
                                 NetworkDirection.PLAY_TO_CLIENT,
                                 TownInterfaceViewModelSyncPacket::decode, TownInterfaceViewModelSyncPacket::encode,
                                 TownInterfaceViewModelSyncPacket::handle);
+
+                // NEW: Server-authoritative trading view-model sync packet (Phase 2.4)
+                register(TradingViewModelSyncPacket.class, "trading_view_model_sync_packet",
+                                NetworkDirection.PLAY_TO_CLIENT,
+                                TradingViewModelSyncPacket::decode, TradingViewModelSyncPacket::encode,
+                                TradingViewModelSyncPacket::handle);
 
                 register(ContractSyncPacket.class, "contract_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
                                 ContractSyncPacket::decode, ContractSyncPacket::encode, ContractSyncPacket::handle);

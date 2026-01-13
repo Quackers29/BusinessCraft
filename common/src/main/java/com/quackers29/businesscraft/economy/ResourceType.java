@@ -22,11 +22,17 @@ public class ResourceType {
 
     private final String id;
     private final ResourceLocation canonicalItemId;
+    private final float baseValue;
     private final Map<ResourceLocation, Float> equivalents = new HashMap<>();
 
     public ResourceType(String id, ResourceLocation canonicalItemId) {
+        this(id, canonicalItemId, 1.0f);
+    }
+
+    public ResourceType(String id, ResourceLocation canonicalItemId, float baseValue) {
         this.id = id;
         this.canonicalItemId = canonicalItemId;
+        this.baseValue = baseValue;
     }
 
     public String getId() {
@@ -39,6 +45,10 @@ public class ResourceType {
 
     public ResourceLocation getMcItemId() {
         return canonicalItemId;
+    }
+
+    public float getBaseValue() {
+        return baseValue;
     }
 
     public Map<ResourceLocation, Float> getEquivalents() {

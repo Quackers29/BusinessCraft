@@ -51,14 +51,21 @@ public class ResourceRegistry {
 
                     try {
                         ResourceLocation itemId = new ResourceLocation(mcItemIdStr);
-                        // ResourceType constructor might need update or we keep it as is.
-                        // Original ResourceType(id, itemId).
-                        ResourceType type = new ResourceType(id, itemId);
+                        float basePrice = 1.0f;
+                        if (parts.length >= 4) {
+                            try {
+                                basePrice = Float.parseFloat(parts[3].trim());
+                            } catch (NumberFormatException e) {
+                                LOGGER.warn("Invalid base price for item {}: {}, using default 1.0", id, parts[3]);
+                            }
+                        }
+
+                        ResourceType type = new ResourceType(id, itemId, basePrice);
                         // We might want to store display name too, but ResourceType might not support
                         // it yet.
                         // For now, adhere to existing constructor flexibility.
                         RESOURCES.put(id, type);
-                        LOGGER.info("Registered item: {} -> {} ({})", id, itemId, displayName);
+                        LOGGER.info("Registered item: {} -> {} ({}) [Value: {}]", id, itemId, displayName, basePrice);
                     } catch (Exception e) {
                         LOGGER.error("Invalid item ID in {}: {}", CONFIG_FILE_NAME, mcItemIdStr);
                     }
@@ -76,12 +83,12 @@ public class ResourceRegistry {
 
     private static void createDefaultConfig(File file) {
         try (FileWriter writer = new FileWriter(file)) {
-            writer.write("item_id,display_name,mc_item_id\n");
-            writer.write("wood,Wood,minecraft:oak_log\n");
-            writer.write("iron,Iron Ingot,minecraft:iron_ingot\n");
-            writer.write("coal,Coal,minecraft:coal\n");
-            writer.write("food,Food,minecraft:bread\n");
-            writer.write("money,Emeralds,minecraft:emerald\n");
+            writer.write("item_id,display_name,mc_item_id,base_price\n");
+            writer.write("wood,Wood,minecraft:oak_log,0.5\n");
+            writer.write("iron,Iron Ingot,minecraft:iron_ingot,2.0\n");
+            writer.write("coal,Coal,minecraft:coal,1.0\n");
+            writer.write("food,Food,minecraft:bread,1.5\n");
+            writer.write("money,Emeralds,minecraft:emerald,5.0\n"); // Example: Money itself has a value
         } catch (IOException e) {
             LOGGER.error("Failed to create default {}", CONFIG_FILE_NAME, e);
         }

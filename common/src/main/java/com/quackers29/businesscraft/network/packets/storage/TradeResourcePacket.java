@@ -32,8 +32,8 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
     private final ItemStack itemToTrade;
     private final int slotId;
 
-    // Number of items needed to receive 1 emerald
-    private static final int ITEMS_PER_EMERALD = 10;
+    // Number of items needed to receive 1 emerald -- LEGACY
+    // private static final int ITEMS_PER_EMERALD = 10;
 
     public TradeResourcePacket(BlockPos pos, ItemStack itemToTrade, int slotId) {
         super(pos);
@@ -130,21 +130,37 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
                     itemCount,
                     town.getName());
 
-            // Get current emerald count before calculation
-            int currentEmeralds = town.getResourceCount(Items.EMERALD);
-            DebugConfig.debug(LOGGER, DebugConfig.TRADE_OPERATIONS, "BEFORE TRADE: Town {} has {} emeralds",
-                    town.getName(), currentEmeralds);
+            // 1. Resolve Currency Item from Config
+            String currencyId = com.quackers29.businesscraft.config.ConfigLoader.currencyItem;
+            Item currencyItem = Items.EMERALD; // Default
+            try {
+                // Try to parse the configured item ID
+                net.minecraft.resources.ResourceLocation loc = new net.minecraft.resources.ResourceLocation(currencyId);
+                Item configuredItem = net.minecraft.core.registries.BuiltInRegistries.ITEM.get(loc);
+                if (configuredItem != Items.AIR) {
+                    currencyItem = configuredItem;
+                } else {
+                    LOGGER.warn("Configured currency item '{}' not found, defaulting to Emerald", currencyId);
+                }
+            } catch (Exception e) {
+                LOGGER.error("Failed to parse currency item '{}', defaulting to Emerald", currencyId, e);
+            }
 
-            // Calculate emeralds to give based on the trade
-            int emeraldsToGive = calculateEmeralds(itemToTrade, town);
+            // Get current currency count before calculation
+            int currentCurrency = town.getResourceCount(currencyItem);
+            DebugConfig.debug(LOGGER, DebugConfig.TRADE_OPERATIONS, "BEFORE TRADE: Town {} has {} currency ({})",
+                    town.getName(), currentCurrency, currencyItem);
 
-            // Create payment item (emeralds)
+            // Calculate paymentAmt to give based on the trade
+            int paymentAmt = calculatePayment(itemToTrade, town, currencyItem);
+
+            // Create payment item
             ItemStack payment = ItemStack.EMPTY;
-            if (emeraldsToGive > 0) {
-                payment = new ItemStack(Items.EMERALD, emeraldsToGive);
+            if (paymentAmt > 0) {
+                payment = new ItemStack(currencyItem, paymentAmt);
 
-                // Deduct emeralds from town resources
-                town.addResource(Items.EMERALD, -emeraldsToGive);
+                // Deduct currency from town resources
+                town.addResource(currencyItem, -paymentAmt);
 
                 // Explicitly mark the town manager as dirty to persist changes
                 townManager.markDirty();
@@ -155,21 +171,23 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
                 // Ensure town data is properly synchronized
                 townInterfaceEntity.syncTownData();
 
-                // Get updated emerald count after deduction
-                int newEmeralds = town.getResourceCount(Items.EMERALD);
+                // Get updated currency count after deduction
+                int newCurrency = town.getResourceCount(currencyItem);
 
                 DebugConfig.debug(LOGGER, DebugConfig.TRADE_OPERATIONS,
-                        "AFTER TRADE: Town {} now has {} emeralds (deducted {})",
-                        town.getName(), newEmeralds, emeraldsToGive);
+                        "AFTER TRADE: Town {} now has {} currency (deducted {})",
+                        town.getName(), newCurrency, paymentAmt);
 
                 // Send feedback to the player about the trade AND the deduction
                 player.sendSystemMessage(Component.literal("Traded " + itemCount + " " +
                         itemToTrade.getItem().getDescription().getString() +
-                        " to " + town.getName() + " for " + emeraldsToGive + " emeralds."));
+                        " to " + town.getName() + " for " + paymentAmt + " " + currencyItem.getDescription().getString()
+                        + "."));
 
                 // Add explicit deduction notification
                 player.sendSystemMessage(
-                        Component.literal("§6" + emeraldsToGive + " emeralds were deducted from town resources."));
+                        Component.literal("§6" + paymentAmt + " " + currencyItem.getDescription().getString()
+                                + " were deducted from town resources."));
             } else {
                 // Send feedback that no payment was given
                 player.sendSystemMessage(Component.literal("Traded " + itemCount + " " +
@@ -195,31 +213,55 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
     }
 
     /**
-     * Calculate how many emeralds to give based on the trade amount
+     * Calculate payment based on the trade amount and item value
      */
-    private int calculateEmeralds(ItemStack itemToTrade, Town town) {
+    private int calculatePayment(ItemStack itemToTrade, Town town, Item currencyItem) {
         int itemCount = itemToTrade.getCount();
-        int emeraldCount = itemCount / ITEMS_PER_EMERALD;
 
-        // Check if town has enough emeralds
-        int availableEmeralds = town.getResourceCount(Items.EMERALD);
+        // distinct from "emeralds", we call it payment units
+        float baseValue = 1.0f;
+
+        // Find the resource type for this item to get its base value
+        com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
+                .getFor(itemToTrade.getItem());
+
+        if (type != null) {
+            baseValue = type.getBaseValue();
+        } else {
+            // If not registered, check if custom logic is needed or just default to 1.0 (or
+            // 0 to disable?)
+            // For now, default to 1.0 so everything is tradable by default unless
+            // specifically blacklisted?
+            // Or maybe better to default to 0.0 to prevent exploit with cheap items?
+            // Let's use 1.0 for now as per plan, but log warning
+            // Actually, the plan said "Default price will be 1.0", so 1.0 is correct.
+        }
+
+        // Calculation: Total Value = Item Count * Base Value
+        // We cast to int, so fractional values might be lost if not accummulated.
+        // Current logic doesn't support fractional accumulation (yet), so we just floor
+        // it.
+        int paymentCount = (int) (itemCount * baseValue);
+
+        // Check if town has enough currency
+        int availableCurrency = town.getResourceCount(currencyItem);
         DebugConfig.debug(LOGGER, DebugConfig.TRADE_OPERATIONS,
-                "Trade calculation: {} items = {} emeralds, town has {} emeralds available",
-                itemCount, emeraldCount, availableEmeralds);
+                "Trade calculation: {} items * {} value = {} payment, town has {} currency available, currency item: {}",
+                itemCount, baseValue, paymentCount, availableCurrency, currencyItem);
 
-        // If no emeralds would be awarded, return early
-        if (emeraldCount <= 0) {
+        // If no payment would be awarded, return early
+        if (paymentCount <= 0) {
             return 0;
         }
 
-        // Ensure the town has enough emeralds to pay
-        if (availableEmeralds < emeraldCount) {
-            LOGGER.warn("Town {} doesn't have enough emeralds for trade! Requested: {}, Available: {}",
-                    town.getName(), emeraldCount, availableEmeralds);
-            // Cap the emerald payment to what's available
-            return availableEmeralds;
+        // Ensure the town has enough currency to pay
+        if (availableCurrency < paymentCount) {
+            LOGGER.warn("Town {} doesn't have enough currency for trade! Requested: {}, Available: {}",
+                    town.getName(), paymentCount, availableCurrency);
+            // Cap the payment to what's available
+            return availableCurrency;
         }
 
-        return emeraldCount;
+        return paymentCount;
     }
 }

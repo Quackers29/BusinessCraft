@@ -56,6 +56,7 @@ public class ConfigLoader {
     public static int tradingTickInterval = 60;
     public static float tradingRestockRate = 0.5f;
     public static float tradingDefaultMaxStock = 1000.0f;
+    public static String currencyItem = "minecraft:emerald";
 
     // Production config
     public static boolean productionEnabled = true;
@@ -165,6 +166,7 @@ public class ConfigLoader {
             tradingTickInterval = Integer.parseInt(props.getProperty("tradingTickInterval", "60"));
             tradingRestockRate = Float.parseFloat(props.getProperty("tradingRestockRate", "0.5"));
             tradingDefaultMaxStock = Float.parseFloat(props.getProperty("tradingDefaultMaxStock", "1000.0"));
+            currencyItem = props.getProperty("currencyItem", "minecraft:emerald");
 
             // Load production config
             productionEnabled = Boolean.parseBoolean(props.getProperty("productionEnabled", "true"));
@@ -277,6 +279,7 @@ public class ConfigLoader {
         props.setProperty("tradingTickInterval", String.valueOf(tradingTickInterval));
         props.setProperty("tradingRestockRate", String.valueOf(tradingRestockRate));
         props.setProperty("tradingDefaultMaxStock", String.valueOf(tradingDefaultMaxStock));
+        props.setProperty("currencyItem", currencyItem);
 
         // Save production config
         props.setProperty("productionEnabled", String.valueOf(productionEnabled));

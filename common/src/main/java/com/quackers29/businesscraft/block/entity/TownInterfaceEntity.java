@@ -98,6 +98,9 @@ import com.quackers29.businesscraft.town.utils.TownNotificationUtils;
 import com.quackers29.businesscraft.town.data.VisitBuffer;
 import com.quackers29.businesscraft.town.data.TouristSpawningHelper;
 import com.quackers29.businesscraft.town.data.PlatformManager;
+import com.quackers29.businesscraft.town.viewmodel.TradingViewModel;
+import com.quackers29.businesscraft.town.viewmodel.TradingViewModelBuilder;
+import com.quackers29.businesscraft.network.packets.TradingViewModelSyncPacket;
 import com.quackers29.businesscraft.town.data.VisitorProcessingHelper;
 import com.quackers29.businesscraft.town.data.ClientSyncHelper;
 import com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel;
@@ -109,6 +112,9 @@ import com.quackers29.businesscraft.network.packets.ProductionViewModelSyncPacke
 import com.quackers29.businesscraft.network.packets.MarketViewModelSyncPacket;
 import com.quackers29.businesscraft.town.viewmodel.MarketViewModel;
 import com.quackers29.businesscraft.town.viewmodel.MarketViewModelBuilder;
+import com.quackers29.businesscraft.town.viewmodel.TradingViewModel;
+import com.quackers29.businesscraft.town.viewmodel.TradingViewModelBuilder;
+import com.quackers29.businesscraft.network.packets.TradingViewModelSyncPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import com.quackers29.businesscraft.town.data.NBTDataHelper;
@@ -476,6 +482,86 @@ public class TownInterfaceEntity extends BlockEntity
         DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
                 "Sent market view-model to all players - {} items with known prices, status: {}",
                 viewModel.getTotalPricedItems(), viewModel.getMarketStatus());
+    }
+
+    /**
+     * Syncs the trading view-model to nearby players.
+     * This ensures the client has the latest stock levels and prices before opening
+     * the UI.
+     */
+    public void syncTradingViewModelToNearbyPlayers() {
+        if (level == null || level.isClientSide())
+            return;
+        if (!(level instanceof ServerLevel serverLevel))
+            return;
+        if (townId == null)
+            return;
+
+        Town town = TownManager.get(serverLevel).getTown(townId);
+        if (town == null)
+            return;
+
+        // Build the view model with current stock and prices
+        TradingViewModel viewModel = TradingViewModelBuilder.build(town);
+
+        // Cache it server-side too
+        this.cachedTradingViewModel = viewModel;
+
+        // Create packet
+        TradingViewModelSyncPacket packet = new TradingViewModelSyncPacket(viewModel);
+
+        // Send to players within range
+        int syncRadius = 64;
+        double syncRadiusSqr = syncRadius * syncRadius;
+        BlockPos pos = getBlockPos();
+
+        for (net.minecraft.server.level.ServerPlayer player : serverLevel.players()) {
+            if (player.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()) < syncRadiusSqr) {
+                PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
+            }
+        }
+    }
+
+    // Client-side trading view-model cache (Phase 2.4)
+    private TradingViewModel cachedTradingViewModel = null;
+
+    /**
+     * Updates the client-side trading view-model cache.
+     * Called by TradingViewModelSyncPacket.
+     */
+    public void updateTradingViewModel(TradingViewModel viewModel) {
+        this.cachedTradingViewModel = viewModel;
+    }
+
+    /**
+     * Gets the cached trading view-model.
+     */
+    public TradingViewModel getCachedTradingViewModel() {
+        return cachedTradingViewModel;
+    }
+
+    /**
+     * SERVER-SIDE: Sends updated trading view-model to a specific player.
+     * This eliminates client-side stock calculations and logic.
+     */
+    public void syncTradingViewModelToPlayer(ServerPlayer player) {
+        if (level == null || level.isClientSide())
+            return;
+
+        Town town = this.getTown();
+        if (town == null)
+            return;
+
+        // Build view-model server-side
+        TradingViewModel viewModel = TradingViewModelBuilder.build(town);
+
+        // Send to client
+        TradingViewModelSyncPacket packet = new TradingViewModelSyncPacket(viewModel);
+        PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
+
+        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
+                "Sent trading view-model to player {} - Resources: {}",
+                player.getName().getString(), viewModel.getResourceInfo().size());
     }
 
     // Platform management (handles platform storage and operations)
@@ -928,6 +1014,8 @@ public class TownInterfaceEntity extends BlockEntity
                 syncUpgradeViewModelToNearbyPlayers();
                 // NEW: Sync market view-model to clients (eliminates client price calculations)
                 syncMarketViewModelToAllPlayers();
+                // NEW: Sync trading view-model to clients (Phase 2.4 - stock/price sync)
+                syncTradingViewModelToNearbyPlayers();
             }
 
             // Delegate buffer synchronization to manager
@@ -1249,6 +1337,12 @@ public class TownInterfaceEntity extends BlockEntity
             }
 
             containerData.markAllDirty();
+
+            // Ensure trading data is synced immediately upon any town data change
+            // This makes sure stock updates are reflected instantly after a trade
+            if (level instanceof ServerLevel) {
+                syncTradingViewModelToNearbyPlayers();
+            }
 
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
             setChanged();
