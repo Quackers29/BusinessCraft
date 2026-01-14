@@ -185,24 +185,56 @@ public class ConfigLoader {
             contractSnailMailDeliveryMinutesPerMeter = Double
                     .parseDouble(props.getProperty("contractSnailMailDeliveryMinutesPerMeter", "0.1"));
 
-            // Load Registries
-            // TODO: These should ONLY load on server, not client!
-            // With the new view-model architecture, client should never access these
-            // registries
-            // For now, they load on both sides, but UI code has been updated to use
-            // view-models instead
-            com.quackers29.businesscraft.economy.ResourceRegistry.load();
+            // ============================================================================
+            // REGISTRY LOADING - ARCHITECTURAL EXPLANATION (Phase 3.1)
+            // ============================================================================
+            //
+            // **WHY REGISTRIES LOAD ON BOTH SIDES:**
+            // These registries load on physical clients because of Integrated Servers
+            // (Single Player mode). When a player starts a single-player world, the
+            // physical client JVM runs BOTH the client and server logic. The server
+            // logic requires these registries for business calculations.
+            //
+            // **SERVER-AUTHORITATIVE ARCHITECTURE GUARANTEE:**
+            // Despite registries loading on both sides, the architecture is still
+            // server-authoritative because:
+            //
+            // 1. CLIENT UI CODE DOES NOT ACCESS BUSINESS LOGIC:
+            //    - ProductionRegistry: ZERO UI access (Phase 1.2 complete)
+            //    - UpgradeRegistry: ZERO UI access (Phase 2.1 complete)
+            //    - ResourceRegistry: Display mapping ONLY (see below)
+            //
+            // 2. ALL CALCULATIONS HAPPEN ON SERVER:
+            //    - Production rates: ProductionStatusViewModelBuilder (server-side)
+            //    - Upgrade costs: UpgradeStatusViewModelBuilder (server-side)
+            //    - Market prices: MarketViewModelBuilder (server-side)
+            //    - Resource stats: TownResourceViewModelBuilder (server-side)
+            //
+            // 3. VIEW-MODEL PATTERN ENFORCES SEPARATION:
+            //    - Server builds view-models with pre-calculated display strings
+            //    - Client receives display-ready data via sync packets
+            //    - UI components render strings directly (zero math on client)
+            //
+            // **RESOURCEREGISTRY SPECIAL CASE:**
+            // ResourceRegistry is accessed by client UI for DISPLAY MAPPING ONLY:
+            //    - ContractBoardScreen: Maps resource ID → ItemStack for icon rendering
+            //    - BCModalInventoryScreen: Maps Item → resource ID for view-model lookup
+            //    - This is pure data translation (analogous to texture lookups)
+            //    - NO BUSINESS LOGIC: Pricing comes from TradingViewModel (server-calculated)
+            //
+            // **FUTURE OPTIMIZATION (Optional):**
+            // Phase 3.1 could add platform detection to skip ProductionRegistry and
+            // UpgradeRegistry on dedicated clients, but this is low-priority because:
+            //    - Memory cost is negligible (~few KB of CSV data)
+            //    - Integrated servers require the data anyway
+            //    - View-model architecture already ensures server authority
+            //
+            // ============================================================================
 
-            // SERVER-SIDE ONLY REGISTRIES
-            // Note: These must be loaded even on physical client to support Integrated
-            // Server (Single Player).
-            // The "Server-Authoritative" architectural constraint is that Client UI code
-            // must not access these directly,
-            // but the classes must be present and populated for the internal server logic
-            // to function.
+            // Load registries for both integrated servers and display mapping
+            com.quackers29.businesscraft.economy.ResourceRegistry.load();
             com.quackers29.businesscraft.production.ProductionRegistry.load();
             com.quackers29.businesscraft.production.UpgradeRegistry.load();
-
             com.quackers29.businesscraft.world.BiomeRegistry.load();
 
         } catch (IOException e) {

@@ -13,8 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.ui.managers.TownDataCacheManager;
-import com.quackers29.businesscraft.economy.ResourceRegistry;
-import net.minecraft.world.item.Item;
+// NOTE: ResourceRegistry import removed - UI now uses TownResourceViewModel (server-authoritative)
 import com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel;
 
 /**

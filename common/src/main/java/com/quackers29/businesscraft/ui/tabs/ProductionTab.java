@@ -5,8 +5,8 @@ import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
 import com.quackers29.businesscraft.ui.layout.BCFlowLayout;
 import com.quackers29.businesscraft.ui.components.containers.StandardTabContent;
 import com.quackers29.businesscraft.ui.components.basic.BCLabel;
-import com.quackers29.businesscraft.production.UpgradeRegistry;
-import com.quackers29.businesscraft.production.UpgradeNode;
+// NOTE: UpgradeRegistry import removed - UI now uses UpgradeStatusViewModel (server-authoritative)
+import com.quackers29.businesscraft.production.UpgradeNode; // Legacy: Used in UpgradeDisplayEntry (TODO: refactor to view-model)
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
