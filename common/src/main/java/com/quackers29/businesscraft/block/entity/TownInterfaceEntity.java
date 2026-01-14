@@ -1212,7 +1212,7 @@ public class TownInterfaceEntity extends BlockEntity
             clientSyncHelper.syncResourcesForClient(tag, provider);
 
             if (provider instanceof Town town) {
-                clientSyncHelper.syncResourceStatsToTag(tag, town);
+                // PHASE 3.2: Removed syncResourceStatsToTag() - stats now synced via ResourceViewModelSyncPacket
                 clientSyncHelper.syncWantedResourcesForClient(tag, town);
                 clientSyncHelper.syncEscrowedResourcesForClient(tag, town);
             }
@@ -1230,8 +1230,7 @@ public class TownInterfaceEntity extends BlockEntity
         DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] loadResourcesFromTag called");
         clientSyncHelper.loadResourcesFromTag(tag);
         clientSyncHelper.loadEscrowedResourcesFromTag(tag);
-        // Load stats
-        clientSyncHelper.loadResourceStatsFromTag(tag);
+        // PHASE 3.2: Removed loadResourceStatsFromTag() - stats now loaded via ResourceViewModelSyncPacket
     }
 
     public ContainerData getContainerData() {

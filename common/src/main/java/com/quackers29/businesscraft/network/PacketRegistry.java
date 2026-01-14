@@ -8,7 +8,7 @@ import com.quackers29.businesscraft.network.packets.storage.*;
 import com.quackers29.businesscraft.network.packets.misc.PaymentResultPacket;
 import com.quackers29.businesscraft.network.packets.debug.RequestTownDataPacket;
 import com.quackers29.businesscraft.network.packets.debug.TownDataResponsePacket;
-import com.quackers29.businesscraft.network.packets.ResourceSyncPacket;
+// PHASE 3.2: Removed ResourceSyncPacket - replaced by ResourceViewModelSyncPacket in Phase 1.1
 import com.quackers29.businesscraft.network.packets.ResourceViewModelSyncPacket;
 import com.quackers29.businesscraft.network.packets.ProductionViewModelSyncPacket;
 import com.quackers29.businesscraft.network.packets.UpgradeViewModelSyncPacket;
@@ -248,8 +248,7 @@ public class PacketRegistry {
                                 TownDataResponsePacket::decode, TownDataResponsePacket::encode,
                                 TownDataResponsePacket::handle);
 
-                register(ResourceSyncPacket.class, "resource_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
-                                ResourceSyncPacket::decode, ResourceSyncPacket::encode, ResourceSyncPacket::handle);
+                // PHASE 3.2: Removed ResourceSyncPacket registration - replaced by ResourceViewModelSyncPacket (Phase 1.1)
 
                 // NEW: Server-authoritative resource view-model sync packet
                 register(ResourceViewModelSyncPacket.class, "resource_view_model_sync_packet",

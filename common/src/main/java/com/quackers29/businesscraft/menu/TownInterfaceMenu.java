@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import com.quackers29.businesscraft.debug.DebugConfig;
-import com.quackers29.businesscraft.network.packets.ResourceSyncPacket;
+// PHASE 3.2: Removed ResourceSyncPacket import - replaced by ResourceViewModelSyncPacket (Phase 1.1)
 
 /**
  * Menu container for the Town Interface block.

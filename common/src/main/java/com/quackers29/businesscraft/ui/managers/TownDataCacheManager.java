@@ -422,25 +422,15 @@ public class TownDataCacheManager {
         return 10f; // Default cap
     }
 
-    /**
-     * Gets the resource stats (production, consumption, capacity) for an item.
-     * 
-     * DEPRECATED: Use getResourceDisplayInfo() for the new view-model approach
-     * 
-     * @param item The item to get stats for
-     * @return float array [production, consumption, capacity] or null if not
-     *         available
-     */
-    @Deprecated
-    public float[] getResourceStats(Item item) {
-        if (menu != null) {
-            net.minecraft.world.level.block.entity.BlockEntity be = menu.getBlockEntity();
-            if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity entity) {
-                return entity.getClientSyncHelper().getClientResourceStats().get(item);
-            }
-        }
-        return null;
-    }
+    // ============================================================================
+    // REMOVED IN PHASE 3.2: getResourceStats(Item)
+    // ============================================================================
+    // This deprecated method was removed as part of Phase 3.2 cleanup.
+    // It accessed ClientSyncHelper.getClientResourceStats() which has been removed.
+    //
+    // REPLACEMENT: Use getResourceDisplayInfo(Item) which accesses the
+    // server-authoritative TownResourceViewModel instead.
+    // ============================================================================
 
     /**
      * NEW: Gets resource display information from the server-authoritative

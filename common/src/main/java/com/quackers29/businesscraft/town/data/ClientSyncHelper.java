@@ -558,119 +558,17 @@ public class ClientSyncHelper {
                 "Sent slot-based buffer storage update for town {} to {} players", townId, level.players().size());
     }
 
-    // --- Stats Handling ---
-    private final Map<Item, float[]> clientResourceStats = new HashMap<>();
-
-    public void updateClientResourceStats(Map<Item, float[]> stats) {
-        clientResourceStats.clear();
-        if (stats != null) {
-            clientResourceStats.putAll(stats);
-        }
-    }
-
-    public Map<Item, float[]> getClientResourceStats() {
-        return clientResourceStats;
-    }
-
-    /**
-     * Calculates resource statistics (prod, cons, cap) for a town
-     * 
-     * @param town The town to calculate stats for
-     * @return Map of stats arrays [prod, cons, cap]
-     */
-    public static Map<Item, float[]> calculateResourceStats(Town town) {
-        Map<Item, float[]> stats = new HashMap<>();
-        if (town == null)
-            return stats;
-
-        Map<Item, Integer> resources = town.getAllResources();
-
-        // Calculate factor to convert daily rates to per-hour rates
-        // Rate/Day * (72000 ticks/hour / DailyTickInterval)
-        float hourFactor = 72000f / (float) com.quackers29.businesscraft.config.ConfigLoader.dailyTickInterval;
-
-        for (Item item : resources.keySet()) {
-            com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
-                    .getFor(item);
-            if (type != null) {
-                String resId = type.getId();
-
-                // Get rates (per game day)
-                float prodPerDay = town.getProduction().getProductionRate(resId);
-                float consPerDay = town.getProduction().getConsumptionRate(resId);
-
-                // Convert to per hour (real-time/game-hour approximation)
-                float prodPerHour = prodPerDay * hourFactor;
-                float consPerHour = consPerDay * hourFactor;
-
-                // Get capacity
-                float capacity = town.getTrading().getStorageCap(resId);
-
-                // Get In-Transit (Incoming)
-                float inTransit = town.getInTransitResourceCount(item);
-
-                stats.put(item, new float[] { prodPerHour, consPerHour, capacity, inTransit });
-            }
-        }
-        return stats;
-    }
-
-    /**
-     * Adds resource stats to the provided tag
-     */
-    public void syncResourceStatsToTag(CompoundTag tag, Town town) {
-        if (town == null)
-            return;
-
-        Map<Item, float[]> stats = calculateResourceStats(town);
-        CompoundTag statsTag = new CompoundTag();
-
-        stats.forEach((item, statArray) -> {
-            Object keyObj = PlatformAccess.getRegistry().getItemKey(item);
-            if (keyObj != null) {
-                ListTag list = new ListTag();
-                for (float val : statArray) {
-                    list.add(net.minecraft.nbt.FloatTag.valueOf(val));
-                }
-                statsTag.put(keyObj.toString(), list);
-            }
-        });
-
-        tag.put("clientResourceStats", statsTag);
-    }
-
-    /**
-     * Loads resource stats from the tag
-     */
-    public void loadResourceStatsFromTag(CompoundTag tag) {
-        if (tag.contains("clientResourceStats")) {
-            CompoundTag statsTag = tag.getCompound("clientResourceStats");
-            clientResourceStats.clear();
-
-            for (String key : statsTag.getAllKeys()) {
-                try {
-                    ResourceLocation resourceLocation = new ResourceLocation(key);
-                    Object itemObj = PlatformAccess.getRegistry().getItem(resourceLocation);
-
-                    if (itemObj instanceof net.minecraft.world.item.Item item) {
-                        if (item != null && item != Items.AIR) {
-                            ListTag list = statsTag.getList(key, Tag.TAG_FLOAT);
-                            if (list.size() >= 3) {
-                                float[] arr = new float[4]; // Resized to 4
-                                arr[0] = list.getFloat(0);
-                                arr[1] = list.getFloat(1);
-                                arr[2] = list.getFloat(2);
-                                if (list.size() >= 4) {
-                                    arr[3] = list.getFloat(3);
-                                }
-                                clientResourceStats.put(item, arr);
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("Error loading client resource stats: {}", key, e);
-                }
-            }
-        }
-    }
+    // ============================================================================
+    // REMOVED IN PHASE 3.2: Legacy NBT-based resource stat methods
+    // ============================================================================
+    // The following methods were removed as part of Phase 3.2 cleanup:
+    // - calculateResourceStats(Town) - Replaced by TownResourceViewModelBuilder
+    // - syncResourceStatsToTag() - Replaced by ResourceViewModelSyncPacket
+    // - loadResourceStatsFromTag() - Replaced by ResourceViewModelSyncPacket
+    // - updateClientResourceStats() - Replaced by view-model caching
+    // - getClientResourceStats() - Replaced by TownDataCacheManager.getResourceDisplayInfo()
+    //
+    // All resource statistics are now calculated server-side and synced via
+    // ResourceViewModelSyncPacket as part of the server-authoritative architecture.
+    // ============================================================================
 }

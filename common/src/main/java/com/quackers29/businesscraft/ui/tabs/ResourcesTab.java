@@ -174,24 +174,24 @@ public class ResourcesTab extends BaseTownTab {
                     sb.append(String.format("§6GPI: %.2f (~%.0f)", gpi, totalWealth));
                     sb.append("\n");
 
-                    // Base stats
-                    float[] stats = cache.getResourceStats(item);
-                    if (stats != null && stats.length >= 3) {
-                        sb.append(String.format("Production: +%.1f/m\nConsumption: -%.1f/m\nCapacity: %.0f",
-                                stats[0], stats[1], stats[2]));
-                        // Check for In-Transit (Index 3)
-                        if (stats.length >= 4 && stats[3] > 0) {
-                            sb.append(String.format("\nIn Transit: %.0f", stats[3]));
-                        }
-                    }
-
-                    // Append relevant upgrade effects from ViewModel (server-authoritative)
-                    // Use ViewModel active effects if available to avoid client-side
-                    // UpgradeRegistry access
+                    // PHASE 3.2: Use ResourceDisplayInfo from view-model for stats (server-authoritative)
+                    // Replaces deprecated getResourceStats() method
                     TownResourceViewModel.ResourceDisplayInfo info = cache != null
                             && cache.getResourceViewModel() != null
                                     ? cache.getResourceViewModel().getResourceDisplay(item)
                                     : null;
+
+                    // Base stats from view-model (pre-calculated by server)
+                    if (info != null) {
+                        sb.append("Production: ").append(info.getProductionRate()).append("\n");
+                        sb.append("Consumption: ").append(info.getConsumptionRate()).append("\n");
+                        sb.append("Capacity: ").append(info.getCapacity());
+
+                        // Check for In-Transit
+                        if (info.getInTransit() != null && !info.getInTransit().isEmpty()) {
+                            sb.append("\n").append(info.getInTransit());
+                        }
+                    }
 
                     if (info != null && info.getActiveEffects() != null && !info.getActiveEffects().isEmpty()) {
                         sb.append("\n\nActive Effects:");
