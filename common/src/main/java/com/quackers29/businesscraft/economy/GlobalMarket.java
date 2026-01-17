@@ -10,6 +10,10 @@ import java.util.Map;
 public class GlobalMarket {
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalMarket.class);
     private static final GlobalMarket INSTANCE = new GlobalMarket();
+    
+    // Minimum price floor to prevent prices from collapsing to absolute zero
+    // Prices can be very low (e.g., 2000 wheat = 1 emerald), but not zero
+    private static final float MIN_PRICE = 0.001f;
 
     private final Map<String, Float> prices = new HashMap<>();
     private final Map<String, Long> totalVolume = new HashMap<>();
@@ -22,11 +26,13 @@ public class GlobalMarket {
     }
 
     public float getPrice(String resourceId) {
-        return prices.getOrDefault(resourceId, 1.0f);
+        float price = prices.getOrDefault(resourceId, 1.0f);
+        return Math.max(price, MIN_PRICE);
     }
 
     public void setPrice(String resourceId, float price) {
-        prices.put(resourceId, price);
+        // Enforce minimum price floor
+        prices.put(resourceId, Math.max(price, MIN_PRICE));
     }
 
     public Map<String, Float> getPrices() {
@@ -42,6 +48,8 @@ public class GlobalMarket {
         // For now, simple convergence towards the traded price
         float currentPrice = getPrice(resourceId);
         float newPrice = (currentPrice * 0.9f) + (unitPrice * 0.1f); // 10% learning rate
+        // Enforce minimum price floor
+        newPrice = Math.max(newPrice, MIN_PRICE);
         prices.put(resourceId, newPrice);
 
         LOGGER.debug("Market update {}: price {} -> {}, vol {}", resourceId, currentPrice, newPrice, quantity);
@@ -51,8 +59,11 @@ public class GlobalMarket {
         if (tag.contains("prices")) {
             CompoundTag pricesTag = tag.getCompound("prices");
             for (String key : pricesTag.getAllKeys()) {
-                prices.put(key, pricesTag.getFloat(key));
+                // Enforce minimum price floor on load to fix corrupted data
+                float loadedPrice = pricesTag.getFloat(key);
+                prices.put(key, Math.max(loadedPrice, MIN_PRICE));
             }
+            LOGGER.info("Loaded {} market prices (with {} floor enforced)", prices.size(), MIN_PRICE);
         }
         if (tag.contains("volume")) {
             CompoundTag volTag = tag.getCompound("volume");

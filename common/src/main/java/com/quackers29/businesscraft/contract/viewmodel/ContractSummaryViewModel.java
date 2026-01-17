@@ -14,6 +14,7 @@ public class ContractSummaryViewModel {
     private final String contractType; // "sell", "courier"
     private final String resourceId;
     private final int quantity;
+    private final UUID issuerTownId;
     private final String issuerTownName;
     
     // Pre-calculated display strings (server-authoritative)
@@ -33,6 +34,7 @@ public class ContractSummaryViewModel {
             String contractType,
             String resourceId,
             int quantity,
+            UUID issuerTownId,
             String issuerTownName,
             String timeRemainingDisplay,
             String highestBidDisplay,
@@ -46,6 +48,7 @@ public class ContractSummaryViewModel {
         this.contractType = contractType;
         this.resourceId = resourceId;
         this.quantity = quantity;
+        this.issuerTownId = issuerTownId;
         this.issuerTownName = issuerTownName;
         this.timeRemainingDisplay = timeRemainingDisplay;
         this.highestBidDisplay = highestBidDisplay;
@@ -65,6 +68,7 @@ public class ContractSummaryViewModel {
         this.contractType = buf.readUtf();
         this.resourceId = buf.readUtf();
         this.quantity = buf.readInt();
+        this.issuerTownId = buf.readUUID();
         this.issuerTownName = buf.readUtf();
         this.timeRemainingDisplay = buf.readUtf();
         this.highestBidDisplay = buf.readUtf();
@@ -84,6 +88,7 @@ public class ContractSummaryViewModel {
         buf.writeUtf(contractType);
         buf.writeUtf(resourceId);
         buf.writeInt(quantity);
+        buf.writeUUID(issuerTownId);
         buf.writeUtf(issuerTownName);
         buf.writeUtf(timeRemainingDisplay);
         buf.writeUtf(highestBidDisplay);
@@ -100,6 +105,7 @@ public class ContractSummaryViewModel {
     public String getContractType() { return contractType; }
     public String getResourceId() { return resourceId; }
     public int getQuantity() { return quantity; }
+    public UUID getIssuerTownId() { return issuerTownId; }
     public String getIssuerTownName() { return issuerTownName; }
     public String getTimeRemainingDisplay() { return timeRemainingDisplay; }
     public String getHighestBidDisplay() { return highestBidDisplay; }

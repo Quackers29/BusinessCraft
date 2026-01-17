@@ -91,6 +91,17 @@ public class ContractDetailViewModelBuilder {
 
         // Tooltip
         String tooltipText = buildTooltip(sc);
+        
+        // Destination town name (for courier contracts - SellContract destination is the winning bidder town)
+        String destinationTownName = sc.isAuctionClosed() ? winningBidderName : null;
+        
+        // Courier reward display
+        String courierRewardDisplay = PRICE_FORMAT.format(sc.getCourierReward()) + " ◎";
+        
+        // Accepted bid display (final price)
+        String acceptedBidDisplay = sc.getAcceptedBid() > 0 
+                ? PRICE_FORMAT.format(sc.getAcceptedBid()) + " ◎" 
+                : null;
 
         // Action flags
         boolean canBid = calculateCanBid(sc, player, serverTime);
@@ -106,6 +117,7 @@ public class ContractDetailViewModelBuilder {
                 "sell",
                 resourceId,
                 quantity,
+                sc.getIssuerTownId(),
                 issuerTownName,
                 timeRemainingDisplay,
                 highestBidDisplay,
@@ -117,6 +129,9 @@ public class ContractDetailViewModelBuilder {
                 courierName,
                 winningBidderName,
                 tooltipText,
+                destinationTownName,
+                courierRewardDisplay,
+                acceptedBidDisplay,
                 canBid,
                 canAcceptCourier,
                 isExpired,
@@ -162,6 +177,7 @@ public class ContractDetailViewModelBuilder {
                 contract.getType(),
                 "unknown",
                 0,
+                contract.getIssuerTownId(),
                 contract.getIssuerTownName() != null ? contract.getIssuerTownName() : "Unknown",
                 formatTimeRemaining(contract.getExpiryTime(), serverTime),
                 "N/A",
@@ -173,6 +189,9 @@ public class ContractDetailViewModelBuilder {
                 null,
                 null,
                 "Contract ID: " + contract.getId(),
+                null, // destinationTownName
+                null, // courierRewardDisplay
+                null, // acceptedBidDisplay
                 false,
                 false,
                 contract.getExpiryTime() < serverTime,

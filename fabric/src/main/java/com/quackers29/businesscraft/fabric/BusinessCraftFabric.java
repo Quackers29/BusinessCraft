@@ -24,7 +24,7 @@ import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.resources.ResourceLocation;
-import com.quackers29.businesscraft.network.packets.ResourceSyncPacket;
+// PHASE 3.2: ResourceSyncPacket removed - replaced by ResourceViewModelSyncPacket
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import com.quackers29.businesscraft.town.TownManager;
 

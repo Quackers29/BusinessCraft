@@ -155,6 +155,7 @@ public class ContractSummaryViewModelBuilder {
                 contract.getType(),
                 "unknown",
                 0,
+                contract.getIssuerTownId(),
                 contract.getIssuerTownName(),
                 formatTimeRemaining(contract.getExpiryTime(), serverTime),
                 "N/A",
@@ -176,6 +177,7 @@ public class ContractSummaryViewModelBuilder {
         UUID contractId = sc.getId();
         String resourceId = sc.getResourceId();
         int quantity = sc.getQuantity();
+        UUID issuerTownId = sc.getIssuerTownId();
         String issuerTownName = sc.getIssuerTownName();
 
         // Time display
@@ -204,6 +206,7 @@ public class ContractSummaryViewModelBuilder {
                 "sell",
                 resourceId,
                 quantity,
+                issuerTownId,
                 issuerTownName,
                 timeRemainingDisplay,
                 highestBidDisplay,

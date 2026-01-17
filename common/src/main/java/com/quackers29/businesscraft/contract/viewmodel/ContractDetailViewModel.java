@@ -17,6 +17,7 @@ public class ContractDetailViewModel {
     private final String contractType;
     private final String resourceId;
     private final int quantity;
+    private final UUID issuerTownId;
     private final String issuerTownName;
     
     // Pre-calculated display strings
@@ -30,6 +31,9 @@ public class ContractDetailViewModel {
     private final String courierName; // Assigned courier name or null
     private final String winningBidderName; // Winning town name or null
     private final String tooltipText;
+    private final String destinationTownName; // For courier contracts
+    private final String courierRewardDisplay; // "25.5 ◎" or null
+    private final String acceptedBidDisplay; // "150.0 ◎" - final accepted price
     
     // Server-calculated action flags
     private final boolean canBid;
@@ -65,6 +69,7 @@ public class ContractDetailViewModel {
             String contractType,
             String resourceId,
             int quantity,
+            UUID issuerTownId,
             String issuerTownName,
             String timeRemainingDisplay,
             String highestBidDisplay,
@@ -76,6 +81,9 @@ public class ContractDetailViewModel {
             String courierName,
             String winningBidderName,
             String tooltipText,
+            String destinationTownName,
+            String courierRewardDisplay,
+            String acceptedBidDisplay,
             boolean canBid,
             boolean canAcceptCourier,
             boolean isExpired,
@@ -86,6 +94,7 @@ public class ContractDetailViewModel {
         this.contractType = contractType;
         this.resourceId = resourceId;
         this.quantity = quantity;
+        this.issuerTownId = issuerTownId;
         this.issuerTownName = issuerTownName;
         this.timeRemainingDisplay = timeRemainingDisplay;
         this.highestBidDisplay = highestBidDisplay;
@@ -97,6 +106,9 @@ public class ContractDetailViewModel {
         this.courierName = courierName;
         this.winningBidderName = winningBidderName;
         this.tooltipText = tooltipText;
+        this.destinationTownName = destinationTownName;
+        this.courierRewardDisplay = courierRewardDisplay;
+        this.acceptedBidDisplay = acceptedBidDisplay;
         this.canBid = canBid;
         this.canAcceptCourier = canAcceptCourier;
         this.isExpired = isExpired;
@@ -113,6 +125,7 @@ public class ContractDetailViewModel {
         this.contractType = buf.readUtf();
         this.resourceId = buf.readUtf();
         this.quantity = buf.readInt();
+        this.issuerTownId = buf.readUUID();
         this.issuerTownName = buf.readUtf();
         this.timeRemainingDisplay = buf.readUtf();
         this.highestBidDisplay = buf.readUtf();
@@ -124,6 +137,9 @@ public class ContractDetailViewModel {
         this.courierName = buf.readBoolean() ? buf.readUtf() : null;
         this.winningBidderName = buf.readBoolean() ? buf.readUtf() : null;
         this.tooltipText = buf.readUtf();
+        this.destinationTownName = buf.readBoolean() ? buf.readUtf() : null;
+        this.courierRewardDisplay = buf.readBoolean() ? buf.readUtf() : null;
+        this.acceptedBidDisplay = buf.readBoolean() ? buf.readUtf() : null;
         this.canBid = buf.readBoolean();
         this.canAcceptCourier = buf.readBoolean();
         this.isExpired = buf.readBoolean();
@@ -146,6 +162,7 @@ public class ContractDetailViewModel {
         buf.writeUtf(contractType);
         buf.writeUtf(resourceId);
         buf.writeInt(quantity);
+        buf.writeUUID(issuerTownId);
         buf.writeUtf(issuerTownName);
         buf.writeUtf(timeRemainingDisplay);
         buf.writeUtf(highestBidDisplay);
@@ -165,6 +182,16 @@ public class ContractDetailViewModel {
         if (winningBidderName != null) buf.writeUtf(winningBidderName);
 
         buf.writeUtf(tooltipText);
+
+        buf.writeBoolean(destinationTownName != null);
+        if (destinationTownName != null) buf.writeUtf(destinationTownName);
+
+        buf.writeBoolean(courierRewardDisplay != null);
+        if (courierRewardDisplay != null) buf.writeUtf(courierRewardDisplay);
+
+        buf.writeBoolean(acceptedBidDisplay != null);
+        if (acceptedBidDisplay != null) buf.writeUtf(acceptedBidDisplay);
+
         buf.writeBoolean(canBid);
         buf.writeBoolean(canAcceptCourier);
         buf.writeBoolean(isExpired);
@@ -183,6 +210,7 @@ public class ContractDetailViewModel {
     public String getContractType() { return contractType; }
     public String getResourceId() { return resourceId; }
     public int getQuantity() { return quantity; }
+    public UUID getIssuerTownId() { return issuerTownId; }
     public String getIssuerTownName() { return issuerTownName; }
     public String getTimeRemainingDisplay() { return timeRemainingDisplay; }
     public String getHighestBidDisplay() { return highestBidDisplay; }
@@ -194,6 +222,9 @@ public class ContractDetailViewModel {
     public String getCourierName() { return courierName; }
     public String getWinningBidderName() { return winningBidderName; }
     public String getTooltipText() { return tooltipText; }
+    public String getDestinationTownName() { return destinationTownName; }
+    public String getCourierRewardDisplay() { return courierRewardDisplay; }
+    public String getAcceptedBidDisplay() { return acceptedBidDisplay; }
     public boolean canBid() { return canBid; }
     public boolean canAcceptCourier() { return canAcceptCourier; }
     public boolean isExpired() { return isExpired; }

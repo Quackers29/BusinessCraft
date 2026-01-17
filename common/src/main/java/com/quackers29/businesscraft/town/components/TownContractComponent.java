@@ -114,10 +114,17 @@ public class TownContractComponent implements TownComponent {
                             .get(level).getTown(sc.getIssuerTownId());
                     int courierCost = ContractBoard.calculateCourierCost(town, sellerTown);
 
+                    // Calculate bid - minimum 1 emerald (can't pay fractions)
                     float bid = (float) Math.ceil((currentHighest > 0 ? currentHighest : basePrice) * 1.1f);
+                    if (bid < 1.0f) {
+                        bid = 1.0f; // Floor: minimum bid is 1 emerald
+                    }
 
                     // Check max bid limit (Total budget = 3x base price)
-                    float maxTotalBudget = basePrice * MAX_BID_MULTIPLIER;
+                    // For very cheap items, ensure budget is at least (1 emerald + courier cost)
+                    float calculatedBudget = basePrice * MAX_BID_MULTIPLIER;
+                    float minBudget = 1.0f + courierCost;
+                    float maxTotalBudget = Math.max(calculatedBudget, minBudget);
                     float maxBid = maxTotalBudget - courierCost;
 
                     if (bid > maxBid) {
@@ -235,19 +242,19 @@ public class TownContractComponent implements TownComponent {
                             .get(level).getTown(sc.getIssuerTownId());
                     int courierCost = ContractBoard.calculateCourierCost(town, sellerTown);
 
+                    // Calculate bid - minimum 1 emerald (can't pay fractions)
                     float projectedBid = (float) Math.ceil((currentHighest > 0 ? currentHighest : basePrice) * 1.1f);
+                    if (projectedBid < 1.0f) {
+                        projectedBid = 1.0f; // Floor: minimum bid is 1 emerald
+                    }
 
                     // Check max bid limit (Total budget = 3x base price normally, 5x if wanted)
+                    // For very cheap items, ensure budget is at least (1 emerald + courier cost)
+                    // so the town can still participate in auctions
                     float multiplier = isWanted ? 5.0f : MAX_BID_MULTIPLIER;
-                    float maxTotalBudget = basePrice * multiplier;
-
-                    // If wanted, we can also add a flat bonus to the budget based on urgency?
-                    // Or just rely on the higher multiplier allowing us to win more auctions.
-                    // User said "current resource status is -100 in bidding terms".
-                    // This implies we should treat our "effective stock" as lower, making us
-                    // willing to pay more?
-                    // Actually, just increasing the multiplier allows us to outbid others who are
-                    // capped at 3x.
+                    float calculatedBudget = basePrice * multiplier;
+                    float minBudget = 1.0f + courierCost; // At least 1 emerald bid + courier
+                    float maxTotalBudget = Math.max(calculatedBudget, minBudget);
 
                     float maxBid = maxTotalBudget - courierCost;
 

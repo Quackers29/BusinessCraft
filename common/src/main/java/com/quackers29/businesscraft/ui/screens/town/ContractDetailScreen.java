@@ -171,32 +171,52 @@ public class ContractDetailScreen extends Screen {
 
     /**
      * Phase 5: Add buttons based on view-model data.
+     * Accept button only available if player is at the issuer (selling) town.
      */
     private void addViewModelButtons(int x, int y) {
-        // Use summary view-model initially, then detail when available
-        boolean canBid = summaryViewModel.canBid();
+        // Players can't bid - only towns can bid on auctions
+        // Accept button is only on Active tab for courier jobs
+        
         boolean canAcceptCourier = summaryViewModel.canAcceptCourier();
         UUID contractId = summaryViewModel.getContractId();
+        UUID issuerTownId = summaryViewModel.getIssuerTownId();
 
         // Override with detail data if available
         if (detailViewModel != null) {
-            canBid = detailViewModel.canBid();
             canAcceptCourier = detailViewModel.canAcceptCourier();
         }
 
-        if (canBid && tabIndex == 0) {
-            // Auction tab: Show Bid button
-            // For now, just show the button - bid input logic remains
-        }
+        // Active tab: Show Accept button for courier jobs
+        if (tabIndex == 1 && canAcceptCourier) {
+            // Check if player is at the issuer (selling) town
+            boolean atIssuerTown = false;
+            
+            if (parentScreen instanceof ContractBoardScreen cbs) {
+                net.minecraft.core.BlockPos pos = cbs.getMenu().getTownBlockPos();
+                if (pos != null && net.minecraft.client.Minecraft.getInstance().level != null) {
+                    net.minecraft.world.level.block.entity.BlockEntity be = 
+                            net.minecraft.client.Minecraft.getInstance().level.getBlockEntity(pos);
+                    if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity tie) {
+                        UUID currentTownId = tie.getTownId();
+                        if (currentTownId != null && currentTownId.equals(issuerTownId)) {
+                            atIssuerTown = true;
+                        }
+                    }
+                }
+            }
 
-        if (canAcceptCourier && tabIndex == 1) {
-            // Active tab: Accept Courier Job
             Button acceptBtn = Button.builder(Component.literal("Accept Job"), b -> {
                 PlatformAccess.getNetworkMessages().sendToServer(new BidContractPacket(contractId, 0f));
                 onClose();
             })
                     .bounds(x + 10, y + WINDOW_HEIGHT - 25, 90, 20)
                     .build();
+
+            if (!atIssuerTown) {
+                acceptBtn.active = false;
+                acceptBtn.setMessage(Component.literal("Wrong Town"));
+            }
+
             this.addRenderableWidget(acceptBtn);
         }
     }
@@ -448,7 +468,7 @@ public class ContractDetailScreen extends Screen {
 
     /**
      * Phase 5: Render contract details using view-model data.
-     * Uses server-calculated display strings (no client time calculations).
+     * Visual layout matches legacy path exactly - uses server-calculated display strings.
      */
     private void renderViewModelDetails(GuiGraphics g, int x, int y) {
         int textY = y + 30;
@@ -459,14 +479,8 @@ public class ContractDetailScreen extends Screen {
         // Use detail view-model if available, otherwise fall back to summary
         boolean hasDetail = (detailViewModel != null);
         
-        // Show loading indicator if waiting for detail
-        if (!hasDetail) {
-            g.drawCenteredString(font, "Loading details...", width / 2, textY, 0xFFAAAA00);
-            textY += 20;
-        }
-
         // Type
-        String contractType = hasDetail ? detailViewModel.getContractType() : summaryViewModel.getContractType();
+        String contractType = hasDetail ? detailViewModel.getContractType() : "sell";
         g.drawString(font, "Type:", x + 10, textY, labelColor);
         g.drawString(font, contractType.substring(0, 1).toUpperCase() + contractType.substring(1), x + 80, textY, valueColor);
         textY += 15;
@@ -484,97 +498,133 @@ public class ContractDetailScreen extends Screen {
         g.drawString(font, truncate(issuerName, 20), x + 80, textY, valueColor);
         textY += 15;
 
-        // Price (from view-model display string)
-        String priceDisplay = hasDetail ? detailViewModel.getPriceDisplay() : summaryViewModel.getPriceDisplay();
-        g.drawString(font, "Price:", x + 10, textY, labelColor);
-        g.drawString(font, priceDisplay, x + 80, textY, valueColor);
-        textY += 15;
-
-        // Status
-        String statusDisplay = hasDetail ? detailViewModel.getStatusDisplay() : summaryViewModel.getStatusDisplay();
-        g.drawString(font, "Status:", x + 10, textY, labelColor);
-        int statusColor = statusDisplay.contains("Delivered") ? 0xFF55FF55 : 
-                         statusDisplay.contains("Expired") ? 0xFFFF5555 : 0xFFFFAA00;
-        g.drawString(font, statusDisplay, x + 80, textY, statusColor);
-        textY += 15;
-
-        // Time remaining (server-calculated, no client System.currentTimeMillis())
-        String timeDisplay = hasDetail ? detailViewModel.getTimeRemainingDisplay() : summaryViewModel.getTimeRemainingDisplay();
-        g.drawString(font, "Time:", x + 10, textY, labelColor);
-        int timeColor = timeDisplay.equals("Expired") ? 0xFFFF5555 : valueColor;
-        g.drawString(font, timeDisplay, x + 80, textY, timeColor);
-        textY += 20;
-
-        // Detail-only fields (only show if we have detail)
-        if (hasDetail) {
-            // Separator
-            g.hLine(x + 10, x + WINDOW_WIDTH - 10, textY, 0xFF666666);
-            textY += 8;
-
-            // Created/Expires dates
-            g.drawString(font, "Created:", x + 10, textY, labelColor);
-            g.drawString(font, detailViewModel.getCreatedDateDisplay(), x + 80, textY, valueColor);
-            textY += 12;
-
-            g.drawString(font, "Expires:", x + 10, textY, labelColor);
-            g.drawString(font, detailViewModel.getExpiresDateDisplay(), x + 80, textY, valueColor);
+        // Destination & Reward (for courier contracts - from detail only)
+        if (hasDetail && detailViewModel.getDestinationTownName() != null) {
+            g.drawString(font, "To:", x + 10, textY, labelColor);
+            g.drawString(font, truncate(detailViewModel.getDestinationTownName(), 20), x + 80, textY, valueColor);
             textY += 15;
 
-            // Winner (if auction closed)
-            if (detailViewModel.isAuctionClosed() && detailViewModel.getWinningBidderName() != null) {
-                g.drawString(font, "Winner:", x + 10, textY, headerColor);
-                textY += 12;
-                g.drawString(font, detailViewModel.getWinningBidderName(), x + 20, textY, 0xFF55FF55);
+            if (detailViewModel.getCourierRewardDisplay() != null) {
+                g.drawString(font, "Reward:", x + 10, textY, labelColor);
+                g.drawString(font, detailViewModel.getCourierRewardDisplay(), x + 80, textY, 0xFF55FF55);
                 textY += 15;
-            }
-
-            // Delivery progress (if applicable)
-            if (detailViewModel.getDeliveryProgressDisplay() != null) {
-                g.drawString(font, "Delivery:", x + 10, textY, labelColor);
-                g.drawString(font, detailViewModel.getDeliveryProgressDisplay(), x + 80, textY, 0xFFFFAA00);
-                textY += 15;
-            }
-
-            // Courier (if assigned)
-            if (detailViewModel.getCourierName() != null) {
-                g.drawString(font, "Courier:", x + 10, textY, labelColor);
-                g.drawString(font, detailViewModel.getCourierName(), x + 80, textY, valueColor);
-                textY += 15;
-            }
-
-            // Bid list
-            List<ContractDetailViewModel.BidDisplayInfo> bids = detailViewModel.getBids();
-            if (!bids.isEmpty()) {
-                textY += 5;
-                g.hLine(x + 10, x + WINDOW_WIDTH - 10, textY, 0xFF666666);
-                textY += 8;
-
-                g.drawString(font, "Bids (" + bids.size() + "):", x + 10, textY, headerColor);
-                textY += 12;
-
-                int count = 0;
-                for (ContractDetailViewModel.BidDisplayInfo bid : bids) {
-                    if (count >= MAX_VISIBLE_BIDS + scrollOffset) break;
-                    if (count >= scrollOffset) {
-                        String bidText = truncate(bid.bidderName(), 15) + ": " + bid.amountDisplay();
-                        if (bid.isHighest()) {
-                            bidText += " ⭐";
-                            g.drawString(font, bidText, x + 20, textY, 0xFF55FF55);
-                        } else {
-                            g.drawString(font, bidText, x + 20, textY, valueColor);
-                        }
-                        textY += 12;
-                    }
-                    count++;
-                }
             }
         }
 
-        // Highest bid display
-        String highestBidDisplay = hasDetail ? detailViewModel.getHighestBidDisplay() : summaryViewModel.getHighestBidDisplay();
-        if (!highestBidDisplay.equals("No bids") && !hasDetail) {
-            g.drawString(font, "Top Bid:", x + 10, textY, labelColor);
-            g.drawString(font, highestBidDisplay, x + 80, textY, 0xFF55FF55);
+        // Created timestamp
+        if (hasDetail) {
+            g.drawString(font, "Created:", x + 10, textY, labelColor);
+            g.drawString(font, detailViewModel.getCreatedDateDisplay(), x + 80, textY, valueColor);
+            textY += 15;
+
+            // Expiry timestamp
+            g.drawString(font, "Expires:", x + 10, textY, labelColor);
+            g.drawString(font, detailViewModel.getExpiresDateDisplay(), x + 80, textY, valueColor);
+            textY += 15;
+        }
+
+        // Time Remaining
+        String timeDisplay = hasDetail ? detailViewModel.getTimeRemainingDisplay() : summaryViewModel.getTimeRemainingDisplay();
+        g.drawString(font, "Time Left:", x + 10, textY, labelColor);
+        int timeColor = timeDisplay.equals("Expired") ? 0xFFFF5555 : valueColor;
+        g.drawString(font, timeDisplay, x + 80, textY, timeColor);
+        textY += 18;
+
+        // Bids Section
+        g.drawString(font, "Bids:", x + 10, textY, headerColor);
+        textY += 12;
+
+        if (hasDetail) {
+            List<ContractDetailViewModel.BidDisplayInfo> bids = detailViewModel.getBids();
+            if (bids.isEmpty()) {
+                g.drawString(font, "No bids yet", x + 20, textY, 0xFF888888);
+                textY += 12;
+            } else {
+                int count = 0;
+                for (ContractDetailViewModel.BidDisplayInfo bid : bids) {
+                    if (count >= MAX_VISIBLE_BIDS && count < bids.size()) {
+                        g.drawString(font, "... +" + (bids.size() - MAX_VISIBLE_BIDS) + " more",
+                                x + 20, textY, 0xFF888888);
+                        textY += 12;
+                        break;
+                    }
+
+                    String bidText = truncate(bid.bidderName(), 15) + ": " + bid.amountDisplay();
+                    if (bid.isHighest()) {
+                        bidText += " ⭐";
+                        g.drawString(font, bidText, x + 20, textY, 0xFF55FF55);
+                    } else {
+                        g.drawString(font, bidText, x + 20, textY, valueColor);
+                    }
+
+                    textY += 12;
+                    count++;
+                }
+            }
+        } else {
+            // Summary only - show highest bid info
+            String highestBidDisplay = summaryViewModel.getHighestBidDisplay();
+            if (highestBidDisplay.equals("No bids")) {
+                g.drawString(font, "No bids yet", x + 20, textY, 0xFF888888);
+            } else {
+                g.drawString(font, "Highest: " + highestBidDisplay + " ⭐", x + 20, textY, 0xFF55FF55);
+            }
+            textY += 12;
+        }
+
+        textY += 6;
+
+        // Winner Section (for completed contracts)
+        if (hasDetail && detailViewModel.isAuctionClosed() && detailViewModel.getWinningBidderName() != null) {
+            // Draw separator line
+            g.hLine(x + 10, x + WINDOW_WIDTH - 10, textY, 0xFF666666);
+            textY += 8;
+
+            g.drawString(font, "Winner:", x + 10, textY, headerColor);
+            textY += 12;
+
+            g.drawString(font, "Buyer:", x + 20, textY, labelColor);
+            g.drawString(font, truncate(detailViewModel.getWinningBidderName(), 18), x + 90, textY, 0xFF55FF55);
+            textY += 12;
+
+            g.drawString(font, "Price:", x + 20, textY, labelColor);
+            g.drawString(font, detailViewModel.getAcceptedBidDisplay(), x + 90, textY, 0xFF55FF55);
+            textY += 15;
+
+            // Courier Info
+            g.drawString(font, "Courier Info:", x + 10, textY, headerColor);
+            textY += 12;
+
+            if (detailViewModel.getCourierRewardDisplay() != null) {
+                g.drawString(font, "Reward:", x + 20, textY, labelColor);
+                g.drawString(font, detailViewModel.getCourierRewardDisplay(), x + 90, textY, 0xFF55FF55);
+                textY += 12;
+            }
+
+            g.drawString(font, "Status:", x + 20, textY, labelColor);
+            if (detailViewModel.getCourierName() != null) {
+                g.drawString(font, detailViewModel.getCourierName(), x + 90, textY, 0xFF55FF55);
+                textY += 12;
+
+                if (detailViewModel.getDeliveryProgressDisplay() != null) {
+                    g.drawString(font, "Progress:", x + 20, textY, labelColor);
+                    String progress = detailViewModel.getDeliveryProgressDisplay();
+                    int progressColor = progress.contains("/") && progress.split("/")[0].trim().equals(progress.split("/")[1].trim()) 
+                            ? 0xFF55FF55 : 0xFFFFAA00;
+                    g.drawString(font, progress, x + 90, textY, progressColor);
+                }
+            } else {
+                g.drawString(font, "Waiting for Courier", x + 90, textY, 0xFFFFAA00);
+            }
+            textY += 12;
+
+            // Final delivery status
+            textY += 12;
+            g.drawString(font, "Status:", x + 20, textY, labelColor);
+            String statusDisplay = detailViewModel.getStatusDisplay();
+            String status = statusDisplay.contains("Delivered") ? "Delivered ✓" : "Pending";
+            int statusColor = statusDisplay.contains("Delivered") ? 0xFF55FF55 : 0xFFFFAA00;
+            g.drawString(font, status, x + 90, textY, statusColor);
         }
     }
 

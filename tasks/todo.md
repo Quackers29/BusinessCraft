@@ -571,9 +571,284 @@ Net change: **+3 packets** (replaces 1, adds 4) but significantly better archite
 
 ---
 
-## 📊 **PHASE 6: VERIFICATION & TESTING**
+## 💰 **PHASE 6: ECONOMY STABILIZATION - FAILED AUCTION PRICE CRASH FIX**
 
-### **6.1 Architecture Compliance Testing** 🧪 **CRITICAL**
+### **6.0 Problem Statement**
+
+**Root Cause Identified:** When an auction fails with no bids, the Global Price Index (GPI) drops by 20%. This assumes "failed auction = price too high", but auctions can fail for other reasons:
+
+1. **All potential buyers at max capacity** (the case that crashed prices to zero)
+2. **No buyers need that resource type** (demand-side issue, not price)
+3. **Courier costs too high** for remote towns
+4. **No buyers have enough emeralds**
+5. **Only one town has excess** (created the auction but can't bid on itself)
+
+**Current Code Location:** `ContractBoard.java` lines 405-419
+```java
+// Failed auction drops price by 20%
+float impliedValue = baseline * 0.8f;
+updateMarketPrice(sc.getResourceId(), (float) sc.getQuantity(), impliedValue);
+```
+
+This caused a death spiral where all market prices collapsed to near-zero.
+
+---
+
+### **6.1 Option 1: Remove Failed Auction Price Reduction** 🟢 **SIMPLE**
+
+**Description:** Simply delete the price drop logic. Prices only adjust from successful trades.
+
+**Changes:**
+- Remove the `impliedValue` calculation and `updateMarketPrice()` call on failed auctions
+- Keep the escrow refund logic intact
+
+**Pros:**
+- ✅ Prevents death spiral completely
+- ✅ Simplest fix
+
+**Cons:**
+- ❌ Overpriced items stay overpriced forever
+- ❌ No market correction mechanism for failed listings
+
+---
+
+### **6.2 Option 2: Reduce Drop Severity + Add Cooldown** 🟡 **MODERATE**
+
+**Description:** Change 20% drop to 2% and add a per-resource cooldown (max 1 drop per 5 minutes).
+
+**Changes:**
+```java
+float impliedValue = baseline * 0.98f; // Only 2% drop instead of 20%
+// Add tracking: Map<String, Long> lastPriceDropTime
+// Only apply if enough time has passed since last drop
+```
+
+**Pros:**
+- ✅ Gradual adjustment instead of crash
+- ✅ Still provides some price discovery
+
+**Cons:**
+- ❌ Still spirals, just slower
+- ❌ Requires additional state tracking
+
+---
+
+### **6.3 Option 3: Check Demand Before Dropping** 🟡 **MODERATE**
+
+**Description:** Before dropping price, check if ANY town could potentially buy (not at max capacity for this resource). If no potential demand exists, don't drop price.
+
+**Changes:**
+```java
+boolean anyBuyerHasCapacity = checkForPotentialBuyers(resourceId, townManager);
+if (anyBuyerHasCapacity) {
+    // Drop price - there were buyers but price was too high
+    updateMarketPrice(...);
+} else {
+    // Don't drop - no demand, not a price problem
+    LOGGER.info("Auction failed due to no demand, not adjusting price");
+}
+```
+
+**Pros:**
+- ✅ Addresses root cause directly
+- ✅ Accurate price signal
+
+**Cons:**
+- ❌ More complex logic
+- ❌ Needs to iterate through all towns to check capacity
+
+---
+
+### **6.4 Option 4: Base Price Floor (Mean Reversion)** 🟢 **RECOMMENDED**
+
+**Description:** Each resource has a "production cost" floor from `ProductionRegistry`. Failed auctions pull toward this base value, not toward zero.
+
+**Changes:**
+```java
+float baseValue = ProductionRegistry.getEstimatedValue(resourceId);
+float floor = baseValue * 0.5f; // Never below 50% of production cost
+float impliedValue = Math.max(baseline * 0.9f, floor);
+updateMarketPrice(sc.getResourceId(), (float) sc.getQuantity(), impliedValue);
+```
+
+**Pros:**
+- ✅ Natural price floor based on actual production costs
+- ✅ Already have production cost data in `ProductionRegistry`
+- ✅ Realistic economics - items can't be worth less than cost to make
+
+**Cons:**
+- ❌ Needs tuning of the floor percentage
+- ❌ Some items may not have production cost data
+
+---
+
+### **6.5 Option 5: Only Drop If Listed Above GPI** 🟢 **RECOMMENDED**
+
+**Description:** Only drop price if the seller listed ABOVE market rate. If they listed at/below GPI and still failed, it's a demand problem, not a price problem.
+
+**Changes:**
+```java
+if (listingPrice > currentGPI * 1.1f) {
+    // Listed above market by >10% - price was indeed too high
+    float impliedValue = baseline * 0.9f;
+    updateMarketPrice(...);
+} else {
+    // Listed at/below market - demand problem, don't penalize price
+    LOGGER.info("Auction failed but listing was at market rate, not adjusting price");
+}
+```
+
+**Pros:**
+- ✅ Simple, targeted fix
+- ✅ Only affects genuinely overpriced listings
+- ✅ Logical: if market rate fails, market isn't wrong
+
+**Cons:**
+- ❌ Overpriced items that get lucky (listed at GPI) won't correct
+
+---
+
+### **6.6 Option 6: Track Bid Interest** 🔴 **COMPLEX**
+
+**Description:** If towns *tried* to bid but couldn't (capacity/budget constraints), there's interest - don't drop price. Only drop if no town even attempted.
+
+**Changes:**
+- Add bid attempt tracking in `TownContractComponent.scanForBids()`
+- Track `Map<UUID, BidAttemptResult>` per contract
+- On auction close, check if any attempts were made
+
+**Pros:**
+- ✅ Most accurate price signal
+- ✅ Distinguishes "can't buy" from "won't buy"
+
+**Cons:**
+- ❌ Requires significant new tracking infrastructure
+- ❌ Memory overhead for tracking attempts
+- ❌ Complex to implement correctly
+
+---
+
+### **6.7 Recommended Approach: Option 4 + Option 5 Combined**
+
+**Description:** Combine base price floor with "only drop if overpriced" logic.
+
+**Implementation:**
+```java
+// Only adjust price if listing was above market
+if (listingPrice > currentGPI * 1.1f) {
+    float baseValue = ProductionRegistry.getEstimatedValue(resourceId);
+    float floor = Math.max(baseValue * 0.5f, 0.001f); // 50% of production cost, min 0.001
+    float impliedValue = Math.max(baseline * 0.9f, floor);
+    updateMarketPrice(sc.getResourceId(), (float) sc.getQuantity(), impliedValue);
+    LOGGER.info("Overpriced auction failed, adjusting price toward floor");
+} else {
+    LOGGER.info("Market-rate auction failed (demand issue), price unchanged");
+}
+```
+
+**This approach:**
+- ✅ Prevents death spiral (floor based on production costs)
+- ✅ Only penalizes genuinely overpriced listings
+- ✅ Uses existing data (ProductionRegistry)
+- ✅ Simple to implement and understand
+
+---
+
+### **6.8 Implementation Status**
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Identify root cause | ✅ Complete | All buyers at max capacity → no bids → price drops → spiral |
+| Temporary fix: MIN_PRICE floor | ✅ Complete | Added 0.001 floor in GlobalMarket.java |
+| Temporary fix: 1 emerald bid floor | ✅ Complete | Added in TownContractComponent.java |
+| Choose permanent fix option | ⏳ Pending | **Option 7 recommended** (see 6.9) |
+| Implement chosen fix | ⏳ Pending | |
+| Test economy stability | ⏳ Pending | |
+
+---
+
+### **6.9 Option 7: Trades-Only Price Discovery + Need-Based Bidding** 🟢 **RECOMMENDED**
+
+**Analysis of Current Bid/Listing Asymmetry:**
+
+| Actor | Price Calculation | Range vs GPI |
+|-------|-------------------|--------------|
+| **Sellers** | `GPI * (1.0 + modifier)` where modifier = +0.05 to -0.40 based on excess | **0.55x to 1.10x** |
+| **Buyers** | `(currentBid or GPI*qty) * 1.1` - always 10% above | **≥1.10x always** |
+
+**Problem:** Buyers always bid ≥10% above GPI, so successful trades are always at GPI*1.1+. With "trades-only" discovery, prices can only go UP, never down.
+
+**Solution: Mirror seller logic for buyers with need-based modifier.**
+
+**Part A: Remove Failed Auction Price Drop**
+```java
+// ContractBoard.java:405-419 - DELETE THIS:
+// float impliedValue = baseline * 0.8f;
+// updateMarketPrice(sc.getResourceId(), (float) sc.getQuantity(), impliedValue);
+
+// KEEP: Escrow refund logic (return items to seller)
+```
+
+**Part B: Add Need-Based Bid Modifier** (`TownContractComponent.java`)
+```java
+// Calculate need level (how desperate is the buyer?)
+float needThreshold = cap * (ConfigLoader.minStockPercent / 100.0f);
+float needRatio = (needThreshold - currentCount) / needThreshold;
+needRatio = Math.max(0f, Math.min(1f, needRatio)); // Clamp 0-1
+
+// Bid modifier: 0.80 to 1.20 based on desperation
+// - needRatio=0 (at threshold, reluctant): bid at GPI * 0.80
+// - needRatio=1 (empty stock, desperate): bid at GPI * 1.20
+float bidModifier = 0.80f + (needRatio * 0.40f);
+
+// Add randomness ±5%
+float randomness = (float)(Math.random() * 0.10f) - 0.05f;
+
+// Calculate bid
+float bidPrice = basePrice * (bidModifier + randomness);
+bidPrice = Math.max(1.0f, (float)Math.ceil(bidPrice)); // Min 1 emerald
+```
+
+**Resulting Price Dynamics:**
+
+| Scenario | Seller Lists At | Buyer Bids At | Trade Price | GPI Movement |
+|----------|-----------------|---------------|-------------|--------------|
+| High supply, low demand | GPI * 0.60 | GPI * 0.85 | ~GPI * 0.85 | ↓ Down |
+| Low supply, high demand | GPI * 1.05 | GPI * 1.15 | ~GPI * 1.15 | ↑ Up |
+| Balanced | GPI * 0.90 | GPI * 1.00 | ~GPI * 0.95 | → Stable |
+| No trades (no demand) | N/A | N/A | No trade | → Unchanged |
+
+**Why This Is Better Than Other Options:**
+
+| Comparison | Option 7 Advantage |
+|------------|-------------------|
+| vs Option 1 (remove drop) | Option 7 also enables downward price movement through trades |
+| vs Option 4 (floor) | No tuning needed - let GPI go to 0, 1 emerald min bid handles it |
+| vs Option 5 (check listing) | Simpler - no conditional logic needed |
+| vs Option 6 (track interest) | Much simpler - no new tracking infrastructure |
+
+**Implementation Tasks:**
+
+- [ ] **6.9.1** Remove failed auction price drop in `ContractBoard.java:405-419`
+- [ ] **6.9.2** Add need-based bid modifier in `TownContractComponent.scanForBids()` and `processPendingBids()`
+- [ ] **6.9.3** Keep 1 emerald minimum bid floor (already exists)
+- [ ] **6.9.4** Keep MIN_PRICE floor in GlobalMarket (0.001) as safety net
+- [ ] **6.9.5** Test: Verify prices go down when supply > demand
+- [ ] **6.9.6** Test: Verify prices go up when demand > supply
+- [ ] **6.9.7** Test: Verify prices stabilize when balanced
+
+**Key Design Decisions:**
+- ✅ No production cost floor (user preference - no tuning)
+- ✅ GPI can go to 0 (economically correct when no demand)
+- ✅ 1 emerald minimum bid ensures trades always have value
+- ✅ Prices only change from actual trades (no signal from silence)
+- ✅ Symmetric buyer/seller price variation enables natural equilibrium
+
+---
+
+## 📊 **PHASE 7: VERIFICATION & TESTING**
+
+### **7.1 Architecture Compliance Testing** 🧪 **CRITICAL**
 - [ ] **Create view-model validation tests**:
   - Verify client contains zero business logic
   - Test that all UI displays pre-calculated values
@@ -587,7 +862,7 @@ Net change: **+3 packets** (replaces 1, adds 4) but significantly better archite
   - Test that all financial calculations are server-authoritative
   - Verify proper validation of client requests
 
-### **6.2 Performance Analysis** 🧪 **MEDIUM**
+### **7.2 Performance Analysis** 🧪 **MEDIUM**
 - [ ] **Network bandwidth optimization**:
   - Measure packet size reduction from view-model approach
   - Verify on-demand fetch reduces data transfers
@@ -641,7 +916,9 @@ Net change: **+3 packets** (replaces 1, adds 4) but significantly better archite
 - **✅ COMPLETED**: Tourism indicator view-model fix (TownInterfaceViewModel) 🎉
 - **⚠️ REMAINING**: Optional enhancement phase (3.3)
 - **🕐 PENDING**: Time handling & Contract Board view-model (Phase 4)
-- **🧪 PENDING**: Verification & Testing (Phase 5)
+- **🕐 PENDING**: Contract Board View-Model Compliance (Phase 5) - In Progress
+- **💰 PENDING**: Economy Stabilization - Failed Auction Price Crash Fix (Phase 6)
+- **🧪 PENDING**: Verification & Testing (Phase 7)
 - **📊 Overall**: ~95% compliant with target architecture (Contract Board is ~40%)
 
 ### **Development Guidelines**

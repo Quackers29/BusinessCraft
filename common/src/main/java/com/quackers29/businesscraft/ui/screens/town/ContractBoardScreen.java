@@ -64,6 +64,8 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     private boolean hasMore = false;
     private long lastCacheCheck = 0;
     private static final long CACHE_CHECK_INTERVAL = 500; // ms
+    private long lastServerRefresh = 0;
+    private static final long SERVER_REFRESH_INTERVAL = 3000; // Request fresh data every 3 seconds
 
     private EditBox bidInput;
     private UUID biddingContractId = null;
@@ -111,9 +113,17 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     /**
      * Phase 5: Check cache for updated contract data (called each frame).
      * Uses throttling to avoid excessive checks.
+     * Also periodically requests fresh data from server to catch bid updates.
      */
     private void updateContractData() {
         long now = System.currentTimeMillis();
+        
+        // Periodically request fresh data from server to ensure we see bid updates
+        if (now - lastServerRefresh >= SERVER_REFRESH_INTERVAL) {
+            lastServerRefresh = now;
+            requestContractList();
+        }
+        
         if (now - lastCacheCheck < CACHE_CHECK_INTERVAL) {
             return;
         }
@@ -167,6 +177,7 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
 
     /**
      * Phase 5: Populate grid using ContractSummaryViewModel (server-calculated display strings).
+     * Visual layout preserved from original - context-aware action buttons.
      */
     private void populateGrid(List<ContractSummaryViewModel> contracts) {
         for (int i = 0; i < contracts.size(); i++) {
@@ -188,10 +199,37 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
             String timeDisplay = vm.getTimeRemainingDisplay();
             contractGrid.addLabel(i, 2, timeDisplay, TEXT_COLOR);
 
-            // Col 3: Action button - always show "View"
+            // Col 3: Action button - context-aware
             final UUID contractId = vm.getContractId();
-            contractGrid.addButtonWithTooltip(i, 3, "View", "View contract details",
-                    (Consumer<Void>) v -> openContractDetails(contractId), 0xFF666666);
+            String buttonText;
+            String buttonTooltip;
+            int buttonColor;
+            
+            if (selectedTab == 0) {
+                // Auction tab - players view auctions, only towns can bid
+                buttonText = "View";
+                buttonTooltip = "View auction details";
+                buttonColor = 0xFF666666;
+            } else if (selectedTab == 1) {
+                // Active tab - show courier status
+                if (vm.canAcceptCourier()) {
+                    buttonText = "Courier";
+                    buttonTooltip = "View courier job details";
+                    buttonColor = 0xFF4444AA;
+                } else {
+                    buttonText = "Delivering";
+                    buttonTooltip = "View delivery progress";
+                    buttonColor = 0xFF44AA44;
+                }
+            } else {
+                // History tab
+                buttonText = "View";
+                buttonTooltip = "View contract details";
+                buttonColor = 0xFF666666;
+            }
+            
+            contractGrid.addButtonWithTooltip(i, 3, buttonText, buttonTooltip,
+                    (Consumer<Void>) v -> openContractDetails(contractId), buttonColor);
         }
 
         // Show "Load More" button for history tab with pagination
