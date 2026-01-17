@@ -337,9 +337,203 @@
 
 ---
 
-## 📊 **PHASE 4: VERIFICATION & TESTING**
+## 🕐 **PHASE 4: CONTRACT BOARD VIEW-MODEL & TIME HANDLING**
 
-### **4.1 Architecture Compliance Testing** 🧪 **CRITICAL**
+### **📋 AUDIT RESULTS (Verified 2026-01-17)**
+
+**✅ Systems with Proper Limits (No Action Needed):**
+| System | Limit | Location |
+|--------|-------|----------|
+| Visit History | 50 entries | `Town.java:90` - `MAX_HISTORY_SIZE = 50` |
+| Payment Board | 100 rewards | `TownPaymentBoard.java:26` - `MAX_REWARDS = 100` |
+| Contracts | 100 total | `ContractBoard.java:97-108` - cleanup loop |
+| Platforms | 10 per town | `PlatformManager.java:24` - `MAX_PLATFORMS = 10` |
+| Active Contracts/Town | 3 max | `TownContractComponent.java:23` |
+
+**✅ View-Model Data (Appropriately Bounded):**
+| System | Bound Type | Actual Size |
+|--------|------------|-------------|
+| Upgrades | Config-bounded | ~11 entries (`upgrades.csv`: 12 lines) |
+| Productions | Config-bounded | ~9 entries (`productions.csv`: 10 lines) |
+| Resources | Town inventory | Variable but reasonable |
+| Market Prices | Float map | Bounded by registry |
+
+**⚠️ Contract Board - THE OUTLIER (Requires Action):**
+| Issue | Location | Problem |
+|-------|----------|---------|
+| Client-side filtering | `ContractBoardScreen.java:128-155` | `filterContractsByTab()` streams/filters |
+| Client time calculation | `ContractBoardScreen.java:187-189` | `System.currentTimeMillis()` for display |
+| Client time calculation | `ContractDetailScreen.java:218-220` | `System.currentTimeMillis()` for display |
+| Variable bid lists | `Contract.java:15` | `Map<UUID, Float> bids` - unbounded |
+| Server-wide data | `ContractSyncPacket` | Sends ALL contracts, not town-scoped |
+
+**Why Contract Board is Different:**
+- Other view-models sync **town-scoped** data (your resources, your upgrades)
+- Contract Board syncs **server-wide** data (all contracts from all towns)
+- Bid maps have **no cap** and grow with auction activity
+- Full NBT serialization per contract is expensive
+
+---
+
+### **4.1 Contract Summary View-Model (List View)** 🔧 **HIGH PRIORITY**
+
+**Goal:** Replace full Contract sync with lightweight summaries for list display.
+
+- [ ] **Create `ContractSummaryViewModel.java`** (~80 lines):
+  - `UUID contractId` - For detail fetch
+  - `String resourceId` - For icon display
+  - `int quantity` - For display
+  - `String issuerTownName` - Seller name
+  - `String timeRemainingDisplay` - "5m 30s" or "Expired" (pre-calculated)
+  - `String highestBidDisplay` - "150 emeralds" or "No bids"
+  - `String statusDisplay` - "Auction", "Awaiting Courier", "In Transit"
+  - `boolean canBid` - Server-calculated
+  - `boolean canAcceptCourier` - Server-calculated (requires player location)
+
+- [ ] **Create `ContractSummaryViewModelBuilder.java`** (~200 lines):
+  - Build summaries for all contracts
+  - Pre-filter into tabs: `auctionContracts`, `activeContracts`, `historyContracts`
+  - Pre-sort each list (expiring first for auction/active, latest first for history)
+  - Calculate `canBid` based on: not own contract, has emeralds, auction open
+  - Calculate `canAcceptCourier` based on: player near seller town, no courier assigned
+  - Format time remaining as display string (eliminates client `System.currentTimeMillis()`)
+
+- [ ] **Create `ContractListSyncPacket.java`** (~100 lines):
+  - Replace `ContractSyncPacket` for list view
+  - Contains: `List<ContractSummaryViewModel>` per tab (3 lists)
+  - Contains: `long serverCurrentTime` for any residual client needs
+  - Contains: `Map<String, Float> marketPrices` (keep existing)
+  - **Estimated size**: ~100 bytes/contract vs ~500+ bytes currently
+
+- [ ] **Update `ContractBoardScreen.java`**:
+  - Remove `filterContractsByTab()` method (lines 128-155) - use server lists
+  - Remove `System.currentTimeMillis()` call (line 187) - use view-model string
+  - Update `populateGrid()` to use `ContractSummaryViewModel`
+  - Keep "View" button that opens detail screen
+
+---
+
+### **4.2 Contract Detail View-Model (On-Demand)** 🔧 **HIGH PRIORITY**
+
+**Goal:** Fetch full contract details only when user clicks "View".
+
+- [ ] **Create `ContractDetailViewModel.java`** (~120 lines):
+  - Summary fields (same as list view)
+  - `List<BidDisplayInfo> bids` - All bids with names, sorted
+  - `String courierName` - If assigned
+  - `String deliveryProgressDisplay` - "5/10 delivered"
+  - `String createdDateDisplay` - "01/14 15:30"
+  - `String expiresDateDisplay` - "01/15 12:00"
+  - `String tooltipText` - Pre-built tooltip
+  - Inner class `BidDisplayInfo { String bidderName; String amountDisplay; boolean isHighest; }`
+
+- [ ] **Create `RequestContractDetailPacket.java`** (Server-bound):
+  - Contains: `UUID contractId`
+  - Server responds with `ContractDetailSyncPacket`
+
+- [ ] **Create `ContractDetailSyncPacket.java`** (Client-bound):
+  - Contains: `ContractDetailViewModel` for single contract
+  - Contains: `long serverCurrentTime`
+  - **Estimated size**: ~1-2KB per contract (includes all bids)
+
+- [ ] **Update `ContractDetailScreen.java`**:
+  - Request detail on screen open via `RequestContractDetailPacket`
+  - Remove `System.currentTimeMillis()` call (line 218)
+  - Display loading state while waiting for detail packet
+  - Use `ContractDetailViewModel` for all display
+  - Remove client-side bid sorting (line 235) - server pre-sorts
+
+---
+
+### **4.3 Time Utility Module** 🔧 **MEDIUM PRIORITY**
+
+**Goal:** Centralize time formatting, eliminate client `System.currentTimeMillis()` for display.
+
+- [ ] **Create `BCTimeUtils.java`** (~60 lines):
+  - `formatTimeRemaining(long expiryEpoch, long serverNow)` → "5m 30s" or "Expired"
+  - `formatDateTime(long epoch)` → "01/14 15:30" in client timezone
+  - `formatDuration(long millis)` → "2h 15m 30s"
+  - `isExpired(long expiryEpoch, long serverNow)` → boolean
+
+- [ ] **Audit remaining `System.currentTimeMillis()` in UI** (most are OK):
+  - `BCScrollableComponent.java:164,183` - Scroll drag timing ✅ OK
+  - `UIGridBuilder.java:109,887` - Debouncing ✅ OK
+  - `ProductionTab.java:52,68` - Update throttling ✅ OK
+  - `BCComponent.java:141,170,558` - Animation timing ✅ OK
+  - `UIDirectRenderer.java:94` - Cursor blink ✅ OK
+  - `ModalEventHandler.java:50` - Click debounce ✅ OK
+  - `BCModalInventoryScreen.java:353,432,749` - Animation ✅ OK
+  - **Only Contract screens need fixing** (business logic time display)
+
+---
+
+### **4.4 Implementation Order**
+
+**Phase 4.1: Contract List (Biggest Impact)**
+1. Create `ContractSummaryViewModel` + Builder
+2. Create `ContractListSyncPacket`
+3. Update `ContractBoard.broadcastUpdate()` to use new packet
+4. Update `ContractBoardScreen` to consume view-model
+5. Delete `filterContractsByTab()` method
+
+**Phase 4.2: Contract Detail (Complete the Pattern)**
+1. Create `ContractDetailViewModel`
+2. Create request/response packets
+3. Update `ContractDetailScreen` to request on open
+4. Add loading state UI
+
+**Phase 4.3: Time Utils (Polish)**
+1. Create `BCTimeUtils`
+2. Update Contract screens to use it
+3. Document time handling pattern
+
+---
+
+### **4.5 Data Size & Network Optimization**
+
+| Metric | Current | After Phase 4 |
+|--------|---------|---------------|
+| Max contracts | 100 ✅ | 100 (keep) |
+| List sync data | Full NBT + all bids | Summary only (~100 bytes/contract) |
+| Detail fetch | All upfront | On-demand per contract |
+| List packet size | ~50KB worst case | ~10KB (100 summaries) |
+| Detail packet size | N/A | ~1-2KB per contract |
+| Client filtering | `filterContractsByTab()` | **ELIMINATED** |
+| Client time calc | `System.currentTimeMillis()` | **ELIMINATED** |
+
+### **4.6 Contract Board Compliance Summary**
+
+| Item | Before | After |
+|------|--------|-------|
+| Contract Filtering | Client-side (`ContractBoardScreen:128`) | Server-side (pre-filtered lists) |
+| Time Calculations | Client `System.currentTimeMillis()` | Server epoch + `BCTimeUtils` |
+| Bid Display | Full bid map synced | Summary in list, detail on-demand |
+| Button States | Client checks | Server-provided booleans |
+| Tooltip Strings | Client generates | Server pre-calculated |
+| Data Strategy | All data upfront | Summary list + on-demand detail |
+| Compliance | ~40% | Target: 100% |
+
+---
+
+### **4.7 Minor Improvements (LOW PRIORITY - Not Urgent)**
+
+These are "nice-to-have" based on the audit but not critical:
+
+- [ ] **Visit History Pagination** (50 entries max, rarely hit):
+  - Could add "Load More" to Visit History modal
+  - Current 50 limit is reasonable for most gameplay
+
+- [ ] **Payment Board Pagination** (100 rewards max, rarely hit):
+  - Could paginate if 100 rewards becomes common
+  - Current limit handles normal gameplay well
+
+**Decision**: Defer these until users report issues. Current limits are adequate
+
+---
+
+## 📊 **PHASE 5: VERIFICATION & TESTING**
+
+### **5.1 Architecture Compliance Testing** 🧪 **CRITICAL**
 - [ ] **Create view-model validation tests**:
   - Verify client contains zero business logic
   - Test that all UI displays pre-calculated values
@@ -353,7 +547,7 @@
   - Test that all financial calculations are server-authoritative
   - Verify proper validation of client requests
 
-### **4.2 Performance Analysis** 🧪 **MEDIUM**
+### **5.2 Performance Analysis** 🧪 **MEDIUM**
 - [ ] **Network bandwidth optimization**:
   - Measure packet size reduction from view-model approach
   - Optimize display string formatting and caching
@@ -404,8 +598,11 @@
 - **✅ COMPLETED**: Global Market Unification (Phase 2.5) 🔧
 - **✅ COMPLETED**: CSV configuration documentation (Phase 3.1) 📝
 - **✅ COMPLETED**: Client sync helper simplification (Phase 3.2) 🧹
+- **✅ COMPLETED**: Tourism indicator view-model fix (TownInterfaceViewModel) 🎉
 - **⚠️ REMAINING**: Optional enhancement phase (3.3)
-- **📊 Overall**: ~95% compliant with target architecture (PHASE 3.2 COMPLETE!)
+- **🕐 PENDING**: Time handling & Contract Board view-model (Phase 4)
+- **🧪 PENDING**: Verification & Testing (Phase 5)
+- **📊 Overall**: ~95% compliant with target architecture (Contract Board is ~40%)
 
 ### **Development Guidelines**
 - **Before Changes**: Verify current Forge functionality works correctly

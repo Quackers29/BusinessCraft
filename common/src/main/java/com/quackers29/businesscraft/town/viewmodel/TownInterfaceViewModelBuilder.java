@@ -80,7 +80,12 @@ public class TownInterfaceViewModelBuilder {
         // 7. Search Radius
         int radius = town.getSearchRadius();
 
-        // 8. Warnings
+        // 8. Cumulative Tourism Stats (for config requirements like "tourism" and "tourism_dist")
+        int totalTouristsArrived = town.getTotalTouristsArrived();
+        double totalTouristDistance = town.getTotalTouristDistance();
+        float borderRadius = town.getBoundaryRadius();
+
+        // 9. Warnings
         String warning = "";
         if (pop == 0)
             warning = "No Population!";
@@ -100,6 +105,9 @@ public class TownInterfaceViewModelBuilder {
                 autoCollect,
                 taxes,
                 radius,
+                totalTouristsArrived,
+                totalTouristDistance,
+                borderRadius,
                 warning);
     }
 
@@ -111,6 +119,9 @@ public class TownInterfaceViewModelBuilder {
                 Status.CRITICAL, Status.CRITICAL, Status.CRITICAL,
                 false, false, false,
                 radius,
+                0,    // totalTouristsArrived
+                0.0,  // totalTouristDistance
+                50f,  // borderRadius default
                 "Town Data Unavailable");
     }
 

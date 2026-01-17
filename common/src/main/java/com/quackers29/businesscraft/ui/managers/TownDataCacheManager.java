@@ -262,8 +262,8 @@ public class TownDataCacheManager {
     }
 
     public float getCachedBorderRadius() {
-        // TODO: Move to a ViewModel? For now return default or 50
-        return 50f;
+        var vm = getInterfaceViewModel();
+        return (vm != null) ? vm.getBorderRadius() : 50f;
     }
 
     public float getCachedAiScore(String nodeId) {
@@ -316,13 +316,13 @@ public class TownDataCacheManager {
     }
 
     public int getCachedTotalTouristsArrived() {
-        // Not currently synced in TownInterfaceViewModel
-        return 0;
+        var vm = getInterfaceViewModel();
+        return (vm != null) ? vm.getTotalTouristsArrived() : 0;
     }
 
     public double getCachedTotalTouristDistance() {
-        // Not currently synced in TownInterfaceViewModel
-        return 0.0;
+        var vm = getInterfaceViewModel();
+        return (vm != null) ? vm.getTotalTouristDistance() : 0.0;
     }
 
     /**

@@ -46,6 +46,11 @@ public class TownInterfaceViewModel {
     // Configurable values that need to be edited
     private final int searchRadius;
 
+    // Cumulative Tourism Stats (for config requirements like "tourism" and "tourism_dist")
+    private final int totalTouristsArrived;
+    private final double totalTouristDistance;
+    private final float borderRadius;
+
     // Warnings (Server-side validation)
     private final String primaryWarning; // e.g. "Town Hall Missing!" or empty
 
@@ -64,6 +69,9 @@ public class TownInterfaceViewModel {
             boolean autoCollectEnabled,
             boolean taxesEnabled,
             int searchRadius,
+            int totalTouristsArrived,
+            double totalTouristDistance,
+            float borderRadius,
             String primaryWarning) {
         this.townName = townName;
         this.biomeFormatted = biomeFormatted;
@@ -79,6 +87,9 @@ public class TownInterfaceViewModel {
         this.autoCollectEnabled = autoCollectEnabled;
         this.taxesEnabled = taxesEnabled;
         this.searchRadius = searchRadius;
+        this.totalTouristsArrived = totalTouristsArrived;
+        this.totalTouristDistance = totalTouristDistance;
+        this.borderRadius = borderRadius;
         this.primaryWarning = primaryWarning;
     }
 
@@ -97,6 +108,9 @@ public class TownInterfaceViewModel {
         this.autoCollectEnabled = buf.readBoolean();
         this.taxesEnabled = buf.readBoolean();
         this.searchRadius = buf.readInt();
+        this.totalTouristsArrived = buf.readInt();
+        this.totalTouristDistance = buf.readDouble();
+        this.borderRadius = buf.readFloat();
         this.primaryWarning = buf.readUtf();
     }
 
@@ -115,6 +129,9 @@ public class TownInterfaceViewModel {
         buf.writeBoolean(autoCollectEnabled);
         buf.writeBoolean(taxesEnabled);
         buf.writeInt(searchRadius);
+        buf.writeInt(totalTouristsArrived);
+        buf.writeDouble(totalTouristDistance);
+        buf.writeFloat(borderRadius);
         buf.writeUtf(primaryWarning);
     }
 
@@ -181,5 +198,17 @@ public class TownInterfaceViewModel {
 
     public boolean hasWarning() {
         return !primaryWarning.isEmpty();
+    }
+
+    public int getTotalTouristsArrived() {
+        return totalTouristsArrived;
+    }
+
+    public double getTotalTouristDistance() {
+        return totalTouristDistance;
+    }
+
+    public float getBorderRadius() {
+        return borderRadius;
     }
 }
