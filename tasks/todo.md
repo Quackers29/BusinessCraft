@@ -337,45 +337,75 @@
 
 ---
 
-## 🕐 **PHASE 4: CONTRACT BOARD VIEW-MODEL & TIME HANDLING**
+## 🕐 **PHASE 4: TIME UTILITY MODULE**
 
-### **📋 AUDIT RESULTS (Verified 2026-01-17)**
+**Goal:** Centralize time formatting, eliminate client `System.currentTimeMillis()` for display.
 
-**✅ Systems with Proper Limits (No Action Needed):**
-| System | Limit | Location |
-|--------|-------|----------|
-| Visit History | 50 entries | `Town.java:90` - `MAX_HISTORY_SIZE = 50` |
-| Payment Board | 100 rewards | `TownPaymentBoard.java:26` - `MAX_REWARDS = 100` |
-| Contracts | 100 total | `ContractBoard.java:97-108` - cleanup loop |
-| Platforms | 10 per town | `PlatformManager.java:24` - `MAX_PLATFORMS = 10` |
-| Active Contracts/Town | 3 max | `TownContractComponent.java:23` |
+### **4.1 Create `BCTimeUtils.java`** 🔧 **MEDIUM PRIORITY**
+- [ ] **Create `BCTimeUtils.java`** (~60 lines):
+  - `formatTimeRemaining(long expiryEpoch, long serverNow)` → "5m 30s" or "Expired"
+  - `formatDateTime(long epoch)` → "01/14 15:30" in client timezone
+  - `formatDuration(long millis)` → "2h 15m 30s"
+  - `isExpired(long expiryEpoch, long serverNow)` → boolean
 
-**✅ View-Model Data (Appropriately Bounded):**
-| System | Bound Type | Actual Size |
-|--------|------------|-------------|
-| Upgrades | Config-bounded | ~11 entries (`upgrades.csv`: 12 lines) |
-| Productions | Config-bounded | ~9 entries (`productions.csv`: 10 lines) |
-| Resources | Town inventory | Variable but reasonable |
-| Market Prices | Float map | Bounded by registry |
+### **4.2 Timezone Configuration**
+- [ ] **Add timezone setting to `businesscraft.properties`**:
+  - `clientTimezone=AUTO` (default: use system timezone)
+  - Options: "AUTO", "UTC", "America/New_York", "Europe/London", etc.
+  - `BCTimeUtils.setTimezone(String)` to configure on client startup
 
-**⚠️ Contract Board - THE OUTLIER (Requires Action):**
+### **4.3 Audit Notes**
+**Client `System.currentTimeMillis()` usage that is OK (animation/debouncing):**
+- `BCScrollableComponent.java:164,183` - Scroll drag timing ✅ OK
+- `UIGridBuilder.java:109,887` - Debouncing ✅ OK
+- `ProductionTab.java:52,68` - Update throttling ✅ OK
+- `BCComponent.java:141,170,558` - Animation timing ✅ OK
+- `UIDirectRenderer.java:94` - Cursor blink ✅ OK
+- `ModalEventHandler.java:50` - Click debounce ✅ OK
+- `BCModalInventoryScreen.java:353,432,749` - Animation ✅ OK
+
+**Usage that needs fixing (business logic time display):**
+- `ContractBoardScreen.java:187-189` - Time remaining display
+- `ContractDetailScreen.java:218-220` - Time remaining display
+- These will be fixed by Phase 5's generic query system
+
+---
+
+## 🔧 **PHASE 5: CONTRACT BOARD VIEW-MODEL COMPLIANCE**
+
+### **📋 Context: Why Contract Board Needs Work**
+
+The Contract Board is the **only system** that doesn't follow the view-model pattern properly:
+
 | Issue | Location | Problem |
 |-------|----------|---------|
 | Client-side filtering | `ContractBoardScreen.java:128-155` | `filterContractsByTab()` streams/filters |
 | Client time calculation | `ContractBoardScreen.java:187-189` | `System.currentTimeMillis()` for display |
 | Client time calculation | `ContractDetailScreen.java:218-220` | `System.currentTimeMillis()` for display |
 | Variable bid lists | `Contract.java:15` | `Map<UUID, Float> bids` - unbounded |
-| Server-wide data | `ContractSyncPacket` | Sends ALL contracts, not town-scoped |
+| Server-wide data | `ContractSyncPacket` | Sends ALL contracts, not player-scoped |
 
 **Why Contract Board is Different:**
 - Other view-models sync **town-scoped** data (your resources, your upgrades)
 - Contract Board syncs **server-wide** data (all contracts from all towns)
 - Bid maps have **no cap** and grow with auction activity
-- Full NBT serialization per contract is expensive
 
 ---
 
-### **4.1 Contract Summary View-Model (List View)** 🔧 **HIGH PRIORITY**
+### **5.1 Core Philosophy: Server Stores All, Client Gets Paginated**
+
+**Key Principle:** The server is the permanent record of ALL contracts ever created. The client only receives what it needs to display the current view.
+
+| Aspect | Server | Client |
+|--------|--------|--------|
+| **Storage** | ALL contracts forever (no limits) | Only current page/view |
+| **History** | Complete audit trail | Paginated on-demand fetch |
+| **Active contracts** | Full list | Synced when relevant |
+| **Expired contracts** | Kept for history | Only fetched when viewing history tab |
+
+---
+
+### **5.2 Contract Summary View-Model (List View)** 🔧 **HIGH PRIORITY**
 
 **Goal:** Replace full Contract sync with lightweight summaries for list display.
 
@@ -384,36 +414,44 @@
   - `String resourceId` - For icon display
   - `int quantity` - For display
   - `String issuerTownName` - Seller name
-  - `String timeRemainingDisplay` - "5m 30s" or "Expired" (pre-calculated)
+  - `String timeRemainingDisplay` - "5m 30s" or "Expired" (server-calculated)
   - `String highestBidDisplay` - "150 emeralds" or "No bids"
   - `String statusDisplay` - "Auction", "Awaiting Courier", "In Transit"
   - `boolean canBid` - Server-calculated
   - `boolean canAcceptCourier` - Server-calculated (requires player location)
 
 - [ ] **Create `ContractSummaryViewModelBuilder.java`** (~200 lines):
-  - Build summaries for all contracts
+  - Build summaries for requested contracts only
   - Pre-filter into tabs: `auctionContracts`, `activeContracts`, `historyContracts`
   - Pre-sort each list (expiring first for auction/active, latest first for history)
   - Calculate `canBid` based on: not own contract, has emeralds, auction open
   - Calculate `canAcceptCourier` based on: player near seller town, no courier assigned
   - Format time remaining as display string (eliminates client `System.currentTimeMillis()`)
+  - **Pagination support**: Accept `page`, `pageSize` params for history tab
 
-- [ ] **Create `ContractListSyncPacket.java`** (~100 lines):
+- [ ] **Create `ContractListSyncPacket.java`** (~120 lines):
   - Replace `ContractSyncPacket` for list view
-  - Contains: `List<ContractSummaryViewModel>` per tab (3 lists)
+  - Contains: `List<ContractSummaryViewModel>` for requested tab
+  - Contains: `int page`, `int pageSize`, `int totalCount`, `boolean hasMore` (pagination metadata)
   - Contains: `long serverCurrentTime` for any residual client needs
   - Contains: `Map<String, Float> marketPrices` (keep existing)
-  - **Estimated size**: ~100 bytes/contract vs ~500+ bytes currently
+  - **Estimated size**: ~100 bytes/contract (lightweight summaries)
+
+- [ ] **Create `RequestContractListPacket.java`** (Server-bound, ~60 lines):
+  - Contains: `String tab` ("auction", "active", "history")
+  - Contains: `int page`, `int pageSize` (for history pagination)
+  - Server responds with `ContractListSyncPacket`
 
 - [ ] **Update `ContractBoardScreen.java`**:
   - Remove `filterContractsByTab()` method (lines 128-155) - use server lists
   - Remove `System.currentTimeMillis()` call (line 187) - use view-model string
   - Update `populateGrid()` to use `ContractSummaryViewModel`
+  - Add pagination controls for History tab ("Load More" or page navigation)
   - Keep "View" button that opens detail screen
 
 ---
 
-### **4.2 Contract Detail View-Model (On-Demand)** 🔧 **HIGH PRIORITY**
+### **5.3 Contract Detail View-Model (On-Demand)** 🔧 **HIGH PRIORITY**
 
 **Goal:** Fetch full contract details only when user clicks "View".
 
@@ -427,11 +465,11 @@
   - `String tooltipText` - Pre-built tooltip
   - Inner class `BidDisplayInfo { String bidderName; String amountDisplay; boolean isHighest; }`
 
-- [ ] **Create `RequestContractDetailPacket.java`** (Server-bound):
+- [ ] **Create `RequestContractDetailPacket.java`** (Server-bound, ~50 lines):
   - Contains: `UUID contractId`
   - Server responds with `ContractDetailSyncPacket`
 
-- [ ] **Create `ContractDetailSyncPacket.java`** (Client-bound):
+- [ ] **Create `ContractDetailSyncPacket.java`** (Client-bound, ~80 lines):
   - Contains: `ContractDetailViewModel` for single contract
   - Contains: `long serverCurrentTime`
   - **Estimated size**: ~1-2KB per contract (includes all bids)
@@ -445,95 +483,95 @@
 
 ---
 
-### **4.3 Time Utility Module** 🔧 **MEDIUM PRIORITY**
+### **5.4 Implementation Order**
 
-**Goal:** Centralize time formatting, eliminate client `System.currentTimeMillis()` for display.
+**Step 1: Remove Hard Limits** ✅ **DONE**
+1. ~~**Remove 100 contract limit** in `ContractBoard.java:97-108` (the cleanup loop)~~ ✅
+2. ~~Server now stores ALL contracts permanently as historical record~~ ✅
+3. ~~Archive flag not needed~~ - existing `SellContract` flags sufficient:
+   - `isAuctionClosed()` → auction ended
+   - `isDelivered()` → delivery complete
+   - Tab filtering: Auction=`!closed`, Active=`closed && !delivered`, History=`delivered`
 
-- [ ] **Create `BCTimeUtils.java`** (~60 lines):
-  - `formatTimeRemaining(long expiryEpoch, long serverNow)` → "5m 30s" or "Expired"
-  - `formatDateTime(long epoch)` → "01/14 15:30" in client timezone
-  - `formatDuration(long millis)` → "2h 15m 30s"
-  - `isExpired(long expiryEpoch, long serverNow)` → boolean
-
-- [ ] **Audit remaining `System.currentTimeMillis()` in UI** (most are OK):
-  - `BCScrollableComponent.java:164,183` - Scroll drag timing ✅ OK
-  - `UIGridBuilder.java:109,887` - Debouncing ✅ OK
-  - `ProductionTab.java:52,68` - Update throttling ✅ OK
-  - `BCComponent.java:141,170,558` - Animation timing ✅ OK
-  - `UIDirectRenderer.java:94` - Cursor blink ✅ OK
-  - `ModalEventHandler.java:50` - Click debounce ✅ OK
-  - `BCModalInventoryScreen.java:353,432,749` - Animation ✅ OK
-  - **Only Contract screens need fixing** (business logic time display)
-
----
-
-### **4.4 Implementation Order**
-
-**Phase 4.1: Contract List (Biggest Impact)**
+**Step 2: Contract List with Pagination**
 1. Create `ContractSummaryViewModel` + Builder
-2. Create `ContractListSyncPacket`
-3. Update `ContractBoard.broadcastUpdate()` to use new packet
-4. Update `ContractBoardScreen` to consume view-model
-5. Delete `filterContractsByTab()` method
+2. Create `RequestContractListPacket` (client requests specific tab + page)
+3. Create `ContractListSyncPacket` (with pagination metadata)
+4. Update `ContractBoard` to respond to list requests (not broadcast everything)
+5. Update `ContractBoardScreen` to consume view-model
+6. Delete `filterContractsByTab()` method
+7. Add "Load More" / page controls for History tab
 
-**Phase 4.2: Contract Detail (Complete the Pattern)**
+**Step 3: Contract Detail (Complete the Pattern)**
 1. Create `ContractDetailViewModel`
-2. Create request/response packets
+2. Create `RequestContractDetailPacket` + `ContractDetailSyncPacket`
 3. Update `ContractDetailScreen` to request on open
 4. Add loading state UI
 
-**Phase 4.3: Time Utils (Polish)**
-1. Create `BCTimeUtils`
-2. Update Contract screens to use it
-3. Document time handling pattern
+**Step 4: Cleanup**
+1. Delete old `ContractSyncPacket` (replaced by new packets)
+2. Verify all client time calculations removed
 
 ---
 
-### **4.5 Data Size & Network Optimization**
+### **5.5 Data Size & Network Optimization**
 
-| Metric | Current | After Phase 4 |
+| Metric | Current | After Phase 5 |
 |--------|---------|---------------|
-| Max contracts | 100 ✅ | 100 (keep) |
-| List sync data | Full NBT + all bids | Summary only (~100 bytes/contract) |
-| Detail fetch | All upfront | On-demand per contract |
-| List packet size | ~50KB worst case | ~10KB (100 summaries) |
+| **Server storage** | Hard limit: 100 contracts | **NO LIMIT** - all history preserved |
+| **Client sync (list)** | All 100+ contracts + bids | **Paginated** summaries (~20 per page) |
+| **Client sync (detail)** | All upfront | **On-demand** per contract |
+| List packet size | ~50KB worst case | ~2KB per page (20 summaries) |
 | Detail packet size | N/A | ~1-2KB per contract |
 | Client filtering | `filterContractsByTab()` | **ELIMINATED** |
 | Client time calc | `System.currentTimeMillis()` | **ELIMINATED** |
 
-### **4.6 Contract Board Compliance Summary**
+**Pagination defaults:**
+- Auction tab: All active auctions (typically small, no pagination needed)
+- Active tab: All in-progress contracts (typically small, no pagination needed)
+- History tab: **Paginated** - 20 contracts per page, "Load More" to fetch older
+
+---
+
+### **5.6 Contract Board Compliance Summary**
 
 | Item | Before | After |
 |------|--------|-------|
+| **Server storage** | Hard limit (100 contracts) | **No limit** - permanent record |
+| **History access** | All synced upfront | **Paginated** on-demand |
 | Contract Filtering | Client-side (`ContractBoardScreen:128`) | Server-side (pre-filtered lists) |
 | Time Calculations | Client `System.currentTimeMillis()` | Server epoch + `BCTimeUtils` |
 | Bid Display | Full bid map synced | Summary in list, detail on-demand |
 | Button States | Client checks | Server-provided booleans |
 | Tooltip Strings | Client generates | Server pre-calculated |
-| Data Strategy | All data upfront | Summary list + on-demand detail |
+| Data Strategy | All data upfront | Paginated list + on-demand detail |
 | Compliance | ~40% | Target: 100% |
 
 ---
 
-### **4.7 Minor Improvements (LOW PRIORITY - Not Urgent)**
+### **5.7 Packet Architecture Note**
 
-These are "nice-to-have" based on the audit but not critical:
+**Why we're keeping specific packets (not going generic):**
 
-- [ ] **Visit History Pagination** (50 entries max, rarely hit):
-  - Could add "Load More" to Visit History modal
-  - Current 50 limit is reasonable for most gameplay
+Per community analysis, 99% of Minecraft mods use specific packet classes per message type:
+- **Type safety**: Each packet has compile-time guarantees
+- **Community standard**: Create, AE2, Mekanism all use this pattern
+- **Minecraft's design**: Vanilla has ~100+ specific packet classes
+- **Easier debugging**: Clear handler per packet type
 
-- [ ] **Payment Board Pagination** (100 rewards max, rarely hit):
-  - Could paginate if 100 rewards becomes common
-  - Current limit handles normal gameplay well
+This phase adds **4 new specific packets** (following the established pattern):
+- `RequestContractListPacket` - client requests tab + page
+- `ContractListSyncPacket` - server responds with paginated summaries
+- `RequestContractDetailPacket` - client requests full contract
+- `ContractDetailSyncPacket` - server responds with full contract
 
-**Decision**: Defer these until users report issues. Current limits are adequate
+Net change: **+3 packets** (replaces 1, adds 4) but significantly better architecture with proper pagination.
 
 ---
 
-## 📊 **PHASE 5: VERIFICATION & TESTING**
+## 📊 **PHASE 6: VERIFICATION & TESTING**
 
-### **5.1 Architecture Compliance Testing** 🧪 **CRITICAL**
+### **6.1 Architecture Compliance Testing** 🧪 **CRITICAL**
 - [ ] **Create view-model validation tests**:
   - Verify client contains zero business logic
   - Test that all UI displays pre-calculated values
@@ -547,10 +585,10 @@ These are "nice-to-have" based on the audit but not critical:
   - Test that all financial calculations are server-authoritative
   - Verify proper validation of client requests
 
-### **5.2 Performance Analysis** 🧪 **MEDIUM**
+### **6.2 Performance Analysis** 🧪 **MEDIUM**
 - [ ] **Network bandwidth optimization**:
   - Measure packet size reduction from view-model approach
-  - Optimize display string formatting and caching
+  - Verify on-demand fetch reduces data transfers
   - Compare before/after sync performance
 - [ ] **Client performance testing**:
   - Verify removal of calculation load from client

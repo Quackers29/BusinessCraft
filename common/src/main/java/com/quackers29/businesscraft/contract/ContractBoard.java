@@ -94,18 +94,9 @@ public class ContractBoard {
     public void tick(ServerLevel level) {
         closeAuctions();
 
-        // Keep expired contracts for History tab, but limit total to 100
-        while (savedData.getContracts().size() > 100) {
-            Contract oldest = savedData.getContracts().stream()
-                    .min((c1, c2) -> Long.compare(c1.getExpiryTime(), c2.getExpiryTime()))
-                    .orElse(null);
-            if (oldest != null) {
-                savedData.getContracts().remove(oldest);
-                savedData.setDirty();
-            } else {
-                break;
-            }
-        }
+        // Server stores ALL contracts permanently as historical record.
+        // Client receives paginated data on-demand (see Phase 5 architecture).
+        // No cleanup/pruning - contracts are kept forever for audit trail.
 
         // Check for contracts that have finished their "Active" phase (delivery time)
         for (Contract contract : savedData.getContracts()) {
