@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.ui.managers;
 
 import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
+import com.quackers29.businesscraft.contract.viewmodel.ContractDetailViewModel;
 import com.quackers29.businesscraft.contract.viewmodel.ContractSummaryViewModel;
 import com.quackers29.businesscraft.data.cache.TownDataCache;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
@@ -33,6 +34,9 @@ public class TownDataCacheManager {
 
     // Static cache for contract list view-models (per-tab)
     private static final Map<String, ContractListCache> contractListCache = new ConcurrentHashMap<>();
+
+    // Static cache for contract detail view-model (single contract at a time)
+    private static ContractDetailCache contractDetailCache = null;
 
     /**
      * Cache entry for a contract list tab.
@@ -668,6 +672,54 @@ public class TownDataCacheManager {
      */
     public static void clearContractListCache() {
         contractListCache.clear();
+    }
+
+    // ========== Contract Detail View-Model Cache ==========
+
+    /**
+     * Cache entry for contract detail.
+     */
+    public static class ContractDetailCache {
+        public final ContractDetailViewModel detail;
+        public final long serverTime;
+        public final long cacheTime;
+
+        public ContractDetailCache(ContractDetailViewModel detail, long serverTime) {
+            this.detail = detail;
+            this.serverTime = serverTime;
+            this.cacheTime = System.currentTimeMillis();
+        }
+    }
+
+    /**
+     * Updates the contract detail cache.
+     * Called by ContractDetailSyncPacket.
+     */
+    public static void updateContractDetail(ContractDetailViewModel detail, long serverTime) {
+        contractDetailCache = new ContractDetailCache(detail, serverTime);
+    }
+
+    /**
+     * Gets the cached contract detail.
+     * @return The cache entry, or null if not cached
+     */
+    public static ContractDetailCache getContractDetailCache() {
+        return contractDetailCache;
+    }
+
+    /**
+     * Gets the cached contract detail view-model.
+     * @return The detail, or null if not cached
+     */
+    public static ContractDetailViewModel getCachedContractDetail() {
+        return contractDetailCache != null ? contractDetailCache.detail : null;
+    }
+
+    /**
+     * Clears the contract detail cache.
+     */
+    public static void clearContractDetailCache() {
+        contractDetailCache = null;
     }
 
 }

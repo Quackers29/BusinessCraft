@@ -445,35 +445,42 @@ The Contract Board is the **only system** that doesn't follow the view-model pat
 
 ---
 
-### **5.3 Contract Detail View-Model (On-Demand)** 🔧 **HIGH PRIORITY**
+### **5.3 Contract Detail View-Model (On-Demand)** ✅ **COMPLETE**
 
 **Goal:** Fetch full contract details only when user clicks "View".
 
-- [ ] **Create `ContractDetailViewModel.java`** (~120 lines):
-  - Summary fields (same as list view)
-  - `List<BidDisplayInfo> bids` - All bids with names, sorted
-  - `String courierName` - If assigned
-  - `String deliveryProgressDisplay` - "5/10 delivered"
-  - `String createdDateDisplay` - "01/14 15:30"
-  - `String expiresDateDisplay` - "01/15 12:00"
-  - `String tooltipText` - Pre-built tooltip
-  - Inner class `BidDisplayInfo { String bidderName; String amountDisplay; boolean isHighest; }`
+- [x] **Create `ContractDetailViewModel.java`** ✅
+  - Location: `contract/viewmodel/ContractDetailViewModel.java`
+  - All summary fields plus: `bids` list, `courierName`, `deliveryProgressDisplay`,
+    `createdDateDisplay`, `expiresDateDisplay`, `winningBidderName`, `isAuctionClosed`
+  - Inner record `BidDisplayInfo { bidderName, amountDisplay, isHighest }`
 
-- [ ] **Create `RequestContractDetailPacket.java`** (Server-bound, ~50 lines):
+- [x] **Create `ContractDetailViewModelBuilder.java`** ✅
+  - Location: `contract/viewmodel/ContractDetailViewModelBuilder.java`
+  - Builds full detail with bid list (sorted by amount)
+  - All time calculations server-side
+
+- [x] **Create `RequestContractDetailPacket.java`** ✅
+  - Location: `network/packets/ui/RequestContractDetailPacket.java`
   - Contains: `UUID contractId`
-  - Server responds with `ContractDetailSyncPacket`
+  - Server builds detail and responds with `ContractDetailSyncPacket`
+  - Registered in `PacketRegistry.java`
 
-- [ ] **Create `ContractDetailSyncPacket.java`** (Client-bound, ~80 lines):
-  - Contains: `ContractDetailViewModel` for single contract
-  - Contains: `long serverCurrentTime`
-  - **Estimated size**: ~1-2KB per contract (includes all bids)
+- [x] **Create `ContractDetailSyncPacket.java`** ✅
+  - Location: `network/packets/ui/ContractDetailSyncPacket.java`
+  - Contains: `ContractDetailViewModel` + `serverCurrentTime`
+  - Registered in `PacketRegistry.java`
 
-- [ ] **Update `ContractDetailScreen.java`**:
-  - Request detail on screen open via `RequestContractDetailPacket`
-  - Remove `System.currentTimeMillis()` call (line 218)
-  - Display loading state while waiting for detail packet
-  - Use `ContractDetailViewModel` for all display
-  - Remove client-side bid sorting (line 235) - server pre-sorts
+- [x] **Update `ContractDetailScreen.java`** ✅
+  - Requests detail on screen open via `RequestContractDetailPacket`
+  - No client `System.currentTimeMillis()` for business logic
+  - Shows "Loading details..." while waiting for response
+  - Uses `renderViewModelDetails()` for server-provided display strings
+  - Bid list from view-model (server pre-sorted)
+
+- [x] **Update `TownDataCacheManager.java`** ✅
+  - Added `ContractDetailCache` class
+  - Added `updateContractDetail()`, `getCachedContractDetail()`, `clearContractDetailCache()`
 
 ---
 
@@ -496,15 +503,16 @@ The Contract Board is the **only system** that doesn't follow the view-model pat
 6. ~~Delete `filterContractsByTab()` method~~ ✅
 7. ~~Add "Load More" / page controls for History tab~~ ✅
 
-**Step 3: Contract Detail (Complete the Pattern)**
-1. Create `ContractDetailViewModel`
-2. Create `RequestContractDetailPacket` + `ContractDetailSyncPacket`
-3. Update `ContractDetailScreen` to request on open
-4. Add loading state UI
+**Step 3: Contract Detail (Complete the Pattern)** ✅ **DONE**
+1. ~~Create `ContractDetailViewModel` + Builder~~ ✅
+2. ~~Create `RequestContractDetailPacket` + `ContractDetailSyncPacket`~~ ✅
+3. ~~Update `ContractDetailScreen` to request on open~~ ✅
+4. ~~Add loading state UI~~ ✅
 
-**Step 4: Cleanup**
-1. Delete old `ContractSyncPacket` (replaced by new packets)
-2. Verify all client time calculations removed
+**Step 4: Cleanup** (Optional - can keep legacy for backwards compatibility)
+1. Old `ContractSyncPacket` still works for legacy code paths
+2. New view-model packets handle modern contract board UI
+3. All client time calculations eliminated from view-model path
 
 ---
 
