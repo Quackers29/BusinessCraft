@@ -405,49 +405,43 @@ The Contract Board is the **only system** that doesn't follow the view-model pat
 
 ---
 
-### **5.2 Contract Summary View-Model (List View)** 🔧 **HIGH PRIORITY**
+### **5.2 Contract Summary View-Model (List View)** ✅ **COMPLETE**
 
 **Goal:** Replace full Contract sync with lightweight summaries for list display.
 
-- [ ] **Create `ContractSummaryViewModel.java`** (~80 lines):
-  - `UUID contractId` - For detail fetch
-  - `String resourceId` - For icon display
-  - `int quantity` - For display
-  - `String issuerTownName` - Seller name
-  - `String timeRemainingDisplay` - "5m 30s" or "Expired" (server-calculated)
-  - `String highestBidDisplay` - "150 emeralds" or "No bids"
-  - `String statusDisplay` - "Auction", "Awaiting Courier", "In Transit"
-  - `boolean canBid` - Server-calculated
-  - `boolean canAcceptCourier` - Server-calculated (requires player location)
+- [x] **Create `ContractSummaryViewModel.java`** ✅
+  - Location: `contract/viewmodel/ContractSummaryViewModel.java`
+  - Fields: `contractId`, `resourceId`, `quantity`, `issuerTownName`, `timeRemainingDisplay`, 
+    `highestBidDisplay`, `statusDisplay`, `priceDisplay`, `canBid`, `canAcceptCourier`, `isExpired`, `isDelivered`
 
-- [ ] **Create `ContractSummaryViewModelBuilder.java`** (~200 lines):
-  - Build summaries for requested contracts only
-  - Pre-filter into tabs: `auctionContracts`, `activeContracts`, `historyContracts`
-  - Pre-sort each list (expiring first for auction/active, latest first for history)
-  - Calculate `canBid` based on: not own contract, has emeralds, auction open
-  - Calculate `canAcceptCourier` based on: player near seller town, no courier assigned
-  - Format time remaining as display string (eliminates client `System.currentTimeMillis()`)
-  - **Pagination support**: Accept `page`, `pageSize` params for history tab
+- [x] **Create `ContractSummaryViewModelBuilder.java`** ✅
+  - Location: `contract/viewmodel/ContractSummaryViewModelBuilder.java`
+  - Server-side filtering into tabs: AUCTION, ACTIVE, HISTORY
+  - Server-side sorting (expiring first for auction/active, latest first for history)
+  - Pagination support with `ContractListResult` record
+  - Time formatting via `formatTimeRemaining()` (eliminates client `System.currentTimeMillis()`)
 
-- [ ] **Create `ContractListSyncPacket.java`** (~120 lines):
-  - Replace `ContractSyncPacket` for list view
-  - Contains: `List<ContractSummaryViewModel>` for requested tab
-  - Contains: `int page`, `int pageSize`, `int totalCount`, `boolean hasMore` (pagination metadata)
-  - Contains: `long serverCurrentTime` for any residual client needs
-  - Contains: `Map<String, Float> marketPrices` (keep existing)
-  - **Estimated size**: ~100 bytes/contract (lightweight summaries)
+- [x] **Create `ContractListSyncPacket.java`** ✅
+  - Location: `network/packets/ui/ContractListSyncPacket.java`
+  - Contains: `List<ContractSummaryViewModel>`, pagination metadata, `serverCurrentTime`, `marketPrices`
+  - Registered in `PacketRegistry.java`
 
-- [ ] **Create `RequestContractListPacket.java`** (Server-bound, ~60 lines):
-  - Contains: `String tab` ("auction", "active", "history")
-  - Contains: `int page`, `int pageSize` (for history pagination)
-  - Server responds with `ContractListSyncPacket`
+- [x] **Create `RequestContractListPacket.java`** ✅
+  - Location: `network/packets/ui/RequestContractListPacket.java`
+  - Contains: `tab`, `page`, `pageSize`
+  - Server handler builds and sends `ContractListSyncPacket`
+  - Registered in `PacketRegistry.java`
 
-- [ ] **Update `ContractBoardScreen.java`**:
-  - Remove `filterContractsByTab()` method (lines 128-155) - use server lists
-  - Remove `System.currentTimeMillis()` call (line 187) - use view-model string
-  - Update `populateGrid()` to use `ContractSummaryViewModel`
-  - Add pagination controls for History tab ("Load More" or page navigation)
-  - Keep "View" button that opens detail screen
+- [x] **Update `ContractBoardScreen.java`** ✅
+  - Removed `filterContractsByTab()` method - server handles filtering
+  - Removed `System.currentTimeMillis()` call - uses view-model `timeRemainingDisplay`
+  - Updated `populateGrid()` to use `ContractSummaryViewModel`
+  - Added "Load More" button for history tab pagination
+  - Requests contract list from server on init and tab change
+
+- [x] **Update `TownDataCacheManager.java`** ✅
+  - Added `ContractListCache` class for caching contract lists per tab
+  - Added `updateContractList()`, `getContractListCache()`, `getCachedContracts()` methods
 
 ---
 
@@ -493,14 +487,14 @@ The Contract Board is the **only system** that doesn't follow the view-model pat
    - `isDelivered()` → delivery complete
    - Tab filtering: Auction=`!closed`, Active=`closed && !delivered`, History=`delivered`
 
-**Step 2: Contract List with Pagination**
-1. Create `ContractSummaryViewModel` + Builder
-2. Create `RequestContractListPacket` (client requests specific tab + page)
-3. Create `ContractListSyncPacket` (with pagination metadata)
-4. Update `ContractBoard` to respond to list requests (not broadcast everything)
-5. Update `ContractBoardScreen` to consume view-model
-6. Delete `filterContractsByTab()` method
-7. Add "Load More" / page controls for History tab
+**Step 2: Contract List with Pagination** ✅ **DONE**
+1. ~~Create `ContractSummaryViewModel` + Builder~~ ✅
+2. ~~Create `RequestContractListPacket` (client requests specific tab + page)~~ ✅
+3. ~~Create `ContractListSyncPacket` (with pagination metadata)~~ ✅
+4. ~~Server responds to list requests via `RequestContractListPacket` handler~~ ✅
+5. ~~Update `ContractBoardScreen` to consume view-model~~ ✅
+6. ~~Delete `filterContractsByTab()` method~~ ✅
+7. ~~Add "Load More" / page controls for History tab~~ ✅
 
 **Step 3: Contract Detail (Complete the Pattern)**
 1. Create `ContractDetailViewModel`

@@ -186,6 +186,12 @@ public class PacketRegistry {
                                 AcceptContractPacket::decode, AcceptContractPacket::encode,
                                 AcceptContractPacket::handle);
 
+                // Phase 5: Contract list request packet (client requests paginated contracts)
+                register(RequestContractListPacket.class, "request_contract_list_packet",
+                                NetworkDirection.PLAY_TO_SERVER,
+                                RequestContractListPacket::decode, RequestContractListPacket::encode,
+                                RequestContractListPacket::handle);
+
                 // Client-bound packets (PLAY_TO_CLIENT)
                 register(RefreshPlatformsPacket.class, "refresh_platforms_packet", NetworkDirection.PLAY_TO_CLIENT,
                                 RefreshPlatformsPacket::decode, RefreshPlatformsPacket::encode,
@@ -291,6 +297,11 @@ public class PacketRegistry {
 
                 register(ContractSyncPacket.class, "contract_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
                                 ContractSyncPacket::decode, ContractSyncPacket::encode, ContractSyncPacket::handle);
+
+                // Phase 5: Contract list sync packet (paginated contract summaries)
+                register(ContractListSyncPacket.class, "contract_list_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
+                                ContractListSyncPacket::decode, ContractListSyncPacket::encode,
+                                ContractListSyncPacket::handle);
 
                 register(TownOverviewSyncPacket.class, "town_overview_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
                                 TownOverviewSyncPacket::decode, TownOverviewSyncPacket::encode,

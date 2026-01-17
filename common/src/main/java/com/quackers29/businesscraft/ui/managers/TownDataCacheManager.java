@@ -2,14 +2,17 @@ package com.quackers29.businesscraft.ui.managers;
 
 import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
+import com.quackers29.businesscraft.contract.viewmodel.ContractSummaryViewModel;
 import com.quackers29.businesscraft.data.cache.TownDataCache;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import com.quackers29.businesscraft.town.viewmodel.TradingViewModel;
 import net.minecraft.world.item.Item;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Manages town data caching and provides consolidated access to cached data.
@@ -27,6 +30,33 @@ public class TownDataCacheManager {
 
     // Static cache for trading view-model (Global sync)
     private static TradingViewModel globalTradingViewModel;
+
+    // Static cache for contract list view-models (per-tab)
+    private static final Map<String, ContractListCache> contractListCache = new ConcurrentHashMap<>();
+
+    /**
+     * Cache entry for a contract list tab.
+     */
+    public static class ContractListCache {
+        public final List<ContractSummaryViewModel> contracts;
+        public final int page;
+        public final int pageSize;
+        public final int totalCount;
+        public final boolean hasMore;
+        public final long serverTime;
+        public final long cacheTime;
+
+        public ContractListCache(List<ContractSummaryViewModel> contracts, int page, int pageSize,
+                int totalCount, boolean hasMore, long serverTime) {
+            this.contracts = new ArrayList<>(contracts);
+            this.page = page;
+            this.pageSize = pageSize;
+            this.totalCount = totalCount;
+            this.hasMore = hasMore;
+            this.serverTime = serverTime;
+            this.cacheTime = System.currentTimeMillis();
+        }
+    }
 
     /**
      * Updates the global trading view-model.
@@ -602,4 +632,43 @@ public class TownDataCacheManager {
         return globalTradingViewModel;
     }
 
+    // ========== Contract List View-Model Cache ==========
+
+    /**
+     * Updates the contract list cache for a specific tab.
+     * Called by ContractListSyncPacket.
+     */
+    public static void updateContractList(String tab, List<ContractSummaryViewModel> contracts,
+            int page, int pageSize, int totalCount, boolean hasMore, long serverTime) {
+        contractListCache.put(tab.toLowerCase(), new ContractListCache(
+                contracts, page, pageSize, totalCount, hasMore, serverTime));
+    }
+
+    /**
+     * Gets the cached contract list for a tab.
+     * @param tab The tab name ("auction", "active", "history")
+     * @return The cache entry, or null if not cached
+     */
+    public static ContractListCache getContractListCache(String tab) {
+        return contractListCache.get(tab.toLowerCase());
+    }
+
+    /**
+     * Gets the cached contracts for a tab.
+     * @param tab The tab name
+     * @return List of contract summaries, or empty list if not cached
+     */
+    public static List<ContractSummaryViewModel> getCachedContracts(String tab) {
+        ContractListCache cache = contractListCache.get(tab.toLowerCase());
+        return cache != null ? cache.contracts : Collections.emptyList();
+    }
+
+    /**
+     * Clears all contract list caches.
+     */
+    public static void clearContractListCache() {
+        contractListCache.clear();
+    }
+
 }
+

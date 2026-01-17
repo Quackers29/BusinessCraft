@@ -4,6 +4,7 @@ import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.contract.Contract;
 import com.quackers29.businesscraft.contract.CourierContract;
 import com.quackers29.businesscraft.contract.SellContract;
+import com.quackers29.businesscraft.contract.viewmodel.ContractSummaryViewModel;
 import com.quackers29.businesscraft.network.packets.ui.BidContractPacket;
 import com.quackers29.businesscraft.ui.util.InventoryRenderer;
 import net.minecraft.client.gui.GuiGraphics;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 public class ContractDetailScreen extends Screen {
     private final Contract contract;
+    private final ContractSummaryViewModel summaryViewModel;
     private final Screen parentScreen;
     private final int tabIndex;
 
@@ -30,9 +32,27 @@ public class ContractDetailScreen extends Screen {
     private int scrollOffset = 0;
     private static final int MAX_VISIBLE_BIDS = 2;
 
+    /**
+     * Legacy constructor using Contract object.
+     * @deprecated Use ContractSummaryViewModel constructor instead.
+     */
+    @Deprecated
     public ContractDetailScreen(Contract contract, Screen parentScreen, int tabIndex) {
         super(Component.literal("Contract Details"));
         this.contract = contract;
+        this.summaryViewModel = null;
+        this.parentScreen = parentScreen;
+        this.tabIndex = tabIndex;
+    }
+
+    /**
+     * Phase 5: Constructor using ContractSummaryViewModel.
+     * Full details will be requested from server in Phase 5.3.
+     */
+    public ContractDetailScreen(ContractSummaryViewModel viewModel, Screen parentScreen, int tabIndex) {
+        super(Component.literal("Contract Details"));
+        this.contract = null; // Will be replaced by ContractDetailViewModel in Phase 5.3
+        this.summaryViewModel = viewModel;
         this.parentScreen = parentScreen;
         this.tabIndex = tabIndex;
     }

@@ -4,9 +4,12 @@ import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.contract.Contract;
 import com.quackers29.businesscraft.contract.SellContract;
 import com.quackers29.businesscraft.contract.CourierContract;
+import com.quackers29.businesscraft.contract.viewmodel.ContractSummaryViewModel;
 import com.quackers29.businesscraft.menu.ContractBoardMenu;
 import com.quackers29.businesscraft.network.packets.ui.BidContractPacket;
+import com.quackers29.businesscraft.network.packets.ui.RequestContractListPacket;
 import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
+import com.quackers29.businesscraft.ui.managers.TownDataCacheManager;
 import com.quackers29.businesscraft.ui.util.InventoryRenderer;
 import com.quackers29.businesscraft.ui.util.ScreenNavigationHelper;
 import net.minecraft.client.Minecraft;
@@ -48,11 +51,20 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     private static final int TAB_WIDTH = 80;
     private static final int TAB_HEIGHT = 20;
 
-    // Tab state: 0=Available, 1=Active, 2=History
+    // Tab state: 0=Auction, 1=Active, 2=History
     private int selectedTab = 0;
+    private static final String[] TAB_NAMES = {"auction", "active", "history"};
+    private static final int DEFAULT_PAGE_SIZE = 20;
 
     private UIGridBuilder contractGrid;
-    private List<Contract> currentContracts = new ArrayList<>();
+    // Phase 5: Use view-models instead of raw Contract objects
+    private List<ContractSummaryViewModel> currentContracts = new ArrayList<>();
+    private int currentPage = 0;
+    private int totalCount = 0;
+    private boolean hasMore = false;
+    private long lastCacheCheck = 0;
+    private static final long CACHE_CHECK_INTERVAL = 500; // ms
+
     private EditBox bidInput;
     private UUID biddingContractId = null;
     private boolean showBidInput = false;
@@ -77,6 +89,8 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
         super.init();
         createContractGrid(); // Init grid early
         initBidInput();
+        // Phase 5: Request initial contract list from server
+        requestContractList();
     }
 
     private void initBidInput() {
@@ -85,22 +99,46 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
         bidInput.setValue("10.0");
     }
 
-    public void updateContracts(List<Contract> contracts) {
-        menu.setContracts(contracts);
-        currentContracts = new ArrayList<>(contracts);
-        if (contractGrid != null) {
+    /**
+     * Phase 5: Request contract list from server for current tab and page.
+     */
+    private void requestContractList() {
+        String tabName = TAB_NAMES[selectedTab];
+        PlatformAccess.getNetworkMessages().sendToServer(
+                new RequestContractListPacket(tabName, currentPage, DEFAULT_PAGE_SIZE));
+    }
+
+    /**
+     * Phase 5: Check cache for updated contract data (called each frame).
+     * Uses throttling to avoid excessive checks.
+     */
+    private void updateContractData() {
+        long now = System.currentTimeMillis();
+        if (now - lastCacheCheck < CACHE_CHECK_INTERVAL) {
+            return;
+        }
+        lastCacheCheck = now;
+
+        String tabName = TAB_NAMES[selectedTab];
+        TownDataCacheManager.ContractListCache cache = TownDataCacheManager.getContractListCache(tabName);
+        if (cache != null && !cache.contracts.equals(currentContracts)) {
+            currentContracts = new ArrayList<>(cache.contracts);
+            currentPage = cache.page;
+            totalCount = cache.totalCount;
+            hasMore = cache.hasMore;
             updateContractGrid();
         }
     }
 
-    private void updateContractData() {
-        List<Contract> contracts = menu.getContracts();
-        if (contracts == null)
-            contracts = new ArrayList<>();
-        if (!contracts.equals(currentContracts)) {
-            currentContracts = new ArrayList<>(contracts);
-            updateContractGrid();
-        }
+    /**
+     * @deprecated Use view-model based updateContractData() instead.
+     * Kept for backwards compatibility with old ContractSyncPacket.
+     */
+    @Deprecated
+    public void updateContracts(List<Contract> contracts) {
+        menu.setContracts(contracts);
+        // Note: This legacy method is no longer used for display.
+        // The screen now uses ContractSummaryViewModel from cache.
     }
 
     private void createContractGrid() {
@@ -120,116 +158,89 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
             return;
         }
         contractGrid.clearElements();
-        List<Contract> filtered = filterContractsByTab();
-        contractGrid.updateTotalRows(filtered.size());
-        populateGrid(filtered);
+        // Phase 5: Data is already filtered/sorted by server
+        contractGrid.updateTotalRows(currentContracts.size());
+        populateGrid(currentContracts);
     }
 
-    private List<Contract> filterContractsByTab() {
-        List<Contract> filtered = currentContracts.stream().filter(c -> {
-            switch (selectedTab) {
-                case 0: // Auction - SellContracts where auction is NOT closed (no winner yet)
-                    return c instanceof SellContract sc && !sc.isAuctionClosed() && !c.isExpired();
-                case 1: // Active - SellContracts where auction IS closed (winner exists) but not fully
-                        // completed/expired
-                        // OR any Courier !expired
-                    return (c instanceof SellContract sc && sc.isAuctionClosed() && !c.isCompleted() && !c.isExpired())
-                            ||
-                            (c instanceof CourierContract && !c.isExpired());
-                case 2: // History - expired contracts or completed contracts
-                    return c.isExpired() || c.isCompleted();
-            }
-            return false;
-        }).collect(Collectors.toList());
+    // Phase 5: filterContractsByTab() REMOVED - server now handles filtering
 
-        // Sort contracts
-        if (selectedTab == 2) {
-            // History: Latest first (Descending expiry)
-            filtered.sort((c1, c2) -> Long.compare(c2.getExpiryTime(), c1.getExpiryTime()));
-        } else {
-            // Active/Auction: Expiring first (Ascending expiry)
-            filtered.sort((c1, c2) -> Long.compare(c1.getExpiryTime(), c2.getExpiryTime()));
-        }
-
-        return filtered;
-    }
-
-    private void populateGrid(List<Contract> contracts) {
+    /**
+     * Phase 5: Populate grid using ContractSummaryViewModel (server-calculated display strings).
+     */
+    private void populateGrid(List<ContractSummaryViewModel> contracts) {
         for (int i = 0; i < contracts.size(); i++) {
-            Contract c = contracts.get(i);
-            // Col 0: Icon with tooltip
-            // Col 0: Icon with tooltip
-            ItemStack icon = getResourceIcon(c);
-            int quantity = 0;
-            if (c instanceof SellContract sc)
-                quantity = sc.getQuantity();
-            else if (c instanceof CourierContract cc)
-                quantity = cc.getQuantity();
+            ContractSummaryViewModel vm = contracts.get(i);
 
-            contractGrid.addItemWithTooltip(i, 0, icon.getItem(), quantity, getContractTooltip(c), null);
+            // Col 0: Icon with tooltip
+            ItemStack icon = getResourceIcon(vm.getResourceId());
+            int quantity = vm.getQuantity();
+            String tooltip = buildContractTooltip(vm);
+
+            contractGrid.addItemWithTooltip(i, 0, icon.getItem(), quantity, tooltip, null);
 
             // Col 1: Town Name
-            String townName = c.getIssuerTownName();
-            if (townName == null)
-                townName = "Unknown";
-            contractGrid.addLabelWithTooltip(i, 1, truncate(townName, 12), getContractTooltip(c), TEXT_COLOR);
+            String townName = vm.getIssuerTownName();
+            if (townName == null) townName = "Unknown";
+            contractGrid.addLabelWithTooltip(i, 1, truncate(townName, 12), tooltip, TEXT_COLOR);
 
-            // Col 2: Time (Seconds left) or Date (History)
-            if (selectedTab == 2) { // History
-                // Use full date/time for history
-                String dateText = c.getFullDateTimeDisplay();
-                // If the contract has a specific completion/expiration time, use that,
-                // otherwise use expiry
-                // For now, getFullDateTimeDisplay seems appropriate as it likely uses the
-                // relevant timestamp
-                contractGrid.addLabelWithTooltip(i, 2, dateText, dateText, TEXT_COLOR);
-            } else {
-                long currentTime = System.currentTimeMillis();
-                long millisLeft = c.getExpiryTime() - currentTime;
-                String time = millisLeft > 0 ? (millisLeft / 1000) + "s" : "Expired";
-                contractGrid.addLabel(i, 2, time, TEXT_COLOR);
-            }
+            // Col 2: Time display (server-calculated, no client System.currentTimeMillis())
+            String timeDisplay = vm.getTimeRemainingDisplay();
+            contractGrid.addLabel(i, 2, timeDisplay, TEXT_COLOR);
 
-            // Col 3: Action button
-            // Always show "View" button which opens details
+            // Col 3: Action button - always show "View"
+            final UUID contractId = vm.getContractId();
             contractGrid.addButtonWithTooltip(i, 3, "View", "View contract details",
-                    (Consumer<Void>) v -> openContractDetails(c), 0xFF666666);
+                    (Consumer<Void>) v -> openContractDetails(contractId), 0xFF666666);
         }
+
+        // Show "Load More" button for history tab with pagination
+        if (selectedTab == 2 && hasMore) {
+            int lastRow = contracts.size();
+            contractGrid.updateTotalRows(lastRow + 1);
+            contractGrid.addButtonWithTooltip(lastRow, 1, "Load More",
+                    "Load older contracts (" + totalCount + " total)",
+                    (Consumer<Void>) v -> loadMoreContracts(), 0xFF4444AA);
+        }
+
         if (contracts.isEmpty()) {
             contractGrid.addLabel(0, 1, "No contracts", 0xFF808080);
         }
     }
 
-    private String getContractDetails(Contract c) {
-        if (c instanceof SellContract sc)
-            return sc.getResourceId();
-        if (c instanceof CourierContract cc)
-            return cc.getResourceId();
-        return "Contract";
+    /**
+     * Phase 5: Load more contracts (next page).
+     */
+    private void loadMoreContracts() {
+        currentPage++;
+        requestContractList();
     }
 
-    private String getContractStatus(Contract c) {
-        // Unused in grid now, but kept for reference
-        if (c instanceof SellContract sc)
-            return "Bid: " + String.format("%.2f", sc.getHighestBid());
-        return "N/A";
+    /**
+     * Phase 5: Build tooltip from view-model (server-calculated data).
+     */
+    private String buildContractTooltip(ContractSummaryViewModel vm) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(vm.getIssuerTownName()).append(" selling ");
+        sb.append(vm.getQuantity()).append(" ").append(vm.getResourceId());
+        sb.append("\nPrice: ").append(vm.getPriceDisplay());
+        sb.append("\nHighest Bid: ").append(vm.getHighestBidDisplay());
+        sb.append("\nStatus: ").append(vm.getStatusDisplay());
+        return sb.toString();
     }
 
-    private ItemStack getResourceIcon(Contract c) {
-        String res = "";
-        int count = 1;
-        if (c instanceof SellContract sc) {
-            res = sc.getResourceId();
-            count = sc.getQuantity();
-        } else if (c instanceof CourierContract cc) {
-            res = cc.getResourceId();
-            count = cc.getQuantity();
+    /**
+     * Phase 5: Get resource icon from resource ID (used by view-model).
+     */
+    private ItemStack getResourceIcon(String resourceId) {
+        if (resourceId == null || resourceId.isEmpty()) {
+            return new ItemStack(Items.BARRIER);
         }
 
         // Look up resource from ResourceRegistry dynamically
         ItemStack stack;
-        com.quackers29.businesscraft.economy.ResourceType resourceType = com.quackers29.businesscraft.economy.ResourceRegistry
-                .get(res);
+        com.quackers29.businesscraft.economy.ResourceType resourceType =
+                com.quackers29.businesscraft.economy.ResourceRegistry.get(resourceId);
 
         if (resourceType != null) {
             // Get the canonical item for this resource
@@ -238,35 +249,27 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
             if (itemObj instanceof net.minecraft.world.item.Item item && item != Items.AIR) {
                 stack = new ItemStack(item);
             } else {
-                // Fallback if item not found
-                stack = new ItemStack(Items.BARRIER); // Visual indicator of missing item
+                stack = new ItemStack(Items.BARRIER);
             }
         } else {
-            // Fallback if resource not in registry
-            stack = new ItemStack(Items.BARRIER); // Visual indicator of missing resource
+            // Try direct item lookup as fallback
+            try {
+                ResourceLocation loc = new ResourceLocation(resourceId);
+                net.minecraft.world.item.Item item = BuiltInRegistries.ITEM.get(loc);
+                if (item != Items.AIR) {
+                    stack = new ItemStack(item);
+                } else {
+                    stack = new ItemStack(Items.BARRIER);
+                }
+            } catch (Exception e) {
+                stack = new ItemStack(Items.BARRIER);
+            }
         }
 
-        stack.setCount(Math.min(count, 64)); // Clamp to 64 for display
         return stack;
     }
 
-    private String getContractTooltip(Contract c) {
-        if (c instanceof SellContract sc) {
-            String originTown = sc.getIssuerTownName() != null ? sc.getIssuerTownName() : "Unknown";
-            String targetTown = "Any"; // TODO: If contracts have specific targets, use that. currently open market.
-            // Format: "town x selling x for x to town y"
-            // Since currently contracts are mostly open market, "to town y" might be "to
-            // market" or generic.
-            // User requested: "town x selling x for x to town y"
-
-            // Round emeralds to integer
-            int totalPrice = Math.round(sc.getPricePerUnit() * sc.getQuantity());
-
-            return String.format("%s selling %d %s for %d Emeralds",
-                    originTown, sc.getQuantity(), sc.getResourceId(), totalPrice);
-        }
-        return "ID: " + c.getId();
-    }
+    // Legacy methods removed - tooltip/details now built from view-model
 
     private String truncate(String text, int maxChars) {
         if (text == null || text.length() <= maxChars)
@@ -349,8 +352,30 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
         // Handled by UIGridBuilder
     }
 
-    private void openContractDetails(Contract c) {
+    /**
+     * Phase 5: Open contract details by ID.
+     * The detail screen will request full details from server.
+     */
+    private void openContractDetails(UUID contractId) {
         if (minecraft != null) {
+            // Find the view-model to pass basic info
+            ContractSummaryViewModel vm = currentContracts.stream()
+                    .filter(c -> c.getContractId().equals(contractId))
+                    .findFirst()
+                    .orElse(null);
+            if (vm != null) {
+                minecraft.setScreen(new ContractDetailScreen(vm, this, selectedTab));
+            }
+        }
+    }
+
+    /**
+     * @deprecated Use openContractDetails(UUID) instead.
+     * Kept for backwards compatibility.
+     */
+    @Deprecated
+    private void openContractDetails(Contract c) {
+        if (minecraft != null && c != null) {
             minecraft.setScreen(new ContractDetailScreen(c, this, selectedTab));
         }
     }
@@ -448,8 +473,14 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
                 int tabX = (width - imageWidth) / 2 + 50;
                 int tx = (int) mx - ((width - imageWidth) / 2);
                 if (tx >= 50 && tx < 50 + 3 * TAB_WIDTH + 2 * 4) {
-                    selectedTab = ((tx - 50) / (TAB_WIDTH + 4));
-                    updateContractGrid(); // Force update on tab switch
+                    int newTab = ((tx - 50) / (TAB_WIDTH + 4));
+                    if (newTab != selectedTab) {
+                        selectedTab = newTab;
+                        currentPage = 0; // Reset to first page on tab change
+                        currentContracts.clear();
+                        requestContractList(); // Request data for new tab
+                        updateContractGrid();
+                    }
                     playDownSound();
                     return true;
                 }
