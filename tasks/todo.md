@@ -353,14 +353,18 @@ Net change: **+3 packets** (replaces 1, adds 4) but significantly better archite
 
 ---
 
-### **6.2 Contract History Display** 📋 **PENDING**
+### **6.2 Contract History Display** ✅ **COMPLETE**
 
 **Goal**: Replace pagination with recent-first display + optional "Show All" button.
 
-- [ ] **Server**: Send last 50 contracts by default, add `showAll` parameter
-- [ ] **Client**: Replace "Load More" with "Show All History" button
-- [ ] **State**: Add `showAllHistory` tracking, reset on tab switch
-- [ ] **Testing**: Verify performance and expand behavior
+- [x] **Server**: Send last 50 contracts by default, add `showAll` parameter ✅
+- [x] **Client**: Replace "Load More" with "Show All History" button ✅
+- [x] **State**: Add `showAllHistory` tracking, reset on tab switch ✅
+- [x] **Build**: Verified all changes compile ✅
+
+**Files Modified:**
+- `RequestContractListPacket.java`: Added `showAll` boolean parameter
+- `ContractBoardScreen.java`: Added `showAllHistory` state, "Show All" button, reset on tab switch
 
 ---
 

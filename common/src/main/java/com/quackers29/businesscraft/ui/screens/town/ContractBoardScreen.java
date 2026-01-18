@@ -55,6 +55,8 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     private int selectedTab = 0;
     private static final String[] TAB_NAMES = {"auction", "active", "history"};
     private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int HISTORY_DEFAULT_LIMIT = 50;
+    private boolean showAllHistory = false; // For history tab: show all vs last 50
 
     private UIGridBuilder contractGrid;
     // Phase 5: Use view-models instead of raw Contract objects
@@ -103,11 +105,13 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
 
     /**
      * Phase 5: Request contract list from server for current tab and page.
+     * For history tab, passes showAllHistory flag to control pagination.
      */
     private void requestContractList() {
         String tabName = TAB_NAMES[selectedTab];
+        boolean showAll = (selectedTab == 2) && showAllHistory; // Only applies to history tab
         PlatformAccess.getNetworkMessages().sendToServer(
-                new RequestContractListPacket(tabName, currentPage, DEFAULT_PAGE_SIZE));
+                new RequestContractListPacket(tabName, currentPage, DEFAULT_PAGE_SIZE, showAll));
     }
 
     /**
@@ -232,13 +236,13 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
                     (Consumer<Void>) v -> openContractDetails(contractId), buttonColor);
         }
 
-        // Show "Load More" button for history tab with pagination
-        if (selectedTab == 2 && hasMore) {
+        // Show "Show All History" button for history tab when there are more contracts
+        if (selectedTab == 2 && hasMore && !showAllHistory) {
             int lastRow = contracts.size();
             contractGrid.updateTotalRows(lastRow + 1);
-            contractGrid.addButtonWithTooltip(lastRow, 1, "Load More",
-                    "Load older contracts (" + totalCount + " total)",
-                    (Consumer<Void>) v -> loadMoreContracts(), 0xFF4444AA);
+            contractGrid.addButtonWithTooltip(lastRow, 1, "Show All",
+                    "Show all " + totalCount + " contracts (currently showing " + HISTORY_DEFAULT_LIMIT + ")",
+                    (Consumer<Void>) v -> showAllHistoryContracts(), 0xFF4444AA);
         }
 
         if (contracts.isEmpty()) {
@@ -247,10 +251,12 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     }
 
     /**
-     * Phase 5: Load more contracts (next page).
+     * Phase 6: Show all history contracts (instead of paginated "Load More").
+     * Sets showAllHistory flag and requests all contracts from server.
      */
-    private void loadMoreContracts() {
-        currentPage++;
+    private void showAllHistoryContracts() {
+        showAllHistory = true;
+        currentPage = 0;
         requestContractList();
     }
 
@@ -515,6 +521,7 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
                     if (newTab != selectedTab) {
                         selectedTab = newTab;
                         currentPage = 0; // Reset to first page on tab change
+                        showAllHistory = false; // Reset show all state on tab change
                         currentContracts.clear();
                         requestContractList(); // Request data for new tab
                         updateContractGrid();

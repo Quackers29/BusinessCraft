@@ -14,27 +14,36 @@ import org.slf4j.LoggerFactory;
  */
 public class RequestContractListPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestContractListPacket.class);
+    private static final int DEFAULT_HISTORY_LIMIT = 50;
 
     private final String tab; // "auction", "active", "history"
     private final int page;
     private final int pageSize;
+    private final boolean showAll; // For history tab: true = fetch all, false = fetch last 50
 
     public RequestContractListPacket(String tab, int page, int pageSize) {
+        this(tab, page, pageSize, false);
+    }
+
+    public RequestContractListPacket(String tab, int page, int pageSize, boolean showAll) {
         this.tab = tab;
         this.page = page;
         this.pageSize = pageSize;
+        this.showAll = showAll;
     }
 
     public RequestContractListPacket(FriendlyByteBuf buf) {
         this.tab = buf.readUtf();
         this.page = buf.readInt();
         this.pageSize = buf.readInt();
+        this.showAll = buf.readBoolean();
     }
 
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeUtf(tab);
         buf.writeInt(page);
         buf.writeInt(pageSize);
+        buf.writeBoolean(showAll);
     }
 
     public static void encode(RequestContractListPacket msg, FriendlyByteBuf buf) {
@@ -60,13 +69,21 @@ public class RequestContractListPacket {
                 }
 
                 // Build paginated result
+                // For history tab: default to last 50, or all if showAll=true
                 long serverTime = System.currentTimeMillis();
+                int effectivePageSize = pageSize;
+                if (tabType == ContractSummaryViewModelBuilder.Tab.HISTORY && !showAll) {
+                    effectivePageSize = DEFAULT_HISTORY_LIMIT;
+                } else if (tabType == ContractSummaryViewModelBuilder.Tab.HISTORY && showAll) {
+                    effectivePageSize = Integer.MAX_VALUE; // Fetch all
+                }
+
                 ContractSummaryViewModelBuilder.ContractListResult result =
                         ContractSummaryViewModelBuilder.build(
                                 board.getContracts(),
                                 tabType,
                                 page,
-                                pageSize,
+                                effectivePageSize,
                                 player,
                                 serverTime
                         );
@@ -99,4 +116,5 @@ public class RequestContractListPacket {
     public String getTab() { return tab; }
     public int getPage() { return page; }
     public int getPageSize() { return pageSize; }
+    public boolean isShowAll() { return showAll; }
 }
