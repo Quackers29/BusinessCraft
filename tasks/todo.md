@@ -1,10 +1,15 @@
 # BusinessCraft - Server-Client Sync Architecture Refactoring
 
+## 📋 **DOCUMENT GUIDELINES**
+- **Be efficient**: Use minimal words, avoid waffle
+- **Keep line count low**: Summarize completed work in 1 line, detail only active tasks
+- **Structure**: One-line summaries for completed sections, full detail for pending work
+
 ## 🎯 **CURRENT PRIORITY: SERVER-AUTHORITATIVE ARCHITECTURE**
 
-**🔧 OBJECTIVE:** Implement the "View-Model" pattern to eliminate client-side business logic duplication and create a true server-authoritative architecture where the client is a "dumb terminal" that only renders pre-calculated data.
+**🔧 OBJECTIVE:** Implement "View-Model" pattern to eliminate client-side business logic duplication and create server-authoritative architecture where client is "dumb terminal" rendering pre-calculated data.
 
-**📋 PROBLEM SUMMARY:** Current architecture violates the server-authoritative principle by duplicating business logic on both client and server sides, leading to potential desyncs and security vulnerabilities.
+**📋 PROBLEM SUMMARY:** Architecture violates server-authoritative principle with business logic duplication on client/server, causing potential desyncs and security issues.
 
 ## 🎉 **MAJOR SUCCESS: PHASE 1 COMPLETE! ALL CRITICAL VIOLATIONS FIXED!**
 
@@ -139,81 +144,10 @@
 
 ---
 
-## 🔧 **PHASE 5: CONTRACT BOARD VIEW-MODEL COMPLIANCE**
+## 🔧 **PHASE 5: CONTRACT BOARD VIEW-MODEL COMPLIANCE** ✅ **COMPLETE** - Implemented paginated contract lists + on-demand detail fetching, eliminated client-side filtering/time calculations
 
-### **📋 Context: Why Contract Board Needs Work**
 
-The Contract Board is the **only system** that doesn't follow the view-model pattern properly:
 
-| Issue | Location | Problem |
-|-------|----------|---------|
-| Client-side filtering | `ContractBoardScreen.java:128-155` | `filterContractsByTab()` streams/filters |
-| Client time calculation | `ContractBoardScreen.java:187-189` | `System.currentTimeMillis()` for display |
-| Client time calculation | `ContractDetailScreen.java:218-220` | `System.currentTimeMillis()` for display |
-| Variable bid lists | `Contract.java:15` | `Map<UUID, Float> bids` - unbounded |
-| Server-wide data | `ContractSyncPacket` | Sends ALL contracts, not player-scoped |
-
-**Why Contract Board is Different:**
-- Other view-models sync **town-scoped** data (your resources, your upgrades)
-- Contract Board syncs **server-wide** data (all contracts from all towns)
-- Bid maps have **no cap** and grow with auction activity
-
----
-
-### **5.1 Core Philosophy: Server Stores All, Client Gets Paginated**
-
-**Key Principle:** The server is the permanent record of ALL contracts ever created. The client only receives what it needs to display the current view.
-
-| Aspect | Server | Client |
-|--------|--------|--------|
-| **Storage** | ALL contracts forever (no limits) | Only current page/view |
-| **History** | Complete audit trail | Paginated on-demand fetch |
-| **Active contracts** | Full list | Synced when relevant |
-| **Expired contracts** | Kept for history | Only fetched when viewing history tab |
-
----
-
-### **5.2 Contract Summary View-Model (List View)** ✅ **COMPLETE**
-
-**Goal:** Replace full Contract sync with lightweight summaries for list display.
-
-- [x] **Create `ContractSummaryViewModel.java`** ✅
-  - Location: `contract/viewmodel/ContractSummaryViewModel.java`
-  - Fields: `contractId`, `resourceId`, `quantity`, `issuerTownName`, `timeRemainingDisplay`, 
-    `highestBidDisplay`, `statusDisplay`, `priceDisplay`, `canBid`, `canAcceptCourier`, `isExpired`, `isDelivered`
-
-- [x] **Create `ContractSummaryViewModelBuilder.java`** ✅
-  - Location: `contract/viewmodel/ContractSummaryViewModelBuilder.java`
-  - Server-side filtering into tabs: AUCTION, ACTIVE, HISTORY
-  - Server-side sorting (expiring first for auction/active, latest first for history)
-  - Pagination support with `ContractListResult` record
-  - Time formatting via `formatTimeRemaining()` (eliminates client `System.currentTimeMillis()`)
-
-- [x] **Create `ContractListSyncPacket.java`** ✅
-  - Location: `network/packets/ui/ContractListSyncPacket.java`
-  - Contains: `List<ContractSummaryViewModel>`, pagination metadata, `serverCurrentTime`, `marketPrices`
-  - Registered in `PacketRegistry.java`
-
-- [x] **Create `RequestContractListPacket.java`** ✅
-  - Location: `network/packets/ui/RequestContractListPacket.java`
-  - Contains: `tab`, `page`, `pageSize`
-  - Server handler builds and sends `ContractListSyncPacket`
-  - Registered in `PacketRegistry.java`
-
-- [x] **Update `ContractBoardScreen.java`** ✅
-  - Removed `filterContractsByTab()` method - server handles filtering
-  - Removed `System.currentTimeMillis()` call - uses view-model `timeRemainingDisplay`
-  - Updated `populateGrid()` to use `ContractSummaryViewModel`
-  - Added "Load More" button for history tab pagination
-  - Requests contract list from server on init and tab change
-
-- [x] **Update `TownDataCacheManager.java`** ✅
-  - Added `ContractListCache` class for caching contract lists per tab
-  - Added `updateContractList()`, `getContractListCache()`, `getCachedContracts()` methods
-
----
-
-### **5.3 Contract Detail View-Model (On-Demand)** ✅ **COMPLETE**
 
 **Goal:** Fetch full contract details only when user clicks "View".
 
@@ -340,41 +274,13 @@ Net change: **+3 packets** (replaces 1, adds 4) but significantly better archite
 ---
 
 ## 💰 **PHASE 6: ECONOMY STABILIZATION** ✅ **COMPLETE**
-
-### **6.1 Problem & Solution Summary**
-
-**Problem:** Failed auctions (no bids) dropped GPI by 20%, causing death spiral to zero. Auctions fail for many reasons beyond price (capacity limits, no demand, etc.).
-
-**Solution Implemented: Trades-Only Price Discovery + Need-Based Bidding**
-
-| Change | Location | Description |
-|--------|----------|-------------|
-| Remove failed auction price drop | `ContractBoard.java:405-419` | Failed auctions no longer affect GPI |
-| Add need-based bid modifier | `TownContractComponent.java` | Buyers bid 0.80x-1.20x GPI based on need level |
-
-**Result:** Symmetric pricing enables natural equilibrium:
-- **Sellers**: List at GPI × 0.55 to 1.10 (based on excess)
-- **Buyers**: Bid at GPI × 0.80 to 1.20 (based on need) + ±5% randomness
-- **No trades**: GPI unchanged (no signal from silence)
-- **High supply/low demand**: Both list and bid low → price drops naturally
-- **Low supply/high demand**: Both list and bid high → price rises naturally
-
-**Safety nets:** MIN_PRICE floor (0.001), 1 emerald minimum bid
+**Problem:** Failed auctions dropped GPI by 20%, causing death spiral to zero.
+**Solution:** Removed failed auction price drops + added need-based bidding (0.80x-1.20x GPI based on town need).
+**Result:** Symmetric pricing enables natural equilibrium with trades-only price discovery.
 
 ---
 
-### **6.2 Contract History Display** ✅ **COMPLETE**
-
-**Goal**: Replace pagination with recent-first display + optional "Show All" button.
-
-- [x] **Server**: Send last 50 contracts by default, add `showAll` parameter ✅
-- [x] **Client**: Replace "Load More" with "Show All History" button ✅
-- [x] **State**: Add `showAllHistory` tracking, reset on tab switch ✅
-- [x] **Build**: Verified all changes compile ✅
-
-**Files Modified:**
-- `RequestContractListPacket.java`: Added `showAll` boolean parameter
-- `ContractBoardScreen.java`: Added `showAllHistory` state, "Show All" button, reset on tab switch
+### **6.2 Contract History Display** ✅ **COMPLETE** - Replaced pagination with recent-first display + "Show All History" button
 
 ---
 
@@ -460,25 +366,114 @@ Net change: **+3 packets** (replaces 1, adds 4) but significantly better archite
 - **Testing**: Verify client can never influence server calculations
 
 ### **Architectural Review Results** (2026-01-12)
-**✅ VERDICT: Current Modular View-Model Pattern is ARCHITECTURALLY SOUND**
+**✅ VERDICT: Modular view-model pattern architecturally sound - continue current approach. Scales to 6-8 view-models without issues.**
 
-**Strengths of Current Approach:**
-- ✅ Excellent separation of concerns (each domain is independent)
-- ✅ Incremental & non-breaking (can add new view-models without touching existing)
-- ✅ Highly maintainable (clear responsibilities, easy to debug)
-- ✅ Type-safe (compile-time checking, no generic type erasure)
-- ✅ Good team velocity (pattern is working, don't disrupt progress)
+---
 
-**Alternatives Considered & Rejected:**
-- ❌ Unified TownUIViewModel: Too inflexible, doesn't match incremental needs
-- ❌ Over-abstraction with registries: Adds complexity without clear benefit
-- 🟡 Event-driven dirty flags: Premature optimization, not needed yet
+## 🔢 **PHASE 8: RESOURCE STORAGE INT→LONG MIGRATION**
 
-**Recommended Enhancements (See Phase 3.3):**
-- 🟢 ViewModelCache Helper: Consolidate cache management (1-2 hours effort)
-- 🟡 BaseViewModelSyncPacket: Reduce packet boilerplate (optional)
-- 🔵 Centralized Sync Manager: Future optimization only if needed
+**Problem:** Resource storage uses `int` (max 2.1B), limiting large-scale town economies.
+**Goal:** Migrate aggregated resource storage from `int` to `long` for virtually unlimited capacity.
 
-**Decision:** Continue with current pattern through all remaining phases. Current approach scales perfectly to 6-8 view-models. Don't over-engineer - YAGNI principle applies.
+### **8.1 Scope Analysis**
+
+**What NEEDS to change (aggregated storage - our code):**
+- `Map<Item, Integer>` → `Map<Item, Long>` in resource maps
+- NBT: `putInt()`/`getInt()` → `putLong()`/`getLong()` for resource amounts
+- Method signatures: `int count` → `long count` parameters
+- Overflow handling: `Integer.MAX_VALUE` → `Long.MAX_VALUE`
+
+**What CANNOT change (Minecraft API constraint):**
+- `ItemStack.getCount()` returns `int` (max 64 per stack normally)
+- This is fine - we aggregate into long, individual stacks stay as int
+
+### **8.2 Files to Modify (19 files, ~100 changes)**
+
+#### **Core Storage (CRITICAL)**
+| File | Changes |
+|------|---------|
+| `TownResources.java` | `Map<Item, Integer>` → `Long`, all methods, NBT |
+| `Town.java` | workUnits, escrow, wanted, personal storage, visitors, NBT |
+| `TownEconomyComponent.java` | addResource/getResourceCount signatures |
+
+#### **Contract System**
+| File | Changes |
+|------|---------|
+| `SellContract.java` | quantity, deliveredAmount fields |
+| `CourierContract.java` | quantity, deliveredAmount fields |
+| `ContractBoard.java` | Casting operations |
+
+#### **Storage Classes**
+| File | Changes |
+|------|---------|
+| `TownPaymentBoard.java` | Buffer storage methods |
+| `SlotBasedStorage.java` | Accumulation methods (aggregate from int stacks to long total) |
+
+#### **Network Packets**
+| File | Changes |
+|------|---------|
+| `PersonalStoragePacket.java` | writeInt→writeLong, readInt→readLong |
+| `CommunalStoragePacket.java` | writeInt→writeLong, readInt→readLong |
+| `BufferStoragePacket.java` | writeInt→writeLong, readInt→readLong |
+| `TownResourceViewModel.java` | population, counts if needed |
+
+#### **View Model Builders**
+| File | Changes |
+|------|---------|
+| `TownResourceViewModelBuilder.java` | Local variables, formatting |
+
+### **8.3 Implementation Steps**
+
+- [ ] **Step 1: Core Storage Migration**
+  - `TownResources.java`: Change `Map<Item, Integer>` → `Map<Item, Long>`
+  - Update all methods: `addResource`, `getResourceCount`, `consumeResource`
+  - Update overflow: `Math.addExact(long, long)`, cap at `Long.MAX_VALUE`
+  - Update NBT: `putLong()`/`getLong()`
+
+- [ ] **Step 2: Town.java Migration**
+  - Change `workUnits` field: `int` → `long`
+  - Change `Map<Item, Integer>` fields → `Map<Item, Long>` for escrow, wanted, visitors
+  - Update all delegation methods
+  - Update all NBT save/load
+
+- [ ] **Step 3: Contract System Migration**
+  - `SellContract.java`: `quantity`, `deliveredAmount` → `long`
+  - `CourierContract.java`: `quantity`, `deliveredAmount` → `long`
+  - Update NBT serialization
+
+- [ ] **Step 4: Network Packet Migration**
+  - Update all resource-related packets to use `writeLong`/`readLong`
+  - Consider backward compatibility (version check)
+
+- [ ] **Step 5: View Model Updates**
+  - Update view-model builders to handle long values
+  - Formatting: use `formatAmount()` for display (K/M/B suffixes)
+
+- [ ] **Step 6: Testing & Verification**
+  - Test with values > Integer.MAX_VALUE
+  - Verify NBT save/load works with existing worlds (backward compat)
+  - Test network sync with large values
+
+### **8.4 Backward Compatibility Strategy**
+
+**Option A: Clean Break (Recommended for alpha/beta)**
+- New NBT keys with `_long` suffix or version tag
+- Old worlds auto-migrate on load (read int, write long)
+
+**Option B: Dual Read (For production)**
+- Try `getLong()`, fall back to `getInt()` if missing
+- Always write as `putLong()`
+
+### **8.5 Display Formatting**
+Already have `formatAmount()` in view-model builders that handles large numbers:
+- 1,000 → "1K"
+- 1,000,000 → "1M"
+- 1,000,000,000 → "1B"
+
+### **8.6 Risk Assessment**
+- **Low Risk**: Core storage changes are isolated to few files
+- **Medium Risk**: NBT format change requires migration
+- **Low Risk**: Network packets - both sides update together
+- **No Risk**: ItemStack.getCount() stays as int (MC API)
 
 ---
