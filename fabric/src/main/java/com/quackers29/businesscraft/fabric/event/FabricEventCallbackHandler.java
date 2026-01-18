@@ -187,6 +187,10 @@ public class FabricEventCallbackHandler {
 
         // Client World Unload (via Disconnect)
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            // Reset client market cache to prevent prices persisting across worlds
+            LOGGER.info("Client disconnecting - resetting ClientGlobalMarket");
+            com.quackers29.businesscraft.client.ClientGlobalMarket.get().reset();
+
             if (client.level != null) {
                 for (EventCallbacks.LevelUnloadCallback callback : levelUnloadCallbacks) {
                     callback.onLevelUnload(client.level);

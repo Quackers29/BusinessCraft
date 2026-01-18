@@ -25,6 +25,16 @@ public class GlobalMarket {
         return INSTANCE;
     }
 
+    /**
+     * Resets all market data. Called when creating a new world to ensure
+     * prices don't persist across worlds.
+     */
+    public void reset() {
+        prices.clear();
+        totalVolume.clear();
+        LOGGER.info("GlobalMarket reset - all prices cleared for new world");
+    }
+
     public float getPrice(String resourceId) {
         float price = prices.getOrDefault(resourceId, 1.0f);
         return Math.max(price, MIN_PRICE);
@@ -56,6 +66,10 @@ public class GlobalMarket {
     }
 
     public void load(CompoundTag tag) {
+        // Clear existing data first to prevent cross-world contamination
+        prices.clear();
+        totalVolume.clear();
+
         if (tag.contains("prices")) {
             CompoundTag pricesTag = tag.getCompound("prices");
             for (String key : pricesTag.getAllKeys()) {
@@ -70,6 +84,8 @@ public class GlobalMarket {
                 totalVolume.put(key, volTag.getLong(key));
             }
         }
+
+        LOGGER.info("GlobalMarket loaded - {} prices, {} volume entries", prices.size(), totalVolume.size());
     }
 
     public void save(CompoundTag tag) {

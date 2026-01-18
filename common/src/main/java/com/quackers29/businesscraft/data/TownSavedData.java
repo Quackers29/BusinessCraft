@@ -49,6 +49,9 @@ public class TownSavedData extends SavedData {
     }
 
     public static TownSavedData create() {
+        // Reset GlobalMarket when creating new world data to prevent
+        // prices from persisting across worlds
+        com.quackers29.businesscraft.economy.GlobalMarket.get().reset();
         return new TownSavedData();
     }
 

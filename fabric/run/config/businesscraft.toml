@@ -1,0 +1,97 @@
+# BusinessCraft Configuration
+# This file controls all mod settings. Edit values below to customize behavior.
+# Changes are automatically detected and reloaded.
+
+[general]
+    # Minimum distance between towns in blocks
+    minDistanceBetweenTowns = 100
+    # Default starting population for new towns
+    defaultStartingPopulation = 5
+    # List of random town names for auto-naming
+    townNames = ["Riverside", "Hillcrest", "Meadowbrook", "Oakville", "Stonebridge", "Willowglen", "Sunnyvale", "Cedarwood", "Maplehaven", "Brookside", "Fairview", "Pinehurst", "Elmwood", "Greystone"]
+
+[vehicles]
+    # Enable Create mod train integration
+    enableCreateTrains = true
+    # Enable minecart detection for tourists
+    enableMinecarts = true
+    # Search radius for vehicle detection (blocks)
+    vehicleSearchRadius = 3
+    # Minecart stop velocity threshold
+    minecartStopThreshold = 0.001
+
+[tourists]
+    # Minimum population required to spawn tourists
+    minPopForTourists = 5
+    # Maximum tourists per town
+    maxTouristsPerTown = 1000
+    # Population required per tourist slot
+    populationPerTourist = 5
+    # Maximum population-based tourists
+    maxPopBasedTourists = 20
+    # Tourist expiry time in minutes (0 = never expire)
+    touristExpiryMinutes = 120.0
+    # Enable tourist expiry system
+    enableTouristExpiry = true
+    # Notify origin town when tourist departs
+    notifyOnTouristDeparture = true
+
+[economy]
+    # Meters of travel per emerald earned
+    metersPerEmerald = 50
+    # Currency item for trading (format: modid:item)
+    currencyItem = "minecraft:emerald"
+
+[milestones]
+    # Enable distance milestone rewards
+    enabled = true
+
+    # Milestone rewards configuration
+    # Each [[milestones.rewards]] entry defines a distance threshold and item rewards
+    # Format: distance = meters, items = ["modid:item:count", ...]
+    [[milestones.rewards]]
+        distance = 10
+        items = ["minecraft:bread:1", "minecraft:experience_bottle:2"]
+
+[contracts]
+    # Auction duration in minutes
+    auctionDurationMinutes = 1.0
+    # Courier acceptance window in minutes
+    courierAcceptanceMinutes = 2.0
+    # Courier delivery time per meter (minutes)
+    courierDeliveryMinutesPerMeter = 0.05
+    # Snail mail delivery time per meter (minutes)
+    snailMailDeliveryMinutesPerMeter = 0.1
+
+[production]
+    # Enable automatic production system
+    enabled = true
+    # Ticks between production cycles
+    tickInterval = 100
+    # Daily tick interval for consumption
+    dailyTickInterval = 24000
+    # Minimum stock percentage before buying
+    minStockPercent = 60
+    # Excess stock percentage for selling
+    excessStockPercent = 80
+
+[trading]
+    # Enable trading system
+    enabled = true
+    # Ticks between trading cycles
+    tickInterval = 60
+    # Restock rate multiplier
+    restockRate = 0.5
+    # Default max stock for items
+    defaultMaxStock = 1000.0
+
+[display]
+    # Timezone for time display
+    # Options: "UTC" (default), "SYSTEM" (use OS default), or timezone ID like "America/New_York"
+    timezone = "America/New_York"
+
+[player]
+    # Enable player tracking system
+    playerTracking = true
+    # Show town boundary entry/exit messages
+    townBoundaryMessages = true

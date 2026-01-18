@@ -40,6 +40,10 @@ loom {
 
     // JetBrains annotations for @NotNull/@Nullable
     compileOnly 'org.jetbrains:annotations:23.0.0'
+
+    // NightConfig for TOML configuration (bundled with Forge, need to add for Fabric)
+    include implementation('com.electronwill.night-config:core:3.8.1')
+    include implementation('com.electronwill.night-config:toml:3.8.1')
 }
 
 // Include common module source directly to allow compilation

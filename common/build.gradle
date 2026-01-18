@@ -34,9 +34,6 @@ dependencies {
         transitive = false
     }
 
-    // Common TOML library for configuration
-    api 'com.moandjiezana.toml:toml4j:0.7.2'
-
     // SLF4J for logging (used by debug and configuration classes)
     api 'org.slf4j:slf4j-api:1.7.36'
 

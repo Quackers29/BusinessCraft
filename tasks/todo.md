@@ -358,7 +358,7 @@ Net change: **+3 packets** (replaces 1, adds 4) but significantly better archite
 - **✅ COMPLETED**: Economy Stabilization - Trades-Only + Need-Based Bidding (Phase 6) 💰
 - **🧪 PENDING**: Verification & Testing (Phase 7)
 - **✅ COMPLETED**: Resource Storage int→long Migration (Phase 8) - Updated all contracts, storage, and view-models to use long for quantities
-- **📋 PLANNED**: Configuration File Modernization (Phase 9) - Migrate from .properties to TOML format
+- **✅ COMPLETED**: Configuration File Modernization (Phase 9) - Migrated from .properties to TOML using NightConfig
 - **📊 Overall**: ~98% compliant with target architecture
 
 ### **Development Guidelines**
@@ -595,29 +595,30 @@ Source: [NightConfig GitHub](https://github.com/TheElectronWill/night-config)
     townBoundaryMessages = true
 ```
 
-### **9.4 Implementation Plan**
+### **9.4 Implementation Plan** ✅ **COMPLETE**
 
-- [ ] **Step 1: Update build.gradle**
-  - Remove toml4j from common/build.gradle
-  - Add NightConfig to fabric/build.gradle (Forge has it bundled)
+- [x] **Step 1: Update build.gradle**
+  - Removed toml4j from common/build.gradle
+  - Added NightConfig to fabric/build.gradle (Forge has it bundled)
 
-- [ ] **Step 2: Update ConfigLoader.java**
-  - Replace `Properties` with NightConfig `CommentedFileConfig`
-  - Use `config.get("section.key")` for reading
-  - Use `config.set("section.key", value)` for writing
-  - Keep static field pattern for easy access
+- [x] **Step 2: Update ConfigLoader.java**
+  - Replaced `Properties` with NightConfig `CommentedFileConfig`
+  - Uses `config.getOrElse("section.key", default)` for reading
+  - Uses `config.set("section.key", value)` for writing
+  - Kept static field pattern for easy access
 
-- [ ] **Step 3: Create default businesscraft.toml**
-  - Include comments explaining each option
-  - Ship as resource in assets, copy to config dir if missing
+- [x] **Step 3: Create default businesscraft.toml**
+  - Created at `assets/businesscraft/config/businesscraft.toml`
+  - Includes comments explaining each option
+  - Auto-copied to config dir on first run
 
-- [ ] **Step 4: Delete old .properties handling**
-  - No migration needed - clean break
-  - Remove old `businesscraft.properties` files
+- [x] **Step 4: Delete old .properties handling**
+  - Removed old `businesscraft.properties` files
+  - Clean break, no migration
 
-- [ ] **Step 5: Keep hot-reload**
-  - ConfigurationService already watches files
-  - Just update the reload callback
+- [x] **Step 5: Keep hot-reload**
+  - ConfigurationService still watches files
+  - Updated to watch `businesscraft.toml`
 
 ### **9.5 Files to Modify**
 

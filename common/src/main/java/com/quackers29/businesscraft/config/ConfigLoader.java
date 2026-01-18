@@ -1,22 +1,22 @@
 package com.quackers29.businesscraft.config;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+
+import com.electronwill.nightconfig.core.CommentedConfig;
+import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.mojang.logging.LogUtils;
-import com.quackers29.businesscraft.util.Result;
 
 public class ConfigLoader {
     private static final Logger LOGGER = LogUtils.getLogger();
-    // INSTANCE moved to bottom to ensure all static fields are initialized first
+    private static final String CONFIG_FILE_NAME = "businesscraft.toml";
+    private static final String DEFAULT_CONFIG_RESOURCE = "/assets/businesscraft/config/businesscraft.toml";
 
     // Vehicle-related config
     public static boolean enableCreateTrains = true;
@@ -26,30 +26,28 @@ public class ConfigLoader {
 
     // Town-related config
     public static List<String> townNames = new ArrayList<>();
-
     public static int minPopForTourists = 5;
-    public static int minDistanceBetweenTowns = 100; // Minimum distance between towns in blocks
-    public static int defaultStartingPopulation = 5; // Default starting population for new towns
-    public static int maxTouristsPerTown = 10; // Maximum number of tourists per town
-    public static int populationPerTourist = 10; // Population required for each tourist (1 tourist per 10 population)
-    public static int maxPopBasedTourists = 20; // Maximum population-based tourists (200 pop = 20 tourists)
+    public static int minDistanceBetweenTowns = 100;
+    public static int defaultStartingPopulation = 5;
+    public static int maxTouristsPerTown = 1000;
+    public static int populationPerTourist = 5;
+    public static int maxPopBasedTourists = 20;
 
     // Tourist-related config
-    public static double touristExpiryMinutes = 120.0; // Tourist expiry time in minutes (default: 120 = 2 hours)
-    public static boolean enableTouristExpiry = true; // Whether tourist expiry is enabled
-    public static boolean notifyOnTouristDeparture = true; // Whether to notify origin town when tourist quits or dies
+    public static double touristExpiryMinutes = 120.0;
+    public static boolean enableTouristExpiry = true;
+    public static boolean notifyOnTouristDeparture = true;
 
     // Tourism economy config
-    public static int metersPerEmerald = 50; // How many meters a tourist needs to travel to earn 1 emerald
+    public static int metersPerEmerald = 50;
 
     // Distance milestone config
-    public static boolean enableMilestones = true; // Whether distance milestone rewards are enabled
-    public static Map<Integer, List<String>> milestoneRewards = new HashMap<>(); // Distance -> List of "item:count"
-                                                                                 // rewards
+    public static boolean enableMilestones = true;
+    public static Map<Integer, List<String>> milestoneRewards = new HashMap<>();
 
     // Player tracking config
-    public static boolean playerTracking = true; // Master toggle for all player tracking functionality
-    public static boolean townBoundaryMessages = true; // Whether to show town entry/exit messages
+    public static boolean playerTracking = true;
+    public static boolean townBoundaryMessages = true;
 
     // Trading config
     public static boolean tradingEnabled = true;
@@ -72,8 +70,6 @@ public class ConfigLoader {
     public static double contractSnailMailDeliveryMinutesPerMeter = 0.1;
 
     // Display Config
-    // Timezone for date/time display formatting. Options: "UTC" (default), "SYSTEM", or any valid timezone ID
-    // Examples: "America/New_York", "Europe/London", "Asia/Tokyo"
     public static String displayTimezone = "UTC";
 
     public static final ConfigLoader INSTANCE = new ConfigLoader();
@@ -83,13 +79,10 @@ public class ConfigLoader {
         registerWithHotReload();
     }
 
-    /**
-     * Registers this configuration with the hot-reloadable configuration service.
-     */
     private void registerWithHotReload() {
         try {
             Path configDir = com.quackers29.businesscraft.api.PlatformAccess.platform.getConfigDirectory();
-            Path configPath = configDir.resolve("businesscraft.properties");
+            Path configPath = configDir.resolve(CONFIG_FILE_NAME);
             ConfigurationService.getInstance().registerConfiguration(
                     "businesscraft-main",
                     configPath,
@@ -99,302 +92,268 @@ public class ConfigLoader {
         }
     }
 
-    /**
-     * Reloads configuration from the specified file path.
-     * Used as a callback for the hot-reload service.
-     */
     private void reloadFromFile(Path filePath) {
         loadConfig();
     }
 
     public static void loadConfig() {
-        Properties props = new Properties();
-
         try {
             Path configDir = com.quackers29.businesscraft.api.PlatformAccess.platform.getConfigDirectory();
-            File configFile = configDir.resolve("businesscraft.properties").toFile();
+            Path configFile = configDir.resolve(CONFIG_FILE_NAME);
 
-            if (!configFile.exists()) {
-                if (!configFile.getParentFile().exists()) {
-                    configFile.getParentFile().mkdirs();
-                }
+            // Create config directory if it doesn't exist
+            if (!Files.exists(configDir)) {
+                Files.createDirectories(configDir);
+            }
+
+            // Copy default config from resources if file doesn't exist
+            if (!Files.exists(configFile)) {
+                copyDefaultConfig(configFile);
+            }
+
+            // Load config using NightConfig
+            try (CommentedFileConfig config = CommentedFileConfig.builder(configFile)
+                    .preserveInsertionOrder()
+                    .build()) {
+
+                config.load();
+
+                // General settings
+                minDistanceBetweenTowns = config.getIntOrElse("general.minDistanceBetweenTowns", 100);
+                defaultStartingPopulation = config.getIntOrElse("general.defaultStartingPopulation", 5);
+                townNames = config.getOrElse("general.townNames", getDefaultTownNames());
+
+                // Vehicle settings
+                enableCreateTrains = config.getOrElse("vehicles.enableCreateTrains", true);
+                enableMinecarts = config.getOrElse("vehicles.enableMinecarts", true);
+                vehicleSearchRadius = config.getIntOrElse("vehicles.vehicleSearchRadius", 3);
+                minecartStopThreshold = config.getOrElse("vehicles.minecartStopThreshold", 0.001);
+
+                // Tourist settings
+                minPopForTourists = config.getIntOrElse("tourists.minPopForTourists", 5);
+                maxTouristsPerTown = config.getIntOrElse("tourists.maxTouristsPerTown", 1000);
+                populationPerTourist = config.getIntOrElse("tourists.populationPerTourist", 5);
+                maxPopBasedTourists = config.getIntOrElse("tourists.maxPopBasedTourists", 20);
+                touristExpiryMinutes = config.getOrElse("tourists.touristExpiryMinutes", 120.0);
+                enableTouristExpiry = config.getOrElse("tourists.enableTouristExpiry", true);
+                notifyOnTouristDeparture = config.getOrElse("tourists.notifyOnTouristDeparture", true);
+
+                // Economy settings
+                metersPerEmerald = config.getIntOrElse("economy.metersPerEmerald", 50);
+                currencyItem = config.getOrElse("economy.currencyItem", "minecraft:emerald");
+
+                // Milestone settings
+                enableMilestones = config.getOrElse("milestones.enabled", true);
+                loadMilestoneRewards(config);
+
+                // Contract settings
+                contractAuctionDurationMinutes = config.getOrElse("contracts.auctionDurationMinutes", 1.0);
+                contractCourierAcceptanceMinutes = config.getOrElse("contracts.courierAcceptanceMinutes", 2.0);
+                contractCourierDeliveryMinutesPerMeter = config.getOrElse("contracts.courierDeliveryMinutesPerMeter", 0.05);
+                contractSnailMailDeliveryMinutesPerMeter = config.getOrElse("contracts.snailMailDeliveryMinutesPerMeter", 0.1);
+
+                // Production settings
+                productionEnabled = config.getOrElse("production.enabled", true);
+                productionTickInterval = config.getIntOrElse("production.tickInterval", 100);
+                dailyTickInterval = config.getIntOrElse("production.dailyTickInterval", 24000);
+                minStockPercent = config.getIntOrElse("production.minStockPercent", 60);
+                excessStockPercent = config.getIntOrElse("production.excessStockPercent", 80);
+
+                // Trading settings
+                tradingEnabled = config.getOrElse("trading.enabled", true);
+                tradingTickInterval = config.getIntOrElse("trading.tickInterval", 60);
+                tradingRestockRate = config.<Number>getOrElse("trading.restockRate", 0.5).floatValue();
+                tradingDefaultMaxStock = config.<Number>getOrElse("trading.defaultMaxStock", 1000.0).floatValue();
+
+                // Display settings
+                displayTimezone = config.getOrElse("display.timezone", "UTC");
+                com.quackers29.businesscraft.util.BCTimeUtils.setTimezone(displayTimezone);
+
+                // Player settings
+                playerTracking = config.getOrElse("player.playerTracking", true);
+                townBoundaryMessages = config.getOrElse("player.townBoundaryMessages", true);
+            }
+
+            // Load registries after config
+            loadRegistries();
+
+            LOGGER.info("Loaded BusinessCraft configuration from {}", configFile);
+
+        } catch (Exception e) {
+            LOGGER.error("Failed to load config: {}", e.getMessage(), e);
+            // Use defaults on error
+        }
+    }
+
+    private static void copyDefaultConfig(Path targetPath) {
+        try (InputStream is = ConfigLoader.class.getResourceAsStream(DEFAULT_CONFIG_RESOURCE)) {
+            if (is != null) {
+                Files.copy(is, targetPath);
+                LOGGER.info("Created default configuration file: {}", targetPath);
+            } else {
+                LOGGER.warn("Default config resource not found, creating minimal config");
                 saveConfig();
-                return;
             }
-
-            FileReader reader = new FileReader(configFile);
-            props.load(reader);
-            reader.close();
-
-            // Vehicle settings
-            enableCreateTrains = Boolean.parseBoolean(props.getProperty("enableCreateTrains", "true"));
-            enableMinecarts = Boolean.parseBoolean(props.getProperty("enableMinecarts", "true"));
-            vehicleSearchRadius = Integer.parseInt(props.getProperty("vehicleSearchRadius", "3"));
-            minecartStopThreshold = Double.parseDouble(props.getProperty("minecartStopThreshold", "0.001"));
-
-            // Town settings
-
-            minPopForTourists = Integer.parseInt(props.getProperty("minPopForTourists", "5"));
-            minDistanceBetweenTowns = Integer.parseInt(props.getProperty("minDistanceBetweenTowns", "100"));
-            defaultStartingPopulation = Integer.parseInt(props.getProperty("defaultStartingPopulation", "5"));
-            maxTouristsPerTown = Integer.parseInt(props.getProperty("maxTouristsPerTown", "10"));
-            populationPerTourist = Integer.parseInt(props.getProperty("populationPerTourist", "10"));
-            maxPopBasedTourists = Integer.parseInt(props.getProperty("maxPopBasedTourists", "20"));
-
-            // Load tourist-related config
-            touristExpiryMinutes = Double.parseDouble(props.getProperty("touristExpiryMinutes", "120.0"));
-            enableTouristExpiry = Boolean.parseBoolean(props.getProperty("enableTouristExpiry", "true"));
-            notifyOnTouristDeparture = Boolean.parseBoolean(props.getProperty("notifyOnTouristDeparture", "true"));
-
-            // Load tourism economy config
-            metersPerEmerald = Integer.parseInt(props.getProperty("metersPerEmerald", "50"));
-
-            // Load milestone config
-            enableMilestones = Boolean.parseBoolean(props.getProperty("enableMilestones", "true"));
-            loadMilestoneRewards(props);
-
-            // Load player tracking config
-            playerTracking = Boolean.parseBoolean(props.getProperty("playerTracking", "true"));
-            townBoundaryMessages = Boolean.parseBoolean(props.getProperty("townBoundaryMessages", "true"));
-
-            // Load town names
-            String namesStr = props.getProperty("townNames", "");
-            townNames = new ArrayList<>(Arrays.asList(namesStr.split(",")));
-            if (townNames.isEmpty()) {
-                townNames.addAll(Arrays.asList("Riverside", "Hillcrest", "Meadowbrook", "Oakville"));
-            }
-
-            // Load trading config
-            tradingEnabled = Boolean.parseBoolean(props.getProperty("tradingEnabled", "true"));
-            tradingTickInterval = Integer.parseInt(props.getProperty("tradingTickInterval", "60"));
-            tradingRestockRate = Float.parseFloat(props.getProperty("tradingRestockRate", "0.5"));
-            tradingDefaultMaxStock = Float.parseFloat(props.getProperty("tradingDefaultMaxStock", "1000.0"));
-            currencyItem = props.getProperty("currencyItem", "minecraft:emerald");
-
-            // Load production config
-            productionEnabled = Boolean.parseBoolean(props.getProperty("productionEnabled", "true"));
-            productionTickInterval = Integer.parseInt(props.getProperty("productionTickInterval", "100"));
-            minStockPercent = Integer.parseInt(props.getProperty("minStockPercent", "60"));
-            minStockPercent = Integer.parseInt(props.getProperty("minStockPercent", "60"));
-            excessStockPercent = Integer.parseInt(props.getProperty("excessStockPercent", "80"));
-
-            // Load contract timing config
-            contractAuctionDurationMinutes = Double
-                    .parseDouble(props.getProperty("contractAuctionDurationMinutes", "1.0"));
-            contractCourierAcceptanceMinutes = Double
-                    .parseDouble(props.getProperty("contractCourierAcceptanceMinutes", "2.0"));
-            contractCourierDeliveryMinutesPerMeter = Double
-                    .parseDouble(props.getProperty("contractCourierDeliveryMinutesPerMeter", "0.05"));
-            contractSnailMailDeliveryMinutesPerMeter = Double
-                    .parseDouble(props.getProperty("contractSnailMailDeliveryMinutesPerMeter", "0.1"));
-
-            // Load display config
-            displayTimezone = props.getProperty("displayTimezone", "UTC");
-            com.quackers29.businesscraft.util.BCTimeUtils.setTimezone(displayTimezone);
-
-            // ============================================================================
-            // REGISTRY LOADING - ARCHITECTURAL EXPLANATION (Phase 3.1)
-            // ============================================================================
-            //
-            // **WHY REGISTRIES LOAD ON BOTH SIDES:**
-            // These registries load on physical clients because of Integrated Servers
-            // (Single Player mode). When a player starts a single-player world, the
-            // physical client JVM runs BOTH the client and server logic. The server
-            // logic requires these registries for business calculations.
-            //
-            // **SERVER-AUTHORITATIVE ARCHITECTURE GUARANTEE:**
-            // Despite registries loading on both sides, the architecture is still
-            // server-authoritative because:
-            //
-            // 1. CLIENT UI CODE DOES NOT ACCESS BUSINESS LOGIC:
-            //    - ProductionRegistry: ZERO UI access (Phase 1.2 complete)
-            //    - UpgradeRegistry: ZERO UI access (Phase 2.1 complete)
-            //    - ResourceRegistry: Display mapping ONLY (see below)
-            //
-            // 2. ALL CALCULATIONS HAPPEN ON SERVER:
-            //    - Production rates: ProductionStatusViewModelBuilder (server-side)
-            //    - Upgrade costs: UpgradeStatusViewModelBuilder (server-side)
-            //    - Market prices: MarketViewModelBuilder (server-side)
-            //    - Resource stats: TownResourceViewModelBuilder (server-side)
-            //
-            // 3. VIEW-MODEL PATTERN ENFORCES SEPARATION:
-            //    - Server builds view-models with pre-calculated display strings
-            //    - Client receives display-ready data via sync packets
-            //    - UI components render strings directly (zero math on client)
-            //
-            // **RESOURCEREGISTRY SPECIAL CASE:**
-            // ResourceRegistry is accessed by client UI for DISPLAY MAPPING ONLY:
-            //    - ContractBoardScreen: Maps resource ID → ItemStack for icon rendering
-            //    - BCModalInventoryScreen: Maps Item → resource ID for view-model lookup
-            //    - This is pure data translation (analogous to texture lookups)
-            //    - NO BUSINESS LOGIC: Pricing comes from TradingViewModel (server-calculated)
-            //
-            // **FUTURE OPTIMIZATION (Optional):**
-            // Phase 3.1 could add platform detection to skip ProductionRegistry and
-            // UpgradeRegistry on dedicated clients, but this is low-priority because:
-            //    - Memory cost is negligible (~few KB of CSV data)
-            //    - Integrated servers require the data anyway
-            //    - View-model architecture already ensures server authority
-            //
-            // ============================================================================
-
-            // Load registries for both integrated servers and display mapping
-            com.quackers29.businesscraft.economy.ResourceRegistry.load();
-            com.quackers29.businesscraft.production.ProductionRegistry.load();
-            com.quackers29.businesscraft.production.UpgradeRegistry.load();
-            com.quackers29.businesscraft.world.BiomeRegistry.load();
-
         } catch (IOException e) {
-            LOGGER.error("Failed to load config: {}", e.getMessage());
-        }
-
-        // Configuration loaded
-
-    }
-
-    public static void saveConfig() {
-        Properties props = new Properties();
-
-        // Vehicle settings
-        props.setProperty("enableCreateTrains", String.valueOf(enableCreateTrains));
-        props.setProperty("enableMinecarts", String.valueOf(enableMinecarts));
-        props.setProperty("vehicleSearchRadius", String.valueOf(vehicleSearchRadius));
-        props.setProperty("minecartStopThreshold", String.valueOf(minecartStopThreshold));
-
-        // Town settings
-
-        props.setProperty("minPopForTourists", String.valueOf(minPopForTourists));
-        props.setProperty("minDistanceBetweenTowns", String.valueOf(minDistanceBetweenTowns));
-        props.setProperty("defaultStartingPopulation", String.valueOf(defaultStartingPopulation));
-        props.setProperty("maxTouristsPerTown", String.valueOf(maxTouristsPerTown));
-        props.setProperty("populationPerTourist", String.valueOf(populationPerTourist));
-        props.setProperty("maxPopBasedTourists", String.valueOf(maxPopBasedTourists));
-        props.setProperty("townNames", String.join(",", townNames));
-
-        // Save tourist-related config
-        props.setProperty("touristExpiryMinutes", String.valueOf(touristExpiryMinutes));
-        props.setProperty("enableTouristExpiry", String.valueOf(enableTouristExpiry));
-        props.setProperty("notifyOnTouristDeparture", String.valueOf(notifyOnTouristDeparture));
-
-        // Save tourism economy config
-        props.setProperty("metersPerEmerald", String.valueOf(metersPerEmerald));
-
-        // Save milestone config
-        props.setProperty("enableMilestones", String.valueOf(enableMilestones));
-        saveMilestoneRewards(props);
-
-        // Save player tracking config
-        props.setProperty("playerTracking", String.valueOf(playerTracking));
-        props.setProperty("townBoundaryMessages", String.valueOf(townBoundaryMessages));
-
-        // Save trading config
-        props.setProperty("tradingEnabled", String.valueOf(tradingEnabled));
-        props.setProperty("tradingTickInterval", String.valueOf(tradingTickInterval));
-        props.setProperty("tradingRestockRate", String.valueOf(tradingRestockRate));
-        props.setProperty("tradingDefaultMaxStock", String.valueOf(tradingDefaultMaxStock));
-        props.setProperty("currencyItem", currencyItem);
-
-        // Save production config
-        props.setProperty("productionEnabled", String.valueOf(productionEnabled));
-        props.setProperty("productionTickInterval", String.valueOf(productionTickInterval));
-        props.setProperty("minStockPercent", String.valueOf(minStockPercent));
-        props.setProperty("excessStockPercent", String.valueOf(excessStockPercent));
-
-        // Save contract timing config
-        props.setProperty("contractAuctionDurationMinutes", String.valueOf(contractAuctionDurationMinutes));
-        props.setProperty("contractCourierAcceptanceMinutes", String.valueOf(contractCourierAcceptanceMinutes));
-        props.setProperty("contractCourierDeliveryMinutesPerMeter",
-                String.valueOf(contractCourierDeliveryMinutesPerMeter));
-        props.setProperty("contractSnailMailDeliveryMinutesPerMeter",
-                String.valueOf(contractSnailMailDeliveryMinutesPerMeter));
-
-        // Save display config
-        props.setProperty("displayTimezone", displayTimezone);
-
-        try {
-            Path configDir = com.quackers29.businesscraft.api.PlatformAccess.platform.getConfigDirectory();
-            File configFile = configDir.resolve("businesscraft.properties").toFile();
-
-            if (!configFile.getParentFile().exists()) {
-                configFile.getParentFile().mkdirs();
-            }
-
-            FileWriter writer = new FileWriter(configFile);
-            props.store(writer, "BusinessCraft Configuration");
-            writer.close();
-        } catch (IOException e) {
-            LOGGER.error("Failed to save config: {}", e.getMessage());
+            LOGGER.error("Failed to copy default config: {}", e.getMessage());
         }
     }
 
-    /**
-     * Loads milestone rewards from properties file.
-     * Expected format: milestone1_distance=10,
-     * milestone1_rewards=minecraft:bread:1,minecraft:experience_bottle:2
-     */
-    private static void loadMilestoneRewards(Properties props) {
-        // Ensure milestoneRewards is initialized
-        if (milestoneRewards == null) {
-            milestoneRewards = new HashMap<>();
-        }
+    private static void loadMilestoneRewards(CommentedFileConfig config) {
         milestoneRewards.clear();
 
-        // Set default milestone for testing if none exist
-        boolean hasAnyMilestone = false;
-        for (String key : props.stringPropertyNames()) {
-            if (key.startsWith("milestone") && key.endsWith("_distance")) {
-                hasAnyMilestone = true;
-                break;
-            }
-        }
-
-        if (!hasAnyMilestone) {
-            // Add default test milestone: 10m distance with bread and XP bottle
-            List<String> defaultRewards = Arrays.asList("minecraft:bread:1", "minecraft:experience_bottle:2");
-            milestoneRewards.put(10, defaultRewards);
+        List<CommentedConfig> rewards = config.getOrElse("milestones.rewards", new ArrayList<>());
+        if (rewards.isEmpty()) {
+            // Default milestone
+            List<String> defaultRewards = List.of("minecraft:bread:1", "minecraft:experience_bottle:2");
+            milestoneRewards.put(10, new ArrayList<>(defaultRewards));
             return;
         }
 
-        // Load configured milestones
-        for (String key : props.stringPropertyNames()) {
-            if (key.startsWith("milestone") && key.endsWith("_distance")) {
-                try {
-                    // Extract milestone number from key (e.g., "milestone1_distance" -> "1")
-                    String milestoneNum = key.substring(9, key.length() - 9); // Remove "milestone" and "_distance"
-                    int distance = Integer.parseInt(props.getProperty(key));
-
-                    // Look for corresponding rewards
-                    String rewardsKey = "milestone" + milestoneNum + "_rewards";
-                    String rewardsStr = props.getProperty(rewardsKey, "");
-
-                    if (!rewardsStr.isEmpty()) {
-                        List<String> rewards = Arrays.asList(rewardsStr.split(","));
-                        milestoneRewards.put(distance, rewards);
-                    } else {
-                        LOGGER.warn("MILESTONE CONFIG - Milestone distance {} found but no rewards configured",
-                                distance);
-                    }
-                } catch (NumberFormatException e) {
-                    LOGGER.warn("Invalid milestone distance in config: {}", key);
-                }
+        for (CommentedConfig reward : rewards) {
+            int distance = reward.<Number>getOrElse("distance", 0).intValue();
+            List<String> items = reward.getOrElse("items", new ArrayList<>());
+            if (distance > 0 && !items.isEmpty()) {
+                milestoneRewards.put(distance, new ArrayList<>(items));
             }
         }
     }
 
-    /**
-     * Saves milestone rewards to properties file.
-     */
-    private static void saveMilestoneRewards(Properties props) {
-        // Ensure milestoneRewards is initialized
-        if (milestoneRewards == null) {
-            milestoneRewards = new HashMap<>();
+    private static void loadRegistries() {
+        // Load registries for both integrated servers and display mapping
+        com.quackers29.businesscraft.economy.ResourceRegistry.load();
+        com.quackers29.businesscraft.production.ProductionRegistry.load();
+        com.quackers29.businesscraft.production.UpgradeRegistry.load();
+        com.quackers29.businesscraft.world.BiomeRegistry.load();
+    }
+
+    private static List<String> getDefaultTownNames() {
+        return List.of("Riverside", "Hillcrest", "Meadowbrook", "Oakville", "Stonebridge",
+                "Willowglen", "Sunnyvale", "Cedarwood", "Maplehaven", "Brookside",
+                "Fairview", "Pinehurst", "Elmwood", "Greystone");
+    }
+
+    public static void saveConfig() {
+        try {
+            Path configDir = com.quackers29.businesscraft.api.PlatformAccess.platform.getConfigDirectory();
+            Path configFile = configDir.resolve(CONFIG_FILE_NAME);
+
+            if (!Files.exists(configDir)) {
+                Files.createDirectories(configDir);
+            }
+
+            try (CommentedFileConfig config = CommentedFileConfig.builder(configFile)
+                    .preserveInsertionOrder()
+                    .build()) {
+
+                // General settings
+                config.set("general.minDistanceBetweenTowns", minDistanceBetweenTowns);
+                config.setComment("general.minDistanceBetweenTowns", " Minimum distance between towns in blocks");
+                config.set("general.defaultStartingPopulation", defaultStartingPopulation);
+                config.setComment("general.defaultStartingPopulation", " Default starting population for new towns");
+                config.set("general.townNames", townNames);
+                config.setComment("general.townNames", " List of random town names for auto-naming");
+
+                // Vehicle settings
+                config.set("vehicles.enableCreateTrains", enableCreateTrains);
+                config.setComment("vehicles.enableCreateTrains", " Enable Create mod train integration");
+                config.set("vehicles.enableMinecarts", enableMinecarts);
+                config.setComment("vehicles.enableMinecarts", " Enable minecart detection for tourists");
+                config.set("vehicles.vehicleSearchRadius", vehicleSearchRadius);
+                config.setComment("vehicles.vehicleSearchRadius", " Search radius for vehicle detection (blocks)");
+                config.set("vehicles.minecartStopThreshold", minecartStopThreshold);
+                config.setComment("vehicles.minecartStopThreshold", " Minecart stop velocity threshold");
+
+                // Tourist settings
+                config.set("tourists.minPopForTourists", minPopForTourists);
+                config.setComment("tourists.minPopForTourists", " Minimum population required to spawn tourists");
+                config.set("tourists.maxTouristsPerTown", maxTouristsPerTown);
+                config.setComment("tourists.maxTouristsPerTown", " Maximum tourists per town");
+                config.set("tourists.populationPerTourist", populationPerTourist);
+                config.setComment("tourists.populationPerTourist", " Population required per tourist slot");
+                config.set("tourists.maxPopBasedTourists", maxPopBasedTourists);
+                config.setComment("tourists.maxPopBasedTourists", " Maximum population-based tourists");
+                config.set("tourists.touristExpiryMinutes", touristExpiryMinutes);
+                config.setComment("tourists.touristExpiryMinutes", " Tourist expiry time in minutes (0 = never expire)");
+                config.set("tourists.enableTouristExpiry", enableTouristExpiry);
+                config.setComment("tourists.enableTouristExpiry", " Enable tourist expiry system");
+                config.set("tourists.notifyOnTouristDeparture", notifyOnTouristDeparture);
+                config.setComment("tourists.notifyOnTouristDeparture", " Notify origin town when tourist departs");
+
+                // Economy settings
+                config.set("economy.metersPerEmerald", metersPerEmerald);
+                config.setComment("economy.metersPerEmerald", " Meters of travel per emerald earned");
+                config.set("economy.currencyItem", currencyItem);
+                config.setComment("economy.currencyItem", " Currency item for trading (format: modid:item)");
+
+                // Milestone settings
+                config.set("milestones.enabled", enableMilestones);
+                config.setComment("milestones.enabled", " Enable distance milestone rewards");
+                saveMilestoneRewards(config);
+
+                // Contract settings
+                config.set("contracts.auctionDurationMinutes", contractAuctionDurationMinutes);
+                config.setComment("contracts.auctionDurationMinutes", " Auction duration in minutes");
+                config.set("contracts.courierAcceptanceMinutes", contractCourierAcceptanceMinutes);
+                config.setComment("contracts.courierAcceptanceMinutes", " Courier acceptance window in minutes");
+                config.set("contracts.courierDeliveryMinutesPerMeter", contractCourierDeliveryMinutesPerMeter);
+                config.setComment("contracts.courierDeliveryMinutesPerMeter", " Courier delivery time per meter (minutes)");
+                config.set("contracts.snailMailDeliveryMinutesPerMeter", contractSnailMailDeliveryMinutesPerMeter);
+                config.setComment("contracts.snailMailDeliveryMinutesPerMeter", " Snail mail delivery time per meter (minutes)");
+
+                // Production settings
+                config.set("production.enabled", productionEnabled);
+                config.setComment("production.enabled", " Enable automatic production system");
+                config.set("production.tickInterval", productionTickInterval);
+                config.setComment("production.tickInterval", " Ticks between production cycles");
+                config.set("production.dailyTickInterval", dailyTickInterval);
+                config.setComment("production.dailyTickInterval", " Daily tick interval for consumption");
+                config.set("production.minStockPercent", minStockPercent);
+                config.setComment("production.minStockPercent", " Minimum stock percentage before buying");
+                config.set("production.excessStockPercent", excessStockPercent);
+                config.setComment("production.excessStockPercent", " Excess stock percentage for selling");
+
+                // Trading settings
+                config.set("trading.enabled", tradingEnabled);
+                config.setComment("trading.enabled", " Enable trading system");
+                config.set("trading.tickInterval", tradingTickInterval);
+                config.setComment("trading.tickInterval", " Ticks between trading cycles");
+                config.set("trading.restockRate", (double) tradingRestockRate);
+                config.setComment("trading.restockRate", " Restock rate multiplier");
+                config.set("trading.defaultMaxStock", (double) tradingDefaultMaxStock);
+                config.setComment("trading.defaultMaxStock", " Default max stock for items");
+
+                // Display settings
+                config.set("display.timezone", displayTimezone);
+                config.setComment("display.timezone", " Timezone for time display (UTC, SYSTEM, or timezone ID like America/New_York)");
+
+                // Player settings
+                config.set("player.playerTracking", playerTracking);
+                config.setComment("player.playerTracking", " Enable player tracking system");
+                config.set("player.townBoundaryMessages", townBoundaryMessages);
+                config.setComment("player.townBoundaryMessages", " Show town boundary entry/exit messages");
+
+                config.save();
+            }
+
+            LOGGER.info("Saved BusinessCraft configuration to {}", configFile);
+
+        } catch (Exception e) {
+            LOGGER.error("Failed to save config: {}", e.getMessage(), e);
+        }
+    }
+
+    private static void saveMilestoneRewards(CommentedFileConfig config) {
+        List<CommentedConfig> rewardsList = new ArrayList<>();
+
+        for (Map.Entry<Integer, List<String>> entry : milestoneRewards.entrySet()) {
+            CommentedConfig reward = config.createSubConfig();
+            reward.set("distance", entry.getKey());
+            reward.set("items", entry.getValue());
+            rewardsList.add(reward);
         }
 
-        int milestoneIndex = 1;
-        for (Map.Entry<Integer, List<String>> entry : milestoneRewards.entrySet()) {
-            props.setProperty("milestone" + milestoneIndex + "_distance", String.valueOf(entry.getKey()));
-            props.setProperty("milestone" + milestoneIndex + "_rewards", String.join(",", entry.getValue()));
-            milestoneIndex++;
-        }
+        config.set("milestones.rewards", rewardsList);
+        config.setComment("milestones.rewards", " Milestone rewards - distance in meters, items as \"modid:item:count\"");
     }
 }

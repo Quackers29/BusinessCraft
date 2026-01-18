@@ -33,6 +33,16 @@ public class ClientGlobalMarket {
     }
 
     /**
+     * Resets all client market data. Should be called when disconnecting
+     * from a server or changing worlds to prevent stale data.
+     */
+    public void reset() {
+        prices.clear();
+        marketViewModel = null;
+        LOGGER.info("ClientGlobalMarket reset - all cached prices cleared");
+    }
+
+    /**
      * NEW METHOD (Phase 1.3): Updates market with server-calculated view-model
      * This is called by MarketViewModelSyncPacket
      */
