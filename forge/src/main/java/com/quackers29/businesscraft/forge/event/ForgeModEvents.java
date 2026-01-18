@@ -27,14 +27,4 @@ public class ForgeModEvents {
         }
     }
 
-    /**
-     * Reset client-side market cache when disconnecting from a server.
-     * Prevents market prices from persisting across different worlds/servers.
-     */
-    @SubscribeEvent
-    @OnlyIn(Dist.CLIENT)
-    public static void onClientDisconnect(ClientPlayerNetworkEvent.LoggingOut event) {
-        LOGGER.info("Client disconnecting - resetting ClientGlobalMarket");
-        ClientGlobalMarket.get().reset();
-    }
 }
