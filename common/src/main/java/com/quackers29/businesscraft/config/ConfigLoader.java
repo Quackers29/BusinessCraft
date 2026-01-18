@@ -71,6 +71,11 @@ public class ConfigLoader {
     public static double contractCourierDeliveryMinutesPerMeter = 0.05;
     public static double contractSnailMailDeliveryMinutesPerMeter = 0.1;
 
+    // Display Config
+    // Timezone for date/time display formatting. Options: "UTC" (default), "SYSTEM", or any valid timezone ID
+    // Examples: "America/New_York", "Europe/London", "Asia/Tokyo"
+    public static String displayTimezone = "UTC";
+
     public static final ConfigLoader INSTANCE = new ConfigLoader();
 
     private ConfigLoader() {
@@ -185,6 +190,10 @@ public class ConfigLoader {
             contractSnailMailDeliveryMinutesPerMeter = Double
                     .parseDouble(props.getProperty("contractSnailMailDeliveryMinutesPerMeter", "0.1"));
 
+            // Load display config
+            displayTimezone = props.getProperty("displayTimezone", "UTC");
+            com.quackers29.businesscraft.util.BCTimeUtils.setTimezone(displayTimezone);
+
             // ============================================================================
             // REGISTRY LOADING - ARCHITECTURAL EXPLANATION (Phase 3.1)
             // ============================================================================
@@ -246,6 +255,7 @@ public class ConfigLoader {
         LOGGER.info("Contract Timings: Auction={}m, CourierAccept={}m, CourierSpeed={}m/m, SnailSpeed={}m/m",
                 contractAuctionDurationMinutes, contractCourierAcceptanceMinutes,
                 contractCourierDeliveryMinutesPerMeter, contractSnailMailDeliveryMinutesPerMeter);
+        LOGGER.info("Display Timezone: {}", displayTimezone);
         LOGGER.info("Enable Minecarts: {}", enableMinecarts);
         LOGGER.info("Vehicle Search Radius: {}", vehicleSearchRadius);
 
@@ -326,6 +336,9 @@ public class ConfigLoader {
                 String.valueOf(contractCourierDeliveryMinutesPerMeter));
         props.setProperty("contractSnailMailDeliveryMinutesPerMeter",
                 String.valueOf(contractSnailMailDeliveryMinutesPerMeter));
+
+        // Save display config
+        props.setProperty("displayTimezone", displayTimezone);
 
         try {
             Path configDir = com.quackers29.businesscraft.api.PlatformAccess.platform.getConfigDirectory();

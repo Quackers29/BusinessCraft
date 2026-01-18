@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.town.data;
 
 // Platform-agnostic imports - Minecraft types abstracted through platform helpers
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.util.BCTimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.world.item.ItemStack;
@@ -9,11 +10,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 
 import java.util.*;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 
 /**
  * Represents a reward entry in the town payment board system.
@@ -126,40 +122,27 @@ public class RewardEntry {
     }
     
     /**
-     * Get a time ago string for display
+     * Get a time ago string for display.
+     * Uses BCTimeUtils for consistent formatting across the codebase.
      */
     public String getTimeAgoDisplay() {
-        long diff = System.currentTimeMillis() - timestamp;
-        long minutes = diff / (60 * 1000);
-        long hours = diff / (60 * 60 * 1000);
-        long days = diff / (24 * 60 * 60 * 1000);
-        
-        if (days > 0) return days + "d ago";
-        if (hours > 0) return hours + "h ago";
-        if (minutes > 0) return minutes + "m ago";
-        return "Just now";
+        return BCTimeUtils.formatTimeAgo(timestamp, System.currentTimeMillis());
     }
-    
+
     /**
-     * Get timestamp in HH:mm:ss format for display
+     * Get timestamp in HH:mm:ss format for display.
+     * Uses the configured timezone from BCTimeUtils.
      */
     public String getTimeDisplay() {
-        LocalDateTime dateTime = LocalDateTime.ofInstant(
-            Instant.ofEpochMilli(timestamp), 
-            ZoneId.systemDefault()
-        );
-        return dateTime.format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        return BCTimeUtils.formatTimeOnly(timestamp);
     }
-    
+
     /**
-     * Get full date and time string for tooltip display
+     * Get full date and time string for tooltip display.
+     * Uses the configured timezone from BCTimeUtils.
      */
     public String getFullDateTimeDisplay() {
-        LocalDateTime dateTime = LocalDateTime.ofInstant(
-            Instant.ofEpochMilli(timestamp), 
-            ZoneId.systemDefault()
-        );
-        return dateTime.format(DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm:ss"));
+        return BCTimeUtils.formatFullDateTime(timestamp);
     }
     
     /**

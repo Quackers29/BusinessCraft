@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.contract.viewmodel;
 
 import com.quackers29.businesscraft.contract.Contract;
 import com.quackers29.businesscraft.contract.SellContract;
+import com.quackers29.businesscraft.util.BCTimeUtils;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.text.DecimalFormat;
@@ -157,7 +158,7 @@ public class ContractSummaryViewModelBuilder {
                 0,
                 contract.getIssuerTownId(),
                 contract.getIssuerTownName(),
-                formatTimeRemaining(contract.getExpiryTime(), serverTime),
+                BCTimeUtils.formatTimeRemaining(contract.getExpiryTime(), serverTime),
                 "N/A",
                 "Unknown",
                 "N/A",
@@ -181,7 +182,7 @@ public class ContractSummaryViewModelBuilder {
         String issuerTownName = sc.getIssuerTownName();
 
         // Time display
-        String timeRemainingDisplay = formatTimeRemaining(sc.getExpiryTime(), serverTime);
+        String timeRemainingDisplay = BCTimeUtils.formatTimeRemaining(sc.getExpiryTime(), serverTime);
         boolean isExpired = sc.getExpiryTime() < serverTime;
 
         // Bid display
@@ -277,31 +278,5 @@ public class ContractSummaryViewModelBuilder {
         // For now, allow acceptance (the detailed check happens on the actual accept action)
 
         return true;
-    }
-
-    /**
-     * Format time remaining as a display string.
-     */
-    private static String formatTimeRemaining(long expiryTime, long serverTime) {
-        long remaining = expiryTime - serverTime;
-
-        if (remaining <= 0) {
-            return "Expired";
-        }
-
-        long seconds = remaining / 1000;
-        long minutes = seconds / 60;
-        long hours = minutes / 60;
-        long days = hours / 24;
-
-        if (days > 0) {
-            return days + "d " + (hours % 24) + "h";
-        } else if (hours > 0) {
-            return hours + "h " + (minutes % 60) + "m";
-        } else if (minutes > 0) {
-            return minutes + "m " + (seconds % 60) + "s";
-        } else {
-            return seconds + "s";
-        }
     }
 }

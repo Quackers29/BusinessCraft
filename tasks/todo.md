@@ -95,24 +95,35 @@
 
 ---
 
-## 🕐 **PHASE 4: TIME UTILITY MODULE**
+## ✅ **PHASE 4: TIME UTILITY MODULE** - **COMPLETE**
 
 **Goal:** Centralize time formatting, eliminate client `System.currentTimeMillis()` for display.
 
-### **4.1 Create `BCTimeUtils.java`** 🔧 **MEDIUM PRIORITY**
-- [ ] **Create `BCTimeUtils.java`** (~60 lines):
+### **4.1 Create `BCTimeUtils.java`** ✅ **COMPLETED**
+- [x] **Created `BCTimeUtils.java`** (~230 lines):
   - `formatTimeRemaining(long expiryEpoch, long serverNow)` → "5m 30s" or "Expired"
-  - `formatDateTime(long epoch)` → "01/14 15:30" in client timezone
+  - `formatDateTime(long epoch)` → "01/14 15:30" in configured timezone
+  - `formatFullDateTime(long epoch)` → "Jan 14, 2026 15:30:45"
+  - `formatTimeOnly(long epoch)` → "15:30:45"
   - `formatDuration(long millis)` → "2h 15m 30s"
+  - `formatTimeAgo(long timestamp, long now)` → "5m ago"
   - `isExpired(long expiryEpoch, long serverNow)` → boolean
+  - `getTimeRemaining(long expiryEpoch, long serverNow)` → millis remaining
 
-### **4.2 Timezone Configuration**
-- [ ] **Add timezone setting to `businesscraft.properties`**:
-  - `clientTimezone=AUTO` (default: use system timezone)
-  - Options: "AUTO", "UTC", "America/New_York", "Europe/London", etc.
-  - `BCTimeUtils.setTimezone(String)` to configure on client startup
+### **4.2 Timezone Configuration** ✅ **COMPLETED**
+- [x] **Added `displayTimezone` to `ConfigLoader.java`**:
+  - Default: `"UTC"` (consistent server-side formatting)
+  - Options: "UTC", "SYSTEM" (use system default), or any valid timezone ID
+  - Examples: "America/New_York", "Europe/London", "Asia/Tokyo"
+  - `BCTimeUtils.setTimezone()` called on config load
 
-### **4.3 Audit Notes**
+### **4.3 Code Consolidation** ✅ **COMPLETED**
+**Updated files to use BCTimeUtils:**
+- `ContractSummaryViewModelBuilder.java` - Removed duplicate `formatTimeRemaining()`
+- `ContractDetailViewModelBuilder.java` - Removed duplicate `formatTimeRemaining()`, uses `BCTimeUtils.formatDateTime()`
+- `RewardEntry.java` - Updated `getTimeAgoDisplay()`, `getTimeDisplay()`, `getFullDateTimeDisplay()`
+
+### **4.4 Audit Notes**
 **Client `System.currentTimeMillis()` usage that is OK (animation/debouncing):**
 - `BCScrollableComponent.java:164,183` - Scroll drag timing ✅ OK
 - `UIGridBuilder.java:109,887` - Debouncing ✅ OK
@@ -122,10 +133,9 @@
 - `ModalEventHandler.java:50` - Click debounce ✅ OK
 - `BCModalInventoryScreen.java:353,432,749` - Animation ✅ OK
 
-**Usage that needs fixing (business logic time display):**
-- `ContractBoardScreen.java:187-189` - Time remaining display
-- `ContractDetailScreen.java:218-220` - Time remaining display
-- These will be fixed by Phase 5's generic query system
+**Business logic time display:** ✅ FIXED by Phase 5 view-models
+- Contract screens now use server-calculated `timeRemainingDisplay` from view-models
+- No client-side time calculations for business logic
 
 ---
 
@@ -426,7 +436,7 @@ Net change: **+3 packets** (replaces 1, adds 4) but significantly better archite
 - **View-Model Pattern**: All network packets contain display-ready view-models
 - **Server Authority**: Single source of truth for all business calculations
 
-### **Current Compliance Status** (Updated 2026-01-14)
+### **Current Compliance Status** (Updated 2026-01-18)
 - **✅ COMPLETED**: Resource statistics view-model (Phase 1.1)
 - **✅ COMPLETED**: Production formula view-model (Phase 1.2)
 - **✅ COMPLETED**: Market price view-model (Phase 1.3)
@@ -437,11 +447,11 @@ Net change: **+3 packets** (replaces 1, adds 4) but significantly better archite
 - **✅ COMPLETED**: Client sync helper simplification (Phase 3.2) 🧹
 - **✅ COMPLETED**: Tourism indicator view-model fix (TownInterfaceViewModel) 🎉
 - **⚠️ REMAINING**: Optional enhancement phase (3.3)
-- **🕐 PENDING**: Time handling & Contract Board view-model (Phase 4)
-- **🕐 PENDING**: Contract Board View-Model Compliance (Phase 5) - In Progress
-- **✅ COMPLETED**: Economy Stabilization - Trades-Only + Need-Based Bidding (Phase 6.9) 💰
+- **✅ COMPLETED**: Time Utility Module - BCTimeUtils consolidation (Phase 4) ⏰
+- **✅ COMPLETED**: Contract Board View-Model Compliance (Phase 5) 📋
+- **✅ COMPLETED**: Economy Stabilization - Trades-Only + Need-Based Bidding (Phase 6) 💰
 - **🧪 PENDING**: Verification & Testing (Phase 7)
-- **📊 Overall**: ~95% compliant with target architecture (Contract Board is ~40%)
+- **📊 Overall**: ~98% compliant with target architecture
 
 ### **Development Guidelines**
 - **Before Changes**: Verify current Forge functionality works correctly

@@ -2,10 +2,10 @@ package com.quackers29.businesscraft.contract.viewmodel;
 
 import com.quackers29.businesscraft.contract.Contract;
 import com.quackers29.businesscraft.contract.SellContract;
+import com.quackers29.businesscraft.util.BCTimeUtils;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -15,7 +15,6 @@ import java.util.*;
 public class ContractDetailViewModelBuilder {
 
     private static final DecimalFormat PRICE_FORMAT = new DecimalFormat("#,##0.##");
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MM/dd HH:mm");
 
     /**
      * Build a full detail view-model for a single contract.
@@ -49,11 +48,11 @@ public class ContractDetailViewModelBuilder {
         int quantity = sc.getQuantity();
         String issuerTownName = sc.getIssuerTownName() != null ? sc.getIssuerTownName() : "Unknown";
 
-        // Time displays
-        String timeRemainingDisplay = formatTimeRemaining(sc.getExpiryTime(), serverTime);
-        String createdDateDisplay = DATE_FORMAT.format(new Date(sc.getCreationTime()));
-        String expiresDateDisplay = DATE_FORMAT.format(new Date(sc.getExpiryTime()));
-        boolean isExpired = sc.getExpiryTime() < serverTime;
+        // Time displays (using BCTimeUtils for centralized formatting)
+        String timeRemainingDisplay = BCTimeUtils.formatTimeRemaining(sc.getExpiryTime(), serverTime);
+        String createdDateDisplay = BCTimeUtils.formatDateTime(sc.getCreationTime());
+        String expiresDateDisplay = BCTimeUtils.formatDateTime(sc.getExpiryTime());
+        boolean isExpired = BCTimeUtils.isExpired(sc.getExpiryTime(), serverTime);
 
         // Bid display
         float highestBid = sc.getHighestBid();
@@ -179,12 +178,12 @@ public class ContractDetailViewModelBuilder {
                 0,
                 contract.getIssuerTownId(),
                 contract.getIssuerTownName() != null ? contract.getIssuerTownName() : "Unknown",
-                formatTimeRemaining(contract.getExpiryTime(), serverTime),
+                BCTimeUtils.formatTimeRemaining(contract.getExpiryTime(), serverTime),
                 "N/A",
                 "Unknown",
                 "N/A",
-                DATE_FORMAT.format(new Date(contract.getCreationTime())),
-                DATE_FORMAT.format(new Date(contract.getExpiryTime())),
+                BCTimeUtils.formatDateTime(contract.getCreationTime()),
+                BCTimeUtils.formatDateTime(contract.getExpiryTime()),
                 null,
                 null,
                 null,
@@ -194,7 +193,7 @@ public class ContractDetailViewModelBuilder {
                 null, // acceptedBidDisplay
                 false,
                 false,
-                contract.getExpiryTime() < serverTime,
+                BCTimeUtils.isExpired(contract.getExpiryTime(), serverTime),
                 contract.isCompleted(),
                 false,
                 new ArrayList<>()
@@ -245,7 +244,7 @@ public class ContractDetailViewModelBuilder {
      */
     private static boolean calculateCanBid(SellContract sc, ServerPlayer player, long serverTime) {
         if (sc.isAuctionClosed()) return false;
-        if (sc.getExpiryTime() < serverTime) return false;
+        if (BCTimeUtils.isExpired(sc.getExpiryTime(), serverTime)) return false;
         return true;
     }
 
@@ -257,31 +256,5 @@ public class ContractDetailViewModelBuilder {
         if (sc.isCourierAssigned()) return false;
         if (sc.isDelivered()) return false;
         return true;
-    }
-
-    /**
-     * Format time remaining as a display string.
-     */
-    private static String formatTimeRemaining(long expiryTime, long serverTime) {
-        long remaining = expiryTime - serverTime;
-
-        if (remaining <= 0) {
-            return "Expired";
-        }
-
-        long seconds = remaining / 1000;
-        long minutes = seconds / 60;
-        long hours = minutes / 60;
-        long days = hours / 24;
-
-        if (days > 0) {
-            return days + "d " + (hours % 24) + "h";
-        } else if (hours > 0) {
-            return hours + "h " + (minutes % 60) + "m";
-        } else if (minutes > 0) {
-            return minutes + "m " + (seconds % 60) + "s";
-        } else {
-            return seconds + "s";
-        }
     }
 }
