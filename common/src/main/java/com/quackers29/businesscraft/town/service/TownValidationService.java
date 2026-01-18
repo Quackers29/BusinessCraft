@@ -202,7 +202,7 @@ public class TownValidationService {
         // Check each item and amount
         for (var entry : request.getInitialResources().entrySet()) {
             Item item = entry.getKey();
-            Integer amount = entry.getValue();
+            Long amount = entry.getValue();
             
             if (item == null) {
                 return Result.failure(new BCError.ValidationError("NULL_ITEM", 

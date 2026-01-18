@@ -19,7 +19,7 @@ public interface ITownState {
 
     int getUpgradeLevel(String nodeId);
 
-    int getWorkUnits();
+    long getWorkUnits();
 
-    int getWorkUnitCap();
+    long getWorkUnitCap();
 }

@@ -211,7 +211,6 @@ public class TownUpgradeComponent implements TownComponent {
             town.getTrading().adjustStock(ra.resourceId, -ra.amount);
         }
 
-        LOGGER.info("Starting research: {} (Lvl {}) for town {}", nodeId, currentLevel + 1, town.getName());
         this.currentResearchNode = nodeId;
         this.researchProgress = 0;
         this.idleTicks = 0;

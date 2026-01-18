@@ -15,9 +15,9 @@ import java.util.Map;
  */
 public class BufferStorageResponsePacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(BufferStorageResponsePacket.class);
-    private final Map<Item, Integer> bufferItems;
+    private final Map<Item, Long> bufferItems;
 
-    public BufferStorageResponsePacket(Map<Item, Integer> bufferItems) {
+    public BufferStorageResponsePacket(Map<Item, Long> bufferItems) {
         this.bufferItems = new HashMap<>(bufferItems);
     }
 
@@ -26,7 +26,7 @@ public class BufferStorageResponsePacket {
         int size = buf.readInt();
         for (int i = 0; i < size; i++) {
             String itemName = buf.readUtf();
-            int count = buf.readInt();
+            long count = buf.readLong();
             
             // Get the item from the registry
             try {
@@ -46,12 +46,12 @@ public class BufferStorageResponsePacket {
 
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeInt(bufferItems.size());
-        for (Map.Entry<Item, Integer> entry : bufferItems.entrySet()) {
+        for (Map.Entry<Item, Long> entry : bufferItems.entrySet()) {
             Object itemIdObj = PlatformAccess.getRegistry().getItemKey(entry.getKey());
             if (itemIdObj instanceof net.minecraft.resources.ResourceLocation itemId) {
                 buf.writeUtf(itemId.toString());
             }
-            buf.writeInt(entry.getValue());
+            buf.writeLong(entry.getValue());
         }
     }
     
@@ -106,7 +106,7 @@ public class BufferStorageResponsePacket {
     /**
      * Returns the buffer items
      */
-    public Map<Item, Integer> getBufferItems() {
+    public Map<Item, Long> getBufferItems() {
         return bufferItems;
     }
 }

@@ -98,9 +98,9 @@ public class ContractDetailScreen extends Screen {
         // Bid button conditional on tab
         int quantity = 0;
         if (contract instanceof CourierContract cc) {
-            quantity = cc.getQuantity();
+            quantity = (int) cc.getQuantity();
         } else if (contract instanceof SellContract sc) {
-            quantity = sc.getQuantity();
+            quantity = (int) sc.getQuantity();
         }
 
         if (contract != null && quantity > 0 && !contract.isExpired()) {
@@ -310,10 +310,10 @@ public class ContractDetailScreen extends Screen {
         int quantity = 0;
         if (contract instanceof SellContract sc) {
             resourceName = sc.getResourceId();
-            quantity = sc.getQuantity();
+            quantity = (int) sc.getQuantity();
         } else if (contract instanceof CourierContract cc) {
             resourceName = cc.getResourceId();
-            quantity = cc.getQuantity();
+            quantity = (int) cc.getQuantity();
         }
 
         g.drawString(font, "Resource:", x + 10, textY, labelColor);
@@ -487,7 +487,7 @@ public class ContractDetailScreen extends Screen {
 
         // Resource & Quantity
         String resourceId = hasDetail ? detailViewModel.getResourceId() : summaryViewModel.getResourceId();
-        int quantity = hasDetail ? detailViewModel.getQuantity() : summaryViewModel.getQuantity();
+        long quantity = hasDetail ? detailViewModel.getQuantity() : summaryViewModel.getQuantity();
         g.drawString(font, "Resource:", x + 10, textY, labelColor);
         g.drawString(font, resourceId + " x" + quantity, x + 80, textY, valueColor);
         textY += 15;

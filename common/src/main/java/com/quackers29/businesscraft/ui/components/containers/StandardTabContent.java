@@ -43,7 +43,7 @@ public class StandardTabContent extends BCComponent {
     // Data suppliers for different content types
     private Supplier<Map<String, String>> labelValueSupplier;
     private Supplier<Map<String, String>> labelValueTooltipSupplier;
-    private Supplier<Map<Item, Integer>> itemListSupplier;
+    private Supplier<Map<Item, Long>> itemListSupplier;
     private Supplier<Map<Item, String>> itemTooltipSupplier;
     private Supplier<Object[]> customDataSupplier;
     private Supplier<Map<String, Object[]>> buttonGridSupplier;
@@ -79,7 +79,7 @@ public class StandardTabContent extends BCComponent {
     /**
      * Configure for item list (Resources tab style)
      */
-    public StandardTabContent withItemListData(Supplier<Map<Item, Integer>> dataSupplier) {
+    public StandardTabContent withItemListData(Supplier<Map<Item, Long>> dataSupplier) {
         this.itemListSupplier = dataSupplier;
         return this;
     }
@@ -209,7 +209,7 @@ public class StandardTabContent extends BCComponent {
      */
     private void renderItemList(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (itemListSupplier != null) {
-            Map<Item, Integer> items = itemListSupplier.get();
+            Map<Item, Long> items = itemListSupplier.get();
             Map<Item, String> tooltips = itemTooltipSupplier != null ? itemTooltipSupplier.get() : null;
             Map<Item, String> names = itemNamesSupplier != null ? itemNamesSupplier.get() : null;
 
@@ -226,12 +226,22 @@ public class StandardTabContent extends BCComponent {
                         .drawBorder(true);
 
                 // This method automatically enables scrolling if needed
-                grid.withItemQuantityPairs(items, tooltips, names, TEXT_HIGHLIGHT);
+                Map<Item, Integer> intItems = items.entrySet().stream()
+                        .collect(java.util.stream.Collectors.toMap(
+                                Map.Entry::getKey,
+                                e -> e.getValue().intValue()
+                        ));
+                grid.withItemQuantityPairs(intItems, tooltips, names, TEXT_HIGHLIGHT);
                 DebugConfig.debug(LOGGER, DebugConfig.UI_STANDARD_TAB_CONTENT,
                         "Grid created with scrolling enabled: {}", items.size() > 4);
             } else {
                 // Update existing grid with new data while preserving scroll state
-                grid.updateItemQuantityPairs(items, tooltips, names, TEXT_HIGHLIGHT);
+                Map<Item, Integer> intItems = items.entrySet().stream()
+                        .collect(java.util.stream.Collectors.toMap(
+                                Map.Entry::getKey,
+                                e -> e.getValue().intValue()
+                        ));
+                grid.updateItemQuantityPairs(intItems, tooltips, names, TEXT_HIGHLIGHT);
             }
 
             // Render the grid (preserves scroll state)

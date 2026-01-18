@@ -23,7 +23,7 @@ public class TownOverviewSyncPacket {
     private final Map<String, Float> activeProductions;
     private final Map<String, Integer> upgradeLevels;
     private final float populationCap;
-    private final int totalTouristsArrived;
+    private final long totalTouristsArrived;
     private final double totalTouristDistance;
     private final float borderRadius;
     private final Map<String, Float> aiScores;
@@ -31,7 +31,7 @@ public class TownOverviewSyncPacket {
     public TownOverviewSyncPacket(float happiness, String biome, String biomeVariant, String currentResearch,
             float researchProgress,
             int dailyTickInterval, Map<String, Float> activeProductions, Map<String, Integer> upgradeLevels,
-            float populationCap, int totalTouristsArrived, double totalTouristDistance, float borderRadius,
+            float populationCap, long totalTouristsArrived, double totalTouristDistance, float borderRadius,
             Map<String, Float> aiScores) {
         this.happiness = happiness;
         this.biome = biome;
@@ -56,7 +56,7 @@ public class TownOverviewSyncPacket {
         this.researchProgress = buf.readFloat();
         this.dailyTickInterval = buf.readInt();
         this.populationCap = buf.readFloat();
-        this.totalTouristsArrived = buf.readInt();
+        this.totalTouristsArrived = buf.readLong();
         this.totalTouristDistance = buf.readDouble();
         this.borderRadius = buf.readFloat();
 
@@ -93,7 +93,7 @@ public class TownOverviewSyncPacket {
         buf.writeFloat(researchProgress);
         buf.writeInt(dailyTickInterval);
         buf.writeFloat(populationCap);
-        buf.writeInt(totalTouristsArrived);
+        buf.writeLong(totalTouristsArrived);
         buf.writeDouble(totalTouristDistance);
         buf.writeFloat(borderRadius);
 
@@ -126,7 +126,7 @@ public class TownOverviewSyncPacket {
             if (clientHelper != null) {
                 clientHelper.updateTownOverviewData(happiness, biome, biomeVariant, currentResearch, researchProgress,
                         dailyTickInterval,
-                        activeProductions, upgradeLevels, populationCap, totalTouristsArrived,
+                        activeProductions, upgradeLevels, populationCap, (int) totalTouristsArrived,
                         totalTouristDistance, borderRadius, aiScores);
             }
         });

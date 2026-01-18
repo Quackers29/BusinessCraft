@@ -30,11 +30,11 @@ import java.util.*;
 public class ClientSyncHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientSyncHelper.class);
 
-    // Client-side caches
-    private final Map<Item, Integer> clientResources = new HashMap<>();
-    private final Map<Item, Integer> clientCommunalStorage = new HashMap<>();
-    private final Map<UUID, Map<Item, Integer>> clientPersonalStorage = new HashMap<>();
-    private final Map<Item, Integer> clientEscrowedResources = new HashMap<>();
+    // Client-side caches (using Long for large-scale economies)
+    private final Map<Item, Long> clientResources = new HashMap<>();
+    private final Map<Item, Long> clientCommunalStorage = new HashMap<>();
+    private final Map<UUID, Map<Item, Long>> clientPersonalStorage = new HashMap<>();
+    private final Map<Item, Long> clientEscrowedResources = new HashMap<>();
     private final List<ITownDataProvider.VisitHistoryRecord> clientVisitHistory = new ArrayList<>();
     private final Map<UUID, String> townNameCache = new HashMap<>();
 
@@ -57,7 +57,7 @@ public class ClientSyncHelper {
         provider.getAllResources().forEach((item, count) -> {
             Object keyObj = PlatformAccess.getRegistry().getItemKey(item);
             if (keyObj != null) {
-                resourcesTag.putInt(keyObj.toString(), count);
+                resourcesTag.putLong(keyObj.toString(), count);
             } else {
                 LOGGER.warn("Skipping invalid item {} in resources sync (null registry key)", item);
             }
@@ -71,7 +71,7 @@ public class ClientSyncHelper {
         provider.getAllCommunalStorageItems().forEach((item, count) -> {
             Object keyObj = PlatformAccess.getRegistry().getItemKey(item);
             if (keyObj != null) {
-                communalTag.putInt(keyObj.toString(), count);
+                communalTag.putLong(keyObj.toString(), count);
             } else {
                 LOGGER.warn("Skipping invalid item {} in communal storage sync (null registry key)", item);
             }
@@ -98,7 +98,7 @@ public class ClientSyncHelper {
 
                     if (itemObj instanceof net.minecraft.world.item.Item item) {
                         if (item != null && item != Items.AIR) {
-                            int count = resourcesTag.getInt(key);
+                            long count = resourcesTag.getLong(key);
                             clientResources.put(item, count);
                             DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
                                     "  - Loaded resource: {} = {}", key, count);
@@ -131,7 +131,7 @@ public class ClientSyncHelper {
                     Object itemObj = PlatformAccess.getRegistry().getItem(resourceLocation);
                     if (itemObj instanceof net.minecraft.world.item.Item item) {
                         if (item != null && item != Items.AIR) {
-                            int count = communalTag.getInt(key);
+                            long count = communalTag.getLong(key);
                             clientCommunalStorage.put(item, count);
                         }
                     }
@@ -146,15 +146,14 @@ public class ClientSyncHelper {
         if (town == null)
             return;
 
-        Map<Item, Integer> escrow = town.getEscrowedResources(); // You need to ensure this public method exists in
-                                                                 // Town.java
+        Map<Item, Long> escrow = town.getEscrowedResources();
         CompoundTag escrowTag = new CompoundTag();
 
         if (!escrow.isEmpty()) {
             escrow.forEach((item, count) -> {
                 Object keyObj = PlatformAccess.getRegistry().getItemKey(item);
                 if (keyObj != null) {
-                    escrowTag.putInt(keyObj.toString(), count);
+                    escrowTag.putLong(keyObj.toString(), count);
                 }
             });
         }
@@ -171,7 +170,7 @@ public class ClientSyncHelper {
                     ResourceLocation resourceLocation = new ResourceLocation(key);
                     Object itemObj = PlatformAccess.getRegistry().getItem(resourceLocation);
                     if (itemObj instanceof net.minecraft.world.item.Item item) {
-                        int count = escrowTag.getInt(key);
+                        long count = escrowTag.getLong(key);
                         clientEscrowedResources.put(item, count);
                     }
                 } catch (Exception e) {
@@ -181,9 +180,9 @@ public class ClientSyncHelper {
         }
     }
 
-    private final Map<Item, Integer> clientWantedResources = new HashMap<>();
+    private final Map<Item, Long> clientWantedResources = new HashMap<>();
 
-    public Map<Item, Integer> getClientWantedResources() {
+    public Map<Item, Long> getClientWantedResources() {
         return Collections.unmodifiableMap(clientWantedResources);
     }
 
@@ -191,7 +190,7 @@ public class ClientSyncHelper {
         if (town == null)
             return;
 
-        Map<Item, Integer> wants = town.getWantedResources();
+        Map<Item, Long> wants = town.getWantedResources();
         // Always send the tag, even if empty, to ensure client clears old data
         CompoundTag wantsTag = new CompoundTag();
 
@@ -199,7 +198,7 @@ public class ClientSyncHelper {
             wants.forEach((item, count) -> {
                 Object keyObj = PlatformAccess.getRegistry().getItemKey(item);
                 if (keyObj != null) {
-                    wantsTag.putInt(keyObj.toString(), count);
+                    wantsTag.putLong(keyObj.toString(), count);
                 }
             });
         }
@@ -216,7 +215,7 @@ public class ClientSyncHelper {
                     ResourceLocation resourceLocation = new ResourceLocation(key);
                     Object itemObj = PlatformAccess.getRegistry().getItem(resourceLocation);
                     if (itemObj instanceof net.minecraft.world.item.Item item) {
-                        int count = wantsTag.getInt(key);
+                        long count = wantsTag.getLong(key);
                         clientWantedResources.put(item, count);
                     }
                 } catch (Exception e) {
@@ -388,12 +387,12 @@ public class ClientSyncHelper {
      * @param playerId UUID of the player
      * @param items    Map of items in the player's personal storage
      */
-    public void updateClientPersonalStorage(UUID playerId, Map<Item, Integer> items) {
+    public void updateClientPersonalStorage(UUID playerId, Map<Item, Long> items) {
         if (playerId == null)
             return;
 
         // Clear existing items for this player
-        Map<Item, Integer> playerItems = clientPersonalStorage.computeIfAbsent(playerId, k -> new HashMap<>());
+        Map<Item, Long> playerItems = clientPersonalStorage.computeIfAbsent(playerId, k -> new HashMap<>());
         playerItems.clear();
 
         // Add all the new items
@@ -437,7 +436,7 @@ public class ClientSyncHelper {
      * 
      * @return Map of resources
      */
-    public Map<Item, Integer> getClientResources() {
+    public Map<Item, Long> getClientResources() {
         return clientResources;
     }
 
@@ -446,11 +445,11 @@ public class ClientSyncHelper {
      * 
      * @return Map of communal storage items
      */
-    public Map<Item, Integer> getClientCommunalStorage() {
+    public Map<Item, Long> getClientCommunalStorage() {
         return clientCommunalStorage;
     }
 
-    public Map<Item, Integer> getClientEscrowedResources() {
+    public Map<Item, Long> getClientEscrowedResources() {
         return Collections.unmodifiableMap(clientEscrowedResources);
     }
 
@@ -460,7 +459,7 @@ public class ClientSyncHelper {
      * @param playerId UUID of the player
      * @return Map of personal storage items for that player
      */
-    public Map<Item, Integer> getClientPersonalStorage(UUID playerId) {
+    public Map<Item, Long> getClientPersonalStorage(UUID playerId) {
         return clientPersonalStorage.getOrDefault(playerId, Collections.emptyMap());
     }
 
@@ -514,7 +513,7 @@ public class ClientSyncHelper {
      * updates
      * This is a static method for easy access from TownBlockEntity
      */
-    public static void notifyBufferStorageChange(ServerLevel level, UUID townId, Map<Item, Integer> bufferItems) {
+    public static void notifyBufferStorageChange(ServerLevel level, UUID townId, Map<Item, Long> bufferItems) {
         if (level == null || townId == null)
             return;
 

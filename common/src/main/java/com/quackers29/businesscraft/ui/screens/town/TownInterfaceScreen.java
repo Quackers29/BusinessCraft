@@ -284,7 +284,7 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     }
 
     // Changed from private to public to allow access from tab implementations
-    public Map<Item, Integer> getCachedResources() {
+    public Map<Item, Long> getCachedResources() {
         return cacheManager.getCachedResources();
     }
 

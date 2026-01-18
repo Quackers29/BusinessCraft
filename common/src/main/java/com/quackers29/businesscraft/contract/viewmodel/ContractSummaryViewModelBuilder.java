@@ -177,7 +177,7 @@ public class ContractSummaryViewModelBuilder {
 
         UUID contractId = sc.getId();
         String resourceId = sc.getResourceId();
-        int quantity = sc.getQuantity();
+        long quantity = sc.getQuantity();
         UUID issuerTownId = sc.getIssuerTownId();
         String issuerTownName = sc.getIssuerTownName();
 
@@ -232,8 +232,8 @@ public class ContractSummaryViewModelBuilder {
                 if (sc.isSnailMail()) {
                     return "Snail Mail";
                 }
-                int delivered = sc.getDeliveredAmount();
-                int total = sc.getQuantity();
+                long delivered = sc.getDeliveredAmount();
+                long total = sc.getQuantity();
                 if (delivered > 0) {
                     return "In Transit (" + delivered + "/" + total + ")";
                 }

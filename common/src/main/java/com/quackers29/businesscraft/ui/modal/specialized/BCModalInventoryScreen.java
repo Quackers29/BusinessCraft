@@ -892,7 +892,7 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                     if (townMenu != null) {
                         // Get the personal storage items through the town data provider
                         var townDataProvider = townMenu.getTownDataProvider();
-                        Map<Item, Integer> personalItems = townDataProvider != null
+                        Map<Item, Long> personalItems = townDataProvider != null
                                 ? townDataProvider.getPersonalStorageItems(playerId)
                                 : java.util.Collections.emptyMap();
 
@@ -924,7 +924,7 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
                 if (townMenu != null) {
                     // Update with communal storage items through the town data provider or menu
                     // method
-                    Map<Item, Integer> communalItems = townMenu.getAllCommunalStorageItems();
+                    Map<Item, Long> communalItems = townMenu.getAllCommunalStorageItems();
                     storageMenu.updateStorageItems(communalItems);
                 } else {
                     LOGGER.warn("Could not access TownInterfaceMenu for communal storage");

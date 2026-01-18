@@ -57,7 +57,6 @@ public class ContractSavedData extends SavedData {
                 }
             }
 
-            LOGGER.info("Loaded {} contracts from saved data", data.activeContracts.size());
         }
 
         if (tag.contains("marketPrices")) {
@@ -69,7 +68,6 @@ public class ContractSavedData extends SavedData {
                 // This ensures old auction prices are preserved in the new unified system
                 com.quackers29.businesscraft.economy.GlobalMarket.get().setPrice(key, price);
             }
-            LOGGER.info("Loaded market prices for {} items and migrated to GlobalMarket", data.marketPrices.size());
         }
 
         return data;

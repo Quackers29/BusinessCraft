@@ -65,7 +65,6 @@ public class ResourceRegistry {
                         // it yet.
                         // For now, adhere to existing constructor flexibility.
                         RESOURCES.put(id, type);
-                        LOGGER.info("Registered item: {} -> {} ({}) [Value: {}]", id, itemId, displayName, basePrice);
                     } catch (Exception e) {
                         LOGGER.error("Invalid item ID in {}: {}", CONFIG_FILE_NAME, mcItemIdStr);
                     }

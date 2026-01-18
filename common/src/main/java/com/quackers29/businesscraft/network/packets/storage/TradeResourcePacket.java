@@ -160,17 +160,17 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
             float unitPrice = com.quackers29.businesscraft.economy.GlobalMarket.get().getPrice(resourceId);
 
             // Get current currency count before calculation
-            int currentCurrency = town.getResourceCount(currencyItem);
+            long currentCurrency = town.getResourceCount(currencyItem);
             DebugConfig.debug(LOGGER, DebugConfig.TRADE_OPERATIONS, "BEFORE TRADE: Town {} has {} currency ({})",
                     town.getName(), currentCurrency, currencyItem);
 
             // Calculate paymentAmt to give based on the trade
-            int paymentAmt = calculatePayment(itemToTrade, town, currencyItem, unitPrice);
+            long paymentAmt = calculatePayment(itemToTrade, town, currencyItem, unitPrice);
 
             // Create payment item
             ItemStack payment = ItemStack.EMPTY;
             if (paymentAmt > 0) {
-                payment = new ItemStack(currencyItem, paymentAmt);
+                payment = new ItemStack(currencyItem, (int) paymentAmt);
 
                 // Deduct currency from town resources
                 town.addResource(currencyItem, -paymentAmt);
@@ -185,7 +185,7 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
                 townInterfaceEntity.syncTownData();
 
                 // Get updated currency count after deduction
-                int newCurrency = town.getResourceCount(currencyItem);
+                long newCurrency = town.getResourceCount(currencyItem);
 
                 DebugConfig.debug(LOGGER, DebugConfig.TRADE_OPERATIONS,
                         "AFTER TRADE: Town {} now has {} currency (deducted {})",
@@ -232,7 +232,7 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
     /**
      * Calculate payment based on the trade amount and item value
      */
-    private int calculatePayment(ItemStack itemToTrade, Town town, Item currencyItem, float unitPrice) {
+    private long calculatePayment(ItemStack itemToTrade, Town town, Item currencyItem, float unitPrice) {
         int itemCount = itemToTrade.getCount();
 
         // distinct from "emeralds", we call it payment units
@@ -243,10 +243,10 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
         // We cast to int, so fractional values might be lost if not accummulated.
         // Current logic doesn't support fractional accumulation (yet), so we just floor
         // it.
-        int paymentCount = (int) (itemCount * baseValue);
+        long paymentCount = (long) (itemCount * baseValue);
 
         // Check if town has enough currency
-        int availableCurrency = town.getResourceCount(currencyItem);
+        long availableCurrency = town.getResourceCount(currencyItem);
         DebugConfig.debug(LOGGER, DebugConfig.TRADE_OPERATIONS,
                 "Trade calculation: {} items * {} value = {} payment, town has {} currency available, currency item: {}",
                 itemCount, baseValue, paymentCount, availableCurrency, currencyItem);

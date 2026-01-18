@@ -7,16 +7,16 @@ public class CourierContract extends Contract {
     private net.minecraft.core.BlockPos sourceTownPos;
     private int sourceTownRadius;
     private String resourceId;
-    private int quantity;
+    private long quantity;
     private UUID destinationTownId;
     private String destinationTownName;
     private float reward;
     private UUID courierId;
     private long acceptedTime;
-    private int deliveredAmount;
+    private long deliveredAmount;
 
     public CourierContract(UUID issuerTownId, String issuerTownName, net.minecraft.core.BlockPos sourceTownPos,
-            int sourceTownRadius, long duration, String resourceId, int quantity,
+            int sourceTownRadius, long duration, String resourceId, long quantity,
             UUID destinationTownId, String destinationTownName,
             float reward) {
         super(issuerTownId, issuerTownName, duration);
@@ -40,19 +40,19 @@ public class CourierContract extends Contract {
         return resourceId;
     }
 
-    public int getQuantity() {
+    public long getQuantity() {
         return quantity;
     }
 
-    public int getDeliveredAmount() {
+    public long getDeliveredAmount() {
         return deliveredAmount;
     }
 
-    public void setDeliveredAmount(int deliveredAmount) {
+    public void setDeliveredAmount(long deliveredAmount) {
         this.deliveredAmount = deliveredAmount;
     }
 
-    public void addDeliveredAmount(int amount) {
+    public void addDeliveredAmount(long amount) {
         this.deliveredAmount += amount;
     }
 
@@ -102,14 +102,14 @@ public class CourierContract extends Contract {
 
     // UI convenience methods
     public int getAmount() {
-        return quantity;
+        return (int) quantity;
     }
 
     @Override
     protected void saveAdditional(CompoundTag tag) {
         tag.putString("resourceId", resourceId);
-        tag.putInt("quantity", quantity);
-        tag.putInt("deliveredAmount", deliveredAmount);
+        tag.putLong("quantity", quantity);
+        tag.putLong("deliveredAmount", deliveredAmount);
         tag.putUUID("destinationTownId", destinationTownId);
         if (destinationTownName != null) {
             tag.putString("destinationTownName", destinationTownName);
@@ -130,9 +130,9 @@ public class CourierContract extends Contract {
     @Override
     protected void loadAdditional(CompoundTag tag) {
         resourceId = tag.getString("resourceId");
-        quantity = tag.getInt("quantity");
+        quantity = tag.getLong("quantity");
         if (tag.contains("deliveredAmount")) {
-            deliveredAmount = tag.getInt("deliveredAmount");
+            deliveredAmount = tag.getLong("deliveredAmount");
         }
         destinationTownId = tag.getUUID("destinationTownId");
         if (tag.contains("destinationTownName")) {

@@ -189,7 +189,7 @@ public class TouristSpawningHelper {
         // Create a map of town ID to population for the tracker
         Map<UUID, Integer> populationMap = new HashMap<>();
         for (Map.Entry<UUID, Town> entry : possibleTowns.entrySet()) {
-            populationMap.put(entry.getKey(), entry.getValue().getPopulation());
+            populationMap.put(entry.getKey(), (int) entry.getValue().getPopulation());
         }
 
         // Use our allocation tracker to select a fair destination

@@ -6,7 +6,7 @@ import java.util.UUID;
 public class SellContract extends Contract {
     // Original SellContract fields
     private String resourceId;
-    private int quantity;
+    private long quantity;
     private float pricePerUnit;
     private UUID buyerTownId;
     private UUID winningTownId;
@@ -18,7 +18,7 @@ public class SellContract extends Contract {
     private UUID courierId;
     private float courierReward;
     private long courierAcceptedTime;
-    private int deliveredAmount;
+    private long deliveredAmount;
 
     public static final UUID SNAIL_MAIL_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
@@ -26,13 +26,13 @@ public class SellContract extends Contract {
         return SNAIL_MAIL_UUID.equals(courierId);
     }
 
-    public SellContract(UUID issuerTownId, String issuerTownName, long duration, String resourceId, int quantity,
+    public SellContract(UUID issuerTownId, String issuerTownName, long duration, String resourceId, long quantity,
             float pricePerUnit) {
         super(issuerTownId, issuerTownName, duration);
         this.resourceId = resourceId;
-        // Clamp quantity to valid range and sanity limit (e.g. 1M) to prevent
+        // Clamp quantity to valid range and sanity limit (e.g. 10M) to prevent
         // overflow/exploits
-        this.quantity = Math.max(1, Math.min(1_000_000, quantity));
+        this.quantity = Math.max(1L, Math.min(10_000_000L, quantity));
         // Clamp price
         this.pricePerUnit = Math.max(0.01f, Math.min(1_000_000f, pricePerUnit));
 
@@ -57,7 +57,7 @@ public class SellContract extends Contract {
         return resourceId;
     }
 
-    public int getQuantity() {
+    public long getQuantity() {
         return quantity;
     }
 
@@ -138,15 +138,15 @@ public class SellContract extends Contract {
         this.courierAcceptedTime = courierAcceptedTime;
     }
 
-    public int getDeliveredAmount() {
+    public long getDeliveredAmount() {
         return deliveredAmount;
     }
 
-    public void setDeliveredAmount(int deliveredAmount) {
+    public void setDeliveredAmount(long deliveredAmount) {
         this.deliveredAmount = deliveredAmount;
     }
 
-    public void addDeliveredAmount(int amount) {
+    public void addDeliveredAmount(long amount) {
         this.deliveredAmount += amount;
     }
 
@@ -160,7 +160,7 @@ public class SellContract extends Contract {
 
     // UI convenience methods
     public int getAmount() {
-        return quantity;
+        return (int) quantity;
     }
 
     public float getCurrentBid() {
@@ -172,7 +172,7 @@ public class SellContract extends Contract {
     @Override
     protected void saveAdditional(CompoundTag tag) {
         tag.putString("resourceId", resourceId);
-        tag.putInt("quantity", quantity);
+        tag.putLong("quantity", quantity);
         tag.putFloat("pricePerUnit", pricePerUnit);
         if (buyerTownId != null) {
             tag.putUUID("buyerTownId", buyerTownId);
@@ -192,14 +192,14 @@ public class SellContract extends Contract {
         }
         tag.putFloat("courierReward", courierReward);
         tag.putLong("courierAcceptedTime", courierAcceptedTime);
-        tag.putInt("deliveredAmount", deliveredAmount);
+        tag.putLong("deliveredAmount", deliveredAmount);
     }
 
     @Override
     protected void loadAdditional(CompoundTag tag) {
         resourceId = tag.getString("resourceId");
-        int loadedQty = tag.getInt("quantity");
-        this.quantity = Math.max(1, Math.min(1_000_000, loadedQty)); // Sanitize loaded quantity
+        long loadedQty = tag.getLong("quantity");
+        this.quantity = Math.max(1L, Math.min(10_000_000L, loadedQty)); // Sanitize loaded quantity
         float loadedPrice = tag.getFloat("pricePerUnit");
         this.pricePerUnit = Math.max(0.01f, Math.min(1_000_000f, loadedPrice));
         if (tag.hasUUID("buyerTownId")) {
@@ -225,7 +225,7 @@ public class SellContract extends Contract {
             courierAcceptedTime = tag.getLong("courierAcceptedTime");
         }
         if (tag.contains("deliveredAmount")) {
-            deliveredAmount = tag.getInt("deliveredAmount");
+            deliveredAmount = tag.getLong("deliveredAmount");
         }
     }
 

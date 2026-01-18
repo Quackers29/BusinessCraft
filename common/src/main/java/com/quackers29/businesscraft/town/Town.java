@@ -31,7 +31,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     private final BlockPos position;
     private String name;
     private final TownEconomyComponent economy = new TownEconomyComponent();
-    private final Map<UUID, Integer> visitors = new HashMap<>();
+    private final Map<UUID, Long> visitors = new HashMap<>();
     private int touristCount = 0; // Track tourists separately from population
     private String biome = "Unknown";
     private String biomeVariant = "Unknown";
@@ -43,14 +43,14 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     private int pendingTouristSpawns = 0;
 
     // Work Units (WU) - Special resource
-    private int workUnits = 0;
+    private long workUnits = 0;
 
     @Override
-    public int getWorkUnits() {
+    public long getWorkUnits() {
         return workUnits;
     }
 
-    public void setWorkUnits(int amount) {
+    public void setWorkUnits(long amount) {
         this.workUnits = Math.max(0, amount);
         markDirty();
     }
@@ -59,12 +59,12 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
      * Adds work units to the town. Can be negative to remove.
      * Clamps to 0 and Cap.
      */
-    public void addWorkUnits(int amount) {
-        int cap = getWorkUnitCap();
+    public void addWorkUnits(long amount) {
+        long cap = getWorkUnitCap();
         try {
             this.workUnits = Math.addExact(this.workUnits, amount);
         } catch (ArithmeticException e) {
-            this.workUnits = amount > 0 ? Integer.MAX_VALUE : 0;
+            this.workUnits = amount > 0 ? Long.MAX_VALUE : 0;
         }
 
         if (this.workUnits < 0)
@@ -76,13 +76,13 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     }
 
     @Override
-    public int getWorkUnitCap() {
+    public long getWorkUnitCap() {
         // Cap determined by upgrades
-        return (int) upgrades.getModifier("wu_cap");
+        return (long) upgrades.getModifier("wu_cap");
     }
 
     // Cumulative tourism stats
-    private int totalTouristsArrived = 0;
+    private long totalTouristsArrived = 0;
     private double totalTouristDistance = 0.0;
 
     // Visit history storage - moved from TownBlockEntity
@@ -93,13 +93,13 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     private final TownPaymentBoard paymentBoard = new TownPaymentBoard();
 
     // Personal storage - individual storage for each player (UUID -> items)
-    private final Map<UUID, Map<Item, Integer>> personalStorage = new HashMap<>();
+    private final Map<UUID, Map<Item, Long>> personalStorage = new HashMap<>();
 
     // ITownState specific fields
     private String biomeNamespace = "minecraft:plains"; // Default biome for ITownState
 
     // Escrow storage - resources locked in auctions
-    private final Map<Item, Integer> escrowedResources = new HashMap<>();
+    private final Map<Item, Long> escrowedResources = new HashMap<>();
 
     // Components
     private final TownTradingComponent trading;
@@ -147,7 +147,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         return contracts;
     }
 
-    private final Map<Item, Integer> wantedResources = new HashMap<>();
+    private final Map<Item, Long> wantedResources = new HashMap<>();
     private int wantCalculationCooldown = 0;
 
     public void tick() {
@@ -194,11 +194,11 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
                 Object itemObj = PlatformAccess.getRegistry().getItem(itemLoc);
                 if (itemObj instanceof Item item) {
                     float stored = trading.getStock(ra.resourceId);
-                    int needed = (int) Math.ceil(ra.amount);
+                    long needed = (long) Math.ceil(ra.amount);
                     if (stored < needed) {
                         // Store as negative value representing the deficit (Want: -100 means we need
                         // 100 more)
-                        int deficit = (int) (stored - needed);
+                        long deficit = (long) (stored - needed);
                         wantedResources.put(item, deficit);
                     }
                 }
@@ -206,45 +206,45 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         }
     }
 
-    public Map<Item, Integer> getWantedResources() {
+    public Map<Item, Long> getWantedResources() {
         return Collections.unmodifiableMap(wantedResources);
     }
 
     @Override
-    public void addResource(Item item, int count) {
+    public void addResource(Item item, long count) {
         economy.addResource(item, count);
     }
 
     @Override
-    public int getResourceCount(Item item) {
+    public long getResourceCount(Item item) {
         return economy.getResourceCount(item);
     }
 
     @Override
-    public Map<Item, Integer> getAllResources() {
+    public Map<Item, Long> getAllResources() {
         return economy.getResources().getAllResources();
     }
 
-    public Map<Item, Integer> getEscrowedResources() {
+    public Map<Item, Long> getEscrowedResources() {
         return Collections.unmodifiableMap(escrowedResources);
     }
 
-    public void addEscrowResource(Item item, int count) {
+    public void addEscrowResource(Item item, long count) {
         if (count == 0)
             return;
 
-        int current = escrowedResources.getOrDefault(item, 0);
+        long current = escrowedResources.getOrDefault(item, 0L);
 
         if (count > 0) {
             try {
-                int result = Math.addExact(current, count);
+                long result = Math.addExact(current, count);
                 escrowedResources.put(item, result);
             } catch (ArithmeticException e) {
-                escrowedResources.put(item, Integer.MAX_VALUE);
+                escrowedResources.put(item, Long.MAX_VALUE);
             }
         } else {
             // Subtraction / removing from escrow
-            int newAmount = Math.max(0, current + count);
+            long newAmount = Math.max(0, current + count);
             if (newAmount == 0) {
                 escrowedResources.remove(item);
             } else {
@@ -254,19 +254,19 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         markDirty();
     }
 
-    public void removeEscrowResource(Item item, int count) {
+    public void removeEscrowResource(Item item, long count) {
         addEscrowResource(item, -count);
     }
 
-    public int getEscrowResourceCount(Item item) {
-        return escrowedResources.getOrDefault(item, 0);
+    public long getEscrowResourceCount(Item item) {
+        return escrowedResources.getOrDefault(item, 0L);
     }
 
-    public int getTotalResourceCount(Item item) {
+    public long getTotalResourceCount(Item item) {
         return getResourceCount(item) + getEscrowResourceCount(item);
     }
 
-    public int getInTransitResourceCount(Item item) {
+    public long getInTransitResourceCount(Item item) {
         com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
                 .getFor(item);
         if (type == null)
@@ -439,7 +439,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
      * @deprecated Use TownService.calculateMaxTourists() instead
      */
     @Deprecated
-    public int getMaxTourists() {
+    public long getMaxTourists() {
         return calculateMaxTouristsFromPopulation();
     }
 
@@ -479,7 +479,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         }
     }
 
-    public int getTouristCount() {
+    public long getTouristCount() {
         return touristCount;
     }
 
@@ -504,13 +504,13 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         tag.putString("biome", biome);
         tag.putString("biomeVariant", biomeVariant);
 
-        tag.putInt("workUnits", workUnits);
+        tag.putLong("workUnits", workUnits);
 
-        tag.putInt("totalTouristsArrived", totalTouristsArrived);
+        tag.putLong("totalTouristsArrived", totalTouristsArrived);
         tag.putDouble("totalTouristDistance", totalTouristDistance);
         CompoundTag visitorsTag = new CompoundTag();
         visitors.forEach((visitorId, count) -> {
-            visitorsTag.putInt(visitorId.toString(), count);
+            visitorsTag.putLong(visitorId.toString(), count);
         });
         tag.put("visitors", visitorsTag);
         CompoundTag economyTag = new CompoundTag();
@@ -599,7 +599,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
                 // Save each item
                 itemMap.forEach((item, count) -> {
                     String itemKey = PlatformAccess.getRegistry().getItemKey(item).toString();
-                    playerTag.putInt(itemKey, count);
+                    playerTag.putLong(itemKey, count);
                 });
 
                 // Add to main personal storage tag with player UUID as key
@@ -610,12 +610,11 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         }
 
         // Save wanted resources
-        // Save wanted resources
         if (!wantedResources.isEmpty()) {
             CompoundTag wantsTag = new CompoundTag();
             wantedResources.forEach((item, amount) -> {
                 String itemKey = PlatformAccess.getRegistry().getItemKey(item).toString();
-                wantsTag.putInt(itemKey, amount);
+                wantsTag.putLong(itemKey, amount);
             });
             tag.put("wantedResources", wantsTag);
         }
@@ -625,7 +624,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
             CompoundTag escrowTag = new CompoundTag();
             escrowedResources.forEach((item, count) -> {
                 String itemKey = PlatformAccess.getRegistry().getItemKey(item).toString();
-                escrowTag.putInt(itemKey, count);
+                escrowTag.putLong(itemKey, count);
             });
             tag.put("escrowedResources", escrowTag);
         }
@@ -647,7 +646,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         }
 
         if (tag.contains("totalTouristsArrived")) {
-            town.totalTouristsArrived = tag.getInt("totalTouristsArrived");
+            town.totalTouristsArrived = tag.getLong("totalTouristsArrived");
         }
 
         if (tag.contains("totalTouristDistance")) {
@@ -662,14 +661,14 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         }
 
         if (tag.contains("workUnits")) {
-            int val = tag.getInt("workUnits");
+            long val = tag.getLong("workUnits");
             town.workUnits = Math.max(0, val); // Sanitize negative values
         }
 
         if (tag.contains("visitors")) {
             CompoundTag visitorsTag = tag.getCompound("visitors");
             visitorsTag.getAllKeys().forEach(key -> {
-                town.visitors.put(UUID.fromString(key), visitorsTag.getInt(key));
+                town.visitors.put(UUID.fromString(key), visitorsTag.getLong(key));
             });
         }
         town.economy.load(tag.getCompound("economy"));
@@ -731,8 +730,6 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
                     // Legacy record with only a town name - create a random UUID
                     // This is just a fallback for migration
                     townId = UUID.nameUUIDFromBytes(visitTag.getString("town").getBytes());
-                    LOGGER.info("Converted legacy town name '{}' to UUID: {}",
-                            visitTag.getString("town"), townId);
                 }
 
                 int count = visitTag.getInt("count");
@@ -767,8 +764,6 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
                             int count = storageTag.getInt(key);
                             if (count > 0) {
                                 town.paymentBoard.addToBuffer(item, count);
-                                LOGGER.info("Migrated {} {} from old communal storage to payment buffer", count,
-                                        item.getDescription().getString());
                             }
                         }
                     }
@@ -790,7 +785,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
 
                     // Get player's items
                     CompoundTag playerTag = personalTag.getCompound(playerKey);
-                    Map<Item, Integer> playerItems = new HashMap<>();
+                    Map<Item, Long> playerItems = new HashMap<>();
 
                     // Load each item
                     playerTag.getAllKeys().forEach(itemKey -> {
@@ -800,7 +795,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
                             Object itemObj = PlatformAccess.getRegistry().getItem(itemId);
                             if (itemObj instanceof net.minecraft.world.item.Item item) {
                                 if (item != null) {
-                                    int count = playerTag.getInt(itemKey);
+                                    long count = playerTag.getLong(itemKey);
                                     if (count > 0) {
                                         playerItems.put(item, count);
                                     }
@@ -828,7 +823,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
                     net.minecraft.resources.ResourceLocation itemId = new net.minecraft.resources.ResourceLocation(key);
                     Object itemObj = PlatformAccess.getRegistry().getItem(itemId);
                     if (itemObj instanceof Item item) {
-                        int amount = wantsTag.getInt(key);
+                        long amount = wantsTag.getLong(key);
                         town.wantedResources.put(item, amount);
                     }
                 } catch (Exception e) {
@@ -845,7 +840,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
                             key);
                     Object itemObj = PlatformAccess.getRegistry().getItem(resourceLocation);
                     if (itemObj instanceof net.minecraft.world.item.Item item) {
-                        int amount = escrowTag.getInt(key);
+                        long amount = escrowTag.getLong(key);
                         // Sanitize negative values
                         if (amount < 0)
                             amount = 0;
@@ -874,7 +869,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         this.name = newName;
     }
 
-    public int getPopulation() {
+    public long getPopulation() {
         return economy.getPopulation();
     }
 
@@ -891,13 +886,11 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     }
 
     public void setTouristSpawningEnabled(boolean enabled) {
-        LOGGER.info("TOGGLE [{}] - Changing from {} to {}",
-                id, touristSpawningEnabled, enabled);
         this.touristSpawningEnabled = enabled;
     }
 
     public void addVisitor(UUID fromTownId) {
-        visitors.merge(fromTownId, 1, Integer::sum);
+        visitors.merge(fromTownId, 1L, Long::sum);
     }
 
     public int getPendingTouristSpawns() {
@@ -915,10 +908,10 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     }
 
     public int getTotalVisitors() {
-        return visitors.values().stream().mapToInt(Integer::intValue).sum();
+        return (int) Math.min(Integer.MAX_VALUE, visitors.values().stream().mapToLong(Long::longValue).sum());
     }
 
-    public int getTotalTouristsArrived() {
+    public long getTotalTouristsArrived() {
         return totalTouristsArrived;
     }
 
@@ -1044,7 +1037,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
      * @param count The amount to add (can be negative to remove)
      * @return true if successful, false if there aren't enough items to remove
      */
-    public boolean addToCommunalStorage(Item item, int count) {
+    public boolean addToCommunalStorage(Item item, long count) {
         if (count == 0)
             return true;
 
@@ -1077,20 +1070,20 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
 
     /**
      * Get the count of a specific item in the payment buffer
-     * 
+     *
      * @param item The item to check
      * @return The amount stored
      */
-    public int getCommunalStorageCount(Item item) {
-        return paymentBoard.getBufferStorage().getOrDefault(item, 0);
+    public long getCommunalStorageCount(Item item) {
+        return paymentBoard.getBufferStorage().getOrDefault(item, 0L);
     }
 
     /**
      * Get all items in the payment buffer
-     * 
+     *
      * @return Map of all items and their counts
      */
-    public Map<Item, Integer> getAllCommunalStorageItems() {
+    public Map<Item, Long> getAllCommunalStorageItems() {
         return paymentBoard.getBufferStorage();
     }
 
@@ -1111,16 +1104,16 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
      * @param count    The amount to add (can be negative to remove)
      * @return true if successful, false if there aren't enough items to remove
      */
-    public boolean addToPersonalStorage(UUID playerId, Item item, int count) {
+    public boolean addToPersonalStorage(UUID playerId, Item item, long count) {
         if (count == 0 || playerId == null)
             return true;
 
         // Get or create the player's storage map
-        Map<Item, Integer> playerStorage = personalStorage.computeIfAbsent(playerId, k -> new HashMap<>());
+        Map<Item, Long> playerStorage = personalStorage.computeIfAbsent(playerId, k -> new HashMap<>());
 
         // Get current amount
-        int currentAmount = playerStorage.getOrDefault(item, 0);
-        int newAmount = currentAmount + count;
+        long currentAmount = playerStorage.getOrDefault(item, 0L);
+        long newAmount = currentAmount + count;
 
         // Check if removing more than available
         if (newAmount < 0) {
@@ -1153,33 +1146,33 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
 
     /**
      * Get the count of a specific item in a player's personal storage
-     * 
+     *
      * @param playerId The UUID of the player
      * @param item     The item to check
      * @return The amount stored
      */
-    public int getPersonalStorageCount(UUID playerId, Item item) {
+    public long getPersonalStorageCount(UUID playerId, Item item) {
         if (playerId == null)
             return 0;
 
-        Map<Item, Integer> playerStorage = personalStorage.get(playerId);
+        Map<Item, Long> playerStorage = personalStorage.get(playerId);
         if (playerStorage == null)
             return 0;
 
-        return playerStorage.getOrDefault(item, 0);
+        return playerStorage.getOrDefault(item, 0L);
     }
 
     /**
      * Get all items in a player's personal storage
-     * 
+     *
      * @param playerId The UUID of the player
      * @return Map of all items and their counts
      */
-    public Map<Item, Integer> getPersonalStorageItems(UUID playerId) {
+    public Map<Item, Long> getPersonalStorageItems(UUID playerId) {
         if (playerId == null)
             return Collections.emptyMap();
 
-        Map<Item, Integer> playerStorage = personalStorage.get(playerId);
+        Map<Item, Long> playerStorage = personalStorage.get(playerId);
         if (playerStorage == null)
             return Collections.emptyMap();
 

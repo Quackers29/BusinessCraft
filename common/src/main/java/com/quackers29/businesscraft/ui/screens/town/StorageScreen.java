@@ -667,7 +667,7 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
      * 
      * @param items Map of items and their counts from the town's communal storage
      */
-    public void updateStorageItems(Map<Item, Integer> items) {
+    public void updateStorageItems(Map<Item, Long> items) {
         // This is just a pass-through to the menu
         this.menu.updateStorageItems(items);
     }
@@ -678,7 +678,7 @@ public class StorageScreen extends AbstractContainerScreen<StorageMenu> {
      * 
      * @param items Map of items and their counts from the player's personal storage
      */
-    public void updatePersonalStorageItems(Map<Item, Integer> items) {
+    public void updatePersonalStorageItems(Map<Item, Long> items) {
         // This is just a pass-through to the menu
         this.menu.updatePersonalStorageItems(items);
     }

@@ -357,6 +357,7 @@ Net change: **+3 packets** (replaces 1, adds 4) but significantly better archite
 - **✅ COMPLETED**: Contract Board View-Model Compliance (Phase 5) 📋
 - **✅ COMPLETED**: Economy Stabilization - Trades-Only + Need-Based Bidding (Phase 6) 💰
 - **🧪 PENDING**: Verification & Testing (Phase 7)
+- **✅ COMPLETED**: Resource Storage int→long Migration (Phase 8) - Updated all contracts, storage, and view-models to use long for quantities
 - **📊 Overall**: ~98% compliant with target architecture
 
 ### **Development Guidelines**
@@ -454,15 +455,8 @@ Net change: **+3 packets** (replaces 1, adds 4) but significantly better archite
   - Verify NBT save/load works with existing worlds (backward compat)
   - Test network sync with large values
 
-### **8.4 Backward Compatibility Strategy**
-
-**Option A: Clean Break (Recommended for alpha/beta)**
-- New NBT keys with `_long` suffix or version tag
-- Old worlds auto-migrate on load (read int, write long)
-
-**Option B: Dual Read (For production)**
-- Try `getLong()`, fall back to `getInt()` if missing
-- Always write as `putLong()`
+### **8.4 Backward Compatibility**
+**NOT REQUIRED** - No existing worlds to migrate. Clean break with `putLong()`/`getLong()` throughout.
 
 ### **8.5 Display Formatting**
 Already have `formatAmount()` in view-model builders that handles large numbers:

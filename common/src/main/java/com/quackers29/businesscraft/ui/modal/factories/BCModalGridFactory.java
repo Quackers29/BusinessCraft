@@ -141,21 +141,21 @@ public class BCModalGridFactory {
      * @param onCloseCallback Optional callback when closing screen
      * @return Configured BCModalGridScreen
      */
-    public static BCModalGridScreen<Map.Entry<Item, Integer>> createResourceListScreen(
+    public static BCModalGridScreen<Map.Entry<Item, Long>> createResourceListScreen(
             Component title,
             Screen parentScreen,
-            Map<Item, Integer> resources,
-            Consumer<BCModalGridScreen<Map.Entry<Item, Integer>>> onCloseCallback) {
+            Map<Item, Long> resources,
+            Consumer<BCModalGridScreen<Map.Entry<Item, Long>>> onCloseCallback) {
         
         // Create the screen
-        BCModalGridScreen<Map.Entry<Item, Integer>> screen = new BCModalGridScreen<>(
+        BCModalGridScreen<Map.Entry<Item, Long>> screen = new BCModalGridScreen<>(
             title,
             parentScreen,
             onCloseCallback
         );
         
         // Convert map to list
-        List<Map.Entry<Item, Integer>> resourceList = resources.entrySet().stream().toList();
+        List<Map.Entry<Item, Long>> resourceList = resources.entrySet().stream().toList();
         
         // Configure with resource columns
         screen.addColumn("Item", entry -> entry.getKey().getDescriptionId())

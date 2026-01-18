@@ -63,7 +63,6 @@ public class GlobalMarket {
                 float loadedPrice = pricesTag.getFloat(key);
                 prices.put(key, Math.max(loadedPrice, MIN_PRICE));
             }
-            LOGGER.info("Loaded {} market prices (with {} floor enforced)", prices.size(), MIN_PRICE);
         }
         if (tag.contains("volume")) {
             CompoundTag volTag = tag.getCompound("volume");

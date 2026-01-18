@@ -15,11 +15,12 @@ import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.debug.DebugConfig;
 
 /**
- * Stores various resources in a town with their quantities
+ * Stores various resources in a town with their quantities.
+ * Uses long for resource counts to support large-scale economies (max ~9.2 quintillion).
  */
 public class TownResources {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownResources.class);
-    private final Map<Item, Integer> resources = new HashMap<>();
+    private final Map<Item, Long> resources = new HashMap<>();
     private final String instanceId = java.util.UUID.randomUUID().toString().substring(0, 8);
 
     public TownResources() {
@@ -28,33 +29,30 @@ public class TownResources {
 
     /**
      * Add a specific resource to the town
-     * 
+     *
      * @param item  The item that represents the resource
      * @param count The amount to add (can be negative to remove resources)
      */
-    public void addResource(Item item, int count) {
+    public void addResource(Item item, long count) {
         if (item == null)
             return;
 
         if (count > 0) {
             // Adding resources with overflow protection
-            int current = resources.getOrDefault(item, 0);
+            long current = resources.getOrDefault(item, 0L);
             try {
-                int result = Math.addExact(current, count);
+                long result = Math.addExact(current, count);
                 resources.put(item, result);
             } catch (ArithmeticException e) {
-                // Determine overflow direction
-                if (count > 0) {
-                    resources.put(item, Integer.MAX_VALUE); // Cap at max
-                }
+                // Overflow - cap at max
+                resources.put(item, Long.MAX_VALUE);
             }
             DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Added {} of resource {}", count,
                     PlatformAccess.getRegistry().getItemKey(item));
         } else if (count < 0) {
             // Removing resources (count is negative)
-            int currentAmount = resources.getOrDefault(item, 0);
-            int newAmount = Math.max(0, currentAmount + count); // Ensure we don't go below 0 (underflow protection for
-                                                                // subtract)
+            long currentAmount = resources.getOrDefault(item, 0L);
+            long newAmount = Math.max(0, currentAmount + count); // Ensure we don't go below 0
 
             // Special logging for emeralds (more important for debugging)
             boolean isEmerald = item == net.minecraft.world.item.Items.EMERALD;
@@ -82,26 +80,26 @@ public class TownResources {
 
     /**
      * Get the count of a specific resource
-     * 
+     *
      * @param item The resource item to check
      * @return The amount of the resource
      */
-    public int getResourceCount(Item item) {
-        return resources.getOrDefault(item, 0);
+    public long getResourceCount(Item item) {
+        return resources.getOrDefault(item, 0L);
     }
 
     /**
      * Consume a specific amount of resources
-     * 
+     *
      * @param item  The resource item to consume
      * @param count The amount to consume
      * @return True if the resources were successfully consumed
      */
-    public boolean consumeResource(Item item, int count) {
+    public boolean consumeResource(Item item, long count) {
         if (item == null || count <= 0)
             return false;
 
-        int currentCount = resources.getOrDefault(item, 0);
+        long currentCount = resources.getOrDefault(item, 0L);
         if (currentCount < count)
             return false;
 
@@ -111,26 +109,26 @@ public class TownResources {
 
     /**
      * Gets all resources as an unmodifiable map
-     * 
+     *
      * @return Map of all resources
      */
-    public Map<Item, Integer> getAllResources() {
+    public Map<Item, Long> getAllResources() {
         return Collections.unmodifiableMap(resources);
     }
 
     /**
      * Save resources to NBT
-     * 
+     *
      * @param tag The tag to save to
      */
     public void save(CompoundTag tag) {
         CompoundTag resourcesTag = new CompoundTag();
 
-        for (Map.Entry<Item, Integer> entry : resources.entrySet()) {
+        for (Map.Entry<Item, Long> entry : resources.entrySet()) {
             Object keyObj = PlatformAccess.getRegistry().getItemKey(entry.getKey());
             if (keyObj instanceof net.minecraft.resources.ResourceLocation key) {
                 if (key != null) {
-                    resourcesTag.putInt(key.toString(), entry.getValue());
+                    resourcesTag.putLong(key.toString(), entry.getValue());
                 }
             }
         }
@@ -140,7 +138,7 @@ public class TownResources {
 
     /**
      * Load resources from NBT
-     * 
+     *
      * @param tag The tag to load from
      */
     public void load(CompoundTag tag) {
@@ -155,21 +153,13 @@ public class TownResources {
                 if (itemObj instanceof net.minecraft.world.item.Item item) {
 
                     if (item != null && item != Items.AIR) {
-                        int amount = resourcesTag.getInt(key);
-                        // Sanitize negative values (caused by overflow)
+                        long amount = resourcesTag.getLong(key);
+                        // Sanitize negative values
                         if (amount < 0)
                             amount = 0;
                         resources.put(item, amount);
                     }
                 }
-            }
-        }
-
-        // Legacy support - if bread count exists in old format, migrate it
-        if (tag.contains("breadCount")) {
-            int breadCount = tag.getInt("breadCount");
-            if (breadCount > 0) {
-                resources.put(Items.BREAD, resources.getOrDefault(Items.BREAD, 0) + breadCount);
             }
         }
     }

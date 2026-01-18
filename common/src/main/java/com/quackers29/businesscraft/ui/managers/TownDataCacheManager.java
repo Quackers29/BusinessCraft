@@ -117,7 +117,7 @@ public class TownDataCacheManager {
         // NEW: Use resource view-model which syncs reliably
         var viewModel = getResourceViewModel();
         if (viewModel != null) {
-            return viewModel.getPopulation();
+            return (int) viewModel.getPopulation();
         }
 
         // FALLBACK: Legacy data sources (should rarely be used)
@@ -138,7 +138,7 @@ public class TownDataCacheManager {
         // NEW: Use resource view-model which syncs reliably
         var viewModel = getResourceViewModel();
         if (viewModel != null) {
-            return viewModel.getTouristCount();
+            return (int) viewModel.getTouristCount();
         }
 
         // FALLBACK: Legacy data sources (should rarely be used)
@@ -159,7 +159,7 @@ public class TownDataCacheManager {
         // NEW: Use resource view-model which syncs reliably
         var viewModel = getResourceViewModel();
         if (viewModel != null) {
-            return viewModel.getMaxTourists();
+            return (int) viewModel.getMaxTourists();
         }
 
         // FALLBACK: Legacy data sources (should rarely be used)
@@ -186,7 +186,7 @@ public class TownDataCacheManager {
      * 
      * @return Map of items to quantities
      */
-    public Map<Item, Integer> getCachedResources() {
+    public Map<Item, Long> getCachedResources() {
         if (dataCache != null) {
             return dataCache.getAllResources();
         }

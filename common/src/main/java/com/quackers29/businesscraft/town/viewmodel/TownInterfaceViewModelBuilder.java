@@ -33,7 +33,7 @@ public class TownInterfaceViewModelBuilder {
                 : "Standard";
 
         // 2. Population Display & Status
-        int pop = town.getPopulation();
+        long pop = town.getPopulation();
         int cap = (int) town.getUpgrades().getModifier("pop_cap");
         if (cap == 0)
             cap = 5; // Baseline fallback
@@ -58,13 +58,13 @@ public class TownInterfaceViewModelBuilder {
             happyStatus = Status.INFO; // High happiness
 
         // 4. Tourists Display
-        int tourists = town.getTouristCount();
-        int maxTourists = town.getMaxTourists();
+        long tourists = town.getTouristCount();
+        long maxTourists = town.getMaxTourists();
         String touristDisplay = String.format("%d / %d", tourists, maxTourists);
 
         // 5. Work Units
-        int wu = town.getWorkUnits();
-        int wuCap = town.getWorkUnitCap();
+        long wu = town.getWorkUnits();
+        long wuCap = town.getWorkUnitCap();
         String wuDisplay = String.format("%d / %d", wu, wuCap);
         Status wuStatus = Status.NORMAL;
         if (wu >= wuCap && wuCap > 0)
@@ -81,7 +81,7 @@ public class TownInterfaceViewModelBuilder {
         int radius = town.getSearchRadius();
 
         // 8. Cumulative Tourism Stats (for config requirements like "tourism" and "tourism_dist")
-        int totalTouristsArrived = town.getTotalTouristsArrived();
+        long totalTouristsArrived = town.getTotalTouristsArrived();
         double totalTouristDistance = town.getTotalTouristDistance();
         float borderRadius = town.getBoundaryRadius();
 
@@ -105,7 +105,7 @@ public class TownInterfaceViewModelBuilder {
                 autoCollect,
                 taxes,
                 radius,
-                totalTouristsArrived,
+                (int) totalTouristsArrived,
                 totalTouristDistance,
                 borderRadius,
                 warning);

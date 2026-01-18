@@ -90,7 +90,7 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
                         }
 
                         // Set town info
-                        platformPacket.setTownInfo(town.getName(), town.getPopulation(), town.getTouristCount(),
+                        platformPacket.setTownInfo(town.getName(), (int) town.getPopulation(), (int) town.getTouristCount(),
                                 town.getBoundaryRadius());
 
                         PlatformAccess.getNetworkMessages().sendToPlayer(platformPacket, player);

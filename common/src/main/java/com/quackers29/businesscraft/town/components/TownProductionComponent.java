@@ -200,7 +200,7 @@ public class TownProductionComponent implements TownComponent {
 
                     // Apply Population Penalty
                     if (town.getPopulation() > 0) {
-                        town.setPopulation(town.getPopulation() - 1);
+                        town.setPopulation((int) (town.getPopulation() - 1L));
 
                         // Notification
                         net.minecraft.server.level.ServerLevel level = com.quackers29.businesscraft.town.utils.TownNotificationUtils
@@ -225,7 +225,7 @@ public class TownProductionComponent implements TownComponent {
                             net.minecraft.world.item.Item item = com.quackers29.businesscraft.api.PlatformAccess
                                     .getRegistry().getItem(type.getMcItemId());
                             if (item != null) {
-                                int available = town.getResourceCount(item);
+                                long available = town.getResourceCount(item);
                                 if (available > 0) {
                                     town.addResource(item, -available); // Consume all
                                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
@@ -373,7 +373,7 @@ public class TownProductionComponent implements TownComponent {
             float amount = resolved.amount();
 
             if (resId.equals("pop")) {
-                town.setPopulation(town.getPopulation() + (int) amount);
+                town.setPopulation((int) (town.getPopulation() + (long) amount));
             } else if (resId.equals("tourist")) {
                 town.addPendingTouristSpawns((int) amount);
             } else if (resId.equals("wu")) {

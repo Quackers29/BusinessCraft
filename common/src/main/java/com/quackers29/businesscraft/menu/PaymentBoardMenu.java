@@ -401,9 +401,9 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
     
     /**
      * Update the buffer inventory with items from the server (legacy method)
-     * Converts Map<Item, Integer> to slot-based display for backward compatibility
+     * Converts Map<Item, Long> to slot-based display
      */
-    public void updateBufferStorageItems(Map<Item, Integer> items) {
+    public void updateBufferStorageItems(Map<Item, Long> items) {
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
             "Updating buffer storage inventory with {} items from server (legacy format)", items.size());
         
@@ -414,9 +414,9 @@ public class PaymentBoardMenu extends AbstractContainerMenu {
         
         // Fill slots with items from the buffer storage
         int slotIndex = 0;
-        for (Map.Entry<Item, Integer> entry : items.entrySet()) {
+        for (Map.Entry<Item, Long> entry : items.entrySet()) {
             Item item = entry.getKey();
-            int count = entry.getValue();
+            int count = entry.getValue().intValue();
             
             // Skip empty items or zero counts
             if (item == null || count <= 0) {

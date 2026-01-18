@@ -189,10 +189,10 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
 
             // Col 0: Icon with tooltip
             ItemStack icon = getResourceIcon(vm.getResourceId());
-            int quantity = vm.getQuantity();
+            long quantity = vm.getQuantity();
             String tooltip = buildContractTooltip(vm);
 
-            contractGrid.addItemWithTooltip(i, 0, icon.getItem(), quantity, tooltip, null);
+            contractGrid.addItemWithTooltip(i, 0, icon.getItem(), (int) quantity, tooltip, null);
 
             // Col 1: Town Name
             String townName = vm.getIssuerTownName();

@@ -90,7 +90,6 @@ public class TownManager {
         if (level != null) {
             String biomeIdString = level.getBiome(pos).unwrapKey().map(k -> k.location().toString())
                     .orElse("minecraft:plains");
-            LOGGER.info("TownManager: Detected biome '{}' for town '{}' at {}", biomeIdString, name, pos);
 
             town.setBiome(biomeIdString);
 

@@ -149,42 +149,63 @@ public class TownPaymentBoard {
      * Get buffer storage items (legacy compatibility method)
      * Converts SlotBasedStorage to Map format for existing code
      */
-    public Map<Item, Integer> getBufferStorage() {
-        Map<Item, Integer> itemMap = new HashMap<>();
+    public Map<Item, Long> getBufferStorage() {
+        Map<Item, Long> itemMap = new HashMap<>();
         for (int i = 0; i < bufferStorage.getSlotCount(); i++) {
             ItemStack stack = bufferStorage.getSlot(i);
             if (!stack.isEmpty()) {
-                itemMap.merge(stack.getItem(), stack.getCount(), Integer::sum);
+                itemMap.merge(stack.getItem(), (long) stack.getCount(), Long::sum);
             }
         }
         return Collections.unmodifiableMap(itemMap);
     }
-    
+
     /**
      * Get buffer storage as SlotBasedStorage (new method)
      */
     public SlotBasedStorage getBufferStorageSlots() {
         return bufferStorage;
     }
-    
+
     /**
-     * Add items to buffer storage directly (legacy compatibility)
+     * Add items to buffer storage directly (legacy compatibility).
+     * Note: Individual ItemStack counts are still limited to int (MC API constraint).
      */
-    public boolean addToBuffer(Item item, int count) {
+    public boolean addToBuffer(Item item, long count) {
         if (count <= 0) return true;
-        
-        ItemStack stackToAdd = new ItemStack(item, count);
-        return bufferStorage.addItem(stackToAdd);
+
+        // ItemStack counts are limited to int, so we add in chunks if needed
+        long remaining = count;
+        while (remaining > 0) {
+            int chunkSize = (int) Math.min(remaining, Integer.MAX_VALUE);
+            ItemStack stackToAdd = new ItemStack(item, chunkSize);
+            if (!bufferStorage.addItem(stackToAdd)) {
+                return false;
+            }
+            remaining -= chunkSize;
+        }
+        return true;
     }
-    
+
     /**
      * Remove items from buffer storage (legacy compatibility)
      */
-    public boolean removeFromBuffer(Item item, int count) {
+    public boolean removeFromBuffer(Item item, long count) {
         if (count <= 0) return true;
-        
-        ItemStack removed = bufferStorage.removeItem(item, count);
-        return removed.getCount() == count; // Return true if we removed the requested amount
+
+        // Remove in chunks if needed
+        long remaining = count;
+        long totalRemoved = 0;
+        while (remaining > 0) {
+            int chunkSize = (int) Math.min(remaining, Integer.MAX_VALUE);
+            ItemStack removed = bufferStorage.removeItem(item, chunkSize);
+            totalRemoved += removed.getCount();
+            remaining -= removed.getCount();
+            if (removed.getCount() < chunkSize) {
+                break; // Not enough items
+            }
+        }
+        return totalRemoved == count;
     }
     
     /**
@@ -286,14 +307,8 @@ public class TownPaymentBoard {
         if (tag.contains("bufferStorage")) {
             CompoundTag bufferTag = tag.getCompound("bufferStorage");
             
-            // Check if this is new slot-based format or legacy Map format
-            if (bufferTag.contains("SlotCount")) {
-                // New slot-based format
-                bufferStorage.fromNBT(bufferTag);
-            } else {
-                // Legacy Map format - migrate to slot-based
-                migrateFromLegacyBufferStorage(bufferTag);
-            }
+            // Load slot-based buffer storage
+            bufferStorage.fromNBT(bufferTag);
         }
         
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
@@ -301,32 +316,6 @@ public class TownPaymentBoard {
             rewards.size());
     }
     
-    /**
-     * Migrate legacy Map<Item, Integer> buffer storage to SlotBasedStorage
-     */
-    private void migrateFromLegacyBufferStorage(CompoundTag bufferTag) {
-        LOGGER.info("Migrating legacy buffer storage to slot-based format");
-        
-        for (String key : bufferTag.getAllKeys()) {
-            try {
-                net.minecraft.resources.ResourceLocation itemId = new net.minecraft.resources.ResourceLocation(key);
-                Object itemObj = PlatformAccess.getRegistry().getItem(itemId);
-                if (itemObj instanceof net.minecraft.world.item.Item item) {
-                    if (item != null) {
-                        int count = bufferTag.getInt(key);
-                        if (count > 0) {
-                            ItemStack stackToMigrate = new ItemStack(item, count);
-                            bufferStorage.addItem(stackToMigrate);
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                LOGGER.error("Error migrating legacy buffer storage item: {}", key, e);
-            }
-        }
-        
-        LOGGER.info("Legacy buffer storage migration complete");
-    }
     
     /**
      * Result of a claim operation

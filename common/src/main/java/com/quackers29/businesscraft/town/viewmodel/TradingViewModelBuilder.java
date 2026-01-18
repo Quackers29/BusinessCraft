@@ -71,8 +71,8 @@ public class TradingViewModelBuilder {
 
         // 2. Iterate through all ACTUAL resources in the town
         // This ensures we catch unregistered items (e.g. Town Interface, Mod Items)
-        Map<Item, Integer> allResources = town.getAllResources();
-        for (Map.Entry<Item, Integer> entry : allResources.entrySet()) {
+        Map<Item, Long> allResources = town.getAllResources();
+        for (Map.Entry<Item, Long> entry : allResources.entrySet()) {
             Item item = entry.getKey();
             if (item == currencyItem)
                 continue; // Skip currency itself

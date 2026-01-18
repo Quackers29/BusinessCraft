@@ -827,7 +827,7 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     /**
      * Update the buffer storage display with items from the server
      */
-    public void updateBufferStorageItems(Map<Item, Integer> items) {
+    public void updateBufferStorageItems(Map<Item, Long> items) {
         this.menu.updateBufferStorageItems(items);
     }
 

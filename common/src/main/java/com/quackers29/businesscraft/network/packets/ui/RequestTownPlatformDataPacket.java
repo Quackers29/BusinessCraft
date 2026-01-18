@@ -88,7 +88,7 @@ public class RequestTownPlatformDataPacket {
                     int boundaryRadius = town.getBoundaryRadius();
 
                     // Add current town information including live boundary calculation
-                    response.setTownInfo(town.getName(), town.getPopulation(), town.getTouristCount(), boundaryRadius);
+                    response.setTownInfo(town.getName(), (int) town.getPopulation(), (int) town.getTouristCount(), boundaryRadius);
 
                     for (Platform platform : platforms) {
                         response.addPlatform(

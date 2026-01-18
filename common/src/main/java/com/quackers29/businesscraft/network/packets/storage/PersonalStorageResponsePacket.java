@@ -16,9 +16,9 @@ import java.util.Map;
  */
 public class PersonalStorageResponsePacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(PersonalStorageResponsePacket.class);
-    private final Map<Item, Integer> storageItems;
+    private final Map<Item, Long> storageItems;
 
-    public PersonalStorageResponsePacket(Map<Item, Integer> storageItems) {
+    public PersonalStorageResponsePacket(Map<Item, Long> storageItems) {
         this.storageItems = new HashMap<>(storageItems);
     }
 
@@ -27,7 +27,7 @@ public class PersonalStorageResponsePacket {
         int size = buf.readInt();
         for (int i = 0; i < size; i++) {
             String itemId = buf.readUtf();
-            int count = buf.readInt();
+            long count = buf.readLong();
             try {
                 ResourceLocation resourceLocation = new ResourceLocation(itemId);
                 Object itemObj = PlatformAccess.getRegistry().getItem(resourceLocation);
@@ -49,7 +49,7 @@ public class PersonalStorageResponsePacket {
             if (itemIdObj instanceof net.minecraft.resources.ResourceLocation itemId) {
                 if (itemId != null) {
                     buf.writeUtf(itemId.toString());
-                    buf.writeInt(count);
+                    buf.writeLong(count);
                 }
             }
         });
@@ -110,7 +110,7 @@ public class PersonalStorageResponsePacket {
     /**
      * Returns the storage items
      */
-    public Map<Item, Integer> getStorageItems() {
+    public Map<Item, Long> getStorageItems() {
         return storageItems;
     }
 } 

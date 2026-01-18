@@ -46,21 +46,21 @@ public class TownDataCache {
      * Get the town population, either from cache or from the provider
      */
     public int getPopulation() {
-        return getOrFetchValue("population", dataProvider::getPopulation, DEFAULT_TTL);
+        return getOrFetchValue("population", () -> (int) dataProvider.getPopulation(), DEFAULT_TTL);
     }
 
     /**
      * Get the tourist count, either from cache or from the provider
      */
     public int getTouristCount() {
-        return getOrFetchValue("touristCount", dataProvider::getTouristCount, DEFAULT_TTL);
+        return getOrFetchValue("touristCount", () -> (int) dataProvider.getTouristCount(), DEFAULT_TTL);
     }
 
     /**
      * Get the max tourists, either from cache or from the provider
      */
     public int getMaxTourists() {
-        return getOrFetchValue("maxTourists", dataProvider::getMaxTourists, DEFAULT_TTL);
+        return getOrFetchValue("maxTourists", () -> (int) dataProvider.getMaxTourists(), DEFAULT_TTL);
     }
 
     /**
@@ -74,27 +74,27 @@ public class TownDataCache {
      * Get work units, either from cache or from the provider
      */
     public int getWorkUnits() {
-        return getOrFetchValue("workUnits", dataProvider::getWorkUnits, DEFAULT_TTL);
+        return getOrFetchValue("workUnits", () -> (int) dataProvider.getWorkUnits(), DEFAULT_TTL);
     }
 
     /**
      * Get work unit cap, either from cache or from the provider
      */
     public int getWorkUnitCap() {
-        return getOrFetchValue("workUnitCap", dataProvider::getWorkUnitCap, DEFAULT_TTL);
+        return getOrFetchValue("workUnitCap", () -> (int) dataProvider.getWorkUnitCap(), DEFAULT_TTL);
     }
 
     /**
      * Get all resources, either from cache or from the provider
      */
-    public Map<Item, Integer> getAllResources() {
+    public Map<Item, Long> getAllResources() {
         return getOrFetchValue("allResources", dataProvider::getAllResources, DEFAULT_TTL);
     }
 
     /**
      * Get all communal storage items, either from cache or from the provider
      */
-    public Map<Item, Integer> getAllCommunalStorageItems() {
+    public Map<Item, Long> getAllCommunalStorageItems() {
         return getOrFetchValue("communalStorage", dataProvider::getAllCommunalStorageItems, DEFAULT_TTL);
     }
 
@@ -109,7 +109,7 @@ public class TownDataCache {
      * Get the personal storage items for a player, either from cache or from the
      * provider
      */
-    public Map<Item, Integer> getPersonalStorageItems(UUID playerId) {
+    public Map<Item, Long> getPersonalStorageItems(UUID playerId) {
         return getOrFetchValue("personalStorage:" + playerId,
                 () -> dataProvider.getPersonalStorageItems(playerId), DEFAULT_TTL);
     }
@@ -133,14 +133,19 @@ public class TownDataCache {
     /**
      * Get a value from cache or fetch it if not present or expired
      */
+    @SuppressWarnings("unchecked")
     private <T> T getOrFetchValue(String key, Supplier<T> fetcher, long ttl) {
-        CacheEntry<T> entry = (CacheEntry<T>) cache.get(key);
+        CacheEntry<?> rawEntry = cache.get(key);
+        CacheEntry<T> entry = null;
 
         // If entry doesn't exist or is expired, fetch a new value
-        if (entry == null || entry.isExpired()) {
+        if (rawEntry == null || rawEntry.isExpired()) {
             T value = fetcher.get();
             entry = new CacheEntry<>(value, ttl);
             cache.put(key, entry);
+        } else {
+            // Safe cast since we know the entry was created with the correct type
+            entry = (CacheEntry<T>) rawEntry;
         }
 
         return entry.getValue();

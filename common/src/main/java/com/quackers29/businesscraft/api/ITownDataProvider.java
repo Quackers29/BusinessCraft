@@ -7,7 +7,8 @@ import java.util.UUID;
 import java.util.List;
 
 /**
- * Platform-agnostic interface for accessing town data
+ * Platform-agnostic interface for accessing town data.
+ * Uses long for resource counts to support large-scale economies.
  */
 public interface ITownDataProvider {
     UUID getTownId();
@@ -15,40 +16,40 @@ public interface ITownDataProvider {
     String getTownName();
 
     // New generic resource methods
-    void addResource(Item item, int count);
+    void addResource(Item item, long count);
 
-    int getResourceCount(Item item);
+    long getResourceCount(Item item);
 
-    Map<Item, Integer> getAllResources();
+    Map<Item, Long> getAllResources();
 
     // Communal storage methods
-    boolean addToCommunalStorage(Item item, int count);
+    boolean addToCommunalStorage(Item item, long count);
 
-    int getCommunalStorageCount(Item item);
+    long getCommunalStorageCount(Item item);
 
-    Map<Item, Integer> getAllCommunalStorageItems();
+    Map<Item, Long> getAllCommunalStorageItems();
 
     // Personal storage methods
-    boolean addToPersonalStorage(UUID playerId, Item item, int count);
+    boolean addToPersonalStorage(UUID playerId, Item item, long count);
 
-    int getPersonalStorageCount(UUID playerId, Item item);
+    long getPersonalStorageCount(UUID playerId, Item item);
 
-    Map<Item, Integer> getPersonalStorageItems(UUID playerId);
+    Map<Item, Long> getPersonalStorageItems(UUID playerId);
 
     // Population methods
-    int getPopulation();
+    long getPopulation();
 
     // Tourist methods
-    int getTouristCount();
+    long getTouristCount();
 
-    int getMaxTourists();
+    long getMaxTourists();
 
     boolean canAddMoreTourists();
 
     // Work Units
-    int getWorkUnits();
+    long getWorkUnits();
 
-    int getWorkUnitCap();
+    long getWorkUnitCap();
 
     // Other town data
     boolean isTouristSpawningEnabled();
@@ -80,7 +81,7 @@ public interface ITownDataProvider {
     // Visit history methods
     /**
      * Record a visit from another town with additional information
-     * 
+     *
      * @param originTownId UUID of the town visitors are from
      * @param count        Number of visitors
      * @param originPos    Position the visitors originated from
@@ -89,7 +90,7 @@ public interface ITownDataProvider {
 
     /**
      * Get all the visit history records
-     * 
+     *
      * @return List of visit records
      */
     List<VisitHistoryRecord> getVisitHistory();

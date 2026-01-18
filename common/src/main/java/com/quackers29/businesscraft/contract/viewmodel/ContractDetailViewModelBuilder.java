@@ -45,7 +45,7 @@ public class ContractDetailViewModelBuilder {
 
         UUID contractId = sc.getId();
         String resourceId = sc.getResourceId();
-        int quantity = sc.getQuantity();
+        long quantity = sc.getQuantity();
         String issuerTownName = sc.getIssuerTownName() != null ? sc.getIssuerTownName() : "Unknown";
 
         // Time displays (using BCTimeUtils for centralized formatting)
@@ -69,8 +69,8 @@ public class ContractDetailViewModelBuilder {
         // Delivery progress
         String deliveryProgressDisplay = null;
         if (sc.isAuctionClosed() && !sc.isDelivered()) {
-            int delivered = sc.getDeliveredAmount();
-            int total = sc.getQuantity();
+            long delivered = sc.getDeliveredAmount();
+            long total = sc.getQuantity();
             deliveryProgressDisplay = delivered + "/" + total + " delivered";
         }
 
@@ -115,7 +115,7 @@ public class ContractDetailViewModelBuilder {
                 contractId,
                 "sell",
                 resourceId,
-                quantity,
+                (int) quantity,
                 sc.getIssuerTownId(),
                 issuerTownName,
                 timeRemainingDisplay,
@@ -212,8 +212,8 @@ public class ContractDetailViewModelBuilder {
                 if (sc.isSnailMail()) {
                     return "Snail Mail";
                 }
-                int delivered = sc.getDeliveredAmount();
-                int total = sc.getQuantity();
+                long delivered = sc.getDeliveredAmount();
+                long total = sc.getQuantity();
                 if (delivered > 0) {
                     return "In Transit (" + delivered + "/" + total + ")";
                 }

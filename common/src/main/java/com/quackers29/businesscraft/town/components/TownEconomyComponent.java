@@ -15,21 +15,17 @@ public class TownEconomyComponent implements TownComponent {
 
     /**
      * Add a specific resource to the town and update population if applicable
-     * 
+     *
      * @param item  The item resource to add
      * @param count The amount to add
      */
-    public void addResource(Item item, int count) {
+    public void addResource(Item item, long count) {
         if (item == null)
             return;
 
         // Special logging for emerald deductions
         boolean isEmerald = item == net.minecraft.world.item.Items.EMERALD;
 
-        // Log only significant emerald deductions (> 1)
-        if (count < 0 && isEmerald && count <= -5) {
-            LOGGER.info("Deducting {} emeralds from town economy", -count);
-        }
 
         // Actually add/remove the resource
         resources.addResource(item, count);
@@ -38,17 +34,17 @@ public class TownEconomyComponent implements TownComponent {
 
     /**
      * Get a specific resource count
-     * 
+     *
      * @param item The item to get count for
      * @return The count of that resource
      */
-    public int getResourceCount(Item item) {
+    public long getResourceCount(Item item) {
         return resources.getResourceCount(item);
     }
 
     /**
      * Remove population from the town
-     * 
+     *
      * @param amount The amount of population to remove
      */
     public void removePopulation(int amount) {
@@ -59,7 +55,7 @@ public class TownEconomyComponent implements TownComponent {
 
     /**
      * Set the population of the town directly
-     * 
+     *
      * @param amount The new population value
      */
     public void setPopulation(int amount) {
@@ -93,13 +89,13 @@ public class TownEconomyComponent implements TownComponent {
     }
 
     // Getters
-    public int getPopulation() {
+    public long getPopulation() {
         return population;
     }
 
     /**
      * Get all resources in the town
-     * 
+     *
      * @return The town's resources
      */
     public TownResources getResources() {

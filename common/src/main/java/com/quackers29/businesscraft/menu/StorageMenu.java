@@ -292,7 +292,7 @@ public class StorageMenu extends AbstractContainerMenu {
      * 
      * @param items Map of items and their counts from the town's communal storage
      */
-    public void updateStorageItems(Map<Item, Integer> items) {
+    public void updateStorageItems(Map<Item, Long> items) {
         // Only update if we're in communal storage mode
         if (isPersonalStorageMode) {
             DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Ignoring communal storage update because we're in personal mode");
@@ -315,7 +315,7 @@ public class StorageMenu extends AbstractContainerMenu {
      * 
      * @param items Map of items and their counts from the player's personal storage
      */
-    public void updatePersonalStorageItems(Map<Item, Integer> items) {
+    public void updatePersonalStorageItems(Map<Item, Long> items) {
         // Only update if we're in personal storage mode
         if (!isPersonalStorageMode) {
             DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Ignoring personal storage update because we're in communal mode");
@@ -335,7 +335,7 @@ public class StorageMenu extends AbstractContainerMenu {
     /**
      * Helper method to update the inventory with the provided items
      */
-    private void updateInventoryWithItems(Map<Item, Integer> items) {
+    private void updateInventoryWithItems(Map<Item, Long> items) {
         DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Starting updateInventoryWithItems with {} items", items.size());
         
         // Log the current inventory state before clearing
@@ -358,9 +358,9 @@ public class StorageMenu extends AbstractContainerMenu {
         // Fill slots with items from the storage
         int slotIndex = 0;
         DebugConfig.debug(LOGGER, DebugConfig.STORAGE_OPERATIONS, "MENU: Filling slots with items from storage map");
-        for (Map.Entry<Item, Integer> entry : items.entrySet()) {
+        for (Map.Entry<Item, Long> entry : items.entrySet()) {
             Item item = entry.getKey();
-            int count = entry.getValue();
+            int count = entry.getValue().intValue();
             
             // Skip empty items or zero counts
             if (item == null || count <= 0) {

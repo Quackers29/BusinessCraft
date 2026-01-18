@@ -27,7 +27,7 @@ public class ResourcesTab extends BaseTownTab {
     private StandardTabContent contentComponent;
 
     // Auto-refresh tracking
-    private Map<Item, Integer> lastKnownResources = null;
+    private Map<Item, Long> lastKnownResources = null;
     private int refreshCounter = 0;
     private static final int REFRESH_CHECK_INTERVAL = 20; // Check every 20 ticks (1 second)
 
@@ -57,7 +57,7 @@ public class ResourcesTab extends BaseTownTab {
         // Configure the data supplier for the resource information
         contentComponent.withItemListData(() -> {
             // Use LinkedHashMap to preserve order (WU first)
-            java.util.LinkedHashMap<Item, Integer> resources = new java.util.LinkedHashMap<>();
+            java.util.LinkedHashMap<Item, Long> resources = new java.util.LinkedHashMap<>();
 
             // Get the resource view-model from cache (server-authoritative)
             TownDataCacheManager cache = parentScreen.getCacheManager();
@@ -71,24 +71,24 @@ public class ResourcesTab extends BaseTownTab {
                 if (displayData.containsKey(net.minecraft.world.item.Items.AIR)) {
                     TownResourceViewModel.ResourceDisplayInfo wuInfo = displayData.get(net.minecraft.world.item.Items.AIR);
                     // Parse the current amount from the display string
-                    int amount = parseAmount(wuInfo.getCurrentAmount());
+                    long amount = parseAmount(wuInfo.getCurrentAmount());
                     resources.put(net.minecraft.world.item.Items.AIR, amount);
                 }
             }
 
             // 2. Add standard resources from cached data
-            Map<Item, Integer> cachedResources = parentScreen.getCachedResources();
+            Map<Item, Long> cachedResources = parentScreen.getCachedResources();
             resources.putAll(cachedResources);
 
             // 3. Merge in wanted resources (deficits)
             com.quackers29.businesscraft.block.entity.TownInterfaceEntity te = parentScreen.getMenu()
                     .getTownInterfaceEntity();
             if (te != null) {
-                Map<Item, Integer> wanted = te.getClientSyncHelper().getClientWantedResources();
+                Map<Item, Long> wanted = te.getClientSyncHelper().getClientWantedResources();
                 wanted.forEach((item, amount) -> {
                     // Ensure wanted items are visible in the list even if stock is 0
                     if (!resources.containsKey(item)) {
-                        resources.put(item, 0);
+                        resources.put(item, 0L);
                     }
                     // Do not overwrite existing stock with deficit
                 });
@@ -112,13 +112,13 @@ public class ResourcesTab extends BaseTownTab {
 
         // Configure tooltips for resource information
         contentComponent.withItemTooltipData(() -> {
-            Map<Item, Integer> resources = parentScreen.getCachedResources();
+            Map<Item, Long> resources = parentScreen.getCachedResources();
             Map<Item, String> tooltips = new java.util.HashMap<>();
             TownDataCacheManager cache = parentScreen.getCacheManager();
 
             if (cache != null) {
                 java.util.Set<String> unlocked = cache.getCachedUnlockedNodes();
-                Map<Item, Integer> wanted = java.util.Collections.emptyMap();
+                Map<Item, Long> wanted = java.util.Collections.emptyMap();
 
                 com.quackers29.businesscraft.block.entity.TownInterfaceEntity te = parentScreen.getMenu()
                         .getTownInterfaceEntity();
@@ -150,18 +150,18 @@ public class ResourcesTab extends BaseTownTab {
 
                     // Wanted status
                     if (wanted.containsKey(item)) {
-                        int deficit = wanted.get(item);
+                        int deficit = wanted.get(item).intValue();
                         sb.append(String.format("§cWANTED: Deficit %d", deficit)); // Negative value
                         sb.append("\n");
                     }
 
                     // Quantity (Line 1)
-                    int quantity = resources.getOrDefault(item, 0);
+                    long quantity = resources.getOrDefault(item, 0L);
                     sb.append(String.format("Quantity: %d", quantity));
 
                     // Add Escrow info
                     if (te != null) {
-                        Map<Item, Integer> escrow = te.getClientSyncHelper().getClientEscrowedResources();
+                        Map<Item, Long> escrow = te.getClientSyncHelper().getClientEscrowedResources();
                         if (escrow.containsKey(item) && escrow.get(item) > 0) {
                             sb.append(String.format(" (+%d Escrow)", escrow.get(item)));
                         }
@@ -233,7 +233,7 @@ public class ResourcesTab extends BaseTownTab {
             }
 
             // Check if resources have changed
-            Map<Item, Integer> currentResources = parentScreen.getCachedResources();
+            Map<Item, Long> currentResources = parentScreen.getCachedResources();
             if (hasResourcesChanged(currentResources)) {
                 DebugConfig.debug(LOGGER, DebugConfig.UI_RESOURCES_TAB,
                         "Resources changed detected, refreshing content component");
@@ -252,7 +252,7 @@ public class ResourcesTab extends BaseTownTab {
     /**
      * Checks if resources have changed since last update
      */
-    private boolean hasResourcesChanged(Map<Item, Integer> currentResources) {
+    private boolean hasResourcesChanged(Map<Item, Long> currentResources) {
         if (lastKnownResources == null) {
             return !currentResources.isEmpty();
         }
@@ -263,8 +263,8 @@ public class ResourcesTab extends BaseTownTab {
         }
 
         // Check if any values have changed
-        for (Map.Entry<Item, Integer> entry : currentResources.entrySet()) {
-            Integer lastValue = lastKnownResources.get(entry.getKey());
+        for (Map.Entry<Item, Long> entry : currentResources.entrySet()) {
+            Long lastValue = lastKnownResources.get(entry.getKey());
             if (lastValue == null || !lastValue.equals(entry.getValue())) {
                 return true;
             }
@@ -283,7 +283,7 @@ public class ResourcesTab extends BaseTownTab {
     /**
      * Called during data supplier execution to check for immediate changes
      */
-    private void checkForResourceChanges(Map<Item, Integer> currentResources) {
+    private void checkForResourceChanges(Map<Item, Long> currentResources) {
         if (hasResourcesChanged(currentResources)) {
             // Update our tracking immediately
             lastKnownResources = Map.copyOf(currentResources);
@@ -327,7 +327,7 @@ public class ResourcesTab extends BaseTownTab {
     /**
      * Parse integer amount from display string (e.g., "250", "1.5K" -> 1500)
      */
-    private int parseAmount(String amountStr) {
+    private long parseAmount(String amountStr) {
         if (amountStr == null || amountStr.isEmpty()) {
             return 0;
         }
@@ -337,11 +337,11 @@ public class ResourcesTab extends BaseTownTab {
             if (amountStr.endsWith("K")) {
                 String numPart = amountStr.substring(0, amountStr.length() - 1);
                 float value = Float.parseFloat(numPart);
-                return (int) (value * 1000);
+                return (long) (value * 1000);
             }
             
             // Handle plain integer
-            return Integer.parseInt(amountStr);
+            return Long.parseLong(amountStr);
         } catch (NumberFormatException e) {
             DebugConfig.debug(LOGGER, DebugConfig.UI_RESOURCES_TAB,
                     "Failed to parse amount string: {}", amountStr);

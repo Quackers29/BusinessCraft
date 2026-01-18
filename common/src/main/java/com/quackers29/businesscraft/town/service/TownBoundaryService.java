@@ -30,7 +30,7 @@ public class TownBoundaryService {
             return ConfigLoader.defaultStartingPopulation; // Fallback to default
         }
         
-        int radius = town.getPopulation();
+        int radius = (int) town.getPopulation();
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
             "Calculated boundary radius for town {}: {} blocks (population: {})", 
             town.getName(), radius, town.getPopulation());

@@ -17,9 +17,9 @@ import java.util.Map;
  */
 public class CommunalStorageResponsePacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(CommunalStorageResponsePacket.class);
-    private final Map<Item, Integer> storageItems;
+    private final Map<Item, Long> storageItems;
 
-    public CommunalStorageResponsePacket(Map<Item, Integer> storageItems) {
+    public CommunalStorageResponsePacket(Map<Item, Long> storageItems) {
         this.storageItems = new HashMap<>(storageItems);
     }
 
@@ -28,7 +28,7 @@ public class CommunalStorageResponsePacket {
         int size = buf.readInt();
         for (int i = 0; i < size; i++) {
             String itemId = buf.readUtf();
-            int count = buf.readInt();
+            long count = buf.readLong();
             try {
                 ResourceLocation resourceLocation = new ResourceLocation(itemId);
                 Object itemObj = PlatformAccess.getRegistry().getItem(resourceLocation);
@@ -50,7 +50,7 @@ public class CommunalStorageResponsePacket {
             if (itemIdObj instanceof net.minecraft.resources.ResourceLocation itemId) {
                 if (itemId != null) {
                     buf.writeUtf(itemId.toString());
-                    buf.writeInt(count);
+                    buf.writeLong(count);
                 }
             }
         });
@@ -115,7 +115,7 @@ public class CommunalStorageResponsePacket {
     /**
      * Returns the storage items
      */
-    public Map<Item, Integer> getStorageItems() {
+    public Map<Item, Long> getStorageItems() {
         return storageItems;
     }
 } 

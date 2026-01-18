@@ -80,7 +80,6 @@ public class ContractBoard {
     public void updateMarketPrice(String resourceId, float quantity, float transactionPrice) {
         // Delegate to Global Market to record the trade and update price
         com.quackers29.businesscraft.economy.GlobalMarket.get().recordTrade(resourceId, quantity, transactionPrice);
-        LOGGER.info("Recorded trade for {} x{} @ {} in Global Market", resourceId, quantity, transactionPrice);
     }
 
     /**
@@ -108,7 +107,7 @@ public class ContractBoard {
         }
     }
 
-    public void processCourierDelivery(UUID contractId, int amount) {
+    public void processCourierDelivery(UUID contractId, long amount) {
         Contract contract = getContract(contractId);
 
         // Handle SellContract (unified contract)
@@ -153,8 +152,7 @@ public class ContractBoard {
                 if (destTown != null && sc.getCourierId() != null) {
                     // If Snail Mail, do nothing (money sink)
                     if (sc.isSnailMail()) {
-                        LOGGER.info("Snail Mail delivery complete for contract {}. Reward {} voided.", sc.getId(),
-                                sc.getCourierReward());
+                        // Snail Mail delivery complete - reward voided
                     } else {
                         // Create reward item (Emeralds)
                         int rewardAmount = (int) sc.getCourierReward();
@@ -231,8 +229,6 @@ public class ContractBoard {
                             destTown.getPaymentBoard().getRewardById(rewardId).ifPresent(entry -> {
                                 entry.addMetadata("contractId", contractId.toString());
                             });
-                            LOGGER.info("Courier contract {} completed! Reward {} emeralds added to {} for courier {}",
-                                    contractId, rewardAmount, destTown.getName(), cc.getCourierId());
                         }
                     }
                 }
@@ -288,7 +284,7 @@ public class ContractBoard {
         net.minecraft.world.item.ItemStack contractItem = com.quackers29.businesscraft.util.ContractItemHelper
                 .createContractItem(
                         sc.getResourceId(),
-                        sc.getQuantity(),
+                        (int) sc.getQuantity(),
                         contractId,
                         sc.getWinningTownId(),
                         destTownName,
@@ -305,8 +301,6 @@ public class ContractBoard {
             sellerTown.getPaymentBoard().getRewardById(rewardId).ifPresent(entry -> {
                 entry.addMetadata("contractId", contractId.toString());
             });
-            LOGGER.info("Courier job {} accepted by {}. Pickup reward {} added to town {}",
-                    contractId, courierId, rewardId, sellerTown.getName());
         }
 
         savedData.setDirty();
@@ -362,8 +356,6 @@ public class ContractBoard {
                                     // ESCROW: Release from buyer's escrow
                                     winnerTown.removeEscrowResource(net.minecraft.world.item.Items.EMERALD, cost);
 
-                                    LOGGER.info("Auction Won: Transferred {} emeralds from {} (Escrow) to {}",
-                                            cost, winnerTown.getName(), sellerTown.getName());
                                 }
 
                                 // 2. Release Seller Item Escrow (Items considered "in transit" or "reserved for
@@ -372,8 +364,6 @@ public class ContractBoard {
                                         .getBaseItemForResource(sc.getResourceId());
                                 if (item != null && item != net.minecraft.world.item.Items.PAPER) {
                                     sellerTown.removeEscrowResource(item, sc.getQuantity());
-                                    LOGGER.info("Auction Won: Released {} {} from {} Escrow (prepared for delivery)",
-                                            sc.getQuantity(), sc.getResourceId(), sellerTown.getName());
                                 }
                             }
 
@@ -386,8 +376,6 @@ public class ContractBoard {
                                     (long) (com.quackers29.businesscraft.config.ConfigLoader.contractCourierAcceptanceMinutes
                                             * 60000L));
 
-                            LOGGER.info("Auction closed for contract {}: Winner={}, Bid={}, CourierReward={}",
-                                    sc.getId(), highestBidder, highestBid, sc.getCourierReward());
 
                             savedData.setDirty();
                         }
@@ -413,7 +401,6 @@ public class ContractBoard {
                         }
                         // DELETE contract instead of moving to history
                         removeContract(sc.getId());
-                        LOGGER.info("Deleted contract {} (no bids)", sc.getId());
                         savedData.setDirty();
                     }
                 }
@@ -445,7 +432,6 @@ public class ContractBoard {
                 else if (sc.isSnailMail() && sc.isExpired() && !sc.isCompleted()) {
                     // Snail Mail Delivery Complete
                     sc.complete();
-                    LOGGER.info("Contract {} completed via Snail Mail delivery", sc.getId());
                     savedData.setDirty();
                     broadcastUpdate();
                 }
@@ -480,14 +466,12 @@ public class ContractBoard {
                 // For Snail Mail, deliveredAmount is 0, so we deliver full quantity.
                 // For Courier, deliveredAmount should equal quantity, so we deliver 0
                 // (preventing double add).
-                int amountRemaining = sc.getQuantity() - sc.getDeliveredAmount();
+                long amountRemaining = sc.getQuantity() - sc.getDeliveredAmount();
 
                 if (amountRemaining > 0) {
                     // Just add to buyer (Money and Seller Escrow logic moved to closeAuctions)
                     buyerTown.addResource(item, amountRemaining);
 
-                    LOGGER.info("Delivered {} {} to {} (arrived from transit)",
-                            amountRemaining, sc.getResourceId(), buyerTown.getName());
                 }
             }
         }
@@ -539,8 +523,6 @@ public class ContractBoard {
                 // ESCROW: Deduct total cost (Bid + Courier) from new bidder
                 bidderTown.addResource(net.minecraft.world.item.Items.EMERALD, -totalCost);
                 bidderTown.addEscrowResource(net.minecraft.world.item.Items.EMERALD, totalCost);
-                LOGGER.info("Escrowed {} emeralds ({} bid + {} courier) from town {} for contract {}",
-                        totalCost, (int) roundedAmount, courierCost, bidderTown.getName(), contractId);
 
                 // ESCROW: Refund emeralds to previous highest bidder
                 if (previousHighestBidder != null) {
@@ -552,8 +534,6 @@ public class ContractBoard {
 
                         previousTown.addResource(net.minecraft.world.item.Items.EMERALD, refundAmount);
                         previousTown.removeEscrowResource(net.minecraft.world.item.Items.EMERALD, refundAmount);
-                        LOGGER.info("Refunded {} emeralds ({} bid + {} courier) to town {} (outbid on contract {})",
-                                refundAmount, prevBid, prevCourierCost, previousTown.getName(), contractId);
                     }
                 }
 
@@ -616,7 +596,7 @@ public class ContractBoard {
                         net.minecraft.world.item.ItemStack contractItem = com.quackers29.businesscraft.util.ContractItemHelper
                                 .createContractItem(
                                         cc.getResourceId(),
-                                        cc.getQuantity(),
+                                        (int) cc.getQuantity(),
                                         contractId,
                                         cc.getDestinationTownId(),
                                         destTownName,
@@ -637,14 +617,11 @@ public class ContractBoard {
                                 entry.addMetadata("contractId", contractId.toString());
                             });
 
-                            LOGGER.info("Created courier pickup reward {} for town {} (courier={}) with contract item",
-                                    rewardId, sellerTown.getName(), bidder);
                         } else {
                             LOGGER.warn("Failed to create courier pickup reward for town {}", sellerTown.getName());
                         }
                     }
 
-                    LOGGER.info("Courier contract {} accepted by {}. New expiry in 4 mins.", contractId, bidder);
                     savedData.setDirty();
                     broadcastUpdate();
                 }
@@ -665,7 +642,6 @@ public class ContractBoard {
             if (PlatformAccess.getNetworkMessages() != null) {
                 Map<String, Float> prices = getAllMarketPrices();
                 if (DebugConfig.isEnabled(DebugConfig.SMART_GPI_DEBUG)) {
-                    LOGGER.info("[SmartGPI] Broadcasting prices: {}", prices);
                 }
                 PlatformAccess.getNetworkMessages().sendToAllPlayers(
                         new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(

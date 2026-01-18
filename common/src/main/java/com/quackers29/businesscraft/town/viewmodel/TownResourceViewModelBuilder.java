@@ -34,7 +34,7 @@ public class TownResourceViewModelBuilder {
         }
 
         Map<Item, TownResourceViewModel.ResourceDisplayInfo> displayData = new HashMap<>();
-        Map<Item, Integer> resources = town.getAllResources();
+        Map<Item, Long> resources = town.getAllResources();
 
         // Calculate factor to convert daily rates to per-hour rates (SERVER-SIDE ONLY)
         // Rate/Day * (72000 ticks/hour / DailyTickInterval)
@@ -44,18 +44,18 @@ public class TownResourceViewModelBuilder {
         int fullCapacityCount = 0;
 
         // FIRST: Process Work Units as a special resource (not in regular resources map)
-        int workUnits = town.getWorkUnits();
-        int workUnitCap = town.getWorkUnitCap();
+        long workUnits = town.getWorkUnits();
+        long workUnitCap = town.getWorkUnitCap();
         if (workUnits > 0 || workUnitCap > 0) {
             displayData.put(net.minecraft.world.item.Items.AIR, createWorkUnitsDisplayInfo(
-                    workUnits, workUnitCap, hourFactor, town));
+                    (int) workUnits, (int) workUnitCap, hourFactor, town));
             // Note: Work units don't contribute to shortage/fullCapacity counts
         }
 
         // Process each regular resource (ALL CALCULATIONS HAPPEN HERE)
-        for (Map.Entry<Item, Integer> entry : resources.entrySet()) {
+        for (Map.Entry<Item, Long> entry : resources.entrySet()) {
             Item item = entry.getKey();
-            int currentAmount = entry.getValue();
+            long currentAmount = entry.getValue();
 
             ResourceType resourceType = ResourceRegistry.getFor(item);
             if (resourceType == null)
@@ -69,7 +69,7 @@ public class TownResourceViewModelBuilder {
             float prodPerHour = prodPerDay * hourFactor;
             float consPerHour = consPerDay * hourFactor;
             float capacity = town.getTrading().getStorageCap(resourceId);
-            float inTransitAmount = town.getInTransitResourceCount(item);
+            long inTransitAmount = town.getInTransitResourceCount(item);
 
             // FORMAT ALL VALUES AS DISPLAY STRINGS (client receives these ready-to-display)
             String displayName = getItemDisplayName(item);
@@ -77,12 +77,12 @@ public class TownResourceViewModelBuilder {
             String productionRateStr = formatProductionRate(prodPerHour);
             String consumptionRateStr = formatConsumptionRate(consPerHour);
             String capacityStr = formatCapacity(capacity);
-            String capacityPercentageStr = formatCapacityPercentage(currentAmount, capacity);
-            String inTransitStr = formatInTransit(inTransitAmount);
+            String capacityPercentageStr = formatCapacityPercentage((int) currentAmount, (int) capacity);
+            String inTransitStr = formatInTransit((float) inTransitAmount);
 
             // CALCULATE STATUS INDICATORS (server-side business logic)
-            boolean isShortage = isResourceShortage(currentAmount, consPerHour, prodPerHour);
-            boolean isCapacityFull = isCapacityFull(currentAmount, capacity);
+            boolean isShortage = isResourceShortage((int) currentAmount, consPerHour, prodPerHour);
+            boolean isCapacityFull = isCapacityFull((int) currentAmount, (int) capacity);
             String statusIndicator = calculateStatusIndicator(prodPerHour, consPerHour, isShortage, isCapacityFull);
 
             // Track overall statistics
@@ -92,7 +92,7 @@ public class TownResourceViewModelBuilder {
                 fullCapacityCount++;
 
             // CALCULATE ACTIVE EFFECTS (server-side business logic)
-            java.util.List<String> activeEffects = calculateActiveEffects(town, item, currentAmount, capacity);
+            java.util.List<String> activeEffects = calculateActiveEffects(town, item, (int) currentAmount, (int) capacity);
 
             // Create display info (all calculations complete)
             TownResourceViewModel.ResourceDisplayInfo displayInfo = new TownResourceViewModel.ResourceDisplayInfo(
@@ -110,9 +110,9 @@ public class TownResourceViewModelBuilder {
         String economicTrend = calculateEconomicTrend(town);
 
         // FIX: Include overview stats in view-model to avoid ContainerData issues
-        int population = town.getPopulation();
-        int touristCount = town.getTouristCount();
-        int maxTourists = town.getMaxTourists();
+        long population = town.getPopulation();
+        long touristCount = town.getTouristCount();
+        long maxTourists = town.getMaxTourists();
 
         return new TownResourceViewModel(displayData, totalResourcesDisplay, overallStatus, economicTrend,
                 population, touristCount, maxTourists);
@@ -172,7 +172,7 @@ public class TownResourceViewModelBuilder {
         return item.getDescriptionId(); // Fallback to basic name
     }
 
-    private static String formatAmount(int amount) {
+    private static String formatAmount(long amount) {
         if (amount >= 1000) {
             return String.format("%.1fK", amount / 1000.0f);
         }
@@ -302,7 +302,7 @@ public class TownResourceViewModelBuilder {
         // This could be enhanced with historical data analysis
         // For now, provide a basic trend based on current production vs consumption
 
-        Map<Item, Integer> resources = town.getAllResources();
+        Map<Item, Long> resources = town.getAllResources();
         if (resources.isEmpty()) {
             return "Unknown";
         }

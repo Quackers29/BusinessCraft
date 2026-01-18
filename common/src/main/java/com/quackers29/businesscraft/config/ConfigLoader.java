@@ -94,7 +94,6 @@ public class ConfigLoader {
                     "businesscraft-main",
                     configPath,
                     this::reloadFromFile);
-            LOGGER.info("Registered BusinessCraft configuration for hot-reloading");
         } catch (Exception e) {
             LOGGER.warn("Failed to register configuration for hot-reloading: {}", e.getMessage());
         }
@@ -105,7 +104,6 @@ public class ConfigLoader {
      * Used as a callback for the hot-reload service.
      */
     private void reloadFromFile(Path filePath) {
-        LOGGER.info("Hot-reloading configuration from: {}", filePath);
         loadConfig();
     }
 
@@ -250,35 +248,8 @@ public class ConfigLoader {
             LOGGER.error("Failed to load config: {}", e.getMessage());
         }
 
-        // Log settings
-        LOGGER.info("Enable Create Trains: {}", enableCreateTrains);
-        LOGGER.info("Contract Timings: Auction={}m, CourierAccept={}m, CourierSpeed={}m/m, SnailSpeed={}m/m",
-                contractAuctionDurationMinutes, contractCourierAcceptanceMinutes,
-                contractCourierDeliveryMinutesPerMeter, contractSnailMailDeliveryMinutesPerMeter);
-        LOGGER.info("Display Timezone: {}", displayTimezone);
-        LOGGER.info("Enable Minecarts: {}", enableMinecarts);
-        LOGGER.info("Vehicle Search Radius: {}", vehicleSearchRadius);
+        // Configuration loaded
 
-        LOGGER.info("Min Pop For Tourists: {}", minPopForTourists);
-        LOGGER.info("Min Distance Between Towns: {}", minDistanceBetweenTowns);
-        LOGGER.info("Default Starting Population: {}", defaultStartingPopulation);
-        LOGGER.info("Max Tourists Per Town: {}", maxTouristsPerTown);
-        LOGGER.info("Population Per Tourist: {}", populationPerTourist);
-        LOGGER.info("Max Population-based Tourists: {}", maxPopBasedTourists);
-        LOGGER.info("Town Names: {}", townNames);
-
-        // Log tourist-related settings
-        LOGGER.info("Tourist Expiry Minutes: {}", touristExpiryMinutes);
-        LOGGER.info("Enable Tourist Expiry: {}", enableTouristExpiry);
-        LOGGER.info("Notify On Tourist Departure: {}", notifyOnTouristDeparture);
-
-        LOGGER.info("Meters Per Emerald: {}", metersPerEmerald);
-        LOGGER.info("Enable Milestones: {}", enableMilestones);
-        LOGGER.info("Milestone Rewards: {}", milestoneRewards.size() + " configured");
-
-        // Log player tracking settings
-        LOGGER.info("Player Tracking: {}", playerTracking);
-        LOGGER.info("Town Boundary Messages: {}", townBoundaryMessages);
     }
 
     public static void saveConfig() {
@@ -381,7 +352,6 @@ public class ConfigLoader {
             // Add default test milestone: 10m distance with bread and XP bottle
             List<String> defaultRewards = Arrays.asList("minecraft:bread:1", "minecraft:experience_bottle:2");
             milestoneRewards.put(10, defaultRewards);
-            LOGGER.info("Added default test milestone: 10m -> bread + XP bottle");
             return;
         }
 
@@ -400,7 +370,6 @@ public class ConfigLoader {
                     if (!rewardsStr.isEmpty()) {
                         List<String> rewards = Arrays.asList(rewardsStr.split(","));
                         milestoneRewards.put(distance, rewards);
-                        LOGGER.info("MILESTONE CONFIG - Loaded milestone: {}m -> {}", distance, rewards);
                     } else {
                         LOGGER.warn("MILESTONE CONFIG - Milestone distance {} found but no rewards configured",
                                 distance);

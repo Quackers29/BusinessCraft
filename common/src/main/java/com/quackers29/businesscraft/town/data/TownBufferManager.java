@@ -35,7 +35,7 @@ public class TownBufferManager {
     private UUID townId;
 
     // Buffer synchronization tracking
-    private Map<Item, Integer> lastKnownTownBuffer = new HashMap<>();
+    private Map<Item, Long> lastKnownTownBuffer = new HashMap<>();
     private boolean bufferNeedsSync = true;
     private boolean suppressBufferCallbacks = false; // Prevents infinite sync loops
 
@@ -122,7 +122,7 @@ public class TownBufferManager {
         if (level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
             if (town != null) {
-                Map<Item, Integer> currentTownBuffer = town.getPaymentBoard().getBufferStorage();
+                Map<Item, Long> currentTownBuffer = town.getPaymentBoard().getBufferStorage();
 
                 // Check if town buffer has changed significantly or if we need initial sync
                 if (bufferNeedsSync || !currentTownBuffer.equals(lastKnownTownBuffer)) {
@@ -160,7 +160,7 @@ public class TownBufferManager {
      * access
      * Now preserves exact slot positions using SlotBasedStorage
      */
-    private void syncTownDataToBuffer(Map<Item, Integer> bufferStorage) {
+    private void syncTownDataToBuffer(Map<Item, Long> bufferStorage) {
         if (level == null || level.isClientSide() || townId == null)
             return;
 

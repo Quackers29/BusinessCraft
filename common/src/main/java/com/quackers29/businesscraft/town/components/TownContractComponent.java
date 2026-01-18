@@ -127,7 +127,7 @@ public class TownContractComponent implements TownComponent {
                         Object itemObj = com.quackers29.businesscraft.api.PlatformAccess.getRegistry().getItem(itemLoc);
 
                         if (itemObj instanceof Item item) {
-                            int currentCount = town.getResourceCount(item);
+                            long currentCount = town.getResourceCount(item);
                             float cap = town.getTrading().getStorageCap(resourceId);
                             float needThreshold = cap * (com.quackers29.businesscraft.config.ConfigLoader.minStockPercent / 100.0f);
 
@@ -180,7 +180,7 @@ public class TownContractComponent implements TownComponent {
                     }
 
                     // ESCROW: Check if town has enough emeralds before bidding (Bid + Courier)
-                    int emeraldCount = town.getResourceCount(Items.EMERALD);
+                    long emeraldCount = town.getResourceCount(Items.EMERALD);
                     if (emeraldCount < (bid + courierCost)) {
                         DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
                                 "Town {} cannot bid {} on contract {} - insufficient emeralds ({} available, need {})",
@@ -263,12 +263,12 @@ public class TownContractComponent implements TownComponent {
                     continue;
                 }
 
-                int currentCount = town.getResourceCount(item);
+                long currentCount = town.getResourceCount(item);
                 float cap = town.getTrading().getStorageCap(resourceId);
                 float needThreshold = cap * (com.quackers29.businesscraft.config.ConfigLoader.minStockPercent / 100.0f);
 
                 boolean isWanted = town.getWantedResources().containsKey(item);
-                int wantedDeficit = town.getWantedResources().getOrDefault(item, 0); // Negative value
+                long wantedDeficit = town.getWantedResources().getOrDefault(item, 0L); // Negative value
 
                 // Bid if stock is low OR if we explicitly want it for an upgrade
                 if (item != null && (currentCount < needThreshold || isWanted)) {
@@ -373,7 +373,7 @@ public class TownContractComponent implements TownComponent {
         }
 
         // Check all resources for excess (excluding currency)
-        for (java.util.Map.Entry<Item, Integer> entry : town.getAllResources().entrySet()) {
+        for (java.util.Map.Entry<Item, Long> entry : town.getAllResources().entrySet()) {
             Item item = entry.getKey();
 
             // Skip emeralds - they are the currency
@@ -414,7 +414,7 @@ public class TownContractComponent implements TownComponent {
         }
 
         // Use TOTAL count (Available + Escrow) for decision making
-        int resourceCount = town.getTotalResourceCount(item);
+        long resourceCount = town.getTotalResourceCount(item);
 
         float cap = town.getTrading().getStorageCap(resourceId);
         float excessThreshold = cap * (com.quackers29.businesscraft.config.ConfigLoader.excessStockPercent / 100.0f);
@@ -442,7 +442,7 @@ public class TownContractComponent implements TownComponent {
             float minThreshold = cap * (com.quackers29.businesscraft.config.ConfigLoader.minStockPercent / 100.0f);
             float targetStock = minThreshold + ((excessThreshold - minThreshold) / 2);
 
-            int sellQuantity = (int) (resourceCount - targetStock);
+            long sellQuantity = resourceCount - (long) targetStock;
             // Cap sell quantity to prevent massive dumps and potential overflow issues
             if (sellQuantity > 10000) {
                 sellQuantity = 10000;
@@ -453,7 +453,7 @@ public class TownContractComponent implements TownComponent {
             // If we assume we have them but they are all in escrow, addResource will clamp
             // to 0
             // but addEscrow will add them, creating infinite resources.
-            int availableCount = town.getResourceCount(item);
+            long availableCount = town.getResourceCount(item);
             if (sellQuantity > availableCount) {
                 sellQuantity = availableCount;
             }
@@ -526,7 +526,7 @@ public class TownContractComponent implements TownComponent {
         lastContractCheckTime = tag.getLong("lastContractCheckTime");
     }
 
-    public int getInTransitResourceCount(String resourceId) {
+    public long getInTransitResourceCount(String resourceId) {
         // Need to find the server level to get the board
         net.minecraft.server.level.ServerLevel level = null;
         for (com.quackers29.businesscraft.town.TownManager manager : com.quackers29.businesscraft.town.TownManager
@@ -558,7 +558,7 @@ public class TownContractComponent implements TownComponent {
                         resourceId.equals(sc.getResourceId()) &&
                         !sc.isExpired() &&
                         !sc.isDelivered()) // isDelivered check covers "fully delivered"
-                .mapToInt(c -> ((SellContract) c).getQuantity() - ((SellContract) c).getDeliveredAmount())
+                .mapToLong(c -> ((SellContract) c).getQuantity() - ((SellContract) c).getDeliveredAmount())
                 .sum();
     }
 }

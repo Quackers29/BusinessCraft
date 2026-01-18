@@ -13,7 +13,7 @@ public class ContractSummaryViewModel {
     private final UUID contractId;
     private final String contractType; // "sell", "courier"
     private final String resourceId;
-    private final int quantity;
+    private final long quantity;
     private final UUID issuerTownId;
     private final String issuerTownName;
     
@@ -33,7 +33,7 @@ public class ContractSummaryViewModel {
             UUID contractId,
             String contractType,
             String resourceId,
-            int quantity,
+            long quantity,
             UUID issuerTownId,
             String issuerTownName,
             String timeRemainingDisplay,
@@ -67,7 +67,7 @@ public class ContractSummaryViewModel {
         this.contractId = buf.readUUID();
         this.contractType = buf.readUtf();
         this.resourceId = buf.readUtf();
-        this.quantity = buf.readInt();
+        this.quantity = buf.readLong();
         this.issuerTownId = buf.readUUID();
         this.issuerTownName = buf.readUtf();
         this.timeRemainingDisplay = buf.readUtf();
@@ -87,7 +87,7 @@ public class ContractSummaryViewModel {
         buf.writeUUID(contractId);
         buf.writeUtf(contractType);
         buf.writeUtf(resourceId);
-        buf.writeInt(quantity);
+        buf.writeLong(quantity);
         buf.writeUUID(issuerTownId);
         buf.writeUtf(issuerTownName);
         buf.writeUtf(timeRemainingDisplay);
@@ -104,7 +104,7 @@ public class ContractSummaryViewModel {
     public UUID getContractId() { return contractId; }
     public String getContractType() { return contractType; }
     public String getResourceId() { return resourceId; }
-    public int getQuantity() { return quantity; }
+    public long getQuantity() { return quantity; }
     public UUID getIssuerTownId() { return issuerTownId; }
     public String getIssuerTownName() { return issuerTownName; }
     public String getTimeRemainingDisplay() { return timeRemainingDisplay; }

@@ -216,7 +216,6 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                 // Update town if we found a valid biome
                 if (!"Unknown".equals(biome)) {
                     town.setBiome(biome);
-                    LOGGER.info("Updated town {} biome to {}", town.getName(), biome);
                 }
             }
 
@@ -285,7 +284,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
 
         // SERVER SIDE: Direct access
         if (town != null) {
-            return town.getPopulation();
+            return (int) town.getPopulation();
         }
 
         return 0;
@@ -319,7 +318,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
 
         // SERVER SIDE
         if (town != null) {
-            return town.getTouristCount();
+            return (int) town.getTouristCount();
         }
 
         return 0;
@@ -338,7 +337,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
 
         // If data isn't available yet or we're on server side
         if (town != null) {
-            return town.getMaxTourists();
+            return (int) town.getMaxTourists();
         }
 
         // Try to get max tourists from town entity
@@ -349,7 +348,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                 if (entityTownId != null && level instanceof ServerLevel serverLevel) {
                     Town townFromEntity = TownManager.get(serverLevel).getTown(entityTownId);
                     if (townFromEntity != null) {
-                        return townFromEntity.getMaxTourists();
+                        return (int) townFromEntity.getMaxTourists();
                     }
                 }
             }
@@ -519,7 +518,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      * 
      * @return A map of items to their quantities.
      */
-    public Map<Item, Integer> getAllResources() {
+    public Map<Item, Long> getAllResources() {
         if (town != null) {
             return town.getAllResources();
         }
@@ -549,7 +548,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      * 
      * @return Map of items and their quantities in communal storage
      */
-    public Map<Item, Integer> getAllCommunalStorageItems() {
+    public Map<Item, Long> getAllCommunalStorageItems() {
         if (town != null) {
             return town.getAllCommunalStorageItems();
         }
@@ -601,7 +600,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
 
         // SERVER SIDE
         if (town != null)
-            return town.getWorkUnits();
+            return (int) town.getWorkUnits();
 
         return workUnits;
     }
@@ -628,7 +627,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
 
         // SERVER SIDE
         if (town != null)
-            return town.getWorkUnitCap();
+            return (int) town.getWorkUnitCap();
 
         return workUnitCap;
     }

@@ -52,12 +52,11 @@ public class TownService {
 
             // Apply initial configuration
             if (request.getInitialResources() != null) {
-                for (Map.Entry<Item, Integer> entry : request.getInitialResources().entrySet()) {
+                for (Map.Entry<Item, Long> entry : request.getInitialResources().entrySet()) {
                     town.addResource(entry.getKey(), entry.getValue());
                 }
             }
 
-            LOGGER.info("Successfully created town: {} at {}", request.getName(), request.getPosition());
             return Result.success(town);
 
         } catch (Exception e) {
@@ -77,7 +76,7 @@ public class TownService {
     public Result<Boolean, BCError.TownError> canSpawnTourists(Town town) {
         try {
             boolean enabled = town.isTouristSpawningEnabled();
-            int population = town.getPopulation();
+            int population = (int) town.getPopulation();
             int minRequired = ConfigLoader.minPopForTourists;
 
             boolean canSpawn = enabled && population >= minRequired;
@@ -157,7 +156,7 @@ public class TownService {
                 return Result.failure(maxTouristsResult.getError());
             }
 
-            int currentTourists = town.getTouristCount();
+            int currentTourists = (int) town.getTouristCount();
             int maxTourists = maxTouristsResult.getValue();
 
             if (currentTourists >= maxTourists) {
@@ -188,7 +187,7 @@ public class TownService {
      */
     public Result<Void, BCError.TownError> removeTourist(Town town) {
         try {
-            int currentTourists = town.getTouristCount();
+            int currentTourists = (int) town.getTouristCount();
 
             if (currentTourists <= 0) {
                 return Result.failure(new BCError.TownError("NO_TOURISTS",
@@ -315,7 +314,6 @@ public class TownService {
                 town.setSearchRadius(settings.getSearchRadius());
             }
 
-            LOGGER.info("Updated settings for town {}", town.getId());
             return Result.success(null);
 
         } catch (Exception e) {
@@ -330,7 +328,7 @@ public class TownService {
     public static class CreateTownRequest {
         private final String name;
         private final BlockPos position;
-        private Map<Item, Integer> initialResources;
+        private Map<Item, Long> initialResources;
 
         public CreateTownRequest(String name, BlockPos position) {
             this.name = name;
@@ -346,11 +344,11 @@ public class TownService {
             return position;
         }
 
-        public Map<Item, Integer> getInitialResources() {
+        public Map<Item, Long> getInitialResources() {
             return initialResources;
         }
 
-        public void setInitialResources(Map<Item, Integer> initialResources) {
+        public void setInitialResources(Map<Item, Long> initialResources) {
             this.initialResources = initialResources;
         }
     }

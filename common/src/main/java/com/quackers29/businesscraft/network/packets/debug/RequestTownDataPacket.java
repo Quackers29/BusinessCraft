@@ -54,7 +54,7 @@ public class RequestTownDataPacket {
                             town.getId().toString(),
                             town.getName(),
                             town.getPosition().toShortString(),
-                            town.getPopulation(),
+                            (int) town.getPopulation(),
                             town.isTouristSpawningEnabled(),
                             town.canSpawnTourists(),
                             town.getPathStart() != null ? town.getPathStart().toShortString() : null,

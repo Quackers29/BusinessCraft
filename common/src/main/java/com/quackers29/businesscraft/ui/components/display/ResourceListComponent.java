@@ -22,14 +22,14 @@ public class ResourceListComponent extends BCScrollableListComponent<ResourceLis
     private static final Logger LOGGER = LoggerFactory.getLogger(ResourceListComponent.class);
     private static final int ITEM_HEIGHT = 16;
     
-    private final Supplier<Map<Item, Integer>> resourcesSupplier;
+    private final Supplier<Map<Item, Long>> resourcesSupplier;
     private final boolean showItemGraphics;
 
-    public ResourceListComponent(Supplier<Map<Item, Integer>> resourcesSupplier, int width) {
+    public ResourceListComponent(Supplier<Map<Item, Long>> resourcesSupplier, int width) {
         this(resourcesSupplier, width, true);
     }
-    
-    public ResourceListComponent(Supplier<Map<Item, Integer>> resourcesSupplier, int width, boolean showItemGraphics) {
+
+    public ResourceListComponent(Supplier<Map<Item, Long>> resourcesSupplier, int width, boolean showItemGraphics) {
         super(width, 
               ITEM_HEIGHT * 8 + 25, // Display area height (8 items plus title)
               ITEM_HEIGHT, 
@@ -131,14 +131,14 @@ public class ResourceListComponent extends BCScrollableListComponent<ResourceLis
     
     private void updateResourceList() {
         // Get the current resources
-        Map<Item, Integer> resources = resourcesSupplier.get();
+        Map<Item, Long> resources = resourcesSupplier.get();
         
         // Create a new list
         List<ResourceEntry> newList = new ArrayList<>();
         
         // Add all resources to the list
         resources.forEach((item, count) -> {
-            newList.add(new ResourceEntry(item, count));
+            newList.add(new ResourceEntry(item, count.intValue()));
         });
         
         // Sort the list by quantity (highest first)

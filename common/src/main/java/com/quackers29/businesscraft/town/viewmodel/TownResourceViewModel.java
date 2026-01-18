@@ -149,17 +149,17 @@ public class TownResourceViewModel {
     private final String economicTrend; // "Growing", "Stable", "Declining"
 
     // Overview stats (FIX: Synced with view-model to avoid ContainerData issues)
-    private final int population; // Current population count
-    private final int touristCount; // Current tourist count
-    private final int maxTourists; // Maximum tourists allowed
+    private final long population; // Current population count
+    private final long touristCount; // Current tourist count
+    private final long maxTourists; // Maximum tourists allowed
 
     public TownResourceViewModel(Map<Item, ResourceDisplayInfo> resourceDisplayData,
             String totalResourcesDisplay,
             String overallStatus,
             String economicTrend,
-            int population,
-            int touristCount,
-            int maxTourists) {
+            long population,
+            long touristCount,
+            long maxTourists) {
         this.resourceDisplayData = new HashMap<>(resourceDisplayData);
         this.totalResourcesDisplay = totalResourcesDisplay;
         this.overallStatus = overallStatus;
@@ -189,9 +189,9 @@ public class TownResourceViewModel {
         this.economicTrend = buf.readUtf();
 
         // Read overview stats
-        this.population = buf.readInt();
-        this.touristCount = buf.readInt();
-        this.maxTourists = buf.readInt();
+        this.population = buf.readLong();
+        this.touristCount = buf.readLong();
+        this.maxTourists = buf.readLong();
     }
 
     public void toBytes(FriendlyByteBuf buf) {
@@ -210,9 +210,9 @@ public class TownResourceViewModel {
         buf.writeUtf(economicTrend);
 
         // Write overview stats
-        buf.writeInt(population);
-        buf.writeInt(touristCount);
-        buf.writeInt(maxTourists);
+        buf.writeLong(population);
+        buf.writeLong(touristCount);
+        buf.writeLong(maxTourists);
     }
 
     // Client-side getters (NO CALCULATIONS)
@@ -245,15 +245,15 @@ public class TownResourceViewModel {
     }
 
     // Overview stats getters (FIX: No more ContainerData issues)
-    public int getPopulation() {
+    public long getPopulation() {
         return population;
     }
 
-    public int getTouristCount() {
+    public long getTouristCount() {
         return touristCount;
     }
 
-    public int getMaxTourists() {
+    public long getMaxTourists() {
         return maxTourists;
     }
 

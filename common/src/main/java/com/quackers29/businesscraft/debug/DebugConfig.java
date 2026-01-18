@@ -59,7 +59,7 @@ public class DebugConfig {
     // Storage Systems
     public static final boolean STORAGE_OPERATIONS = false;
     public static final boolean TRADE_OPERATIONS = false;
-    public static final boolean SMART_GPI_DEBUG = true;
+    public static final boolean SMART_GPI_DEBUG = false;
 
     // Configuration and Initialization
     public static final boolean CONFIG_SYSTEM = false;

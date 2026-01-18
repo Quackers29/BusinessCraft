@@ -151,17 +151,17 @@ public class BCModalGridExample {
      */
     public static void showItemInventory(Screen parentScreen) {
         // Create a map of items and quantities
-        Map<Item, Integer> inventory = new HashMap<>();
-        inventory.put(Items.DIAMOND, 12);
-        inventory.put(Items.EMERALD, 8);
-        inventory.put(Items.GOLD_INGOT, 24);
-        inventory.put(Items.IRON_INGOT, 42);
-        inventory.put(Items.COAL, 64);
-        inventory.put(Items.OAK_LOG, 32);
-        inventory.put(Items.STONE, 128);
+        Map<Item, Long> inventory = new HashMap<>();
+        inventory.put(Items.DIAMOND, 12L);
+        inventory.put(Items.EMERALD, 8L);
+        inventory.put(Items.GOLD_INGOT, 24L);
+        inventory.put(Items.IRON_INGOT, 42L);
+        inventory.put(Items.COAL, 64L);
+        inventory.put(Items.OAK_LOG, 32L);
+        inventory.put(Items.STONE, 128L);
         
         // Use the factory method for resources
-        BCModalGridScreen<Map.Entry<Item, Integer>> screen = BCModalGridFactory.createResourceListScreen(
+        BCModalGridScreen<Map.Entry<Item, Long>> screen = BCModalGridFactory.createResourceListScreen(
             Component.literal("Town Resources"),
             parentScreen,
             inventory,

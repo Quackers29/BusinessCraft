@@ -70,8 +70,8 @@ public class RequestTownMapDataPacket {
                         town.getId(),
                         town.getName(),
                         town.getPosition(),
-                        town.getPopulation(),
-                        town.getTouristCount()
+                        (int) town.getPopulation(),
+                        (int) town.getTouristCount()
                     );
                 }
 

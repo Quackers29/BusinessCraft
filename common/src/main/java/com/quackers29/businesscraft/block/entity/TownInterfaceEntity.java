@@ -597,7 +597,7 @@ public class TownInterfaceEntity extends BlockEntity
     private int getPopulationFromTown() {
         if (townId != null && level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
-            return town != null ? town.getPopulation() : 0;
+            return town != null ? (int) town.getPopulation() : 0;
         }
         return 0;
     }
@@ -621,7 +621,7 @@ public class TownInterfaceEntity extends BlockEntity
     private int getTouristCountFromTown() {
         if (townId != null && level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
-            return town != null ? town.getTouristCount() : 0;
+            return town != null ? (int) town.getTouristCount() : 0;
         }
         return 0;
     }
@@ -629,7 +629,7 @@ public class TownInterfaceEntity extends BlockEntity
     private int getMaxTouristsFromTown() {
         if (townId != null && level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
-            return town != null ? town.getMaxTourists() : 0;
+            return town != null ? (int) town.getMaxTourists() : 0;
         }
         return 0;
     }
@@ -1537,7 +1537,7 @@ public class TownInterfaceEntity extends BlockEntity
                             if (townId.equals(destTownId)) {
                                 // Process 1 item per tick
                                 stack.shrink(1);
-                                ContractBoard.get(sLevel).processCourierDelivery(contractId, 1);
+                                ContractBoard.get(sLevel).processCourierDelivery(contractId, 1L);
                                 setChanged();
                                 level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(),
                                         Block.UPDATE_ALL);
@@ -1579,7 +1579,7 @@ public class TownInterfaceEntity extends BlockEntity
      * 
      * @return Map of resources
      */
-    public Map<Item, Integer> getClientResources() {
+    public Map<Item, Long> getClientResources() {
         return clientSyncHelper.getClientResources();
     }
 
@@ -1588,7 +1588,7 @@ public class TownInterfaceEntity extends BlockEntity
      * 
      * @return Map of communal storage items
      */
-    public Map<Item, Integer> getClientCommunalStorage() {
+    public Map<Item, Long> getClientCommunalStorage() {
         return clientSyncHelper.getClientCommunalStorage();
     }
 
@@ -1598,7 +1598,7 @@ public class TownInterfaceEntity extends BlockEntity
      * @param playerId UUID of the player
      * @return Map of personal storage items for that player
      */
-    public Map<Item, Integer> getClientPersonalStorage(UUID playerId) {
+    public Map<Item, Long> getClientPersonalStorage(UUID playerId) {
         return clientSyncHelper.getClientPersonalStorage(playerId);
     }
 
@@ -1608,7 +1608,7 @@ public class TownInterfaceEntity extends BlockEntity
      * @param playerId UUID of the player
      * @param items    Map of items in the player's personal storage
      */
-    public void updateClientPersonalStorage(UUID playerId, Map<Item, Integer> items) {
+    public void updateClientPersonalStorage(UUID playerId, Map<Item, Long> items) {
         clientSyncHelper.updateClientPersonalStorage(playerId, items);
     }
 

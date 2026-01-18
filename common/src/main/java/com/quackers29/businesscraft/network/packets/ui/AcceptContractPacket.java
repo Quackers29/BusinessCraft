@@ -53,7 +53,6 @@ public class AcceptContractPacket {
                     if (courierContract.getCourierId() == null) {
                         courierContract.setCourierId(player.getUUID());
                         board.updateContract(courierContract);
-                        LOGGER.info("Player {} accepted contract {}", player.getName().getString(), contractId);
 
                         // Sync back to client so UI updates
                         PlatformAccess.getNetworkMessages().sendToPlayer(

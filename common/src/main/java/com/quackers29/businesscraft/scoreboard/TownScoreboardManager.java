@@ -35,7 +35,7 @@ public class TownScoreboardManager {
         TownManager.get(level).getAllTowns().forEach((id, town) -> {
             String status = town.canSpawnTourists() ? ":ON" : ":OFF";
             String displayName = town.getName() + status + " [" + town.getTotalVisitors() + "]";
-            scoreboard.getOrCreatePlayerScore(displayName, finalObjective).setScore(town.getPopulation());
+            scoreboard.getOrCreatePlayerScore(displayName, finalObjective).setScore((int) town.getPopulation());
         });
     }
 } 
