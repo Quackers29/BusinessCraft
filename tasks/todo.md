@@ -358,6 +358,7 @@ Net change: **+3 packets** (replaces 1, adds 4) but significantly better archite
 - **✅ COMPLETED**: Economy Stabilization - Trades-Only + Need-Based Bidding (Phase 6) 💰
 - **🧪 PENDING**: Verification & Testing (Phase 7)
 - **✅ COMPLETED**: Resource Storage int→long Migration (Phase 8) - Updated all contracts, storage, and view-models to use long for quantities
+- **📋 PLANNED**: Configuration File Modernization (Phase 9) - Migrate from .properties to TOML format
 - **📊 Overall**: ~98% compliant with target architecture
 
 ### **Development Guidelines**
@@ -467,5 +468,204 @@ Already have `formatAmount()` in view-model builders that handles large numbers:
 - **Medium Risk**: NBT format change requires migration
 - **Low Risk**: Network packets - both sides update together
 - **No Risk**: ItemStack.getCount() stays as int (MC API)
+
+---
+
+## 🔧 **PHASE 9: CONFIGURATION FILE MODERNIZATION**
+
+**Problem:** Current `businesscraft.properties` uses Java Properties format which is non-standard for Minecraft mods.
+**Goal:** Migrate to TOML format with proper sectioning and comments using NightConfig.
+**Note:** CSV data files (items.csv, productions.csv, etc.) stay as-is for Excel compatibility.
+
+### **9.1 Current State**
+
+| File | Format | Status |
+|------|--------|--------|
+| `businesscraft.properties` | Java Properties | Replace with TOML |
+| `ConfigLoader.java` | Manual parsing | Update to use NightConfig |
+| `ConfigurationService.java` | File watcher | Keep for hot-reload |
+| `*.csv` files | CSV | Keep as-is |
+
+### **9.2 Dependencies**
+
+| Library | Status | Notes |
+|---------|--------|-------|
+| `NightConfig` | **Bundled with Forge** | Same library Forge uses internally |
+| `toml4j` | Remove from build.gradle | Replaced by NightConfig |
+
+**Forge:** NightConfig is already bundled - no dependency needed.
+**Fabric:** Add `com.electronwill.night-config:toml:3.8.1` to fabric/build.gradle.
+
+Source: [NightConfig GitHub](https://github.com/TheElectronWill/night-config)
+
+### **9.3 Proposed TOML Structure**
+
+```toml
+# BusinessCraft Configuration
+
+[general]
+    # Minimum distance between towns in blocks
+    minDistanceBetweenTowns = 100
+    # Default starting population for new towns
+    defaultStartingPopulation = 5
+    # List of random town names
+    townNames = ["Riverside", "Hillcrest", "Meadowbrook", "Oakville"]
+
+[vehicles]
+    # Enable Create mod train integration
+    enableCreateTrains = true
+    # Enable minecart detection for tourists
+    enableMinecarts = true
+    # Search radius for vehicle detection (blocks)
+    vehicleSearchRadius = 3
+    # Minecart stop velocity threshold
+    minecartStopThreshold = 0.001
+
+[tourists]
+    # Minimum population required to spawn tourists
+    minPopForTourists = 5
+    # Maximum tourists per town
+    maxTouristsPerTown = 1000
+    # Population required per tourist slot
+    populationPerTourist = 5
+    # Maximum population-based tourists
+    maxPopBasedTourists = 20
+    # Tourist expiry time in minutes (0 = never expire)
+    touristExpiryMinutes = 120.0
+    # Enable tourist expiry system
+    enableTouristExpiry = true
+    # Notify origin town when tourist departs
+    notifyOnTouristDeparture = true
+
+[economy]
+    # Meters of travel per emerald earned
+    metersPerEmerald = 50
+    # Currency item for trading
+    currencyItem = "minecraft:emerald"
+
+[milestones]
+    # Enable distance milestone rewards
+    enabled = true
+
+    # Milestone rewards - distance in meters, items as "modid:item:count"
+    [[milestones.rewards]]
+        distance = 10
+        items = ["minecraft:bread:1", "minecraft:experience_bottle:2"]
+
+[contracts]
+    # Auction duration in minutes
+    auctionDurationMinutes = 1.0
+    # Courier acceptance window in minutes
+    courierAcceptanceMinutes = 2.0
+    # Courier delivery time per meter (minutes)
+    courierDeliveryMinutesPerMeter = 0.05
+    # Snail mail delivery time per meter (minutes)
+    snailMailDeliveryMinutesPerMeter = 0.1
+
+[production]
+    # Enable automatic production system
+    enabled = true
+    # Ticks between production cycles
+    tickInterval = 100
+    # Daily tick interval for consumption
+    dailyTickInterval = 24000
+    # Minimum stock percentage before buying
+    minStockPercent = 60
+    # Excess stock percentage for selling
+    excessStockPercent = 80
+
+[trading]
+    # Enable trading system
+    enabled = true
+    # Ticks between trading cycles
+    tickInterval = 60
+    # Restock rate multiplier
+    restockRate = 0.5
+    # Default max stock for items
+    defaultMaxStock = 1000.0
+
+[display]
+    # Timezone for time display (UTC, SYSTEM, or timezone ID like America/New_York)
+    timezone = "UTC"
+
+[player]
+    # Enable player tracking system
+    playerTracking = true
+    # Show town boundary entry/exit messages
+    townBoundaryMessages = true
+```
+
+### **9.4 Implementation Plan**
+
+- [ ] **Step 1: Update build.gradle**
+  - Remove toml4j from common/build.gradle
+  - Add NightConfig to fabric/build.gradle (Forge has it bundled)
+
+- [ ] **Step 2: Update ConfigLoader.java**
+  - Replace `Properties` with NightConfig `CommentedFileConfig`
+  - Use `config.get("section.key")` for reading
+  - Use `config.set("section.key", value)` for writing
+  - Keep static field pattern for easy access
+
+- [ ] **Step 3: Create default businesscraft.toml**
+  - Include comments explaining each option
+  - Ship as resource in assets, copy to config dir if missing
+
+- [ ] **Step 4: Delete old .properties handling**
+  - No migration needed - clean break
+  - Remove old `businesscraft.properties` files
+
+- [ ] **Step 5: Keep hot-reload**
+  - ConfigurationService already watches files
+  - Just update the reload callback
+
+### **9.5 Files to Modify**
+
+| File | Action |
+|------|--------|
+| `common/build.gradle` | Remove toml4j dependency |
+| `fabric/build.gradle` | Add NightConfig dependency |
+| `ConfigLoader.java` | Replace Properties → NightConfig |
+| `businesscraft.toml` | NEW - Default config with comments |
+| `businesscraft.properties` | DELETE |
+
+### **9.6 NightConfig Usage Example**
+
+```java
+import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+
+// Loading with comments preserved
+CommentedFileConfig config = CommentedFileConfig.builder(configFile)
+    .defaultResource("/assets/businesscraft/config/businesscraft.toml")
+    .autosave()
+    .build();
+config.load();
+
+// Reading values
+enableCreateTrains = config.getOrElse("vehicles.enableCreateTrains", true);
+maxTouristsPerTown = config.<Integer>getOrElse("tourists.maxTouristsPerTown", 1000);
+townNames = config.getOrElse("general.townNames", List.of("Riverside", "Hillcrest"));
+
+// Writing values
+config.set("vehicles.enableCreateTrains", enableCreateTrains);
+config.setComment("vehicles.enableCreateTrains", "Enable Create mod train integration");
+
+// Save happens automatically with autosave(), or call:
+config.save();
+config.close();
+```
+
+### **9.7 Summary**
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| **Format** | `.properties` (flat) | `.toml` (sectioned) |
+| **Library** | Java Properties | NightConfig (bundled with Forge) |
+| **New Dependencies** | - | Fabric only: night-config:toml |
+| **Sections** | None | Yes |
+| **Comments** | Lost on save | Preserved |
+| **Hot Reload** | ✅ | ✅ |
+| **Default Resource** | Manual copy | Built-in support |
+| **Autosave** | Manual | Built-in support |
 
 ---
