@@ -114,15 +114,60 @@ public class TownContractComponent implements TownComponent {
                             .get(level).getTown(sc.getIssuerTownId());
                     int courierCost = ContractBoard.calculateCourierCost(town, sellerTown);
 
-                    // Calculate bid - minimum 1 emerald (can't pay fractions)
-                    float bid = (float) Math.ceil((currentHighest > 0 ? currentHighest : basePrice) * 1.1f);
-                    if (bid < 1.0f) {
-                        bid = 1.0f; // Floor: minimum bid is 1 emerald
+                    // NEED-BASED BID MODIFIER: Calculate current need level
+                    String resourceId = sc.getResourceId();
+                    com.quackers29.businesscraft.economy.ResourceType resourceType =
+                            com.quackers29.businesscraft.economy.ResourceRegistry.get(resourceId);
+
+                    float needRatio = 1.0f; // Default to desperate if can't determine
+                    boolean isWanted = false;
+
+                    if (resourceType != null) {
+                        net.minecraft.resources.ResourceLocation itemLoc = resourceType.getCanonicalItemId();
+                        Object itemObj = com.quackers29.businesscraft.api.PlatformAccess.getRegistry().getItem(itemLoc);
+
+                        if (itemObj instanceof Item item) {
+                            int currentCount = town.getResourceCount(item);
+                            float cap = town.getTrading().getStorageCap(resourceId);
+                            float needThreshold = cap * (com.quackers29.businesscraft.config.ConfigLoader.minStockPercent / 100.0f);
+
+                            needRatio = needThreshold > 0 ? (needThreshold - currentCount) / needThreshold : 1.0f;
+                            needRatio = Math.max(0f, Math.min(1f, needRatio));
+
+                            isWanted = town.getWantedResources().containsKey(item);
+                            if (isWanted) {
+                                needRatio = 1.0f; // Treat wanted items as desperate
+                            }
+                        }
                     }
 
-                    // Check max bid limit (Total budget = 3x base price)
+                    // Bid modifier: 0.80 (reluctant) to 1.20 (desperate)
+                    float bidModifier = 0.80f + (needRatio * 0.40f);
+
+                    // Add randomness ±5%
+                    float randomness = (float)(Math.random() * 0.10f) - 0.05f;
+                    bidModifier += randomness;
+
+                    // Calculate bid - if there's a current highest, we must beat it
+                    float bid;
+                    if (currentHighest > 0) {
+                        // Must beat current bid by at least 1 emerald (or 10%, whichever is higher)
+                        float minIncrement = Math.max(1.0f, currentHighest * 0.10f);
+                        bid = (float) Math.ceil(currentHighest + minIncrement);
+                    } else {
+                        // First bid: use need-based modifier on base price
+                        bid = (float) Math.ceil(basePrice * bidModifier);
+                    }
+
+                    // Floor: minimum bid is 1 emerald
+                    if (bid < 1.0f) {
+                        bid = 1.0f;
+                    }
+
+                    // Check max bid limit (Total budget = 3x base price normally, 5x if wanted)
                     // For very cheap items, ensure budget is at least (1 emerald + courier cost)
-                    float calculatedBudget = basePrice * MAX_BID_MULTIPLIER;
+                    float multiplier = isWanted ? 5.0f : MAX_BID_MULTIPLIER;
+                    float calculatedBudget = basePrice * multiplier;
                     float minBudget = 1.0f + courierCost;
                     float maxTotalBudget = Math.max(calculatedBudget, minBudget);
                     float maxBid = maxTotalBudget - courierCost;
@@ -242,10 +287,39 @@ public class TownContractComponent implements TownComponent {
                             .get(level).getTown(sc.getIssuerTownId());
                     int courierCost = ContractBoard.calculateCourierCost(town, sellerTown);
 
-                    // Calculate bid - minimum 1 emerald (can't pay fractions)
-                    float projectedBid = (float) Math.ceil((currentHighest > 0 ? currentHighest : basePrice) * 1.1f);
+                    // NEED-BASED BID MODIFIER: Mirrors seller's excess-based pricing
+                    // - Desperate (empty stock, needRatio=1): bid at GPI * 1.20
+                    // - Reluctant (at threshold, needRatio=0): bid at GPI * 0.80
+                    // This enables natural price discovery through trades
+                    float needRatio = needThreshold > 0 ? (needThreshold - currentCount) / needThreshold : 1.0f;
+                    needRatio = Math.max(0f, Math.min(1f, needRatio)); // Clamp 0-1
+
+                    // If wanted for upgrade, treat as desperate (high modifier)
+                    if (isWanted) {
+                        needRatio = 1.0f;
+                    }
+
+                    // Bid modifier: 0.80 (reluctant) to 1.20 (desperate)
+                    float bidModifier = 0.80f + (needRatio * 0.40f);
+
+                    // Add randomness ±5%
+                    float randomness = (float)(Math.random() * 0.10f) - 0.05f;
+                    bidModifier += randomness;
+
+                    // Calculate bid - if there's a current highest, we must beat it
+                    float projectedBid;
+                    if (currentHighest > 0) {
+                        // Must beat current bid by at least 1 emerald (or 10%, whichever is higher)
+                        float minIncrement = Math.max(1.0f, currentHighest * 0.10f);
+                        projectedBid = (float) Math.ceil(currentHighest + minIncrement);
+                    } else {
+                        // First bid: use need-based modifier on base price
+                        projectedBid = (float) Math.ceil(basePrice * bidModifier);
+                    }
+
+                    // Floor: minimum bid is 1 emerald
                     if (projectedBid < 1.0f) {
-                        projectedBid = 1.0f; // Floor: minimum bid is 1 emerald
+                        projectedBid = 1.0f;
                     }
 
                     // Check max bid limit (Total budget = 3x base price normally, 5x if wanted)

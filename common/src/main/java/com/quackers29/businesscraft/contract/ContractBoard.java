@@ -402,21 +402,13 @@ public class ContractBoard {
                                 sellerTown.addResource(item, sc.getQuantity());
                                 sellerTown.removeEscrowResource(item, sc.getQuantity());
 
-                                // UPDATE MARKET PRICE via Implied Value (Failed Auction = Price Too High)
-                                float currentGPI = getMarketPrice(sc.getResourceId());
-                                float listingPrice = sc.getPricePerUnit();
-
-                                // Prevent upward drift: Implied value cannot be higher than current GPI or
-                                // listing price
-                                float baseline = Math.min(currentGPI, listingPrice);
-                                float impliedValue = baseline * 0.8f;
-
-                                updateMarketPrice(sc.getResourceId(), (float) sc.getQuantity(), impliedValue);
-
+                                // TRADES-ONLY PRICE DISCOVERY: Failed auctions do NOT affect GPI
+                                // Rationale: "No bids" could mean price too high, OR no demand exists,
+                                // OR all buyers at capacity. We can't distinguish, so we extract no signal.
+                                // Prices only change from actual completed trades.
                                 LOGGER.info(
-                                        "Refunded {} {} to town {} (auction {} had no bids). Lowered GPI (Implied: {}, Base: {}, List: {}).",
-                                        sc.getQuantity(), sc.getResourceId(), sellerTown.getName(), sc.getId(),
-                                        impliedValue, baseline, listingPrice);
+                                        "Refunded {} {} to town {} (auction {} had no bids). GPI unchanged (trades-only discovery).",
+                                        sc.getQuantity(), sc.getResourceId(), sellerTown.getName(), sc.getId());
                             }
                         }
                         // DELETE contract instead of moving to history

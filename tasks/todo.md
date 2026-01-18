@@ -529,9 +529,9 @@ if (listingPrice > currentGPI * 1.1f) {
 | Identify root cause | ✅ Complete | All buyers at max capacity → no bids → price drops → spiral |
 | Temporary fix: MIN_PRICE floor | ✅ Complete | Added 0.001 floor in GlobalMarket.java |
 | Temporary fix: 1 emerald bid floor | ✅ Complete | Added in TownContractComponent.java |
-| Choose permanent fix option | ⏳ Pending | **Option 7 recommended** (see 6.9) |
-| Implement chosen fix | ⏳ Pending | |
-| Test economy stability | ⏳ Pending | |
+| Choose permanent fix option | ✅ Complete | **Option 7 selected** - Trades-Only + Need-Based Bidding |
+| Implement chosen fix | ✅ Complete | Removed failed auction drop, added need-based bid modifier |
+| Test economy stability | ⏳ Pending | Manual testing needed |
 | Choose history display option | ✅ Complete | **Option F selected** - Recent focus with expand |
 | Implement Option F history display | ⏳ Pending | See 6.8.1-6.8.5 plan above |
 
@@ -599,10 +599,10 @@ bidPrice = Math.max(1.0f, (float)Math.ceil(bidPrice)); // Min 1 emerald
 
 **Implementation Tasks:**
 
-- [ ] **6.9.1** Remove failed auction price drop in `ContractBoard.java:405-419`
-- [ ] **6.9.2** Add need-based bid modifier in `TownContractComponent.scanForBids()` and `processPendingBids()`
-- [ ] **6.9.3** Keep 1 emerald minimum bid floor (already exists)
-- [ ] **6.9.4** Keep MIN_PRICE floor in GlobalMarket (0.001) as safety net
+- [x] **6.9.1** Remove failed auction price drop in `ContractBoard.java:405-419` ✅ DONE
+- [x] **6.9.2** Add need-based bid modifier in `TownContractComponent.scanForBids()` and `processPendingBids()` ✅ DONE
+- [x] **6.9.3** Keep 1 emerald minimum bid floor (already exists) ✅ CONFIRMED
+- [x] **6.9.4** Keep MIN_PRICE floor in GlobalMarket (0.001) as safety net ✅ CONFIRMED
 - [ ] **6.9.5** Test: Verify prices go down when supply > demand
 - [ ] **6.9.6** Test: Verify prices go up when demand > supply
 - [ ] **6.9.7** Test: Verify prices stabilize when balanced
@@ -687,7 +687,7 @@ bidPrice = Math.max(1.0f, (float)Math.ceil(bidPrice)); // Min 1 emerald
 - **⚠️ REMAINING**: Optional enhancement phase (3.3)
 - **🕐 PENDING**: Time handling & Contract Board view-model (Phase 4)
 - **🕐 PENDING**: Contract Board View-Model Compliance (Phase 5) - In Progress
-- **💰 PENDING**: Economy Stabilization - Failed Auction Price Crash Fix (Phase 6)
+- **✅ COMPLETED**: Economy Stabilization - Trades-Only + Need-Based Bidding (Phase 6.9) 💰
 - **🧪 PENDING**: Verification & Testing (Phase 7)
 - **📊 Overall**: ~95% compliant with target architecture (Contract Board is ~40%)
 
