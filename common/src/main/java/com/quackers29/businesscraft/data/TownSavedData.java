@@ -28,9 +28,6 @@ public class TownSavedData extends SavedData {
         });
         tag.put("towns", townsTag);
 
-        // Save Global Market data
-        com.quackers29.businesscraft.economy.GlobalMarket.get().save(tag);
-
         return tag;
     }
 
@@ -43,15 +40,9 @@ public class TownSavedData extends SavedData {
                 towns.put(id, Town.load(townsTag.getCompound(key)));
             });
         }
-
-        // Load Global Market data
-        com.quackers29.businesscraft.economy.GlobalMarket.get().load(tag);
     }
 
     public static TownSavedData create() {
-        // Reset GlobalMarket when creating new world data to prevent
-        // prices from persisting across worlds
-        com.quackers29.businesscraft.economy.GlobalMarket.get().reset();
         return new TownSavedData();
     }
 

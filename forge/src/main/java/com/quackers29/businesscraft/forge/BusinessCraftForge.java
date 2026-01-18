@@ -147,6 +147,7 @@ public class BusinessCraftForge {
         // Initialize server-side event handlers
         com.quackers29.businesscraft.event.PlayerBoundaryTracker.initialize();
         com.quackers29.businesscraft.event.PlatformPathHandler.initialize();
+        com.quackers29.businesscraft.event.TownEventHandler.initialize();
 
         LOGGER.info("BusinessCraft Forge common setup complete.");
     }

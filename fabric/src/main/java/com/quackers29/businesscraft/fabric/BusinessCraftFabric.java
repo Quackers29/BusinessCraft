@@ -137,6 +137,7 @@ public class BusinessCraftFabric implements ModInitializer {
         // Initialize common event handlers
         com.quackers29.businesscraft.event.PlayerBoundaryTracker.initialize();
         com.quackers29.businesscraft.event.PlatformPathHandler.initialize();
+        com.quackers29.businesscraft.event.TownEventHandler.initialize();
 
         // Load registries
         com.quackers29.businesscraft.economy.ResourceRegistry.load();

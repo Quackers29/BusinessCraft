@@ -52,6 +52,16 @@ public class TownManager {
     }
 
     public static TownManager get(ServerLevel level) {
+        // Ensure Global Market persistence is properly initialized from Overworld data
+        // independently of which dimension we are currently accessing
+        // This prevents the "reset" bug where accessing from another dimension without
+        // loading overworld data first would wipe the global market
+        ServerLevel overworld = level.getServer().overworld();
+        if (overworld != null) {
+            overworld.getDataStorage().computeIfAbsent(com.quackers29.businesscraft.economy.MarketSavedData::load,
+                    com.quackers29.businesscraft.economy.MarketSavedData::create,
+                    com.quackers29.businesscraft.economy.MarketSavedData.NAME);
+        }
         return INSTANCES.computeIfAbsent(level, key -> new TownManager(level));
     }
 

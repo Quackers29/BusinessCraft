@@ -15,6 +15,13 @@ import org.slf4j.LoggerFactory;
  * Common event handler for town-related logic.
  * Centralizes logic that was previously duplicated across platforms.
  */
+import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.town.viewmodel.MarketViewModel;
+import com.quackers29.businesscraft.town.viewmodel.MarketViewModelBuilder;
+import com.quackers29.businesscraft.network.packets.MarketViewModelSyncPacket;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+
 public class TownEventHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownEventHandler.class);
 
@@ -22,6 +29,21 @@ public class TownEventHandler {
     private static BlockPos activeTownBlockPos = null;
     private static long lastClickTime = 0;
     private static boolean awaitingSecondClick = false;
+
+    public static void initialize() {
+        PlatformAccess.getEvents().registerPlayerLoginCallback(TownEventHandler::onPlayerLogin);
+    }
+
+    private static void onPlayerLogin(ServerPlayer player, ServerLevel level, BlockPos position) {
+        // Build global market view-model (contains ALL item prices)
+        MarketViewModel viewModel = MarketViewModelBuilder.buildMarketViewModel();
+
+        // Send to the player
+        MarketViewModelSyncPacket packet = new MarketViewModelSyncPacket(viewModel);
+        PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
+
+        LOGGER.info("Synced Global Market data to player {}", player.getName().getString());
+    }
 
     public static void setActiveTownBlock(BlockPos pos) {
         LOGGER.debug("Setting active town block to: {}", pos);

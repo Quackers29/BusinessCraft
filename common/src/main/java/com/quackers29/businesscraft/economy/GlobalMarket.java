@@ -10,15 +10,23 @@ import java.util.Map;
 public class GlobalMarket {
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalMarket.class);
     private static final GlobalMarket INSTANCE = new GlobalMarket();
-    
+
     // Minimum price floor to prevent prices from collapsing to absolute zero
     // Prices can be very low (e.g., 2000 wheat = 1 emerald), but not zero
     private static final float MIN_PRICE = 0.001f;
 
     private final Map<String, Float> prices = new HashMap<>();
     private final Map<String, Long> totalVolume = new HashMap<>();
+    private Runnable dirtyCallback;
 
-    private GlobalMarket() {
+    public void setDirtyCallback(Runnable callback) {
+        this.dirtyCallback = callback;
+    }
+
+    private void markDirty() {
+        if (dirtyCallback != null) {
+            dirtyCallback.run();
+        }
     }
 
     public static GlobalMarket get() {
@@ -33,6 +41,7 @@ public class GlobalMarket {
         prices.clear();
         totalVolume.clear();
         LOGGER.info("GlobalMarket reset - all prices cleared for new world");
+        markDirty();
     }
 
     public float getPrice(String resourceId) {
@@ -43,6 +52,7 @@ public class GlobalMarket {
     public void setPrice(String resourceId, float price) {
         // Enforce minimum price floor
         prices.put(resourceId, Math.max(price, MIN_PRICE));
+        markDirty();
     }
 
     public Map<String, Float> getPrices() {
@@ -63,6 +73,7 @@ public class GlobalMarket {
         prices.put(resourceId, newPrice);
 
         LOGGER.debug("Market update {}: price {} -> {}, vol {}", resourceId, currentPrice, newPrice, quantity);
+        markDirty();
     }
 
     public void load(CompoundTag tag) {
