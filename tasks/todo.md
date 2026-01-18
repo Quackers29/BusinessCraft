@@ -36,274 +36,32 @@
 
 ## 🔧 **PHASE 1: CRITICAL SERVER-CLIENT SYNC VIOLATIONS** - ✅ **COMPLETE (3/3)**
 
-### **1.1 Resource Statistics Calculation** ✅ **COMPLETED**
-- [x] **Analyze current duplication**:
-  - `ClientSyncHelper.calculateResourceStats()` duplicates server logic ✅
-  - Client performs complex calculations instead of displaying server results ✅
-  - 35-line method with production/consumption rate calculations ✅
-- [x] **Create TownResourceViewModel**:
-  - Server-calculated display strings (e.g., "Production: +50/hr", "Storage: 75/100") ✅
-  - Pre-calculated capacity percentages and status indicators ✅
-  - Localized display text with proper formatting ✅
-- [x] **Replace ResourceSyncPacket**:
-  - Remove raw resource data + calculated stats pattern ✅
-  - Send only display-ready view-model objects ✅
-  - Eliminate `calculateResourceStats()` from client entirely ✅
-- [x] **Update UI components**:
-  - Resource display components render strings directly ✅
-  - Remove calculation logic from `ResourceListComponent` ✅
-  - Ensure zero client-side math ✅
+### **1.1 Resource Statistics Calculation** ✅ **COMPLETED** - Eliminated client-side resource calculations, created server-calculated view-models (175+ lines)
 
-**📋 IMPLEMENTATION DETAILS:**
-- **Created**: `TownResourceViewModel.java` - Complete view-model with display strings
-- **Created**: `TownResourceViewModelBuilder.java` - Server-side calculation engine (175+ lines)
-- **Created**: `ResourceViewModelSyncPacket.java` - New server-authoritative packet
-- **Updated**: `TownInterfaceEntity.java` - Added view-model cache and sync methods
-- **Updated**: `TownDataCacheManager.java` - New view-model access methods, deprecated old calculations
-- **Updated**: `PacketRegistry.java` - Registered new view-model sync packet
-- **Integrated**: Server tick cycle sends view-models every 10 ticks (0.5 seconds)
+### **1.2 Production Formula Evaluation** ✅ **COMPLETED** - Eliminated client-side ProductionRegistry access, created server-calculated production view-models (270+ lines)
 
-### **1.2 Production Formula Evaluation** ✅ **COMPLETED**
-- [x] **Audit production logic**: ✅
-  - `TownProductionComponent.evaluateExpression()` confirmed server-side only ✅
-  - Complex formula parsing and evaluation logic (49-82 lines) ✅
-  - **CLIENT VIOLATIONS FOUND**: ProductionTab/ResourcesTab access ProductionRegistry! ✅ FIXED
-- [x] **Create ProductionStatusViewModel**: ✅
-  - Pre-calculated production rates as display strings ✅
-  - Status indicators (e.g., "Active", "Resource Shortage", "Completed") ✅
-  - Progress percentages for ongoing productions ✅
-  - **Created**: `ProductionStatusViewModel.java` (160+ lines)
-- [x] **Server-only formula evaluation**: ✅
-  - All formula parsing confirmed server-side only ✅
-  - Client will never see raw formulas or multipliers ✅
-  - **Created**: `ProductionStatusViewModelBuilder.java` (270+ lines, compiles successfully)
-- [x] **Create production sync packet**: ✅
-  - Created ProductionViewModelSyncPacket similar to ResourceViewModelSyncPacket ✅
-  - Registered packet in PacketRegistry ✅
-  - Integrated into server tick cycle (every 10 ticks) ✅
-- [x] **Remove client-side ProductionRegistry access**: ✅
-  - Updated ProductionTab.java to use view-model instead of ProductionRegistry.get() ✅
-  - Updated ResourcesTab.java to remove ProductionRegistry access ✅
-  - Added TownDataCacheManager methods for production view-model access ✅
-- [x] **Document config loading limitation**: ✅
-  - Added TODO markers in ConfigLoader for future server-only loading ✅
-  - ProductionRegistry.load() still runs on both sides (requires platform-specific detection) 📝
-  - UI now uses view-models exclusively - no runtime config access ✅
+### **1.3 Market Price Resolution** ✅ **COMPLETED** - Eliminated client-side price calculations, created global market view-models with all item prices
 
-**📋 IMPLEMENTATION DETAILS:**
-- **Created**: `ProductionStatusViewModel.java` - View-model with recipe display data (160+ lines)
-- **Created**: `ProductionStatusViewModelBuilder.java` - Server-side calculation engine (270+ lines)
-- **Created**: `ProductionViewModelSyncPacket.java` - Server-authoritative packet
-- **Updated**: `TownInterfaceEntity.java` - Added production view-model cache and sync methods
-- **Updated**: `TownDataCacheManager.java` - Added getProductionViewModel() and getProductionRecipeInfo()
-- **Updated**: `PacketRegistry.java` - Registered production view-model sync packet
-- **Updated**: `ProductionTab.java` - Removed ProductionRegistry.get() calls, uses view-model tooltips
-- **Updated**: `ResourcesTab.java` - Simplified ProductionRegistry access with view-model checks
-- **Integrated**: Server tick cycle sends production view-models every 10 ticks
-- **Build Status**: ✅ SUCCESS (all platforms compile cleanly)
-
-### **1.3 Market Price Resolution** ✅ **COMPLETED**
-- [x] **Eliminate client price calculations**:
-  - `ClientGlobalMarket.getPrice(Item)` NOW delegates to view-model ✅
-  - Client-side item-to-resource mapping ELIMINATED ✅
-  - All price calculations happen server-side only ✅
-- [x] **Create MarketViewModel**:
-  - Item-specific prices as formatted display strings ✅
-  - Pre-calculated price info for ALL items in registry ✅
-  - Server handles all resource conversion logic ✅
-- [x] **Replace ClientGlobalMarket**:
-  - Now stores MarketViewModel instead of raw price map ✅
-  - getPrice(Item) simplified from 38 lines to 1 line delegation ✅
-  - Server sends complete market display state ✅
-
-**📋 IMPLEMENTATION DETAILS:**
-- **Created**: `MarketViewModel.java` - View-model with MarketPriceInfo for all items (130+ lines)
-- **Created**: `MarketViewModelBuilder.java` - Server-side price calculation engine (180+ lines)
-- **Created**: `MarketViewModelSyncPacket.java` - Global market sync packet (no BlockPos needed)
-- **Updated**: `ClientGlobalMarket.java` - Now uses view-model, eliminated 38 lines of calculation logic
-- **Updated**: `TownInterfaceEntity.java` - Added global market sync with static tracking (syncs every 100 ticks)
-- **Updated**: `PacketRegistry.java` - Registered market view-model sync packet
-- **Integrated**: Server tick cycle sends market view-models every 100 ticks (5 seconds, global)
-- **Build Status**: ✅ SUCCESS (all platforms compile cleanly)
-
-**📋 IMPLEMENTATION DETAILS (Phase 2.1):**
-- **Created**: `UpgradeStatusViewModel.java` - View-model with UpgradeDisplayInfo for all upgrades (315+ lines)
-- **Created**: `UpgradeStatusViewModelBuilder.java` - Server-side upgrade calculation engine (460+ lines)
-- **Created**: `UpgradeViewModelSyncPacket.java` - Upgrade sync packet with full documentation
-- **Updated**: `TownInterfaceEntity.java` - Added upgrade view-model cache and sync methods
-- **Updated**: `TownDataCacheManager.java` - Deprecated old methods, added upgrade view-model access
-- **Updated**: `ProductionTab.java` - Completely rewrote upgrade display logic to use view-model
-- **Updated**: `PacketRegistry.java` - Registered upgrade view-model sync packet
-- **Integrated**: Server tick cycle sends upgrade view-models every 10 ticks alongside production data
-- **Build Status**: ✅ SUCCESS (all platforms compile cleanly)
 
 ---
 
 ## 🟡 **PHASE 2: MEDIUM PRIORITY VIOLATIONS**
 
-### **2.1 Upgrade Registry View-Model** ✅ **COMPLETED**
-- [x] **Audit upgrade system client access**:
-  - ProductionTab.java used UpgradeRegistry.get() for Upgrades view ✅
-  - Client accessed UpgradeRegistry.getAll() to display upgrade tree ✅
-  - Client-side upgrade effect calculations for research speed ✅
-  - TownDataCacheManager had getCachedResearchSpeed() with UpgradeRegistry access ✅
-- [x] **Create UpgradeStatusViewModel**:
-  - Pre-calculated upgrade display names and descriptions ✅
-  - Server-calculated effect values, costs, and research times ✅
-  - Upgrade tree structure with unlock status and AI scores ✅
-  - Created UpgradeStatusViewModel.java (315+ lines)
-- [x] **Eliminate UpgradeRegistry client access**:
-  - Replaced UpgradeRegistry.get() calls with view-model ✅
-  - Replaced UpgradeRegistry.getAll() iteration with server lists ✅
-  - Server sends complete upgrade tree state ✅
-  - Client displays upgrade info without accessing configs ✅
+### **2.1 Upgrade Registry View-Model** ✅ **COMPLETED** - Eliminated client-side UpgradeRegistry access, created upgrade tree view-models (315+ lines)
 
-### **2.3 Menu System Fallbacks** ✅ **COMPLETED**
-- [x] **Audit menu fallback logic**:
-  - `TownInterfaceMenu.java` contains client-side fallback calculations ✅
-  - Menu classes should not contain business logic ✅
-  - SimpleContainerData usage may include calculations ✅
-- [x] **Create TownInterfaceViewModel**:
-  - Complete UI state as view-model object ✅
-  - Pre-calculated button states (enabled/disabled) ✅
-  - Display strings for all UI elements ✅
-- [x] **Remove fallback calculations**:
-  - Server sends complete view-model, no fallbacks needed ✅
-  - Menu becomes pure data container for display ✅
-  - Zero client-side logic in menu classes ✅
+### **2.3 Menu System Fallbacks** ✅ **COMPLETED** - Eliminated client-side menu calculations, created TownInterfaceViewModel for UI state
 
-### **2.4 Trading Component Logic** ✅ **COMPLETED**
-- [x] **Data Structure Updates**:
-  - [x] Update `ConfigLoader` to support `currencyItem` ✅
-  - [x] Update `ResourceType` to support `baseValue` ✅
-  - [x] Update `ResourceRegistry` to parse price from `items.csv` ✅
-- [x] **Logic Refactor**:
-  - [x] Remove 10:1 conversion in `TradeResourcePacket` (legacy abolished) ✅
-  - [x] Implement new currency and pricing logic in packet ✅
-- [x] **Create TradingViewModel**:
-  - [x] `TradingViewModel.java` (Data Class) ✅
-  - [x] `TradingViewModelBuilder.java` (Logic) ✅
-  - [x] `TradingViewModelSyncPacket.java` (Network) ✅
-- [x] **Integration**:
-  - [x] Add caching to `TownInterfaceEntity` ✅
-  - [x] Add getters to `TownDataCacheManager` ✅
-  - [x] Register sync packet ✅
-- [x] **UI Refactor**:
-  - [x] Update `BCModalInventoryScreen` to use ViewModel ✅
-  - [x] Ensure UI displays correct prices, currency, and stock ✅
+### **2.4 Trading Component Logic** ✅ **COMPLETED** - Implemented currency system and trading view-models with server-calculated prices
 
-### **2.5 Global Market Unification** 🔧 **HIGH PRIORITY** - ✅ **COMPLETED**
-**Context**: Currently, the system has split market logic. `ContractBoard` maintains persistent market prices for auctions, while `GlobalMarket` is ephemeral and unused by the Trade UI. Unregistered items (like `Town Interface`) lack GPI tracking.
-
-#### **2.5.1 Single Source of Truth**
-- [x] **Create `GlobalMarketSavedData`**:
-  - Centralize market price and volume persistence. ✅
-  - Migrate `ContractSavedData` market prices to this new store. ✅
-  - Ensure lifecycle is managed by `TownManager`. ✅
-- [x] **Unify Pricing Logic**:
-  - Deprecate `ContractBoard.getMarketPrice()`. ✅
-  - Redirect all pricing queries (Trade UI, Auctions) to `GlobalMarket`. ✅
-  - Implement "Dynamic Item Registration" to automatically track unregistered items (using ResourceLocation as key). ✅
-
-#### **2.5.2 Trade Integration**
-- [x] **Update `TradeResourcePacket`**:
-  - Record every trade to `GlobalMarket`. ✅
-  - Ensure immediate price updates based on supply/demand. ✅
-- [x] **Update `TradingViewModelBuilder`**:
-  - Use `GlobalMarket` prices instead of static CSV base values. ✅
-  - Iterate all `Town` inventory items to catch unregistered resources. ✅
-
-#### **2.5.3 Data Migration**
-- [x] **Migrate existing auction data**:
-  - Ensure current auction prices are preserved in the new `GlobalMarketSavedData`. ✅
+### **2.5 Global Market Unification** ✅ **COMPLETED** - Unified auction and trade pricing systems into single persistent GlobalMarket with dynamic item tracking
 
 ---
 
 ## 🟢 **PHASE 3: CONFIGURATION & CLEANUP**
 
-### **3.1 CSV Configuration Distribution** ✅ **COMPLETED**
-- [x] **Code cleanup completed**:
-  - Removed unused `UpgradeRegistry` import from `ProductionTab.java` ✅
-  - Removed unused `ResourceRegistry` import from `ResourcesTab.java` ✅
-  - Removed duplicate `Item` import from `ResourcesTab.java` ✅
-- [x] **ConfigLoader documentation added**:
-  - 60-line architectural explanation of registry loading strategy ✅
-  - Documented why integrated servers require CSV loading ✅
-  - Explained view-model pattern ensures server authority ✅
-  - Listed all view-model builders that handle calculations ✅
-- [x] **ResourceRegistry documentation added**:
-  - 70-line "Display Mapping API" documentation ✅
-  - Explained permitted client usage (display mapping only) ✅
-  - Documented prohibited client usage (business logic calculations) ✅
-  - Added JavaDoc to get(), getFor(), getAllFor() methods ✅
-- [x] **Architecture validation checklist created**:
-  - Created `tasks/architecture_validation_checklist.md` ✅
-  - Comprehensive validation of all phases (1.1-3.1) ✅
-  - Security validation and compliance metrics ✅
-  - Architectural lessons learned and guidelines ✅
-- [x] **Build verification**: ✅ SUCCESS (all platforms compile cleanly)
+### **3.1 CSV Configuration Distribution** ✅ **COMPLETED** - Documented registry loading strategy and created architecture validation checklist
 
-**📋 IMPLEMENTATION SUMMARY:**
-- **Conservative Approach**: Keep current CSV loading for integrated server compatibility
-- **Display Mapping Justified**: ResourceRegistry client access is pure data translation
-- **Zero Business Logic**: All calculations use server-calculated view-models
-- **Documentation-First**: Comprehensive comments prevent future violations
-- **Status**: Phase 3.1 complete, ready for optional Phase 3.2/3.3 enhancements
-
-### **3.2 Client Sync Helper Simplification** ✅ **COMPLETED**
-- [x] **Refactor ClientSyncHelper**: ✅
-  - Removed all deprecated calculation methods (676 → 574 lines, -102 lines)
-  - Converted to pure caching mechanism for view-models only
-  - Zero business logic remaining, only display data storage
-- [x] **Simplify client data structures**: ✅
-  - Removed parallel NBT-based sync logic
-  - Eliminated legacy ResourceSyncPacket (unused dead code)
-  - Updated UI components to use view-model exclusively
-- [x] **Build verification**: ✅ SUCCESS (all platforms compile cleanly)
-
-**📋 COMPLETE REMOVAL LIST (as requested):**
-
-**1. ClientSyncHelper.java** (5 methods + 1 field removed, ~106 lines total):
-   - `calculateResourceStats(Town)` - 35 lines (production/consumption rate calculations)
-   - `syncResourceStatsToTag(CompoundTag)` - 20 lines (NBT serialization)
-   - `loadResourceStatsFromTag(CompoundTag)` - 31 lines (NBT deserialization)
-   - `updateClientResourceStats(Map<Item, float[]>)` - 6 lines (cache updater)
-   - `getClientResourceStats()` - 3 lines (cache getter)
-   - `Map<Item, float[]> clientResourceStats` - 1 line (cache field)
-   - **Total**: ~106 lines removed, file size: 676 → 574 lines
-
-**2. TownInterfaceEntity.java** (2 method calls removed):
-   - Removed `clientSyncHelper.syncResourceStatsToTag(tag, town)` call
-   - Removed `clientSyncHelper.loadResourceStatsFromTag(tag)` call
-   - Replaced by: ResourceViewModelSyncPacket handles all resource stats
-
-**3. TownDataCacheManager.java** (1 method removed, ~18 lines):
-   - `getResourceStats(Item)` - 18 lines (returned cached float[] from deprecated system)
-   - Replaced by: `getResourceDisplayInfo(Item)` using ResourceViewModel
-
-**4. ResourceSyncPacket.java** (ENTIRE FILE DELETED):
-   - Complete legacy packet class removed (never instantiated in codebase)
-   - Was replaced by ResourceViewModelSyncPacket in Phase 1.1
-   - Dead code with zero references
-
-**5. PacketRegistry.java** (registration removed):
-   - Removed `import ResourceSyncPacket` statement
-   - Removed `register(ResourceSyncPacket.class, ...)` registration call
-
-**6. TownInterfaceMenu.java** (import removed):
-   - Removed `import ResourceSyncPacket` statement
-
-**7. ResourcesTab.java** (tooltip logic updated, ~9 lines replaced):
-   - Removed `cache.getResourceStats(item)` call and numeric formatting
-   - Replaced with view-model display strings (production/consumption/capacity)
-   - Now uses pre-formatted strings from ResourceDisplayInfo
-
-**📊 IMPACT SUMMARY:**
-- **Lines Removed**: ~135+ lines of deprecated code eliminated
-- **Files Modified**: 7 files (5 updated, 1 deleted, 1 unregistered)
-- **Architecture**: Single source of truth enforced via view-models
-- **Compliance**: ~92% → ~95% server-authoritative compliance
-- **Status**: Phase 3.2 complete, all deprecated parallel sync systems removed
+### **3.2 Client Sync Helper Simplification** ✅ **COMPLETED** - Removed deprecated calculation methods, eliminated legacy ResourceSyncPacket (135+ lines removed)
 
 ### **3.3 View-Model Architecture Enhancements** 🔧 **MEDIUM** (Recommended)
 - [ ] **Create ViewModelCache Helper Class**:
@@ -754,7 +512,17 @@ if (listingPrice > currentGPI * 1.1f) {
 
 ---
 
-### **6.8 Implementation Status**
+### **6.8 Contract History Display - Option F: Recent Focus with Expand** 📋 **PLAN**
+
+**Goal**: Replace pagination with simple recent-first display + optional "Show All" button.
+
+**Steps**:
+- [ ] **Server**: Modify history tab to send last 50 contracts by default, add `showAll` parameter to packet
+- [ ] **Client**: Remove "Load More" button, add "Show All History" button when >50 contracts exist
+- [ ] **State**: Add `showAllHistory` tracking, reset on tab switch
+- [ ] **Testing**: Verify performance improvement and correct expand behavior
+
+#### **6.8.6 Economy Fix Implementation Status**
 
 | Task | Status | Notes |
 |------|--------|-------|
@@ -764,6 +532,8 @@ if (listingPrice > currentGPI * 1.1f) {
 | Choose permanent fix option | ⏳ Pending | **Option 7 recommended** (see 6.9) |
 | Implement chosen fix | ⏳ Pending | |
 | Test economy stability | ⏳ Pending | |
+| Choose history display option | ✅ Complete | **Option F selected** - Recent focus with expand |
+| Implement Option F history display | ⏳ Pending | See 6.8.1-6.8.5 plan above |
 
 ---
 
