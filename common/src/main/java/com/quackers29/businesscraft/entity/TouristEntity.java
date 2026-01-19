@@ -39,11 +39,8 @@ public class TouristEntity extends Villager {
     public static final UUID ANY_TOWN_DESTINATION = new UUID(0, 0);
     public static final String ANY_TOWN_NAME = "Any Town";
 
-    // Tourist expiry settings - calculate from ConfigLoader
-    private static final int DEFAULT_EXPIRY_TICKS = (int) (ConfigLoader.touristExpiryMinutes * 60 * 20); // Convert
-                                                                                                         // minutes to
-                                                                                                         // ticks
-    private int expiryTicks = DEFAULT_EXPIRY_TICKS;
+    // Tourist expiry - calculated dynamically from config at spawn time (not static to avoid class load order issues)
+    private int expiryTicks;
     private boolean hasNotifiedOriginTown = false;
 
     // Flag to track if tourist has already received a ride extension
@@ -77,6 +74,9 @@ public class TouristEntity extends Villager {
     public TouristEntity(EntityType<? extends Villager> entityType, Level level) {
         super(entityType, level);
         this.spawnTime = level.getGameTime();
+
+        // Calculate expiry ticks from config at spawn time (not static to avoid class load order issues)
+        this.expiryTicks = (int) (ConfigLoader.touristExpiryMinutes * 60 * 20);
 
         // Default constructor - position will be set properly by setPos later
         // We'll update spawnPosX, spawnPosY, spawnPosZ when setPos is called the first

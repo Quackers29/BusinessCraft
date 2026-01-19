@@ -24,8 +24,8 @@ import java.util.function.Predicate;
  */
 public class TouristVehicleManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(TouristVehicleManager.class);
-    private static final double VISITOR_POSITION_CHANGE_THRESHOLD = ConfigLoader.INSTANCE.minecartStopThreshold;
-    private static final ConfigLoader CONFIG = ConfigLoader.INSTANCE;
+    // Note: Access config values through ConfigLoader static fields directly to support hot-reloading
+    // and avoid class load order issues with static constants that cache values
 
     // Maps to track vehicle positions for movement detection
     private final Map<UUID, Vec3> lastVehiclePositions = new HashMap<>();
@@ -58,12 +58,12 @@ public class TouristVehicleManager {
         }
 
         // Handle mounting to Create mod trains if enabled
-        if (CONFIG.enableCreateTrains && level instanceof ServerLevel serverLevel) {
+        if (ConfigLoader.enableCreateTrains && level instanceof ServerLevel serverLevel) {
             mountedCount += mountTouristsToCreateTrains(serverLevel, searchBounds, tourists);
         }
 
         // Handle mounting to vanilla minecarts if enabled
-        if (CONFIG.enableMinecarts) {
+        if (ConfigLoader.enableMinecarts) {
             mountedCount += mountTouristsToMinecarts(level, searchBounds, tourists);
         }
 
@@ -150,7 +150,7 @@ public class TouristVehicleManager {
         boolean isStopped = false;
         if (lastPos != null) {
             double positionChange = currentPos.distanceTo(lastPos);
-            isStopped = positionChange < VISITOR_POSITION_CHANGE_THRESHOLD;
+            isStopped = positionChange < ConfigLoader.minecartStopThreshold;
         }
 
         lastVehiclePositions.put(entity.getUUID(), currentPos);
@@ -240,10 +240,10 @@ public class TouristVehicleManager {
             DebugConfig.debug(LOGGER, DebugConfig.ENTITY_SYSTEM, "Minecart {} position change: {} (Threshold: {})",
                     minecart.getUUID().toString().substring(0, 8),
                     String.format("%.6f", positionChange),
-                    String.format("%.6f", VISITOR_POSITION_CHANGE_THRESHOLD));
+                    String.format("%.6f", ConfigLoader.minecartStopThreshold));
 
             // Only board if position change is LESS than threshold (minecart is stopped)
-            if (positionChange < VISITOR_POSITION_CHANGE_THRESHOLD) {
+            if (positionChange < ConfigLoader.minecartStopThreshold) {
                 Optional<Villager> touristOpt = tourists.stream()
                         .filter(tourist -> !tourist.isPassenger())
                         .findFirst();
