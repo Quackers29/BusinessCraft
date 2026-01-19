@@ -12,8 +12,11 @@ public class GlobalMarket {
     private static final GlobalMarket INSTANCE = new GlobalMarket();
 
     // Minimum price floor to prevent prices from collapsing to absolute zero
-    // Prices can be very low (e.g., 2000 wheat = 1 emerald), but not zero
-    private static final float MIN_PRICE = 0.001f;
+    // Floor at 0.0001 = 10,000 items per emerald (for bulk items like sticks, dirt)
+    private static final float MIN_PRICE = 0.0001f;
+
+    // Drop rate when an auction fails (no bids) - 5% per failed auction
+    private static final float FAILED_AUCTION_DROP_RATE = 0.05f;
 
     private final Map<String, Float> prices = new HashMap<>();
     private final Map<String, Long> totalVolume = new HashMap<>();
@@ -73,6 +76,21 @@ public class GlobalMarket {
         prices.put(resourceId, newPrice);
 
         LOGGER.debug("Market update {}: price {} -> {}, vol {}", resourceId, currentPrice, newPrice, quantity);
+        markDirty();
+    }
+
+    /**
+     * Records a failed auction (no bids received).
+     * Applies downward pressure on the price to signal oversupply.
+     */
+    public void recordFailedAuction(String resourceId) {
+        float currentPrice = getPrice(resourceId);
+        float newPrice = Math.max(currentPrice * (1 - FAILED_AUCTION_DROP_RATE), MIN_PRICE);
+        prices.put(resourceId, newPrice);
+
+        LOGGER.info("Failed auction: {} price {} -> {} ({}% drop)",
+                resourceId, String.format("%.4f", currentPrice), String.format("%.4f", newPrice),
+                (int)(FAILED_AUCTION_DROP_RATE * 100));
         markDirty();
     }
 

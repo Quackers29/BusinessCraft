@@ -359,6 +359,7 @@ Net change: **+3 packets** (replaces 1, adds 4) but significantly better archite
 - **🧪 PENDING**: Verification & Testing (Phase 7)
 - **✅ COMPLETED**: Resource Storage int→long Migration (Phase 8) - Updated all contracts, storage, and view-models to use long for quantities
 - **✅ COMPLETED**: Configuration File Modernization (Phase 9) - Migrated from .properties to TOML using NightConfig
+- **✅ COMPLETED**: GPI Supply Pressure (Phase 10) - Failed auctions now reduce GPI by 5%
 - **📊 Overall**: ~98% compliant with target architecture
 
 ### **Development Guidelines**
@@ -668,5 +669,71 @@ config.close();
 | **Hot Reload** | ✅ | ✅ |
 | **Default Resource** | Manual copy | Built-in support |
 | **Autosave** | Manual | Built-in support |
+
+---
+
+## 📉 **PHASE 10: GPI SUPPLY PRESSURE MECHANISM**
+
+**Problem:** With trades-only price discovery, oversupplied items (like wheat) stay stuck at ~1.0 GPI. No downward pressure when supply exceeds demand.
+
+**Previous Approach:** Failed auctions dropped GPI by 20% → too aggressive, caused death spiral.
+
+**New Approach:** Failed auctions drop price by small amount (2-5%). Simple.
+
+### **10.1 Simple Solution**
+
+```
+On failed auction (no bids):
+  dropRate = 0.05 (5%)
+  minPrice = 0.0001 (floor: 10,000 items = 1 emerald)
+
+  newPrice = max(currentPrice * (1 - dropRate), minPrice)
+```
+
+**Why this works:**
+- 5% is much gentler than 20%
+- Floor at 0.0001 allows very cheap bulk items (sticks, dirt, etc.)
+- When prices get low enough, someone WILL buy → price stabilizes
+- Successful trades still pull price toward trade price (existing 10% learning rate)
+
+### **10.2 Implementation Plan** ✅ **COMPLETE**
+
+- [x] **Step 1: Add `recordFailedAuction()` to GlobalMarket**
+  - Added method with 5% drop rate constant
+  - Logs price changes for debugging
+
+- [x] **Step 2: Update MIN_PRICE in GlobalMarket**
+  - Changed from 0.001f to 0.0001f (10,000 items per emerald floor)
+
+- [x] **Step 3: Call from ContractBoard.closeAuctions()**
+  - Added call in the "no bids" branch
+  - Replaced old "trades-only" comment
+
+- [ ] **Step 4: Add config option (optional - future)**
+  ```toml
+  [economy]
+  # Price drop rate per failed auction (0.05 = 5%)
+  failedAuctionDropRate = 0.05
+  ```
+
+### **10.3 Files to Modify**
+
+| File | Changes |
+|------|---------|
+| `GlobalMarket.java` | Add `recordFailedAuction()`, lower `MIN_PRICE` to 0.0001f |
+| `ContractBoard.java` | Call `recordFailedAuction()` in no-bids branch |
+
+### **10.4 Expected Behavior**
+
+| GPI | Items per Emerald | Example |
+|-----|-------------------|---------|
+| 1.0 | 1 | Diamonds, rare items |
+| 0.1 | 10 | Common resources |
+| 0.01 | 100 | Abundant items |
+| 0.001 | 1,000 | Very common |
+| 0.0001 | 10,000 | Sticks, dirt (floor) |
+
+After ~50 failed auctions with no trades: 1.0 → 0.08 (still above floor)
+After ~90 failed auctions: hits floor at 0.0001
 
 ---

@@ -376,7 +376,6 @@ public class ContractBoard {
                                     (long) (com.quackers29.businesscraft.config.ConfigLoader.contractCourierAcceptanceMinutes
                                             * 60000L));
 
-
                             savedData.setDirty();
                         }
                     } else {
@@ -390,12 +389,11 @@ public class ContractBoard {
                                 sellerTown.addResource(item, sc.getQuantity());
                                 sellerTown.removeEscrowResource(item, sc.getQuantity());
 
-                                // TRADES-ONLY PRICE DISCOVERY: Failed auctions do NOT affect GPI
-                                // Rationale: "No bids" could mean price too high, OR no demand exists,
-                                // OR all buyers at capacity. We can't distinguish, so we extract no signal.
-                                // Prices only change from actual completed trades.
+                                // Apply supply pressure: failed auction drops price slightly
+                                com.quackers29.businesscraft.economy.GlobalMarket.get().recordFailedAuction(sc.getResourceId());
+
                                 LOGGER.info(
-                                        "Refunded {} {} to town {} (auction {} had no bids). GPI unchanged (trades-only discovery).",
+                                        "Refunded {} {} to town {} (auction {} had no bids). GPI reduced due to oversupply.",
                                         sc.getQuantity(), sc.getResourceId(), sellerTown.getName(), sc.getId());
                             }
                         }
