@@ -158,8 +158,8 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         if (ConfigLoader.productionEnabled) {
             production.tick();
         }
-        contracts.tick(); // Always tick contracts
-        upgrades.tick(); // Always tick upgrades
+        if (ConfigLoader.contractsEnabled) contracts.tick(); // Phase 11 global toggle
+        if (ConfigLoader.researchEnabled) upgrades.tick(); // Phase 11 global toggle
 
         if (wantCalculationCooldown-- <= 0) {
             wantCalculationCooldown = 20; // Check every 1 second

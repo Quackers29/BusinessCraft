@@ -21,6 +21,8 @@
     minecartStopThreshold = 0.001
 
 [tourists]
+    enabled = true
+    # Master switch - completely disables tourist spawning globally
     # Minimum population required to spawn tourists
     minPopForTourists = 5
     # Maximum tourists per town
@@ -54,6 +56,8 @@
         items = ["minecraft:bread:1", "minecraft:experience_bottle:2"]
 
 [contracts]
+    enabled = true
+    # Enable contract system (auction, bidding, delivery)
     # Auction duration in minutes
     auctionDurationMinutes = 1.0
     # Courier acceptance window in minutes
@@ -95,3 +99,7 @@
     playerTracking = true
     # Show town boundary entry/exit messages
     townBoundaryMessages = true
+
+[research]
+enabled = true
+# Enable research/upgrade system

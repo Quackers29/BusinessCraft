@@ -1031,6 +1031,7 @@ public class TownInterfaceEntity extends BlockEntity
                 Town town = TownManager.get(sLevel1).getTown(townId);
                 if (town != null) {
                     // Platform-based villager spawning (consuming pending queue from production)
+                    if (!ConfigLoader.touristSystemEnabled) return; // Phase 11 global toggle
                     if (touristSpawningEnabled && town.canSpawnTourists() &&
                             platformManager.getPlatformCount() > 0 &&
                             town.getPendingTouristSpawns() > 0 &&
@@ -1070,6 +1071,7 @@ public class TownInterfaceEntity extends BlockEntity
 
         // Handle tourist vehicles for all platforms
         if (level.getGameTime() % 20 == 0) { // Every 1 second
+            if (!ConfigLoader.touristSystemEnabled) return; // Phase 11 global toggle
             if (touristSpawningEnabled && townId != null) {
                 // Get town object safely
                 Town currentTown = null;

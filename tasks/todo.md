@@ -738,92 +738,16 @@ After ~90 failed auctions: hits floor at 0.0001
 
 ---
 
-## 🎛️ **PHASE 11: GLOBAL SYSTEM ENABLE/DISABLE CONFIG**
+## 🎛️ **PHASE 11: GLOBAL SYSTEM ENABLE/DISABLE CONFIG** ✅ **COMPLETE** - Added global TOML toggles for tourists/contracts/research (ConfigLoader), wrapped ticks/spawns, global overrides per-town toggle.
 
-**Goal:** Add global config toggles for all major systems (tourists, production, research, contracts) so server admins can completely enable/disable functionality.
+**Implementation:**
+- Added `touristSystemEnabled`/`contractsEnabled`/`researchEnabled` (defaults true).
+- `Town.tick()`: if-checks for contracts/upgrades.
+- `TownInterfaceEntity`: Early return if !touristSystemEnabled (~1034/1073).
+- TOML: enabled=true + comments in [tourists]/[contracts]; new [research].
 
-### **11.1 Current State Analysis**
-
-| System | Global Config | Per-Town Toggle | Code Location |
-|--------|---------------|-----------------|---------------|
-| **Tourists** | ❌ MISSING | ✅ `isTouristSpawningEnabled()` | `TownInterfaceEntity.java:1034,1073` |
-| **Production** | ✅ `productionEnabled` | ❌ None | `Town.java:158` |
-| **Trading** | ✅ `tradingEnabled` | ❌ None | `Town.java:155` |
-| **Contracts** | ❌ MISSING | ❌ None | `Town.java:161` (always ticks) |
-| **Research/Upgrades** | ❌ MISSING | ❌ None | `Town.java:162` (always ticks) |
-
-**How Current System Works:**
-- **Per-Town Tourist Toggle**: `Town.touristSpawningEnabled` - checked in `TownInterfaceEntity` before spawning
-- **Production/Trading**: Global config checked in `Town.tick()` - if disabled, component doesn't tick
-- **Contracts/Research**: Always tick regardless of config - NO disable option
-
-### **11.2 Proposed Config Structure**
-
-```toml
-[tourists]
-    # Master switch - completely disables tourist spawning globally
-    enabled = true
-    # ... existing tourist settings ...
-
-[contracts]
-    # Enable contract system (auction, bidding, delivery)
-    enabled = true
-    # ... existing contract settings ...
-
-[research]
-    # Enable research/upgrade system
-    enabled = true
-```
-
-### **11.3 Implementation Plan**
-
-#### **Step 1: Add Config Fields to ConfigLoader.java**
-- [ ] Add `touristSystemEnabled` field (default: true)
-- [ ] Add `contractsEnabled` field (default: true)
-- [ ] Add `researchEnabled` field (default: true)
-- [ ] Load from TOML in `loadConfig()`
-- [ ] Save to TOML in `saveConfig()`
-
-#### **Step 2: Update businesscraft.toml**
-- [ ] Add `enabled = true` to `[tourists]` section
-- [ ] Add `enabled = true` to `[contracts]` section
-- [ ] Add `[research]` section with `enabled = true`
-
-#### **Step 3: Update Town.tick()**
-- [ ] Add `ConfigLoader.contractsEnabled` check before `contracts.tick()`
-- [ ] Add `ConfigLoader.researchEnabled` check before `upgrades.tick()`
-
-#### **Step 4: Update TownInterfaceEntity Tourist Spawning**
-- [ ] Add `ConfigLoader.touristSystemEnabled` check at lines 1034 and 1073
-- [ ] Global switch takes precedence over per-town toggle
-
-#### **Step 5: Update UI (Optional - show disabled state)**
-- [ ] Consider showing "Disabled by Server" in UI when global toggle is off
-- [ ] Grey out controls when system is globally disabled
-
-### **11.4 Files to Modify**
-
-| File | Changes |
-|------|---------|
-| `ConfigLoader.java` | Add 3 new boolean fields + load/save logic |
-| `businesscraft.toml` | Add `enabled` to tourists/contracts, add `[research]` section |
-| `Town.java:161-162` | Add config checks for contracts/research |
-| `TownInterfaceEntity.java:1034,1073` | Add `touristSystemEnabled` check |
-
-### **11.5 Behavior Matrix**
-
-| Global Config | Per-Town Toggle | Result |
-|---------------|-----------------|--------|
-| `enabled=true` | `enabled=true` | ✅ System active |
-| `enabled=true` | `enabled=false` | ❌ System inactive (per-town) |
-| `enabled=false` | `enabled=true` | ❌ System inactive (global override) |
-| `enabled=false` | `enabled=false` | ❌ System inactive |
-
-### **11.6 Estimated Effort**
-
-- **Step 1-3**: ~30 mins - Config changes, straightforward
-- **Step 4**: ~15 mins - Add checks to tourist spawning
-- **Step 5**: ~1-2 hours (optional) - UI changes to show disabled state
-- **Total**: ~45 mins minimum, ~2.5 hours with UI polish
+**Behavior:** Global=false skips entirely (overrides per-town); hot-reload works.
+**Tested:** Verified skips; Forge/Fabric builds.
 
 ---
+

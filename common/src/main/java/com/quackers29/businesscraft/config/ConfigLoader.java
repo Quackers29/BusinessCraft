@@ -72,6 +72,11 @@ public class ConfigLoader {
     // Display Config
     public static String displayTimezone = "UTC";
 
+    // Phase 11: Global system toggles
+    public static boolean touristSystemEnabled = true;
+    public static boolean contractsEnabled = true;
+    public static boolean researchEnabled = true;
+
     public static final ConfigLoader INSTANCE = new ConfigLoader();
 
     private ConfigLoader() {
@@ -135,8 +140,9 @@ public class ConfigLoader {
                 populationPerTourist = config.getIntOrElse("tourists.populationPerTourist", 5);
                 maxPopBasedTourists = config.getIntOrElse("tourists.maxPopBasedTourists", 20);
                 touristExpiryMinutes = config.getOrElse("tourists.touristExpiryMinutes", 120.0);
-                enableTouristExpiry = config.getOrElse("tourists.enableTouristExpiry", true);
-                notifyOnTouristDeparture = config.getOrElse("tourists.notifyOnTouristDeparture", true);
+enableTouristExpiry = config.getOrElse("tourists.enableTouristExpiry", true);
+        notifyOnTouristDeparture = config.getOrElse("tourists.notifyOnTouristDeparture", true);
+        touristSystemEnabled = config.getOrElse("tourists.enabled", true);
 
                 // Economy settings
                 metersPerEmerald = config.getIntOrElse("economy.metersPerEmerald", 50);
@@ -151,6 +157,7 @@ public class ConfigLoader {
                 contractCourierAcceptanceMinutes = config.getOrElse("contracts.courierAcceptanceMinutes", 2.0);
                 contractCourierDeliveryMinutesPerMeter = config.getOrElse("contracts.courierDeliveryMinutesPerMeter", 0.05);
                 contractSnailMailDeliveryMinutesPerMeter = config.getOrElse("contracts.snailMailDeliveryMinutesPerMeter", 0.1);
+        contractsEnabled = config.getOrElse("contracts.enabled", true);
 
                 // Production settings
                 productionEnabled = config.getOrElse("production.enabled", true);
@@ -158,6 +165,7 @@ public class ConfigLoader {
                 dailyTickInterval = config.getIntOrElse("production.dailyTickInterval", 24000);
                 minStockPercent = config.getIntOrElse("production.minStockPercent", 60);
                 excessStockPercent = config.getIntOrElse("production.excessStockPercent", 80);
+        researchEnabled = config.getOrElse("research.enabled", true);
 
                 // Trading settings
                 tradingEnabled = config.getOrElse("trading.enabled", true);
@@ -277,8 +285,10 @@ public class ConfigLoader {
                 config.setComment("tourists.touristExpiryMinutes", " Tourist expiry time in minutes (0 = never expire)");
                 config.set("tourists.enableTouristExpiry", enableTouristExpiry);
                 config.setComment("tourists.enableTouristExpiry", " Enable tourist expiry system");
-                config.set("tourists.notifyOnTouristDeparture", notifyOnTouristDeparture);
-                config.setComment("tourists.notifyOnTouristDeparture", " Notify origin town when tourist departs");
+config.set("tourists.notifyOnTouristDeparture", notifyOnTouristDeparture);
+        config.setComment("tourists.notifyOnTouristDeparture", " Notify origin town when tourist departs");
+        config.set("tourists.enabled", touristSystemEnabled);
+        config.setComment("tourists.enabled", "Master switch - completely disables tourist spawning globally");
 
                 // Economy settings
                 config.set("economy.metersPerEmerald", metersPerEmerald);
@@ -298,8 +308,10 @@ public class ConfigLoader {
                 config.setComment("contracts.courierAcceptanceMinutes", " Courier acceptance window in minutes");
                 config.set("contracts.courierDeliveryMinutesPerMeter", contractCourierDeliveryMinutesPerMeter);
                 config.setComment("contracts.courierDeliveryMinutesPerMeter", " Courier delivery time per meter (minutes)");
-                config.set("contracts.snailMailDeliveryMinutesPerMeter", contractSnailMailDeliveryMinutesPerMeter);
-                config.setComment("contracts.snailMailDeliveryMinutesPerMeter", " Snail mail delivery time per meter (minutes)");
+config.set("contracts.snailMailDeliveryMinutesPerMeter", contractSnailMailDeliveryMinutesPerMeter);
+        config.setComment("contracts.snailMailDeliveryMinutesPerMeter", " Snail mail delivery time per meter (minutes)");
+        config.set("contracts.enabled", contractsEnabled);
+        config.setComment("contracts.enabled", "Enable contract system (auction, bidding, delivery)");
 
                 // Production settings
                 config.set("production.enabled", productionEnabled);
@@ -330,8 +342,11 @@ public class ConfigLoader {
                 // Player settings
                 config.set("player.playerTracking", playerTracking);
                 config.setComment("player.playerTracking", " Enable player tracking system");
-                config.set("player.townBoundaryMessages", townBoundaryMessages);
-                config.setComment("player.townBoundaryMessages", " Show town boundary entry/exit messages");
+config.set("player.townBoundaryMessages", townBoundaryMessages);
+        config.setComment("player.townBoundaryMessages", " Show town boundary entry/exit messages");
+
+        config.set("research.enabled", researchEnabled);
+        config.setComment("research.enabled", "Enable research/upgrade system");
 
                 config.save();
             }
