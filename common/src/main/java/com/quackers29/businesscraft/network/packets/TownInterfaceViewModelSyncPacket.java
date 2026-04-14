@@ -58,7 +58,7 @@ public class TownInterfaceViewModelSyncPacket {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof TownInterfaceEntity entity) {
                 // Update client cache
-                entity.updateTownInterfaceViewModel(viewModel);
+                entity.getVmCache().update(TownInterfaceViewModel.class, viewModel);
 
                 LOGGER.debug("[CLIENT] Town Interface view-model updated: {}, Pop: {}, Happy: {}",
                         viewModel.getTownName(), viewModel.getPopulationDisplay(), viewModel.getHappinessDisplay());

@@ -482,7 +482,7 @@ public class TownDataCacheManager {
             net.minecraft.world.level.block.entity.BlockEntity be = menu.getBlockEntity();
             if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity entity) {
                 com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel viewModel = entity
-                        .getCachedResourceViewModel();
+                        .getVmCache().get(com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel.class);
                 if (viewModel != null) {
                     return viewModel.getResourceDisplay(item);
                 }
@@ -501,7 +501,7 @@ public class TownDataCacheManager {
         if (menu != null) {
             net.minecraft.world.level.block.entity.BlockEntity be = menu.getBlockEntity();
             if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity entity) {
-                return entity.getCachedResourceViewModel();
+                return entity.getVmCache().get(com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel.class);
             }
         }
         return null;
@@ -519,7 +519,7 @@ public class TownDataCacheManager {
         if (menu != null) {
             net.minecraft.world.level.block.entity.BlockEntity be = menu.getBlockEntity();
             if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity entity) {
-                return entity.getCachedProductionViewModel();
+                return entity.getVmCache().get(com.quackers29.businesscraft.town.viewmodel.ProductionStatusViewModel.class);
             }
         }
         return null;
@@ -563,7 +563,7 @@ public class TownDataCacheManager {
         if (menu != null) {
             net.minecraft.world.level.block.entity.BlockEntity be = menu.getBlockEntity();
             if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity entity) {
-                return entity.getCachedUpgradeViewModel();
+                return entity.getVmCache().get(com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel.class);
             }
         }
         return null;
@@ -599,7 +599,7 @@ public class TownDataCacheManager {
         if (menu != null) {
             net.minecraft.world.level.block.entity.BlockEntity be = menu.getBlockEntity();
             if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity entity) {
-                return entity.getCachedInterfaceViewModel();
+                return entity.getVmCache().get(com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel.class);
             }
         }
         return null;

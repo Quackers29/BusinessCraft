@@ -81,7 +81,7 @@ public class UpgradeViewModelSyncPacket {
             if (be instanceof TownInterfaceEntity entity) {
                 // Update the client cache with pre-calculated view-model
                 // NO CONFIG ACCESS - client is truly a "dumb terminal"
-                entity.updateUpgradeViewModel(upgradeViewModel);
+                entity.getVmCache().update(UpgradeStatusViewModel.class, upgradeViewModel);
 
                 // Refresh open UI if TownInterfaceScreen is active
                 if (mc.screen instanceof com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen screen) {

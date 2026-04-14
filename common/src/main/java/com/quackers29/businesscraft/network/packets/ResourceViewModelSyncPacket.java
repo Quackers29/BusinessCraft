@@ -78,7 +78,7 @@ public class ResourceViewModelSyncPacket {
             if (be instanceof TownInterfaceEntity entity) {
                 // Update the client cache with pre-calculated view-model
                 // NO CALCULATIONS HAPPEN HERE - client is truly a "dumb terminal"
-                entity.updateResourceViewModel(resourceViewModel);
+                entity.getVmCache().update(TownResourceViewModel.class, resourceViewModel);
                 
                 // Refresh open UI if TownInterfaceScreen is active  
                 if (mc.screen instanceof com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen screen) {

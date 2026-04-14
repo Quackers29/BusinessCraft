@@ -266,7 +266,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         // CLIENT SIDE: Use cached ViewModel if available
         if (level != null && level.isClientSide()) {
             if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
-                var vm = townEntity.getCachedInterfaceViewModel();
+                var vm = townEntity.getVmCache().get(com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel.class);
                 if (vm != null) {
                     try {
                         String disp = vm.getPopulationDisplay(); // e.g. "5 / 10"
@@ -300,7 +300,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         // CLIENT SIDE: Use cached ViewModel if available
         if (level != null && level.isClientSide()) {
             if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
-                var vm = townEntity.getCachedInterfaceViewModel();
+                var vm = townEntity.getVmCache().get(com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel.class);
                 if (vm != null) {
                     try {
                         String disp = vm.getTouristsDisplay(); // e.g. "2 / 5"
@@ -410,7 +410,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         if (level != null && level.isClientSide()) {
             // Priority 1: Check block entity for latest ViewModel
             if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
-                var vm = townEntity.getCachedInterfaceViewModel();
+                var vm = townEntity.getVmCache().get(com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel.class);
                 if (vm != null) {
                     return vm.getSearchRadius();
                 }
@@ -582,7 +582,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         // CLIENT SIDE
         if (level != null && level.isClientSide()) {
             if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
-                var vm = townEntity.getCachedInterfaceViewModel();
+                var vm = townEntity.getVmCache().get(com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel.class);
                 if (vm != null) {
                     try {
                         String disp = vm.getWorkUnitsDisplay(); // e.g. "10 / 20"
@@ -609,7 +609,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         // CLIENT SIDE
         if (level != null && level.isClientSide()) {
             if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
-                var vm = townEntity.getCachedInterfaceViewModel();
+                var vm = townEntity.getVmCache().get(com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel.class);
                 if (vm != null) {
                     try {
                         String disp = vm.getWorkUnitsDisplay(); // e.g. "10 / 20"

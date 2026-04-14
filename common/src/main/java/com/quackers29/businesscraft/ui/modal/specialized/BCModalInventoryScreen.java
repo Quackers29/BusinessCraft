@@ -492,7 +492,7 @@ public class BCModalInventoryScreen<T extends AbstractContainerMenu> extends Abs
         if (this.minecraft != null && this.minecraft.level != null && menu instanceof TradeMenu tradeMenu) {
             if (this.minecraft.level
                     .getBlockEntity(tradeMenu.getTownBlockPos()) instanceof TownInterfaceEntity townEntity) {
-                return townEntity.getCachedTradingViewModel();
+                return TownDataCacheManager.getTradingViewModel();
             }
         }
         return null;

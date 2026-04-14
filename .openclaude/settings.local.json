@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find common:*)",
+      "Bash(grep -r BCComponent common/src/main/java --include=*.java)",
+      "Bash(grep -r BCScreenBuilder common/src/main/java --include=*.java)",
+      "Bash(grep -r StateBindingManager common/src/main/java/com/quackers29/businesscraft/ui/ --include=*.java)"
+    ]
+  }
+}

@@ -103,6 +103,7 @@ import com.quackers29.businesscraft.town.viewmodel.TradingViewModelBuilder;
 import com.quackers29.businesscraft.network.packets.TradingViewModelSyncPacket;
 import com.quackers29.businesscraft.town.data.VisitorProcessingHelper;
 import com.quackers29.businesscraft.town.data.ClientSyncHelper;
+import com.quackers29.businesscraft.town.viewmodel.ViewModelCache;
 import com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel;
 import com.quackers29.businesscraft.town.viewmodel.TownResourceViewModelBuilder;
 import com.quackers29.businesscraft.town.viewmodel.ProductionStatusViewModel;
@@ -179,30 +180,18 @@ public class TownInterfaceEntity extends BlockEntity
     // logic)
     private final ClientSyncHelper clientSyncHelper = new ClientSyncHelper();
 
+    // Consolidated view-model cache (replaces 5 individual caches)
+    private final ViewModelCache vmCache = new ViewModelCache();
+
+public ViewModelCache getVmCache() {
+    return vmCache;
+}
+
     public ClientSyncHelper getClientSyncHelper() {
         return clientSyncHelper;
     }
 
-    // Client-side resource view-model cache (for the new server-authoritative
-    // architecture)
-    private TownResourceViewModel cachedResourceViewModel = null;
-
-    /**
-     * Updates the client-side resource view-model cache.
-     * This method is called by ResourceViewModelSyncPacket to implement the
-     * "dumb terminal" pattern where client only displays pre-calculated data.
-     */
-    public void updateResourceViewModel(TownResourceViewModel viewModel) {
-        this.cachedResourceViewModel = viewModel;
-    }
-
-    /**
-     * Gets the cached resource view-model for client-side display.
-     * Returns null if no view-model has been received from server yet.
-     */
-    public TownResourceViewModel getCachedResourceViewModel() {
-        return cachedResourceViewModel;
-    }
+    // updateResourceViewModel, getCachedResourceViewModel now via vmCache
 
     /**
      * SERVER-SIDE: Sends updated resource view-model to a specific player.
@@ -242,27 +231,7 @@ public class TownInterfaceEntity extends BlockEntity
         serverLevel.players().forEach(this::syncResourceViewModelToPlayer);
     }
 
-    // Client-side production view-model cache (for the new server-authoritative
-    // architecture)
-    private ProductionStatusViewModel cachedProductionViewModel = null;
-
-    /**
-     * Updates the client-side production view-model cache.
-     * This method is called by ProductionViewModelSyncPacket to implement the
-     * "dumb terminal" pattern where client only displays pre-calculated production
-     * data.
-     */
-    public void updateProductionViewModel(ProductionStatusViewModel viewModel) {
-        this.cachedProductionViewModel = viewModel;
-    }
-
-    /**
-     * Gets the cached production view-model for client-side display.
-     * Returns null if no view-model has been received from server yet.
-     */
-    public ProductionStatusViewModel getCachedProductionViewModel() {
-        return cachedProductionViewModel;
-    }
+    // updateProductionViewModel, getCachedProductionViewModel now via vmCache
 
     /**
      * SERVER-SIDE: Sends updated production view-model to a specific player.
@@ -304,27 +273,7 @@ public class TownInterfaceEntity extends BlockEntity
         serverLevel.players().forEach(this::syncProductionViewModelToPlayer);
     }
 
-    // Client-side upgrade view-model cache (for the new server-authoritative
-    // architecture)
-    private com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel cachedUpgradeViewModel = null;
-
-    /**
-     * Updates the client-side upgrade view-model cache.
-     * This method is called by UpgradeViewModelSyncPacket to implement the
-     * "dumb terminal" pattern where client only displays pre-calculated upgrade
-     * data.
-     */
-    public void updateUpgradeViewModel(com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel viewModel) {
-        this.cachedUpgradeViewModel = viewModel;
-    }
-
-    /**
-     * Gets the cached upgrade view-model for client-side display.
-     * Returns null if no view-model has been received from server yet.
-     */
-    public com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel getCachedUpgradeViewModel() {
-        return cachedUpgradeViewModel;
-    }
+    // updateUpgradeViewModel, getCachedUpgradeViewModel now via vmCache
 
     /**
      * SERVER-SIDE: Sends updated upgrade view-model to a specific player.
@@ -383,24 +332,7 @@ public class TownInterfaceEntity extends BlockEntity
         serverLevel.players().forEach(this::syncUpgradeViewModelToPlayer);
     }
 
-    // Client-side town interface view-model cache (Phase 2.3)
-    private com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel cachedInterfaceViewModel = null;
-
-    /**
-     * Updates the client-side town interface view-model cache.
-     * Called by TownInterfaceViewModelSyncPacket.
-     */
-    public void updateTownInterfaceViewModel(
-            com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel viewModel) {
-        this.cachedInterfaceViewModel = viewModel;
-    }
-
-    /**
-     * Gets the cached town interface view-model.
-     */
-    public com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel getCachedInterfaceViewModel() {
-        return cachedInterfaceViewModel;
-    }
+    // updateTownInterfaceViewModel, getCachedInterfaceViewModel now via vmCache
 
     /**
      * SERVER-SIDE: Sends updated town interface view-model to a specific player.
@@ -505,7 +437,6 @@ public class TownInterfaceEntity extends BlockEntity
         TradingViewModel viewModel = TradingViewModelBuilder.build(town);
 
         // Cache it server-side too
-        this.cachedTradingViewModel = viewModel;
 
         // Create packet
         TradingViewModelSyncPacket packet = new TradingViewModelSyncPacket(viewModel);
@@ -522,23 +453,7 @@ public class TownInterfaceEntity extends BlockEntity
         }
     }
 
-    // Client-side trading view-model cache (Phase 2.4)
-    private TradingViewModel cachedTradingViewModel = null;
-
-    /**
-     * Updates the client-side trading view-model cache.
-     * Called by TradingViewModelSyncPacket.
-     */
-    public void updateTradingViewModel(TradingViewModel viewModel) {
-        this.cachedTradingViewModel = viewModel;
-    }
-
-    /**
-     * Gets the cached trading view-model.
-     */
-    public TradingViewModel getCachedTradingViewModel() {
-        return cachedTradingViewModel;
-    }
+    // updateTradingViewModel, getCachedTradingViewModel now via vmCache
 
     /**
      * SERVER-SIDE: Sends updated trading view-model to a specific player.

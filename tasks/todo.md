@@ -751,3 +751,26 @@ After ~90 failed auctions: hits floor at 0.0001
 
 ---
 
+## 🔧 **PHASE 12: VIEWMODEL CACHE CONSOLIDATION** 
+
+**Objective:** Replace 5 duplicate VM caches in TownInterfaceEntity (~350L dupe code). Single typed cache + dirty flags. Saves ~250L, enables dirty-opt sync.
+
+### **12.1 ViewModelCache Implementation** ✅ **COMPLETE**
+- New: `town/viewmodel/ViewModelCache.java` - Generic Map<Class,Object> + dirtyMap. update/get/isDirty/syncAllDirty.
+- Edit: `TownInterfaceEntity.java` - Add `vmCache` field. Remove 5 cached*VM fields + dupe syncToNearbyPlayers.
+- Lines saved: ~250L.
+- Build: Forge/Fabric clean.
+- Test: UI tabs display/sync correct.
+
+### **12.2 Dirty Sync Unification** 🔧 **PENDING**
+- Replace 5 sync*ToNearbyPlayers() → single `syncAllDirtyViewModelsToNearbyPlayers()`.
+- Add `updateResourceVM()` etc. Call on data changes (addResource, syncTownData).
+- Tick: `vmCache.syncAllDirty( (type,vm) -> sendPacket(type,vm) )`.
+- Benefit: Only sync changed VMs. Reduce network.
+
+**Verification:**
+- Compile both.
+- Town UI: tabs Resources/Prod/Upg/Trading/Interface → data syncs.
+- Changes (add resource): only dirty tab updates.
+
+**Risks:** ClassCast (instanceof guards). Null VMs (null-safe get).
