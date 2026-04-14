@@ -26,7 +26,7 @@ Record everything in a .claude/tasks/[TASK_ID]/onboarding.md file. This file wil
 1. First, read the codebase for relevant files, and write a plan to tasks/todo.md.
 2. If you are told to add tasks to the backlog, use "tasks/toImprove.md" this is a log of future improvements to be made but not the current task, update as needed
 3. The plan should have a list of todo items that you can check off as you complete them.
-4. Before you begin working, check in with me and I will verify the plan. Use the 'Notify User' command to notify me prior to any input to get my attention (including when you complete).
+4. Before you begin working, check in with me and I will verify the plan. 
 5. Then, begin working on the todo items, keep on marking them off as you go in the file so I can track progress.
 6. Finally, if you have noticed you have move onto your next task, move the previously completed task to the bottom of the done.md file, using similar style to whats already in the end of that file.
 
