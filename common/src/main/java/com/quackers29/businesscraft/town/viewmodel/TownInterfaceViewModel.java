@@ -1,4 +1,5 @@
 package com.quackers29.businesscraft.town.viewmodel;
+import com.quackers29.businesscraft.town.viewmodel.IViewModel;
 
 import net.minecraft.network.FriendlyByteBuf;
 import java.util.HashMap;
@@ -16,7 +17,7 @@ import java.util.Map;
  * - ContainerData integer slots in TownInterfaceMenu
  * - Client-side fallback calculations in TownInterfaceMenu
  */
-public class TownInterfaceViewModel {
+public class TownInterfaceViewModel implements IViewModel {
 
     public enum Status {
         NORMAL, WARNING, CRITICAL, INFO

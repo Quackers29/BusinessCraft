@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.town.viewmodel.TownResourceViewModel;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
@@ -22,74 +23,33 @@ import org.slf4j.LoggerFactory;
  * - Implements true "dumb terminal" client architecture
  * - All business logic happens server-side in TownResourceViewModelBuilder
  */
-public class ResourceViewModelSyncPacket {
+public class ResourceViewModelSyncPacket extends BaseViewModelSyncPacket<TownResourceViewModel> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ResourceViewModelSyncPacket.class);
-    
-    private final BlockPos pos;
-    private final TownResourceViewModel resourceViewModel;
-    
-    /**
-     * Creates a new view-model sync packet (SERVER-SIDE)
-     * @param pos Block position of the town interface
-     * @param resourceViewModel Pre-calculated view-model from server
-     */
-    public ResourceViewModelSyncPacket(BlockPos pos, TownResourceViewModel resourceViewModel) {
-        this.pos = pos;
-        this.resourceViewModel = resourceViewModel;
+
+    public ResourceViewModelSyncPacket(BlockPos pos, TownResourceViewModel viewModel) {
+        super(pos, viewModel);
     }
-    
-    /**
-     * Deserializes packet from network buffer (CLIENT-SIDE)
-     */
+
     public ResourceViewModelSyncPacket(FriendlyByteBuf buf) {
-        this.pos = buf.readBlockPos();
-        this.resourceViewModel = new TownResourceViewModel(buf);
+        super(buf);
     }
-    
-    /**
-     * Serializes packet to network buffer (SERVER-SIDE)
-     */
-    public void toBytes(FriendlyByteBuf buf) {
-        buf.writeBlockPos(pos);
-        resourceViewModel.toBytes(buf);
+
+    @Override
+    protected TownResourceViewModel readViewModel(FriendlyByteBuf buf) {
+        return new TownResourceViewModel(buf);
     }
-    
+
     public static void encode(ResourceViewModelSyncPacket msg, FriendlyByteBuf buf) {
-        msg.toBytes(buf);
+        BaseViewModelSyncPacket.encode(msg, buf);
     }
-    
+
     public static ResourceViewModelSyncPacket decode(FriendlyByteBuf buf) {
         return new ResourceViewModelSyncPacket(buf);
     }
-    
-    /**
-     * Handles packet on client side - PURE DISPLAY LOGIC ONLY
-     * No calculations, no business logic, just updating the display cache
-     */
+
+    @Override
     public void handle(Object context) {
-        PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            LOGGER.debug("[CLIENT] ResourceViewModelSyncPacket received for pos {}", pos);
-            
-            var mc = Minecraft.getInstance();
-            var level = mc.level;
-            if (level == null) return;
-            
-            BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof TownInterfaceEntity entity) {
-                // Update the client cache with pre-calculated view-model
-                // NO CALCULATIONS HAPPEN HERE - client is truly a "dumb terminal"
-                entity.getVmCache().update(TownResourceViewModel.class, resourceViewModel);
-                
-                // Refresh open UI if TownInterfaceScreen is active  
-                if (mc.screen instanceof com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen screen) {
-                    screen.getMenu().refreshDataSlots();
-                }
-                
-                LOGGER.debug("[CLIENT] Resource view-model updated: {} resources, status: {}", 
-                    resourceViewModel.getResourceCount(), 
-                    resourceViewModel.getOverallStatus());
-            }
-        });
-        PlatformAccess.getNetwork().setPacketHandled(context);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "[CLIENT] ResourceViewModelSyncPacket received for pos {}", pos);
+        super.handle(context);
     }
 }

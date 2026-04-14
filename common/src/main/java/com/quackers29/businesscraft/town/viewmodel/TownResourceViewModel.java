@@ -4,6 +4,7 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.town.viewmodel.IViewModel;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +19,7 @@ import java.util.Map;
  * - Client receives ready-to-display data
  * - No business logic duplication between client/server
  */
-public class TownResourceViewModel {
+public class TownResourceViewModel implements IViewModel {
 
     /**
      * Resource display information for a single resource

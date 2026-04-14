@@ -1,4 +1,5 @@
 package com.quackers29.businesscraft.town.viewmodel;
+import com.quackers29.businesscraft.town.viewmodel.IViewModel;
 
 import net.minecraft.network.FriendlyByteBuf;
 
@@ -15,7 +16,7 @@ import java.util.Map;
  * - Client receives ready-to-display data with recipe names from server config
  * - No production recipe registry or formula access on client
  */
-public class ProductionStatusViewModel {
+public class ProductionStatusViewModel implements IViewModel {
 
     /**
      * Display information for a single production recipe

@@ -1,4 +1,5 @@
 package com.quackers29.businesscraft.town.viewmodel;
+import com.quackers29.businesscraft.town.viewmodel.IViewModel;
 
 import net.minecraft.network.FriendlyByteBuf;
 
@@ -17,7 +18,7 @@ import java.util.Map;
  * - Client receives ready-to-display data with upgrade names from server config
  * - No upgrade registry or effect calculation access on client
  */
-public class UpgradeStatusViewModel {
+public class UpgradeStatusViewModel implements IViewModel {
 
     /**
      * Display information for a single upgrade node at a specific level
