@@ -149,7 +149,8 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
                         // Force a sync of the view model to this player right now
                         if (be instanceof TownInterfaceEntity entity
                                 && inv.player instanceof net.minecraft.server.level.ServerPlayer sp) {
-                            entity.syncInterfaceViewModelToPlayer(sp);
+                            entity.updateInterfaceVM();
+                            entity.syncAllDirtyTownVMsToPlayers();
                         }
 
                         // --- FIX: Sync Contract/Market Data for GPI Display ---

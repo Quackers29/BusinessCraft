@@ -183,6 +183,68 @@ public class TownInterfaceEntity extends BlockEntity
     // Consolidated view-model cache (replaces 5 individual caches)
     private final ViewModelCache vmCache = new ViewModelCache();
 
+    private void updateResourceVM() {
+        Town town = getTown();
+        if (town != null) {
+            TownResourceViewModel vm = TownResourceViewModelBuilder.buildResourceViewModel(town);
+            vmCache.update(TownResourceViewModel.class, vm);
+        }
+    }
+
+    private void updateProductionVM() {
+        Town town = getTown();
+        if (town != null) {
+            ProductionStatusViewModel vm = ProductionStatusViewModelBuilder.buildProductionViewModel(town);
+            vmCache.update(ProductionStatusViewModel.class, vm);
+        }
+    }
+
+    private void updateUpgradeVM() {
+        Town town = getTown();
+        if (town != null) {
+            com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel vm = com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModelBuilder.buildUpgradeViewModel(town);
+            vmCache.update(com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel.class, vm);
+        }
+    }
+
+    public void updateInterfaceVM() {
+        Town town = getTown();
+        if (town != null) {
+            com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel vm = com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModelBuilder.build(town, this);
+            vmCache.update(com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel.class, vm);
+        }
+    }
+
+    private void updateAllTownVMs() {
+        updateResourceVM();
+        updateProductionVM();
+        updateUpgradeVM();
+        updateInterfaceVM();
+    }
+
+    public void syncAllDirtyTownVMsToPlayers() {
+        if (level == null || level.isClientSide()) return;
+        if (!(level instanceof ServerLevel serverLevel)) return;
+
+        BlockPos pos = getBlockPos();
+
+        vmCache.syncAllDirty(vm -> {
+            if (vm instanceof TownResourceViewModel rvm) {
+                ResourceViewModelSyncPacket packet = new ResourceViewModelSyncPacket(pos, rvm);
+                serverLevel.players().forEach(player -> PlatformAccess.getNetworkMessages().sendToPlayer(packet, player));
+            } else if (vm instanceof ProductionStatusViewModel pvm) {
+                ProductionViewModelSyncPacket packet = new ProductionViewModelSyncPacket(pos, pvm);
+                serverLevel.players().forEach(player -> PlatformAccess.getNetworkMessages().sendToPlayer(packet, player));
+            } else if (vm instanceof com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel uvm) {
+                com.quackers29.businesscraft.network.packets.UpgradeViewModelSyncPacket packet = new com.quackers29.businesscraft.network.packets.UpgradeViewModelSyncPacket(pos, uvm);
+                serverLevel.players().forEach(player -> PlatformAccess.getNetworkMessages().sendToPlayer(packet, player));
+            } else if (vm instanceof com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel ivm) {
+                com.quackers29.businesscraft.network.packets.TownInterfaceViewModelSyncPacket packet = new com.quackers29.businesscraft.network.packets.TownInterfaceViewModelSyncPacket(pos, ivm);
+                serverLevel.players().forEach(player -> PlatformAccess.getNetworkMessages().sendToPlayer(packet, player));
+            }
+        });
+    }
+
 public ViewModelCache getVmCache() {
     return vmCache;
 }
@@ -193,183 +255,15 @@ public ViewModelCache getVmCache() {
 
     // updateResourceViewModel, getCachedResourceViewModel now via vmCache
 
-    /**
-     * SERVER-SIDE: Sends updated resource view-model to a specific player.
-     * This implements the server-authoritative architecture by sending
-     * pre-calculated display data instead of raw numbers.
-     */
-    public void syncResourceViewModelToPlayer(ServerPlayer player) {
-        if (level == null || level.isClientSide())
-            return;
-
-        Town town = this.getTown();
-        if (town == null)
-            return;
-
-        // Build view-model on server (contains ALL calculations)
-        TownResourceViewModel viewModel = TownResourceViewModelBuilder.buildResourceViewModel(town);
-
-        // Send view-model to client (client performs ZERO calculations)
-        ResourceViewModelSyncPacket packet = new ResourceViewModelSyncPacket(getBlockPos(), viewModel);
-        PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
-
-        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
-                "Sent resource view-model to player {} - {} resources, status: {}",
-                player.getName().getString(), viewModel.getResourceCount(), viewModel.getOverallStatus());
-    }
-
-    /**
-     * SERVER-SIDE: Sends updated resource view-model to all nearby players.
-     */
-    public void syncResourceViewModelToNearbyPlayers() {
-        if (level == null || level.isClientSide())
-            return;
-        if (!(level instanceof ServerLevel serverLevel))
-            return;
-
-        // Send to all players in the area
-        serverLevel.players().forEach(this::syncResourceViewModelToPlayer);
-    }
 
     // updateProductionViewModel, getCachedProductionViewModel now via vmCache
 
-    /**
-     * SERVER-SIDE: Sends updated production view-model to a specific player.
-     * This implements the server-authoritative architecture by sending
-     * pre-calculated production data from server config files.
-     */
-    public void syncProductionViewModelToPlayer(ServerPlayer player) {
-        if (level == null || level.isClientSide())
-            return;
-
-        Town town = this.getTown();
-        if (town == null)
-            return;
-
-        // Build view-model on server (contains ALL production config data and
-        // calculations)
-        ProductionStatusViewModel viewModel = ProductionStatusViewModelBuilder.buildProductionViewModel(town);
-
-        // Send view-model to client (client performs ZERO config access or
-        // calculations)
-        ProductionViewModelSyncPacket packet = new ProductionViewModelSyncPacket(getBlockPos(), viewModel);
-        PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
-
-        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
-                "Sent production view-model to player {} - {} recipes, status: {}",
-                player.getName().getString(), viewModel.getRecipeCount(), viewModel.getOverallStatus());
-    }
-
-    /**
-     * SERVER-SIDE: Sends updated production view-model to all nearby players.
-     */
-    public void syncProductionViewModelToNearbyPlayers() {
-        if (level == null || level.isClientSide())
-            return;
-        if (!(level instanceof ServerLevel serverLevel))
-            return;
-
-        // Send to all players in the area
-        serverLevel.players().forEach(this::syncProductionViewModelToPlayer);
-    }
 
     // updateUpgradeViewModel, getCachedUpgradeViewModel now via vmCache
 
-    /**
-     * SERVER-SIDE: Sends updated upgrade view-model to a specific player.
-     * This implements the server-authoritative architecture by sending
-     * pre-calculated upgrade data from server config files.
-     *
-     * REPLACES client-side business logic:
-     * - ProductionTab research speed calculations (lines 155-172)
-     * - ProductionTab upgrade tree building (line 174+)
-     * - ProductionTab cost multiplier calculations (lines 253-310)
-     * - TownDataCacheManager.getCachedResearchSpeed() (lines 262-279)
-     * - TownDataCacheManager.getResearchSpeedTooltip() (lines 284-310)
-     */
-    public void syncUpgradeViewModelToPlayer(ServerPlayer player) {
-        if (level == null || level.isClientSide())
-            return;
-
-        Town town = this.getTown();
-        if (town == null) {
-            DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
-                    "[SERVER] syncUpgradeViewModelToPlayer: Town is null, skipping");
-            return;
-        }
-
-        // Build view-model on server (contains ALL upgrade config data and
-        // calculations)
-        com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel viewModel = com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModelBuilder
-                .buildUpgradeViewModel(town);
-
-        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
-                "[SERVER] Built upgrade view-model: {} total upgrades, {} unlocked, {} researchable, {} locked, status: {}",
-                viewModel.getUpgradeCount(), viewModel.getUnlockedCount(),
-                viewModel.getResearchableUpgradeIds().size(), viewModel.getLockedUpgradeIds().size(),
-                viewModel.getCurrentResearchStatus());
-
-        // Send view-model to client (client performs ZERO config access or
-        // calculations)
-        com.quackers29.businesscraft.network.packets.UpgradeViewModelSyncPacket packet = new com.quackers29.businesscraft.network.packets.UpgradeViewModelSyncPacket(
-                getBlockPos(), viewModel);
-        PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
-
-        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
-                "[SERVER] Sent upgrade view-model packet to player: {}", player.getName().getString());
-    }
-
-    /**
-     * SERVER-SIDE: Sends updated upgrade view-model to all nearby players.
-     */
-    public void syncUpgradeViewModelToNearbyPlayers() {
-        if (level == null || level.isClientSide())
-            return;
-        if (!(level instanceof ServerLevel serverLevel))
-            return;
-
-        // Send to all players in the area
-        serverLevel.players().forEach(this::syncUpgradeViewModelToPlayer);
-    }
 
     // updateTownInterfaceViewModel, getCachedInterfaceViewModel now via vmCache
 
-    /**
-     * SERVER-SIDE: Sends updated town interface view-model to a specific player.
-     * Replaces TownOverviewSyncPacket and ContainerData with server-authoritative
-     * display strings.
-     */
-    public void syncInterfaceViewModelToPlayer(ServerPlayer player) {
-        if (level == null || level.isClientSide())
-            return;
-
-        Town town = this.getTown();
-
-        // Build view-model server-side (handles all formatting and logic)
-        com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel viewModel = com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModelBuilder
-                .build(town, this);
-
-        // Send to client
-        com.quackers29.businesscraft.network.packets.TownInterfaceViewModelSyncPacket packet = new com.quackers29.businesscraft.network.packets.TownInterfaceViewModelSyncPacket(
-                getBlockPos(), viewModel);
-        PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
-
-        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
-                "Sent town interface view-model to player {} - Town: {}, Pop: {}",
-                player.getName().getString(), viewModel.getTownName(), viewModel.getPopulationDisplay());
-    }
-
-    /**
-     * SERVER-SIDE: Sends updated town interface view-model to all nearby players.
-     */
-    public void syncInterfaceViewModelToNearbyPlayers() {
-        if (level == null || level.isClientSide())
-            return;
-        if (!(level instanceof ServerLevel serverLevel))
-            return;
-
-        serverLevel.players().forEach(this::syncInterfaceViewModelToPlayer);
-    }
 
     // GLOBAL market sync tracking (market prices are global, not per-town)
     private static long lastGlobalMarketSyncTime = 0;
@@ -920,16 +814,9 @@ public ViewModelCache getVmCache() {
 
             // NEW: Sync resource view-model to clients (server-authoritative architecture)
             if (!level.isClientSide && level instanceof ServerLevel) {
-                syncResourceViewModelToNearbyPlayers();
-                // NEW: Sync production view-model to clients (eliminates ProductionRegistry
-                // access on client)
-                syncProductionViewModelToNearbyPlayers();
-                // NEW: Sync upgrade view-model to clients (eliminates UpgradeRegistry access on
-                // client)
-                syncUpgradeViewModelToNearbyPlayers();
-                // NEW: Sync market view-model to clients (eliminates client price calculations)
+                updateAllTownVMs();
+                syncAllDirtyTownVMsToPlayers();
                 syncMarketViewModelToAllPlayers();
-                // NEW: Sync trading view-model to clients (Phase 2.4 - stock/price sync)
                 syncTradingViewModelToNearbyPlayers();
             }
 
