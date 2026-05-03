@@ -1,0 +1,27 @@
+﻿# Refinement TODO - forge
+
+- [ ] forge/build.gradle
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/block/entity/ForgeTownInterfaceEntity.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/BusinessCraftForge.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/client/ForgeClientSetup.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/event/ForgeEventCallbackHandler.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/event/ForgeModEvents.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/init/ForgeModBlockEntities.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/init/ForgeModBlocks.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/init/ForgeModEntityTypes.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/init/ForgeModMenuTypes.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/network/ForgeModMessages.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/platform/ForgeBlockEntityHelper.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/platform/ForgeClientHelper.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/platform/ForgeEntityHelper.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/platform/ForgeEventHelper.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/platform/ForgeItemHandlerHelper.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/platform/ForgeMenuHelper.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/platform/ForgeMenuTypeHelper.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/platform/ForgeNetworkHelper.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/platform/ForgeNetworkMessages.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/platform/ForgePlatformHelper.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/platform/ForgeRegistryHelper.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/platform/ForgeRenderHelper.java
+- [ ] forge/src/main/java/com/quackers29/businesscraft/forge/platform/ForgeTouristHelper.java
+- [ ] forge/src/main/resources/META-INF/mods.toml
