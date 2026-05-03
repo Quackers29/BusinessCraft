@@ -1,11 +1,6 @@
 package com.quackers29.businesscraft.api;
 
-/**
- * Utility class to access platform-specific services from common code.
- * This is a bridge between common code and platform implementations.
- */
 public class PlatformAccess {
-    // These will be set by the platform-specific mod initialization
     public static PlatformHelper platform;
     public static RegistryHelper registry;
     public static EventHelper events;
@@ -16,8 +11,8 @@ public class PlatformAccess {
     public static MenuTypeHelper menuTypes;
     public static ItemHandlerHelper itemHandlers;
     public static NetworkMessages networkMessages;
-    public static ClientHelper client; // Client-side only - may be null on server
-    public static RenderHelper render; // Client-side only - may be null on server
+    public static ClientHelper client;
+    public static RenderHelper render;
 
     public static PlatformHelper getPlatform() {
         if (platform == null) {
@@ -90,12 +85,10 @@ public class PlatformAccess {
     }
 
     public static ClientHelper getClient() {
-        // ClientHelper may be null on server side, so we don't throw an exception
         return client;
     }
 
     public static RenderHelper getRender() {
-        // RenderHelper may be null on server side, so we don't throw an exception
         return render;
     }
 
