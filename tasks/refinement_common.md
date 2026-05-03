@@ -9,9 +9,9 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/api/ItemHandlerHelper.java
 - [x] common/src/main/java/com/quackers29/businesscraft/api/ITouristHelper.java
 - [x] common/src/main/java/com/quackers29/businesscraft/api/ITownDataProvider.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/api/MenuHelper.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/api/MenuTypeHelper.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/api/NetworkHelper.java
+- [x] common/src/main/java/com/quackers29/businesscraft/api/MenuHelper.java
+- [x] common/src/main/java/com/quackers29/businesscraft/api/MenuTypeHelper.java
+- [x] common/src/main/java/com/quackers29/businesscraft/api/NetworkHelper.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/api/NetworkMessages.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/api/PlatformAccess.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/api/PlatformHelper.java
