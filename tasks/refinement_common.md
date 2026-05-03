@@ -2,7 +2,7 @@
 
 - [x] common/build.gradle
 - [x] common/src/main/java/com/quackers29/businesscraft/api/BlockEntityHelper.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/api/ClientHelper.java
+- [x] common/src/main/java/com/quackers29/businesscraft/api/ClientHelper.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/api/EntityHelper.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/api/EventCallbacks.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/api/EventHelper.java
