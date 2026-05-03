@@ -3,12 +3,12 @@
 - [x] common/build.gradle
 - [x] common/src/main/java/com/quackers29/businesscraft/api/BlockEntityHelper.java
 - [x] common/src/main/java/com/quackers29/businesscraft/api/ClientHelper.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/api/EntityHelper.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/api/EventCallbacks.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/api/EventHelper.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/api/ItemHandlerHelper.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/api/ITouristHelper.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/api/ITownDataProvider.java
+- [x] common/src/main/java/com/quackers29/businesscraft/api/EntityHelper.java
+- [x] common/src/main/java/com/quackers29/businesscraft/api/EventCallbacks.java
+- [x] common/src/main/java/com/quackers29/businesscraft/api/EventHelper.java
+- [x] common/src/main/java/com/quackers29/businesscraft/api/ItemHandlerHelper.java
+- [x] common/src/main/java/com/quackers29/businesscraft/api/ITouristHelper.java
+- [x] common/src/main/java/com/quackers29/businesscraft/api/ITownDataProvider.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/api/MenuHelper.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/api/MenuTypeHelper.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/api/NetworkHelper.java
