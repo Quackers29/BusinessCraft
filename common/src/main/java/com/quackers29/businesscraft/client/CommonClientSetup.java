@@ -34,14 +34,12 @@ public class CommonClientSetup {
     public static void init() {
         LOGGER.info("Initializing Common Client Setup...");
 
-        // Initialize key handlers
         if (DebugConfig.isEnabled(DebugConfig.DEBUG_OVERLAY)) {
             TownDebugKeyHandler.initialize();
             TownDebugOverlay.initialize();
         }
         PlatformPathKeyHandler.initialize();
 
-        // Initialize client render events
         ClientRenderEvents.initialize();
     }
 
