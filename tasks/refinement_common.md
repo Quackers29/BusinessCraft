@@ -14,11 +14,11 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/api/NetworkHelper.java
 - [x] common/src/main/java/com/quackers29/businesscraft/api/NetworkMessages.java
 - [x] common/src/main/java/com/quackers29/businesscraft/api/PlatformAccess.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/api/PlatformHelper.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/api/RegistryHelper.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/api/RenderHelper.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/api/SlotBasedStorageAccess.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/block/entity/TownInterfaceEntity.java
+- [x] common/src/main/java/com/quackers29/businesscraft/api/PlatformHelper.java
+- [x] common/src/main/java/com/quackers29/businesscraft/api/RegistryHelper.java
+- [x] common/src/main/java/com/quackers29/businesscraft/api/RenderHelper.java
+- [x] common/src/main/java/com/quackers29/businesscraft/api/SlotBasedStorageAccess.java
+- [x] common/src/main/java/com/quackers29/businesscraft/block/entity/TownInterfaceEntity.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/block/TownInterfaceBlock.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/client/ClientGlobalMarket.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/client/CommonClientSetup.java

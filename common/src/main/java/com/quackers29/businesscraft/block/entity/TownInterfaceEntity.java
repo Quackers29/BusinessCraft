@@ -1,7 +1,5 @@
 package com.quackers29.businesscraft.block.entity;
 
-// import com.quackers29.businesscraft.blocks.ModBlocks;
-// import com.quackers29.businesscraft.capability.ItemHandlerCapability;
 import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
@@ -9,9 +7,7 @@ import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.service.TouristVehicleManager;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
-// import com.quackers29.businesscraft.api.IEconomyDataProvider;
 import com.quackers29.businesscraft.api.ITownDataProvider;
-// import com.quackers29.businesscraft.data.VisitHistoryRecord;
 import com.quackers29.businesscraft.scoreboard.TownScoreboardManager;
 import com.quackers29.businesscraft.contract.ContractBoard;
 import com.quackers29.businesscraft.contract.SellContract;
@@ -88,7 +84,6 @@ import net.minecraft.world.phys.Vec3;
 import com.quackers29.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
 import com.quackers29.businesscraft.platform.Platform;
 import net.minecraft.resources.ResourceLocation;
-// import net.minecraftforge.registries.ForgeRegistries;
 import com.quackers29.businesscraft.api.ITouristHelper;
 import com.quackers29.businesscraft.api.ITouristHelper.TouristInfo;
 import com.quackers29.businesscraft.town.utils.TouristAllocationTracker;
@@ -128,11 +123,9 @@ public class TownInterfaceEntity extends BlockEntity
     private final Object itemHandler = PlatformAccess.getItemHandlers().createItemStackHandler(1);
     private Object lazyItemHandler = PlatformAccess.getItemHandlers().getEmptyLazyOptional();
 
-    // Buffer management - extracted to separate class for better organization
     private TownBufferManager bufferManager;
     private Object lazyBufferHandler = PlatformAccess.getItemHandlers().getEmptyLazyOptional();
 
-    // Modular ContainerData system - replaces hardcoded indices with named fields
     private final ContainerDataHelper containerData = ContainerDataHelper.builder("TownBlock")
 
             .addReadOnlyField("population", this::getPopulationFromTown, "Current town population")
@@ -162,25 +155,16 @@ public class TownInterfaceEntity extends BlockEntity
     private List<LivingEntity> tourists = new ArrayList<>();
     private ITownDataProvider townDataProvider;
 
-    /**
-     * Rate limiting parameters for markDirty calls
-     * Prevents excessive updates which can flood logs and impact performance
-     */
     private long lastMarkDirtyTime = 0;
     private static final long MARK_DIRTY_COOLDOWN_MS = 2000; // 2 seconds between calls
     private long lastSearchRadiusLogTime = 0; // For rate-limiting debug logs
 
-    // Add a new TouristVehicleManager instance
     private final TouristVehicleManager touristVehicleManager = new TouristVehicleManager();
 
-    // History buffer storage
     private final VisitBuffer visitBuffer = new VisitBuffer();
 
-    // Client-server synchronization helper (handles all client caching and sync
-    // logic)
     private final ClientSyncHelper clientSyncHelper = new ClientSyncHelper();
 
-    // Consolidated view-model cache (replaces 5 individual caches)
     private final ViewModelCache vmCache = new ViewModelCache();
 
     private void updateResourceVM() {
@@ -253,19 +237,6 @@ public ViewModelCache getVmCache() {
         return clientSyncHelper;
     }
 
-    // updateResourceViewModel, getCachedResourceViewModel now via vmCache
-
-
-    // updateProductionViewModel, getCachedProductionViewModel now via vmCache
-
-
-    // updateUpgradeViewModel, getCachedUpgradeViewModel now via vmCache
-
-
-    // updateTownInterfaceViewModel, getCachedInterfaceViewModel now via vmCache
-
-
-    // GLOBAL market sync tracking (market prices are global, not per-town)
     private static long lastGlobalMarketSyncTime = 0;
     private static final long MARKET_SYNC_INTERVAL = 100; // Sync every 100 ticks (5 seconds)
 
@@ -286,20 +257,15 @@ public ViewModelCache getVmCache() {
         if (!(level instanceof ServerLevel serverLevel))
             return;
 
-        // Check if enough time has passed since last global sync
         long currentTime = level.getGameTime();
         if (currentTime - lastGlobalMarketSyncTime < MARKET_SYNC_INTERVAL) {
             return; // Skip sync, too soon since last one
         }
 
-        // Update last sync time (prevents duplicate syncs from multiple
-        // TownInterfaceEntities)
         lastGlobalMarketSyncTime = currentTime;
 
-        // Build global market view-model (contains ALL item prices)
         MarketViewModel viewModel = MarketViewModelBuilder.buildMarketViewModel();
 
-        // Send to ALL online players (market is global, not per-location)
         MarketViewModelSyncPacket packet = new MarketViewModelSyncPacket(viewModel);
         serverLevel.players().forEach(player -> {
             PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
@@ -327,15 +293,10 @@ public ViewModelCache getVmCache() {
         if (town == null)
             return;
 
-        // Build the view model with current stock and prices
         TradingViewModel viewModel = TradingViewModelBuilder.build(town);
 
-        // Cache it server-side too
-
-        // Create packet
         TradingViewModelSyncPacket packet = new TradingViewModelSyncPacket(viewModel);
 
-        // Send to players within range
         int syncRadius = 64;
         double syncRadiusSqr = syncRadius * syncRadius;
         BlockPos pos = getBlockPos();
@@ -346,8 +307,6 @@ public ViewModelCache getVmCache() {
             }
         }
     }
-
-    // updateTradingViewModel, getCachedTradingViewModel now via vmCache
 
     /**
      * SERVER-SIDE: Sends updated trading view-model to a specific player.
@@ -361,10 +320,8 @@ public ViewModelCache getVmCache() {
         if (town == null)
             return;
 
-        // Build view-model server-side
         TradingViewModel viewModel = TradingViewModelBuilder.build(town);
 
-        // Send to client
         TradingViewModelSyncPacket packet = new TradingViewModelSyncPacket(viewModel);
         PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
 
@@ -373,35 +330,22 @@ public ViewModelCache getVmCache() {
                 player.getName().getString(), viewModel.getResourceInfo().size());
     }
 
-    // Platform management (handles platform storage and operations)
     private final PlatformManager platformManager = new PlatformManager();
 
-    // Added for platform visualization
     private Map<UUID, Long> platformIndicatorSpawnTimes = new HashMap<>();
     private static final long INDICATOR_SPAWN_INTERVAL = 20; // 1 second in ticks
 
-    // Track when players exit town UI for extended indicators
     private Map<UUID, Long> extendedIndicatorPlayers = new HashMap<>();
     private static final long EXTENDED_INDICATOR_DURATION = 600; // 30 seconds in ticks
 
-    // Platform visualization is now handled by the modular client-side rendering
-    // system
-    // See: client.render.world.PlatformVisualizationRenderer
-
-    // Tourist spawning helper (handles complex spawning logic)
     private final TouristSpawningHelper touristSpawningHelper = new TouristSpawningHelper();
 
-    // Visitor processing helper (handles complex visitor detection and processing)
     private final VisitorProcessingHelper visitorProcessingHelper = new VisitorProcessingHelper();
 
-    // NBT data management helper (handles complex save/load operations)
     private final NBTDataHelper nbtDataHelper = new NBTDataHelper();
 
-    // Special UUID for "any town" destination
     private static final UUID ANY_TOWN_DESTINATION = new UUID(0, 0);
     private static final String ANY_TOWN_NAME = "Any Town";
-
-    // Helper methods for ContainerData integration
 
     private int getPopulationFromTown() {
         if (townId != null && level instanceof ServerLevel sLevel) {
@@ -447,16 +391,10 @@ public ViewModelCache getVmCache() {
         super((net.minecraft.world.level.block.entity.BlockEntityType<TownInterfaceEntity>) PlatformAccess
                 .getBlockEntities().getTownInterfaceEntityType(), pos, state);
 
-        // Initialize buffer manager immediately so it's available for setTownId
-        // We pass null for level initially, it will be updated in onLoad or when level
-        // is set
         this.bufferManager = new TownBufferManager(this, null);
 
-        // Set up platform manager callback
         platformManager.setChangeCallback(this::setChanged);
 
-        // Initialize lazy handlers immediately to handle early capability queries (e.g.
-        // from hoppers)
         this.lazyItemHandler = PlatformAccess.getItemHandlers().createLazyOptional(itemHandler);
         this.lazyBufferHandler = PlatformAccess.getItemHandlers().createLazyOptional(bufferManager.getBufferHandler());
 
@@ -476,24 +414,15 @@ public ViewModelCache getVmCache() {
         return new TownInterfaceMenu(id, inventory, this.getBlockPos());
     }
 
-    // Platform-agnostic capability access method
-    // Note: Platform-specific implementations should bridge this to Forge's
-    // getCapability or Fabric's equivalent
     public @NotNull <T> Object getCapabilityCommon(@NotNull Object cap, @Nullable Direction side) {
         if (PlatformAccess.getItemHandlers().isItemHandlerCapability(cap)) {
-            // Return buffer handler for hopper extraction from below
             if (side == Direction.DOWN && bufferManager != null) {
                 return PlatformAccess.getItemHandlers().castLazyOptional(lazyBufferHandler, cap);
             }
-            // Return regular resource input handler for other sides
             return PlatformAccess.getItemHandlers().castLazyOptional(lazyItemHandler, cap);
         }
-        // Platform-specific implementations should handle other capabilities
         return PlatformAccess.getItemHandlers().getEmptyLazyOptional();
     }
-
-    // Hopper compatibility methods - Fabric uses SidedInventory interface
-    // These methods delegate to the internal item handlers
 
     /**
      * Gets the container size for hopper interactions
@@ -507,13 +436,11 @@ public ViewModelCache getVmCache() {
      * Checks if the container is empty
      */
     public boolean isEmpty() {
-        // Check input handler
         Object inputStack = PlatformAccess.getItemHandlers().getStackInSlot(itemHandler, 0);
         if (inputStack instanceof ItemStack stack && !stack.isEmpty()) {
             return false;
         }
 
-        // Check buffer handler (if available)
         if (bufferManager != null && bufferManager.getBufferHandler() instanceof Container bufferContainer) {
             for (int i = 0; i < bufferContainer.getContainerSize(); i++) {
                 if (!bufferContainer.getItem(i).isEmpty()) {
@@ -530,11 +457,9 @@ public ViewModelCache getVmCache() {
      */
     public ItemStack getItem(int slot) {
         if (slot == 0) {
-            // Input slot
             Object stack = PlatformAccess.getItemHandlers().getStackInSlot(itemHandler, 0);
             return stack instanceof ItemStack ? (ItemStack) stack : ItemStack.EMPTY;
         } else if (slot >= 1 && slot <= 18) {
-            // Buffer slots (1-18 map to buffer slots 0-17)
             if (bufferManager != null && bufferManager.getBufferHandler() instanceof Container bufferContainer) {
                 int bufferSlot = slot - 1;
                 if (bufferSlot < bufferContainer.getContainerSize()) {
@@ -550,16 +475,12 @@ public ViewModelCache getVmCache() {
      */
     public void setItem(int slot, ItemStack stack) {
         if (slot == 0) {
-            // Input slot
             PlatformAccess.getItemHandlers().setStackInSlot(itemHandler, 0, stack);
         } else if (slot >= 1 && slot <= 18) {
-            // Buffer slots
             if (bufferManager != null && bufferManager.getBufferHandler() instanceof Container bufferContainer) {
                 int bufferSlot = slot - 1;
                 if (bufferSlot < bufferContainer.getContainerSize()) {
                     bufferContainer.setItem(bufferSlot, stack);
-                    // Notify buffer manager of changes
-                    // bufferManager.onBufferContentsChanged(); // TODO: Add this method if needed
                 }
             }
         }
@@ -605,10 +526,8 @@ public ViewModelCache getVmCache() {
      */
     public boolean canPlaceItem(int slot, ItemStack stack) {
         if (slot == 0) {
-            // Input slot - accept any item
             return true;
         }
-        // Buffer slots - only allow placement through UI (not hoppers)
         return false;
     }
 
@@ -617,7 +536,6 @@ public ViewModelCache getVmCache() {
      */
     public boolean canTakeItemThroughFace(int slot, ItemStack stack, Direction direction) {
         if (direction == Direction.DOWN && slot >= 1 && slot <= 18) {
-            // Buffer slots can be extracted from below
             return true;
         }
         return false; // Input slot cannot be extracted
@@ -628,10 +546,8 @@ public ViewModelCache getVmCache() {
      */
     public int[] getSlotsForFace(Direction direction) {
         if (direction == Direction.DOWN) {
-            // Bottom face: buffer slots (1-18)
             return new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 };
         } else {
-            // All other faces: input slot (0)
             return new int[] { 0 };
         }
     }
@@ -642,7 +558,6 @@ public ViewModelCache getVmCache() {
      */
     public boolean canPlaceItemThroughFace(int slot, ItemStack stack, Direction direction) {
         if (direction != Direction.DOWN && slot == 0) {
-            // Input slot accepts items from any side except bottom
             return true;
         }
         return false;
@@ -664,10 +579,8 @@ public ViewModelCache getVmCache() {
      */
     @Override
     public void clearContent() {
-        // Clear input slot
         PlatformAccess.getItemHandlers().setStackInSlot(itemHandler, 0, ItemStack.EMPTY);
 
-        // Clear buffer slots if buffer manager exists
         if (bufferManager != null && bufferManager.getBufferHandler() instanceof Container bufferContainer) {
             for (int i = 0; i < bufferContainer.getContainerSize(); i++) {
                 bufferContainer.setItem(i, ItemStack.EMPTY);
@@ -680,7 +593,6 @@ public ViewModelCache getVmCache() {
      * This is needed for Fabric's hopper logic
      */
     public Container getContainer() {
-        // Create a wrapper container that delegates to our methods
         return new SimpleContainer(getContainerSize()) {
             @Override
             public ItemStack getItem(int slot) {
@@ -730,7 +642,6 @@ public ViewModelCache getVmCache() {
     @Override
     public void saveAdditional(CompoundTag tag) {
         super.saveAdditional(tag);
-        // Ensure we have the latest search radius from the town before saving
         if (!level.isClientSide()) {
             updateFromTownProvider();
         }
@@ -745,7 +656,6 @@ public ViewModelCache getVmCache() {
 
         NBTDataHelper.LoadResult result = nbtDataHelper.loadFromNBT(tag, itemHandler, level, platformManager);
 
-        // Apply loaded data to instance variables
         this.townId = result.townId;
         this.name = result.name;
         this.town = result.town;
@@ -753,12 +663,10 @@ public ViewModelCache getVmCache() {
         this.pathEnd = result.pathEnd;
         this.touristSpawningEnabled = result.touristSpawningEnabled;
 
-        // Update buffer manager with townId if it exists
         if (bufferManager != null && townId != null) {
             bufferManager.setTownId(townId);
         }
 
-        // Apply search radius if loaded, otherwise use default
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Before NBT load: searchRadius={}", this.searchRadius);
         if (result.hasSearchRadius()) {
             this.searchRadius = result.searchRadius;
@@ -780,22 +688,18 @@ public ViewModelCache getVmCache() {
             DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM,
                     "[PLATFORM] load() called on CLIENT - checking for sync data");
 
-            // Check for and load resources if present
             if (tag.contains("clientResources")) {
                 loadResourcesFromTag(tag);
             }
 
-            // Check for and load visit history if present
             if (tag.contains("visitHistory")) {
                 clientSyncHelper.loadVisitHistoryFromTag(tag);
             }
 
-            // Check for and load wanted resources if present
             if (tag.contains("clientWantedResources")) {
                 clientSyncHelper.loadWantedResourcesFromTag(tag);
             }
 
-            // Check for platform updates
             if (tag.contains("platforms")) {
                 platformManager.updateClientPlatforms(tag);
             }
@@ -804,15 +708,12 @@ public ViewModelCache getVmCache() {
 
     @Override
     public void tick(Level level, BlockPos pos, BlockState state, TownInterfaceEntity blockEntity) {
-        // Process resources every tick (not just once per second)
         processResourcesInSlot();
 
-        // Sync town data from the provider
         if (level.getGameTime() % 10 == 0) { // Every 10 ticks (0.5 seconds) for snappier UI
             updateFromTownProvider();
             setChanged(); // Force sync of resources to client
 
-            // NEW: Sync resource view-model to clients (server-authoritative architecture)
             if (!level.isClientSide && level instanceof ServerLevel) {
                 updateAllTownVMs();
                 syncAllDirtyTownVMsToPlayers();
@@ -820,9 +721,7 @@ public ViewModelCache getVmCache() {
                 syncTradingViewModelToNearbyPlayers();
             }
 
-            // Delegate buffer synchronization to manager
             if (bufferManager != null) {
-                // Ensure buffer manager has level (safety check)
                 bufferManager.setLevel(level);
                 bufferManager.tick();
             }
@@ -832,17 +731,14 @@ public ViewModelCache getVmCache() {
             if (level instanceof ServerLevel sLevel1) {
                 Town town = TownManager.get(sLevel1).getTown(townId);
                 if (town != null) {
-                    // Platform-based villager spawning (consuming pending queue from production)
                     if (!ConfigLoader.touristSystemEnabled) return; // Phase 11 global toggle
                     if (touristSpawningEnabled && town.canSpawnTourists() &&
                             platformManager.getPlatformCount() > 0 &&
                             town.getPendingTouristSpawns() > 0 &&
                             level.getGameTime() % 20 == 0) { // Check every second
 
-                        // Spawn one tourist per check to avoid lag spikes
                         List<Platform> platforms = platformManager.getEnabledPlatforms();
                         if (!platforms.isEmpty()) {
-                            // Pick a random platform to distribute traffic
                             Platform platform = platforms.get(random.nextInt(platforms.size()));
                             if (touristSpawningHelper.spawnTouristOnPlatform(level, town, platform, townId)) {
                                 town.addPendingTouristSpawns(-1);
@@ -850,7 +746,6 @@ public ViewModelCache getVmCache() {
                         }
                     }
 
-                    // Check for visitors using helper
                     if (level.getGameTime() % 40 == 0) {
                         visitorProcessingHelper.processVisitors(
                                 level,
@@ -863,7 +758,6 @@ public ViewModelCache getVmCache() {
                                 this::setChanged);
                     }
 
-                    // Add scoreboard update
                     if (level instanceof ServerLevel sLevel2) {
                         TownScoreboardManager.updateScoreboard(sLevel2);
                     }
@@ -871,18 +765,15 @@ public ViewModelCache getVmCache() {
             }
         }
 
-        // Handle tourist vehicles for all platforms
         if (level.getGameTime() % 20 == 0) { // Every 1 second
             if (!ConfigLoader.touristSystemEnabled) return; // Phase 11 global toggle
             if (touristSpawningEnabled && townId != null) {
-                // Get town object safely
                 Town currentTown = null;
                 if (level instanceof ServerLevel sLevel) {
                     currentTown = TownManager.get(sLevel).getTown(townId);
                 }
 
                 if (currentTown != null && currentTown.canSpawnTourists()) {
-                    // Process each enabled platform
                     for (Platform platform : platformManager.getEnabledPlatforms()) {
                         touristVehicleManager.mountTouristsToVehicles(
                                 level,
@@ -894,24 +785,18 @@ public ViewModelCache getVmCache() {
                 }
             }
 
-            // Platform visualization cleanup is now handled automatically by the modular
-            // system
         }
 
-        // Platform visualization is now handled entirely client-side through the
-        // modular rendering system
-        // No server-side platform indicator spawning needed
     }
 
     public String getTownName() {
         if (townId != null) {
             if (level.isClientSide && name != null) {
-                return name; // Use client-cached name
+                return name;
             }
             if (level instanceof ServerLevel sLevel1) {
                 Town town = TownManager.get(sLevel1).getTown(townId);
                 if (town != null) {
-                    // Always update our local cached name with the latest town name
                     if (!town.getName().equals(name)) {
                         DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Updating cached name from {} to {}",
                                 name, town.getName());
@@ -927,7 +812,7 @@ public ViewModelCache getVmCache() {
 
     private String getRandomTownName() {
         if (ConfigLoader.townNames == null || ConfigLoader.townNames.isEmpty()) {
-            return "DefaultTown"; // Fallback name
+            return "DefaultTown";
         }
         int index = new Random().nextInt(ConfigLoader.townNames.size());
         return ConfigLoader.townNames.get(index);
@@ -938,8 +823,6 @@ public ViewModelCache getVmCache() {
         super.setChanged();
         if (level != null && !level.isClientSide()) {
             DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] setChanged called on SERVER");
-            // Update client cache from town data before syncing to ensure latest data is
-            // sent
             if (townId != null && level instanceof ServerLevel serverLevel) {
                 Town town = TownManager.get(serverLevel).getTown(townId);
                 if (town != null) {
@@ -950,7 +833,6 @@ public ViewModelCache getVmCache() {
                 }
             }
 
-            // Refresh ContainerData for any open TownInterfaceMenu instances
             refreshOpenMenus();
 
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
@@ -964,10 +846,8 @@ public ViewModelCache getVmCache() {
      */
     private void refreshOpenMenus() {
         if (level instanceof ServerLevel serverLevel) {
-            // Find all players with open menus for this block
             for (net.minecraft.server.level.ServerPlayer player : serverLevel.players()) {
                 if (player.containerMenu instanceof com.quackers29.businesscraft.menu.TownInterfaceMenu menu) {
-                    // Check if this menu is for our block position
                     if (getBlockPos().equals(menu.getBlockPos())) {
                         menu.refreshDataSlots();
                     }
@@ -984,23 +864,17 @@ public ViewModelCache getVmCache() {
     public CompoundTag getUpdateTag() {
         DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] getUpdateTag called on SERVER");
         CompoundTag tag = super.getUpdateTag();
-        // Add town info
         if (townId != null) {
             tag.putUUID("TownId", townId);
         }
 
-        // Add name for client display - use fresh name from Town object instead of
-        // cached field
         String freshTownName = getTownName();
         tag.putString("name", freshTownName != null ? freshTownName : "");
 
-        // Add search radius for client sync
         tag.putInt("searchRadius", getSearchRadius());
 
-        // Add resource data for client rendering
         syncResourcesForClient(tag);
 
-        // Add platforms using platform manager
         platformManager.saveToNBT(tag);
 
         return tag;
@@ -1016,12 +890,10 @@ public ViewModelCache getVmCache() {
             clientSyncHelper.syncResourcesForClient(tag, provider);
 
             if (provider instanceof Town town) {
-                // PHASE 3.2: Removed syncResourceStatsToTag() - stats now synced via ResourceViewModelSyncPacket
                 clientSyncHelper.syncWantedResourcesForClient(tag, town);
                 clientSyncHelper.syncEscrowedResourcesForClient(tag, town);
             }
 
-            // Sync visit history as well since we have the provider
             clientSyncHelper.syncVisitHistoryForClient(tag, provider, level);
         }
     }
@@ -1034,7 +906,6 @@ public ViewModelCache getVmCache() {
         DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] loadResourcesFromTag called");
         clientSyncHelper.loadResourcesFromTag(tag);
         clientSyncHelper.loadEscrowedResourcesFromTag(tag);
-        // PHASE 3.2: Removed loadResourceStatsFromTag() - stats now loaded via ResourceViewModelSyncPacket
     }
 
     public ContainerData getContainerData() {
@@ -1060,7 +931,6 @@ public ViewModelCache getVmCache() {
     public void setPathStart(BlockPos pos) {
         this.pathStart = pos;
 
-        // Update the town through the provider
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
             provider.setPathStart(pos);
@@ -1073,7 +943,6 @@ public ViewModelCache getVmCache() {
     public void setPathEnd(BlockPos pos) {
         this.pathEnd = pos;
 
-        // Update the town through the provider
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
             provider.setPathEnd(pos);
@@ -1099,12 +968,12 @@ public ViewModelCache getVmCache() {
      */
     public boolean isValidPathDistance(BlockPos pos) {
         if (townId == null || !(level instanceof ServerLevel serverLevel)) {
-            return false; // Cannot validate without town or on client
+            return false;
         }
 
         Town town = TownManager.get(serverLevel).getTown(townId);
         if (town == null) {
-            return false; // No town found
+            return false;
         }
 
         int boundaryRadius = town.getBoundaryRadius();
@@ -1134,15 +1003,11 @@ public ViewModelCache getVmCache() {
                 if (town != null) {
                     clientSyncHelper.updateClientResourcesFromTown(town);
                     clientSyncHelper.updateClientResourcesFromTown(town);
-                    // Stats are now synced via NBT in getUpdateTag which is triggered by
-                    // sendBlockUpdated below
                 }
             }
 
             containerData.markAllDirty();
 
-            // Ensure trading data is synced immediately upon any town data change
-            // This makes sure stock updates are reflected instantly after a trade
             if (level instanceof ServerLevel) {
                 syncTradingViewModelToNearbyPlayers();
             }
@@ -1158,15 +1023,12 @@ public ViewModelCache getVmCache() {
             Town town = TownManager.get(sLevel1).getTown(id);
             this.name = town != null ? town.getName() : "Unnamed";
 
-            // Initialize buffer manager with the new town ID
             bufferManager.setTownId(id);
 
             syncTownData();
         }
     }
 
-    // Replace the old mountTouristsToVehicles method with a simplified version that
-    // delegates to the manager
     private void mountTouristsToVehicles() {
         if (level == null || level.isClientSide || town == null)
             return;
@@ -1185,10 +1047,8 @@ public ViewModelCache getVmCache() {
     }
 
     public int getSearchRadius() {
-        // Use default if not yet initialized from NBT
         int result = searchRadius > 0 ? searchRadius : DEFAULT_SEARCH_RADIUS;
 
-        // Rate-limit debug logging - only log once per second
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastSearchRadiusLogTime > 1000) {
             DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "getSearchRadius() field={}, result={}",
@@ -1205,7 +1065,6 @@ public ViewModelCache getVmCache() {
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "setSearchRadius() {} -> {}", oldValue,
                 this.searchRadius);
 
-        // Also update in the Town object
         if (townId != null && level instanceof ServerLevel sLevel) {
             Town town = TownManager.get(sLevel).getTown(townId);
             if (town != null) {
@@ -1214,10 +1073,8 @@ public ViewModelCache getVmCache() {
             }
         }
 
-        // Make sure to update the container data
         if (level != null && !level.isClientSide()) {
             containerData.markDirty("search_radius");
-            // Force client sync when search radius changes
             level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
         }
 
@@ -1225,7 +1082,6 @@ public ViewModelCache getVmCache() {
     }
 
     public Town getTown() {
-        // Dynamic lookup instead of cached field (prevents stale/null issues)
         if (townId != null && level instanceof ServerLevel serverLevel) {
             return TownManager.get(serverLevel).getTown(townId);
         }
@@ -1235,14 +1091,12 @@ public ViewModelCache getVmCache() {
     public void setTouristSpawningEnabled(boolean enabled) {
         this.touristSpawningEnabled = enabled;
 
-        // Update the town through the provider
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
             provider.setTouristSpawningEnabled(enabled);
             markDirtyWithRateLimit(provider);
         }
 
-        // Update container data
         if (level != null && !level.isClientSide()) {
             containerData.markDirty("spawn_enabled");
         }
@@ -1259,11 +1113,9 @@ public ViewModelCache getVmCache() {
     public Map<UUID, String> getAllTownsForDestination(ServerLevel serverLevel) {
         Map<UUID, String> result = new HashMap<>();
 
-        // Get all towns from the town manager
         TownManager townManager = TownManager.get(serverLevel);
         Map<UUID, Town> allTowns = townManager.getAllTowns();
 
-        // Filter out the current town
         allTowns.forEach((id, town) -> {
             if (!id.equals(townId)) {
                 result.put(id, town.getName());
@@ -1292,16 +1144,12 @@ public ViewModelCache getVmCache() {
     private void updateFromTownProvider() {
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
-            // Sync data from the provider (the single source of truth)
             this.touristSpawningEnabled = provider.isTouristSpawningEnabled();
             this.pathStart = provider.getPathStart();
             this.pathEnd = provider.getPathEnd();
             this.searchRadius = provider.getSearchRadius();
 
-            // If we made any local changes, we need to sync them back
             if (level != null && !level.isClientSide() && this.townId != null) {
-                // Mark the provider as dirty to ensure changes are saved, but with rate
-                // limiting
                 markDirtyWithRateLimit(provider);
             }
         }
@@ -1328,7 +1176,6 @@ public ViewModelCache getVmCache() {
         if (stackObj instanceof net.minecraft.world.item.ItemStack stack) {
             if (!stack.isEmpty() && townId != null) {
                 if (level instanceof ServerLevel sLevel) {
-                    // Check if it's a contract item first
                     if (com.quackers29.businesscraft.util.ContractItemHelper.isContractItem(stack)) {
                         UUID contractId = com.quackers29.businesscraft.util.ContractItemHelper.getContractId(stack);
                         CompoundTag contractData = com.quackers29.businesscraft.util.ContractItemHelper
@@ -1337,15 +1184,13 @@ public ViewModelCache getVmCache() {
                         if (contractId != null && contractData != null) {
                             UUID destTownId = contractData.getUUID("destinationTownId");
 
-                            // Only process if this is the correct destination town
                             if (townId.equals(destTownId)) {
-                                // Process 1 item per tick
                                 stack.shrink(1);
                                 ContractBoard.get(sLevel).processCourierDelivery(contractId, 1L);
                                 setChanged();
                                 level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(),
                                         Block.UPDATE_ALL);
-                                return; // Don't process as normal resource
+                                return;
                             }
                         }
                     }
@@ -1353,11 +1198,9 @@ public ViewModelCache getVmCache() {
                     Town town = TownManager.get(sLevel).getTown(townId);
                     if (town != null) {
                         Item item = stack.getItem();
-                        // Process just 1 item per tick
                         stack.shrink(1);
                         town.addResource(item, 1);
 
-                        // Sync fully to ensure tooltips and UI are updated
                         syncTownData();
                     }
                 }
@@ -1365,14 +1208,12 @@ public ViewModelCache getVmCache() {
         }
     }
 
-    // Ensure we clean up resources when the block entity is removed
     @Override
     public void setRemoved() {
         super.setRemoved();
         touristVehicleManager.clearTrackedVehicles();
         visitorProcessingHelper.clearAll();
         clientSyncHelper.clearAll();
-        // Clear platform indicators
         platformIndicatorSpawnTimes.clear();
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY,
                 "Cleared visitor position tracking, client caches, and platform indicators on block removal");
@@ -1436,12 +1277,9 @@ public ViewModelCache getVmCache() {
         return clientSyncHelper.getVisitHistory(level, getTownDataProvider());
     }
 
-    // Helper method to get town name from client cache or resolve from server
     public String getTownNameFromId(UUID townId) {
         return clientSyncHelper.getTownNameFromId(townId, level);
     }
-
-    // Platform management methods - delegated to PlatformManager
 
     /**
      * Gets the list of all platforms
@@ -1478,7 +1316,6 @@ public ViewModelCache getVmCache() {
     public boolean removePlatform(UUID platformId) {
         boolean removed = platformManager.removePlatform(platformId);
         if (removed) {
-            // Remove the platform indicator spawning data when a platform is removed
             platformIndicatorSpawnTimes.remove(platformId);
         }
         return removed;
@@ -1547,8 +1384,6 @@ public ViewModelCache getVmCache() {
      */
     public void registerPlayerExitUI(UUID playerId) {
         if (level != null) {
-            // Platform visualization is now handled by the modular client-side system
-            // The visualization packet will trigger the new PlatformVisualizationRenderer
             extendedIndicatorPlayers.put(playerId, level.getGameTime());
         }
     }
@@ -1586,7 +1421,6 @@ public ViewModelCache getVmCache() {
 
             @Override
             public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
-                // Create a FriendlyByteBuf to pass the BlockPos
                 io.netty.buffer.ByteBuf buf = io.netty.buffer.Unpooled.buffer();
                 net.minecraft.network.FriendlyByteBuf friendlyBuf = new net.minecraft.network.FriendlyByteBuf(buf);
                 friendlyBuf.writeBlockPos(TownInterfaceEntity.this.getBlockPos());
@@ -1597,9 +1431,5 @@ public ViewModelCache getVmCache() {
 
         };
     }
-
-    /**
-     * Gets the visit history for client-side display
-     */
 
 }
