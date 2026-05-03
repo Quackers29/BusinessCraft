@@ -12,7 +12,7 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/api/MenuHelper.java
 - [x] common/src/main/java/com/quackers29/businesscraft/api/MenuTypeHelper.java
 - [x] common/src/main/java/com/quackers29/businesscraft/api/NetworkHelper.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/api/NetworkMessages.java
+- [x] common/src/main/java/com/quackers29/businesscraft/api/NetworkMessages.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/api/PlatformAccess.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/api/PlatformHelper.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/api/RegistryHelper.java
