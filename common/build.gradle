@@ -15,11 +15,14 @@ dependencies {
         transitive = false
     }
 
+    // SLF4J for logging (used by debug and configuration classes)
     api 'org.slf4j:slf4j-api:1.7.36'
 
+    // JetBrains annotations for @NotNull/@Nullable
     api 'org.jetbrains:annotations:23.0.0'
 }
 
+// Configure jar to exclude Forge runtime classes
 jar {
     manifest {
         attributes([

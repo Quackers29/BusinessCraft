@@ -1,7 +1,7 @@
 ﻿# Refinement TODO - common
 
-- [ ] common/build.gradle
-- [ ] common/src/main/java/com/quackers29/businesscraft/api/BlockEntityHelper.java
+- [x] common/build.gradle
+- [x] common/src/main/java/com/quackers29/businesscraft/api/BlockEntityHelper.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/api/ClientHelper.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/api/EntityHelper.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/api/EventCallbacks.java

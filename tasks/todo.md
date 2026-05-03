@@ -13,9 +13,10 @@
 - [ ] 3. Read that file fully.
 - [ ] 4. Read associated files needed for context.
 - [ ] 5. Make cleanup/refinement changes with a removal-first approach.
-- [ ] 6. Summarize the change and why for approval (short, direct, no waffling).
-- [ ] 7. If approved, you commit.
-- [ ] 8. End; wait for "next file" and repeat.
+- [ ] 6. Mark off that file in the relevant refinement checklist.
+- [ ] 7. Summarize the change and why for approval (short, direct, no waffling).
+- [ ] 8. If approved, you commit.
+- [ ] 9. End; wait for "next file" and repeat.
 
 ## Refinement Prioritization Rules
 - [ ] First pass targets obvious isolated wins (unused code, dead branches, duplication cleanup, naming clarity, small simplifications).
