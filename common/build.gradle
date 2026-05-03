@@ -1,8 +1,3 @@
-// Common module - Platform-agnostic business logic for BusinessCraft
-// Contains all business logic, UI framework, and platform-agnostic code
-// Uses Forge Gradle plugin ONLY for Minecraft class resolution during compilation
-// No Forge runtime dependencies will be included in the final jar
-
 plugins {
     id 'java-library'
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
@@ -13,35 +8,18 @@ archivesBaseName = 'businesscraft-common'
 
 minecraft {
     mappings channel: 'parchment', version: '2023.06.26-1.20.1'
-    
-    // No runs configuration - common module is not executable
-}
-
-repositories {
-    mavenCentral()
-    maven {
-        name = 'MinecraftForge'
-        url = 'https://maven.minecraftforge.net/'
-    }
 }
 
 dependencies {
-    // Minecraft API (platform-agnostic - same Minecraft regardless of loader)
-    // Using Forge's Minecraft dependency for compilation only
-    // Platform modules will provide the actual runtime
-    // Mark as non-transitive so it doesn't leak to Fabric
     minecraft('net.minecraftforge:forge:1.20.1-47.1.0') {
         transitive = false
     }
 
-    // SLF4J for logging (used by debug and configuration classes)
     api 'org.slf4j:slf4j-api:1.7.36'
 
-    // JetBrains annotations for @NotNull/@Nullable
     api 'org.jetbrains:annotations:23.0.0'
 }
 
-// Configure jar to exclude Forge runtime classes
 jar {
     manifest {
         attributes([
@@ -55,11 +33,6 @@ jar {
         ])
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    // Include resources
-    from sourceSets.main.resources
-    
-    // Exclude Forge-specific classes from the jar
     exclude 'net/minecraftforge/**'
     exclude 'META-INF/mods.toml'
 }
