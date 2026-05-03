@@ -22,7 +22,7 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/block/TownInterfaceBlock.java
 - [x] common/src/main/java/com/quackers29/businesscraft/client/ClientGlobalMarket.java
 - [x] common/src/main/java/com/quackers29/businesscraft/client/CommonClientSetup.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/client/PlatformPathKeyHandler.java
+- [x] common/src/main/java/com/quackers29/businesscraft/client/PlatformPathKeyHandler.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/client/render/world/BoundaryRenderer3D.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/client/render/world/LineRenderer3D.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/client/render/world/package-info.java
