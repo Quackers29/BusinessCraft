@@ -11,19 +11,17 @@ import java.util.UUID;
 public class ContractSummaryViewModel {
 
     private final UUID contractId;
-    private final String contractType; // "sell", "courier"
+    private final String contractType;
     private final String resourceId;
     private final long quantity;
     private final UUID issuerTownId;
     private final String issuerTownName;
-    
-    // Pre-calculated display strings (server-authoritative)
-    private final String timeRemainingDisplay; // "5m 30s" or "Expired"
-    private final String highestBidDisplay;    // "150 emeralds" or "No bids"
-    private final String statusDisplay;        // "Auction", "Awaiting Courier", "In Transit", "Delivered"
-    private final String priceDisplay;         // "10.5 emeralds/unit"
-    
-    // Server-calculated action flags
+
+    private final String timeRemainingDisplay;
+    private final String highestBidDisplay;
+    private final String statusDisplay;
+    private final String priceDisplay;
+
     private final boolean canBid;
     private final boolean canAcceptCourier;
     private final boolean isExpired;
@@ -60,9 +58,6 @@ public class ContractSummaryViewModel {
         this.isDelivered = isDelivered;
     }
 
-    /**
-     * Deserialize from network buffer.
-     */
     public ContractSummaryViewModel(FriendlyByteBuf buf) {
         this.contractId = buf.readUUID();
         this.contractType = buf.readUtf();
@@ -80,9 +75,6 @@ public class ContractSummaryViewModel {
         this.isDelivered = buf.readBoolean();
     }
 
-    /**
-     * Serialize to network buffer.
-     */
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeUUID(contractId);
         buf.writeUtf(contractType);
@@ -100,7 +92,6 @@ public class ContractSummaryViewModel {
         buf.writeBoolean(isDelivered);
     }
 
-    // Getters
     public UUID getContractId() { return contractId; }
     public String getContractType() { return contractType; }
     public String getResourceId() { return resourceId; }
