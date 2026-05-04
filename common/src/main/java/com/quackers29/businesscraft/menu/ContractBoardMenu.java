@@ -44,8 +44,6 @@ public class ContractBoardMenu extends AbstractContainerMenu {
         super((net.minecraft.world.inventory.MenuType<ContractBoardMenu>) PlatformAccess.getMenuTypes()
                 .getContractBoardMenuType(), containerId);
 
-        // Add player inventory slots
-        // layoutPlayerInventory(playerInventory, 8, 84);
     }
 
     private void layoutPlayerInventory(Inventory playerInventory, int leftCol, int topRow) {
