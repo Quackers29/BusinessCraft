@@ -201,7 +201,6 @@ public class FabricEventCallbackHandler {
 
             BlockPos pos = hitResult.getBlockPos();
             if (world.getBlockState(pos).getBlock() instanceof com.quackers29.businesscraft.block.TownInterfaceBlock) {
-                LOGGER.info("Right-clicked on town interface block - opening menu");
                 PlatformAccess.getNetworkMessages().sendToServer(new OpenTownInterfacePacket(pos));
                 return InteractionResult.PASS; // Allow interaction to proceed (or should we consume it?)
             }

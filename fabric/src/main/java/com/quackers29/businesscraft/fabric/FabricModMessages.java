@@ -83,7 +83,8 @@ public class FabricModMessages {
 
             ServerPlayNetworking.registerGlobalReceiver(packetId, (server, player, handler, buf, responseSender) -> {
                 try {
-                    LOGGER.info("[PACKET RECEIVED] Server received packet: {} from player: {}", packetName,
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                            "[PACKET RECEIVED] Server received packet: {} from player: {}", packetName,
                             player.getName().getString());
 
                     // Convert PacketByteBuf to FriendlyByteBuf (they're compatible)
@@ -91,16 +92,19 @@ public class FabricModMessages {
 
                     // Use the decoder from the definition
                     MSG packet = packetDef.decoder().apply(friendlyBuf);
-                    LOGGER.info("[PACKET DECODED] Successfully decoded packet: {}", packetName);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                            "[PACKET DECODED] Successfully decoded packet: {}", packetName);
 
                     // Execute on server thread
                     server.execute(() -> {
                         try {
-                            LOGGER.info("[PACKET HANDLING] About to handle packet: {} for player: {}", packetName,
+                            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                                    "[PACKET HANDLING] About to handle packet: {} for player: {}", packetName,
                                     player.getName().getString());
                             // Use the handler from the definition
                             packetDef.handler().accept(packet, player);
-                            LOGGER.info("[PACKET HANDLED] Successfully handled packet: {}", packetName);
+                            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                                    "[PACKET HANDLED] Successfully handled packet: {}", packetName);
                         } catch (Exception e) {
                             LOGGER.error("Error handling server packet {}", packetName, e);
                             e.printStackTrace();
@@ -130,6 +134,28 @@ public class FabricModMessages {
     }
 
     /**
+     * Encode using {@link PacketRegistry} (static {@code encode(MSG, buf)} / {@code toBytes}) — same as Forge.
+     * Reflection-only {@code encode(FriendlyByteBuf)} misses almost all common packets and failed silently.
+     */
+    @SuppressWarnings("unchecked")
+    private static <MSG> void encodeOutgoing(MSG message, FriendlyByteBuf buf) throws Exception {
+        Class<?> msgClass = message.getClass();
+        for (PacketRegistry.PacketDefinition<?> def : PacketRegistry.getPackets()) {
+            if (def.packetClass() == msgClass) {
+                ((PacketRegistry.PacketDefinition<MSG>) def).encoder().accept(message, buf);
+                return;
+            }
+        }
+        try {
+            java.lang.reflect.Method encodeMethod = message.getClass().getMethod("encode", FriendlyByteBuf.class);
+            encodeMethod.invoke(message, buf);
+        } catch (NoSuchMethodException e) {
+            java.lang.reflect.Method toBytesMethod = message.getClass().getMethod("toBytes", FriendlyByteBuf.class);
+            toBytesMethod.invoke(message, buf);
+        }
+    }
+
+    /**
      * Send a message to a specific player
      */
     public static void sendToPlayer(Object message, Object player) {
@@ -148,19 +174,9 @@ public class FabricModMessages {
             // Create buffer
             FriendlyByteBuf friendlyBuf = new FriendlyByteBuf(Unpooled.buffer());
 
-            // Try instance encode method first, then instance toBytes method
-            try {
-                java.lang.reflect.Method encodeMethod = message.getClass().getMethod("encode", FriendlyByteBuf.class);
-                encodeMethod.invoke(message, friendlyBuf);
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                        "[SEND TO PLAYER] Encoded packet using instance encode method");
-            } catch (NoSuchMethodException e) {
-                // Fall back to instance toBytes method
-                java.lang.reflect.Method toBytesMethod = message.getClass().getMethod("toBytes", FriendlyByteBuf.class);
-                toBytesMethod.invoke(message, friendlyBuf);
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                        "[SEND TO PLAYER] Encoded packet using instance toBytes method");
-            }
+            encodeOutgoing(message, friendlyBuf);
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                    "[SEND TO PLAYER] Encoded packet via PacketRegistry or legacy reflection");
 
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "[SEND TO PLAYER] Buffer size: {} bytes",
                     friendlyBuf.writerIndex());
@@ -171,7 +187,7 @@ public class FabricModMessages {
                     "[SEND TO PLAYER] Successfully sent packet: {} to player: {}", packetName,
                     serverPlayer.getName().getString());
         } catch (Exception e) {
-            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Error in sendToPlayer", e);
+            LOGGER.error("Error in sendToPlayer for {}", message != null ? message.getClass().getName() : "null", e);
         }
     }
 
@@ -241,19 +257,9 @@ public class FabricModMessages {
             // Create buffer
             FriendlyByteBuf friendlyBuf = new FriendlyByteBuf(Unpooled.buffer());
 
-            // Try instance encode method first, then instance toBytes method
-            try {
-                java.lang.reflect.Method encodeMethod = message.getClass().getMethod("encode", FriendlyByteBuf.class);
-                encodeMethod.invoke(message, friendlyBuf);
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                        "[SEND TO SERVER] Encoded packet using instance encode method");
-            } catch (NoSuchMethodException e) {
-                // Fall back to instance toBytes method
-                java.lang.reflect.Method toBytesMethod = message.getClass().getMethod("toBytes", FriendlyByteBuf.class);
-                toBytesMethod.invoke(message, friendlyBuf);
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                        "[SEND TO SERVER] Encoded packet using instance toBytes method");
-            }
+            encodeOutgoing(message, friendlyBuf);
+            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                    "[SEND TO SERVER] Encoded packet via PacketRegistry or legacy reflection");
 
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "[SEND TO SERVER] Buffer size: {} bytes",
                     friendlyBuf.writerIndex());
@@ -263,7 +269,7 @@ public class FabricModMessages {
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "[SEND TO SERVER] Successfully sent packet: {}",
                     packetName);
         } catch (Exception e) {
-            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, "Error in sendToServer", e);
+            LOGGER.error("Error in sendToServer for {}", message != null ? message.getClass().getName() : "null", e);
         }
     }
 
