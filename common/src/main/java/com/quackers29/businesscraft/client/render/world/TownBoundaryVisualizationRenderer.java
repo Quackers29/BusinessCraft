@@ -24,9 +24,11 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
 
     private static final LineRenderer3D.Color BOUNDARY_COLOR = LineRenderer3D.Color.GREEN;
 
+    // Global sync tracking (shared across all boundary visualizations)
     private static long lastGlobalSyncTime = 0;
     private static final long GLOBAL_SYNC_INTERVAL_MS = 2000;
 
+    // Registry to track active boundary data by position
     private static final Map<BlockPos, TownBoundaryVisualizationData> activeBoundaryData = new ConcurrentHashMap<>();
 
     public static class TownBoundaryVisualizationData {
@@ -71,16 +73,19 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
 
         VisualizationManager manager = VisualizationManager.getInstance();
 
+        // Iterate through nearby chunks to find TownBlockEntities (same as platforms)
         iterateNearbyChunks(level, playerPos, (chunk, chunkX, chunkZ) -> {
             chunk.getBlockEntities().forEach((pos, blockEntity) -> {
                 if (!isWithinRenderDistance(pos, playerPos)) {
                     return;
                 }
 
+                // Check if this is a TownInterfaceEntity with active boundary visualization
                 if (blockEntity instanceof TownInterfaceEntity townInterfaceEntity) {
                     if (manager.shouldShowVisualization(VisualizationManager.TYPE_TOWN_BOUNDARY, pos)) {
                         UUID townId = townInterfaceEntity.getTownId();
                         if (townId != null) {
+                            // Get or create boundary data for this position
                             TownBoundaryVisualizationData boundaryData = activeBoundaryData.computeIfAbsent(
                                     pos, TownBoundaryVisualizationData::new);
 
@@ -101,6 +106,7 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
             return;
         }
 
+        // Only render if we have received server data and boundary > 0
         if (!boundaryData.shouldRender()) {
             return;
         }
@@ -116,6 +122,7 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
 
         LineRenderer3D.Color boundaryColor = BOUNDARY_COLOR;
 
+        // Create boundary configuration for circles - simple solid line
         BoundaryRenderer3D.BoundaryConfig config = new BoundaryRenderer3D.BoundaryConfig()
                 .shape(BoundaryRenderer3D.BoundaryShape.CIRCLE)
                 .lineConfig(new LineRenderer3D.LineConfig()
@@ -123,6 +130,7 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
                         .thickness(0.05f)
                         .yOffset(0.1f));
 
+        // Render circular boundary around the town center
         BoundaryRenderer3D.renderCircularBoundaryFromCenter(
                 poseStack,
                 visualization.getPosition(),
@@ -139,8 +147,10 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
 
         activeBoundaryData.entrySet().removeIf(entry -> !activePositions.contains(entry.getKey()));
 
+        // Clean up expired boundary visualizations
         manager.cleanupExpired(VisualizationManager.TYPE_TOWN_BOUNDARY);
 
+        // Periodically request boundary sync for all active visualizations
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastGlobalSyncTime >= GLOBAL_SYNC_INTERVAL_MS) {
             requestBoundaryUpdatesForActiveVisualizations(level);
@@ -151,6 +161,7 @@ public class TownBoundaryVisualizationRenderer extends WorldVisualizationRendere
     private void requestBoundaryUpdatesForActiveVisualizations(Level level) {
         VisualizationManager manager = VisualizationManager.getInstance();
 
+        // Get all active boundary visualizations and request updates
         List<VisualizationManager.VisualizationEntry> activeEntries = manager
                 .getActiveVisualizations(VisualizationManager.TYPE_TOWN_BOUNDARY);
 
