@@ -5,14 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Full view-model for contract detail display.
- * Contains all data needed to render the contract detail screen.
- * All display strings are pre-calculated on the server.
- */
 public class ContractDetailViewModel {
 
-    // Basic contract info (same as summary)
     private final UUID contractId;
     private final String contractType;
     private final String resourceId;
@@ -20,34 +14,27 @@ public class ContractDetailViewModel {
     private final UUID issuerTownId;
     private final String issuerTownName;
     
-    // Pre-calculated display strings
     private final String timeRemainingDisplay;
     private final String highestBidDisplay;
     private final String statusDisplay;
     private final String priceDisplay;
     private final String createdDateDisplay;
     private final String expiresDateDisplay;
-    private final String deliveryProgressDisplay; // "5/10 delivered" or null
-    private final String courierName; // Assigned courier name or null
-    private final String winningBidderName; // Winning town name or null
+    private final String deliveryProgressDisplay;
+    private final String courierName;
+    private final String winningBidderName;
     private final String tooltipText;
-    private final String destinationTownName; // For courier contracts
-    private final String courierRewardDisplay; // "25.5 ◎" or null
-    private final String acceptedBidDisplay; // "150.0 ◎" - final accepted price
+    private final String destinationTownName;
+    private final String courierRewardDisplay;
+    private final String acceptedBidDisplay;
     
-    // Server-calculated action flags
     private final boolean canBid;
     private final boolean canAcceptCourier;
     private final boolean isExpired;
     private final boolean isDelivered;
     private final boolean isAuctionClosed;
     
-    // Bid list (sorted by amount, highest first)
     private final List<BidDisplayInfo> bids;
-
-    /**
-     * Bid display info record.
-     */
     public record BidDisplayInfo(
             String bidderName,
             String amountDisplay,
@@ -117,9 +104,6 @@ public class ContractDetailViewModel {
         this.bids = bids != null ? new ArrayList<>(bids) : new ArrayList<>();
     }
 
-    /**
-     * Deserialize from network buffer.
-     */
     public ContractDetailViewModel(FriendlyByteBuf buf) {
         this.contractId = buf.readUUID();
         this.contractType = buf.readUtf();
@@ -146,7 +130,6 @@ public class ContractDetailViewModel {
         this.isDelivered = buf.readBoolean();
         this.isAuctionClosed = buf.readBoolean();
 
-        // Read bids
         int bidCount = buf.readInt();
         this.bids = new ArrayList<>(bidCount);
         for (int i = 0; i < bidCount; i++) {
@@ -154,9 +137,6 @@ public class ContractDetailViewModel {
         }
     }
 
-    /**
-     * Serialize to network buffer.
-     */
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeUUID(contractId);
         buf.writeUtf(contractType);
@@ -171,7 +151,6 @@ public class ContractDetailViewModel {
         buf.writeUtf(createdDateDisplay);
         buf.writeUtf(expiresDateDisplay);
 
-        // Nullable fields
         buf.writeBoolean(deliveryProgressDisplay != null);
         if (deliveryProgressDisplay != null) buf.writeUtf(deliveryProgressDisplay);
 
@@ -198,14 +177,12 @@ public class ContractDetailViewModel {
         buf.writeBoolean(isDelivered);
         buf.writeBoolean(isAuctionClosed);
 
-        // Write bids
         buf.writeInt(bids.size());
         for (BidDisplayInfo bid : bids) {
             bid.toBytes(buf);
         }
     }
 
-    // Getters
     public UUID getContractId() { return contractId; }
     public String getContractType() { return contractType; }
     public String getResourceId() { return resourceId; }
