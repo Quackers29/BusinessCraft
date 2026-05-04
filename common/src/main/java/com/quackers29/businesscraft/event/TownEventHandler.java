@@ -37,8 +37,6 @@ public class TownEventHandler {
     private static void onPlayerLogin(ServerPlayer player, ServerLevel level, BlockPos position) {
         // Build global market view-model (contains ALL item prices)
         MarketViewModel viewModel = MarketViewModelBuilder.buildMarketViewModel();
-
-        // Send to the player
         MarketViewModelSyncPacket packet = new MarketViewModelSyncPacket(viewModel);
         PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
 
@@ -70,7 +68,6 @@ public class TownEventHandler {
         if (activeTownBlockPos == null)
             return false;
 
-        // Skip if on client side - only process on server
         if (level.isClientSide())
             return false;
 
@@ -108,7 +105,6 @@ public class TownEventHandler {
                 townInterface.setPathEnd(clickedPos);
                 townInterface.setPathCreationMode(false);
 
-                // Update provider
                 ITownDataProvider provider = townInterface.getTownDataProvider();
                 if (provider != null) {
                     provider.setPathStart(townInterface.getPathStart());
@@ -120,7 +116,6 @@ public class TownEventHandler {
                         Component.literal("Path created!")
                                 .withStyle(ChatFormatting.GREEN));
 
-                // Reset state
                 awaitingSecondClick = false;
                 activeTownBlockPos = null;
                 LOGGER.debug("Set path end to {} and completed path creation", clickedPos);
