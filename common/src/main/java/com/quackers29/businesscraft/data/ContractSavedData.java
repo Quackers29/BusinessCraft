@@ -64,8 +64,6 @@ public class ContractSavedData extends SavedData {
             for (String key : pricesTag.getAllKeys()) {
                 float price = pricesTag.getFloat(key);
                 data.marketPrices.put(key, price);
-                // MIGRATION: Push to GlobalMarket
-                // This ensures old auction prices are preserved in the new unified system
                 com.quackers29.businesscraft.economy.GlobalMarket.get().setPrice(key, price);
             }
         }
@@ -85,10 +83,6 @@ public class ContractSavedData extends SavedData {
         }
 
         tag.put("contracts", list);
-
-        // MARKET PRICES ARE NOW MANAGED BY GlobalMarket AND SAVED VIA TownSavedData
-        // We no longer save them here to enforce the single source of truth.
-        // Existing data was migrated in load().
 
         LOGGER.debug("Saved {} contracts", activeContracts.size());
 

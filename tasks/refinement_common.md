@@ -49,9 +49,9 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/contract/viewmodel/ContractSummaryViewModel.java
 - [x] common/src/main/java/com/quackers29/businesscraft/contract/viewmodel/ContractSummaryViewModelBuilder.java
 - [x] common/src/main/java/com/quackers29/businesscraft/data/cache/TownDataCache.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/data/ContractSavedData.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/data/parsers/Condition.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/data/parsers/DataParser.java
+- [x] common/src/main/java/com/quackers29/businesscraft/data/ContractSavedData.java
+- [x] common/src/main/java/com/quackers29/businesscraft/data/parsers/Condition.java
+- [x] common/src/main/java/com/quackers29/businesscraft/data/parsers/DataParser.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/data/parsers/Effect.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/data/TownSavedData.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/debug/DebugConfig.java
