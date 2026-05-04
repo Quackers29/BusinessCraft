@@ -39,11 +39,9 @@ public class TouristEntity extends Villager {
     public static final UUID ANY_TOWN_DESTINATION = new UUID(0, 0);
     public static final String ANY_TOWN_NAME = "Any Town";
 
-    // Tourist expiry - calculated dynamically from config at spawn time (not static to avoid class load order issues)
     private int expiryTicks;
     private boolean hasNotifiedOriginTown = false;
 
-    // Flag to track if tourist has already received a ride extension
     private boolean hasReceivedRideExtension = false;
 
     // Tourist origin and destination information
@@ -58,18 +56,15 @@ public class TouristEntity extends Villager {
     private double spawnPosY;
     private double spawnPosZ;
     private boolean hasMoved = false;
-    private static final double MOVEMENT_THRESHOLD = 2.0; // Consider moved if more than 2 blocks away from spawn
+    private static final double MOVEMENT_THRESHOLD = 2.0;
 
-    // Track recent position to determine if tourist is currently moving (for expiry
-    // logic)
     private double recentPosX;
     private double recentPosY;
     private double recentPosZ;
     private int positionUpdateTicks = 0;
-    private boolean isCurrentlyStationary = true; // Track current movement state between checks
-    private static final int POSITION_UPDATE_INTERVAL = 20; // Check movement every 20 ticks (1 second)
-    private static final double STATIONARY_THRESHOLD = 0.5; // Consider stationary if moved less than 0.5 blocks in 1
-                                                            // second
+    private boolean isCurrentlyStationary = true;
+    private static final int POSITION_UPDATE_INTERVAL = 20;
+    private static final double STATIONARY_THRESHOLD = 0.5;
 
     public TouristEntity(EntityType<? extends Villager> entityType, Level level) {
         super(entityType, level);
@@ -77,12 +72,6 @@ public class TouristEntity extends Villager {
 
         // Calculate expiry ticks from config at spawn time (not static to avoid class load order issues)
         this.expiryTicks = (int) (ConfigLoader.touristExpiryMinutes * 60 * 20);
-
-        // Default constructor - position will be set properly by setPos later
-        // We'll update spawnPosX, spawnPosY, spawnPosZ when setPos is called the first
-        // time
-
-        // Reduce speed significantly to make tourists very slow
         this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.000001);
     }
 
@@ -91,17 +80,14 @@ public class TouristEntity extends Villager {
             UUID destinationTownId, String destinationName) {
         this(entityType, level);
 
-        // Store origin town information
         if (originTown != null) {
             this.originTownId = originTown.getId();
             this.originTownName = originTown.getName();
         }
 
-        // Store destination information
         this.destinationTownId = destinationTownId;
         this.destinationTownName = destinationName;
 
-        // Set display name
         String displayName;
         if (destinationTownId.equals(ANY_TOWN_DESTINATION)) {
             displayName = "Tourist to Any Town";
@@ -111,7 +97,6 @@ public class TouristEntity extends Villager {
         }
         this.setCustomName(Component.literal(displayName));
 
-        // Add standard tourist tags
         PlatformAccess.getTouristHelper().addStandardTouristTags(
                 this,
                 originTown,
@@ -119,27 +104,22 @@ public class TouristEntity extends Villager {
                 destinationTownId.toString(),
                 destinationName);
 
-        // Set random profession and max level
         this.setRandomProfession();
     }
 
     @Override
     protected void registerGoals() {
-        // Simplified goals for tourists - mainly just looking around
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 5.0F));
         this.goalSelector.addGoal(2, new RandomStrollGoal(this, 0.3D));
         this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
 
-        // We deliberately omit many typical villager goals like trading,
-        // farming, working, breeding, panic, etc.
     }
 
     @Override
     public void tick() {
         super.tick();
 
-        // Check if the tourist has moved from spawn position
         if (!hasMoved && !this.level().isClientSide) {
             double dx = this.getX() - this.spawnPosX;
             double dy = this.getY() - this.spawnPosY;
@@ -153,11 +133,9 @@ public class TouristEntity extends Villager {
             }
         }
 
-        // Handle expiry - only expire when stationary (regardless of riding state)
         if (!this.level().isClientSide && ConfigLoader.enableTouristExpiry) {
             positionUpdateTicks++;
 
-            // Check if tourist is currently moving every POSITION_UPDATE_INTERVAL ticks
             if (positionUpdateTicks >= POSITION_UPDATE_INTERVAL) {
                 double dx = this.getX() - this.recentPosX;
                 double dy = this.getY() - this.recentPosY;
@@ -165,10 +143,8 @@ public class TouristEntity extends Villager {
                 double recentMovementSquared = dx * dx + dy * dy + dz * dz;
                 double distanceMoved = Math.sqrt(recentMovementSquared);
 
-                // Update stationary state based on movement
                 isCurrentlyStationary = recentMovementSquared < (STATIONARY_THRESHOLD * STATIONARY_THRESHOLD);
 
-                // Update recent position for next check
                 this.recentPosX = this.getX();
                 this.recentPosY = this.getY();
                 this.recentPosZ = this.getZ();
@@ -179,27 +155,22 @@ public class TouristEntity extends Villager {
                         this.getId(), distanceMoved, isCurrentlyStationary, this.isPassenger(), expiryTicks / 20);
             }
 
-            // Only decrement expiry timer when tourist is stationary
             if (isCurrentlyStationary) {
                 expiryTicks--;
 
-                // Expiry reached, prepare to "quit"
                 if (expiryTicks <= 0) {
                     DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Tourist {} expired after being stationary",
                             this.getId());
 
-                    // Notify origin town if not already done
                     if (!hasNotifiedOriginTown) {
                         notifyOriginTownOfQuitting();
                         hasNotifiedOriginTown = true;
                     }
 
-                    // Remove the entity
                     this.discard();
                 }
             } else {
-                // Debug every few seconds when moving to avoid spam
-                if (level().getGameTime() % 100 == 0) { // Every 5 seconds
+                if (level().getGameTime() % 100 == 0) {
                     DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
                             "Tourist {} is moving, expiry timer paused at {}s",
                             this.getId(), expiryTicks / 20);
@@ -210,19 +181,15 @@ public class TouristEntity extends Villager {
 
     private void notifyOriginTownOfQuitting() {
         if (this.level() instanceof ServerLevel serverLevel && originTownId != null) {
-            // Always update the origin town's tourist count to ensure proper replenishment
             Town originTown = TownNotificationUtils.removeTouristFromOrigin(serverLevel, originTownId);
 
-            // Only send visual notifications if tourist has moved from spawn or
-            // notification is disabled
             if (hasMoved && ConfigLoader.notifyOnTouristDeparture && originTown != null) {
-                // Display notification only if the tourist has moved from spawn position
                 TownNotificationUtils.displayTouristDepartureNotification(
                         serverLevel,
                         originTown,
                         originTownName,
                         destinationTownName != null ? destinationTownName : "unknown destination",
-                        false, // Not died, just quitting due to expiry
+                        false,
                         this.blockPosition());
             } else {
                 DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
@@ -233,24 +200,20 @@ public class TouristEntity extends Villager {
 
     @Override
     public void die(net.minecraft.world.damagesource.DamageSource cause) {
-        // Notify the origin town before dying
         if (!this.level().isClientSide && originTownId != null) {
             if (this.level() instanceof ServerLevel serverLevel) {
-                // Always update the origin town's tourist count
                 Town originTown = TownNotificationUtils.removeTouristFromOrigin(serverLevel, originTownId);
 
-                // Always show visual notification for deaths regardless of movement
                 if (ConfigLoader.notifyOnTouristDeparture && originTown != null) {
                     TownNotificationUtils.displayTouristDepartureNotification(
                             serverLevel,
                             originTown,
                             originTownName,
                             destinationTownName != null ? destinationTownName : "unknown destination",
-                            true, // Died
+                            true,
                             this.blockPosition());
                 }
 
-                // Mark as notified to prevent double-counting
                 hasNotifiedOriginTown = true;
             }
         }
@@ -287,7 +250,6 @@ public class TouristEntity extends Villager {
     }
 
     private void setRandomProfession() {
-        // Set tourists to unemployed villagers for base clothing look
         this.setVillagerData(this.getVillagerData()
                 .setProfession(VillagerProfession.NONE)
                 .setLevel(1));
@@ -382,27 +344,22 @@ public class TouristEntity extends Villager {
         }
     }
 
-    // Disable breeding more thoroughly by preventing the production of baby
-    // entities
     @Nullable
     @Override
     public Villager getBreedOffspring(ServerLevel level, AgeableMob otherParent) {
-        return null; // Return null to prevent breeding
+        return null;
     }
 
-    // Override the canBreed method to ensure these entities never breed
     @Override
     public boolean canBreed() {
         return false;
     }
 
-    // Prevent tourists from picking up items
     @Override
     public boolean wantsToPickUp(ItemStack itemStack) {
         return false;
     }
 
-    // Factory method for attribute builder
     public static AttributeSupplier.Builder createAttributes() {
         return Villager.createAttributes();
     }
@@ -431,33 +388,22 @@ public class TouristEntity extends Villager {
         return result;
     }
 
-    // For simpler mounting calls
     @Override
     public boolean startRiding(Entity entity) {
         return this.startRiding(entity, false);
     }
 
-    /**
-     * Override setPos to initialize the spawn position on first call
-     * This ensures we capture the actual spawn position
-     */
     @Override
     public void setPos(double x, double y, double z) {
-        // If spawn position hasn't been set yet (all values are 0), this is our first
-        // positioning
-        // So we store it as the spawn position
         if (spawnPosX == 0 && spawnPosY == 0 && spawnPosZ == 0) {
             this.spawnPosX = x;
             this.spawnPosY = y;
             this.spawnPosZ = z;
 
-            // Also initialize recent position for movement tracking
             this.recentPosX = x;
             this.recentPosY = y;
             this.recentPosZ = z;
         }
-
-        // Call the parent implementation to actually set the position
         super.setPos(x, y, z);
     }
 
@@ -493,7 +439,6 @@ public class TouristEntity extends Villager {
 
                                     @Override
                                     public void set(int index, int value) {
-                                        // Read-only
                                     }
 
                                     @Override

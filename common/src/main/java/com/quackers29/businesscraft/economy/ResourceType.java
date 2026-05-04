@@ -13,10 +13,6 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Represents a tradeable resource type (e.g., "wood", "iron").
- * Handles mapping canonical items and fuzzy equivalents.
- */
 public class ResourceType {
     private static final Logger LOGGER = LoggerFactory.getLogger(ResourceType.class);
 
@@ -55,34 +51,15 @@ public class ResourceType {
         return equivalents;
     }
 
-    /**
-     * Expands the list of equivalents based on tags, food properties, and
-     * heuristics.
-     */
     public void expand() {
-        // Add canonical item itself (1.0 unit)
         equivalents.put(canonicalItemId, 1.0f);
 
-        // Get the canonical item object
         Item canonicalItem = (Item) PlatformAccess.getRegistry().getItem(canonicalItemId);
         if (canonicalItem == null || canonicalItem == Items.AIR) {
             LOGGER.warn("Canonical item {} for resource {} not found in registry", canonicalItemId, id);
             return;
         }
 
-        // 1. Tag-based expansion
-        // We try to guess the tag based on the resource ID (e.g., "wood" -> "logs",
-        // "planks")
-        // This is a simplified approach; a more robust one would allow configuring tags
-        // in CSV.
-        // For now, we'll hardcode some common tag mappings or iterate all items to
-        // check tags.
-        // Since we can't easily iterate all tags without a specific tag key, we'll
-        // iterate items and check tags if possible,
-        // or rely on platform helper to get items in a tag if we knew the tag.
-
-        // Better approach for now: Iterate all registered items and check if they match
-        // criteria
         Iterable<Item> allItems = PlatformAccess.getRegistry().getItems();
 
         for (Item item : allItems) {
@@ -97,7 +74,6 @@ public class ResourceType {
 
                 if (foodProps != null && canonicalProps != null) {
                     float saturationRatio = foodProps.getSaturationModifier() / canonicalProps.getSaturationModifier();
-                    // Clamp reasonable values
                     if (saturationRatio > 0.1f && saturationRatio < 10.0f) {
                         equivalents.put(itemId, saturationRatio);
                     }
@@ -115,13 +91,13 @@ public class ResourceType {
                 if (path.contains("iron_ingot")) {
                     equivalents.put(itemId, 1.0f);
                 } else if (path.contains("iron_nugget")) {
-                    equivalents.put(itemId, 0.11f); // 1/9
+                    equivalents.put(itemId, 0.11f);
                 } else if (path.contains("iron_block")) {
                     equivalents.put(itemId, 9.0f);
                 }
             } else if (id.equals("coal")) {
                 if (path.contains("coal") && !path.contains("block") && !path.contains("ore")) {
-                    equivalents.put(itemId, 1.0f); // Charcoal, Coal
+                    equivalents.put(itemId, 1.0f);
                 }
             }
         }

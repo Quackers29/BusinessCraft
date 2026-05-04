@@ -58,8 +58,8 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/economy/GlobalMarket.java
 - [x] common/src/main/java/com/quackers29/businesscraft/economy/MarketSavedData.java
 - [x] common/src/main/java/com/quackers29/businesscraft/economy/ResourceRegistry.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/economy/ResourceType.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/entity/TouristEntity.java
+- [x] common/src/main/java/com/quackers29/businesscraft/economy/ResourceType.java
+- [x] common/src/main/java/com/quackers29/businesscraft/entity/TouristEntity.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandler.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandlerIntegration.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandlingExample.java
