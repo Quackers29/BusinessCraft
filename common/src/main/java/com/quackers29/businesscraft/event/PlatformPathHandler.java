@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.event;
 
-import com.quackers29.businesscraft.api.EventCallbacks;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.platform.Platform;
@@ -39,9 +38,6 @@ public class PlatformPathHandler {
         LOGGER.debug("Cleared active platform");
     }
 
-    /**
-     * Initialize event callbacks. Should be called during mod initialization.
-     */
     public static void initialize() {
         PlatformAccess.getEvents().registerRightClickBlockCallback(PlatformPathHandler::onRightClickBlock);
     }
@@ -49,10 +45,8 @@ public class PlatformPathHandler {
     private static boolean onRightClickBlock(Player player, Level level, BlockPos clickedPos) {
         if (activeTownBlockPos == null || activePlatformId == null) return false;
         
-        // Skip if on client side - only process on server
         if (level.isClientSide()) return false;
-        
-        // Debounce clicks - prevent multiple rapid clicks
+
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastClickTime < 500) {
             LOGGER.debug("Ignoring click due to debounce (time since last: {}ms)", currentTime - lastClickTime);
@@ -66,22 +60,19 @@ public class PlatformPathHandler {
         if (be instanceof TownInterfaceEntity townInterface && townInterface.isInPlatformCreationMode()) {
             LOGGER.debug("Platform path creation mode active, clicked: {}, awaitingSecondClick: {}", clickedPos, awaitingSecondClick);
             
-            // Check if the platform exists
             Platform platform = townInterface.getPlatform(activePlatformId);
             if (platform == null) {
                 LOGGER.error("Platform {} not found in town block at {}", activePlatformId, activeTownBlockPos);
                 clearActivePlatform();
-                return true; // Cancel event
+                return true;
             }
-            
-            // Check if the clicked position is within town boundary
+
             String validationError = validatePositionWithinBoundary(clickedPos, townInterface, level);
             if (validationError != null) {
                 player.sendSystemMessage(Component.literal(validationError));
-                return true; // Cancel event
+                return true;
             }
-            
-            // First click - set start point
+
             if (!awaitingSecondClick) {
                 townInterface.setPlatformPathStart(activePlatformId, clickedPos);
                 player.sendSystemMessage(
@@ -90,8 +81,7 @@ public class PlatformPathHandler {
                 );
                 awaitingSecondClick = true;
                 LOGGER.debug("Set platform {} path start to {}, now awaiting second click", activePlatformId, clickedPos);
-            } 
-            // Second click - set end point
+            }
             else {
                 townInterface.setPlatformPathEnd(activePlatformId, clickedPos);
                 townInterface.setPlatformCreationMode(false, null);
@@ -101,32 +91,22 @@ public class PlatformPathHandler {
                         .withStyle(ChatFormatting.GREEN)
                 );
                 
-                // Force a block update to ensure clients get the updated data
                 level.sendBlockUpdated(activeTownBlockPos, level.getBlockState(activeTownBlockPos), 
                                        level.getBlockState(activeTownBlockPos), 3);
-                
-                // Notify clients of the update
+
                 PlatformAccess.getNetworkMessages().sendToAllTrackingChunk(new RefreshPlatformsPacket(activeTownBlockPos), level, activeTownBlockPos);
-                
-                // Reset state
+
                 awaitingSecondClick = false;
                 clearActivePlatform();
                 LOGGER.debug("Set platform path end to {} and completed path creation", clickedPos);
             }
-            
-            return true; // Cancel event
+
+            return true;
         }
-        
-        return false; // Don't cancel event
+
+        return false;
     }
-    
-    /**
-     * Validates if a position is within the town's boundary radius
-     * @param pos The position to validate
-     * @param townBlock The town block entity
-     * @param level The server level
-     * @return null if valid, error message if invalid
-     */
+
     private static String validatePositionWithinBoundary(BlockPos pos, TownInterfaceEntity townInterface, Level level) {
         if (!(level instanceof ServerLevel serverLevel)) {
             return "Server error: cannot validate position";
