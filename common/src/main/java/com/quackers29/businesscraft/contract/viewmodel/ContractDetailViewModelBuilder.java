@@ -8,65 +8,43 @@ import net.minecraft.server.level.ServerPlayer;
 import java.text.DecimalFormat;
 import java.util.*;
 
-/**
- * Server-side builder for ContractDetailViewModel.
- * Builds full contract details including bid list.
- */
 public class ContractDetailViewModelBuilder {
 
     private static final DecimalFormat PRICE_FORMAT = new DecimalFormat("#,##0.##");
 
-    /**
-     * Build a full detail view-model for a single contract.
-     *
-     * @param contract The contract to build details for
-     * @param player The player requesting the data
-     * @param serverTime Current server time in millis
-     * @return Full detail view-model, or null if contract is null
-     */
     public static ContractDetailViewModel build(Contract contract, ServerPlayer player, long serverTime) {
         if (contract == null) {
             return null;
         }
 
         if (contract instanceof SellContract sc) {
-            return buildSellContractDetail(sc, player, serverTime);
+            return buildSellContractDetail(sc, serverTime);
         }
 
-        // Fallback for unknown contract types
-        return buildGenericDetail(contract, player, serverTime);
+        return buildGenericDetail(contract, serverTime);
     }
 
-    /**
-     * Build detail for a SellContract.
-     */
-    private static ContractDetailViewModel buildSellContractDetail(
-            SellContract sc, ServerPlayer player, long serverTime) {
+    private static ContractDetailViewModel buildSellContractDetail(SellContract sc, long serverTime) {
 
         UUID contractId = sc.getId();
         String resourceId = sc.getResourceId();
         long quantity = sc.getQuantity();
         String issuerTownName = sc.getIssuerTownName() != null ? sc.getIssuerTownName() : "Unknown";
 
-        // Time displays (using BCTimeUtils for centralized formatting)
         String timeRemainingDisplay = BCTimeUtils.formatTimeRemaining(sc.getExpiryTime(), serverTime);
         String createdDateDisplay = BCTimeUtils.formatDateTime(sc.getCreationTime());
         String expiresDateDisplay = BCTimeUtils.formatDateTime(sc.getExpiryTime());
         boolean isExpired = BCTimeUtils.isExpired(sc.getExpiryTime(), serverTime);
 
-        // Bid display
         float highestBid = sc.getHighestBid();
         String highestBidDisplay = highestBid > 0
                 ? PRICE_FORMAT.format(highestBid) + " emeralds"
                 : "No bids";
 
-        // Status display
         String statusDisplay = calculateStatus(sc);
 
-        // Price display
         String priceDisplay = PRICE_FORMAT.format(sc.getPricePerUnit()) + " emeralds/unit";
 
-        // Delivery progress
         String deliveryProgressDisplay = null;
         if (sc.isAuctionClosed() && !sc.isDelivered()) {
             long delivered = sc.getDeliveredAmount();
@@ -74,7 +52,6 @@ public class ContractDetailViewModelBuilder {
             deliveryProgressDisplay = delivered + "/" + total + " delivered";
         }
 
-        // Courier name
         String courierName = null;
         if (sc.isCourierAssigned()) {
             if (sc.isSnailMail()) {
@@ -85,30 +62,23 @@ public class ContractDetailViewModelBuilder {
             }
         }
 
-        // Winning bidder name
         String winningBidderName = sc.getWinningTownName();
 
-        // Tooltip
         String tooltipText = buildTooltip(sc);
         
-        // Destination town name (for courier contracts - SellContract destination is the winning bidder town)
         String destinationTownName = sc.isAuctionClosed() ? winningBidderName : null;
         
-        // Courier reward display
         String courierRewardDisplay = PRICE_FORMAT.format(sc.getCourierReward()) + " ◎";
         
-        // Accepted bid display (final price)
         String acceptedBidDisplay = sc.getAcceptedBid() > 0 
                 ? PRICE_FORMAT.format(sc.getAcceptedBid()) + " ◎" 
                 : null;
 
-        // Action flags
-        boolean canBid = calculateCanBid(sc, player, serverTime);
-        boolean canAcceptCourier = calculateCanAcceptCourier(sc, player);
+        boolean canBid = calculateCanBid(sc, serverTime);
+        boolean canAcceptCourier = calculateCanAcceptCourier(sc);
         boolean isDelivered = sc.isDelivered();
         boolean isAuctionClosed = sc.isAuctionClosed();
 
-        // Build bid list (sorted by amount, highest first)
         List<ContractDetailViewModel.BidDisplayInfo> bids = buildBidList(sc);
 
         return new ContractDetailViewModel(
@@ -140,15 +110,11 @@ public class ContractDetailViewModelBuilder {
         );
     }
 
-    /**
-     * Build bid list from contract.
-     */
     private static List<ContractDetailViewModel.BidDisplayInfo> buildBidList(SellContract sc) {
         List<ContractDetailViewModel.BidDisplayInfo> result = new ArrayList<>();
         Map<UUID, Float> bids = sc.getBids();
         float highestBid = sc.getHighestBid();
 
-        // Sort by bid amount (highest first)
         List<Map.Entry<UUID, Float>> sortedBids = new ArrayList<>(bids.entrySet());
         sortedBids.sort((e1, e2) -> Float.compare(e2.getValue(), e1.getValue()));
 
@@ -165,11 +131,7 @@ public class ContractDetailViewModelBuilder {
         return result;
     }
 
-    /**
-     * Build generic detail for unknown contract types.
-     */
-    private static ContractDetailViewModel buildGenericDetail(
-            Contract contract, ServerPlayer player, long serverTime) {
+    private static ContractDetailViewModel buildGenericDetail(Contract contract, long serverTime) {
 
         return new ContractDetailViewModel(
                 contract.getId(),
@@ -200,9 +162,6 @@ public class ContractDetailViewModelBuilder {
         );
     }
 
-    /**
-     * Calculate the status display string for a contract.
-     */
     private static String calculateStatus(SellContract sc) {
         if (sc.isDelivered()) {
             return "Delivered";
@@ -224,9 +183,6 @@ public class ContractDetailViewModelBuilder {
         return "Auction Open";
     }
 
-    /**
-     * Build tooltip text.
-     */
     private static String buildTooltip(SellContract sc) {
         StringBuilder sb = new StringBuilder();
         sb.append(sc.getIssuerTownName()).append(" selling ");
@@ -239,19 +195,13 @@ public class ContractDetailViewModelBuilder {
         return sb.toString();
     }
 
-    /**
-     * Calculate whether the player can bid on this contract.
-     */
-    private static boolean calculateCanBid(SellContract sc, ServerPlayer player, long serverTime) {
+    private static boolean calculateCanBid(SellContract sc, long serverTime) {
         if (sc.isAuctionClosed()) return false;
         if (BCTimeUtils.isExpired(sc.getExpiryTime(), serverTime)) return false;
         return true;
     }
 
-    /**
-     * Calculate whether the player can accept courier duty for this contract.
-     */
-    private static boolean calculateCanAcceptCourier(SellContract sc, ServerPlayer player) {
+    private static boolean calculateCanAcceptCourier(SellContract sc) {
         if (!sc.isAuctionClosed()) return false;
         if (sc.isCourierAssigned()) return false;
         if (sc.isDelivered()) return false;

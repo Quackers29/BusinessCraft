@@ -45,7 +45,7 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/contract/CourierContract.java
 - [x] common/src/main/java/com/quackers29/businesscraft/contract/SellContract.java
 - [x] common/src/main/java/com/quackers29/businesscraft/contract/viewmodel/ContractDetailViewModel.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/contract/viewmodel/ContractDetailViewModelBuilder.java
+- [x] common/src/main/java/com/quackers29/businesscraft/contract/viewmodel/ContractDetailViewModelBuilder.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/contract/viewmodel/ContractSummaryViewModel.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/contract/viewmodel/ContractSummaryViewModelBuilder.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/data/cache/TownDataCache.java
