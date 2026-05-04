@@ -20,4 +20,4 @@ public class ClearTownsCommand {
         context.getSource().sendSuccess(() -> Component.literal("Cleared " + count + " towns."), true);
         return 1;
     }
-} 
+}

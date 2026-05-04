@@ -22,6 +22,7 @@ public class ClearContractsCommand {
 
     private static int execute(CommandContext<CommandSourceStack> context) {
         try {
+            // Access the private INSTANCES map via reflection
             java.lang.reflect.Field instancesField = ContractBoard.class.getDeclaredField("INSTANCES");
             instancesField.setAccessible(true);
             @SuppressWarnings("unchecked")

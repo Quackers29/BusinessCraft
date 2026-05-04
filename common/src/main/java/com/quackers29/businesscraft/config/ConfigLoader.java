@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.config;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -91,14 +92,10 @@ public class ConfigLoader {
             ConfigurationService.getInstance().registerConfiguration(
                     "businesscraft-main",
                     configPath,
-                    this::reloadFromFile);
+                    filePath -> loadConfig());
         } catch (Exception e) {
             LOGGER.warn("Failed to register configuration for hot-reloading: {}", e.getMessage());
         }
-    }
-
-    private void reloadFromFile(Path filePath) {
-        loadConfig();
     }
 
     public static void loadConfig() {
@@ -140,9 +137,9 @@ public class ConfigLoader {
                 populationPerTourist = config.getIntOrElse("tourists.populationPerTourist", 5);
                 maxPopBasedTourists = config.getIntOrElse("tourists.maxPopBasedTourists", 20);
                 touristExpiryMinutes = config.getOrElse("tourists.touristExpiryMinutes", 120.0);
-enableTouristExpiry = config.getOrElse("tourists.enableTouristExpiry", true);
-        notifyOnTouristDeparture = config.getOrElse("tourists.notifyOnTouristDeparture", true);
-        touristSystemEnabled = config.getOrElse("tourists.enabled", true);
+                enableTouristExpiry = config.getOrElse("tourists.enableTouristExpiry", true);
+                notifyOnTouristDeparture = config.getOrElse("tourists.notifyOnTouristDeparture", true);
+                touristSystemEnabled = config.getOrElse("tourists.enabled", true);
 
                 // Economy settings
                 metersPerEmerald = config.getIntOrElse("economy.metersPerEmerald", 50);
@@ -157,7 +154,7 @@ enableTouristExpiry = config.getOrElse("tourists.enableTouristExpiry", true);
                 contractCourierAcceptanceMinutes = config.getOrElse("contracts.courierAcceptanceMinutes", 2.0);
                 contractCourierDeliveryMinutesPerMeter = config.getOrElse("contracts.courierDeliveryMinutesPerMeter", 0.05);
                 contractSnailMailDeliveryMinutesPerMeter = config.getOrElse("contracts.snailMailDeliveryMinutesPerMeter", 0.1);
-        contractsEnabled = config.getOrElse("contracts.enabled", true);
+                contractsEnabled = config.getOrElse("contracts.enabled", true);
 
                 // Production settings
                 productionEnabled = config.getOrElse("production.enabled", true);
@@ -165,7 +162,7 @@ enableTouristExpiry = config.getOrElse("tourists.enableTouristExpiry", true);
                 dailyTickInterval = config.getIntOrElse("production.dailyTickInterval", 24000);
                 minStockPercent = config.getIntOrElse("production.minStockPercent", 60);
                 excessStockPercent = config.getIntOrElse("production.excessStockPercent", 80);
-        researchEnabled = config.getOrElse("research.enabled", true);
+                researchEnabled = config.getOrElse("research.enabled", true);
 
                 // Trading settings
                 tradingEnabled = config.getOrElse("trading.enabled", true);
@@ -285,10 +282,10 @@ enableTouristExpiry = config.getOrElse("tourists.enableTouristExpiry", true);
                 config.setComment("tourists.touristExpiryMinutes", " Tourist expiry time in minutes (0 = never expire)");
                 config.set("tourists.enableTouristExpiry", enableTouristExpiry);
                 config.setComment("tourists.enableTouristExpiry", " Enable tourist expiry system");
-config.set("tourists.notifyOnTouristDeparture", notifyOnTouristDeparture);
-        config.setComment("tourists.notifyOnTouristDeparture", " Notify origin town when tourist departs");
-        config.set("tourists.enabled", touristSystemEnabled);
-        config.setComment("tourists.enabled", "Master switch - completely disables tourist spawning globally");
+                config.set("tourists.notifyOnTouristDeparture", notifyOnTouristDeparture);
+                config.setComment("tourists.notifyOnTouristDeparture", " Notify origin town when tourist departs");
+                config.set("tourists.enabled", touristSystemEnabled);
+                config.setComment("tourists.enabled", "Master switch - completely disables tourist spawning globally");
 
                 // Economy settings
                 config.set("economy.metersPerEmerald", metersPerEmerald);
@@ -308,10 +305,10 @@ config.set("tourists.notifyOnTouristDeparture", notifyOnTouristDeparture);
                 config.setComment("contracts.courierAcceptanceMinutes", " Courier acceptance window in minutes");
                 config.set("contracts.courierDeliveryMinutesPerMeter", contractCourierDeliveryMinutesPerMeter);
                 config.setComment("contracts.courierDeliveryMinutesPerMeter", " Courier delivery time per meter (minutes)");
-config.set("contracts.snailMailDeliveryMinutesPerMeter", contractSnailMailDeliveryMinutesPerMeter);
-        config.setComment("contracts.snailMailDeliveryMinutesPerMeter", " Snail mail delivery time per meter (minutes)");
-        config.set("contracts.enabled", contractsEnabled);
-        config.setComment("contracts.enabled", "Enable contract system (auction, bidding, delivery)");
+                config.set("contracts.snailMailDeliveryMinutesPerMeter", contractSnailMailDeliveryMinutesPerMeter);
+                config.setComment("contracts.snailMailDeliveryMinutesPerMeter", " Snail mail delivery time per meter (minutes)");
+                config.set("contracts.enabled", contractsEnabled);
+                config.setComment("contracts.enabled", "Enable contract system (auction, bidding, delivery)");
 
                 // Production settings
                 config.set("production.enabled", productionEnabled);
@@ -342,11 +339,11 @@ config.set("contracts.snailMailDeliveryMinutesPerMeter", contractSnailMailDelive
                 // Player settings
                 config.set("player.playerTracking", playerTracking);
                 config.setComment("player.playerTracking", " Enable player tracking system");
-config.set("player.townBoundaryMessages", townBoundaryMessages);
-        config.setComment("player.townBoundaryMessages", " Show town boundary entry/exit messages");
+                config.set("player.townBoundaryMessages", townBoundaryMessages);
+                config.setComment("player.townBoundaryMessages", " Show town boundary entry/exit messages");
 
-        config.set("research.enabled", researchEnabled);
-        config.setComment("research.enabled", "Enable research/upgrade system");
+                config.set("research.enabled", researchEnabled);
+                config.setComment("research.enabled", "Enable research/upgrade system");
 
                 config.save();
             }
