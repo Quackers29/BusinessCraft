@@ -27,13 +27,14 @@ public class BoundarySyncResponsePacket extends BaseBlockEntityPacket {
         this.boundaryRadius = buf.readInt();
     }
 
-    private void write(FriendlyByteBuf buf) {
+    @Override
+    public void toBytes(FriendlyByteBuf buf) {
         super.toBytes(buf);
         buf.writeInt(boundaryRadius);
     }
 
     public static void encode(BoundarySyncResponsePacket msg, FriendlyByteBuf buf) {
-        msg.write(buf);
+        msg.toBytes(buf);
     }
 
     public static BoundarySyncResponsePacket decode(FriendlyByteBuf buf) {

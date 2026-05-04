@@ -29,13 +29,14 @@ public class SetPathCreationModePacket extends BaseBlockEntityPacket {
         return mode;
     }
 
-    private void write(FriendlyByteBuf buf) {
+    @Override
+    public void toBytes(FriendlyByteBuf buf) {
         super.toBytes(buf);
         buf.writeBoolean(mode);
     }
 
     public static void encode(SetPathCreationModePacket msg, FriendlyByteBuf buf) {
-        msg.write(buf);
+        msg.toBytes(buf);
     }
 
     public static SetPathCreationModePacket decode(FriendlyByteBuf buf) {
