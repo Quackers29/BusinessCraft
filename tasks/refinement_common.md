@@ -35,7 +35,7 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/client/renderer/TouristRenderer.java
 - [x] common/src/main/java/com/quackers29/businesscraft/client/TownDebugKeyHandler.java
 - [x] common/src/main/java/com/quackers29/businesscraft/client/TownDebugNetwork.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/client/TownDebugOverlay.java
+- [x] common/src/main/java/com/quackers29/businesscraft/client/TownDebugOverlay.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/command/ClearContractsCommand.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/command/ClearTownsCommand.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/config/ConfigLoader.java
