@@ -104,7 +104,6 @@ public abstract class Contract {
         tag.putLong("expiryTime", expiryTime);
         tag.putBoolean("isCompleted", isCompleted);
 
-        // Save bids
         net.minecraft.nbt.ListTag bidsList = new net.minecraft.nbt.ListTag();
         for (Map.Entry<UUID, Float> entry : bids.entrySet()) {
             CompoundTag bidTag = new CompoundTag();
@@ -133,11 +132,10 @@ public abstract class Contract {
         expiryTime = tag.getLong("expiryTime");
         isCompleted = tag.getBoolean("isCompleted");
 
-        // Load bids
         bids.clear();
         bidderNames.clear();
         if (tag.contains("bids")) {
-            net.minecraft.nbt.ListTag bidsList = tag.getList("bids", 10); // 10 = CompoundTag
+            net.minecraft.nbt.ListTag bidsList = tag.getList("bids", 10);
             for (int i = 0; i < bidsList.size(); i++) {
                 CompoundTag bidTag = bidsList.getCompound(i);
                 UUID bidder = bidTag.getUUID("bidder");
