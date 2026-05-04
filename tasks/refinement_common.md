@@ -27,7 +27,7 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/client/render/world/LineRenderer3D.java
 - [x] common/src/main/java/com/quackers29/businesscraft/client/render/world/package-info.java
 - [x] common/src/main/java/com/quackers29/businesscraft/client/render/world/PathRenderer3D.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/client/render/world/PlatformVisualizationRenderer.java
+- [x] common/src/main/java/com/quackers29/businesscraft/client/render/world/PlatformVisualizationRenderer.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/client/render/world/TownBoundaryVisualizationRenderer.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/client/render/world/VisualizationManager.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/client/render/world/WorldVisualizationRenderer.java
