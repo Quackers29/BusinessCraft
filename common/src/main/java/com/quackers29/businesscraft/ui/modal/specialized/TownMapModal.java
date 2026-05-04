@@ -42,8 +42,8 @@ public class TownMapModal extends Screen {
     private int panelTop;
 
     // Map properties
-    private final int mapWidth = 300;
-    private final int mapHeight = 250;
+    private int mapWidth;
+    private int mapHeight;
     private int mapCenterX;
     private int mapCenterY;
     private double mapOffsetX = 0; // Camera offset in world coordinates
@@ -84,6 +84,10 @@ public class TownMapModal extends Screen {
     private static final double COORDINATE_CONVERSION = 0.1;
     private static final int MAX_COORDINATE_MARKERS = 7;
     private static final int CLICK_TOLERANCE = 3;
+    private static final int MIN_MAP_WIDTH = 140;
+    private static final int MIN_MAP_HEIGHT = 110;
+    private static final int MAX_MAP_WIDTH = 420;
+    private static final int MAX_MAP_HEIGHT = 300;
 
     /**
      * Constructor for the town map modal
@@ -116,9 +120,15 @@ public class TownMapModal extends Screen {
         this.panelLeft = (this.width - panelWidth) / 2;
         this.panelTop = (this.height - panelHeight) / 2;
 
-        // Calculate map area
+        // Calculate map area from the available panel space so it stays usable on
+        // small screens.
+        int horizontalPadding = 40;
+        int topReserved = 50; // title + separator + breathing room
+        int bottomReserved = 70; // controls help + buttons
+        this.mapWidth = Math.max(MIN_MAP_WIDTH, Math.min(MAX_MAP_WIDTH, panelWidth - (horizontalPadding * 2)));
+        this.mapHeight = Math.max(MIN_MAP_HEIGHT, Math.min(MAX_MAP_HEIGHT, panelHeight - topReserved - bottomReserved));
         this.mapCenterX = panelLeft + panelWidth / 2;
-        this.mapCenterY = panelTop + 80 + mapHeight / 2; // 80 for title area
+        this.mapCenterY = panelTop + topReserved + mapHeight / 2;
 
         // Load town data
         loadTownData();
