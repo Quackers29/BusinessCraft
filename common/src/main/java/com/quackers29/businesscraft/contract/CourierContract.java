@@ -100,7 +100,6 @@ public class CourierContract extends Contract {
         return sourceTownRadius;
     }
 
-    // UI convenience methods
     public int getAmount() {
         return (int) quantity;
     }

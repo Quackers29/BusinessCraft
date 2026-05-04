@@ -4,7 +4,6 @@ import net.minecraft.nbt.CompoundTag;
 import java.util.UUID;
 
 public class SellContract extends Contract {
-    // Original SellContract fields
     private String resourceId;
     private long quantity;
     private float pricePerUnit;
@@ -14,7 +13,6 @@ public class SellContract extends Contract {
     private float acceptedBid;
     private boolean isDelivered;
 
-    // Courier Phase Fields
     private UUID courierId;
     private float courierReward;
     private long courierAcceptedTime;
@@ -30,10 +28,7 @@ public class SellContract extends Contract {
             float pricePerUnit) {
         super(issuerTownId, issuerTownName, duration);
         this.resourceId = resourceId;
-        // Clamp quantity to valid range and sanity limit (e.g. 10M) to prevent
-        // overflow/exploits
         this.quantity = Math.max(1L, Math.min(10_000_000L, quantity));
-        // Clamp price
         this.pricePerUnit = Math.max(0.01f, Math.min(1_000_000f, pricePerUnit));
 
         this.buyerTownId = null;
@@ -42,7 +37,6 @@ public class SellContract extends Contract {
         this.acceptedBid = 0f;
         this.isDelivered = false;
 
-        // Courier defaults
         this.courierId = null;
         this.courierReward = 0f;
         this.courierAcceptedTime = 0L;
@@ -100,7 +94,6 @@ public class SellContract extends Contract {
     }
 
     public boolean isAuctionClosed() {
-        // Auction is closed if we have a winner
         return winningTownId != null;
     }
 
@@ -111,8 +104,6 @@ public class SellContract extends Contract {
     public void setDelivered(boolean delivered) {
         this.isDelivered = delivered;
     }
-
-    // Courier Methods
 
     public UUID getCourierId() {
         return courierId;
@@ -158,14 +149,11 @@ public class SellContract extends Contract {
         return deliveredAmount >= quantity;
     }
 
-    // UI convenience methods
     public int getAmount() {
         return (int) quantity;
     }
 
     public float getCurrentBid() {
-        // TODO: Implement bidding system tracking
-        // For now, return the price per unit times quantity as a placeholder
         return pricePerUnit * quantity;
     }
 
@@ -186,7 +174,6 @@ public class SellContract extends Contract {
         tag.putFloat("acceptedBid", acceptedBid);
         tag.putBoolean("isDelivered", isDelivered);
 
-        // Courier fields
         if (courierId != null) {
             tag.putUUID("courierId", courierId);
         }
@@ -214,7 +201,6 @@ public class SellContract extends Contract {
         acceptedBid = tag.getFloat("acceptedBid");
         isDelivered = tag.getBoolean("isDelivered");
 
-        // Courier fields
         if (tag.hasUUID("courierId")) {
             courierId = tag.getUUID("courierId");
         }

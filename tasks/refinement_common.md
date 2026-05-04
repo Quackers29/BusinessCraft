@@ -42,8 +42,8 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/config/ConfigurationService.java
 - [x] common/src/main/java/com/quackers29/businesscraft/contract/Contract.java
 - [x] common/src/main/java/com/quackers29/businesscraft/contract/ContractBoard.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/contract/CourierContract.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/contract/SellContract.java
+- [x] common/src/main/java/com/quackers29/businesscraft/contract/CourierContract.java
+- [x] common/src/main/java/com/quackers29/businesscraft/contract/SellContract.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/contract/viewmodel/ContractDetailViewModel.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/contract/viewmodel/ContractDetailViewModelBuilder.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/contract/viewmodel/ContractSummaryViewModel.java
