@@ -46,14 +46,18 @@ public class ErrorHandler {
     public <T> Result<T, BCError.Error> handleException(Exception exception, String context, String componentName, 
                                                        Function<Exception, T> recoveryStrategy) {
         
+        // Generate error context
         ErrorContext errorContext = new ErrorContext(exception, context, componentName, Instant.now());
         
+        // Log the error
         logError(errorContext);
         
+        // Update metrics
         if (enableMetrics) {
             updateErrorMetrics(errorContext);
         }
         
+        // Attempt recovery
         if (recoveryStrategy != null) {
             try {
                 T recoveredValue = recoveryStrategy.apply(exception);
@@ -66,6 +70,7 @@ public class ErrorHandler {
             }
         }
         
+        // Try default recovery strategies
         String errorType = exception.getClass().getSimpleName();
         Function<Exception, Object> defaultRecovery = recoveryStrategies.get(errorType);
         if (defaultRecovery != null) {
@@ -80,6 +85,7 @@ public class ErrorHandler {
             }
         }
         
+        // Return standardized error
         BCError.Error standardizedError = categorizeError(errorContext);
         return Result.failure(standardizedError);
     }
@@ -182,6 +188,7 @@ public class ErrorHandler {
                 String.format("Validation error in %s: %s", componentName, exception.getMessage()));
         }
         
+        // Generic unexpected error
         return new BCError.UnexpectedError(
             String.format("Unexpected %s in %s: %s", 
                          exception.getClass().getSimpleName(), componentName, exception.getMessage()));
@@ -208,6 +215,8 @@ public class ErrorHandler {
             return false;
         });
     }
+    
+    // Error classification methods
     
     private boolean isCriticalError(Exception exception) {
         Throwable cause = exception.getCause();
@@ -274,6 +283,8 @@ public class ErrorHandler {
                message.contains("invalid") ||
                message.contains("validation");
     }
+    
+    // Configuration methods
     
     public void setEnableMetrics(boolean enableMetrics) {
         this.enableMetrics = enableMetrics;

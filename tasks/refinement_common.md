@@ -61,7 +61,7 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/economy/ResourceType.java
 - [x] common/src/main/java/com/quackers29/businesscraft/entity/TouristEntity.java
 - [x] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandler.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandlerIntegration.java
+- [x] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandlerIntegration.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandlingExample.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorMetrics.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorReporter.java
@@ -246,7 +246,6 @@
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/modal/factories/BCModalInventoryFactory.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/modal/specialized/BCModalGridScreen.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/modal/specialized/BCModalInventoryScreen.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/ui/modal/specialized/BCModalInventoryScreenV2.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/modal/specialized/TownMapModal.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/README-MODALGRID.md
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/screens/BaseTownScreen.java
