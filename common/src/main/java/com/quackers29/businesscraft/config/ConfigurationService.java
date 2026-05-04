@@ -14,11 +14,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-/**
- * Hot-reloadable configuration service that monitors configuration files
- * and automatically reloads them when changes are detected.
- * Uses the Result pattern for type-safe error handling.
- */
 public class ConfigurationService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationService.class);
     
@@ -46,11 +41,6 @@ public class ConfigurationService {
         }
     }
     
-    /**
-     * Gets the singleton instance of the configuration service.
-     * 
-     * @return The configuration service instance
-     */
     public static synchronized ConfigurationService getInstance() {
         if (instance == null) {
             instance = new ConfigurationService();
@@ -58,14 +48,6 @@ public class ConfigurationService {
         return instance;
     }
     
-    /**
-     * Registers a configuration file for hot-reloading.
-     * 
-     * @param configName Unique name for this configuration
-     * @param filePath Path to the configuration file
-     * @param reloadCallback Callback to execute when file changes
-     * @return Result indicating success or failure
-     */
     public Result<Void, BCError.ConfigError> registerConfiguration(String configName, Path filePath, Consumer<Path> reloadCallback) {
         if (configName == null || configName.trim().isEmpty()) {
             return Result.failure(new BCError.ConfigError("INVALID_CONFIG_NAME", "Configuration name cannot be null or empty"));
@@ -80,20 +62,17 @@ public class ConfigurationService {
         }
         
         try {
-            // Ensure the file exists
             if (!Files.exists(filePath)) {
                 return Result.failure(new BCError.ConfigError("FILE_NOT_FOUND", 
                     "Configuration file does not exist: " + filePath));
             }
             
-            // Get the parent directory for watching
             Path parentDir = filePath.getParent();
             if (parentDir == null) {
                 return Result.failure(new BCError.ConfigError("INVALID_DIRECTORY", 
                     "Cannot determine parent directory for: " + filePath));
             }
             
-            // Register watch key for the directory if not already registered
             String dirKey = parentDir.toString();
             if (!watchKeys.containsKey(dirKey)) {
                 WatchKey watchKey = parentDir.register(watchService, 
@@ -104,7 +83,6 @@ public class ConfigurationService {
                 LOGGER.info("Registered file watcher for directory: {}", parentDir);
             }
             
-            // Store configuration entry
             ConfigEntry entry = new ConfigEntry(filePath, reloadCallback, System.currentTimeMillis());
             configurations.put(configName, entry);
             
@@ -120,12 +98,6 @@ public class ConfigurationService {
         }
     }
     
-    /**
-     * Unregisters a configuration from hot-reloading.
-     * 
-     * @param configName Name of the configuration to unregister
-     * @return Result indicating success or failure
-     */
     public Result<Void, BCError.ConfigError> unregisterConfiguration(String configName) {
         if (configName == null || !configurations.containsKey(configName)) {
             return Result.failure(new BCError.ConfigError("CONFIG_NOT_FOUND", 
@@ -137,12 +109,6 @@ public class ConfigurationService {
         return Result.success(null);
     }
     
-    /**
-     * Manually triggers a reload of a specific configuration.
-     * 
-     * @param configName Name of the configuration to reload
-     * @return Result indicating success or failure
-     */
     public Result<Void, BCError.ConfigError> reloadConfiguration(String configName) {
         ConfigEntry entry = configurations.get(configName);
         if (entry == null) {
@@ -162,11 +128,6 @@ public class ConfigurationService {
         }
     }
     
-    /**
-     * Reloads all registered configurations.
-     * 
-     * @return Result indicating overall success or failure
-     */
     public Result<Void, BCError.ConfigError> reloadAllConfigurations() {
         LOGGER.info("Reloading all configurations...");
         
@@ -193,9 +154,6 @@ public class ConfigurationService {
         }
     }
     
-    /**
-     * Starts the file watching service.
-     */
     private void startWatching() {
         if (isRunning) {
             return;
@@ -206,15 +164,12 @@ public class ConfigurationService {
         LOGGER.info("Started configuration file watching service");
     }
     
-    /**
-     * Main file watching loop.
-     */
     private void watchForChanges() {
         while (isRunning) {
             try {
                 WatchKey key = watchService.poll(1, TimeUnit.SECONDS);
                 if (key == null) {
-                    continue; // No events, continue polling
+                    continue;
                 }
                 
                 for (WatchEvent<?> event : key.pollEvents()) {
@@ -229,14 +184,12 @@ public class ConfigurationService {
                     WatchEvent<Path> pathEvent = (WatchEvent<Path>) event;
                     Path filename = pathEvent.context();
                     
-                    // Check if this file change affects any of our registered configurations
                     handleFileChange(key, filename, kind);
                 }
                 
                 boolean valid = key.reset();
                 if (!valid) {
                     LOGGER.warn("Watch key is no longer valid, removing from registry");
-                    // Remove the invalid key from our map
                     watchKeys.values().removeIf(k -> k.equals(key));
                 }
                 
@@ -251,11 +204,7 @@ public class ConfigurationService {
         LOGGER.info("File watching service stopped");
     }
     
-    /**
-     * Handles a file change event.
-     */
     private void handleFileChange(WatchKey key, Path filename, WatchEvent.Kind<?> kind) {
-        // Find the directory this watch key belongs to
         String changedDir = null;
         for (Map.Entry<String, WatchKey> entry : watchKeys.entrySet()) {
             if (entry.getValue().equals(key)) {
@@ -270,20 +219,17 @@ public class ConfigurationService {
         
         Path fullPath = Paths.get(changedDir, filename.toString());
         
-        // Check if this file matches any of our registered configurations
         for (Map.Entry<String, ConfigEntry> entry : configurations.entrySet()) {
             ConfigEntry config = entry.getValue();
             
             if (config.filePath.equals(fullPath)) {
-                // Debounce rapid file changes (some editors create multiple events)
                 long now = System.currentTimeMillis();
-                if (now - config.lastModified < 1000) { // 1 second debounce
+                if (now - config.lastModified < 1000) {
                     continue;
                 }
                 
                 LOGGER.info("Configuration file changed: {} ({})", entry.getKey(), kind);
                 
-                // Schedule reload with a small delay to ensure file writing is complete
                 executorService.schedule(() -> {
                     try {
                         config.reloadCallback.accept(config.filePath);
@@ -299,28 +245,14 @@ public class ConfigurationService {
         }
     }
     
-    /**
-     * Gets the number of registered configurations.
-     * 
-     * @return Number of registered configurations
-     */
     public int getRegisteredConfigurationCount() {
         return configurations.size();
     }
     
-    /**
-     * Checks if a configuration is registered.
-     * 
-     * @param configName Name of the configuration
-     * @return True if registered
-     */
     public boolean isConfigurationRegistered(String configName) {
         return configurations.containsKey(configName);
     }
     
-    /**
-     * Shuts down the configuration service.
-     */
     public void shutdown() {
         LOGGER.info("Shutting down configuration service...");
         
@@ -350,9 +282,6 @@ public class ConfigurationService {
         LOGGER.info("Configuration service shutdown complete");
     }
     
-    /**
-     * Internal class to hold configuration entry information.
-     */
     private static class ConfigEntry {
         final Path filePath;
         final Consumer<Path> reloadCallback;

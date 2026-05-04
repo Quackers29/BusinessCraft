@@ -39,7 +39,7 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/command/ClearContractsCommand.java
 - [x] common/src/main/java/com/quackers29/businesscraft/command/ClearTownsCommand.java
 - [x] common/src/main/java/com/quackers29/businesscraft/config/ConfigLoader.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/config/ConfigurationService.java
+- [x] common/src/main/java/com/quackers29/businesscraft/config/ConfigurationService.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/contract/Contract.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/contract/ContractBoard.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/contract/CourierContract.java
