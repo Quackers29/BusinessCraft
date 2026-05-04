@@ -331,9 +331,11 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     public int getMaxTourists() {
         // First try to get from our ContainerData which is synced between server and
         // client
-        int maxTouristsFromData = data.get(DATA_MAX_TOURISTS);
-        if (maxTouristsFromData > 0) {
-            return maxTouristsFromData;
+        if (hasDataSlot(DATA_MAX_TOURISTS)) {
+            int maxTouristsFromData = data.get(DATA_MAX_TOURISTS);
+            if (maxTouristsFromData > 0) {
+                return maxTouristsFromData;
+            }
         }
 
         // If data isn't available yet or we're on server side
@@ -440,9 +442,13 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         this.clientSearchRadius = radius;
 
         // Also update in the data if we're on the client (for immediate feedback)
-        if (level != null && level.isClientSide()) {
+        if (level != null && level.isClientSide() && hasDataSlot(DATA_SEARCH_RADIUS)) {
             data.set(DATA_SEARCH_RADIUS, radius);
         }
+    }
+
+    private boolean hasDataSlot(int index) {
+        return data != null && index >= 0 && index < data.getCount();
     }
 
     /**
