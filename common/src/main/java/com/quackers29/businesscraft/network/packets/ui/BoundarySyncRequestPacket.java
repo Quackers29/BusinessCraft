@@ -32,20 +32,19 @@ public class BoundarySyncRequestPacket extends BaseBlockEntityPacket {
         super(buf);
     }
 
-    @Override
-    public void toBytes(FriendlyByteBuf buf) {
+    private void write(FriendlyByteBuf buf) {
         super.toBytes(buf);
     }
 
     public static void encode(BoundarySyncRequestPacket msg, FriendlyByteBuf buf) {
-        msg.toBytes(buf);
+        msg.write(buf);
     }
 
     public static BoundarySyncRequestPacket decode(FriendlyByteBuf buf) {
         return new BoundarySyncRequestPacket(buf);
     }
 
-    public boolean handle(Object context) {
+    public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (!(senderObj instanceof ServerPlayer player)) return;
@@ -71,6 +70,6 @@ public class BoundarySyncRequestPacket extends BaseBlockEntityPacket {
             }
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
-        return true;
     }
 }
+

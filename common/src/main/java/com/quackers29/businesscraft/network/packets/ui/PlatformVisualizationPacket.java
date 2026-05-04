@@ -26,20 +26,19 @@ public class PlatformVisualizationPacket extends BaseBlockEntityPacket {
         super(buf);
     }
 
-    @Override
-    public void toBytes(FriendlyByteBuf buf) {
+    private void write(FriendlyByteBuf buf) {
         super.toBytes(buf);
     }
 
     public static void encode(PlatformVisualizationPacket msg, FriendlyByteBuf buf) {
-        msg.toBytes(buf);
+        msg.write(buf);
     }
 
     public static PlatformVisualizationPacket decode(FriendlyByteBuf buf) {
         return new PlatformVisualizationPacket(buf);
     }
 
-    public boolean handle(Object context) {
+    public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
             if (clientHelper == null) return;
@@ -59,6 +58,6 @@ public class PlatformVisualizationPacket extends BaseBlockEntityPacket {
                 "Client received platform visualization enable for town at {}, requested immediate boundary sync", pos);
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
-        return true;
     }
 }
+

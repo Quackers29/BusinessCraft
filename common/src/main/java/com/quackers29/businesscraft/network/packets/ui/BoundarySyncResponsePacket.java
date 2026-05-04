@@ -27,21 +27,20 @@ public class BoundarySyncResponsePacket extends BaseBlockEntityPacket {
         this.boundaryRadius = buf.readInt();
     }
 
-    @Override
-    public void toBytes(FriendlyByteBuf buf) {
+    private void write(FriendlyByteBuf buf) {
         super.toBytes(buf);
         buf.writeInt(boundaryRadius);
     }
 
     public static void encode(BoundarySyncResponsePacket msg, FriendlyByteBuf buf) {
-        msg.toBytes(buf);
+        msg.write(buf);
     }
 
     public static BoundarySyncResponsePacket decode(FriendlyByteBuf buf) {
         return new BoundarySyncResponsePacket(buf);
     }
 
-    public boolean handle(Object context) {
+    public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             TownBoundaryVisualizationRenderer.updateBoundaryRadius(pos, boundaryRadius);
             
@@ -49,6 +48,6 @@ public class BoundarySyncResponsePacket extends BaseBlockEntityPacket {
                 "Boundary sync response for town at {}: updated to boundary radius={}", pos, boundaryRadius);
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
-        return true;
     }
 }
+

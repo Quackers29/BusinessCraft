@@ -29,19 +29,19 @@ public class RequestContractDetailPacket {
         this.contractId = buf.readUUID();
     }
 
-    public void toBytes(FriendlyByteBuf buf) {
+    private void write(FriendlyByteBuf buf) {
         buf.writeUUID(contractId);
     }
 
     public static void encode(RequestContractDetailPacket msg, FriendlyByteBuf buf) {
-        msg.toBytes(buf);
+        msg.write(buf);
     }
 
     public static RequestContractDetailPacket decode(FriendlyByteBuf buf) {
         return new RequestContractDetailPacket(buf);
     }
 
-    public boolean handle(Object context) {
+    public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (senderObj instanceof ServerPlayer player) {
@@ -64,8 +64,8 @@ public class RequestContractDetailPacket {
             }
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
-        return true;
     }
 
     public UUID getContractId() { return contractId; }
 }
+

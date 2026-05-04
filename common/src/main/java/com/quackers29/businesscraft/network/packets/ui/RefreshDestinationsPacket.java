@@ -79,7 +79,7 @@ public class RefreshDestinationsPacket {
         townDirections.put(townId, direction);
     }
 
-    public boolean handle(Object context) {
+    public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
             if (clientHelper == null) {
@@ -115,6 +115,5 @@ public class RefreshDestinationsPacket {
             }
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
-        return true;
     }
 }

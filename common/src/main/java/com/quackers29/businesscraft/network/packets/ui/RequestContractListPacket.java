@@ -39,7 +39,7 @@ public class RequestContractListPacket {
         this.showAll = buf.readBoolean();
     }
 
-    public void toBytes(FriendlyByteBuf buf) {
+    private void write(FriendlyByteBuf buf) {
         buf.writeUtf(tab);
         buf.writeInt(page);
         buf.writeInt(pageSize);
@@ -47,14 +47,14 @@ public class RequestContractListPacket {
     }
 
     public static void encode(RequestContractListPacket msg, FriendlyByteBuf buf) {
-        msg.toBytes(buf);
+        msg.write(buf);
     }
 
     public static RequestContractListPacket decode(FriendlyByteBuf buf) {
         return new RequestContractListPacket(buf);
     }
 
-    public boolean handle(Object context) {
+    public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (senderObj instanceof ServerPlayer player) {
@@ -97,7 +97,6 @@ public class RequestContractListPacket {
             }
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
-        return true;
     }
 
     private static ContractSummaryViewModelBuilder.Tab parseTab(String tab) {
@@ -115,3 +114,4 @@ public class RequestContractListPacket {
     public int getPageSize() { return pageSize; }
     public boolean isShowAll() { return showAll; }
 }
+

@@ -24,28 +24,28 @@ public class ContractDetailSyncPacket {
         this.detail = new ContractDetailViewModel(buf);
     }
 
-    public void toBytes(FriendlyByteBuf buf) {
+    private void write(FriendlyByteBuf buf) {
         buf.writeLong(serverCurrentTime);
         detail.toBytes(buf);
     }
 
     public static void encode(ContractDetailSyncPacket msg, FriendlyByteBuf buf) {
-        msg.toBytes(buf);
+        msg.write(buf);
     }
 
     public static ContractDetailSyncPacket decode(FriendlyByteBuf buf) {
         return new ContractDetailSyncPacket(buf);
     }
 
-    public boolean handle(Object context) {
+    public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             TownDataCacheManager.updateContractDetail(detail, serverCurrentTime);
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
-        return true;
     }
 
     // Getters
     public ContractDetailViewModel getDetail() { return detail; }
     public long getServerCurrentTime() { return serverCurrentTime; }
 }
+

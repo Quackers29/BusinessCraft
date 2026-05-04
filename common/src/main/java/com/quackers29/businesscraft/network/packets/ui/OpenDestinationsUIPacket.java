@@ -39,7 +39,7 @@ public class OpenDestinationsUIPacket {
         return new OpenDestinationsUIPacket(buf.readBlockPos(), buf.readUUID());
     }
 
-    public boolean handle(Object context) {
+    public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (!(senderObj instanceof ServerPlayer player))
@@ -108,7 +108,6 @@ public class OpenDestinationsUIPacket {
             }
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
-        return true;
     }
 
     /**

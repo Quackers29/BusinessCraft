@@ -32,19 +32,19 @@ public class OpenContractBoardPacket {
         this.blockPos = buf.readBlockPos();
     }
 
-    public void toBytes(FriendlyByteBuf buf) {
+    private void write(FriendlyByteBuf buf) {
         buf.writeBlockPos(blockPos);
     }
 
     public static void encode(OpenContractBoardPacket msg, FriendlyByteBuf buf) {
-        msg.toBytes(buf);
+        msg.write(buf);
     }
 
     public static OpenContractBoardPacket decode(FriendlyByteBuf buf) {
         return new OpenContractBoardPacket(buf);
     }
 
-    public boolean handle(Object context) {
+    public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (senderObj instanceof ServerPlayer player) {
@@ -83,6 +83,6 @@ public class OpenContractBoardPacket {
             }
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
-        return true;
     }
 }
+

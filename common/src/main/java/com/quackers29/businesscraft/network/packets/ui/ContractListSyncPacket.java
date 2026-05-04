@@ -85,7 +85,7 @@ public class ContractListSyncPacket {
         }
     }
 
-    public void toBytes(FriendlyByteBuf buf) {
+    private void write(FriendlyByteBuf buf) {
         buf.writeUtf(tab);
         buf.writeInt(page);
         buf.writeInt(pageSize);
@@ -106,21 +106,20 @@ public class ContractListSyncPacket {
     }
 
     public static void encode(ContractListSyncPacket msg, FriendlyByteBuf buf) {
-        msg.toBytes(buf);
+        msg.write(buf);
     }
 
     public static ContractListSyncPacket decode(FriendlyByteBuf buf) {
         return new ContractListSyncPacket(buf);
     }
 
-    public boolean handle(Object context) {
+    public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             com.quackers29.businesscraft.ui.managers.TownDataCacheManager
                     .updateContractList(tab, contracts, page, pageSize, totalCount, hasMore, serverCurrentTime);
             com.quackers29.businesscraft.client.ClientGlobalMarket.get().setPrices(marketPrices);
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
-        return true;
     }
 
     // Getters for client-side access
@@ -133,3 +132,4 @@ public class ContractListSyncPacket {
     public long getServerCurrentTime() { return serverCurrentTime; }
     public Map<String, Float> getMarketPrices() { return marketPrices; }
 }
+

@@ -55,7 +55,7 @@ public class ContractSyncPacket {
         }
     }
 
-    public void toBytes(FriendlyByteBuf buf) {
+    private void write(FriendlyByteBuf buf) {
         buf.writeInt(contracts.size());
         for (Contract c : contracts) {
             buf.writeUtf(c.getType());
@@ -73,14 +73,14 @@ public class ContractSyncPacket {
 
     // Static methods for Forge network registration
     public static void encode(ContractSyncPacket msg, FriendlyByteBuf buf) {
-        msg.toBytes(buf);
+        msg.write(buf);
     }
 
     public static ContractSyncPacket decode(FriendlyByteBuf buf) {
         return new ContractSyncPacket(buf);
     }
 
-    public boolean handle(Object context) {
+    public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             Player player = (Player) PlatformAccess.getClient().getPlayer();
             if (player != null && player.containerMenu instanceof ContractBoardMenu menu) {
@@ -89,6 +89,6 @@ public class ContractSyncPacket {
             com.quackers29.businesscraft.client.ClientGlobalMarket.get().setPrices(marketPrices);
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
-        return true;
     }
 }
+
