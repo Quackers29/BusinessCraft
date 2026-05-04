@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.client.renderer;
 
-// BusinessCraft moved to platform-specific module
 import com.quackers29.businesscraft.client.renderer.layer.TouristHatLayer;
 import com.quackers29.businesscraft.entity.TouristEntity;
 import net.minecraft.client.model.VillagerModel;
@@ -19,10 +18,8 @@ public class TouristRenderer extends MobRenderer<TouristEntity, VillagerModel<To
               new VillagerModel<>(context.bakeLayer(ModelLayers.VILLAGER)), 
               0.5F);
         
-        // Add profession layer for base unemployed villager clothing
         this.addLayer(new VillagerProfessionLayer<>(this, context.getResourceManager(), "villager"));
-        
-        // Add tourist hat layer
+
         this.addLayer(new TouristHatLayer(this, new VillagerModel<>(context.bakeLayer(ModelLayers.VILLAGER))));
     }
     
