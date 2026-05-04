@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.error;
 
-import com.quackers29.businesscraft.util.BCError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,20 +10,12 @@ import java.util.StringJoiner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-/**
- * Comprehensive error reporting and analysis utility.
- * Generates detailed error reports for debugging, monitoring, and operational insights.
- * Provides both human-readable and machine-parseable output formats.
- */
 public class ErrorReporter {
     private static final Logger LOGGER = LoggerFactory.getLogger(ErrorReporter.class);
     
     private static final ErrorHandler errorHandler = ErrorHandler.getInstance();
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ISO_INSTANT;
     
-    /**
-     * Generates a comprehensive error report for debugging purposes.
-     */
     public static String generateComprehensiveReport() {
         StringBuilder report = new StringBuilder();
         
@@ -32,16 +23,12 @@ public class ErrorReporter {
             report.append("=== BusinessCraft Error Analysis Report ===\n");
             report.append("Generated at: ").append(TIMESTAMP_FORMAT.format(Instant.now())).append("\n\n");
             
-            // Error counts section
             appendErrorCountsSection(report);
             
-            // Error metrics section
             appendErrorMetricsSection(report);
             
-            // System health section
             appendSystemHealthSection(report);
             
-            // Recommendations section
             appendRecommendationsSection(report);
             
             report.append("=== End of Report ===\n");
@@ -54,9 +41,6 @@ public class ErrorReporter {
         return report.toString();
     }
     
-    /**
-     * Generates a summary error report for quick overview.
-     */
     public static String generateSummaryReport() {
         StringBuilder report = new StringBuilder();
         
@@ -73,7 +57,6 @@ public class ErrorReporter {
             report.append("-------------------\n");
             report.append(String.format("Total Errors: %d\n", totalErrors));
             
-            // Top 3 most frequent errors
             var topErrors = errorCounts.entrySet().stream()
                 .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
                 .limit(3)
@@ -88,7 +71,6 @@ public class ErrorReporter {
                 }
             }
             
-            // System health assessment
             String healthStatus = assessSystemHealth(errorCounts);
             report.append(String.format("System Health: %s\n", healthStatus));
             
@@ -100,9 +82,6 @@ public class ErrorReporter {
         return report.toString();
     }
     
-    /**
-     * Generates a JSON-formatted report for machine consumption.
-     */
     public static String generateJsonReport() {
         try {
             var errorCounts = errorHandler.getErrorCounts();
@@ -113,7 +92,6 @@ public class ErrorReporter {
             json.append("  \"timestamp\": \"").append(TIMESTAMP_FORMAT.format(Instant.now())).append("\",\n");
             json.append("  \"totalErrors\": ").append(errorCounts.values().stream().mapToLong(Long::longValue).sum()).append(",\n");
             
-            // Error counts
             json.append("  \"errorCounts\": {\n");
             StringJoiner countJoiner = new StringJoiner(",\n    ", "    ", "\n");
             errorCounts.forEach((key, value) -> 
@@ -121,7 +99,6 @@ public class ErrorReporter {
             json.append(countJoiner.toString());
             json.append("  },\n");
             
-            // Error metrics summary
             json.append("  \"errorMetrics\": {\n");
             StringJoiner metricsJoiner = new StringJoiner(",\n    ", "    ", "\n");
             errorMetrics.forEach((key, metrics) -> {
@@ -132,7 +109,6 @@ public class ErrorReporter {
             json.append(metricsJoiner.toString());
             json.append("  },\n");
             
-            // System health
             json.append("  \"systemHealth\": \"").append(assessSystemHealth(errorCounts)).append("\"\n");
             json.append("}\n");
             
@@ -144,9 +120,6 @@ public class ErrorReporter {
         }
     }
     
-    /**
-     * Appends error counts section to the report.
-     */
     private static void appendErrorCountsSection(StringBuilder report) {
         report.append("## Error Counts by Type\n");
         
@@ -160,7 +133,6 @@ public class ErrorReporter {
         long totalErrors = errorCounts.values().stream().mapToLong(Long::longValue).sum();
         report.append(String.format("Total errors recorded: %d\n\n", totalErrors));
         
-        // Sort by frequency
         errorCounts.entrySet().stream()
             .sorted((a, b) -> Long.compare(b.getValue(), a.getValue()))
             .forEach(entry -> {
@@ -172,9 +144,6 @@ public class ErrorReporter {
         report.append("\n");
     }
     
-    /**
-     * Appends error metrics section to the report.
-     */
     private static void appendErrorMetricsSection(StringBuilder report) {
         report.append("## Detailed Error Metrics\n");
         
@@ -204,11 +173,9 @@ public class ErrorReporter {
             
             report.append(String.format("  Error Spike Detected: %s\n", summary.hasSpike ? "YES" : "No"));
             
-            // Frequency breakdown
             report.append(String.format("  Frequency: Last 5min: %d, 15min: %d, 30min: %d, 1h: %d\n", 
                 frequency.last5Minutes, frequency.last15Minutes, frequency.last30Minutes, frequency.lastHour));
             
-            // Top error messages
             if (!summary.topMessages.isEmpty()) {
                 report.append("  Most Common Messages:\n");
                 summary.topMessages.entrySet().stream()
@@ -221,9 +188,6 @@ public class ErrorReporter {
         });
     }
     
-    /**
-     * Appends system health section to the report.
-     */
     private static void appendSystemHealthSection(StringBuilder report) {
         report.append("## System Health Assessment\n");
         
@@ -233,7 +197,6 @@ public class ErrorReporter {
         String overallHealth = assessSystemHealth(errorCounts);
         report.append(String.format("Overall System Health: %s\n\n", overallHealth));
         
-        // Component-specific health
         Map<String, String> componentHealth = new ConcurrentHashMap<>();
         
         errorCounts.keySet().forEach(errorType -> {
@@ -257,7 +220,6 @@ public class ErrorReporter {
             report.append("\n");
         }
         
-        // Error spike detection
         boolean hasAnySpikes = errorMetrics.values().stream()
             .anyMatch(metrics -> metrics.getSummary().hasSpike);
         
@@ -271,9 +233,6 @@ public class ErrorReporter {
         }
     }
     
-    /**
-     * Appends recommendations section to the report.
-     */
     private static void appendRecommendationsSection(StringBuilder report) {
         report.append("## Recommendations\n");
         
@@ -285,7 +244,6 @@ public class ErrorReporter {
             return;
         }
         
-        // High frequency error recommendations
         var highFrequencyErrors = errorCounts.entrySet().stream()
             .filter(entry -> entry.getValue() > 10)
             .collect(Collectors.toList());
@@ -296,7 +254,6 @@ public class ErrorReporter {
                 report.append(String.format("  - Investigate '%s' (%d occurrences)\n", 
                     entry.getKey(), entry.getValue()));
                 
-                // Provide specific recommendations based on error type
                 String recommendation = getErrorRecommendation(entry.getKey());
                 if (recommendation != null) {
                     report.append(String.format("    Recommendation: %s\n", recommendation));
@@ -305,7 +262,6 @@ public class ErrorReporter {
             report.append("\n");
         }
         
-        // Error spike recommendations
         boolean hasSpikes = errorMetrics.values().stream()
             .anyMatch(metrics -> metrics.getSummary().hasSpike);
         
@@ -317,7 +273,6 @@ public class ErrorReporter {
             report.append("  - Consider temporary rate limiting if needed\n\n");
         }
         
-        // General recommendations
         long totalErrors = errorCounts.values().stream().mapToLong(Long::longValue).sum();
         if (totalErrors > 50) {
             report.append("🛠️  General System Maintenance:\n");
@@ -328,9 +283,6 @@ public class ErrorReporter {
         }
     }
     
-    /**
-     * Assesses overall system health based on error patterns.
-     */
     private static String assessSystemHealth(Map<String, Long> errorCounts) {
         if (errorCounts.isEmpty()) {
             return "EXCELLENT";
@@ -356,9 +308,6 @@ public class ErrorReporter {
         }
     }
     
-    /**
-     * Provides specific recommendations based on error type.
-     */
     private static String getErrorRecommendation(String errorType) {
         String lowerErrorType = errorType.toLowerCase();
         
@@ -381,9 +330,6 @@ public class ErrorReporter {
         }
     }
     
-    /**
-     * Exports error report to a formatted string suitable for file output.
-     */
     public static String exportToFile(String reportType) {
         String content;
         
