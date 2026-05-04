@@ -62,8 +62,7 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/entity/TouristEntity.java
 - [x] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandler.java
 - [x] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandlerIntegration.java
-- [x] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandlingExample.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorMetrics.java
+- [x] common/src/main/java/com/quackers29/businesscraft/error/ErrorMetrics.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorReporter.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/event/ClientRenderEvents.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/event/PlatformPathHandler.java
