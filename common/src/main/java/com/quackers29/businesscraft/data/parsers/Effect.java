@@ -1,9 +1,9 @@
 package com.quackers29.businesscraft.data.parsers;
 
 public class Effect {
-    private final String target; // e.g., "storage_cap_food"
-    private final float value; // e.g., 20.0 or 0.2
-    private final boolean isPercentage; // true if string had '%'
+    private final String target;
+    private final float value;
+    private final boolean isPercentage;
 
     public Effect(String target, float value, boolean isPercentage) {
         this.target = target;
