@@ -62,7 +62,7 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/entity/TouristEntity.java
 - [x] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandler.java
 - [x] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandlerIntegration.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandlingExample.java
+- [x] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandlingExample.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorMetrics.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorReporter.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/event/ClientRenderEvents.java
@@ -236,10 +236,6 @@
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/managers/UnifiedModalManager.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/managers/VisitorHistoryManager.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/managers/VisitorModalManager.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/ui/modal/components/ModalEventHandler.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/ui/modal/components/ModalRenderingEngine.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/ui/modal/components/StorageOperationsManager.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/ui/modal/components/TradeOperationsManager.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/modal/core/BCModalScreen.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/modal/core/BCPopupScreen.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/modal/factories/BCModalGridFactory.java
