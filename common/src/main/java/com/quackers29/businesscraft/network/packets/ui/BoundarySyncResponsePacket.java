@@ -32,24 +32,17 @@ public class BoundarySyncResponsePacket extends BaseBlockEntityPacket {
         super.toBytes(buf);
         buf.writeInt(boundaryRadius);
     }
-    
-    /**
-     * Static encode method needed by ModMessages registration
-     */
+
     public static void encode(BoundarySyncResponsePacket msg, FriendlyByteBuf buf) {
         msg.toBytes(buf);
     }
-    
-    /**
-     * Static decode method needed by ModMessages registration
-     */
+
     public static BoundarySyncResponsePacket decode(FriendlyByteBuf buf) {
         return new BoundarySyncResponsePacket(buf);
     }
 
     public boolean handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            // Client-side handling - update the boundary visualization directly
             TownBoundaryVisualizationRenderer.updateBoundaryRadius(pos, boundaryRadius);
             
             DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 

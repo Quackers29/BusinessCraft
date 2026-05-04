@@ -5,7 +5,6 @@ import com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizatio
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
-import com.quackers29.businesscraft.network.packets.ui.BoundarySyncRequestPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
@@ -31,31 +30,23 @@ public class PlatformVisualizationPacket extends BaseBlockEntityPacket {
     public void toBytes(FriendlyByteBuf buf) {
         super.toBytes(buf);
     }
-    
-    /**
-     * Static encode method needed by ModMessages registration
-     */
+
     public static void encode(PlatformVisualizationPacket msg, FriendlyByteBuf buf) {
         msg.toBytes(buf);
     }
-    
-    /**
-     * Static decode method needed by ModMessages registration
-     */
+
     public static PlatformVisualizationPacket decode(FriendlyByteBuf buf) {
         return new PlatformVisualizationPacket(buf);
     }
 
     public boolean handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            // Client-side handling
             com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
             if (clientHelper == null) return;
-            
+
             Object levelObj = clientHelper.getClientLevel();
             if (!(levelObj instanceof Level level)) return;
-            
-            // Register the town block for platform visualization using the new modular system
+
             PlatformVisualizationRenderer.showPlatformVisualization(pos, level.getGameTime());
             
             // Also trigger boundary visualization at the same time as platforms

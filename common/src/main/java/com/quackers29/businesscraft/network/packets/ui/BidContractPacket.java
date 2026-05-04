@@ -81,7 +81,6 @@ public class BidContractPacket {
                             player.getName().getString());
                     return;
                 }
-                // Sync updated contracts
                 PlatformAccess.getNetworkMessages().sendToPlayer(
                         new ContractSyncPacket(board.getContracts(), board.getAllMarketPrices()), player);
             }

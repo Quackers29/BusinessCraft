@@ -1,17 +1,11 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
-import com.quackers29.businesscraft.ui.managers.TownDataCacheManager;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Collection;
 
 public class TownOverviewSyncPacket {
     private final float happiness;

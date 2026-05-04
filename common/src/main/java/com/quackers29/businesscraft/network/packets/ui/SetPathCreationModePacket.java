@@ -35,16 +35,10 @@ public class SetPathCreationModePacket extends BaseBlockEntityPacket {
         buf.writeBoolean(mode);
     }
 
-    /**
-     * Static encode method needed by ModMessages registration
-     */
     public static void encode(SetPathCreationModePacket msg, FriendlyByteBuf buf) {
         msg.toBytes(buf);
     }
 
-    /**
-     * Static decode method needed by ModMessages registration
-     */
     public static SetPathCreationModePacket decode(FriendlyByteBuf buf) {
         return new SetPathCreationModePacket(buf);
     }
@@ -53,34 +47,27 @@ public class SetPathCreationModePacket extends BaseBlockEntityPacket {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             handlePacket(context, (player, townInterface) -> {
                 if (mode) {
-                    // Start path creation mode
-                    // Start path creation mode
                     PlatformAccess.getEntities().setPathCreationTarget(player, townInterface.getTownId());
                     // Set the active town block in ModEvents
                     PlatformAccess.getEvents().setActiveTownBlock(pos);
-                    // Enable path creation mode on the town block entity
                     townInterface.setPathCreationMode(true);
 
                     // Reset any existing path to avoid confusion
                     townInterface.setPathStart(null);
                     townInterface.setPathEnd(null);
 
-                    // Notify player using proper formatting
                     player.sendSystemMessage(
                             Component.literal("Entering path creation mode. Right-click blocks to set path points.")
                                     .withStyle(ChatFormatting.GREEN));
                 } else {
-                    // Path creation complete
                     ITownDataProvider provider = townInterface.getTownDataProvider();
                     if (provider != null && townInterface.getPathStart() != null
                             && townInterface.getPathEnd() != null) {
-                        // Update provider with path data
                         provider.setPathStart(townInterface.getPathStart());
                         provider.setPathEnd(townInterface.getPathEnd());
                         provider.markDirty();
                     }
 
-                    // Disable path creation mode
                     townInterface.setPathCreationMode(false);
                     PlatformAccess.getEvents().clearActiveTownBlock();
                 }

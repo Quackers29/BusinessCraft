@@ -29,31 +29,15 @@ public class RequestTownPlatformDataPacket {
         this.townId = townId;
     }
 
-    /**
-     * Encode the packet data into the buffer
-     */
     public void encode(FriendlyByteBuf buf) {
         buf.writeUUID(townId);
     }
 
-    /**
-     * Serialize packet data for Fabric networking (C2S)
-     */
-    public void toBytes(FriendlyByteBuf buf) {
-        buf.writeUUID(townId);
-    }
-
-    /**
-     * Decode the packet data from the buffer
-     */
     public static RequestTownPlatformDataPacket decode(FriendlyByteBuf buf) {
         UUID townId = buf.readUUID();
         return new RequestTownPlatformDataPacket(townId);
     }
 
-    /**
-     * Handle the packet when received on the server
-     */
     public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             try {
@@ -77,17 +61,13 @@ public class RequestTownPlatformDataPacket {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                         "Processing platform data request for town: {} ({})", town.getName(), townId);
 
-                // Find the town block entity to get platform data
                 if (level.getBlockEntity(town.getPosition()) instanceof TownInterfaceEntity townEntity) {
                     List<Platform> platforms = townEntity.getPlatforms();
 
-                    // Create response packet with platform data and town info
                     TownPlatformDataResponsePacket response = new TownPlatformDataResponsePacket(townId);
 
                     // Get live boundary radius from town (single source of truth)
                     int boundaryRadius = town.getBoundaryRadius();
-
-                    // Add current town information including live boundary calculation
                     response.setTownInfo(town.getName(), (int) town.getPopulation(), (int) town.getTouristCount(), boundaryRadius);
 
                     for (Platform platform : platforms) {
@@ -100,7 +80,6 @@ public class RequestTownPlatformDataPacket {
                                 platform.getEnabledDestinations());
                     }
 
-                    // Send response back to client
                     PlatformAccess.getNetworkMessages().sendToPlayer(response, player);
 
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,

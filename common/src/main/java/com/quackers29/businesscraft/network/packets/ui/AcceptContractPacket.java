@@ -49,12 +49,10 @@ public class AcceptContractPacket {
                 Contract contract = board.getContract(contractId);
 
                 if (contract instanceof CourierContract courierContract) {
-                    // Logic to accept the contract
                     if (courierContract.getCourierId() == null) {
                         courierContract.setCourierId(player.getUUID());
                         board.updateContract(courierContract);
 
-                        // Sync back to client so UI updates
                         PlatformAccess.getNetworkMessages().sendToPlayer(
                                 new com.quackers29.businesscraft.network.packets.ui.ContractSyncPacket(
                                         board.getContracts(), board.getAllMarketPrices()),

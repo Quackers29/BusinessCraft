@@ -36,31 +36,23 @@ public class BoundarySyncRequestPacket extends BaseBlockEntityPacket {
     public void toBytes(FriendlyByteBuf buf) {
         super.toBytes(buf);
     }
-    
-    /**
-     * Static encode method needed by ModMessages registration
-     */
+
     public static void encode(BoundarySyncRequestPacket msg, FriendlyByteBuf buf) {
         msg.toBytes(buf);
     }
-    
-    /**
-     * Static decode method needed by ModMessages registration
-     */
+
     public static BoundarySyncRequestPacket decode(FriendlyByteBuf buf) {
         return new BoundarySyncRequestPacket(buf);
     }
 
     public boolean handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            // Server-side handling
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (!(senderObj instanceof ServerPlayer player)) return;
-            
+
             Level level = player.level();
             if (!(level instanceof ServerLevel serverLevel)) return;
-            
-            // Get town population and send response
+
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof TownInterfaceEntity townInterface) {
                 UUID townId = townInterface.getTownId();
@@ -70,8 +62,6 @@ public class BoundarySyncRequestPacket extends BaseBlockEntityPacket {
                     if (town != null) {
                         // Use town's boundary calculation method (single source of truth)
                         int currentBoundaryRadius = town.getBoundaryRadius();
-                        
-                        // Send boundary update back to client
                         PlatformAccess.getNetworkMessages().sendToPlayer(new BoundarySyncResponsePacket(pos, currentBoundaryRadius), player);
                         
                         DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 

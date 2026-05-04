@@ -18,29 +18,19 @@ public class TownMapDataResponsePacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownMapDataResponsePacket.class);
     private static final int MAX_STRING_LENGTH = 32767;
     
-    // Town data for the map
     private final Map<UUID, TownMapInfo> townData = new HashMap<>();
-    
+
     public TownMapDataResponsePacket() {
     }
-    
-    /**
-     * Add town data to the packet
-     */
+
     public void addTown(UUID id, String name, BlockPos position, int population, int touristCount) {
         townData.put(id, new TownMapInfo(id, name, position, population, touristCount));
     }
-    
-    /**
-     * Get all town data
-     */
+
     public Map<UUID, TownMapInfo> getTownData() {
         return townData;
     }
-    
-    /**
-     * Encode the packet data into the buffer
-     */
+
     public void encode(FriendlyByteBuf buf) {
         buf.writeInt(townData.size());
         
@@ -53,9 +43,6 @@ public class TownMapDataResponsePacket {
         }
     }
     
-    /**
-     * Decode the packet data from the buffer
-     */
     public static TownMapDataResponsePacket decode(FriendlyByteBuf buf) {
         TownMapDataResponsePacket packet = new TownMapDataResponsePacket();
         
@@ -73,21 +60,17 @@ public class TownMapDataResponsePacket {
         return packet;
     }
     
-    /**
-     * Handle the packet when received on the client
-     */
     public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             try {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                     "Received town map data response with {} towns", townData.size());
-                
-                // Store the town data in the client-side cache
+
                 ClientTownMapCache.getInstance().updateTownData(townData);
-                
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
+
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                     "Updated client town map cache with {} towns", townData.size());
-                
+
                 // Try to refresh any open town map modals
                 com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
                 if (clientHelper != null) {
@@ -106,9 +89,6 @@ public class TownMapDataResponsePacket {
         PlatformAccess.getNetwork().setPacketHandled(context);
     }
     
-    /**
-     * Simple data class for town information
-     */
     public static class TownMapInfo {
         public final UUID id;
         public final String name;

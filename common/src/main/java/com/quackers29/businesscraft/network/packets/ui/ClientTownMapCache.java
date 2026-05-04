@@ -24,9 +24,6 @@ public class ClientTownMapCache {
     private ClientTownMapCache() {
     }
     
-    /**
-     * Get the singleton instance
-     */
     public static synchronized ClientTownMapCache getInstance() {
         if (instance == null) {
             instance = new ClientTownMapCache();
@@ -34,9 +31,6 @@ public class ClientTownMapCache {
         return instance;
     }
     
-    /**
-     * Update the cached town data
-     */
     public void updateTownData(Map<UUID, TownMapDataResponsePacket.TownMapInfo> newData) {
         int oldSize = townData.size();
         townData.clear();
@@ -47,37 +41,22 @@ public class ClientTownMapCache {
             "Town map cache updated: {} -> {} towns", oldSize, townData.size());
     }
     
-    /**
-     * Get all cached town data
-     */
     public Map<UUID, TownMapDataResponsePacket.TownMapInfo> getAllTowns() {
         return new HashMap<>(townData);
     }
-    
-    /**
-     * Get town data by ID
-     */
+
     public TownMapDataResponsePacket.TownMapInfo getTown(UUID id) {
         return townData.get(id);
     }
-    
-    /**
-     * Check if the cache has data
-     */
+
     public boolean hasData() {
         return !townData.isEmpty();
     }
-    
-    /**
-     * Check if the cache data is stale (older than 30 seconds)
-     */
+
     public boolean isStale() {
         return System.currentTimeMillis() - lastUpdateTime > CACHE_EXPIRY_MS;
     }
-    
-    /**
-     * Update platform data for a specific town
-     */
+
     public void updateTownPlatformData(UUID townId, Map<UUID, TownPlatformDataResponsePacket.PlatformInfo> platforms) {
         platformData.put(townId, new HashMap<>(platforms));
         
@@ -85,24 +64,15 @@ public class ClientTownMapCache {
             "Platform data updated for town {}: {} platforms", townId, platforms.size());
     }
     
-    /**
-     * Get platform data for a specific town
-     */
     public Map<UUID, TownPlatformDataResponsePacket.PlatformInfo> getTownPlatformData(UUID townId) {
         Map<UUID, TownPlatformDataResponsePacket.PlatformInfo> platforms = platformData.get(townId);
         return platforms != null ? new HashMap<>(platforms) : new HashMap<>();
     }
-    
-    /**
-     * Check if platform data exists for a town
-     */
+
     public boolean hasTownPlatformData(UUID townId) {
         return platformData.containsKey(townId);
     }
-    
-    /**
-     * Clear platform data for a specific town
-     */
+
     public void clearTownPlatformData(UUID townId) {
         platformData.remove(townId);
         
@@ -110,9 +80,6 @@ public class ClientTownMapCache {
             "Platform data cleared for town {}", townId);
     }
     
-    /**
-     * Update town information for a specific town (from platform packet - no boundary data)
-     */
     public void updateTownInfo(UUID townId, String name, int population, int touristCount) {
         TownMapDataResponsePacket.TownMapInfo existingTown = townData.get(townId);
         if (existingTown != null) {
@@ -127,9 +94,6 @@ public class ClientTownMapCache {
         }
     }
     
-    /**
-     * Clear the cache
-     */
     public void clear() {
         townData.clear();
         platformData.clear();
@@ -138,9 +102,6 @@ public class ClientTownMapCache {
         DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Town map cache cleared");
     }
     
-    /**
-     * Get the number of cached towns
-     */
     public int size() {
         return townData.size();
     }

@@ -82,7 +82,6 @@ public class ContractSyncPacket {
 
     public boolean handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            // Client-side handling
             Player player = (Player) PlatformAccess.getClient().getPlayer();
             if (player != null && player.containerMenu instanceof ContractBoardMenu menu) {
                 menu.setContracts(contracts);
@@ -91,13 +90,5 @@ public class ContractSyncPacket {
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
         return true;
-    }
-
-    // Client handler
-    public void handleClient(Object client) { // ClientHelper instance
-        if (client instanceof com.quackers29.businesscraft.api.ClientHelper helper) {
-            helper.updateContractBoard(contracts);
-        }
-        com.quackers29.businesscraft.client.ClientGlobalMarket.get().setPrices(marketPrices);
     }
 }

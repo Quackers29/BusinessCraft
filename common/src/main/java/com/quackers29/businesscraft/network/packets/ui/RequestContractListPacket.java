@@ -61,14 +61,12 @@ public class RequestContractListPacket {
                 net.minecraft.server.level.ServerLevel level = (net.minecraft.server.level.ServerLevel) player.level();
                 ContractBoard board = ContractBoard.get(level);
 
-                // Parse tab type
                 ContractSummaryViewModelBuilder.Tab tabType = parseTab(tab);
                 if (tabType == null) {
                     LOGGER.warn("Invalid tab type '{}' requested by {}", tab, player.getName().getString());
                     return;
                 }
 
-                // Build paginated result
                 // For history tab: default to last 50, or all if showAll=true
                 long serverTime = System.currentTimeMillis();
                 int effectivePageSize = pageSize;
@@ -88,7 +86,6 @@ public class RequestContractListPacket {
                                 serverTime
                         );
 
-                // Send response
                 ContractListSyncPacket response = new ContractListSyncPacket(
                         tab,
                         result,

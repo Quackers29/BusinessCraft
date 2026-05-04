@@ -54,12 +54,10 @@ public class RequestContractDetailPacket {
                     return;
                 }
 
-                // Build detail view-model
                 long serverTime = System.currentTimeMillis();
                 ContractDetailViewModel detail = ContractDetailViewModelBuilder.build(contract, player, serverTime);
 
                 if (detail != null) {
-                    // Send response
                     ContractDetailSyncPacket response = new ContractDetailSyncPacket(detail, serverTime);
                     PlatformAccess.getNetworkMessages().sendToPlayer(response, player);
                 }

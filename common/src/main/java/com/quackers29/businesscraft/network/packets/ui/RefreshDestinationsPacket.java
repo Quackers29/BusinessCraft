@@ -8,8 +8,8 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.platform.Platform;
@@ -20,7 +20,7 @@ import com.quackers29.businesscraft.town.TownManager;
  * Packet sent from server to client to refresh the destinations UI
  */
 public class RefreshDestinationsPacket {
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LoggerFactory.getLogger(RefreshDestinationsPacket.class);
     private final BlockPos pos;
     private final UUID platformId;
     private final Map<UUID, String> townNames = new HashMap<>();
@@ -68,27 +68,10 @@ public class RefreshDestinationsPacket {
         }
     }
 
-    /**
-     * Serialize packet data for Fabric networking
-     */
-    public void toBytes(FriendlyByteBuf buf) {
-        encode(buf);
-    }
-
-    // Static decode method for Forge network registration
     public static RefreshDestinationsPacket decode(FriendlyByteBuf buf) {
         return new RefreshDestinationsPacket(buf);
     }
 
-    /**
-     * Add town data to this packet
-     * 
-     * @param townId    The town ID
-     * @param name      The town name
-     * @param enabled   Whether this town is enabled as a destination
-     * @param distance  Distance to this town in meters
-     * @param direction Cardinal direction to this town (N, NE, E, SE, S, SW, W, NW)
-     */
     public void addTown(UUID townId, String name, boolean enabled, int distance, String direction) {
         townNames.put(townId, name);
         enabledState.put(townId, enabled);
@@ -98,7 +81,6 @@ public class RefreshDestinationsPacket {
 
     public boolean handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            // This runs on the client side
             com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
             if (clientHelper == null) {
                 LOGGER.warn("ClientHelper not available (server side?)");

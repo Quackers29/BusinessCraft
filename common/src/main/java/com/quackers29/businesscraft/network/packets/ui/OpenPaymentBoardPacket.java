@@ -36,7 +36,6 @@ public class OpenPaymentBoardPacket {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (senderObj instanceof ServerPlayer player) {
-                // Get the block entity to ensure all town data is accessible
                 net.minecraft.world.level.block.entity.BlockEntity entity = player.level().getBlockEntity(pos);
                 if (entity instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity townInterface) {
                     // Open the PaymentBoardMenu using the entity's provider method

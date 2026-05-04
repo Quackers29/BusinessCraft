@@ -35,23 +35,16 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
         super.toBytes(buf);
     }
 
-    /**
-     * Static encode method needed by ModMessages registration
-     */
     public static void encode(PlayerExitUIPacket msg, FriendlyByteBuf buf) {
         msg.toBytes(buf);
     }
 
-    /**
-     * Static decode method needed by ModMessages registration
-     */
     public static PlayerExitUIPacket decode(FriendlyByteBuf buf) {
         return new PlayerExitUIPacket(buf);
     }
 
     public boolean handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            // Get player and level
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (!(senderObj instanceof ServerPlayer player))
                 return;
@@ -66,8 +59,6 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                         "Player {} exited TownInterfaceEntity UI at {}", player.getUUID(), pos);
                 townInterface.registerPlayerExitUI(player.getUUID());
-
-                // Send visualization enable packet to client
                 PlatformAccess.getNetworkMessages().sendToPlayer(new PlatformVisualizationPacket(pos), player);
 
                 // Also send platform data to the client so it can render them
@@ -78,7 +69,6 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
                     if (town != null) {
                         TownPlatformDataResponsePacket platformPacket = new TownPlatformDataResponsePacket(townId);
 
-                        // Add all platforms from the town interface entity
                         for (com.quackers29.businesscraft.platform.Platform platform : townInterface.getPlatforms()) {
                             platformPacket.addPlatform(
                                     platform.getId(),
@@ -89,7 +79,6 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
                                     platform.getEnabledDestinations());
                         }
 
-                        // Set town info
                         platformPacket.setTownInfo(town.getName(), (int) town.getPopulation(), (int) town.getTouristCount(),
                                 town.getBoundaryRadius());
 
@@ -107,8 +96,6 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                             "Player {} exited TownInterfaceBlock UI at {}", player.getUUID(), pos);
                     townInterfaceBlock.registerPlayerExitUI(player.getUUID(), level, pos);
-
-                    // Send visualization enable packet to client
                     PlatformAccess.getNetworkMessages().sendToPlayer(new PlatformVisualizationPacket(pos), player);
                 }
             }

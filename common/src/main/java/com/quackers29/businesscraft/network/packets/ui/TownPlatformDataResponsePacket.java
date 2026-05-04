@@ -29,49 +29,30 @@ public class TownPlatformDataResponsePacket {
         this.townId = townId;
     }
 
-    /**
-     * Add platform data to the packet
-     */
     public void addPlatform(UUID platformId, String name, boolean enabled,
             BlockPos startPos, BlockPos endPos, Set<UUID> enabledDestinations) {
         platforms.put(platformId, new PlatformInfo(platformId, name, enabled, startPos, endPos, enabledDestinations));
     }
 
-    /**
-     * Set town information
-     */
     public void setTownInfo(String name, int population, int touristCount, int boundaryRadius) {
         this.townInfo = new TownInfo(name, population, touristCount, boundaryRadius);
     }
 
-    /**
-     * Get the town ID this data is for
-     */
     public UUID getTownId() {
         return townId;
     }
 
-    /**
-     * Get all platform data
-     */
     public Map<UUID, PlatformInfo> getPlatforms() {
         return platforms;
     }
 
-    /**
-     * Get town information
-     */
     public TownInfo getTownInfo() {
         return townInfo;
     }
 
-    /**
-     * Encode the packet data into the buffer
-     */
     public void encode(FriendlyByteBuf buf) {
         buf.writeUUID(townId);
 
-        // Write town info
         buf.writeBoolean(townInfo != null);
         if (townInfo != null) {
             buf.writeUtf(townInfo.name, MAX_STRING_LENGTH);
@@ -87,19 +68,16 @@ public class TownPlatformDataResponsePacket {
             buf.writeUtf(platform.name, MAX_STRING_LENGTH);
             buf.writeBoolean(platform.enabled);
 
-            // Nullable startPos
             buf.writeBoolean(platform.startPos != null);
             if (platform.startPos != null) {
                 buf.writeBlockPos(platform.startPos);
             }
 
-            // Nullable endPos
             buf.writeBoolean(platform.endPos != null);
             if (platform.endPos != null) {
                 buf.writeBlockPos(platform.endPos);
             }
 
-            // Write enabled destinations
             buf.writeInt(platform.enabledDestinations.size());
             for (UUID destId : platform.enabledDestinations) {
                 buf.writeUUID(destId);
@@ -107,21 +85,10 @@ public class TownPlatformDataResponsePacket {
         }
     }
 
-    /**
-     * Serialize packet data for Fabric networking (S2C)
-     */
-    public void toBytes(FriendlyByteBuf buf) {
-        encode(buf);
-    }
-
-    /**
-     * Decode the packet data from the buffer
-     */
     public static TownPlatformDataResponsePacket decode(FriendlyByteBuf buf) {
         UUID townId = buf.readUUID();
         TownPlatformDataResponsePacket packet = new TownPlatformDataResponsePacket(townId);
 
-        // Read town info
         boolean hasTownInfo = buf.readBoolean();
         if (hasTownInfo) {
             String townName = buf.readUtf(MAX_STRING_LENGTH);
@@ -137,15 +104,12 @@ public class TownPlatformDataResponsePacket {
             String name = buf.readUtf(MAX_STRING_LENGTH);
             boolean enabled = buf.readBoolean();
 
-            // Nullable startPos
             boolean hasStartPos = buf.readBoolean();
             BlockPos startPos = hasStartPos ? buf.readBlockPos() : null;
 
-            // Nullable endPos
             boolean hasEndPos = buf.readBoolean();
             BlockPos endPos = hasEndPos ? buf.readBlockPos() : null;
 
-            // Read enabled destinations
             int destCount = buf.readInt();
             Set<UUID> enabledDestinations = new java.util.HashSet<>();
             for (int j = 0; j < destCount; j++) {
@@ -158,9 +122,6 @@ public class TownPlatformDataResponsePacket {
         return packet;
     }
 
-    /**
-     * Handle the packet when received on the client
-     */
     public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             try {
@@ -168,10 +129,8 @@ public class TownPlatformDataResponsePacket {
                         "Received platform data response for town {} with {} platforms",
                         townId, platforms.size());
 
-                // Update the client-side town map cache with platform data
                 ClientTownMapCache.getInstance().updateTownPlatformData(townId, platforms);
 
-                // Also update town information in cache if available
                 if (townInfo != null) {
                     ClientTownMapCache.getInstance().updateTownInfo(townId, townInfo.name, townInfo.population,
                             townInfo.touristCount);
@@ -183,13 +142,11 @@ public class TownPlatformDataResponsePacket {
                 if (clientHelper != null) {
                     Object levelObj = clientHelper.getClientLevel();
                     if (levelObj instanceof net.minecraft.world.level.Level level) {
-                        // Search for TownInterfaceEntity with this townId
                         // This is a bit expensive but necessary for visualization to work
                         BlockPos foundPos = findTownBlockPos(level, townId);
                         if (foundPos != null) {
                             net.minecraft.world.level.block.entity.BlockEntity be = level.getBlockEntity(foundPos);
                             if (be instanceof com.quackers29.businesscraft.block.entity.TownInterfaceEntity townEntity) {
-                                // Build NBT tag with platform data
                                 net.minecraft.nbt.CompoundTag platformTag = new net.minecraft.nbt.CompoundTag();
                                 net.minecraft.nbt.ListTag platformsTag = new net.minecraft.nbt.ListTag();
 
@@ -211,7 +168,6 @@ public class TownPlatformDataResponsePacket {
                                         pTag.putInt("EndZ", platform.endPos.getZ());
                                     }
 
-                                    // Add enabled destinations in the correct format
                                     net.minecraft.nbt.CompoundTag destTag = new net.minecraft.nbt.CompoundTag();
                                     destTag.putInt("Count", platform.enabledDestinations.size());
                                     int destIndex = 0;
@@ -225,8 +181,6 @@ public class TownPlatformDataResponsePacket {
                                 }
 
                                 platformTag.put("platforms", platformsTag);
-
-                                // Update the platform manager with this data
                                 townEntity.updateClientPlatformsFromPacket(platformTag);
 
                                 DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM,
@@ -242,8 +196,6 @@ public class TownPlatformDataResponsePacket {
                     Object currentScreen = clientHelper.getCurrentScreen();
                     if (currentScreen instanceof com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal) {
                         mapModal.refreshPlatformData(townId, platforms);
-
-                        // Also update town info if available
                         if (townInfo != null) {
                             mapModal.refreshTownData(townId, townInfo);
                         }
@@ -260,14 +212,9 @@ public class TownPlatformDataResponsePacket {
         PlatformAccess.getNetwork().setPacketHandled(context);
     }
 
-    /**
-     * Helper method to find the BlockPos of a TownInterfaceEntity with the given
-     * townId
-     */
+    // Search within render distance for the TownInterfaceEntity with the given townId.
+    // Called client-side only — cannot search the full world.
     private BlockPos findTownBlockPos(net.minecraft.world.level.Level level, java.util.UUID townId) {
-        // Search nearby chunks for the town block
-        // This is called on the client so we can't search the entire world
-        // We'll search within render distance
         com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
         if (clientHelper == null)
             return null;
@@ -299,9 +246,6 @@ public class TownPlatformDataResponsePacket {
         return null;
     }
 
-    /**
-     * Data class for platform information
-     */
     public static class PlatformInfo {
         public final UUID id;
         public final String name;
@@ -321,9 +265,6 @@ public class TownPlatformDataResponsePacket {
         }
     }
 
-    /**
-     * Data class for town information
-     */
     public static class TownInfo {
         public final String name;
         public final int population;

@@ -36,7 +36,6 @@ public class OpenContractBoardPacket {
         buf.writeBlockPos(blockPos);
     }
 
-    // Static methods for Forge network registration
     public static void encode(OpenContractBoardPacket msg, FriendlyByteBuf buf) {
         msg.toBytes(buf);
     }
@@ -49,11 +48,8 @@ public class OpenContractBoardPacket {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (senderObj instanceof ServerPlayer player) {
-                // Get the block entity to ensure all town data is accessible
                 BlockEntity entity = player.level().getBlockEntity(blockPos);
                 if (entity instanceof TownInterfaceEntity townInterface) {
-                    // Open the ContractBoardMenu using PlatformAccess for platform-agnostic screen
-                    // opening
                     PlatformAccess.getNetwork().openScreen(player, new MenuProvider() {
                         @Override
                         public Component getDisplayName() {

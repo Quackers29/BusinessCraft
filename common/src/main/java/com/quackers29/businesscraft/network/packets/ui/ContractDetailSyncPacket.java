@@ -39,7 +39,6 @@ public class ContractDetailSyncPacket {
 
     public boolean handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            // Update client-side cache with contract detail
             TownDataCacheManager.updateContractDetail(detail, serverCurrentTime);
         });
         PlatformAccess.getNetwork().setPacketHandled(context);

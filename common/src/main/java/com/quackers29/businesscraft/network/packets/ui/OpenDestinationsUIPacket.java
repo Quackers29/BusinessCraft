@@ -8,8 +8,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.town.Town;
@@ -21,7 +21,7 @@ import com.quackers29.businesscraft.debug.DebugConfig;
  * Packet for opening the destinations UI for a platform
  */
 public class OpenDestinationsUIPacket {
-    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenDestinationsUIPacket.class);
     private final BlockPos blockPos;
     private final UUID platformId;
 
@@ -30,54 +30,32 @@ public class OpenDestinationsUIPacket {
         this.platformId = platformId;
     }
 
-    /**
-     * Encode the packet data into the buffer
-     */
     public void encode(FriendlyByteBuf buf) {
         buf.writeBlockPos(blockPos);
         buf.writeUUID(platformId);
     }
 
-    /**
-     * Serialize packet data for Fabric networking
-     */
-    public void toBytes(FriendlyByteBuf buf) {
-        encode(buf);
-    }
-
-    /**
-     * Decode the packet data from the buffer
-     */
     public static OpenDestinationsUIPacket decode(FriendlyByteBuf buf) {
         return new OpenDestinationsUIPacket(buf.readBlockPos(), buf.readUUID());
     }
 
-    /**
-     * Handle the packet on the receiving side
-     */
     public boolean handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            // Get player and world from context
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (!(senderObj instanceof ServerPlayer player))
                 return;
 
             Level level = player.level();
 
-            // Check if the block entity is valid
             BlockEntity be = level.getBlockEntity(blockPos);
             if (be instanceof TownInterfaceEntity townInterface) {
-                // Find the platform
                 Platform platform = townInterface.getPlatform(platformId);
                 if (platform != null) {
-                    // Get town manager to find all towns
                     TownManager townManager = TownManager.get((ServerLevel) level);
 
-                    // Create a response packet with town information
                     RefreshDestinationsPacket responsePacket = new RefreshDestinationsPacket(
                             blockPos, platformId);
 
-                    // Get the current town's position for distance calculations
                     BlockPos originPos = blockPos;
                     Town originTown = townInterface.getTown();
                     if (originTown != null) {
@@ -111,7 +89,6 @@ public class OpenDestinationsUIPacket {
                                     townPos.getX() - originPos.getX(),
                                     townPos.getZ() - originPos.getZ());
 
-                            // Add town to packet
                             boolean enabled = platform.isDestinationEnabled(townId);
                             responsePacket.addTown(
                                     townId,
@@ -123,7 +100,6 @@ public class OpenDestinationsUIPacket {
                         }
                     }
 
-                    // Send response packet to open UI on client
                     PlatformAccess.getNetworkMessages().sendToPlayer(responsePacket, player);
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                             "Sent destinations data for {} towns to player {}",

@@ -2,7 +2,6 @@ package com.quackers29.businesscraft.network.packets.ui;
 
 import java.util.UUID;
 import java.util.Map;
-import java.util.HashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
@@ -21,27 +20,16 @@ import com.quackers29.businesscraft.debug.DebugConfig;
 public class RequestTownMapDataPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestTownMapDataPacket.class);
     
-    // No data needed for the request
     public RequestTownMapDataPacket() {
     }
-    
-    /**
-     * Encode the packet data into the buffer
-     */
+
     public void encode(FriendlyByteBuf buf) {
-        // No data to encode
     }
-    
-    /**
-     * Decode the packet data from the buffer
-     */
+
     public static RequestTownMapDataPacket decode(FriendlyByteBuf buf) {
         return new RequestTownMapDataPacket();
     }
-    
-    /**
-     * Handle the packet when received on the server
-     */
+
     public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             try {
@@ -57,12 +45,11 @@ public class RequestTownMapDataPacket {
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                     "Processing town map data request for player: {}", player.getName().getString());
 
-                // Get all towns data
                 Map<UUID, Town> allTowns = townManager.getAllTowns();
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
                     "Server has {} towns to send", allTowns.size());
 
-                // Create and send response packet (no boundary calculation - that's done per-town on click)
+                // No boundary calculation here - that's done per-town on click
                 TownMapDataResponsePacket responsePacket = new TownMapDataResponsePacket();
                 for (Map.Entry<UUID, Town> entry : allTowns.entrySet()) {
                     Town town = entry.getValue();

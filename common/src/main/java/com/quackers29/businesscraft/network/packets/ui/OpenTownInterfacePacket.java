@@ -36,7 +36,6 @@ public class OpenTownInterfacePacket {
         buf.writeBlockPos(blockPos);
     }
 
-    // Static methods for Forge network registration
     public static void encode(OpenTownInterfacePacket msg, FriendlyByteBuf buf) {
         msg.toBytes(buf);
     }
@@ -49,11 +48,8 @@ public class OpenTownInterfacePacket {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (senderObj instanceof ServerPlayer player) {
-                // Get the block entity to ensure all town data is accessible
                 BlockEntity entity = player.level().getBlockEntity(blockPos);
                 if (entity instanceof TownInterfaceEntity townInterface) {
-                    // Open the TownInterfaceScreen using PlatformAccess for platform-agnostic
-                    // screen opening
                     PlatformAccess.getNetwork().openScreen(player, new MenuProvider() {
                         @Override
                         public Component getDisplayName() {
@@ -62,7 +58,6 @@ public class OpenTownInterfacePacket {
 
                         @Override
                         public AbstractContainerMenu createMenu(int windowId, Inventory inventory, Player player) {
-                            // Create the TownInterfaceMenu using the town's position
                             return new TownInterfaceMenu(windowId, inventory, blockPos);
                         }
                     }, blockPos);

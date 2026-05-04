@@ -64,9 +64,6 @@ public class ContractListSyncPacket {
         );
     }
 
-    /**
-     * Deserialize from network buffer.
-     */
     public ContractListSyncPacket(FriendlyByteBuf buf) {
         this.tab = buf.readUtf();
         this.page = buf.readInt();
@@ -75,14 +72,12 @@ public class ContractListSyncPacket {
         this.hasMore = buf.readBoolean();
         this.serverCurrentTime = buf.readLong();
 
-        // Read contracts
         int contractCount = buf.readInt();
         this.contracts = new ArrayList<>(contractCount);
         for (int i = 0; i < contractCount; i++) {
             this.contracts.add(new ContractSummaryViewModel(buf));
         }
 
-        // Read market prices
         int priceCount = buf.readInt();
         this.marketPrices = new HashMap<>(priceCount);
         for (int i = 0; i < priceCount; i++) {
@@ -90,9 +85,6 @@ public class ContractListSyncPacket {
         }
     }
 
-    /**
-     * Serialize to network buffer.
-     */
     public void toBytes(FriendlyByteBuf buf) {
         buf.writeUtf(tab);
         buf.writeInt(page);
@@ -101,13 +93,11 @@ public class ContractListSyncPacket {
         buf.writeBoolean(hasMore);
         buf.writeLong(serverCurrentTime);
 
-        // Write contracts
         buf.writeInt(contracts.size());
         for (ContractSummaryViewModel vm : contracts) {
             vm.toBytes(buf);
         }
 
-        // Write market prices
         buf.writeInt(marketPrices.size());
         marketPrices.forEach((k, v) -> {
             buf.writeUtf(k);
@@ -125,11 +115,8 @@ public class ContractListSyncPacket {
 
     public boolean handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            // Update client-side cache with the new contract list
             com.quackers29.businesscraft.ui.managers.TownDataCacheManager
                     .updateContractList(tab, contracts, page, pageSize, totalCount, hasMore, serverCurrentTime);
-
-            // Update market prices
             com.quackers29.businesscraft.client.ClientGlobalMarket.get().setPrices(marketPrices);
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
