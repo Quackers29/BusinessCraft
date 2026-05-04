@@ -66,7 +66,7 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/error/ErrorReporter.java
 - [x] common/src/main/java/com/quackers29/businesscraft/event/ClientRenderEvents.java
 - [x] common/src/main/java/com/quackers29/businesscraft/event/PlatformPathHandler.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/event/PlayerBoundaryTracker.java
+- [x] common/src/main/java/com/quackers29/businesscraft/event/PlayerBoundaryTracker.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/event/TownEventHandler.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/init/CommonModBlocks.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/init/CommonModEntityTypes.java
