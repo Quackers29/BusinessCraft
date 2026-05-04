@@ -42,8 +42,12 @@ public class TownSavedData extends SavedData {
         }
     }
 
+    public static TownSavedData create() {
+        return new TownSavedData();
+    }
+
     public static TownSavedData load(CompoundTag tag) {
-        TownSavedData data = new TownSavedData();
+        TownSavedData data = create();
         data.loadFromNbt(tag);
         return data;
     }
