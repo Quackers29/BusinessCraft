@@ -54,7 +54,7 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/data/parsers/DataParser.java
 - [x] common/src/main/java/com/quackers29/businesscraft/data/parsers/Effect.java
 - [x] common/src/main/java/com/quackers29/businesscraft/data/TownSavedData.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/debug/DebugConfig.java
+- [x] common/src/main/java/com/quackers29/businesscraft/debug/DebugConfig.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/economy/GlobalMarket.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/economy/MarketSavedData.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/economy/ResourceRegistry.java

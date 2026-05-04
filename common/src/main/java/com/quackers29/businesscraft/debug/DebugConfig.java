@@ -6,11 +6,6 @@ import org.slf4j.LoggerFactory;
 /**
  * Central debug configuration system for BusinessCraft mod.
  * Controls debug logging output on a per-component basis to reduce log noise.
- * 
- * Usage:
- * if (DebugConfig.isEnabled(DebugConfig.TOWN_BLOCK_ENTITY)) {
- * LOGGER.info("[DEBUG] Your debug message here");
- * }
  */
 public class DebugConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/DebugConfig");
@@ -68,55 +63,22 @@ public class DebugConfig {
     // Error Handling
     public static final boolean ERROR_HANDLING = false;
 
-    /**
-     * Helper method to check if debug logging is enabled for a specific component.
-     * Takes into account both the global override and individual component flags.
-     * 
-     * @param componentFlag The individual component's debug flag
-     * @return true if debug logging should be enabled for this component
-     */
     public static boolean isEnabled(boolean componentFlag) {
         return FORCE_ALL_DEBUG || componentFlag;
     }
 
-    /**
-     * Conditional debug logging helper with message formatting.
-     * Only logs if the component flag is enabled.
-     * 
-     * @param logger        The logger instance to use
-     * @param componentFlag The component's debug flag
-     * @param message       The message to log
-     * @param args          Optional message arguments for formatting
-     */
     public static void debug(Logger logger, boolean componentFlag, String message, Object... args) {
         if (isEnabled(componentFlag)) {
             logger.info("[DEBUG] " + message, args);
         }
     }
 
-    /**
-     * Conditional debug logging helper for simple messages.
-     * Only logs if the component flag is enabled.
-     * 
-     * @param logger        The logger instance to use
-     * @param componentFlag The component's debug flag
-     * @param message       The message to log
-     */
     public static void debug(Logger logger, boolean componentFlag, String message) {
         if (isEnabled(componentFlag)) {
             logger.info("[DEBUG] " + message);
         }
     }
 
-    /**
-     * Conditional debug logging helper with message formatting for Log4J loggers.
-     * Only logs if the component flag is enabled.
-     * 
-     * @param logger        The Log4J logger instance to use
-     * @param componentFlag The component's debug flag
-     * @param message       The message to log
-     * @param args          Optional message arguments for formatting
-     */
     public static void debug(org.apache.logging.log4j.Logger logger, boolean componentFlag, String message,
             Object... args) {
         if (isEnabled(componentFlag)) {
@@ -124,24 +86,12 @@ public class DebugConfig {
         }
     }
 
-    /**
-     * Conditional debug logging helper for simple messages for Log4J loggers.
-     * Only logs if the component flag is enabled.
-     * 
-     * @param logger        The Log4J logger instance to use
-     * @param componentFlag The component's debug flag
-     * @param message       The message to log
-     */
     public static void debug(org.apache.logging.log4j.Logger logger, boolean componentFlag, String message) {
         if (isEnabled(componentFlag)) {
             logger.info("[DEBUG] " + message);
         }
     }
 
-    /**
-     * Reports all active debug loggers at startup.
-     * This provides transparency about which systems have debug logging enabled.
-     */
     public static void logActiveDebuggers() {
         if (FORCE_ALL_DEBUG) {
             LOGGER.info("=== BusinessCraft Debug Config ===");
@@ -267,28 +217,11 @@ public class DebugConfig {
         }
     }
 
-    /**
-     * Quick toggle method for enabling debug logging for common development
-     * scenarios.
-     * This can be called from debug commands or development tools.
-     * 
-     * @param category The category to enable: "all", "core", "ui", "data",
-     *                 "network"
-     * @return true if the category was recognized and enabled
-     */
     public static boolean enableDebugCategory(String category) {
-        // Note: This would require the fields to be non-final for runtime modification
-        // For now, this is a placeholder for future enhancement in Milestone 4
         LOGGER.info("Debug category toggle requested for: {} (requires restart to take effect)", category);
         return false;
     }
 
-    /**
-     * Gets the total number of debug flags that are currently enabled.
-     * Useful for performance monitoring and configuration validation.
-     * 
-     * @return The count of enabled debug flags
-     */
     public static int getEnabledFlagCount() {
         if (FORCE_ALL_DEBUG) {
             return -1; // Special value indicating all flags are enabled
