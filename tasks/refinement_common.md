@@ -60,7 +60,7 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/economy/ResourceRegistry.java
 - [x] common/src/main/java/com/quackers29/businesscraft/economy/ResourceType.java
 - [x] common/src/main/java/com/quackers29/businesscraft/entity/TouristEntity.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandler.java
+- [x] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandler.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandlerIntegration.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandlingExample.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorMetrics.java
@@ -196,7 +196,6 @@
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/builders/grid/GridRenderingEngine.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/builders/grid/GridScrollManager.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/builders/UIGridBuilder.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/ui/builders/UIGridBuilderV2.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/components/basic/BCButton.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/components/basic/BCComponent.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/ui/components/basic/BCLabel.java
