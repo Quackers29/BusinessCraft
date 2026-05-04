@@ -22,8 +22,8 @@
 - [ ] First pass targets obvious isolated wins (unused code, dead branches, duplication cleanup, naming clarity, small simplifications).
 - [ ] Avoid architecture rewrites unless explicitly approved for that file.
 - [ ] Prefer deleting/reducing code over introducing new abstractions.
+- [ ] One-line summaries of code chunks are fine to keep if it explains a none obvious method - ie TouristRenderer is obvious, no comment needed.
+- [ ] One-line file-header summaries are also fine to keep
 - [ ] Only proceed one file at a time under the approval loop above.
 - [ ] Loop condition: continue the per-file loop only while changes are comment-removal-only.
 - [ ] Stop condition: stop the loop immediately as soon as any non-comment code change is required or made.
-
-
