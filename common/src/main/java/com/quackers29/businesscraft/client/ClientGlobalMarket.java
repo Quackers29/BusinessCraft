@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.client;
 import java.util.HashMap;
 import java.util.Map;
 import net.minecraft.world.item.Item;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.town.viewmodel.MarketViewModel;
 
 public class ClientGlobalMarket {
@@ -27,8 +28,9 @@ public class ClientGlobalMarket {
 
     public void setMarketViewModel(MarketViewModel viewModel) {
         this.marketViewModel = viewModel;
-        LOGGER.debug("[CLIENT] Market view-model updated: {} items with prices",
-            viewModel != null ? viewModel.getTotalPricedItems() : 0);
+        DebugConfig.debug(LOGGER, DebugConfig.GLOBAL_MARKET,
+                "[CLIENT] Market view-model updated: {} items with prices",
+                viewModel != null ? viewModel.getTotalPricedItems() : 0);
     }
 
     @Deprecated

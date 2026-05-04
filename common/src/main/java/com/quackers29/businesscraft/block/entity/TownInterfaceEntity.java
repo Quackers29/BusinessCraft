@@ -105,9 +105,6 @@ import com.quackers29.businesscraft.town.viewmodel.ProductionStatusViewModel;
 import com.quackers29.businesscraft.town.viewmodel.ProductionStatusViewModelBuilder;
 import com.quackers29.businesscraft.network.packets.ResourceViewModelSyncPacket;
 import com.quackers29.businesscraft.network.packets.ProductionViewModelSyncPacket;
-import com.quackers29.businesscraft.network.packets.MarketViewModelSyncPacket;
-import com.quackers29.businesscraft.town.viewmodel.MarketViewModel;
-import com.quackers29.businesscraft.town.viewmodel.MarketViewModelBuilder;
 import com.quackers29.businesscraft.town.viewmodel.TradingViewModel;
 import com.quackers29.businesscraft.town.viewmodel.TradingViewModelBuilder;
 import com.quackers29.businesscraft.network.packets.TradingViewModelSyncPacket;
@@ -235,45 +232,6 @@ public ViewModelCache getVmCache() {
 
     public ClientSyncHelper getClientSyncHelper() {
         return clientSyncHelper;
-    }
-
-    private static long lastGlobalMarketSyncTime = 0;
-    private static final long MARKET_SYNC_INTERVAL = 100; // Sync every 100 ticks (5 seconds)
-
-    /**
-     * SERVER-SIDE: Sends updated market view-model to all online players.
-     *
-     * IMPORTANT: Market prices are GLOBAL (not per-town or per-block-entity).
-     * This method uses static tracking to ensure market view-model is only sent
-     * once per sync interval, regardless of how many TownInterfaceEntities exist.
-     *
-     * This implements server-authoritative market pricing by sending pre-calculated
-     * prices that eliminate client-side item-to-resource resolution and price
-     * calculations.
-     */
-    public void syncMarketViewModelToAllPlayers() {
-        if (level == null || level.isClientSide())
-            return;
-        if (!(level instanceof ServerLevel serverLevel))
-            return;
-
-        long currentTime = level.getGameTime();
-        if (currentTime - lastGlobalMarketSyncTime < MARKET_SYNC_INTERVAL) {
-            return; // Skip sync, too soon since last one
-        }
-
-        lastGlobalMarketSyncTime = currentTime;
-
-        MarketViewModel viewModel = MarketViewModelBuilder.buildMarketViewModel();
-
-        MarketViewModelSyncPacket packet = new MarketViewModelSyncPacket(viewModel);
-        serverLevel.players().forEach(player -> {
-            PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
-        });
-
-        DebugConfig.debug(LOGGER, DebugConfig.SYNC_HELPERS,
-                "Sent market view-model to all players - {} items with known prices, status: {}",
-                viewModel.getTotalPricedItems(), viewModel.getMarketStatus());
     }
 
     /**
@@ -717,7 +675,6 @@ public ViewModelCache getVmCache() {
             if (!level.isClientSide && level instanceof ServerLevel) {
                 updateAllTownVMs();
                 syncAllDirtyTownVMsToPlayers();
-                syncMarketViewModelToAllPlayers();
                 syncTradingViewModelToNearbyPlayers();
             }
 

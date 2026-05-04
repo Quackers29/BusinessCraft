@@ -18,6 +18,7 @@ public class DebugConfig {
     public static final boolean TOWN_BLOCK_ENTITY = false;
     public static final boolean TOWN_INTERFACE_MENU = false;
     public static final boolean NETWORK_PACKETS = false;
+    public static final boolean GLOBAL_MARKET = false;
 
     // UI Management Systems (Milestone 3)
     public static final boolean UI_MANAGERS = false;
@@ -116,6 +117,10 @@ public class DebugConfig {
         }
         if (NETWORK_PACKETS) {
             enabledSystems.append("  - NETWORK_PACKETS\n");
+            anyEnabled = true;
+        }
+        if (GLOBAL_MARKET) {
+            enabledSystems.append("  - GLOBAL_MARKET\n");
             anyEnabled = true;
         }
         if (UI_MANAGERS) {
@@ -233,6 +238,8 @@ public class DebugConfig {
         if (TOWN_INTERFACE_MENU)
             count++;
         if (NETWORK_PACKETS)
+            count++;
+        if (GLOBAL_MARKET)
             count++;
         if (UI_MANAGERS)
             count++;

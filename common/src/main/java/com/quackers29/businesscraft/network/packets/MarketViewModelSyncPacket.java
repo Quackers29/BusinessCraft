@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.network.packets;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.client.ClientGlobalMarket;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.town.viewmodel.MarketViewModel;
 import net.minecraft.network.FriendlyByteBuf;
 import org.slf4j.Logger;
@@ -67,13 +68,14 @@ public class MarketViewModelSyncPacket {
      */
     public void handle(Object context) {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            LOGGER.debug("[CLIENT] MarketViewModelSyncPacket received");
+            DebugConfig.debug(LOGGER, DebugConfig.GLOBAL_MARKET, "[CLIENT] MarketViewModelSyncPacket received");
 
             // Update the global client market cache with pre-calculated view-model
             // NO CALCULATIONS HAPPEN HERE - client is truly a "dumb terminal"
             ClientGlobalMarket.get().setMarketViewModel(marketViewModel);
 
-            LOGGER.debug("[CLIENT] Market view-model updated: {} items with known prices, status: {}",
+            DebugConfig.debug(LOGGER, DebugConfig.GLOBAL_MARKET,
+                "[CLIENT] Market view-model updated: {} items with known prices, status: {}",
                 marketViewModel.getTotalPricedItems(),
                 marketViewModel.getMarketStatus());
         });

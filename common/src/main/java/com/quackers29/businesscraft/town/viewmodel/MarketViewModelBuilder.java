@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.town.viewmodel;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.economy.GlobalMarket;
 import com.quackers29.businesscraft.economy.ResourceRegistry;
 import com.quackers29.businesscraft.economy.ResourceType;
@@ -43,7 +44,7 @@ public class MarketViewModelBuilder {
      * @return Complete market view-model with all pre-calculated prices
      */
     public static MarketViewModel buildMarketViewModel() {
-        LOGGER.debug("[SERVER] Building market view-model...");
+        DebugConfig.debug(LOGGER, DebugConfig.GLOBAL_MARKET, "[SERVER] Building market view-model...");
 
         Map<Item, MarketViewModel.MarketPriceInfo> itemPrices = new HashMap<>();
         GlobalMarket market = GlobalMarket.get();
@@ -112,14 +113,16 @@ public class MarketViewModelBuilder {
 
             if (foundAny) {
                 pricedItems++;
-                LOGGER.debug("[SERVER] Item {} → {} (type: {})", itemKeyStr, priceDisplay, resourceTypeUsed);
+                DebugConfig.debug(LOGGER, DebugConfig.GLOBAL_MARKET,
+                        "[SERVER] Item {} -> {} (type: {})", itemKeyStr, priceDisplay, resourceTypeUsed);
             }
         }
 
         // Calculate market status (simple heuristic based on price variance)
         String marketStatus = calculateMarketStatus(itemPrices);
 
-        LOGGER.debug("[SERVER] Market view-model built: {} items with known prices", pricedItems);
+        DebugConfig.debug(LOGGER, DebugConfig.GLOBAL_MARKET,
+                "[SERVER] Market view-model built: {} items with known prices", pricedItems);
 
         return new MarketViewModel(itemPrices, marketStatus, pricedItems);
     }

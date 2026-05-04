@@ -96,6 +96,9 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         if (level.isClientSide()) {
             // No-op
         } else {
+            if (inv.player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                com.quackers29.businesscraft.town.viewmodel.MarketViewModelSyncHelper.syncToPlayer(serverPlayer);
+            }
             // Get town from TownManager
             if (level instanceof ServerLevel serverLevel) {
                 TownManager townManager = TownManager.get(serverLevel);

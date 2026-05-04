@@ -16,9 +16,7 @@ import org.slf4j.LoggerFactory;
  * Centralizes logic that was previously duplicated across platforms.
  */
 import com.quackers29.businesscraft.api.PlatformAccess;
-import com.quackers29.businesscraft.town.viewmodel.MarketViewModel;
-import com.quackers29.businesscraft.town.viewmodel.MarketViewModelBuilder;
-import com.quackers29.businesscraft.network.packets.MarketViewModelSyncPacket;
+import com.quackers29.businesscraft.town.viewmodel.MarketViewModelSyncHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
 
@@ -35,11 +33,7 @@ public class TownEventHandler {
     }
 
     private static void onPlayerLogin(ServerPlayer player, ServerLevel level, BlockPos position) {
-        // Build global market view-model (contains ALL item prices)
-        MarketViewModel viewModel = MarketViewModelBuilder.buildMarketViewModel();
-        MarketViewModelSyncPacket packet = new MarketViewModelSyncPacket(viewModel);
-        PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
-
+        MarketViewModelSyncHelper.syncToPlayer(player);
         LOGGER.info("Synced Global Market data to player {}", player.getName().getString());
     }
 

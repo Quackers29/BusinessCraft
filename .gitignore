@@ -1,7 +1,6 @@
 !/.gitignore
 /.gradle
 /bin
-/TS-RTS-master
 /.claude
 /.cursor
 .cursorignore
@@ -22,4 +21,3 @@
 /fabric/run/logs
 /common/build
 /.agent
-
