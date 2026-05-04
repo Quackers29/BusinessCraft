@@ -36,10 +36,6 @@ public class GlobalMarket {
         return INSTANCE;
     }
 
-    /**
-     * Resets all market data. Called when creating a new world to ensure
-     * prices don't persist across worlds.
-     */
     public void reset() {
         prices.clear();
         totalVolume.clear();
@@ -53,7 +49,6 @@ public class GlobalMarket {
     }
 
     public void setPrice(String resourceId, float price) {
-        // Enforce minimum price floor
         prices.put(resourceId, Math.max(price, MIN_PRICE));
         markDirty();
     }
@@ -79,10 +74,6 @@ public class GlobalMarket {
         markDirty();
     }
 
-    /**
-     * Records a failed auction (no bids received).
-     * Applies downward pressure on the price to signal oversupply.
-     */
     public void recordFailedAuction(String resourceId) {
         float currentPrice = getPrice(resourceId);
         float newPrice = Math.max(currentPrice * (1 - FAILED_AUCTION_DROP_RATE), MIN_PRICE);

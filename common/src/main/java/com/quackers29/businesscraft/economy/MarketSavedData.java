@@ -17,9 +17,6 @@ public class MarketSavedData extends SavedData {
     public MarketSavedData() {
         this.market = GlobalMarket.get();
         this.market.setDirtyCallback(this::setDirty);
-        // Do NOT reset market here, as this might be called AFTER load
-        // But create() is called when no data exists, so we should allow fresh state.
-        // Since GlobalMarket is singleton, we assume it's already initialized.
     }
 
     @Override
@@ -33,8 +30,6 @@ public class MarketSavedData extends SavedData {
     }
 
     public static MarketSavedData create() {
-        // If we are creating fresh data, it means no file existed.
-        // We should reset the global market to a clean state.
         GlobalMarket.get().reset();
         return new MarketSavedData();
     }

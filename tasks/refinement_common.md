@@ -55,9 +55,9 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/data/parsers/Effect.java
 - [x] common/src/main/java/com/quackers29/businesscraft/data/TownSavedData.java
 - [x] common/src/main/java/com/quackers29/businesscraft/debug/DebugConfig.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/economy/GlobalMarket.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/economy/MarketSavedData.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/economy/ResourceRegistry.java
+- [x] common/src/main/java/com/quackers29/businesscraft/economy/GlobalMarket.java
+- [x] common/src/main/java/com/quackers29/businesscraft/economy/MarketSavedData.java
+- [x] common/src/main/java/com/quackers29/businesscraft/economy/ResourceRegistry.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/economy/ResourceType.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/entity/TouristEntity.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/error/ErrorHandler.java
