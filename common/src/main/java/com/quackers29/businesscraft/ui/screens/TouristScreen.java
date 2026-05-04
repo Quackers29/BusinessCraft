@@ -11,12 +11,28 @@ public class TouristScreen extends AbstractContainerScreen<TouristMenu> {
 
     // Use standard villager texture
     private static final ResourceLocation TEXTURE = new ResourceLocation("textures/gui/container/villager2.png");
+    private static final String TITLE_DATA_SEPARATOR = "||";
+    private static final int TEXT_COLOR = 0x404040;
+    private final Component displayTitle;
+    private final String originTownName;
 
     public TouristScreen(TouristMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
         this.imageWidth = 276;
         this.imageHeight = 166;
         this.inventoryLabelX = 107; // Match MerchantScreen default
+
+        String rawTitle = title.getString();
+        String parsedDisplayTitle = rawTitle;
+        String parsedOriginTown = "Unknown";
+        int separatorIndex = rawTitle.indexOf(TITLE_DATA_SEPARATOR);
+        if (separatorIndex >= 0) {
+            parsedDisplayTitle = rawTitle.substring(0, separatorIndex);
+            parsedOriginTown = rawTitle.substring(separatorIndex + TITLE_DATA_SEPARATOR.length());
+        }
+
+        this.displayTitle = Component.literal(parsedDisplayTitle);
+        this.originTownName = parsedOriginTown;
     }
 
     @Override
@@ -26,26 +42,8 @@ public class TouristScreen extends AbstractContainerScreen<TouristMenu> {
         this.renderTooltip(guiGraphics, mouseX, mouseY);
 
         // Render custom text "No trades available"
-        // Move it up as requested
         guiGraphics.drawCenteredString(this.font, Component.literal("No trades available"), this.leftPos + 209,
                 this.topPos + 20, 0xFFFFFF);
-
-        // Render stats in the left area (Trades area)
-        int ageTicks = this.menu.getJourneyAge();
-        int expiryTicks = this.menu.getTimeLeft();
-
-        String ageText = formatTime(ageTicks);
-        String expiryText = formatTime(expiryTicks);
-
-        guiGraphics.drawString(this.font, Component.literal("Journey Duration:"), this.leftPos + 8, this.topPos + 40,
-                0x404040, false);
-        guiGraphics.drawString(this.font, Component.literal(ageText), this.leftPos + 8, this.topPos + 50, 0x404040,
-                false);
-
-        guiGraphics.drawString(this.font, Component.literal("Time Remaining:"), this.leftPos + 8, this.topPos + 70,
-                0x404040, false);
-        guiGraphics.drawString(this.font, Component.literal(expiryText), this.leftPos + 8, this.topPos + 80, 0x404040,
-                false);
     }
 
     private String formatTime(int ticks) {
@@ -53,6 +51,44 @@ public class TouristScreen extends AbstractContainerScreen<TouristMenu> {
         int minutes = seconds / 60;
         seconds = seconds % 60;
         return String.format("%dm %ds", minutes, seconds);
+    }
+
+    private String ellipsizeToWidth(String text, int maxWidth) {
+        if (text == null || text.isBlank()) {
+            return "Unknown";
+        }
+        if (this.font.width(text) <= maxWidth) {
+            return text;
+        }
+        String suffix = "...";
+        int availableWidth = Math.max(0, maxWidth - this.font.width(suffix));
+        return this.font.plainSubstrByWidth(text, availableWidth) + suffix;
+    }
+
+    @Override
+    protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        guiGraphics.drawString(this.font, this.displayTitle, this.titleLabelX, this.titleLabelY, TEXT_COLOR, false);
+        guiGraphics.drawString(this.font, this.playerInventoryTitle, this.inventoryLabelX, this.inventoryLabelY, TEXT_COLOR,
+                false);
+
+        int leftPanelX = 8;
+        int originTownY = 22;
+        int journeyY = 50;
+        int timeRemainingY = 74;
+        int valueWidth = 95;
+
+        guiGraphics.drawString(this.font, Component.literal("Origin Town:"), leftPanelX, originTownY, TEXT_COLOR, false);
+        guiGraphics.drawString(this.font, Component.literal(ellipsizeToWidth(this.originTownName, valueWidth)), leftPanelX,
+                originTownY + 10, TEXT_COLOR, false);
+
+        guiGraphics.drawString(this.font, Component.literal("Journey Duration:"), leftPanelX, journeyY, TEXT_COLOR, false);
+        guiGraphics.drawString(this.font, Component.literal(formatTime(this.menu.getJourneyAge())), leftPanelX, journeyY + 10,
+                TEXT_COLOR, false);
+
+        guiGraphics.drawString(this.font, Component.literal("Time Remaining:"), leftPanelX, timeRemainingY, TEXT_COLOR,
+                false);
+        guiGraphics.drawString(this.font, Component.literal(formatTime(this.menu.getTimeLeft())), leftPanelX,
+                timeRemainingY + 10, TEXT_COLOR, false);
     }
 
     @Override

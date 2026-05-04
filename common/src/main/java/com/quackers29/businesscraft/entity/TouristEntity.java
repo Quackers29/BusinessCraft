@@ -414,7 +414,13 @@ public class TouristEntity extends Villager {
                 PlatformAccess.getNetwork().openScreen(serverPlayer, new net.minecraft.world.MenuProvider() {
                     @Override
                     public Component getDisplayName() {
-                        return TouristEntity.this.getDisplayName();
+                        String destinationName = TouristEntity.this.destinationTownName != null
+                                ? TouristEntity.this.destinationTownName
+                                : "Unknown";
+                        String originName = TouristEntity.this.originTownName != null
+                                ? TouristEntity.this.originTownName
+                                : "Unknown";
+                        return Component.literal("Tourist to " + destinationName + "||" + originName);
                     }
 
                     @Override

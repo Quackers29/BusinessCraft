@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.economy;
 
+import com.quackers29.businesscraft.debug.DebugConfig;
 import net.minecraft.nbt.CompoundTag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +80,8 @@ public class GlobalMarket {
         float newPrice = Math.max(currentPrice * (1 - FAILED_AUCTION_DROP_RATE), MIN_PRICE);
         prices.put(resourceId, newPrice);
 
-        LOGGER.info("Failed auction: {} price {} -> {} ({}% drop)",
+        DebugConfig.debug(LOGGER, DebugConfig.GLOBAL_MARKET,
+                "Failed auction: {} price {} -> {} ({}% drop)",
                 resourceId, String.format("%.4f", currentPrice), String.format("%.4f", newPrice),
                 (int)(FAILED_AUCTION_DROP_RATE * 100));
         markDirty();

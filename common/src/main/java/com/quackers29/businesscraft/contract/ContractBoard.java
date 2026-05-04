@@ -339,7 +339,7 @@ public class ContractBoard {
                                 // Apply supply pressure: failed auction drops price slightly
                                 com.quackers29.businesscraft.economy.GlobalMarket.get().recordFailedAuction(sc.getResourceId());
 
-                                LOGGER.info(
+                                DebugConfig.debug(LOGGER, DebugConfig.GLOBAL_MARKET,
                                         "Refunded {} {} to town {} (auction {} had no bids). GPI reduced due to oversupply.",
                                         sc.getQuantity(), sc.getResourceId(), sellerTown.getName(), sc.getId());
                             }

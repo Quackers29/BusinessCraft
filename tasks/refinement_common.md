@@ -68,10 +68,10 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/event/PlatformPathHandler.java
 - [x] common/src/main/java/com/quackers29/businesscraft/event/PlayerBoundaryTracker.java
 - [x] common/src/main/java/com/quackers29/businesscraft/event/TownEventHandler.java
-- [x] common/src/main/java/com/quackers29/businesscraft/init/CommonModBlocks.java
-- [x] common/src/main/java/com/quackers29/businesscraft/init/CommonModEntityTypes.java
-- [x] common/src/main/java/com/quackers29/businesscraft/init/CommonModMenuTypes.java
-- [x] common/src/main/java/com/quackers29/businesscraft/menu/ContractBoardMenu.java
+- [ ] common/src/main/java/com/quackers29/businesscraft/init/CommonModBlocks.java
+- [ ] common/src/main/java/com/quackers29/businesscraft/init/CommonModEntityTypes.java
+- [ ] common/src/main/java/com/quackers29/businesscraft/init/CommonModMenuTypes.java
+- [ ] common/src/main/java/com/quackers29/businesscraft/menu/ContractBoardMenu.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/menu/PaymentBoardMenu.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/menu/StorageMenu.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/menu/TouristMenu.java
