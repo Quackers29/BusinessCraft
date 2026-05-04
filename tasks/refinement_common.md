@@ -30,7 +30,7 @@
 - [x] common/src/main/java/com/quackers29/businesscraft/client/render/world/PlatformVisualizationRenderer.java
 - [x] common/src/main/java/com/quackers29/businesscraft/client/render/world/TownBoundaryVisualizationRenderer.java
 - [x] common/src/main/java/com/quackers29/businesscraft/client/render/world/VisualizationManager.java
-- [ ] common/src/main/java/com/quackers29/businesscraft/client/render/world/WorldVisualizationRenderer.java
+- [x] common/src/main/java/com/quackers29/businesscraft/client/render/world/WorldVisualizationRenderer.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/client/renderer/layer/TouristHatLayer.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/client/renderer/TouristRenderer.java
 - [ ] common/src/main/java/com/quackers29/businesscraft/client/TownDebugKeyHandler.java
