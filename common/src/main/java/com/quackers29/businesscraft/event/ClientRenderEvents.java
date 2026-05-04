@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.event;
 
-import com.quackers29.businesscraft.api.EventCallbacks;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer;
 import com.quackers29.businesscraft.client.render.world.TownBoundaryVisualizationRenderer;
@@ -13,12 +12,8 @@ import net.minecraft.world.level.Level;
  */
 public class ClientRenderEvents {
     
-    // Platform visualization renderer using the new modular system
-    // Lazy initialization to avoid loading Vec3i/BlockPos at class load time (for Fabric compatibility)
     private static PlatformVisualizationRenderer platformRenderer;
     
-    // Town boundary visualization renderer
-    // Lazy initialization to avoid loading Vec3i/BlockPos at class load time (for Fabric compatibility)
     private static TownBoundaryVisualizationRenderer boundaryRenderer;
     
     private static boolean initialized = false;
@@ -32,23 +27,19 @@ public class ClientRenderEvents {
             return;
         }
         
-        // Lazy initialization of renderers (defers BlockPos/Vec3i loading until runtime)
         platformRenderer = new PlatformVisualizationRenderer();
         boundaryRenderer = new TownBoundaryVisualizationRenderer();
         
-        // Register the platform renderer with the visualization manager
         VisualizationManager.getInstance().registerRenderer(
             VisualizationManager.TYPE_PLATFORM, 
             platformRenderer
         );
         
-        // Register the town boundary renderer with the visualization manager
         VisualizationManager.getInstance().registerRenderer(
             VisualizationManager.TYPE_TOWN_BOUNDARY, 
             boundaryRenderer
         );
         
-        // Register event callbacks
         PlatformAccess.getEvents().registerRenderLevelCallback(ClientRenderEvents::onRenderLevelStage);
         PlatformAccess.getEvents().registerLevelUnloadCallback(ClientRenderEvents::onLevelUnload);
         
@@ -56,12 +47,10 @@ public class ClientRenderEvents {
     }
     
     private static void onRenderLevelStage(String renderStage, float partialTick, Object eventObject) {
-        // Ensure renderers are initialized (lazy initialization)
         if (!initialized) {
             initialize();
         }
         
-        // Render all registered renderers using the platform-agnostic render method
         if (platformRenderer != null) {
             platformRenderer.render(renderStage, partialTick, eventObject);
         }
@@ -76,7 +65,6 @@ public class ClientRenderEvents {
     private static void onLevelUnload(Level level) {
         if (level.isClientSide()) {
             VisualizationManager.getInstance().onLevelUnload();
-            // Boundary data is cleaned up automatically by the renderer's cleanup method
         }
     }
     
