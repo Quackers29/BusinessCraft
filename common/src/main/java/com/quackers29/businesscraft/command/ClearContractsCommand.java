@@ -21,9 +21,7 @@ public class ClearContractsCommand {
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) {
-        // Get all ContractBoard instances and clear their contracts
         try {
-            // Access the private INSTANCES map via reflection
             java.lang.reflect.Field instancesField = ContractBoard.class.getDeclaredField("INSTANCES");
             instancesField.setAccessible(true);
             @SuppressWarnings("unchecked")
@@ -31,12 +29,10 @@ public class ClearContractsCommand {
 
             int totalCleared = 0;
             for (ContractBoard instanceBoard : instances.values()) {
-                // Access the savedData field via reflection
                 java.lang.reflect.Field savedDataField = ContractBoard.class.getDeclaredField("savedData");
                 savedDataField.setAccessible(true);
                 ContractSavedData savedData = (ContractSavedData) savedDataField.get(instanceBoard);
 
-                // Clear contracts and mark as dirty
                 totalCleared += savedData.getContracts().size();
                 savedData.getContracts().clear();
                 savedData.setDirty();
