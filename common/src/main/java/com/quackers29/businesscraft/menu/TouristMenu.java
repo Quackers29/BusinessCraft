@@ -25,7 +25,7 @@ public class TouristMenu extends AbstractContainerMenu {
 
     // Constructor for client-side
     public TouristMenu(int containerId, Inventory playerInventory, FriendlyByteBuf extraData) {
-        this(containerId, playerInventory, new net.minecraft.world.inventory.SimpleContainerData(2));
+        this(containerId, playerInventory, new net.minecraft.world.inventory.SimpleContainerData(4));
     }
 
     // Helper for layout
@@ -49,6 +49,14 @@ public class TouristMenu extends AbstractContainerMenu {
 
     public int getTimeLeft() {
         return this.data.get(1);
+    }
+
+    public int getVillagerXp() {
+        return this.data.get(2);
+    }
+
+    public int getVillagerLevel() {
+        return this.data.get(3);
     }
 
     @Override

@@ -13,7 +13,14 @@ public class TouristScreen extends AbstractContainerScreen<TouristMenu> {
     private static final ResourceLocation TEXTURE = new ResourceLocation("textures/gui/container/villager2.png");
     private static final String TITLE_DATA_SEPARATOR = "||";
     private static final int TEXT_COLOR = 0x404040;
-    private final Component displayTitle;
+    private static final int XP_BAR_TEXTURE_U = 0;
+    private static final int XP_BAR_BG_TEXTURE_V = 186;
+    private static final int XP_BAR_FILL_TEXTURE_V = 191;
+    private static final int XP_BAR_WIDTH = 102;
+    private static final int XP_BAR_HEIGHT = 5;
+    private static final int XP_BAR_X = 136;
+    private static final int XP_BAR_Y = 16;
+    private static final int STATIC_NOVICE_XP_FILL = 24;
     private final String originTownName;
 
     public TouristScreen(TouristMenu menu, Inventory inventory, Component title) {
@@ -23,15 +30,12 @@ public class TouristScreen extends AbstractContainerScreen<TouristMenu> {
         this.inventoryLabelX = 107; // Match MerchantScreen default
 
         String rawTitle = title.getString();
-        String parsedDisplayTitle = rawTitle;
         String parsedOriginTown = "Unknown";
         int separatorIndex = rawTitle.indexOf(TITLE_DATA_SEPARATOR);
         if (separatorIndex >= 0) {
-            parsedDisplayTitle = rawTitle.substring(0, separatorIndex);
             parsedOriginTown = rawTitle.substring(separatorIndex + TITLE_DATA_SEPARATOR.length());
         }
 
-        this.displayTitle = Component.literal(parsedDisplayTitle);
         this.originTownName = parsedOriginTown;
     }
 
@@ -67,7 +71,7 @@ public class TouristScreen extends AbstractContainerScreen<TouristMenu> {
 
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        guiGraphics.drawString(this.font, this.displayTitle, this.titleLabelX, this.titleLabelY, TEXT_COLOR, false);
+        guiGraphics.drawCenteredString(this.font, Component.literal("Tourist - Novice"), 186, 6, TEXT_COLOR);
         guiGraphics.drawString(this.font, this.playerInventoryTitle, this.inventoryLabelX, this.inventoryLabelY, TEXT_COLOR,
                 false);
 
@@ -96,5 +100,9 @@ public class TouristScreen extends AbstractContainerScreen<TouristMenu> {
         int x = (this.width - this.imageWidth) / 2;
         int y = (this.height - this.imageHeight) / 2;
         guiGraphics.blit(TEXTURE, x, y, 0, 0, this.imageWidth, this.imageHeight, 512, 256);
+        guiGraphics.blit(TEXTURE, x + XP_BAR_X, y + XP_BAR_Y, XP_BAR_TEXTURE_U, XP_BAR_BG_TEXTURE_V, XP_BAR_WIDTH,
+                XP_BAR_HEIGHT, 512, 256);
+        guiGraphics.blit(TEXTURE, x + XP_BAR_X, y + XP_BAR_Y, XP_BAR_TEXTURE_U, XP_BAR_FILL_TEXTURE_V,
+                STATIC_NOVICE_XP_FILL, XP_BAR_HEIGHT, 512, 256);
     }
 }
