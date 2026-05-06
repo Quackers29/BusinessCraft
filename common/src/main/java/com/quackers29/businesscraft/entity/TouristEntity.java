@@ -24,6 +24,12 @@ import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.trading.Merchant;
+import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.item.trading.MerchantOffers;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.level.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +71,16 @@ public class TouristEntity extends Villager {
     private boolean isCurrentlyStationary = true;
     private static final int POSITION_UPDATE_INTERVAL = 20;
     private static final double STATIONARY_THRESHOLD = 0.5;
+
+    // Track total distance traveled
+    private double totalDistanceTraveled = 0.0;
+
+    // Override merchant offers (Villager already implements Merchant)
+    private MerchantOffers customOffers;
+
+    // Distance-based leveling config
+    private static final double DISTANCE_PER_LEVEL = 100.0; // 100m per level
+    private static final int MAX_LEVEL = 1; // Max level for now
 
     public TouristEntity(EntityType<? extends Villager> entityType, Level level) {
         super(entityType, level);
@@ -113,7 +129,24 @@ public class TouristEntity extends Villager {
         this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 5.0F));
         this.goalSelector.addGoal(2, new RandomStrollGoal(this, 0.3D));
         this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
+    }
 
+    @Override
+    protected void customServerAiStep() {
+        // Override to prevent villager brain updates that interfere with trading
+        // Don't call super.customServerAiStep() - this prevents villager brain from running
+        // This stops the villager brain from calling stopTrading() automatically
+    }
+
+    @Override
+    public void updateTrades() {
+        // Override to prevent villager from resetting offers
+        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "updateTrades() called - ignoring");
+    }
+
+    @Override
+    public boolean canRestock() {
+        return false; // Tourists don't restock
     }
 
     @Override
@@ -145,14 +178,20 @@ public class TouristEntity extends Villager {
 
                 isCurrentlyStationary = recentMovementSquared < (STATIONARY_THRESHOLD * STATIONARY_THRESHOLD);
 
+                // Accumulate total distance traveled
+                totalDistanceTraveled += distanceMoved;
+
+                // Update level based on distance traveled
+                updateLevelFromDistance();
+
                 this.recentPosX = this.getX();
                 this.recentPosY = this.getY();
                 this.recentPosZ = this.getZ();
                 positionUpdateTicks = 0;
 
                 DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
-                        "Tourist {} movement check: distance={:.3f}, stationary={}, riding={}, expiry={}s",
-                        this.getId(), distanceMoved, isCurrentlyStationary, this.isPassenger(), expiryTicks / 20);
+                        "Tourist {} movement check: distance={:.3f}, total={:.1f}m, stationary={}, riding={}, expiry={}s",
+                        this.getId(), distanceMoved, totalDistanceTraveled, isCurrentlyStationary, this.isPassenger(), expiryTicks / 20);
             }
 
             if (isCurrentlyStationary) {
@@ -271,6 +310,7 @@ public class TouristEntity extends Villager {
         tag.putDouble("RecentPosZ", recentPosZ);
         tag.putInt("PositionUpdateTicks", positionUpdateTicks);
         tag.putBoolean("IsCurrentlyStationary", isCurrentlyStationary);
+        tag.putDouble("TotalDistanceTraveled", totalDistanceTraveled);
 
         if (originTownId != null) {
             tag.putUUID("OriginTownId", originTownId);
@@ -328,6 +368,9 @@ public class TouristEntity extends Villager {
         }
         if (tag.contains("IsCurrentlyStationary")) {
             isCurrentlyStationary = tag.getBoolean("IsCurrentlyStationary");
+        }
+        if (tag.contains("TotalDistanceTraveled")) {
+            totalDistanceTraveled = tag.getDouble("TotalDistanceTraveled");
         }
 
         if (tag.contains("OriginTownId")) {
@@ -410,53 +453,157 @@ public class TouristEntity extends Villager {
     @Override
     public net.minecraft.world.InteractionResult mobInteract(Player player, net.minecraft.world.InteractionHand hand) {
         if (!this.level().isClientSide) {
-            if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-                PlatformAccess.getNetwork().openScreen(serverPlayer, new net.minecraft.world.MenuProvider() {
-                    @Override
-                    public Component getDisplayName() {
-                        String destinationName = TouristEntity.this.destinationTownName != null
-                                ? TouristEntity.this.destinationTownName
-                                : "Unknown";
-                        String originName = TouristEntity.this.originTownName != null
-                                ? TouristEntity.this.originTownName
-                                : "Unknown";
-                        return Component.literal("Tourist to " + destinationName + "||" + originName);
-                    }
+            if (hand == net.minecraft.world.InteractionHand.MAIN_HAND) {
+                DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
+                    "Tourist mobInteract - opening trading screen for player {}", player.getName().getString());
 
-                    @Override
-                    public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int windowId,
-                            net.minecraft.world.entity.player.Inventory inventory, Player player) {
-                        return new com.quackers29.businesscraft.menu.TouristMenu(windowId, inventory,
-                                new net.minecraft.world.inventory.ContainerData() {
-                                    @Override
-                                    public int get(int index) {
-                                        switch (index) {
-                                            case 0:
-                                                // Journey Age (ticks)
-                                                return (int) (TouristEntity.this.level().getGameTime()
-                                                        - TouristEntity.this.spawnTime);
-                                            case 1:
-                                                // Time Left (ticks)
-                                                return TouristEntity.this.expiryTicks;
-                                            default:
-                                                return 0;
-                                        }
-                                    }
+                // Regenerate offers on each UI open so data is fresh
+                this.customOffers = null;
+                DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Cleared cached offers for fresh data");
 
-                                    @Override
-                                    public void set(int index, int value) {
-                                    }
-
-                                    @Override
-                                    public int getCount() {
-                                        return 2;
-                                    }
-                                });
-                    }
-                });
+                // Use villager's built-in trading screen
+                this.setTradingPlayer(player);
+                this.openTradingScreen(player, this.getDisplayName(), 1);
             }
             return net.minecraft.world.InteractionResult.CONSUME;
         }
         return net.minecraft.world.InteractionResult.sidedSuccess(this.level().isClientSide);
+    }
+
+    @Override
+    public void setTradingPlayer(@Nullable Player player) {
+        super.setTradingPlayer(player);
+        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
+            "Set trading player to {}", player != null ? player.getName().getString() : "null");
+    }
+
+    @Override
+    public void stopTrading() {
+        // Don't call super - prevents villager brain from interfering
+        this.setTradingPlayer(null);
+        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Stopped trading");
+    }
+
+
+    // Override Merchant methods from Villager
+    @Override
+    public MerchantOffers getOffers() {
+        if (this.customOffers == null) {
+            this.customOffers = createOffers();
+            DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
+                "getOffers() called - created {} offers", this.customOffers.size());
+        }
+        return this.customOffers;
+    }
+
+    @Override
+    public void overrideOffers(MerchantOffers offers) {
+        this.customOffers = offers;
+        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
+            "overrideOffers() called with {} offers", offers != null ? offers.size() : 0);
+    }
+
+    @Override
+    public int getVillagerXp() {
+        // Return distance-based XP (0-100 for each level)
+        int currentLevel = this.getVillagerData().getLevel();
+        double distanceIntoCurrentLevel = totalDistanceTraveled - ((currentLevel - 1) * DISTANCE_PER_LEVEL);
+        int xp = (int) Math.min(distanceIntoCurrentLevel, DISTANCE_PER_LEVEL);
+        return Math.max(0, xp);
+    }
+
+    @Override
+    public boolean showProgressBar() {
+        return true; // Show XP bar for distance progress
+    }
+
+    @Override
+    public void notifyTrade(MerchantOffer offer) {
+        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "notifyTrade() called");
+        offer.increaseUses();
+        // XP is now distance-based, not trade-based
+    }
+
+    /**
+     * Update tourist level based on distance traveled
+     */
+    private void updateLevelFromDistance() {
+        int targetLevel = 1 + (int) (totalDistanceTraveled / DISTANCE_PER_LEVEL);
+        targetLevel = Math.min(targetLevel, MAX_LEVEL + 1); // +1 because levels are 1-indexed
+
+        int currentLevel = this.getVillagerData().getLevel();
+        if (targetLevel > currentLevel && currentLevel <= MAX_LEVEL) {
+            this.setVillagerData(this.getVillagerData().setLevel(targetLevel));
+            DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
+                "Tourist leveled up to {} at {:.1f}m", targetLevel, totalDistanceTraveled);
+        }
+    }
+
+    @Override
+    public boolean isClientSide() {
+        return this.level().isClientSide;
+    }
+
+    /**
+     * Creates the merchant offers for this tourist.
+     * First offer is an info display, followed by actual trades.
+     */
+    private MerchantOffers createOffers() {
+        MerchantOffers offers = new MerchantOffers();
+
+        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Creating merchant offers for tourist");
+
+        // Info "trade" - displays tourist information (not actually tradeable)
+        String journeyTime = formatTicks((int) (this.level().getGameTime() - this.spawnTime));
+        String timeLeft = formatTicks(this.expiryTicks);
+
+        // Create info display item with tourist details in lore
+        ItemStack infoDisplay = new ItemStack(Items.PAPER);
+        infoDisplay.setHoverName(Component.literal("§6Tourist Information"));
+
+        // Add lore with tourist data
+        net.minecraft.nbt.CompoundTag displayTag = infoDisplay.getOrCreateTagElement("display");
+        net.minecraft.nbt.ListTag loreList = new net.minecraft.nbt.ListTag();
+        loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Origin: §f" + (this.originTownName != null ? this.originTownName : "Unknown")))));
+        loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Destination: §f" + (this.destinationTownName != null ? this.destinationTownName : "Unknown")))));
+        loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal(""))));
+        loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Journey Time: §f" + journeyTime))));
+        loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Time Remaining: §f" + timeLeft))));
+        loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Distance Traveled: §f" + String.format("%.1f", this.totalDistanceTraveled) + "m"))));
+        loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Status: §f" + (this.isCurrentlyStationary ? "Stationary" : "Moving")))));
+        displayTag.put("Lore", loreList);
+
+        // Info offer - cannot be traded (uses Barrier as impossible cost)
+        MerchantOffer infoOffer = new MerchantOffer(
+            new ItemStack(Items.BARRIER), // Unobtainable in survival - can't complete trade
+            infoDisplay,
+            1, // Only 1 use (doesn't matter since cost is impossible)
+            0, // No XP
+            0.0f // No price multiplier
+        );
+        offers.add(infoOffer);
+        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Added info display offer (untradeable)");
+
+        // TODO: Add real trades based on tourist origin/destination/level
+        // Example placeholder trade
+        MerchantOffer exampleTrade = new MerchantOffer(
+            new ItemStack(Items.EMERALD, 3),
+            new ItemStack(Items.DIAMOND),
+            10, // maxUses
+            5, // villagerXp
+            0.05f // priceMultiplier
+        );
+        offers.add(exampleTrade);
+        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Added example trade offer");
+
+        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Total offers created: {}", offers.size());
+        return offers;
+    }
+
+    private String formatTicks(int ticks) {
+        int seconds = ticks / 20;
+        int minutes = seconds / 60;
+        seconds = seconds % 60;
+        return String.format("%dm %ds", minutes, seconds);
     }
 }
