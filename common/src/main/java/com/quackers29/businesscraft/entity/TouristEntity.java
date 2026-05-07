@@ -117,11 +117,14 @@ public class TouristEntity extends Villager {
         this.destinationTownId = destinationTownId;
         this.destinationTownName = destinationName;
 
+        String displayName;
         if (destinationTownId.equals(ANY_TOWN_DESTINATION)) {
+            displayName = "Tourist to Any Town";
             this.destinationTownName = ANY_TOWN_NAME;
+        } else {
+            displayName = "Tourist to " + destinationName;
         }
-
-        updateDisplayName(); // Set initial display name with level
+        this.setCustomName(Component.literal(displayName));
 
         PlatformAccess.getTouristHelper().addStandardTouristTags(
                 this,
@@ -162,6 +165,14 @@ public class TouristEntity extends Villager {
     @Override
     public void tick() {
         super.tick();
+
+        // Force offer refresh for live updates when trading
+        if (!this.level().isClientSide && this.getTradingPlayer() != null) {
+            // Refresh offers every 10 ticks (0.5 seconds) for live data
+            if (this.tickCount % 10 == 0) {
+                this.overrideOffers(createOffers());
+            }
+        }
 
         if (!hasMoved && !this.level().isClientSide) {
             double dx = this.getX() - this.spawnPosX;
@@ -542,33 +553,9 @@ public class TouristEntity extends Villager {
         int currentLevel = this.getVillagerData().getLevel();
         if (targetLevel > currentLevel && targetLevel <= MAX_LEVEL) {
             this.setVillagerData(this.getVillagerData().setLevel(targetLevel));
-            updateDisplayName(); // Update name to show new level
             DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
                 "Tourist leveled up to {} at {:.1f}m", targetLevel, totalDistanceTraveled);
         }
-    }
-
-    /**
-     * Update the display name to show current level
-     */
-    private void updateDisplayName() {
-        String levelName = getLevelName(this.getVillagerData().getLevel());
-        String destinationName = this.destinationTownName != null ? this.destinationTownName : "Unknown";
-        this.setCustomName(Component.literal(levelName + " Tourist to " + destinationName));
-    }
-
-    /**
-     * Get level name for tourist
-     */
-    private String getLevelName(int level) {
-        return switch (level) {
-            case 1 -> "Novice";
-            case 2 -> "Experienced";
-            case 3 -> "Seasoned";
-            case 4 -> "Expert";
-            case 5 -> "Master";
-            default -> "Tourist";
-        };
     }
 
     @Override
