@@ -196,6 +196,15 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
         }
     }
 
+    @Override
+    public void onViewLeaderboard() {
+        if (dependencies != null) {
+            dependencies.getButtonCoordinator().handleViewLeaderboard();
+        } else {
+            LOGGER.warn("Dependencies not available for onViewLeaderboard");
+        }
+    }
+
     // ===== Specific Interface Implementations =====
 
     @Override

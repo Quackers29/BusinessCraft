@@ -123,6 +123,23 @@ public class ButtonActionCoordinator {
     }
 
     /**
+     * Handles the view leaderboard action.
+     */
+    public void handleViewLeaderboard() {
+        try {
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling view leaderboard action");
+
+            // Request leaderboard data from server
+            com.quackers29.businesscraft.network.packets.ui.LeaderboardDataRequestPacket requestPacket =
+                new com.quackers29.businesscraft.network.packets.ui.LeaderboardDataRequestPacket();
+            PlatformAccess.getNetworkMessages().sendToServer(requestPacket);
+        } catch (Exception e) {
+            LOGGER.error("Failed to handle view leaderboard action", e);
+            screen.sendChatMessage("Unable to open leaderboard");
+        }
+    }
+
+    /**
      * Handles the assign jobs action.
      * Currently shows a placeholder message as the feature is not yet implemented.
      */

@@ -198,6 +198,11 @@ public class PacketRegistry {
                                 RequestContractDetailPacket::decode, RequestContractDetailPacket::encode,
                                 RequestContractDetailPacket::handle);
 
+                register(LeaderboardDataRequestPacket.class, "leaderboard_data_request_packet",
+                                NetworkDirection.PLAY_TO_SERVER,
+                                LeaderboardDataRequestPacket::decode, LeaderboardDataRequestPacket::encode,
+                                LeaderboardDataRequestPacket::handle);
+
                 // Client-bound packets (PLAY_TO_CLIENT)
                 register(RefreshPlatformsPacket.class, "refresh_platforms_packet", NetworkDirection.PLAY_TO_CLIENT,
                                 RefreshPlatformsPacket::decode, RefreshPlatformsPacket::encode,
@@ -317,5 +322,10 @@ public class PacketRegistry {
                 register(TownOverviewSyncPacket.class, "town_overview_sync_packet", NetworkDirection.PLAY_TO_CLIENT,
                                 TownOverviewSyncPacket::decode, TownOverviewSyncPacket::encode,
                                 TownOverviewSyncPacket::handle);
+
+                register(LeaderboardDataResponsePacket.class, "leaderboard_data_response_packet",
+                                NetworkDirection.PLAY_TO_CLIENT,
+                                LeaderboardDataResponsePacket::decode, LeaderboardDataResponsePacket::encode,
+                                LeaderboardDataResponsePacket::handle);
         }
 }

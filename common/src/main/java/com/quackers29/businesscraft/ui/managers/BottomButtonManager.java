@@ -34,6 +34,8 @@ public class BottomButtonManager {
         void onGenericAction(String action);
 
         void onContractBoard();
+
+        void onViewLeaderboard();
     }
 
     private UIGridBuilder bottomButtonsGrid;
@@ -167,8 +169,8 @@ public class BottomButtonManager {
      */
     private void configureOverviewButtons() {
         bottomButtonsGrid
-                .addButtonWithTooltip(0, 0, "Edit Details", "Edit town details and properties",
-                        v -> actionHandler.onEditDetails(), TownInterfaceTheme.PRIMARY_COLOR)
+                .addButtonWithTooltip(0, 0, "Leaderboard", "View all towns leaderboard",
+                        v -> actionHandler.onViewLeaderboard(), TownInterfaceTheme.PRIMARY_COLOR)
                 .addButtonWithTooltip(0, 1, "Map View", "View town map with surrounding areas",
                         v -> actionHandler.onManagePlatforms(), TownInterfaceTheme.SECONDARY_COLOR);
     }
@@ -217,8 +219,8 @@ public class BottomButtonManager {
         bottomButtonsGrid
                 .addButtonWithTooltip(0, 0, "Save Settings", "Save current town settings",
                         v -> actionHandler.onSaveSettings(), TownInterfaceTheme.SUCCESS_COLOR)
-                .addButtonWithTooltip(0, 1, "Reset Defaults", "Reset town settings to defaults",
-                        v -> actionHandler.onResetDefaults(), TownInterfaceTheme.DANGER_COLOR);
+                .addButtonWithTooltip(0, 1, "Edit Details", "Edit town details and properties",
+                        v -> actionHandler.onEditDetails(), TownInterfaceTheme.PRIMARY_COLOR);
     }
 
     /**
