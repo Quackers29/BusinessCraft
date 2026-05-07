@@ -13,6 +13,9 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
@@ -40,6 +43,10 @@ import com.quackers29.businesscraft.debug.DebugConfig;
 
 public class TouristEntity extends Villager {
     private static final Logger LOGGER = LoggerFactory.getLogger(TouristEntity.class);
+
+    // Synced entity data for live updates on client
+    private static final EntityDataAccessor<Float> DATA_DISTANCE_TRAVELED =
+        SynchedEntityData.defineId(TouristEntity.class, EntityDataSerializers.FLOAT);
 
     // Special constant for "Any Town" destination
     public static final UUID ANY_TOWN_DESTINATION = new UUID(0, 0);
@@ -79,8 +86,8 @@ public class TouristEntity extends Villager {
     private MerchantOffers customOffers;
 
     // Distance-based leveling config
-    private static final double DISTANCE_PER_LEVEL = 100.0; // 100m per level
-    private static final int MAX_LEVEL = 1; // Max level for now
+    private static final double DISTANCE_PER_LEVEL = 10.0; // 10m per level
+    private static final int MAX_LEVEL = 2; // Max level 2 for now (starts at 1, can reach 2)
 
     public TouristEntity(EntityType<? extends Villager> entityType, Level level) {
         super(entityType, level);
@@ -89,6 +96,12 @@ public class TouristEntity extends Villager {
         // Calculate expiry ticks from config at spawn time (not static to avoid class load order issues)
         this.expiryTicks = (int) (ConfigLoader.touristExpiryMinutes * 60 * 20);
         this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(0.000001);
+    }
+
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(DATA_DISTANCE_TRAVELED, 0.0f);
     }
 
     public TouristEntity(EntityType<? extends Villager> entityType, Level level,
@@ -104,14 +117,11 @@ public class TouristEntity extends Villager {
         this.destinationTownId = destinationTownId;
         this.destinationTownName = destinationName;
 
-        String displayName;
         if (destinationTownId.equals(ANY_TOWN_DESTINATION)) {
-            displayName = "Tourist to Any Town";
             this.destinationTownName = ANY_TOWN_NAME;
-        } else {
-            displayName = "Tourist to " + destinationName;
         }
-        this.setCustomName(Component.literal(displayName));
+
+        updateDisplayName(); // Set initial display name with level
 
         PlatformAccess.getTouristHelper().addStandardTouristTags(
                 this,
@@ -180,6 +190,9 @@ public class TouristEntity extends Villager {
 
                 // Accumulate total distance traveled
                 totalDistanceTraveled += distanceMoved;
+
+                // Sync to client via entity data
+                this.entityData.set(DATA_DISTANCE_TRAVELED, (float) totalDistanceTraveled);
 
                 // Update level based on distance traveled
                 updateLevelFromDistance();
@@ -457,10 +470,6 @@ public class TouristEntity extends Villager {
                 DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
                     "Tourist mobInteract - opening trading screen for player {}", player.getName().getString());
 
-                // Regenerate offers on each UI open so data is fresh
-                this.customOffers = null;
-                DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Cleared cached offers for fresh data");
-
                 // Use villager's built-in trading screen
                 this.setTradingPlayer(player);
                 this.openTradingScreen(player, this.getDisplayName(), 1);
@@ -488,26 +497,25 @@ public class TouristEntity extends Villager {
     // Override Merchant methods from Villager
     @Override
     public MerchantOffers getOffers() {
-        if (this.customOffers == null) {
-            this.customOffers = createOffers();
-            DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
-                "getOffers() called - created {} offers", this.customOffers.size());
-        }
+        // Always regenerate offers for live data updates
+        this.customOffers = createOffers();
         return this.customOffers;
     }
 
     @Override
     public void overrideOffers(MerchantOffers offers) {
-        this.customOffers = offers;
+        // Don't cache - we want live updates
         DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
-            "overrideOffers() called with {} offers", offers != null ? offers.size() : 0);
+            "overrideOffers() called - ignoring to maintain live updates");
     }
 
     @Override
     public int getVillagerXp() {
         // Return distance-based XP (0-100 for each level)
+        // Read from synced entity data for client-side access
+        double distance = this.level().isClientSide ? this.entityData.get(DATA_DISTANCE_TRAVELED) : totalDistanceTraveled;
         int currentLevel = this.getVillagerData().getLevel();
-        double distanceIntoCurrentLevel = totalDistanceTraveled - ((currentLevel - 1) * DISTANCE_PER_LEVEL);
+        double distanceIntoCurrentLevel = distance - ((currentLevel - 1) * DISTANCE_PER_LEVEL);
         int xp = (int) Math.min(distanceIntoCurrentLevel, DISTANCE_PER_LEVEL);
         return Math.max(0, xp);
     }
@@ -529,14 +537,38 @@ public class TouristEntity extends Villager {
      */
     private void updateLevelFromDistance() {
         int targetLevel = 1 + (int) (totalDistanceTraveled / DISTANCE_PER_LEVEL);
-        targetLevel = Math.min(targetLevel, MAX_LEVEL + 1); // +1 because levels are 1-indexed
+        targetLevel = Math.min(targetLevel, MAX_LEVEL);
 
         int currentLevel = this.getVillagerData().getLevel();
-        if (targetLevel > currentLevel && currentLevel <= MAX_LEVEL) {
+        if (targetLevel > currentLevel && targetLevel <= MAX_LEVEL) {
             this.setVillagerData(this.getVillagerData().setLevel(targetLevel));
+            updateDisplayName(); // Update name to show new level
             DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
                 "Tourist leveled up to {} at {:.1f}m", targetLevel, totalDistanceTraveled);
         }
+    }
+
+    /**
+     * Update the display name to show current level
+     */
+    private void updateDisplayName() {
+        String levelName = getLevelName(this.getVillagerData().getLevel());
+        String destinationName = this.destinationTownName != null ? this.destinationTownName : "Unknown";
+        this.setCustomName(Component.literal(levelName + " Tourist to " + destinationName));
+    }
+
+    /**
+     * Get level name for tourist
+     */
+    private String getLevelName(int level) {
+        return switch (level) {
+            case 1 -> "Novice";
+            case 2 -> "Experienced";
+            case 3 -> "Seasoned";
+            case 4 -> "Expert";
+            case 5 -> "Master";
+            default -> "Tourist";
+        };
     }
 
     @Override
@@ -552,6 +584,9 @@ public class TouristEntity extends Villager {
         MerchantOffers offers = new MerchantOffers();
 
         DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Creating merchant offers for tourist");
+
+        // Get synced distance for client-side rendering
+        double distance = this.level().isClientSide ? this.entityData.get(DATA_DISTANCE_TRAVELED) : totalDistanceTraveled;
 
         // Info "trade" - displays tourist information (not actually tradeable)
         String journeyTime = formatTicks((int) (this.level().getGameTime() - this.spawnTime));
@@ -569,7 +604,7 @@ public class TouristEntity extends Villager {
         loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal(""))));
         loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Journey Time: §f" + journeyTime))));
         loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Time Remaining: §f" + timeLeft))));
-        loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Distance Traveled: §f" + String.format("%.1f", this.totalDistanceTraveled) + "m"))));
+        loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Distance Traveled: §f" + String.format("%.1f", distance) + "m"))));
         loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Status: §f" + (this.isCurrentlyStationary ? "Stationary" : "Moving")))));
         displayTag.put("Lore", loreList);
 
