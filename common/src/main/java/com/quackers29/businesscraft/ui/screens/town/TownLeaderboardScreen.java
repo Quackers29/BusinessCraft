@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.ui.screens.town;
 
 import com.quackers29.businesscraft.town.data.TownLeaderboardData;
+import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import com.quackers29.businesscraft.ui.templates.TownInterfaceTheme;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -11,9 +12,11 @@ import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Leaderboard screen showing all towns with sorting options.
+ * Uses UIGridBuilder with dynamic equal-width columns.
  */
 public class TownLeaderboardScreen extends Screen {
 
@@ -31,13 +34,13 @@ public class TownLeaderboardScreen extends Screen {
     // UI elements
     private Button backButton;
     private Button sortButton;
+    private UIGridBuilder contentGrid;
 
-    // Scrolling
-    private int scrollOffset = 0;
-    private final int rowHeight = 18;
-    private final int headerHeight = 50;
+    // Dynamic columns
+    private List<ColumnInfo> visibleColumns = new ArrayList<>();
 
     public enum SortMode {
+        NAME("Name"),
         DISTANCE("Distance"),
         POPULATION("Population"),
         MONEY("Money");
@@ -57,32 +60,33 @@ public class TownLeaderboardScreen extends Screen {
         }
     }
 
+    /**
+     * Column information for dynamic layout.
+     */
+    private record ColumnInfo(
+        String header,
+        Function<TownLeaderboardData, String> valueExtractor,
+        boolean isSorted
+    ) {}
+
     public TownLeaderboardScreen(Component title, Screen parentScreen, BlockPos currentTownPosition) {
         super(title);
         this.parentScreen = parentScreen;
         this.currentTownPosition = currentTownPosition;
     }
 
-    /**
-     * Set town data and apply initial sorting.
-     */
     public void setTownData(List<TownLeaderboardData> towns) {
         this.townData = new ArrayList<>(towns);
         sortData();
     }
 
-    /**
-     * Sort data based on current mode.
-     */
     private void sortData() {
         townData.sort(getComparatorForMode(sortMode));
     }
 
-    /**
-     * Get comparator for the current sort mode.
-     */
     private Comparator<TownLeaderboardData> getComparatorForMode(SortMode mode) {
         return switch (mode) {
+            case NAME -> Comparator.comparing(TownLeaderboardData::name);
             case DISTANCE -> Comparator.comparingDouble(data -> data.distanceTo(currentTownPosition));
             case POPULATION -> Comparator.comparingLong(TownLeaderboardData::population).reversed();
             case MONEY -> Comparator.comparingLong(TownLeaderboardData::money).reversed();
@@ -90,14 +94,128 @@ public class TownLeaderboardScreen extends Screen {
     }
 
     /**
-     * Cycle to next sort mode.
+     * Calculate which columns to display based on available width.
+     * All columns get equal width. Columns stay in fixed order.
+     * When only 3 columns fit, the 3rd column is the currently sorted column (unless sorting by Distance).
      */
+    private void calculateVisibleColumns() {
+        visibleColumns.clear();
+
+        int availableWidth = panelWidth - 30; // Account for margins
+        int MIN_COLUMN_WIDTH = 100; // Minimum width per column
+
+        // Determine how many total columns we can fit
+        int maxColumns = Math.max(2, availableWidth / MIN_COLUMN_WIDTH);
+
+        // Column 1: Town Name (always)
+        visibleColumns.add(new ColumnInfo(
+            "Town Name",
+            TownLeaderboardData::name,
+            sortMode == SortMode.NAME
+        ));
+
+        // Column 2: Distance (always)
+        visibleColumns.add(new ColumnInfo(
+            "Distance",
+            data -> TownLeaderboardData.formatDistance(data.distanceTo(currentTownPosition)),
+            sortMode == SortMode.DISTANCE
+        ));
+
+        // For 3 columns: show the sorted column (if not Name/Distance)
+        if (maxColumns == 3) {
+            if (sortMode == SortMode.POPULATION) {
+                visibleColumns.add(new ColumnInfo(
+                    "Population",
+                    data -> String.format("%d", data.population()),
+                    true
+                ));
+            } else if (sortMode == SortMode.MONEY) {
+                visibleColumns.add(new ColumnInfo(
+                    "Money",
+                    data -> data.money() + " ✰",
+                    true
+                ));
+            } else {
+                // Default to Population if sorting by Name or Distance
+                visibleColumns.add(new ColumnInfo(
+                    "Population",
+                    data -> String.format("%d", data.population()),
+                    false
+                ));
+            }
+        }
+        // For 4+ columns: show all in fixed order
+        else if (maxColumns >= 3) {
+            visibleColumns.add(new ColumnInfo(
+                "Population",
+                data -> String.format("%d", data.population()),
+                sortMode == SortMode.POPULATION
+            ));
+        }
+
+        if (maxColumns >= 4) {
+            visibleColumns.add(new ColumnInfo(
+                "Money",
+                data -> data.money() + " ✰",
+                sortMode == SortMode.MONEY
+            ));
+        }
+    }
+
+    /**
+     * Build the grid with current data and columns.
+     */
+    private void buildGrid() {
+        int gridX = panelLeft + 10;
+        int gridY = panelTop + 50;
+        int gridWidth = panelWidth - 20;
+        int gridHeight = panelHeight - 60;
+
+        int numColumns = visibleColumns.size();
+
+        contentGrid = UIGridBuilder.create(gridX, gridY, gridWidth, gridHeight, numColumns)
+            .withBackgroundColor(0x00000000) // Transparent - we draw panel background
+            .withBorderColor(0x00000000) // No border
+            .withMargins(5, 5)
+            .withSpacing(10, 0)
+            .withRowHeight(18)
+            .drawBorder(false);
+
+        // Enable vertical scrolling
+        int visibleRows = (gridHeight - 10) / 18;
+        contentGrid.withVerticalScroll(true, visibleRows);
+
+        // Add header row
+        for (int col = 0; col < visibleColumns.size(); col++) {
+            ColumnInfo column = visibleColumns.get(col);
+            String header = column.isSorted() ? column.header() + " ▼" : column.header();
+            int color = column.isSorted() ? TownInterfaceTheme.TEXT_HIGHLIGHT : TownInterfaceTheme.TEXT_COLOR;
+            contentGrid.addLabel(0, col, header, color);
+        }
+
+        // Add data rows
+        if (townData.isEmpty()) {
+            int midColumn = visibleColumns.size() / 2;
+            contentGrid.addLabel(1, midColumn, "No towns to display", TownInterfaceTheme.TEXT_COLOR);
+        } else {
+            for (int row = 0; row < townData.size(); row++) {
+                TownLeaderboardData town = townData.get(row);
+                int dataRow = row + 1; // +1 for header
+
+                for (int col = 0; col < visibleColumns.size(); col++) {
+                    ColumnInfo column = visibleColumns.get(col);
+                    String value = column.valueExtractor().apply(town);
+                    contentGrid.addLabel(dataRow, col, value, TownInterfaceTheme.TEXT_COLOR);
+                }
+            }
+        }
+
+        contentGrid.updateTotalRows(townData.size() + 1); // +1 for header
+    }
+
     private void cycleSortMode() {
         sortMode = sortMode.next();
         sortData();
-        scrollOffset = 0;
-
-        // Recreate buttons to update text
         this.clearWidgets();
         this.init();
     }
@@ -106,13 +224,14 @@ public class TownLeaderboardScreen extends Screen {
     protected void init() {
         super.init();
 
-        // Calculate panel dimensions
         this.panelWidth = (int)(this.width * 0.8);
         this.panelHeight = (int)(this.height * 0.7) - 40;
         this.panelLeft = (this.width - panelWidth) / 2;
         this.panelTop = (this.height - panelHeight) / 2 - 10;
 
-        // Back button
+        calculateVisibleColumns();
+        buildGrid();
+
         int buttonX = this.width / 2 - 50;
         int buttonY = panelTop + panelHeight + 5;
         this.backButton = this.addRenderableWidget(Button.builder(
@@ -123,7 +242,6 @@ public class TownLeaderboardScreen extends Screen {
             .build()
         );
 
-        // Sort button
         buttonY = panelTop + panelHeight + 30;
         this.sortButton = this.addRenderableWidget(Button.builder(
             Component.literal("Sort: " + sortMode.getDisplayName()),
@@ -136,86 +254,44 @@ public class TownLeaderboardScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-        // Render background
         this.renderBackground(graphics);
         graphics.fill(0, 0, this.width, this.height, 0xB0000000);
 
-        // Draw panel
+        // Panel background and border
         graphics.fill(panelLeft, panelTop, panelLeft + panelWidth, panelTop + panelHeight, TownInterfaceTheme.BACKGROUND_COLOR);
         graphics.hLine(panelLeft, panelLeft + panelWidth - 1, panelTop, TownInterfaceTheme.BORDER_COLOR);
         graphics.hLine(panelLeft, panelLeft + panelWidth - 1, panelTop + panelHeight - 1, TownInterfaceTheme.BORDER_COLOR);
         graphics.vLine(panelLeft, panelTop, panelTop + panelHeight - 1, TownInterfaceTheme.BORDER_COLOR);
         graphics.vLine(panelLeft + panelWidth - 1, panelTop, panelTop + panelHeight - 1, TownInterfaceTheme.BORDER_COLOR);
 
-        // Draw title
+        // Title
         graphics.drawCenteredString(this.font, this.title, this.width / 2, panelTop + 15, TownInterfaceTheme.TEXT_COLOR);
 
-        // Draw header separator
-        graphics.hLine(panelLeft + 10, panelLeft + panelWidth - 10, panelTop + headerHeight - 5, TownInterfaceTheme.BORDER_COLOR);
+        // Header separator
+        graphics.hLine(panelLeft + 10, panelLeft + panelWidth - 10, panelTop + 45, TownInterfaceTheme.BORDER_COLOR);
 
-        // Draw column headers
-        int col1X = panelLeft + 15;
-        int col2X = panelLeft + panelWidth / 3;
-        int col3X = panelLeft + 2 * panelWidth / 3;
-        int headerY = panelTop + 35;
-
-        graphics.drawString(this.font, "Town Name", col1X, headerY, TownInterfaceTheme.TEXT_HIGHLIGHT);
-        graphics.drawString(this.font, "Distance", col2X, headerY, TownInterfaceTheme.TEXT_HIGHLIGHT);
-        graphics.drawString(this.font, sortMode.getDisplayName(), col3X, headerY, TownInterfaceTheme.TEXT_HIGHLIGHT);
-
-        // Draw rows
-        int contentY = panelTop + headerHeight + 5;
-        int contentHeight = panelHeight - headerHeight - 10;
-        int visibleRows = contentHeight / rowHeight;
-
-        if (townData.isEmpty()) {
-            graphics.drawCenteredString(this.font, "No towns to display", this.width / 2, contentY + 20, TownInterfaceTheme.TEXT_COLOR);
-        } else {
-            for (int i = scrollOffset; i < Math.min(scrollOffset + visibleRows, townData.size()); i++) {
-                TownLeaderboardData town = townData.get(i);
-                int rowY = contentY + (i - scrollOffset) * rowHeight;
-
-                // Alternating row background
-                if (i % 2 == 0) {
-                    graphics.fill(panelLeft + 10, rowY, panelLeft + panelWidth - 10, rowY + rowHeight, 0x30FFFFFF);
-                } else {
-                    graphics.fill(panelLeft + 10, rowY, panelLeft + panelWidth - 10, rowY + rowHeight, 0x20FFFFFF);
-                }
-
-                // Draw data
-                graphics.drawString(this.font, town.name(), col1X, rowY + 4, TownInterfaceTheme.TEXT_COLOR);
-                graphics.drawString(this.font, TownLeaderboardData.formatDistance(town.distanceTo(currentTownPosition)), col2X, rowY + 4, TownInterfaceTheme.TEXT_COLOR);
-
-                String scoreValue = switch (sortMode) {
-                    case DISTANCE -> TownLeaderboardData.formatDistance(town.distanceTo(currentTownPosition));
-                    case POPULATION -> String.format("%d", town.population());
-                    case MONEY -> town.money() + " ✰";
-                };
-                graphics.drawString(this.font, scoreValue, col3X, rowY + 4, TownInterfaceTheme.TEXT_COLOR);
-            }
+        // Render grid
+        if (contentGrid != null) {
+            contentGrid.render(graphics, mouseX, mouseY);
         }
 
-        // Render buttons
         super.render(graphics, mouseX, mouseY, partialTicks);
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        // Check if click is on a town row
-        if (button == 0 && !townData.isEmpty()) {
-            int contentY = panelTop + headerHeight + 5;
-            int contentHeight = panelHeight - headerHeight - 10;
-            int visibleRows = contentHeight / rowHeight;
-
-            if (mouseX >= panelLeft + 10 && mouseX <= panelLeft + panelWidth - 10 &&
-                mouseY >= contentY && mouseY <= contentY + contentHeight) {
-
-                int clickedRow = (int)((mouseY - contentY) / rowHeight) + scrollOffset;
-                if (clickedRow >= 0 && clickedRow < townData.size()) {
-                    openDetailScreen(townData.get(clickedRow));
-                    return true;
-                }
+        // Check for row clicks first (before grid handles it)
+        if (contentGrid != null && button == 0 && !townData.isEmpty()) {
+            int row = contentGrid.getClickedRow((int)mouseX, (int)mouseY);
+            if (row > 0 && row <= townData.size()) { // row 0 is header
+                openDetailScreen(townData.get(row - 1));
+                return true;
             }
+        }
+
+        // Let grid handle other interactions (scrollbar, etc)
+        if (contentGrid != null && contentGrid.mouseClicked((int)mouseX, (int)mouseY, button)) {
+            return true;
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
@@ -223,19 +299,12 @@ public class TownLeaderboardScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        int contentHeight = panelHeight - headerHeight - 10;
-        int visibleRows = contentHeight / rowHeight;
-        int maxScroll = Math.max(0, townData.size() - visibleRows);
-
-        scrollOffset -= (int)Math.signum(delta);
-        scrollOffset = Math.max(0, Math.min(scrollOffset, maxScroll));
-
-        return true;
+        if (contentGrid != null) {
+            return contentGrid.mouseScrolled(mouseX, mouseY, delta);
+        }
+        return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
-    /**
-     * Open detail screen for selected town.
-     */
     private void openDetailScreen(TownLeaderboardData town) {
         TownDetailScreen detailScreen = new TownDetailScreen(
             Component.literal("Town Details"),

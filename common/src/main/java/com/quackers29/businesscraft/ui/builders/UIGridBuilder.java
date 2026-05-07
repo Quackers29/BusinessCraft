@@ -828,11 +828,49 @@ public class UIGridBuilder {
 
     /**
      * Gets the current vertical scroll offset
-     * 
+     *
      * @return Current scroll offset in rows
      */
     public int getVerticalScrollOffset() {
         return verticalScrollOffset;
+    }
+
+    /**
+     * Gets the row index at the given mouse coordinates.
+     * Accounts for scrolling and margins.
+     *
+     * @param mouseX Mouse X coordinate
+     * @param mouseY Mouse Y coordinate
+     * @return Row index (including scroll offset), or -1 if not over a row
+     */
+    public int getClickedRow(int mouseX, int mouseY) {
+        // Check if mouse is within grid bounds
+        if (mouseX < x || mouseX > x + width || mouseY < y || mouseY > y + height) {
+            return -1;
+        }
+
+        // Calculate row height
+        int cellsHeight = height - (verticalMargin * 2);
+        int effectiveRows = verticalScrollEnabled ? Math.min(visibleRows, rows) : rows;
+        int rowHeight = customRowHeight != null ? customRowHeight
+                : (cellsHeight - (verticalSpacing * (effectiveRows - 1))) / effectiveRows;
+
+        // Calculate relative position within grid
+        int relativeY = mouseY - (y + verticalMargin);
+
+        // Calculate which row was clicked (accounting for spacing)
+        int rowWithSpacing = rowHeight + verticalSpacing;
+        int visibleRowIndex = relativeY / rowWithSpacing;
+
+        // Adjust for scroll offset
+        int actualRowIndex = verticalScrollEnabled ? visibleRowIndex + verticalScrollOffset : visibleRowIndex;
+
+        // Validate row index
+        if (actualRowIndex < 0 || actualRowIndex >= totalRows) {
+            return -1;
+        }
+
+        return actualRowIndex;
     }
 
     /**
