@@ -219,7 +219,7 @@ public class BottomButtonManager {
         bottomButtonsGrid
                 .addButtonWithTooltip(0, 0, "Save Settings", "Save current town settings",
                         v -> actionHandler.onSaveSettings(), TownInterfaceTheme.SUCCESS_COLOR)
-                .addButtonWithTooltip(0, 1, "Edit Details", "Edit town details and properties",
+                .addButtonWithTooltip(0, 1, "Edit Name", "Edit town name",
                         v -> actionHandler.onEditDetails(), TownInterfaceTheme.PRIMARY_COLOR);
     }
 
