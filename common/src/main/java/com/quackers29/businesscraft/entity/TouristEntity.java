@@ -76,7 +76,7 @@ public class TouristEntity extends Villager {
     private double recentPosZ;
     private int positionUpdateTicks = 0;
     private boolean isCurrentlyStationary = true;
-    private static final int POSITION_UPDATE_INTERVAL = 20;
+    private static final int POSITION_UPDATE_INTERVAL = 40; // 2 seconds
     private static final double STATIONARY_THRESHOLD = 0.5;
 
     // Track total distance traveled
@@ -169,9 +169,9 @@ public class TouristEntity extends Villager {
         // Force offer refresh for live updates when trading
         if (!this.level().isClientSide && this.getTradingPlayer() != null) {
             // Refresh offers for live data
-            if (this.tickCount % 80 == 0) {
-                // Regenerate offers with current data
-                this.overrideOffers(createOffers());
+            if (this.tickCount % 10 == 0) {
+                // Regenerate offers preserving use counts
+                this.refreshOffersWithLiveData();
 
                 // Send packet to sync offers to client screen
                 if (this.getTradingPlayer() instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
@@ -528,16 +528,59 @@ public class TouristEntity extends Villager {
     // Override Merchant methods from Villager
     @Override
     public MerchantOffers getOffers() {
-        // Always regenerate offers for live data updates
-        this.customOffers = createOffers();
+        if (this.customOffers == null) {
+            this.customOffers = createOffers();
+        }
         return this.customOffers;
     }
 
     @Override
     public void overrideOffers(MerchantOffers offers) {
-        // Don't cache - we want live updates
-        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
-            "overrideOffers() called - ignoring to maintain live updates");
+        this.customOffers = offers;
+    }
+
+    /**
+     * Refresh offers preserving use counts
+     */
+    public void refreshOffersWithLiveData() {
+        MerchantOffers oldOffers = this.customOffers;
+        MerchantOffers newOffers = createOffers();
+
+        // Preserve use counts from old offers (even when level up adds new trades)
+        if (oldOffers != null) {
+            for (MerchantOffer newOffer : newOffers) {
+                // Find matching old offer by comparing items
+                for (MerchantOffer oldOffer : oldOffers) {
+                    if (offersMatch(oldOffer, newOffer)) {
+                        // Copy use count to new offer
+                        for (int j = 0; j < oldOffer.getUses(); j++) {
+                            newOffer.increaseUses();
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        this.customOffers = newOffers;
+    }
+
+    /**
+     * Check if two offers are the same trade (same items + counts)
+     */
+    private boolean offersMatch(MerchantOffer offer1, MerchantOffer offer2) {
+        return itemStacksMatch(offer1.getBaseCostA(), offer2.getBaseCostA()) &&
+               itemStacksMatch(offer1.getCostB(), offer2.getCostB()) &&
+               itemStacksMatch(offer1.getResult(), offer2.getResult());
+    }
+
+    /**
+     * Check if two ItemStacks match (type, NBT, AND count)
+     */
+    private boolean itemStacksMatch(ItemStack stack1, ItemStack stack2) {
+        if (stack1.isEmpty() && stack2.isEmpty()) return true;
+        if (stack1.isEmpty() || stack2.isEmpty()) return false;
+        return ItemStack.isSameItemSameTags(stack1, stack2) && stack1.getCount() == stack2.getCount();
     }
 
     @Override
