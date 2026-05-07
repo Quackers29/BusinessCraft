@@ -503,7 +503,7 @@ public class TouristEntity extends Villager {
 
                 // Use villager's built-in trading screen
                 this.setTradingPlayer(player);
-                this.openTradingScreen(player, this.getDisplayName(), 1);
+                this.openTradingScreen(player, this.getDisplayName(), this.getVillagerData().getLevel());
             }
             return net.minecraft.world.InteractionResult.CONSUME;
         }
@@ -585,13 +585,24 @@ public class TouristEntity extends Villager {
 
     @Override
     public int getVillagerXp() {
-        // Return distance-based XP (0-100 for each level)
-        // Read from synced entity data for client-side access
+        // Map distance to Minecraft's villager XP thresholds
+        // Level 1→2: 10 XP, Level 2→3: 70 XP, Level 3→4: 150 XP
         double distance = this.level().isClientSide ? this.entityData.get(DATA_DISTANCE_TRAVELED) : totalDistanceTraveled;
         int currentLevel = this.getVillagerData().getLevel();
         double distanceIntoCurrentLevel = distance - ((currentLevel - 1) * DISTANCE_PER_LEVEL);
-        int xp = (int) Math.min(distanceIntoCurrentLevel, DISTANCE_PER_LEVEL);
-        return Math.max(0, xp);
+
+        // Scale distance (0-20m) to vanilla XP thresholds based on level
+        int maxXpForLevel;
+        switch (currentLevel) {
+            case 1: maxXpForLevel = 10; break;   // Novice → Apprentice
+            case 2: maxXpForLevel = 70; break;   // Apprentice → Journeyman
+            case 3: maxXpForLevel = 150; break;  // Journeyman → Expert
+            default: maxXpForLevel = 10; break;
+        }
+
+        // Map distance progress to XP: (distance / 20m) * maxXpForLevel
+        int xp = (int) ((distanceIntoCurrentLevel / DISTANCE_PER_LEVEL) * maxXpForLevel);
+        return Math.max(0, Math.min(maxXpForLevel, xp));
     }
 
     @Override

@@ -28,8 +28,10 @@ public class TouristHatLayer extends RenderLayer<TouristEntity, VillagerModel<To
     }
     
     private int getColorIndex(TouristEntity tourist) {
-        // Use UUID for consistent random hat colors since tourists are unemployed
-        return Math.abs(tourist.getUUID().hashCode()) % HAT_TEXTURES.length;
+        // Use level for hat color: Level 1 = Red, Level 2 = Blue, Level 3 = Green
+        int level = tourist.getVillagerData().getLevel();
+        // Map level to texture index: 1->red(1), 2->blue(2), 3->green(3)
+        return Math.min(level, 3);
     }
     
     @Override
