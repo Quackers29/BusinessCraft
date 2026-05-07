@@ -170,7 +170,27 @@ public class TouristEntity extends Villager {
         if (!this.level().isClientSide && this.getTradingPlayer() != null) {
             // Refresh offers every 10 ticks (0.5 seconds) for live data
             if (this.tickCount % 10 == 0) {
+                // Regenerate offers with current data
                 this.overrideOffers(createOffers());
+
+                // Send packet to sync offers to client screen
+                if (this.getTradingPlayer() instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                    if (serverPlayer.containerMenu instanceof net.minecraft.world.inventory.MerchantMenu) {
+                        serverPlayer.connection.send(
+                            new net.minecraft.network.protocol.game.ClientboundMerchantOffersPacket(
+                                serverPlayer.containerMenu.containerId,
+                                this.getOffers(),
+                                this.getVillagerData().getLevel(),
+                                this.getVillagerXp(),
+                                this.showProgressBar(),
+                                this.canRestock()
+                            )
+                        );
+                        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
+                            "Sent merchant offers packet to client - {} offers, XP: {}",
+                            this.getOffers().size(), this.getVillagerXp());
+                    }
+                }
             }
         }
 
