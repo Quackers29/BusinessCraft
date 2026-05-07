@@ -123,19 +123,24 @@ public class ButtonActionCoordinator {
     }
 
     /**
-     * Handles the view leaderboard action.
+     * Handles the view ranking action.
      */
     public void handleViewLeaderboard() {
         try {
-            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling view leaderboard action");
+            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling view ranking action");
 
-            // Request leaderboard data from server
+            // Get current town name from cache
+            String currentTownName = screen.getCacheManager() != null
+                ? screen.getCacheManager().getCachedTownName()
+                : "";
+
+            // Request ranking data from server
             com.quackers29.businesscraft.network.packets.ui.LeaderboardDataRequestPacket requestPacket =
-                new com.quackers29.businesscraft.network.packets.ui.LeaderboardDataRequestPacket();
+                new com.quackers29.businesscraft.network.packets.ui.LeaderboardDataRequestPacket(currentTownName);
             PlatformAccess.getNetworkMessages().sendToServer(requestPacket);
         } catch (Exception e) {
-            LOGGER.error("Failed to handle view leaderboard action", e);
-            screen.sendChatMessage("Unable to open leaderboard");
+            LOGGER.error("Failed to handle view ranking action", e);
+            screen.sendChatMessage("Unable to open ranking");
         }
     }
 

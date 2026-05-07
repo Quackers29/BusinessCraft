@@ -17,12 +17,15 @@ import java.util.UUID;
  */
 public class LeaderboardDataResponsePacket {
     private final List<TownLeaderboardData> towns;
+    private final String currentTownName;
 
-    public LeaderboardDataResponsePacket(List<TownLeaderboardData> towns) {
+    public LeaderboardDataResponsePacket(List<TownLeaderboardData> towns, String currentTownName) {
         this.towns = towns;
+        this.currentTownName = currentTownName != null ? currentTownName : "";
     }
 
     public LeaderboardDataResponsePacket(FriendlyByteBuf buf) {
+        this.currentTownName = buf.readUtf();
         int size = buf.readInt();
         this.towns = new ArrayList<>(size);
         for (int i = 0; i < size; i++) {
@@ -31,11 +34,13 @@ public class LeaderboardDataResponsePacket {
             BlockPos position = buf.readBlockPos();
             long population = buf.readLong();
             long money = buf.readLong();
-            this.towns.add(new TownLeaderboardData(townId, name, position, population, money));
+            float happiness = buf.readFloat();
+            this.towns.add(new TownLeaderboardData(townId, name, position, population, money, happiness));
         }
     }
 
     private void write(FriendlyByteBuf buf) {
+        buf.writeUtf(currentTownName);
         buf.writeInt(towns.size());
         for (TownLeaderboardData town : towns) {
             buf.writeUUID(town.townId());
@@ -43,6 +48,7 @@ public class LeaderboardDataResponsePacket {
             buf.writeBlockPos(town.position());
             buf.writeLong(town.population());
             buf.writeLong(town.money());
+            buf.writeFloat(town.happiness());
         }
     }
 
@@ -59,15 +65,16 @@ public class LeaderboardDataResponsePacket {
             Minecraft minecraft = Minecraft.getInstance();
             Screen currentScreen = minecraft.screen;
 
-            // Open the leaderboard screen with the received data
+            // Open the ranking screen with the received data
             if (minecraft.player != null) {
-                TownLeaderboardScreen leaderboardScreen = new TownLeaderboardScreen(
-                    Component.literal("Town Leaderboard"),
+                TownLeaderboardScreen rankingScreen = new TownLeaderboardScreen(
+                    Component.literal("Town Ranking"),
                     currentScreen,
-                    minecraft.player.blockPosition()
+                    minecraft.player.blockPosition(),
+                    packet.currentTownName
                 );
-                leaderboardScreen.setTownData(packet.towns);
-                minecraft.setScreen(leaderboardScreen);
+                rankingScreen.setTownData(packet.towns);
+                minecraft.setScreen(rankingScreen);
             }
         });
         PlatformAccess.getNetwork().setPacketHandled(context);

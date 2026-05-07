@@ -16,17 +16,18 @@ import java.util.UUID;
  * Client → Server: Request leaderboard data for all towns.
  */
 public class LeaderboardDataRequestPacket {
+    private final String currentTownName;
 
-    public LeaderboardDataRequestPacket() {
-        // Empty packet - just a request signal
+    public LeaderboardDataRequestPacket(String currentTownName) {
+        this.currentTownName = currentTownName != null ? currentTownName : "";
     }
 
     public LeaderboardDataRequestPacket(FriendlyByteBuf buf) {
-        // Empty constructor for decoding
+        this.currentTownName = buf.readUtf();
     }
 
     private void write(FriendlyByteBuf buf) {
-        // Empty packet - no data to write
+        buf.writeUtf(currentTownName);
     }
 
     public static void encode(LeaderboardDataRequestPacket msg, FriendlyByteBuf buf) {
@@ -35,6 +36,10 @@ public class LeaderboardDataRequestPacket {
 
     public static LeaderboardDataRequestPacket decode(FriendlyByteBuf buf) {
         return new LeaderboardDataRequestPacket(buf);
+    }
+
+    public String getCurrentTownName() {
+        return currentTownName;
     }
 
     public static void handle(LeaderboardDataRequestPacket packet, Object context) {
@@ -54,13 +59,17 @@ public class LeaderboardDataRequestPacket {
                     town.getName(),
                     town.getPosition(),
                     town.getPopulation(),
-                    town.getResourceCount(Items.EMERALD)
+                    town.getResourceCount(Items.EMERALD),
+                    town.getHappiness()
                 );
                 leaderboardData.add(data);
             }
 
             // Send response back to client
-            LeaderboardDataResponsePacket responsePacket = new LeaderboardDataResponsePacket(leaderboardData);
+            LeaderboardDataResponsePacket responsePacket = new LeaderboardDataResponsePacket(
+                leaderboardData,
+                packet.getCurrentTownName()
+            );
             PlatformAccess.getNetworkMessages().sendToPlayer(responsePacket, player);
         });
         PlatformAccess.getNetwork().setPacketHandled(context);

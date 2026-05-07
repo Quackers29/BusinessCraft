@@ -12,7 +12,8 @@ public record TownLeaderboardData(
     String name,
     BlockPos position,
     long population,
-    long money
+    long money,
+    float happiness
 ) {
     /**
      * Calculate distance from this town to another position.

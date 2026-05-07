@@ -22,6 +22,7 @@ public class TownLeaderboardScreen extends Screen {
 
     private final Screen parentScreen;
     private final BlockPos currentTownPosition;
+    private final String currentTownName;
     private List<TownLeaderboardData> townData = new ArrayList<>();
     private SortMode sortMode = SortMode.DISTANCE;
 
@@ -43,6 +44,7 @@ public class TownLeaderboardScreen extends Screen {
         NAME("Name"),
         DISTANCE("Distance"),
         POPULATION("Population"),
+        HAPPINESS("Happiness"),
         MONEY("Money");
 
         private final String displayName;
@@ -69,10 +71,11 @@ public class TownLeaderboardScreen extends Screen {
         boolean isSorted
     ) {}
 
-    public TownLeaderboardScreen(Component title, Screen parentScreen, BlockPos currentTownPosition) {
+    public TownLeaderboardScreen(Component title, Screen parentScreen, BlockPos currentTownPosition, String currentTownName) {
         super(title);
         this.parentScreen = parentScreen;
         this.currentTownPosition = currentTownPosition;
+        this.currentTownName = currentTownName != null ? currentTownName : "";
     }
 
     public void setTownData(List<TownLeaderboardData> towns) {
@@ -89,6 +92,7 @@ public class TownLeaderboardScreen extends Screen {
             case NAME -> Comparator.comparing(TownLeaderboardData::name);
             case DISTANCE -> Comparator.comparingDouble(data -> data.distanceTo(currentTownPosition));
             case POPULATION -> Comparator.comparingLong(TownLeaderboardData::population).reversed();
+            case HAPPINESS -> Comparator.comparingDouble(TownLeaderboardData::happiness).reversed();
             case MONEY -> Comparator.comparingLong(TownLeaderboardData::money).reversed();
         };
     }
@@ -96,7 +100,7 @@ public class TownLeaderboardScreen extends Screen {
     /**
      * Calculate which columns to display based on available width.
      * All columns get equal width. Columns stay in fixed order.
-     * When only 3 columns fit, the 3rd column is the currently sorted column (unless sorting by Distance).
+     * When only 3 columns fit, the 3rd column is the currently sorted column (unless sorting by Name/Distance).
      */
     private void calculateVisibleColumns() {
         visibleColumns.clear();
@@ -126,20 +130,26 @@ public class TownLeaderboardScreen extends Screen {
             if (sortMode == SortMode.POPULATION) {
                 visibleColumns.add(new ColumnInfo(
                     "Population",
-                    data -> String.format("%d", data.population()),
+                    data -> data.population() > 0 ? String.format("%d", data.population()) : "-",
+                    true
+                ));
+            } else if (sortMode == SortMode.HAPPINESS) {
+                visibleColumns.add(new ColumnInfo(
+                    "Happiness",
+                    data -> data.happiness() >= 0 ? String.format("%.0f%%", data.happiness()) : "-",
                     true
                 ));
             } else if (sortMode == SortMode.MONEY) {
                 visibleColumns.add(new ColumnInfo(
                     "Money",
-                    data -> data.money() + " ✰",
+                    data -> data.money() > 0 ? data.money() + " ✰" : "-",
                     true
                 ));
             } else {
                 // Default to Population if sorting by Name or Distance
                 visibleColumns.add(new ColumnInfo(
                     "Population",
-                    data -> String.format("%d", data.population()),
+                    data -> data.population() > 0 ? String.format("%d", data.population()) : "-",
                     false
                 ));
             }
@@ -148,15 +158,23 @@ public class TownLeaderboardScreen extends Screen {
         else if (maxColumns >= 3) {
             visibleColumns.add(new ColumnInfo(
                 "Population",
-                data -> String.format("%d", data.population()),
+                data -> data.population() > 0 ? String.format("%d", data.population()) : "-",
                 sortMode == SortMode.POPULATION
             ));
         }
 
         if (maxColumns >= 4) {
             visibleColumns.add(new ColumnInfo(
+                "Happiness",
+                data -> data.happiness() >= 0 ? String.format("%.0f%%", data.happiness()) : "-",
+                sortMode == SortMode.HAPPINESS
+            ));
+        }
+
+        if (maxColumns >= 5) {
+            visibleColumns.add(new ColumnInfo(
                 "Money",
-                data -> data.money() + " ✰",
+                data -> data.money() > 0 ? data.money() + " ✰" : "-",
                 sortMode == SortMode.MONEY
             ));
         }
@@ -202,10 +220,17 @@ public class TownLeaderboardScreen extends Screen {
                 TownLeaderboardData town = townData.get(row);
                 int dataRow = row + 1; // +1 for header
 
+                // Check if this is the current town (by name)
+                boolean isCurrentTown = town.name().equals(currentTownName);
+
                 for (int col = 0; col < visibleColumns.size(); col++) {
                     ColumnInfo column = visibleColumns.get(col);
                     String value = column.valueExtractor().apply(town);
-                    contentGrid.addLabel(dataRow, col, value, TownInterfaceTheme.TEXT_COLOR);
+
+                    // Use gold color for current town's name, normal color for everything else
+                    int textColor = (col == 0 && isCurrentTown) ? 0xFFFFAA00 : TownInterfaceTheme.TEXT_COLOR;
+
+                    contentGrid.addLabel(dataRow, col, value, textColor);
                 }
             }
         }

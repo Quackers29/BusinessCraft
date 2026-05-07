@@ -169,7 +169,7 @@ public class BottomButtonManager {
      */
     private void configureOverviewButtons() {
         bottomButtonsGrid
-                .addButtonWithTooltip(0, 0, "Leaderboard", "View all towns leaderboard",
+                .addButtonWithTooltip(0, 0, "Ranking", "View town rankings",
                         v -> actionHandler.onViewLeaderboard(), TownInterfaceTheme.PRIMARY_COLOR)
                 .addButtonWithTooltip(0, 1, "Map View", "View town map with surrounding areas",
                         v -> actionHandler.onManagePlatforms(), TownInterfaceTheme.SECONDARY_COLOR);

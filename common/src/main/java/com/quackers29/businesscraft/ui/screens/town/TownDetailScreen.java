@@ -46,8 +46,9 @@ public class TownDetailScreen extends BCModalGridScreen<TownDetailEntry> {
         details.add(new TownDetailEntry("Town Name", townData.name()));
         details.add(new TownDetailEntry("Distance", TownLeaderboardData.formatDistance(townData.distanceTo(currentTownPosition))));
         details.add(new TownDetailEntry("Coordinates", formatPosition(townData.position())));
-        details.add(new TownDetailEntry("Population", String.format("%d", townData.population())));
-        details.add(new TownDetailEntry("Money", townData.money() + " ✰"));
+        details.add(new TownDetailEntry("Population", townData.population() > 0 ? String.format("%d", townData.population()) : "N/A"));
+        details.add(new TownDetailEntry("Happiness", townData.happiness() >= 0 ? String.format("%.0f%%", townData.happiness()) : "N/A"));
+        details.add(new TownDetailEntry("Money", townData.money() > 0 ? townData.money() + " ✰" : "N/A"));
 
         // Set data
         this.withData(details);
