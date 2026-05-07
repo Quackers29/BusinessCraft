@@ -168,8 +168,8 @@ public class TouristEntity extends Villager {
 
         // Force offer refresh for live updates when trading
         if (!this.level().isClientSide && this.getTradingPlayer() != null) {
-            // Refresh offers every 10 ticks (0.5 seconds) for live data
-            if (this.tickCount % 10 == 0) {
+            // Refresh offers for live data
+            if (this.tickCount % 80 == 0) {
                 // Regenerate offers with current data
                 this.overrideOffers(createOffers());
 
@@ -626,40 +626,59 @@ public class TouristEntity extends Villager {
         offers.add(infoOffer);
         DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Added info display offer (untradeable)");
 
+        // Travel ticket trade - always available (free souvenir from tourist)
+        ItemStack travelTicket = new ItemStack(Items.PAPER);
+        travelTicket.setHoverName(Component.literal("§6Travel Ticket"));
+
+        net.minecraft.nbt.CompoundTag ticketDisplayTag = travelTicket.getOrCreateTagElement("display");
+        net.minecraft.nbt.ListTag ticketLoreList = new net.minecraft.nbt.ListTag();
+        ticketLoreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7From: §f" + (this.originTownName != null ? this.originTownName : "Unknown")))));
+        ticketLoreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7To: §f" + (this.destinationTownName != null ? this.destinationTownName : "Unknown")))));
+        ticketLoreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal(""))));
+        ticketLoreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§8A souvenir from a traveling tourist"))));
+        ticketDisplayTag.put("Lore", ticketLoreList);
+
+        MerchantOffer ticketTrade = new MerchantOffer(
+            new ItemStack(Items.PAPER, 1), // Cost: 1 paper
+            travelTicket,
+            1,   
+            0, // No XP
+            0.0f // No price multiplier
+        );
+        offers.add(ticketTrade);
+        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Added travel ticket offer");
+
         // Add level-based trades
         int currentLevel = this.getVillagerData().getLevel();
 
-        // Level 1 trade (0-20m): 3 emeralds → 1 diamond
         if (currentLevel >= 1) {
             MerchantOffer level1Trade = new MerchantOffer(
-                new ItemStack(Items.EMERALD, 3),
-                new ItemStack(Items.DIAMOND),
-                10, // maxUses
-                5, // villagerXp
+                new ItemStack(Items.BREAD, 8),
+                new ItemStack(Items.IRON_INGOT, 2),
+                1, // maxUses
+                0, // villagerXp
                 0.05f // priceMultiplier
             );
             offers.add(level1Trade);
         }
 
-        // Level 2 trade (20-40m): 5 diamonds → 1 netherite ingot
         if (currentLevel >= 2) {
             MerchantOffer level2Trade = new MerchantOffer(
-                new ItemStack(Items.DIAMOND, 5),
-                new ItemStack(Items.NETHERITE_INGOT),
-                5, // maxUses
-                10, // villagerXp
+                new ItemStack(Items.BREAD, 6),
+                new ItemStack(Items.IRON_INGOT, 2),
+                1, // maxUses
+                0, // villagerXp
                 0.1f // priceMultiplier
             );
             offers.add(level2Trade);
         }
 
-        // Level 3 trade (40-60m): 10 emeralds → 1 enchanted golden apple
         if (currentLevel >= 3) {
             MerchantOffer level3Trade = new MerchantOffer(
-                new ItemStack(Items.EMERALD, 10),
-                new ItemStack(Items.ENCHANTED_GOLDEN_APPLE),
-                3, // maxUses
-                15, // villagerXp
+                new ItemStack(Items.BREAD, 4),
+                new ItemStack(Items.IRON_INGOT, 2),
+                1, // maxUses
+                0, // villagerXp
                 0.15f // priceMultiplier
             );
             offers.add(level3Trade);
