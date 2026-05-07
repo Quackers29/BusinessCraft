@@ -86,8 +86,8 @@ public class TouristEntity extends Villager {
     private MerchantOffers customOffers;
 
     // Distance-based leveling config
-    private static final double DISTANCE_PER_LEVEL = 10.0; // 10m per level
-    private static final int MAX_LEVEL = 2; // Max level 2 for now (starts at 1, can reach 2)
+    private static final double DISTANCE_PER_LEVEL = 20.0; // 20m per level
+    private static final int MAX_LEVEL = 3; // Max level 3 (starts at 1)
 
     public TouristEntity(EntityType<? extends Villager> entityType, Level level) {
         super(entityType, level);
@@ -626,19 +626,46 @@ public class TouristEntity extends Villager {
         offers.add(infoOffer);
         DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Added info display offer (untradeable)");
 
-        // TODO: Add real trades based on tourist origin/destination/level
-        // Example placeholder trade
-        MerchantOffer exampleTrade = new MerchantOffer(
-            new ItemStack(Items.EMERALD, 3),
-            new ItemStack(Items.DIAMOND),
-            10, // maxUses
-            5, // villagerXp
-            0.05f // priceMultiplier
-        );
-        offers.add(exampleTrade);
-        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Added example trade offer");
+        // Add level-based trades
+        int currentLevel = this.getVillagerData().getLevel();
 
-        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Total offers created: {}", offers.size());
+        // Level 1 trade (0-20m): 3 emeralds → 1 diamond
+        if (currentLevel >= 1) {
+            MerchantOffer level1Trade = new MerchantOffer(
+                new ItemStack(Items.EMERALD, 3),
+                new ItemStack(Items.DIAMOND),
+                10, // maxUses
+                5, // villagerXp
+                0.05f // priceMultiplier
+            );
+            offers.add(level1Trade);
+        }
+
+        // Level 2 trade (20-40m): 5 diamonds → 1 netherite ingot
+        if (currentLevel >= 2) {
+            MerchantOffer level2Trade = new MerchantOffer(
+                new ItemStack(Items.DIAMOND, 5),
+                new ItemStack(Items.NETHERITE_INGOT),
+                5, // maxUses
+                10, // villagerXp
+                0.1f // priceMultiplier
+            );
+            offers.add(level2Trade);
+        }
+
+        // Level 3 trade (40-60m): 10 emeralds → 1 enchanted golden apple
+        if (currentLevel >= 3) {
+            MerchantOffer level3Trade = new MerchantOffer(
+                new ItemStack(Items.EMERALD, 10),
+                new ItemStack(Items.ENCHANTED_GOLDEN_APPLE),
+                3, // maxUses
+                15, // villagerXp
+                0.15f // priceMultiplier
+            );
+            offers.add(level3Trade);
+        }
+
+        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Total offers created: {} (level {})", offers.size(), currentLevel);
         return offers;
     }
 
