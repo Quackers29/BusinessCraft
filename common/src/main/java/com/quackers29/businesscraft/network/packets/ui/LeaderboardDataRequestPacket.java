@@ -60,7 +60,8 @@ public class LeaderboardDataRequestPacket {
                     town.getPosition(),
                     town.getPopulation(),
                     town.getResourceCount(Items.EMERALD),
-                    town.getHappiness()
+                    town.getHappiness(),
+                    town.getTotalTouristsArrived()
                 );
                 leaderboardData.add(data);
             }

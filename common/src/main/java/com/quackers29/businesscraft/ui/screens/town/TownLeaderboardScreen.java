@@ -45,6 +45,7 @@ public class TownLeaderboardScreen extends Screen {
         DISTANCE("Distance"),
         POPULATION("Population"),
         HAPPINESS("Happiness"),
+        TOURISM("Tourism"),
         MONEY("Money");
 
         private final String displayName;
@@ -93,17 +94,38 @@ public class TownLeaderboardScreen extends Screen {
             case DISTANCE -> Comparator.comparingDouble(data -> data.distanceTo(currentTownPosition));
             case POPULATION -> Comparator.comparingLong(TownLeaderboardData::population).reversed();
             case HAPPINESS -> Comparator.comparingDouble(TownLeaderboardData::happiness).reversed();
+            case TOURISM -> Comparator.comparingLong(TownLeaderboardData::tourism).reversed();
             case MONEY -> Comparator.comparingLong(TownLeaderboardData::money).reversed();
         };
     }
 
     /**
-     * Calculate which columns to display based on available width.
+     * Check if a metric has any non-zero values across all towns.
+     */
+    private boolean hasAnyNonZeroValues(Function<TownLeaderboardData, Number> extractor) {
+        for (TownLeaderboardData town : townData) {
+            Number value = extractor.apply(town);
+            if (value.doubleValue() > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Calculate which columns to display based on available width and data availability.
      * All columns get equal width. Columns stay in fixed order.
      * When only 3 columns fit, the 3rd column is the currently sorted column (unless sorting by Name/Distance).
+     * Columns with all zero values are hidden.
      */
     private void calculateVisibleColumns() {
         visibleColumns.clear();
+
+        // Check which metrics have data
+        boolean hasPopulation = hasAnyNonZeroValues(TownLeaderboardData::population);
+        boolean hasHappiness = hasAnyNonZeroValues(data -> data.happiness());
+        boolean hasTourism = hasAnyNonZeroValues(TownLeaderboardData::tourism);
+        boolean hasMoney = hasAnyNonZeroValues(TownLeaderboardData::money);
 
         int availableWidth = panelWidth - 30; // Account for margins
         int MIN_COLUMN_WIDTH = 100; // Minimum width per column
@@ -125,58 +147,68 @@ public class TownLeaderboardScreen extends Screen {
             sortMode == SortMode.DISTANCE
         ));
 
-        // For 3 columns: show the sorted column (if not Name/Distance)
-        if (maxColumns == 3) {
-            if (sortMode == SortMode.POPULATION) {
-                visibleColumns.add(new ColumnInfo(
-                    "Population",
-                    data -> data.population() > 0 ? String.format("%d", data.population()) : "-",
-                    true
-                ));
-            } else if (sortMode == SortMode.HAPPINESS) {
-                visibleColumns.add(new ColumnInfo(
-                    "Happiness",
-                    data -> data.happiness() >= 0 ? String.format("%.0f%%", data.happiness()) : "-",
-                    true
-                ));
-            } else if (sortMode == SortMode.MONEY) {
-                visibleColumns.add(new ColumnInfo(
-                    "Money",
-                    data -> data.money() > 0 ? data.money() + " ✰" : "-",
-                    true
-                ));
-            } else {
-                // Default to Population if sorting by Name or Distance
-                visibleColumns.add(new ColumnInfo(
-                    "Population",
-                    data -> data.population() > 0 ? String.format("%d", data.population()) : "-",
-                    false
-                ));
-            }
-        }
-        // For 4+ columns: show all in fixed order
-        else if (maxColumns >= 3) {
-            visibleColumns.add(new ColumnInfo(
+        // Build list of available columns in order
+        List<ColumnInfo> availableColumns = new ArrayList<>();
+
+        if (hasPopulation) {
+            availableColumns.add(new ColumnInfo(
                 "Population",
                 data -> data.population() > 0 ? String.format("%d", data.population()) : "-",
                 sortMode == SortMode.POPULATION
             ));
         }
 
-        if (maxColumns >= 4) {
-            visibleColumns.add(new ColumnInfo(
+        if (hasHappiness) {
+            availableColumns.add(new ColumnInfo(
                 "Happiness",
                 data -> data.happiness() >= 0 ? String.format("%.0f%%", data.happiness()) : "-",
                 sortMode == SortMode.HAPPINESS
             ));
         }
 
-        if (maxColumns >= 5) {
-            visibleColumns.add(new ColumnInfo(
+        if (hasTourism) {
+            availableColumns.add(new ColumnInfo(
+                "Tourism",
+                data -> data.tourism() > 0 ? String.format("%d", data.tourism()) : "-",
+                sortMode == SortMode.TOURISM
+            ));
+        }
+
+        if (hasMoney) {
+            availableColumns.add(new ColumnInfo(
                 "Money",
                 data -> data.money() > 0 ? data.money() + " ✰" : "-",
                 sortMode == SortMode.MONEY
             ));
+        }
+
+        // For 3 columns: prioritize showing the sorted column
+        if (maxColumns == 3 && availableColumns.size() > 1) {
+            // Find the sorted column
+            ColumnInfo sortedColumn = null;
+            List<ColumnInfo> otherColumns = new ArrayList<>();
+
+            for (ColumnInfo col : availableColumns) {
+                if (col.isSorted()) {
+                    sortedColumn = col;
+                } else {
+                    otherColumns.add(col);
+                }
+            }
+
+            // If we found a sorted column, show it. Otherwise show first available.
+            if (sortedColumn != null) {
+                visibleColumns.add(sortedColumn);
+            } else if (!otherColumns.isEmpty()) {
+                visibleColumns.add(otherColumns.get(0));
+            }
+        }
+        // For 4+ columns: show as many as fit
+        else {
+            int columnsToAdd = Math.min(maxColumns - 2, availableColumns.size()); // -2 for Name and Distance
+            for (int i = 0; i < columnsToAdd; i++) {
+                visibleColumns.add(availableColumns.get(i));
+            }
         }
     }
 

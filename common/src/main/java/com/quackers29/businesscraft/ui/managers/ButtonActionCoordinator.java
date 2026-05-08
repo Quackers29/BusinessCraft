@@ -129,10 +129,11 @@ public class ButtonActionCoordinator {
         try {
             DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling view ranking action");
 
-            // Get current town name from cache
-            String currentTownName = screen.getCacheManager() != null
-                ? screen.getCacheManager().getCachedTownName()
-                : "";
+            // Get current town name from menu (simpler than cache)
+            String currentTownName = "";
+            if (screen.getMenu() != null) {
+                currentTownName = screen.getMenu().getTownName();
+            }
 
             // Request ranking data from server
             com.quackers29.businesscraft.network.packets.ui.LeaderboardDataRequestPacket requestPacket =

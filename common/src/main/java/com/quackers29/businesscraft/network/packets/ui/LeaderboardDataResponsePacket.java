@@ -35,7 +35,8 @@ public class LeaderboardDataResponsePacket {
             long population = buf.readLong();
             long money = buf.readLong();
             float happiness = buf.readFloat();
-            this.towns.add(new TownLeaderboardData(townId, name, position, population, money, happiness));
+            long tourism = buf.readLong();
+            this.towns.add(new TownLeaderboardData(townId, name, position, population, money, happiness, tourism));
         }
     }
 
@@ -49,6 +50,7 @@ public class LeaderboardDataResponsePacket {
             buf.writeLong(town.population());
             buf.writeLong(town.money());
             buf.writeFloat(town.happiness());
+            buf.writeLong(town.tourism());
         }
     }
 

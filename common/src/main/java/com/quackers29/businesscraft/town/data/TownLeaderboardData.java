@@ -13,7 +13,8 @@ public record TownLeaderboardData(
     BlockPos position,
     long population,
     long money,
-    float happiness
+    float happiness,
+    long tourism
 ) {
     /**
      * Calculate distance from this town to another position.
