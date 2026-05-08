@@ -9,9 +9,14 @@ import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import net.minecraft.network.chat.Component;
 
 public class TownScoreboardManager {
+    // LEGACY SYSTEM: Disabled in favor of in-game leaderboard UI
+    // Set to true to re-enable legacy Minecraft sidebar scoreboard
+    private static final boolean SCOREBOARD_ENABLED = false;
+
     private static final String OBJECTIVE_NAME = "townstats";
-    
+
     public static void updateScoreboard(ServerLevel level) {
+        if (!SCOREBOARD_ENABLED) return;
         Scoreboard scoreboard = level.getScoreboard();
         
         // Remove old objective if it exists
