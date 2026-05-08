@@ -15,6 +15,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
@@ -59,6 +60,7 @@ public class FabricEventCallbackHandler {
 
     // Key state tracking for key input callbacks
     private static final Map<Integer, Boolean> previousKeyStates = new HashMap<>();
+    private static boolean scrollCallbackRegistered = false;
 
     /**
      * Check if we're running on a server (as opposed to client-only)
@@ -182,6 +184,24 @@ public class FabricEventCallbackHandler {
                     }
                 }
                 previousKeyStates.put(keyCode, currentState == GLFW.GLFW_PRESS);
+            }
+        });
+
+        // Mouse Scroll (using GLFW callback - register once)
+        ClientTickEvents.START_CLIENT_TICK.register(client -> {
+            if (!scrollCallbackRegistered && client.getWindow() != null) {
+                long windowHandle = client.getWindow().getWindow();
+
+                // Register GLFW scroll callback once
+                GLFW.glfwSetScrollCallback(windowHandle, (window, xOffset, yOffset) -> {
+                    for (EventCallbacks.MouseScrollCallback callback : mouseScrollCallbacks) {
+                        if (callback.onMouseScroll(yOffset)) {
+                            break;
+                        }
+                    }
+                });
+                scrollCallbackRegistered = true;
+                LOGGER.debug("Registered GLFW scroll callback");
             }
         });
 

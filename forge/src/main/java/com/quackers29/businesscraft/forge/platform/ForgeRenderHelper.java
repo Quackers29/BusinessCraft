@@ -4,7 +4,9 @@ import com.quackers29.businesscraft.api.RenderHelper;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
@@ -133,9 +135,9 @@ public class ForgeRenderHelper implements RenderHelper {
     }
 
     /**
-     * Static handler for registering overlays
+     * Static handler for registering and rendering overlays
      */
-    @Mod.EventBusSubscriber(modid = "businesscraft", bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    @Mod.EventBusSubscriber(modid = "businesscraft", bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
     public static class ForgeOverlayRegistry {
         private static ForgeRenderHelper renderHelper;
         private static final Set<String> registeredOverlayIds = new HashSet<>();
@@ -146,6 +148,24 @@ public class ForgeRenderHelper implements RenderHelper {
 
         public static boolean isOverlayRegistered(String overlayId) {
             return registeredOverlayIds.contains(overlayId);
+        }
+
+        @SubscribeEvent
+        public static void onRenderGuiOverlay(RenderGuiOverlayEvent.Post event) {
+            // Render custom overlays after hotbar (always rendered)
+            if (event.getOverlay().id().equals(VanillaGuiOverlay.HOTBAR.id())) {
+                if (renderHelper != null) {
+                    GuiGraphics guiGraphics = event.getGuiGraphics();
+                    int screenWidth = guiGraphics.guiWidth();
+                    int screenHeight = guiGraphics.guiHeight();
+                    float partialTick = event.getPartialTick();
+
+                    // Render all registered overlays
+                    for (Map.Entry<String, OverlayRenderer> entry : renderHelper.getRegisteredOverlays().entrySet()) {
+                        entry.getValue().render(guiGraphics, partialTick, screenWidth, screenHeight);
+                    }
+                }
+            }
         }
     }
 }

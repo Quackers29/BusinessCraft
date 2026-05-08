@@ -50,7 +50,7 @@ public class DebugConfig {
     // Client Systems
     public static final boolean CLIENT_HANDLERS = false;
     public static final boolean KEY_HANDLERS = false;
-    public static final boolean DEBUG_OVERLAY = false;
+    public static final boolean DEBUG_OVERLAY = false; // F4 key town overlay (disabled)
 
     // Storage Systems
     public static final boolean STORAGE_OPERATIONS = false;
