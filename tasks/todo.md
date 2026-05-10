@@ -1,128 +1,111 @@
-# Town Leaderboard Feature - COMPLETED ✅
+# Tourist Behavior Enhancement
 
-## Implementation Summary
-Successfully implemented town leaderboard system with sortable stats, detail view, and button reorganization.
+Add social behaviors using vanilla Minecraft animations/sounds only.
 
-## Completed Tasks
+---
 
-### Phase 1: Data Layer & Network ✅
-- ✅ **1.1** Created `TownLeaderboardData` record class
-  - Fields: UUID townId, String name, BlockPos position, long population, long money
-  - Helper methods: distanceTo(), formatDistance()
+## Phase 1: Core Behaviors
 
-- ✅ **1.2** Created `LeaderboardDataRequestPacket`
-  - Empty request packet with proper encode/decode methods
+### 1.1: Gossiping Between Tourists
+**NEW FILE**: `TouristGossipGoal.java` (extends `Goal`)
+- Priority 4 (after RandomLookAroundGoal)
+- Every 40-80 ticks: search 4-block radius for another TouristEntity
+- When found: `getLookControl().setLookAt(otherTourist)`
+- Play `SoundEvents.VILLAGER_AMBIENT` (15% chance per tick when looking)
+- Track partner for 80-150 ticks, then find new one
+- Add field to TouristEntity: `@Nullable TouristEntity gossipPartner`
 
-- ✅ **1.3** Created `LeaderboardDataResponsePacket`
-  - Serializes List<TownLeaderboardData>
-  - Server handler queries TownManager.getAllTowns() and converts to leaderboard data
+### 1.2: Window Gazing When Riding
+**NEW FILE**: `TouristGazeGoal.java` (extends `Goal`)
+- Priority 5 (only when NOT gossiping)
+- When `isPassenger() == true`: look perpendicular to movement direction
+- Calculate vehicle velocity, look 90° left/right
+- Switch sides every 60-100 ticks
+- Use `getLookControl().setLookAt(x, y, z)` for target position
 
-- ✅ **1.4** Registered packets in PacketRegistry
-  - Both request (PLAY_TO_SERVER) and response (PLAY_TO_CLIENT) packets registered
+### 1.3: UI Interaction Sounds
+**MODIFY**: `TouristEntity.mobInteract()` + `stopTrading()`
+- On UI open: `playSound(SoundEvents.VILLAGER_YES, 1.0f, 1.0f)`
+- On UI close: `playSound(SoundEvents.VILLAGER_NO, 1.0f, 1.0f)`
 
-### Phase 2: Leaderboard Screen ✅
-- ✅ **2.1** Created `TownLeaderboardScreen`
-  - Extends BCModalGridScreen<TownLeaderboardData>
-  - Three columns: Town Name, Distance, Score (dynamic based on sort mode)
-  - Panel size: 80% width, 70% height
-  - Row height: 18px
-  - Uses TownInterfaceTheme colors
+---
 
-- ✅ **2.2** Implemented sorting functionality
-  - SortMode enum: DISTANCE, POPULATION, MONEY
-  - Toggle button cycles through sort modes
-  - Default sort: Distance (nearest first)
-  - Comparators for each mode
+## Phase 2: Speed Reactions
 
-- ✅ **2.3** Implemented row click handler
-  - Opens TownDetailScreen with selected town data
-  - Passes current position for distance calculation
+### 2.1: Celebrate When Fast
+**MODIFY**: `TouristEntity.tick()` (lines 213-239, position update block)
+- Calculate speed: `distanceMoved / (40 ticks / 20) = blocks/sec`
+- If speed > 5 blocks/s:
+  - `playSound(SoundEvents.VILLAGER_CELEBRATE, 1.0f, 1.0f)` (20% chance)
+  - `swing(InteractionHand.MAIN_HAND)` - arm wave
+- Cooldown: 100 ticks between reactions
+- Add field: `int lastSpeedReactionTick`
 
-- ✅ **2.4** Screen scaling and responsiveness
-  - Uses withPanelSize(0.8f, 0.7f) for dynamic sizing
-  - Inherits BCModalGridScreen's responsive behavior
+---
 
-### Phase 3: Town Detail Screen ✅
-- ✅ **3.1** Created `TownDetailScreen`
-  - Extends BCModalGridScreen<TownDetailEntry>
-  - Shows: Town Name, Distance, Coordinates, Population, Money
-  - "Back to Leaderboard" button
-  - Panel size: 60% width, 50% height
+## Phase 3: Enhanced Player Interaction
 
-### Phase 4: Button Reorganization ✅
-- ✅ **4.1** Modified `BottomButtonManager.configureOverviewButtons()`
-  - Replaced "Edit Details" with "Leaderboard" button
-  - Kept "Map View" button unchanged
+### 3.1: Closer Player Detection
+**MODIFY**: `TouristEntity.registerGoals()`
+- Change `LookAtPlayerGoal(this, Player.class, 5.0F)` → `3.0F` (closer range)
+- Add occasional sound: in tick(), if looking at player, 5% chance play `VILLAGER_YES`
 
-- ✅ **4.2** Added `onViewLeaderboard()` to ButtonActionHandler interface
+**Alternative** (if simple change insufficient):
+**NEW FILE**: `TouristLookAtPlayerGoal.java` - custom version with sound triggers
 
-- ✅ **4.3** Modified `BottomButtonManager.configureSettingsButtons()`
-  - Replaced "Reset Defaults" with "Edit Details" button
-  - Kept "Save Settings" button unchanged
+---
 
-- ✅ **4.4** Implemented `onViewLeaderboard()` in TownInterfaceScreen
-  - Delegates to ButtonActionCoordinator
+## Phase 4: NBT Persistence
 
-- ✅ **4.5** Updated ButtonActionCoordinator
-  - Added handleViewLeaderboard() method
-  - Sends LeaderboardDataRequestPacket to server
+**MODIFY**: `TouristEntity.addAdditionalSaveData()` / `readAdditionalSaveData()`
+- Save/load: `lastSpeedReactionTick` (int)
+- Gossip partner not persisted (re-establish on load)
 
-### Build Status ✅
-- ✅ Common module builds successfully
-- ✅ No compilation errors
-- ✅ All new files integrated properly
+---
 
-## Files Created/Modified
+## Testing Checklist
+- [ ] Spawn 2+ tourists - verify face each other, play ambient sounds
+- [ ] Tourist in minecart - verify looks left/right periodically
+- [ ] Boost minecart with powered rails - verify celebration + arm wave
+- [ ] Right-click tourist - verify greeting sound on UI open
+- [ ] Close UI - verify farewell sound
+- [ ] Player near tourist - verify looks at player more often at close range
+- [ ] Save/reload - verify behaviors persist
 
-### New Files (6)
-1. `common/src/main/java/com/quackers29/businesscraft/town/data/TownLeaderboardData.java`
-2. `common/src/main/java/com/quackers29/businesscraft/network/packets/ui/LeaderboardDataRequestPacket.java`
-3. `common/src/main/java/com/quackers29/businesscraft/network/packets/ui/LeaderboardDataResponsePacket.java`
-4. `common/src/main/java/com/quackers29/businesscraft/ui/screens/town/TownLeaderboardScreen.java`
-5. `common/src/main/java/com/quackers29/businesscraft/ui/screens/town/TownDetailScreen.java`
-6. `TownDetailEntry.java` (record in TownDetailScreen file)
+---
 
-### Modified Files (3)
-1. `common/src/main/java/com/quackers29/businesscraft/network/PacketRegistry.java` - Registered new packets
-2. `common/src/main/java/com/quackers29/businesscraft/ui/managers/BottomButtonManager.java` - Button reorganization
-3. `common/src/main/java/com/quackers29/businesscraft/ui/managers/ButtonActionCoordinator.java` - Added leaderboard handler
-4. `common/src/main/java/com/quackers29/businesscraft/ui/screens/town/TownInterfaceScreen.java` - Added onViewLeaderboard()
+## Implementation Order
+1. UI sounds (1.3) - 5 lines, immediate feedback
+2. Speed reactions (2.1) - 15 lines, uses existing position tracking
+3. Gossiping (1.1) - 40 lines, new goal class
+4. Window gazing (1.2) - 35 lines, new goal class
+5. Enhanced player look (3.1) - 10 lines or new class
+6. NBT persistence (4) - 10 lines
 
-## Testing Checklist (Manual Testing Required)
+**Total: ~115-150 lines new code**
 
-### Phase 5: Testing & Polish
-- [ ] **5.1** Test with no towns (empty state)
-- [ ] **5.2** Test with single town (current town only)
-- [ ] **5.3** Test with multiple towns (3-10 towns)
-  - [ ] Verify sorting by distance
-  - [ ] Verify sorting by population
-  - [ ] Verify sorting by money
-  - [ ] Test row click opens correct detail screen
-- [ ] **5.4** Test screen scaling (GUI Scale 1, 2, 3, 4)
-- [ ] **5.5** Test navigation flow
-  - [ ] Overview → Leaderboard → Detail → Back to Leaderboard → Back
-  - [ ] Settings → Edit Details modal
-- [ ] **5.6** Polish
-  - [ ] Verify "Sort: Distance/Population/Money" button works
-  - [ ] Verify scrolling smooth with many towns
-  - [ ] Verify distance formatting correct ("123m" vs "1.2km")
+---
 
-## How to Test
-1. Build and run: `./gradlew :fabric:runClient` or `./gradlew :common:runClient`
-2. Create or open a town with Town Interface block
-3. Click Overview tab → "Leaderboard" button
-4. Test sorting with "Sort:" button
-5. Click on a town row to view details
-6. Click Settings tab → verify "Edit Details" button present
+## Files Changed
+**New (2-3 files)**:
+- `common/.../entity/ai/goal/TouristGossipGoal.java`
+- `common/.../entity/ai/goal/TouristGazeGoal.java`
+- `common/.../entity/ai/goal/TouristLookAtPlayerGoal.java` (optional)
 
-## Known Limitations
-- No biome data in leaderboard (not easily accessible without full town sync)
-- No real-time updates (refresh by reopening)
-- No search/filter functionality (future enhancement)
+**Modified (1 file)**:
+- `TouristEntity.java` - fields, registerGoals(), tick(), mobInteract(), stopTrading(), NBT
 
-## Future Enhancements
-- Add search bar for filtering towns by name
-- Add biome column (requires server-side data extension)
-- Add "Visit" button with navigation/teleport (future gameplay feature)
-- Real-time leaderboard updates when towns change
-- Player-specific stats (your visits, trades with each town)
+---
+
+## Vanilla Animations Used
+- ✅ `swing(InteractionHand.MAIN_HAND)` - arm wave
+- ✅ `getLookControl().setLookAt()` - head rotation
+- ✅ `playSound(SoundEvents.VILLAGER_*)` - all sounds
+- ❌ Head tilt/nod - NOT available in vanilla (requires custom model)
+
+---
+
+## Risks
+- **Low**: UI sounds, speed reactions, player look changes
+- **Medium**: Gossip entity search (test with 10+ tourists for performance)
+- **Medium**: Window gaze velocity calculation (null checks for Create trains)
