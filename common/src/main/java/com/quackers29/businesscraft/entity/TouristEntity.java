@@ -82,6 +82,15 @@ public class TouristEntity extends Villager {
     // Track total distance traveled
     private double totalDistanceTraveled = 0.0;
 
+    // Speed reaction tracking
+    private int lastSpeedReactionTick = 0;
+    private static final double SPEED_THRESHOLD = 0.5; // blocks per second
+    private static final int SPEED_REACTION_COOLDOWN = 100; // 10 seconds
+
+    // Social interaction tracking
+    @Nullable
+    private TouristEntity gossipPartner;
+
     // Override merchant offers (Villager already implements Merchant)
     private MerchantOffers customOffers;
 
@@ -139,9 +148,11 @@ public class TouristEntity extends Villager {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 5.0F));
+        this.goalSelector.addGoal(1, new LookAtPlayerGoal(this, Player.class, 3.0F)); // Closer range
         this.goalSelector.addGoal(2, new RandomStrollGoal(this, 0.3D));
-        this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(4, new com.quackers29.businesscraft.entity.ai.goal.TouristGossipGoal(this));
+        this.goalSelector.addGoal(5, new com.quackers29.businesscraft.entity.ai.goal.TouristTargetGazeGoal(this)); // Rare: track distant target
+        this.goalSelector.addGoal(6, new com.quackers29.businesscraft.entity.ai.goal.TouristGazeGoal(this)); // Common: look left/right
     }
 
     @Override
@@ -207,7 +218,8 @@ public class TouristEntity extends Villager {
             }
         }
 
-        if (!this.level().isClientSide && ConfigLoader.enableTouristExpiry) {
+        // Speed-based reactions - runs independently of expiry system
+        if (!this.level().isClientSide) {
             positionUpdateTicks++;
 
             if (positionUpdateTicks >= POSITION_UPDATE_INTERVAL) {
@@ -216,6 +228,7 @@ public class TouristEntity extends Villager {
                 double dz = this.getZ() - this.recentPosZ;
                 double recentMovementSquared = dx * dx + dy * dy + dz * dz;
                 double distanceMoved = Math.sqrt(recentMovementSquared);
+                double speed = distanceMoved / (POSITION_UPDATE_INTERVAL / 20.0); // blocks per second
 
                 isCurrentlyStationary = recentMovementSquared < (STATIONARY_THRESHOLD * STATIONARY_THRESHOLD);
 
@@ -228,16 +241,44 @@ public class TouristEntity extends Villager {
                 // Update level based on distance traveled
                 updateLevelFromDistance();
 
+                // Speed-based reactions (celebrate when going fast)
+                int currentTick = this.tickCount;
+                if (speed > SPEED_THRESHOLD) {
+                    int cooldownRemaining = SPEED_REACTION_COOLDOWN - (currentTick - lastSpeedReactionTick);
+                    if (cooldownRemaining > 0) {
+                        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
+                                "Tourist {} fast ({}b/s) but cooldown remains: {} ticks",
+                                this.getId(), String.format("%.1f", speed), cooldownRemaining);
+                    } else {
+                        // 50% chance to celebrate when going fast (increased for testing)
+                        if (this.random.nextFloat() < 0.5f) {
+                            this.playSound(SoundEvents.VILLAGER_CELEBRATE, 1.0f, 1.0f);
+                            this.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+                            lastSpeedReactionTick = currentTick;
+                            DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
+                                    "Tourist {} CELEBRATING high speed: {} blocks/s",
+                                    this.getId(), String.format("%.1f", speed));
+                        } else {
+                            DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
+                                    "Tourist {} fast ({}b/s) but RNG missed (50% chance)",
+                                    this.getId(), String.format("%.1f", speed));
+                        }
+                    }
+                }
+
                 this.recentPosX = this.getX();
                 this.recentPosY = this.getY();
                 this.recentPosZ = this.getZ();
                 positionUpdateTicks = 0;
 
                 DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
-                        "Tourist {} movement check: distance={:.3f}, total={:.1f}m, stationary={}, riding={}, expiry={}s",
-                        this.getId(), distanceMoved, totalDistanceTraveled, isCurrentlyStationary, this.isPassenger(), expiryTicks / 20);
+                        "Tourist {} movement check: distance={} m, speed={} b/s, total={} m, stationary={}, riding={}",
+                        this.getId(), String.format("%.3f", distanceMoved), String.format("%.1f", speed),
+                        String.format("%.1f", totalDistanceTraveled), isCurrentlyStationary, this.isPassenger());
             }
+        }
 
+        if (!this.level().isClientSide && ConfigLoader.enableTouristExpiry) {
             if (isCurrentlyStationary) {
                 expiryTicks--;
 
@@ -332,6 +373,19 @@ public class TouristEntity extends Villager {
         return this.destinationTownName;
     }
 
+    public boolean isGossiping() {
+        return gossipPartner != null && gossipPartner.isAlive();
+    }
+
+    public void setGossipPartner(@Nullable TouristEntity partner) {
+        this.gossipPartner = partner;
+    }
+
+    @Nullable
+    public TouristEntity getGossipPartner() {
+        return this.gossipPartner;
+    }
+
     private void setRandomProfession() {
         this.setVillagerData(this.getVillagerData()
                 .setProfession(VillagerProfession.NONE)
@@ -355,6 +409,7 @@ public class TouristEntity extends Villager {
         tag.putInt("PositionUpdateTicks", positionUpdateTicks);
         tag.putBoolean("IsCurrentlyStationary", isCurrentlyStationary);
         tag.putDouble("TotalDistanceTraveled", totalDistanceTraveled);
+        tag.putInt("LastSpeedReactionTick", lastSpeedReactionTick);
 
         if (originTownId != null) {
             tag.putUUID("OriginTownId", originTownId);
@@ -416,6 +471,9 @@ public class TouristEntity extends Villager {
         if (tag.contains("TotalDistanceTraveled")) {
             totalDistanceTraveled = tag.getDouble("TotalDistanceTraveled");
         }
+        if (tag.contains("LastSpeedReactionTick")) {
+            lastSpeedReactionTick = tag.getInt("LastSpeedReactionTick");
+        }
 
         if (tag.contains("OriginTownId")) {
             originTownId = tag.getUUID("OriginTownId");
@@ -445,6 +503,22 @@ public class TouristEntity extends Villager {
     @Override
     public boolean wantsToPickUp(ItemStack itemStack) {
         return false;
+    }
+
+    // Disable automatic ambient sounds - only play sounds through gossip goal
+    @Override
+    protected SoundEvent getAmbientSound() {
+        return null;
+    }
+
+    @Override
+    public int getAmbientSoundInterval() {
+        return Integer.MAX_VALUE; // Never play automatically
+    }
+
+    @Override
+    public void playAmbientSound() {
+        // Do nothing - sounds controlled by gossip goal only
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -501,6 +575,9 @@ public class TouristEntity extends Villager {
                 DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
                     "Tourist mobInteract - opening trading screen for player {}", player.getName().getString());
 
+                // Play greeting sound
+                this.playSound(SoundEvents.VILLAGER_YES, 1.0f, 1.0f);
+
                 // Use villager's built-in trading screen
                 this.setTradingPlayer(player);
                 this.openTradingScreen(player, this.getDisplayName(), this.getVillagerData().getLevel());
@@ -521,6 +598,12 @@ public class TouristEntity extends Villager {
     public void stopTrading() {
         // Don't call super - prevents villager brain from interfering
         this.setTradingPlayer(null);
+
+        // Play farewell sound
+        if (!this.level().isClientSide) {
+            this.playSound(SoundEvents.VILLAGER_NO, 1.0f, 1.0f);
+        }
+
         DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Stopped trading");
     }
 
