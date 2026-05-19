@@ -4,6 +4,7 @@ import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.api.ITouristHelper;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.config.ConfigLoader;
+import com.quackers29.businesscraft.entity.TouristEntity;
 import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
@@ -178,15 +179,26 @@ public class VisitorProcessingHelper {
 
                 visitBuffer.addVisitor(originTownUuid, originPos);
 
-                // Calculate distance from origin town to destination town (not tourist's
-                // current position)
-                double distance = Math.sqrt(originPos.distSqr(townBlockPos));
+                // CORE CHANGE: Use the actual distance the tourist *traveled* (from TouristEntity)
+                // instead of the old town A to B Euclidean distance. This is what the user requested.
+                double distance;
+                if (villager instanceof TouristEntity touristEntity) {
+                    distance = touristEntity.getTotalDistanceTraveled();
+                    DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+                            "TOURIST DISTANCE - Using REAL traveled distance from entity: {} blocks", 
+                            String.format("%.1f", distance));
+                } else {
+                    distance = Math.sqrt(originPos.distSqr(townBlockPos));
+                    DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+                            "TOURIST DISTANCE - Fallback to town-to-town distance: {} blocks", 
+                            String.format("%.1f", distance));
+                }
 
                 // Add detailed distance logging
                 DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
-                        "TOURIST DISTANCE - Town: {}, From: {}, Origin town pos: {}, Destination town pos: {}, Calculated distance: {}",
+                        "TOURIST DISTANCE - Town: {}, From: {}, Origin town pos: {}, Destination town pos: {}, Final distance used: {}",
                         townId, touristInfo.originTownName,
-                        originPos, townBlockPos, distance);
+                        originPos, townBlockPos, String.format("%.1f", distance));
 
                 // Store the distance in the visitor info for later payment calculation
                 visitBuffer.updateVisitorDistance(UUID.fromString(touristInfo.originTownId), distance);

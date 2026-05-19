@@ -386,6 +386,10 @@ public class TouristEntity extends Villager {
         return this.gossipPartner;
     }
 
+    public double getTotalDistanceTraveled() {
+        return totalDistanceTraveled;
+    }
+
     private void setRandomProfession() {
         this.setVillagerData(this.getVillagerData()
                 .setProfession(VillagerProfession.NONE)

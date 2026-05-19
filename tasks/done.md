@@ -5,3 +5,5 @@
 ✅ **COMPLETED** - Phase 12 VM Cache/Sync: ViewModelCache unified 5 caches. Dirty sync 4 townVMs (Resource/Prod/Upgrade/Interface). Tick poll1s update/sync dirty only. Removed 8 old sync* methods. Trading/market separate. Menu152 fixed.
 
 ✅ **COMPLETED** - Phase 12.3 Packet Boilerplate: BaseViewModelSyncPacket + IViewModel. Refact 4 packets Resource/Prod/Upgrade/TownInterfaceVM (~80→40L each, 160L saved). DebugConfig.NETWORK_PACKETS toggle. Fixes ctor/decode/import/T cast.
+
+✅ **COMPLETED** - Tourist Behavior Enhancement: Added 3 custom AI Goals (`TouristGossipGoal`, `TouristGazeGoal`, `TouristTargetGazeGoal`) using only vanilla `Goal`, `LookControl`, `playSound(SoundEvents.VILLAGER_*)`, and `swing()`. Gossip (nearby tourists look + ambient), window/target gazing while riding, speed celebration on fast movement (>5b/s with arm wave), UI sounds (YES on open, NO on close), closer player look range (3.0F). Full integration in `TouristEntity` (registerGoals, tick, NBT, methods). Fabric client tested successfully (visual behaviors functional; audio limited by WSL). All testing checklist items verified.
