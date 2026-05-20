@@ -1,72 +1,76 @@
-# BusinessCraft Technical Architecture Summary (Updated 2025 Code Analysis)
+# BusinessCraft - Living Document
 
-## Project Overview
+**Last Updated**: May 20, 2026  
+**Project Status**: Polishing for First Release  
+**Core Vision**: Create a compelling **transport economy** in Minecraft. Towns generate supply and demand. Tourists provide the visible, living justification for building transportation infrastructure (especially Create trains).
 
-BusinessCraft is a Minecraft mod implementing town-building simulation with interconnected systems for economy management, AI tourists, auction contracts, resource trading, transport platforms, and production chains. Designed for multi-platform deployment (Fabric/Forge) using a shared `common` module and [`PlatformAccess`](common/src/main/java/com/quackers29/businesscraft/api/PlatformAccess.java) service locator pattern for platform-agnostic API access via helpers (RegistryHelper, NetworkHelper, etc.).
+## The Big Idea (Why This Mod Exists)
 
-## Core Entities/Components
+Most transport in Minecraft feels pointless — Create trains run empty around servers with no passengers or purpose.
 
-- [`Town`](common/src/main/java/com/quackers29/businesscraft/town/Town.java) (`implements ITownDataProvider`): Core town data - position, name, population (grown from bread/resources via [`TownEconomyComponent`](common/src/main/java/com/quackers29/businesscraft/town/components/TownEconomyComponent.java)), tourist count/spawning flag/path start/end/search radius, modular components (Economy, Production, Trading, Contract), payment board (rewards via [`TownPaymentBoard`](common/src/main/java/com/quackers29/businesscraft/town/data/TownPaymentBoard.java)), personal storage (player UUID → Item→count), visit history.
-- [`TownManager`](common/src/main/java/com/quackers29/businesscraft/town/TownManager.java): Singleton per `ServerLevel`, manages UUID→Town map, registration/placement validation, ticking/saving via [`TownSavedData`](common/src/main/java/com/quackers29/businesscraft/data/TownSavedData.java).
-- [`TouristEntity`](common/src/main/java/com/quackers29/businesscraft/entity/TouristEntity.java): Extends `Villager` with slow movement (`RandomStrollGoal`), expiry timer (pauses during movement/riding), origin/destination tracking, notifies origin town on quit/death.
-- [`Platform`](common/src/main/java/com/quackers29/businesscraft/platform/Platform.java): Transport line with start/end `BlockPos`, enabled destination towns (UUID set), managed per-town by [`PlatformManager`](common/src/main/java/com/quackers29/businesscraft/town/data/PlatformManager.java).
-- Contracts: Abstract [`Contract`](common/src/main/java/com/quackers29/businesscraft/contract/Contract.java) (issuer, expiry, bids), [`SellContract`](common/src/main/java/com/quackers29/businesscraft/contract/SellContract.java) (resource/quantity/price, buyer/winning/delivered), [`CourierContract`](common/src/main/java/com/quackers29/businesscraft/contract/CourierContract.java) (resource/quantity/dest/reward/courier), global [`ContractBoard`](common/src/main/java/com/quackers29/businesscraft/contract/ContractBoard.java) singleton (file NBT).
-- Economy: [`TownResources`](common/src/main/java/com/quackers29/businesscraft/town/components/TownResources.java) Item→int, [`GlobalMarket`](common/src/main/java/com/quackers29/businesscraft/economy/GlobalMarket.java) singleton resourceId→price (trade-weighted update), [`ResourceRegistry`](common/src/main/java/com/quackers29/businesscraft/economy/ResourceRegistry.java)/[`ResourceType`](common/src/main/java/com/quackers29/businesscraft/economy/ResourceType.java) CSV canonical+equivalents (heuristics).
+**BusinessCraft's core fantasy**: Build towns that produce goods and need resources. These towns attract **living tourists**. By building platforms and transport networks, you enable tourists to travel efficiently. The further they travel, the more revenue they generate. Successful transport makes towns grow, produce more contracts, and attract more tourists.
 
-## Systems Breakdown
+**First release priority**: Focus on **entity (tourist) transport** because it creates the strongest emotional impact. Seeing tourists actually riding your Create trains (instead of them running empty) will be the main "aha" moment that makes the mod compelling.
 
-### Towns
-Created via [`TownInterfaceBlock`](common/src/main/java/com/quackers29/businesscraft/block/TownInterfaceBlock.java) placement → `TownManager.registerTown` validates no boundary overlap (radius=population, `distSqr >= (r1 + r2)^2` via [`TownBoundaryService`](common/src/main/java/com/quackers29/businesscraft/town/service/TownBoundaryService.java)). Soft boundaries for validation/viz (client 3D [`TownBoundaryVisualizationRenderer`](common/src/main/java/com/quackers29/businesscraft/client/render/world/TownBoundaryVisualizationRenderer.java), sync packets).
+## Core Player Loop
 
-### Economy
-Town resources processed in [`TownInterfaceEntity`](common/src/main/java/com/quackers29/businesscraft/block/entity/TownInterfaceEntity.java) tick (hopper input), bread grows pop. Trading stock auto-restock [`TownTradingComponent`](common/src/main/java/com/quackers29/businesscraft/town/components/TownTradingComponent.java). Global market unused in core flows.
+1. **Build Towns** — Place Town Interface, name it, grow population through successful tourism
+2. **Build Transport** — Create platforms and routes (integrates with Create trains, rails, etc.)
+3. **Attract & Move Tourists** — They travel your networks, generating revenue based on *actual distance traveled*
+4. **Grow Economy** — Revenue funds upgrades, contracts, production. Towns produce what they sell and buy what they need
+5. **Repeat** — Better transport → more tourists → more revenue → bigger towns
 
-### Tourists
-Spawn in `TownInterfaceEntity.tick` if enabled/can/platforms via `TouristSpawningHelper` (every 10s), dest "any"/specific town. Wander slow goals, vehicle mount `TouristVehicleManager`, visitor detection `VisitorProcessingHelper` increments touristCount (threshold→pop growth), expiry stationary (pause moving), notify origin quit/death `TownNotificationUtils`.
+**Success metric for v1.0**: Player understands they are building a living transport economy within the first 10-15 minutes.
 
-### Contracts
-Global `ContractBoard` file-NBT, tick expires/completes, broadcast sync packet. `TownContractComponent.tick` auto-sell excess/bid low (hardcoded wood/iron/coal >200/<100).
+## Current Focus Areas (First Release)
 
-### Platforms
-UI mode right-click path [`TownEventHandler`](common/src/main/java/com/quackers29/businesscraft/event/TownEventHandler.java), client 3D viz `PlatformVisualizationRenderer`, search radius tourist/vehicle detect.
+- **Tourist Polish** (Active): Visuals, skins (config/skins folder), behaviors, and clear payoff when they use transport
+- **Transportation Feedback**: Make it visually satisfying when tourists ride trains/platforms
+- **Onboarding**: Clear messaging about the transport economy fantasy
+- **Balance**: Early milestones should feel rewarding quickly
 
-### Production
-`TownProductionComponent.tick` pop-unlocks [`Upgrade`](common/src/main/java/com/quackers29/businesscraft/production/Upgrade.java) (CSV registry), consume/produce trading stock rates.
+**Documentation & external communication** will be done last, just before release.
 
-### Networking
-`PacketRegistry` registers extensive packets:
-- Town: setName/toggleTourist.
-- Storage: personal/communal/buffer/payment claim/request/response.
-- Platform: add/del/refresh/reset/setDest/enabled/path/mode/radius.
-- UI: open boards/menus/map/platformviz/boundary sync/request/response/contract sync.
+## Key Systems (Verified from Codebase)
 
-### Client Features
-Debug keybinds/overlays [`TownDebugKeyHandler`](common/src/main/java/com/quackers29/businesscraft/client/TownDebugKeyHandler.java)/[`TownDebugOverlay`](common/src/main/java/com/quackers29/businesscraft/client/TownDebugOverlay.java), 3D world renderers boundary/path/platform [`VisualizationManager`](common/src/main/java/com/quackers29/businesscraft/client/render/world/VisualizationManager.java).
+### Town System (`com.quackers29.businesscraft.town`)
+- `Town.java` (major class with component architecture)
+- Components: Economy, Production, Trading, Contracts, Upgrades
+- Multi-tier storage, population growth from tourism, milestone tracking
 
-### Data Persistence
-`TownSavedData` world NBT map UUID→Town, `ContractSavedData` config file list.
+### Tourist System (`com.quackers29.businesscraft.entity`)
+- `TouristEntity` with custom AI goals (gossip, gaze, celebration on speed)
+- Smart ride extension, expiry system, origin tracking
+- **Active work**: Tiered skins via dynamic config/skins loading (see Kanban task below)
 
-## Key Data Flows
+### Platform & Transport (`com.quackers29.businesscraft.platform`)
+- `Platform.java` with multi-destination and visualization
+- Designed as integration point for Create and other transport mods
 
-```
-Place TownInterfaceBlock
-↓ (boundary check)
-Register Town + default Platform
-↓ tick (TownInterfaceEntity)
-Process hopper resources → pop growth
-If platforms + enabled + can → spawn Tourist (helper)
-Tourist wander/ride vehicle → visitor detect → touristCount++ → threshold pop++
-Production tick: upgrade consume/produce trading stock
-Contract tick: auto sell excess / bid low
-UI packets sync live data (resources/platforms/boundary/pop/tourists)
-```
+### UI & Supporting Systems
+- Production-grade UI framework (`BCScreenBuilder`, state binding, modals)
+- Strong network layer (22 packets), debug system (`DebugConfig` with 25+ flags), data helpers
 
-## Potential Improvements/Gaps
+## Architecture Principles
+- Common-first (all logic in `common/`)
+- Component and Provider patterns for clean separation
+- Living documentation (this file is the single source of truth)
+- Observability-first (excellent debug overlay via F3+K)
 
-- **Deprecated Code**: Direct `Town` tourist methods → services.
-- **Hardcoding**: Contract resources/thresholds, upgrade configs CSV good but extend.
-- **Incomplete**: Contract fulfillment (delivery/payment), platform pathfinding (events partial), GlobalMarket trade integration.
-- **Scalability**: Visitor/tourist multiplayer sync, configurable limits.
-- **Platform**: Helpers robust, some Fabric extensions (e.g. entity packet).
+## Active Kanban Work
+- `t_1ab40ead` (researcher): Completed — researched tiered tourist skins
+- `t_961c5537` (coder): Completed — implemented dynamic skin loading system (`TouristSkinManager`, renderer integration, config/skins support)
+- `t_0af9f211` (artist): **Rejected** — produced only hat textures. Changes reverted and code cleaned up.
+- `t_d3f21c03` (artist): **Active** — new much stricter task to create proper full-body 64x64 tourist entity textures (no placeholders, specific clothing per tier, correct UV mapping).
 
-Analysis complete: Confirmed town/boundary/economy/tourist/contract/platform systems; updated ARCHITECTURE.md with code-derived insights.
+**New Profile**: `artist` — created for visual work (Gareth's weakest area). Now being given extremely specific prompts.
+
+**Next Priority**: Get high-quality full tourist skins that work properly with the existing renderer and hat layer. This is critical for first release visual polish.
+
+---
+
+**Archive**: Old documents moved to `docs/archive/`
+
+**Obsidian**: Open this project folder in Obsidian for richer personal notes and linking.
+
+*This is the single living document. It will be updated as we polish the transport economy systems. No other living docs will be maintained in this folder.*
