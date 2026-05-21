@@ -21,3 +21,8 @@
 /fabric/run/logs
 /common/build
 /.agent
+*.Identifier
+**/build/tmp/
+**/run/logs/
+**/run/usercache.json
+**/.gradle/loom-cache/
