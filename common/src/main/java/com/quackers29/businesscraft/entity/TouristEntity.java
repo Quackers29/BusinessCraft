@@ -47,6 +47,12 @@ public class TouristEntity extends Villager {
     // Synced entity data for live updates on client
     private static final EntityDataAccessor<Float> DATA_DISTANCE_TRAVELED =
         SynchedEntityData.defineId(TouristEntity.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Integer> DATA_SKIN_TIER =
+        SynchedEntityData.defineId(TouristEntity.class, EntityDataSerializers.INT);
+
+    public static final int SKIN_TIER_BASIC = 0;
+    public static final int SKIN_TIER_EXPERIENCED = 1;
+    public static final int SKIN_TIER_LUXURY = 2;
 
     // Special constant for "Any Town" destination
     public static final UUID ANY_TOWN_DESTINATION = new UUID(0, 0);
@@ -111,6 +117,7 @@ public class TouristEntity extends Villager {
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(DATA_DISTANCE_TRAVELED, 0.0f);
+        this.entityData.define(DATA_SKIN_TIER, SKIN_TIER_BASIC);
     }
 
     public TouristEntity(EntityType<? extends Villager> entityType, Level level,
@@ -386,14 +393,27 @@ public class TouristEntity extends Villager {
         return this.gossipPartner;
     }
 
-    public double getTotalDistanceTraveled() {
-        return totalDistanceTraveled;
-    }
-
     private void setRandomProfession() {
         this.setVillagerData(this.getVillagerData()
                 .setProfession(VillagerProfession.NONE)
                 .setLevel(1));
+        syncSkinTierFromLevel();
+    }
+
+    public int getSkinTier() {
+        return this.entityData.get(DATA_SKIN_TIER);
+    }
+
+    public double getTotalDistanceTraveled() {
+        return this.level().isClientSide ? this.entityData.get(DATA_DISTANCE_TRAVELED) : totalDistanceTraveled;
+    }
+
+    private static int skinTierForLevel(int level) {
+        return Math.min(Math.max(level, 1), MAX_LEVEL) - 1;
+    }
+
+    private void syncSkinTierFromLevel() {
+        this.entityData.set(DATA_SKIN_TIER, skinTierForLevel(this.getVillagerData().getLevel()));
     }
 
     @Override
@@ -491,6 +511,8 @@ public class TouristEntity extends Villager {
         if (tag.contains("DestinationTownName")) {
             destinationTownName = tag.getString("DestinationTownName");
         }
+
+        syncSkinTierFromLevel();
     }
 
     @Nullable
@@ -714,6 +736,7 @@ public class TouristEntity extends Villager {
         int currentLevel = this.getVillagerData().getLevel();
         if (targetLevel > currentLevel && targetLevel <= MAX_LEVEL) {
             this.setVillagerData(this.getVillagerData().setLevel(targetLevel));
+            syncSkinTierFromLevel();
             DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
                 "Tourist leveled up to {} at {:.1f}m", targetLevel, totalDistanceTraveled);
         }

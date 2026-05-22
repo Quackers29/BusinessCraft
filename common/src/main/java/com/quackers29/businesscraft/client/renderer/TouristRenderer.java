@@ -10,7 +10,12 @@ import net.minecraft.client.renderer.entity.layers.VillagerProfessionLayer;
 import net.minecraft.resources.ResourceLocation;
 
 public class TouristRenderer extends MobRenderer<TouristEntity, VillagerModel<TouristEntity>> {
-    private static final ResourceLocation VILLAGER_BASE_SKIN = 
+    private static final ResourceLocation[] SKIN_TEXTURES = {
+        new ResourceLocation("businesscraft", "textures/entity/tourist_basic.png"),
+        new ResourceLocation("businesscraft", "textures/entity/tourist_experienced.png"),
+        new ResourceLocation("businesscraft", "textures/entity/tourist_luxury.png"),
+    };
+    private static final ResourceLocation FALLBACK_SKIN =
         new ResourceLocation("textures/entity/villager/villager.png");
     
     public TouristRenderer(EntityRendererProvider.Context context) {
@@ -25,6 +30,10 @@ public class TouristRenderer extends MobRenderer<TouristEntity, VillagerModel<To
     
     @Override
     public ResourceLocation getTextureLocation(TouristEntity entity) {
-        return VILLAGER_BASE_SKIN;
+        int tier = entity.getSkinTier();
+        if (tier >= 0 && tier < SKIN_TEXTURES.length) {
+            return SKIN_TEXTURES[tier];
+        }
+        return FALLBACK_SKIN;
     }
 } 
