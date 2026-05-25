@@ -66,6 +66,11 @@ public class TouristTargetGazeGoal extends Goal {
 
     @Override
     public void start() {
+        if (targetPosition == null) {
+            // Re-establish state if we were preempted (e.g. by gossip or LookAtPlayer)
+            // while a gazeDuration was still active. This prevents NPE on reclaim.
+            pickNewTarget();
+        }
         DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
             "Tourist {} spotted distant target at ({}, {}, {})",
             tourist.getId(),
@@ -87,6 +92,7 @@ public class TouristTargetGazeGoal extends Goal {
     @Override
     public void stop() {
         targetPosition = null;
+        gazeDuration = 0; // Cleanly end any active gaze session on preemption (gossip, player look, etc.)
     }
 
     /**
