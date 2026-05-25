@@ -7,6 +7,10 @@
     minDistanceBetweenTowns = 100
     # Default starting population for new towns
     defaultStartingPopulation = 5
+    # When false (default): Town Interface block is nearly indestructible in survival.
+    # Creative players can still place and break it.
+    # When true: Block is craftable and can be mined with a diamond pickaxe or better (obsidian difficulty).
+    craftableTownInterface = false
     # List of random town names for auto-naming
     townNames = ["Riverside", "Hillcrest", "Meadowbrook", "Oakville", "Stonebridge", "Willowglen", "Sunnyvale", "Cedarwood", "Maplehaven", "Brookside", "Fairview", "Pinehurst", "Elmwood", "Greystone"]
 

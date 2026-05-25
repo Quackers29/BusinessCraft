@@ -16,7 +16,7 @@ public class CommonModBlocks {
         TOWN_INTERFACE_BLOCK = PlatformAccess.getRegistry().registerBlock("town_interface",
                 () -> new TownInterfaceBlock(BlockBehaviour.Properties.of()
                         .mapColor(MapColor.STONE)
-                        .strength(3.0f, 3.0f)
+                        .strength(50.0f, 1200.0f) // Obsidian-tier baseline when craftableTownInterface = true
                         .sound(SoundType.STONE)
                         .requiresCorrectToolForDrops()));
 

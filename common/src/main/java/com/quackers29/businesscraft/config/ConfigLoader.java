@@ -30,6 +30,7 @@ public class ConfigLoader {
     public static int minPopForTourists = 5;
     public static int minDistanceBetweenTowns = 100;
     public static int defaultStartingPopulation = 5;
+    public static boolean craftableTownInterface = false;
     public static int maxTouristsPerTown = 1000;
     public static int populationPerTourist = 5;
     public static int maxPopBasedTourists = 20;
@@ -123,6 +124,7 @@ public class ConfigLoader {
                 // General settings
                 minDistanceBetweenTowns = config.getIntOrElse("general.minDistanceBetweenTowns", 100);
                 defaultStartingPopulation = config.getIntOrElse("general.defaultStartingPopulation", 5);
+                craftableTownInterface = config.getOrElse("general.craftableTownInterface", false);
                 townNames = config.getOrElse("general.townNames", getDefaultTownNames());
 
                 // Vehicle settings
@@ -256,6 +258,8 @@ public class ConfigLoader {
                 config.setComment("general.minDistanceBetweenTowns", " Minimum distance between towns in blocks");
                 config.set("general.defaultStartingPopulation", defaultStartingPopulation);
                 config.setComment("general.defaultStartingPopulation", " Default starting population for new towns");
+                config.set("general.craftableTownInterface", craftableTownInterface);
+                config.setComment("general.craftableTownInterface", " When false (default): Town Interface is nearly indestructible in survival. Creative players can still break it. When true: block is craftable and breakable with diamond pickaxe or better.");
                 config.set("general.townNames", townNames);
                 config.setComment("general.townNames", " List of random town names for auto-naming");
 

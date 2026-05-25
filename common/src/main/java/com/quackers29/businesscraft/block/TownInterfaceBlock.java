@@ -31,6 +31,7 @@ import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -440,5 +441,31 @@ public class TownInterfaceBlock extends BaseEntityBlock {
                     0.0, 0.0, 0.0,
                     0.0);
         }
+    }
+
+    // === Config-driven Town Interface hardness / safety ===
+
+    @Override
+    public float getDestroyProgress(BlockState state, Player player, BlockGetter level, BlockPos pos) {
+        if (!ConfigLoader.craftableTownInterface && !player.isCreative()) {
+            return 0.0F; // Nearly indestructible in survival when config is false
+        }
+        return super.getDestroyProgress(state, player, level, pos);
+    }
+
+    @Override
+    public float getExplosionResistance(BlockState state, BlockGetter level, BlockPos pos, Explosion explosion) {
+        if (!ConfigLoader.craftableTownInterface) {
+            return 3600000.0F; // Bedrock-level resistance when not craftable
+        }
+        return super.getExplosionResistance(state, level, pos, explosion);
+    }
+
+    @Override
+    public void playerDestroy(Level level, Player player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity, ItemStack tool) {
+        if (ConfigLoader.craftableTownInterface || player.isCreative()) {
+            super.playerDestroy(level, player, pos, state, blockEntity, tool);
+        }
+        // When config is false and player is not creative: do nothing (no drop)
     }
 }
