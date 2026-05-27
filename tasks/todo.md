@@ -1,5 +1,7 @@
 # Task: Town Interface World Generation & Village Spawning
 
+**Note**: See `tasks/ROADMAP_v1.md` for the overall v1.0 phased plan and priorities. This task is one important piece of Phase 1 (Onboarding & Accessibility).
+
 **Goal**: Add configurable world generation options so Town Interface blocks can naturally appear in the world, improving accessibility and world integration without breaking the transport economy fantasy.
 
 ## Desired Modes (user specified)

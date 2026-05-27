@@ -1,5 +1,7 @@
 # BusinessCraft - First Release Evaluation & Improvement Ideas
 
+**Note**: For a higher-level, phased, and prioritized view of the path to v1.0, see the dedicated **tasks/ROADMAP_v1.md** file. This document contains the raw detailed evaluation notes.
+
 **Date**: Evaluation performed after Tourist Behavior Enhancement + Actual Distance Payment work.
 **Scope**: Full codebase review for v1.0 / first public release readiness.
 **Approach**: Explored from scratch — architecture, core loop, systems, polish, multiplayer, performance, UX.
@@ -115,3 +117,68 @@ I recommend focusing the next 1–2 weeks on **onboarding + feedback polish** ra
 ---
 
 **Next Step**: Would you like me to turn the highest-priority items into concrete, checkable tasks in `tasks/todo.md`, or focus on a specific area first (e.g. onboarding flow or balance tuning)?
+
+---
+
+## Raw Player Ideas: Tourist Contracts & Reputation System (May 2026)
+
+**Raw notes from user** (lightly formatted for readability):
+
+Tourist contracts  
+- General contract, works and tourist?  
+- Works only want to go to nearby towns ie shortest town wins  
+- Select platform for contract start  
+- Auto new contract every x hours  
+- Vip contracts  
+- Vip seats on a train  
+
+Create train name filter per contract, can be fuzzy  
+Or create train route checker even better  
+
+Colour passenger names based on destination  
+With key toggle or config to disable name tag  
+
+More automatic contracting based on available routes auto adds routes to network with editing add or remove  
+
+Wage is good incentive but rep inc better  
+More rep  
+More vips better contracts  
+Leaderboard inc  
+Towns inc  
+City creates from effort  
+First to city?  
+
+Company links to players  
+Multiple players in a company working for it  
+Players have a cap on contracts  
+More rep more contracts  
+Company better  
+Add train names to your company or player  
+Contracts only ride your trains  
+
+Tourist walk towards seat prior to teleport, only for 1 sec ish  
+
+Towns limited to platform number, can be upgrade maybe with tourism plus money  
+
+Vip train or plane way more lucrative, speed is key there
+
+---
+
+### Synthesized & Expanded Version (for roadmap use)
+
+- Distinguish between general/work contracts (which prefer short distances) and dedicated Tourist Transport Contracts.
+- Allow contract issuers to choose a specific departure platform.
+- Generate new tourist contracts automatically on a timer, intelligently based on existing routes.
+- Introduce VIP contracts that require premium/VIP seating and pay substantially more.
+- Add strong Create integration: fuzzy train name filtering or (preferably) full route validation per contract.
+- Color tourist name tags by destination town, with client config/key toggle to disable.
+- Build automatic network discovery that suggests or auto-creates contracts from a player's existing platforms and Create routes (with manual editing).
+- Make **Reputation** the primary long-term incentive over wages — higher reputation unlocks better contracts, more VIPs, and higher capacity.
+- Add leaderboards for contract performance, reputation, and "first to city" prestige milestones earned through sustained effort.
+- Introduce Player Companies where multiple players collaborate, share capacity/reputation, register trains as company assets, and restrict some contracts to company trains only.
+- Give players and companies contract capacity limits that scale with reputation and company standing.
+- Improve tourist boarding so they walk toward their seat for ~1 second before teleporting.
+- Add upgradeable platform count limits per town (costing tourism success + money).
+- Make high-speed VIP trains and premium transport dramatically more profitable, rewarding investment in speed and quality.
+
+**Notes**: These ideas represent a major expansion of the existing contract system (currently Sell + Courier only) into passenger/tourism transport. They have very strong synergy with the core "actual distance traveled" tourism loop and Create integration. This direction is likely too large for v1.0 and should be treated as a major post-release pillar. See the dedicated section in `tasks/ROADMAP_v1.md` for the structured version of these ideas.
