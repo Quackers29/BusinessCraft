@@ -7,6 +7,10 @@
     minDistanceBetweenTowns = 100
     # Default starting population for new towns
     defaultStartingPopulation = 5
+    # When false (default): Town Interface block is nearly indestructible in survival.
+    # Creative players can still place and break it.
+    # When true: Block is craftable and can be mined with a diamond pickaxe or better (obsidian difficulty).
+    craftableTownInterface = true
     # List of random town names for auto-naming
     townNames = ["Riverside", "Hillcrest", "Meadowbrook", "Oakville", "Stonebridge", "Willowglen", "Sunnyvale", "Cedarwood", "Maplehaven", "Brookside", "Fairview", "Pinehurst", "Elmwood", "Greystone"]
 
@@ -21,7 +25,7 @@
     minecartStopThreshold = 0.001
 
 [tourists]
-    enabled = false
+    enabled = true
     # Enable contract system (auction, bidding, delivery)
     # Minimum population required to spawn tourists
     minPopForTourists = 5
@@ -56,7 +60,7 @@
         items = ["minecraft:bread:1", "minecraft:experience_bottle:2"]
 
 [contracts]
-    enabled = false
+    enabled = true
     # Enable contract system (auction, bidding, delivery)
     # Auction duration in minutes
     auctionDurationMinutes = 1.0
@@ -91,7 +95,7 @@
 
 [display]
     # Timezone for time display
-    # Options: "UTC" (default), "SYSTEM" (use OS default), or timezone ID like "America/New_York"
+    # Options: "UTC" (default), "SYSTEM" (use OS  default), or timezone ID like "America/New_York"
     timezone = "UTC"
 
 [player]
@@ -102,5 +106,5 @@
 
 
 [research]
-    enabled = false
+    enabled = true
     # Enable research/upgrade system
