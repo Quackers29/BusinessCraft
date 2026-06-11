@@ -9,6 +9,7 @@ tags:
 
 ## Processes in this area
 - **[[Config/Configuration Loading|Configuration Loading]]** (T-014) — ConfigLoader.loadConfig/saveConfig + getOrElse parsing, the special milestoneRewards and townNames fallback rules, private getDefaultTownNames, ConfigurationService hot-reload registration + Result-based validation, and the "null platform → keep Java defaults" behavior that makes the statics testable in pure JUnit.
+- **[[Config/Data Parsing|Data Parsing]]** — compact semicolon-delimited strings from CSVs (upgrades, productions, biome starts) become structured Effect, Condition and ResourceAmount lists; supports bare flags, key*mult, key:value, optional %, pop aliases, and tolerant error handling so one bad entry doesn't break a row.
 
 ## How it connects
 Config values are read directly (no getters) by TouristEntity (expiry, notify, enabled), TownInterface* (naming, craftable flag), TownBoundaryService / TownValidationService (min distance, starting pop), VisitorProcessingHelper (metersPerEmerald via T-001), DistanceMilestoneHelper (T-002), ContractBoard timings, production/trading loops, BCTimeUtils (timezone), and the global phase-11 toggles. Changes after load (hot reload or test mutation) are immediately visible. The Test + Docs Loop and many existing tests rely on the save/restore @BeforeEach/@AfterEach pattern for these statics plus stubbing PlatformAccess.platform when forcing a re-load from a temp toml.
