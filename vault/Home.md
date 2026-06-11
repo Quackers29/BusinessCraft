@@ -16,15 +16,15 @@ Each loop iteration documents one unit of game logic (a calculation, a rule, a p
 ## Structure
 Folders mirror game systems, nesting from system → subsystem → process:
 
-- **Economy/** — tourist payments, milestones, currency
-- **Trade/** — contracts, bidding, courier delivery, town-to-town trades, global market
-- **Town/** — town lifecycle, population, resources, boundaries, visit history
-- **Tourists/** — spawning, AI, expiry, capacity, ride mechanics
-- **Platforms/** — platform rules, paths, destinations
-- **[[Production/Production Overview|Production/]]** — production sites, upgrades, research (Effect Value Calculation T-016)
-- **Config/** — configuration system and key settings
-- **Network/** — packet flows (mostly DOC-ONLY material)
-- **UI/** — screen/data flows (mostly DOC-ONLY material)
+- **[[Economy/Economy Overview|Economy/]]** — tourist payments, milestones, currency, market prices
+- **[[Trade/Trade Overview|Trade/]]** — contracts, bidding, courier delivery, town-to-town trades, global market
+- **[[Town/Town Overview|Town/]]** — town lifecycle, population, resources, boundaries, visit history, payment board, platforms (under `Town/Platforms/`)
+- **[[Tourists/Tourists Overview|Tourists/]]** — spawning, AI, expiry, capacity, ride mechanics
+- **[[Production/Production Overview|Production/]]** — production recipes, upgrades, research
+- **[[Config/Config Overview|Config/]]** — configuration system and key settings
+- **[[Core/Core Overview|Core/]]** — cross-cutting pure utilities (time formatting, result/error types)
+
+Planned but empty (create only when notes exist): **Network/** (packet flows), **UI/** (screen/data flows) — mostly DOC-ONLY material.
 
 ## Tracking
 - [[_meta/Coverage Ledger|Coverage Ledger]] — what's covered, in progress, blocked

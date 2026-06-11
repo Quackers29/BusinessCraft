@@ -17,11 +17,12 @@ tags:
 - [[Economy/Economy Overview]] — tourist payments, milestones, global market, currency
 - [[Trade/Trade Overview|Trade]] — sell contracts (towns auction surplus), courier delivery contracts, town-to-town trading
 - [[Town/Town Overview|Town]] — lifecycle, population, multi-tier storage (resources + escrow + personal), boundaries, visit history, payment board
-- [[Tourists/Tourists Overview|Tourists]] — spawning, allocation, capacity, AI behaviors, expiry, ride mechanics (see Tourist Allocation T-009)
-- [[Town/Platforms/Platform Data Model|Platforms]] — paths, destinations, enable/disable (data model T-015), visualization *(full Platforms overview pending)*
+- [[Tourists/Tourists Overview|Tourists]] — spawning, allocation, capacity, AI behaviors, expiry, ride mechanics
 - [[Production/Production Overview|Production]] — production recipes (farming, population, crafting) and upgrade nodes that scale town stats by level
-- [[Config/Config Overview|Config]] — TOML config system, hot reload, key settings (T-014)
-- [[Core/Core Overview|Core]] — cross-cutting pure utilities (time formatting for all UIs, result type, etc.; T-017)
+- [[Config/Config Overview|Config]] — settings file, hot reload, key settings
+- [[Core/Core Overview|Core]] — cross-cutting utilities (time formatting for all UIs, success/failure handling)
+
+Platforms (paths, destinations, enable/disable) are documented under the Town area: [[Town/Platforms/Platform Data Model|Platform Data Model]] and [[Town/Platforms/Platform Management|Platform Management]].
 
 ## Reading paths
 - **Human, "how does the mod work?"**: this note → area overview notes. Stop there; that's the full picture in plain language.

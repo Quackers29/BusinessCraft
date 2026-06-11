@@ -182,3 +182,20 @@ Vip train or plane way more lucrative, speed is key there
 - Make high-speed VIP trains and premium transport dramatically more profitable, rewarding investment in speed and quality.
 
 **Notes**: These ideas represent a major expansion of the existing contract system (currently Sell + Courier only) into passenger/tourism transport. They have very strong synergy with the core "actual distance traveled" tourism loop and Create integration. This direction is likely too large for v1.0 and should be treated as a major post-release pillar. See the dedicated section in `tasks/ROADMAP_v1.md` for the structured version of these ideas.
+
+---
+
+## Testing Infrastructure (post-v1)
+
+### GameTest harness for NEEDS-MC coverage
+The Test + Docs Loop (June 2026) covered all pure/bootstrap-testable logic, but three Coverage Ledger rows remain `NEEDS-MC` because they require a live `ServerLevel`, `TownManager`, or real entity ticking:
+- **T-034** — `TownContractComponent` autonomous bidding + sell contract creation (orchestration paths)
+- **T-037** — `TouristSpawningHelper` spawning flow + destination selection
+- **T-038** — `TouristEntity` construction, tick loop, ride extension in-world behavior
+
+Plus smaller residuals noted in ledger rows: `ContractBoard.closeAuctions()` orchestration (T-003), `ClientSyncHelper` server-side TownManager lookup (T-033), `TownPaymentBoard` claim-to-player overflow handling (lives in packet handlers).
+
+**Approach**: Set up Minecraft GameTest framework (or fabric-loom test harness) in a platform module so these flows can run against a real headless server. Revisit after v1.0 ships.
+
+### UIGridBuilder refactor (from v1 release review)
+`UIGridBuilder.java` (2,647 lines) — split into focused builder/layout/render concerns. Deferred from the v1.0 release plan as post-release maintainability work.

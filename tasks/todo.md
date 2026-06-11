@@ -50,7 +50,8 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 - [ ] English only for v1; structure makes community translations possible later
 
 ## Phase F — Testing & Release
-- [ ] Unit test coverage for economy-critical logic — delivered via the **Test + Docs Loop** (see parallel track below); at minimum T-001 through T-005 in the Coverage Ledger should be DONE before the public beta
+- [x] Unit test coverage for economy-critical logic — delivered via the **Test + Docs Loop**: seed list exhausted June 2026, 39 ledger items (35 DONE, 1 BUG-FOUND, 3 NEEDS-MC), ~600+ tests — far beyond the T-001–T-005 minimum
+- [ ] **Fix T-012 payment board bugs (pre-beta blocker)**: two `@Disabled` tests in `TownPaymentBoardTest` pin real bugs in `toBuffer` claims — (1) partial-claim item leak while entry stays UNCLAIMED, (2) excess item loss on success. Fix production code, re-enable both tests, set ledger row to DONE
 - [ ] Multiplayer playtest pass: payment board claims, milestone rewards, personal storage, contract flow with 2+ players
 - [ ] Tourist vehicle stress test: minecarts + Create contraptions across chunk boundaries, server restarts, long journeys
 - [ ] Performance check: 5 active towns, 50+ simultaneous tourists
@@ -71,12 +72,14 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 - [x] Add JUnit 5 to `common/build.gradle` (junit-jupiter 5.10.2, junit-platform-launcher, `useJUnitPlatform()`)
 - [x] Add smoke test (`common/src/test/java/.../SmokeTest.java`) and verify `wsl ./gradlew :common:test` runs green — confirmed: 2 tests pass, no ForgeGradle quirks; smoke test also verifies tests can reference production classes and guards `FORCE_ALL_DEBUG == false`
 - [x] Pilot: ran iteration T-001 (distance payment calculation) end-to-end — vault note + 10 passing tests; protocol refined (reflection allowed for private pure methods, config field save/restore pattern, BlockPos confirmed safe)
-- [ ] Hand off to loop execution (cheap-model subagents or recurring loop runs, one ledger item per iteration)
+- [x] Hand off to loop execution (cheap-model subagents or recurring loop runs, one ledger item per iteration)
 
-### Ongoing
-- [ ] Work through Coverage Ledger (T-001 pilot + T-002–T-023 completed via loop iterations; new gaps discovered per protocol Step 1 after seeds exhausted)
-- [ ] Periodically review `BUG-FOUND` / `BLOCKED` rows (these need human or senior-agent attention)
-- [ ] Senior review every ~5 iterations: skim the last 5 vault notes + tests for quality drift (vague docs, shallow tests) — cheap models drift while the build stays green; commit per iteration (or small batch) so any junk iteration is easy to revert
+### Status: v1 goal met — loop PARKED (June 2026)
+- [x] Work through Coverage Ledger — all 39 seed rows resolved (35 DONE, T-012 BUG-FOUND, T-034/T-037/T-038 NEEDS-MC)
+- [x] Senior review #1 (after T-015): built McBootstrap fixture, re-opened 6 NEEDS-MC rows, corrected dates
+- [x] Senior review #2 (T-016–T-039): docs/tests quality held up; fixed plain-language drift in overview notes (T-024/T-033/T-034 entries had code jargon), reconciled Home.md area taxonomy; T-012 bugs promoted to Phase F task
+- [ ] Re-invoke the loop only when new logic lands (e.g. Phase D features should each get an iteration after implementation) — review cadence lesson: every ~5 iterations was specified but slipped to 24; enforce it next time
+- [ ] NEEDS-MC rows (T-034 autonomous contracts, T-037 tourist spawning, T-038 entity ticking) need a GameTest harness — tracked in `tasks/toImprove.md`, not v1
 
 ## Deferred (not v1.0)
 - Town Interface worldgen → `tasks/v1.1_worldgen.md` (planning complete, implementation not started)
@@ -84,4 +87,4 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 - Prestige / "First to City" → v1.x/v2 (move into ROADMAP_v2 during Phase A)
 - `UIGridBuilder.java` refactor (2,647 lines) → post-release maintainability work; add to `tasks/toImprove.md`
 
-**Status**: Plan approved by user (June 2026). Phase A in progress — file reorganisation done, roadmap rewrites pending.
+**Status**: Plan approved by user (June 2026). Test + Docs Loop track COMPLETE for v1 (seeds exhausted, parked). Phase A in progress — file reorganisation done, roadmap rewrites pending (note: `ROADMAP_v2.md` also needs updating — it still says v2 "builds on Tourist Contracts + prestige from v1", but those were cut from v1, so the base features themselves must become v2 opening priorities). Next up: finish Phase A, then Phase B one-day pass, then fix T-012 payment board bugs.
