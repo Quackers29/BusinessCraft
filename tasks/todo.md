@@ -70,12 +70,13 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 - [x] Seed Coverage Ledger with 14 priority targets (economy math first)
 - [x] Add JUnit 5 to `common/build.gradle` (junit-jupiter 5.10.2, junit-platform-launcher, `useJUnitPlatform()`)
 - [x] Add smoke test (`common/src/test/java/.../SmokeTest.java`) and verify `wsl ./gradlew :common:test` runs green — confirmed: 2 tests pass, no ForgeGradle quirks; smoke test also verifies tests can reference production classes and guards `FORCE_ALL_DEBUG == false`
-- [ ] Pilot: run iteration T-001 (distance payment calculation) with a capable agent to validate the protocol end-to-end; refine `test_doc_loop.md` based on friction found
+- [x] Pilot: ran iteration T-001 (distance payment calculation) end-to-end — vault note + 10 passing tests; protocol refined (reflection allowed for private pure methods, config field save/restore pattern, BlockPos confirmed safe)
 - [ ] Hand off to loop execution (cheap-model subagents or recurring loop runs, one ledger item per iteration)
 
 ### Ongoing
-- [ ] Work through Coverage Ledger T-001 → T-014, then discover new gaps per protocol Step 1
+- [ ] Work through Coverage Ledger T-002 → T-014 (T-001 done as pilot), then discover new gaps per protocol Step 1
 - [ ] Periodically review `BUG-FOUND` / `BLOCKED` rows (these need human or senior-agent attention)
+- [ ] Senior review every ~5 iterations: skim the last 5 vault notes + tests for quality drift (vague docs, shallow tests) — cheap models drift while the build stays green; commit per iteration (or small batch) so any junk iteration is easy to revert
 
 ## Deferred (not v1.0)
 - Town Interface worldgen → `tasks/v1.1_worldgen.md` (planning complete, implementation not started)

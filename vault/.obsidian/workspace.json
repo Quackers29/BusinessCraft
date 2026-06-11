@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "_meta/Loop Log.md",
+                "file": "Economy/Tourist Payments/Distance Payment Calculation.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Loop Log"
+              "title": "Distance Payment Calculation"
             }
           }
         ]
@@ -186,8 +186,9 @@
   "active": "0fc2a8312fd10b5e",
   "lastOpenFiles": [
     "_meta/Coverage Ledger.md",
-    "Home.md",
+    "_meta/Loop Log.md",
     "_meta/Note Template.md",
-    "_meta/Loop Log.md"
+    "Economy/Tourist Payments/Distance Payment Calculation.md",
+    "Home.md"
   ]
 }

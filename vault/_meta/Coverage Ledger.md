@@ -6,7 +6,7 @@ All code paths are relative to `common/src/main/java/com/quackers29/businesscraf
 
 | ID | Vault note path | Code target | Status | Test file | Date | Notes |
 |----|----------------|-------------|--------|-----------|------|-------|
-| T-001 | Economy/Tourist Payments/Distance Payment Calculation | `town/data/VisitorProcessingHelper.java` (distance → emerald math, `metersPerEmerald`) | TODO | | | The single most important formula in the mod |
+| T-001 | Economy/Tourist Payments/Distance Payment Calculation | `town/data/VisitorProcessingHelper.java` (distance → emerald math, `metersPerEmerald`) | DONE | `common/src/test/java/com/quackers29/businesscraft/town/data/VisitorProcessingHelperTest.java` | 2026-06-11 | 10 tests. `calculatePayment` is private → tested via reflection. Quirk found: count=0 + distance>0 pays 1 (unreachable today, pinned by test). Min payment is per batch, not per tourist |
 | T-002 | Economy/Milestones/Distance Milestone Resolution | `town/data/DistanceMilestoneHelper.java` | TODO | | | Threshold matching + reward selection |
 | T-003 | Trade/Contracts/Auction Resolution | `contract/ContractBoard.java` (bid resolution, auction close, winner selection) | TODO | | | May need splitting into multiple rows |
 | T-004 | Trade/Contracts/Sell Contract Lifecycle | `contract/SellContract.java` + `contract/Contract.java` (state transitions, validation, serialization round-trip) | TODO | | | |

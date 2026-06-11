@@ -16,10 +16,14 @@
 3. **Only run these commands**:
    - `wsl ./gradlew :common:test` (all tests)
    - `wsl ./gradlew :common:test --tests "com.quackers29.businesscraft.SomeClassTest"` (filtered)
-4. **Tests must be pure-logic tests.** They must not require Minecraft registry/game bootstrap. Simple data classes like `BlockPos` or `CompoundTag` are usually safe; anything touching `Registry`, `Level`, entities, blocks, or static init that loads game state is NOT safe — mark `NEEDS-MC` instead.
+4. **Tests must be pure-logic tests.** They must not require Minecraft registry/game bootstrap. Simple data classes like `BlockPos` or `CompoundTag` are usually safe (confirmed working in T-001); anything touching `Registry`, `Level`, entities, blocks, or static init that loads game state is NOT safe — mark `NEEDS-MC` instead.
+   - **Private pure methods MAY be tested via reflection** (`getDeclaredMethod` + `setAccessible(true)`) when the logic is important — see `VisitorProcessingHelperTest.java` for the working pattern. Note "tested via reflection" in the ledger row, and suggest extracting the method as a future refactor in the vault note's Open questions.
+   - **Mutable public static config fields** (e.g. `ConfigLoader.metersPerEmerald`) may be set in `@BeforeEach` for determinism — ALWAYS save and restore the original value in `@AfterEach`.
 5. **If a test reveals what looks like a real bug in production code**: do NOT fix the production code. Write the test, annotate it `@Disabled("BUG: <description> — see ledger")`, set ledger status to `BUG-FOUND` with details, and mention it clearly in your final summary to the user.
+   - **Quirks are NOT bugs.** If you find suspicious-but-harmless behavior (e.g. an edge case that is unreachable through normal play, or behavior that is odd but plausibly intentional): do NOT escalate to `BUG-FOUND`. Instead write a **pinning test** that asserts CURRENT behavior, with a comment explaining the quirk and that the test pins it, and record the quirk under "Open questions" in the vault note. Reference example: `calculatePayment_zeroCountWithDistance_currentBehaviorPaysOne` in `VisitorProcessingHelperTest.java`. When unsure whether something is a quirk or a bug, treat it as a quirk and flag it in your final summary for human review.
 6. **All committed-to tests must pass.** Never leave the build red. If you can't get green, revert your test file and mark the item `BLOCKED`.
 7. Do not git commit unless the user explicitly asked for commits.
+8. **Never run concurrent iterations.** The Coverage Ledger is the lock — one agent, one iteration at a time. If you find a stale `IN-PROGRESS` row from a previous session, reset it to `TODO` before picking your target.
 
 ---
 
@@ -62,7 +66,7 @@
 - Add the test file link to the vault note's Test coverage section.
 
 ### Step 6 — Update tracking
-- Ledger row: status `DONE`, fill Test file, Vault note, Date columns.
+- Ledger row: status `DONE`, fill Test file, Vault note, Date columns. Keep the Notes column to ONE short clause — details belong in the vault note and Loop Log, not the ledger table.
 - Append ONE line to `vault/_meta/Loop Log.md`: `YYYY-MM-DD | <ledger ID> | <status> | <one-line summary>`.
 
 ### Step 7 — Report and stop
