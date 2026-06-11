@@ -19,7 +19,7 @@ tags:
 - [[Town/Town Overview|Town]] — lifecycle, population, multi-tier storage (resources + escrow + personal), boundaries, visit history, payment board
 - [[Tourists/Tourists Overview|Tourists]] — spawning, allocation, capacity, AI behaviors, expiry, ride mechanics (see Tourist Allocation T-009)
 - [[Town/Platforms/Platform Data Model|Platforms]] — paths, destinations, enable/disable (data model T-015), visualization *(full Platforms overview pending)*
-- Production — production sites, upgrades, research *(overview pending)*
+- [[Production/Production Overview|Production]] — production recipes (farming, population, crafting) and upgrade nodes that scale town stats by level
 - [[Config/Config Overview|Config]] — TOML config system, hot reload, key settings (T-014)
 
 ## Reading paths

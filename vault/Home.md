@@ -21,7 +21,7 @@ Folders mirror game systems, nesting from system → subsystem → process:
 - **Town/** — town lifecycle, population, resources, boundaries, visit history
 - **Tourists/** — spawning, AI, expiry, capacity, ride mechanics
 - **Platforms/** — platform rules, paths, destinations
-- **Production/** — production sites, upgrades, research
+- **[[Production/Production Overview|Production/]]** — production sites, upgrades, research (Effect Value Calculation T-016)
 - **Config/** — configuration system and key settings
 - **Network/** — packet flows (mostly DOC-ONLY material)
 - **UI/** — screen/data flows (mostly DOC-ONLY material)
