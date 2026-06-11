@@ -26,3 +26,6 @@
 **/run/logs/
 **/run/usercache.json
 **/.gradle/loom-cache/
+/common/logs
+vault/.obsidian/graph.json
+vault/.obsidian/workspace.json
