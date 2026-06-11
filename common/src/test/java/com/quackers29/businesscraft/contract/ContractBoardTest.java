@@ -1,8 +1,12 @@
 package com.quackers29.businesscraft.contract;
 
 import com.quackers29.businesscraft.config.ConfigLoader;
+import com.quackers29.businesscraft.testutil.McBootstrap;
+import com.quackers29.businesscraft.town.Town;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,6 +26,11 @@ import static org.junit.jupiter.api.Assertions.*;
  * ServerLevel + TownManager + full Town resource state — not pure, hence
  * intentionally not exercised here.
  *
+ * With McBootstrap, the calculateCourierCost happy path (non-null Towns) is
+ * now reachable using the public 3-param Town ctor + BlockPos (simple data).
+ * Full closeAuctions remains untestable in this harness (see vault note).
+ * 7 distance-based tests added for the courier formula (hand-computed).
+ *
  * Documentation: vault/Trade/Contracts/Auction Resolution.md
  */
 class ContractBoardTest {
@@ -34,6 +43,11 @@ class ContractBoardTest {
     private static final UUID ISSUER = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private static final UUID BIDDER1 = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID BIDDER2 = UUID.fromString("22222222-2222-2222-2222-222222222222");
+
+    @BeforeAll
+    static void boot() {
+        McBootstrap.init();
+    }
 
     @BeforeEach
     void setUp() {
@@ -202,5 +216,68 @@ class ContractBoardTest {
         assertEquals(190f, loaded.getHighestBid());
         assertEquals(BIDDER2, loaded.getHighestBidder());
         assertEquals("Two", loaded.getBidderName(BIDDER2));
+    }
+
+    // --- calculateCourierCost happy path (now reachable with McBootstrap + Town ctor) ---
+
+    private Town makeTown(int x, int y, int z, String name) {
+        return new Town(UUID.randomUUID(), new BlockPos(x, y, z), name);
+    }
+
+    @Test
+    void calculateCourierCost_realTowns_zeroDistance_returnsZero() {
+        Town t1 = makeTown(100, 64, 200, "A");
+        Town t2 = makeTown(100, 64, 200, "B");
+        // distSqr = 0; sqrt=0; 0/10=0; ceil(0)=0; (int)0
+        assertEquals(0, ContractBoard.calculateCourierCost(t1, t2));
+    }
+
+    @Test
+    void calculateCourierCost_realTowns_tinyDistance_ceilsToOne() {
+        Town t1 = makeTown(0, 0, 0, "A");
+        Town t2 = makeTown(5, 0, 0, "B"); // euclid dist=5
+        // 5 / 10.0 = 0.5; Math.ceil(0.5) = 1.0; (int)1
+        assertEquals(1, ContractBoard.calculateCourierCost(t1, t2));
+    }
+
+    @Test
+    void calculateCourierCost_realTowns_exactTenBlocks_returnsOne() {
+        Town t1 = makeTown(0, 0, 0, "A");
+        Town t2 = makeTown(10, 0, 0, "B");
+        // 10 / 10 = 1.0; ceil(1.0)=1; (int)1
+        assertEquals(1, ContractBoard.calculateCourierCost(t1, t2));
+    }
+
+    @Test
+    void calculateCourierCost_realTowns_elevenBlocks_ceilsToTwo() {
+        Town t1 = makeTown(0, 0, 0, "A");
+        Town t2 = makeTown(11, 0, 0, "B");
+        // 11 / 10.0 = 1.1; ceil(1.1)=2.0; (int)2
+        assertEquals(2, ContractBoard.calculateCourierCost(t1, t2));
+    }
+
+    @Test
+    void calculateCourierCost_realTowns_25Blocks_returnsThree() {
+        Town t1 = makeTown(0, 0, 0, "A");
+        Town t2 = makeTown(25, 0, 0, "B");
+        // 25 / 10.0 = 2.5; ceil(2.5)=3.0; (int)3
+        assertEquals(3, ContractBoard.calculateCourierCost(t1, t2));
+    }
+
+    @Test
+    void calculateCourierCost_realTowns_100Blocks_returnsTen() {
+        Town t1 = makeTown(0, 64, 0, "Seller");
+        Town t2 = makeTown(100, 64, 0, "Winner");
+        // 100 / 10.0 = 10.0; ceil(10)=10; (int)10
+        // (matches the worked example in the vault note)
+        assertEquals(10, ContractBoard.calculateCourierCost(t1, t2));
+    }
+
+    @Test
+    void calculateCourierCost_realTowns_3DOffset_usesFullDistSqr() {
+        Town t1 = makeTown(0, 0, 0, "A");
+        Town t2 = makeTown(6, 8, 0, "B"); // 6-8-0 triangle: sqrt(36+64)=10 exactly
+        // dist=10; 10/10=1.0 -> 1
+        assertEquals(1, ContractBoard.calculateCourierCost(t1, t2));
     }
 }
