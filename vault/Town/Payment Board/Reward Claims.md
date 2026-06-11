@@ -134,13 +134,33 @@ From the code (write-from-implementation):
 - ClaimResult and PaymentBoardStats are simple immutable snapshots; ClaimResult always defensively copies the item list.
 
 ## Test coverage
-- Test file: none (NEEDS-MC)
-- The core eligibility, expiry, claim-decision, cleanup, and trim logic lives in RewardEntry.canBeClaimed / isExpired and TownPaymentBoard methods, but both classes have hard dependencies that prevent pure JUnit instantiation:
-  - TownPaymentBoard eagerly `new SlotBasedStorage(18)` in its field initializer → ItemStack[] + ItemStack.EMPTY → triggers ItemStack codec/registry static init (same "Not bootstrapped" crash seen in T-007 / T-013).
-  - RewardEntry public ctor and fromNBT/fromNetwork all take or produce List<ItemStack>; even referencing ItemStack.EMPTY in a test that loads these classes initializes the failing ItemStack <clinit>.
-- Only the trivial ClaimStatus enum values could be referenced in isolation. No meaningful guard-only surface existed that would justify a test class under the loop rules (cf. T-007 which got 4 population/null guards before hitting the wall).
-- If MC bootstrap or a GameTest harness with real registries becomes available, the positive paths (add non-empty real stacks, buffer space behavior, full item NBT fidelity, claim to real inventories) would be covered by the scenarios described in the "Rules & formulas" and "Edge cases" sections above.
-- The vault note itself was written first per protocol; it captures the exact formulas and multiplayer fairness rules (ALL vs UUID eligibility) from code inspection.
+- Test files: `common/src/test/java/com/quackers29/businesscraft/town/data/TownPaymentBoardTest.java`, `common/src/test/java/com/quackers29/businesscraft/town/data/RewardEntryTest.java` (plus the fixture validation starter in `testutil/McBootstrapValidationTest.java`)
+- McBootstrap + TestRegistryHelper double (installed per-test, matching T-002/T-007/T-008 patterns) unblocks ItemStack construction and any registry-dependent paths (NBT roundtrips, hover names, debug logging).
+- RewardEntryTest covers the pure decision logic and serialization:
+  - canBeClaimed matrix: UNCLAIMED + not-expired + ("ALL" matches anyone, specific UUID matches only exact, mismatch false); claimed/expired short-circuit.
+  - isExpired: strict `>` vs expirationTime; exact-now still not expired.
+  - 24 h default in direct ctor vs forced 7 d overwrite by TownPaymentBoard.addReward (pinned).
+  - fromNBT defensive: unknown source→OTHER, unknown status→UNCLAIMED, empty eligibility→"ALL", empty/air stacks inside rewards list are dropped (fidelity quirk pinned).
+  - fromNetwork roundtrips, equals/hash by id only, getters/setters for status/expiry.
+  - getRewardsDisplay combines same items (order-stable via LinkedHashMap), handles count=1 vs >1.
+- TownPaymentBoardTest covers the container + claim flow + maintenance:
+  - addReward guards: null or empty list → null return + no side effects (warning logged, not asserted).
+  - addReward success: creates entry, forces DEFAULT_EXPIRATION_TIME = 7 d (overriding entry's 24 h), returns its UUID, appends; size grows.
+  - getUnclaimedRewards: always runs cleanup first; only UNCLAIMED && !isExpired(); sorted newest (ts desc).
+  - claimReward paths:
+    - not found → ClaimResult(false, "Reward not found")
+    - !canBeClaimed (by status/expiry/eligibility) → appropriate reason ("already claimed", "expired", "not eligible")
+    - toBuffer=true + fits in 18-slot SlotBasedStorage (smart stacking into matching or empty) → sets CLAIMED, returns success + copy of items; buffer contains them.
+    - toBuffer=true + no room for all stacks in reward → false + "Buffer storage is full"; entry status unchanged (atomic for the reward).
+    - toBuffer=false → unconditionally sets CLAIMED, returns items (caller owns placement/overflow).
+  - cleanupExpiredRewards: marks isExpired() && status != CLAIMED → EXPIRED; independently prunes any EXPIRED whose *creation timestamp* < now-30 d (creation ts, not expiry ts).
+  - MAX_REWARDS=100 trim (in addReward): on crossing 101, cleanup then oldest-first (ts asc) remove(0) until <=100.
+  - getStats: cleans then returns counts for UNCLAIMED/CLAIMED/EXPIRED + total.
+  - getAllRewards / getRewardsBySource: do **not** clean; include expired/claimed; newest first.
+  - NBT roundtrip for board + entries: full rewards list + bufferStorage; fromNBT skips bad entries, drops empty stacks inside entries, defensive enum defaults.
+  - Buffer interaction: 18-slot hard-coded; legacy addToBuffer/removeFromBuffer chunking to int-max; getBufferStorageSlots exposes the real storage.
+- All formulas and edge cases from the Rules & Edge sections have at least one asserting test with hand-computed expectations (time deltas, 7 d / 30 d ms constants, 100 cap, stack counts, "ALL" vs UUID strings).
+- Starter validation tests (eligibility, claimed/expired short-circuits) remain in McBootstrapValidationTest; the loop tests are the comprehensive ones.
 
 ## Open questions
 - **Testability blocker (ItemStack bootstrap)**: Even the pure decision methods (canBeClaimed, claimReward logic, cleanup rules, eligibility string matching) cannot be exercised in the current JUnit setup because TownPaymentBoard and RewardEntry construction unconditionally touch ItemStack (eager buffer + ctor param). This is the same fundamental limit that caused T-002/T-007/T-008/T-013 to be marked NEEDS-MC. No production bug; just an architectural coupling of data objects to MC item types. Future improvement: factor the pure claim/eligibility/expiry state into a POJO that the board wraps, or provide a test seam.
@@ -150,6 +170,7 @@ From the code (write-from-implementation):
 - **Buffer storage size hard-coded**: 18 slots is magic in TownPaymentBoard; SlotBasedStorage itself is generic. If the UI ever wants a larger claim staging area this constant must move in sync.
 - **No per-player claim tracking beyond the eligibility string**: Once claimed the entry just becomes CLAIMED with no record of *who* claimed it. For audit or "only the claimer can un-claim" features this would need to be extended (metadata already exists as an escape hatch).
 - `getRewardsDisplay`, `getTimeAgoDisplay`, etc. on RewardEntry are presentation helpers that pull from the contained ItemStacks and BCTimeUtils; they are not exercised in pure unit tests.
+- **BUG-FOUND during T-012 testing (see disabled tests in TownPaymentBoardTest)**: `addToBufferStorage` + board's claim toBuffer path commits partial ItemStack adds (via SlotBasedStorage.addItem which succeeds on "at least some" placed) for earlier stacks in a reward list, then aborts on a later stack that won't fit. On failure the claim returns "Buffer storage is full" and leaves entry UNCLAIMED — so the leaked partial items now sit in the shared town buffer while the full reward can be claimed again (or by someone else) → item duplication / inflation. Even on single-stack partial fits, a toBuffer claim can succeed while only a subset of the declared count lands in buffer (excess count disappears silently because entry is marked CLAIMED with the original list returned in the result). These are not harmless quirks; they are lossy/dupe vectors for any reward containing multiple distinct items or stacks larger than remaining buffer space. Production code change required (e.g. dry-run check or transactional snapshot of buffer before mutating). Tests are @Disabled("BUG: ...") per protocol; ledger status set to BUG-FOUND.
 
 ## Related
 - [[Town/Town Overview]]
