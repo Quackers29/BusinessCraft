@@ -19,3 +19,4 @@ One line per completed iteration: `YYYY-MM-DD | ID | STATUS | summary`. Use the 
 2026-06-11 | T-014 | DONE | ConfigLoader TOML parsing/defaults/milestones documented + 16 tests; empty-vs-invalid milestone list quirk pinned
 2026-06-11 | T-015 | DONE | Platform data model documented + 25 tests (NBT, destination sets, isComplete, defensive copies)
 2026-06-11 | REVIEW | — | Senior review of T-002..T-015: all green (208 tests), quality high; built McBootstrap registry fixture (+4 validation tests on RewardEntry); re-opened T-002/003/007/008/012/013 to TODO; corrected invented dates; protocol tightened
+2026-06-11 | T-002 | DONE | Distance milestone resolution extended (docs+tests); 9 positive-path tests added via McBootstrap (total 17); selection/scaling/parse resilience covered with hand-computed expects; count=0 zero-stack quirk pinned; full suite green
