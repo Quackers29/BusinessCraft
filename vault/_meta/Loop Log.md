@@ -40,3 +40,4 @@ One line per completed iteration: `YYYY-MM-DD | ID | STATUS | summary`. Use the 
 2026-06-11 | T-028 | DONE | Base Contract bid clamping (max per bidder), highest selection (tie pins iteration), extend/expire always from now, full bids NBT roundtrip; 14 pure tests (no bootstrap); quirk pinned (neg offer -> 0 via max(0)); full suite green; docs first.
 2026-06-11 | T-029 | DONE | Recipe execution (expr eval, rate math, conditions, stall+starve) documented + 25 tests; McBootstrap+reflection+registry injection; full green.
 2026-06-11 | T-030 | DONE | UpgradeRegistry load/defaults/parse edges documented + 7 tests (tempdir+reflection+platform double); mkdir quirk + trailing-split edge pinned; full suite green.
+2026-06-11 | T-031 | DONE | TownTradingComponent virtual stocks (pop/tourist/happiness/tourism*), cap resolution (upgrade mods + alias), adjust exclusions/clamp/delegate documented + 20 tests; full suite green.

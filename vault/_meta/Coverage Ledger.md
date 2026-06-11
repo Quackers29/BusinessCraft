@@ -38,6 +38,7 @@ All code paths are relative to `common/src/main/java/com/quackers29/businesscraf
 | T-028 | Trade/Contracts/Bid Selection and Clamping | `contract/Contract.java` | DONE | `.../contract/ContractTest.java` | 2026-06-11 | 14 pure tests; bid clamp + highest + extend-from-now + NBT bids |
 | T-029 | Town/Production/Recipe Execution and Dynamic Evaluation | `town/components/TownProductionComponent.java` | DONE | `.../town/components/TownProductionComponentTest.java` | 2026-06-11 | 25 tests; expression/rates/conditions/stall+starve; quirks pinned; full suite green |
 | T-030 | Production/Upgrades/Upgrade Registry Loading and Lookup | `production/UpgradeRegistry.java` | DONE | `.../production/UpgradeRegistryTest.java` | 2026-06-11 | 7 tests; defaults+parse edges+quirk pinned |
+| T-031 | Town/Trading/Stock and Capacity Resolution | `town/components/TownTradingComponent.java` | DONE | `.../town/components/TownTradingComponentTest.java` | 2026-06-11 | 20 tests (virtual stock + cap math + adjust clamp/delegate); alias branch noted |
 
 ## Adding new rows
 When the seeds run out (or you find a better target while reading code), append rows with the next T-### ID. Keep the vault note path in `System/Subsystem/Process Name` form, matching the area taxonomy in `vault/Home.md`. Big classes (e.g. `Town.java`) should be split across multiple rows by concern.
