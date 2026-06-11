@@ -21,6 +21,7 @@ tags:
 - [[Town/Platforms/Platform Data Model|Platforms]] — paths, destinations, enable/disable (data model T-015), visualization *(full Platforms overview pending)*
 - [[Production/Production Overview|Production]] — production recipes (farming, population, crafting) and upgrade nodes that scale town stats by level
 - [[Config/Config Overview|Config]] — TOML config system, hot reload, key settings (T-014)
+- [[Core/Core Overview|Core]] — cross-cutting pure utilities (time formatting for all UIs, result type, etc.; T-017)
 
 ## Reading paths
 - **Human, "how does the mod work?"**: this note → area overview notes. Stop there; that's the full picture in plain language.
