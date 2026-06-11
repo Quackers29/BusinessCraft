@@ -36,6 +36,7 @@ All code paths are relative to `common/src/main/java/com/quackers29/businesscraf
 | T-026 | Core/Util/Error Types | `util/BCError.java` | DONE | `.../util/BCErrorTest.java` | 2026-06-11 | 26 pure tests; all factories + null/num edges + toString; null-message quirk pinned |
 | T-027 | Tourists/Capacity/Tourist Capacity Calculation | `town/service/TownService.java` | DONE | `.../town/service/TownServiceTest.java` | 2026-06-11 | 16 tests; spawn eligibility + tourist_cap modifier + add/remove paths |
 | T-028 | Trade/Contracts/Bid Selection and Clamping | `contract/Contract.java` | DONE | `.../contract/ContractTest.java` | 2026-06-11 | 14 pure tests; bid clamp + highest + extend-from-now + NBT bids |
+| T-029 | Town/Production/Recipe Execution and Dynamic Evaluation | `town/components/TownProductionComponent.java` | DONE | `.../town/components/TownProductionComponentTest.java` | 2026-06-11 | 25 tests; expression/rates/conditions/stall+starve; quirks pinned; full suite green |
 
 ## Adding new rows
 When the seeds run out (or you find a better target while reading code), append rows with the next T-### ID. Keep the vault note path in `System/Subsystem/Process Name` form, matching the area taxonomy in `vault/Home.md`. Big classes (e.g. `Town.java`) should be split across multiple rows by concern.

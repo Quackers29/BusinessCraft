@@ -38,3 +38,4 @@ One line per completed iteration: `YYYY-MM-DD | ID | STATUS | summary`. Use the 
 2026-06-11 | T-026 | DONE | BCError error factories + exact message templates documented + 26 pure tests (all 7 categories + null/num/empty edges + fromException); null-message quirk pinned; full suite green; docs first
 2026-06-11 | T-027 | DONE | Tourist capacity (minPop + tourist_cap modifier) documented + 16 tests; hand-computed edges + config save/restore + TownService orchestration; full suite green; docs first
 2026-06-11 | T-028 | DONE | Base Contract bid clamping (max per bidder), highest selection (tie pins iteration), extend/expire always from now, full bids NBT roundtrip; 14 pure tests (no bootstrap); quirk pinned (neg offer -> 0 via max(0)); full suite green; docs first.
+2026-06-11 | T-029 | DONE | Recipe execution (expr eval, rate math, conditions, stall+starve) documented + 25 tests; McBootstrap+reflection+registry injection; full green.
