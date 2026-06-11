@@ -25,6 +25,7 @@ All code paths are relative to `common/src/main/java/com/quackers29/businesscraf
 | T-015 | Town/Platforms/Platform Data Model | `platform/Platform.java` | DONE | `.../platform/PlatformTest.java` | 2026-06-11 | 25 tests; NBT roundtrips, dest sets, defensive copies |
 | T-016 | Production/Upgrades/Effect Value Calculation | `production/UpgradeNode.java` | DONE | `.../production/UpgradeNodeTest.java` | 2026-06-11 | 14 tests; linear+exp scaling + level<=0 edges |
 | T-017 | Core/Time/Time Display Formatting | `util/BCTimeUtils.java` | DONE | `.../util/BCTimeUtilsTest.java` | 2026-06-11 | 29 tests; all duration/expiry/timezone rules + edges |
+| T-018 | Core/Util/Result Type | `util/Result.java` | DONE | `.../util/ResultTest.java` | 2026-06-11 | 32 tests; pure monad paths + null/edge/BCError cases (no bootstrap) |
 
 ## Adding new rows
 When the seeds run out (or you find a better target while reading code), append rows with the next T-### ID. Keep the vault note path in `System/Subsystem/Process Name` form, matching the area taxonomy in `vault/Home.md`. Big classes (e.g. `Town.java`) should be split across multiple rows by concern.
