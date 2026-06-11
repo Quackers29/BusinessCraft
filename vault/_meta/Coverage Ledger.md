@@ -26,6 +26,7 @@ All code paths are relative to `common/src/main/java/com/quackers29/businesscraf
 | T-016 | Production/Upgrades/Effect Value Calculation | `production/UpgradeNode.java` | DONE | `.../production/UpgradeNodeTest.java` | 2026-06-11 | 14 tests; linear+exp scaling + level<=0 edges |
 | T-017 | Core/Time/Time Display Formatting | `util/BCTimeUtils.java` | DONE | `.../util/BCTimeUtilsTest.java` | 2026-06-11 | 29 tests; all duration/expiry/timezone rules + edges |
 | T-018 | Core/Util/Result Type | `util/Result.java` | DONE | `.../util/ResultTest.java` | 2026-06-11 | 32 tests; pure monad paths + null/edge/BCError cases (no bootstrap) |
+| T-019 | Economy/Resources/Resource Type Expansion and Lookup | `economy/ResourceRegistry.java` + `economy/ResourceType.java` | DONE | `.../economy/ResourceRegistryTest.java` | 2026-06-11 | 15 tests; csv+expand heuristics+get*For covered |
 
 ## Adding new rows
 When the seeds run out (or you find a better target while reading code), append rows with the next T-### ID. Keep the vault note path in `System/Subsystem/Process Name` form, matching the area taxonomy in `vault/Home.md`. Big classes (e.g. `Town.java`) should be split across multiple rows by concern.
