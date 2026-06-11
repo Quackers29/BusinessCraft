@@ -12,7 +12,7 @@ tags:
 - **[[Town/Visits/Visit Buffer]]** (T-010 — pending) — arrival batching (~1s window per origin), distance accumulation, dedup, flush to history + payment.
 - **[[Town/Leaderboard/Ranking Calculation]]** (T-011 — pending) — sort + tie-break on tourism metrics.
 - **[[Town/Payment Board/Reward Claims]]** (T-012 — pending) — claimable bundled rewards (tourist fares + milestones), eligibility, expiry, multiplayer.
-- **[[Town/Boundaries/Town Distance Validation]]** (T-008 — pending) — min-distance and placement rules.
+- **[[Town/Boundaries/Town Distance Validation|Town Distance Validation]]** (T-008) — placement/expansion gates (euclidean dist < (newB + other.getBoundaryRadius())), TownBoundaryService 1:1 pop vs Town 50-default border discrepancy documented; TownValidationService name/pos/radius/tourist/resource guards (pure paths + BlockPos).
 - **[[Town/Storage/Slot-Based Storage]]** (T-013 — pending) — per-player / communal slot UI layer on top of the raw maps.
 - Tourists/Capacity (T-009 — pending), production cycles, upgrade application, contract lifecycle integration.
 
