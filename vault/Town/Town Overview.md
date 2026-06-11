@@ -9,6 +9,7 @@ tags:
 
 ## Processes in this area
 - **[[Town/Resources/Resource Storage Operations|Resource Storage Operations]]** (T-007) — Every town keeps a ledger of resources (wood, food, emeralds, anything). Adding and spending is safe by design: counts can never overflow or go negative, and everything survives save/reload.
+- **[[Town/Resources/Work Unit Accounting|Work Unit Accounting]]** (T-035) — Work units are a virtual internal counter that production recipes consume as costs and produce as yields. Adds and sets are protected from negatives and overflow; an upgrade modifier can impose an upper cap.
 - **[[Town/Trading/Stock and Capacity Resolution|Stock and Capacity Resolution]]** (T-031) — Production recipes, research AI, and trading contracts read uniform "stocks" for population, active tourists, happiness, and cumulative tourism totals, plus storage caps that scale with upgrades; real items delegate through to the resource ledger while a few virtual commodities restock from a small internal buffer.
 - **[[Town/Visits/Visit Buffer|Visit Buffer]]** (T-010) — Tourists arriving around the same time from the same origin town are grouped into one batch (about a 1-second window), so the town gets one combined payment and one notification instead of spam.
 - **[[Town/Leaderboard/Ranking Calculation|Ranking Calculation]]** (T-011) — The leaderboard screen ranks towns by distance from you, population, visits, or total tourism, and formats distances nicely (meters under 1 km, kilometers above).
