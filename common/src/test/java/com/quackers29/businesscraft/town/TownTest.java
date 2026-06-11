@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.town;
 
+import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.testutil.McBootstrap;
 import com.quackers29.businesscraft.town.components.TownUpgradeComponent;
@@ -10,10 +11,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * T-035: Work Unit Accounting (Test + Docs Loop).
@@ -391,5 +393,145 @@ class TownTest {
     void getMinimumDistanceRequired_afterBorderChange_affectsResult() throws Exception {
         setBorder(25.0f);
         assertEquals(25.0, town.getMinimumDistanceRequired(null), 0.0001);
+    }
+
+    // ============================================================
+    // T-039: Visit History Recording (recordVisit + totals + trim)
+    // Extends the same TownTest (big-class split per protocol).
+    // Pure logic using only BlockPos/UUID (no McBootstrap/ItemStack needed).
+    // All formulas have hand-computed expectations in comments.
+    // Documentation: vault/Town/Visits/Visit History Recording.md
+    // ============================================================
+
+    private static final BlockPos ORIGIN_POS_A = new BlockPos(30, 64, 40); // distSqr=900+1600=2500, dist=50.0 exact
+    private static final BlockPos ORIGIN_POS_B = new BlockPos(0, 64, 200);  // dist=200.0 exact
+    private static final UUID ORIGIN_U = UUID.fromString("11111111-1111-1111-1111-111111111111");
+
+    // --- happy path + math ---
+
+    @Test
+    void recordVisit_happyPath_insertsNewestFirst_updatesTotals() {
+        // dist = sqrt(30^2 + 40^2) = sqrt(900+1600)=sqrt(2500)=50.0
+        // 50.0 * 2 = 100.0
+        town.recordVisit(ORIGIN_U, 2, ORIGIN_POS_A);
+
+        assertEquals(2L, town.getTotalTouristsArrived());
+        assertEquals(100.0, town.getTotalTouristDistance(), 1e-9);
+
+        List<ITownDataProvider.VisitHistoryRecord> hist = town.getVisitHistory();
+        assertEquals(1, hist.size());
+        ITownDataProvider.VisitHistoryRecord rec = hist.get(0);
+        assertEquals(ORIGIN_U, rec.getOriginTownId());
+        assertEquals(2, rec.getCount());
+        assertEquals(ORIGIN_POS_A, rec.getOriginPos());
+        assertTrue(rec.getTimestamp() > 0);
+    }
+
+    @Test
+    void recordVisit_multipleRecords_newestIsFirst() {
+        town.recordVisit(ORIGIN_U, 1, ORIGIN_POS_A);
+        UUID v = UUID.randomUUID();
+        town.recordVisit(v, 7, ORIGIN_POS_B);
+
+        List<ITownDataProvider.VisitHistoryRecord> hist = town.getVisitHistory();
+        assertEquals(2, hist.size());
+        // newest first
+        assertEquals(v, hist.get(0).getOriginTownId());
+        assertEquals(7, hist.get(0).getCount());
+        assertEquals(ORIGIN_U, hist.get(1).getOriginTownId());
+        assertEquals(1, hist.get(1).getCount());
+    }
+
+    // --- count edges (including quirks) ---
+
+    @Test
+    void recordVisit_countZero_createsRecord_noTotalChange() {
+        // Hand-computed: +=0 leaves totals at 0; record still takes a history slot
+        town.recordVisit(ORIGIN_U, 0, ORIGIN_POS_A);
+
+        assertEquals(0L, town.getTotalTouristsArrived());
+        assertEquals(0.0, town.getTotalTouristDistance(), 1e-9);
+
+        List<ITownDataProvider.VisitHistoryRecord> hist = town.getVisitHistory();
+        assertEquals(1, hist.size());
+        assertEquals(0, hist.get(0).getCount());
+    }
+
+    @Test
+    void recordVisit_negativeCount_decrementsTotal_currentBehavior() {
+        // Hand-computed: first 50.0*5=250, arrived=5; then 50.0*(-2)=-100, arrived=3; dist=150.0
+        // negative counts are accepted by += with no guard (pinned current behavior)
+        town.recordVisit(ORIGIN_U, 5, ORIGIN_POS_A);
+        town.recordVisit(ORIGIN_U, -2, ORIGIN_POS_A);
+
+        assertEquals(3L, town.getTotalTouristsArrived());
+        assertEquals(150.0, town.getTotalTouristDistance(), 1e-9);
+    }
+
+    // --- position guard edges ---
+
+    @Test
+    void recordVisit_nullOriginPos_skipsDistance_butStillRecords() {
+        town.recordVisit(ORIGIN_U, 4, null);
+
+        assertEquals(4L, town.getTotalTouristsArrived());
+        assertEquals(0.0, town.getTotalTouristDistance(), 1e-9); // no addition
+        assertEquals(1, town.getVisitHistory().size());
+    }
+
+    @Test
+    void recordVisit_blockPosZero_skipsDistance_currentBehavior() {
+        // The guard is "!= BlockPos.ZERO" (identity against the constant) + null check
+        town.recordVisit(ORIGIN_U, 3, BlockPos.ZERO);
+
+        assertEquals(3L, town.getTotalTouristsArrived());
+        assertEquals(0.0, town.getTotalTouristDistance(), 1e-9);
+    }
+
+    // --- trim behavior ---
+
+    @Test
+    void recordVisit_exactly50_keepsAll() {
+        for (int i = 0; i < 50; i++) {
+            town.recordVisit(UUID.randomUUID(), 1, ORIGIN_POS_A);
+        }
+        assertEquals(50, town.getVisitHistory().size());
+    }
+
+    @Test
+    void recordVisit_51st_trimsOldest() {
+        // Insert 50, then one more; oldest (first inserted) must be dropped
+        UUID first = UUID.randomUUID();
+        town.recordVisit(first, 1, ORIGIN_POS_A);
+        for (int i = 1; i < 50; i++) {
+            town.recordVisit(UUID.randomUUID(), 1, ORIGIN_POS_A);
+        }
+        // size is 50, first is still at end
+        assertEquals(50, town.getVisitHistory().size());
+        assertEquals(first, town.getVisitHistory().get(49).getOriginTownId());
+
+        // 51st
+        UUID fiftyFirst = UUID.randomUUID();
+        town.recordVisit(fiftyFirst, 1, ORIGIN_POS_A);
+
+        List<ITownDataProvider.VisitHistoryRecord> hist = town.getVisitHistory();
+        assertEquals(50, hist.size());
+        // newest is at 0
+        assertEquals(fiftyFirst, hist.get(0).getOriginTownId());
+        // the original first has been trimmed (no longer in list)
+        for (ITownDataProvider.VisitHistoryRecord r : hist) {
+            assertNotEquals(first, r.getOriginTownId());
+        }
+    }
+
+    // --- unmodifiable view ---
+
+    @Test
+    void getVisitHistory_returnsUnmodifiableView() {
+        town.recordVisit(ORIGIN_U, 1, ORIGIN_POS_A);
+        List<ITownDataProvider.VisitHistoryRecord> hist = town.getVisitHistory();
+        assertThrows(UnsupportedOperationException.class, () -> hist.add(null));
+        assertThrows(UnsupportedOperationException.class, () -> hist.remove(0));
+        assertThrows(UnsupportedOperationException.class, hist::clear);
     }
 }
