@@ -44,6 +44,7 @@ All code paths are relative to `common/src/main/java/com/quackers29/businesscraf
 | T-034 | Town/Contracts/Autonomous Bidding and Sell Contract Creation | `town/components/TownContractComponent.java` | NEEDS-MC | `.../town/components/TownContractComponentTest.java` | 2026-06-11 | NEEDS-MC (TownManager/ContractBoard/Level); formulas documented; 4 smoke/persistence tests |
 | T-035 | Town/Resources/Work Unit Accounting | `town/Town.java` (addWorkUnits, setWorkUnits, getWorkUnitCap, getWorkUnits) | DONE | `.../town/TownTest.java` | 2026-06-11 | 20 tests; addExact+0-floor+cap+overflow; set-bypass quirk pinned |
 | T-036 | Town/Boundaries/Boundary Geometry Queries | `town/Town.java` (getBoundaryRadius, isPositionInside, wouldOverlapWith, getMinimumDistanceRequired) | DONE | `.../town/TownTest.java` | 2026-06-11 | 17 tests; radius fallback+3D inside/overlap/min-dist; pop-vs-border + service dupe pinned |
+| T-037 | Tourists/Spawning/Tourist Spawning and Destination Selection | `town/data/TouristSpawningHelper.java` | NEEDS-MC | `.../town/data/TouristSpawningHelperTest.java` | 2026-06-11 | 2 smoke + sentinel pin tests; core spawn/dest select requires ServerLevel+TownManager (NEEDS-MC) |
 
 ## Adding new rows
 When the seeds run out (or you find a better target while reading code), append rows with the next T-### ID. Keep the vault note path in `System/Subsystem/Process Name` form, matching the area taxonomy in `vault/Home.md`. Big classes (e.g. `Town.java`) should be split across multiple rows by concern.
