@@ -16,7 +16,9 @@
 3. **Only run these commands**:
    - `wsl ./gradlew :common:test` (all tests)
    - `wsl ./gradlew :common:test --tests "com.quackers29.businesscraft.SomeClassTest"` (filtered)
-4. **Tests must be pure-logic tests.** They must not require Minecraft registry/game bootstrap. Simple data classes like `BlockPos` or `CompoundTag` are usually safe (confirmed working in T-001); anything touching `Registry`, `Level`, entities, blocks, or static init that loads game state is NOT safe — mark `NEEDS-MC` instead.
+4. **Prefer pure-logic tests; use the bootstrap fixture only when needed.** Simple data classes like `BlockPos` or `CompoundTag` are safe with no setup (confirmed in T-001).
+   - If the target needs `ItemStack`, `Items.*`, or other registry-backed objects: call `McBootstrap.init()` in a `@BeforeAll` (fixture: `common/src/test/java/com/quackers29/businesscraft/testutil/McBootstrap.java`; working example: `McBootstrapValidationTest.java`). Do NOT add the fixture to tests that don't need it.
+   - Targets that need a live `Level`/world, real entities, networking, or a running server are still untestable — mark `NEEDS-MC`.
    - **Private pure methods MAY be tested via reflection** (`getDeclaredMethod` + `setAccessible(true)`) when the logic is important — see `VisitorProcessingHelperTest.java` for the working pattern. Note "tested via reflection" in the ledger row, and suggest extracting the method as a future refactor in the vault note's Open questions.
    - **Mutable public static config fields** (e.g. `ConfigLoader.metersPerEmerald`) may be set in `@BeforeEach` for determinism — ALWAYS save and restore the original value in `@AfterEach`.
 5. **If a test reveals what looks like a real bug in production code**: do NOT fix the production code. Write the test, annotate it `@Disabled("BUG: <description> — see ledger")`, set ledger status to `BUG-FOUND` with details, and mention it clearly in your final summary to the user.
@@ -40,7 +42,8 @@
   5. `.../platform/` (the Platform class, not loader abstraction)
   6. `.../util/`
 - Add the new gap as a ledger row, then proceed with it.
-- Set the item's status to `IN-PROGRESS` and add today's date.
+- Set the item's status to `IN-PROGRESS` and add today's date — get the REAL date by running `wsl date +%F`; never guess or increment dates.
+- If the row is a RE-OPENED one (it already has a test file and vault note): EXTEND the existing files, don't rewrite them. Read them first.
 
 ### Step 2 — Understand the code
 - Read the target class fully.
@@ -56,6 +59,8 @@
 - Write the formulas from what the CODE does, not what comments or docs claim. If they disagree, note the discrepancy under Open questions.
 - Link related notes with `[[wikilinks]]` where they exist.
 - **Maintain the navigation layer**: add/update a one-line entry for this note in the area's Overview note (e.g. `vault/Economy/Economy Overview.md` — TL;DR-style summary + wikilink). If the area has no Overview note yet, create one (frontmatter tag `overview`, copy the structure of Economy Overview) and add the area to the list in `vault/Mod Overview.md`.
+- **Overview entries must be plain language**: readable by a non-programmer, NO method names, class names, or code symbols. One or two sentences about what the process does for the player/game, then the wikilink. The technical detail belongs ONLY in the detail note. Bad: "`addResource` with `Math.addExact` overflow → `Long.MAX_VALUE`". Good: "Towns store resources with safe limits so counts can never overflow or go negative."
+- **Match the existing folder taxonomy**: place notes under the areas listed in `vault/Home.md`. Don't invent new top-level areas if an existing one fits.
 
 ### Step 4 — Write the test
 - File: `common/src/test/java/<mirrored package>/<ClassName>Test.java`.
