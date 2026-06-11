@@ -41,3 +41,4 @@ One line per completed iteration: `YYYY-MM-DD | ID | STATUS | summary`. Use the 
 2026-06-11 | T-029 | DONE | Recipe execution (expr eval, rate math, conditions, stall+starve) documented + 25 tests; McBootstrap+reflection+registry injection; full green.
 2026-06-11 | T-030 | DONE | UpgradeRegistry load/defaults/parse edges documented + 7 tests (tempdir+reflection+platform double); mkdir quirk + trailing-split edge pinned; full suite green.
 2026-06-11 | T-031 | DONE | TownTradingComponent virtual stocks (pop/tourist/happiness/tourism*), cap resolution (upgrade mods + alias), adjust exclusions/clamp/delegate documented + 20 tests; full suite green.
+2026-06-11 | T-032 | DONE | Upgrade cost/research time scaling (pow ^ level + ceil for resources, same mult for minutes) documented + 14 tests (level 0/1/2/4 edges, repeatability gates, canAfford stock checks via virtual ids); reflection + platform double + McBootstrap; full suite green; docs first.
