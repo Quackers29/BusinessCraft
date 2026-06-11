@@ -9,7 +9,7 @@ tags:
 
 ## Processes in this area
 - **[[Economy/Tourist Payments/Distance Payment Calculation|Distance Payment Calculation]]** — tourists pay `distance ÷ metersPerEmerald × count` emeralds per arrival batch (default rate: 1 emerald per 50 blocks), minimum 1 emerald per batch, truncated down. Uses the *real* path the tourist traveled, not straight-line distance.
-- **Distance Milestone Resolution** *(T-002, pending)* — long journeys past configurable distance thresholds award bonus items on top of the fare.
+- **[[Economy/Milestones/Distance Milestone Resolution|Distance Milestone Resolution]]** — highest configured distance threshold <= average travel distance awards scaled item rewards (default 10m: 1 bread + 2 exp bottles per tourist) delivered to Payment Board.
 - **Global Market Price Calculation** *(T-006, pending)* — server-wide market pricing and restock behavior.
 
 ## How it connects
