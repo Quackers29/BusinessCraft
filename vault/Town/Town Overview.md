@@ -15,6 +15,7 @@ tags:
 - **[[Town/Boundaries/Town Distance Validation|Town Distance Validation]]** (T-008) — Towns can't be founded too close to each other. Each town has a boundary radius that grows with population, and new placements/expansions are checked against every existing town's boundary. Town names are also validated here (length, characters, appropriateness).
 - **[[Town/Storage/Slot-Based Storage|Slot-Based Storage]]** (T-013) — A chest-like grid storage used by the payment board's claim buffer (18 slots). Items stack into matching slots first, then empty ones, exactly like you'd expect from a chest.
 - **[[Town/Platforms/Platform Data Model|Platform Data Model]]** (T-015) — Each town can have up to 10 platforms: a start/end path where tourists arrive and depart. A platform can target specific destination towns or be open to "any town", and can be toggled on/off.
+- **[[Town/Platforms/Platform Management|Platform Management]]** (T-023) — The owner of a town's platform list: it enforces the hard cap of 10, records path and destination changes from the UI, keeps a separate snapshot for the client screen and world renderer, writes compact NBT, and turns old single-path saves into a "Main Platform" entry on first load.
 - **[[Tourists/Tourists Overview|Tourist Capacity & Allocation]]** (T-009) — How many tourists a town can send depends on its population, and destinations are chosen fairly so bigger towns receive proportionally more visitors.
 
 ## How it connects

@@ -74,7 +74,7 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 - [ ] Hand off to loop execution (cheap-model subagents or recurring loop runs, one ledger item per iteration)
 
 ### Ongoing
-- [ ] Work through Coverage Ledger T-002 → T-014 (T-001 done as pilot), then discover new gaps per protocol Step 1
+- [ ] Work through Coverage Ledger (T-001 pilot + T-002–T-023 completed via loop iterations; new gaps discovered per protocol Step 1 after seeds exhausted)
 - [ ] Periodically review `BUG-FOUND` / `BLOCKED` rows (these need human or senior-agent attention)
 - [ ] Senior review every ~5 iterations: skim the last 5 vault notes + tests for quality drift (vague docs, shallow tests) — cheap models drift while the build stays green; commit per iteration (or small batch) so any junk iteration is easy to revert
 

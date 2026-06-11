@@ -30,6 +30,7 @@ All code paths are relative to `common/src/main/java/com/quackers29/businesscraf
 | T-020 | Trade/Contracts/Contract List and Detail ViewModels | `contract/viewmodel/ContractSummaryViewModelBuilder.java` + `contract/viewmodel/ContractDetailViewModelBuilder.java` | DONE | `.../contract/ContractSummaryViewModelBuilderTest.java`, `.../contract/ContractDetailViewModelBuilderTest.java` | 2026-06-11 | 23 tests; tab filter/sort/paging/status/can*/bids + generic; status string diff quirk pinned |
 | T-021 | Config/Data Parsing | `data/parsers/DataParser.java` | DONE | `.../data/parsers/DataParserTest.java` | 2026-06-11 | 16 pure tests; aliases/ops/edges/:= quirk pinned |
 | T-022 | Trade/Contracts/Contract Item Creation and Inspection | `util/ContractItemHelper.java` | DONE | `.../util/ContractItemHelperTest.java` | 2026-06-11 | 12 tests; NPE-on-null quirk pinned |
+| T-023 | Town/Platforms/Platform Management | `town/data/PlatformManager.java` | DONE | `.../town/data/PlatformManagerTest.java` | 2026-06-11 | 26 tests; cap/notify/NBT/legacy/client-snapshot/filter covered |
 
 ## Adding new rows
 When the seeds run out (or you find a better target while reading code), append rows with the next T-### ID. Keep the vault note path in `System/Subsystem/Process Name` form, matching the area taxonomy in `vault/Home.md`. Big classes (e.g. `Town.java`) should be split across multiple rows by concern.
