@@ -18,7 +18,7 @@ tags:
 - [[Trade/Trade Overview|Trade]] — sell contracts (towns auction surplus), courier delivery contracts, town-to-town trading
 - [[Town/Town Overview|Town]] — lifecycle, population, multi-tier storage (resources + escrow + personal), boundaries, visit history, payment board
 - [[Tourists/Tourists Overview|Tourists]] — spawning, allocation, capacity, AI behaviors, expiry, ride mechanics (see Tourist Allocation T-009)
-- Platforms — paths, destinations, enable/disable, visualization *(overview pending)*
+- [[Town/Platforms/Platform Data Model|Platforms]] — paths, destinations, enable/disable (data model T-015), visualization *(full Platforms overview pending)*
 - Production — production sites, upgrades, research *(overview pending)*
 - [[Config/Config Overview|Config]] — TOML config system, hot reload, key settings (T-014)
 

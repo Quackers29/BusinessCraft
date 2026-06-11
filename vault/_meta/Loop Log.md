@@ -20,4 +20,5 @@ One line per completed iteration: `YYYY-MM-DD | ID | STATUS | summary`
 
 2026-06-22 | T-013 | NEEDS-MC | Slot-Based Storage documented (ctor/EMPTY, two-pass addItem with isSameItemSameTags+partial, slot-order remove aggregate, index guards, NBT SlotCount exact+ "id" check, copy, 18-slot TownPaymentBoard buffer, network packet roundtrip); 0 tests (ItemStack bootstrap on any instantiation, same blocker as T-007/T-012); Town Overview entry completed; full suite green — 1 iteration complete
 2026-06-23 | T-014 | DONE | ConfigLoader TOML parsing/defaults/milestones + ConfigurationService validation; 16 tests (getDefaultTownNames via refl, platform stub + temp toml for load/save, empty-rewards vs all-invalid quirk pinned); full suite green — 1 iteration complete
+2026-06-24 | T-015 | DONE | Platform data model (NBT, dest sets+compat map, isComplete, defensive copies, equals) documented + 25 tests; no production code touched, full suite green — 1 iteration complete
 
