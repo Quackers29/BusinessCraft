@@ -20,7 +20,7 @@ tags:
 - [[Tourists/Tourists Overview|Tourists]] — spawning, allocation, capacity, AI behaviors, expiry, ride mechanics (see Tourist Allocation T-009)
 - Platforms — paths, destinations, enable/disable, visualization *(overview pending)*
 - Production — production sites, upgrades, research *(overview pending)*
-- Config — TOML config system, hot reload, key settings *(overview pending)*
+- [[Config/Config Overview|Config]] — TOML config system, hot reload, key settings (T-014)
 
 ## Reading paths
 - **Human, "how does the mod work?"**: this note → area overview notes. Stop there; that's the full picture in plain language.
