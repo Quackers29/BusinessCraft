@@ -50,9 +50,12 @@
 
 ### Step 3 — Write the vault note (docs BEFORE tests)
 - Create/update the note at the vault path given in the ledger (create folders as needed).
-- Use the template in `vault/_meta/Note Template.md`. Required sections: Breadcrumb, What it does, Key classes & methods (with real file paths), Rules & formulas (exact, with units), Edge cases & behaviors, Test coverage (link added in Step 5), Open questions.
+- Use the template in `vault/_meta/Note Template.md` EXACTLY — it has two layers:
+  - **Human layer (top)**: frontmatter tags (`detail` + area tag), TL;DR one-liner, "What it does", "How it works (process view)" — plain language, worked example with real numbers, readable by a non-programmer. Reference example: `vault/Economy/Tourist Payments/Distance Payment Calculation.md`.
+  - **Deep reference (below the `> [!info]- Deep reference` callout)**: key classes table, exact formulas, edge cases, test coverage, open questions.
 - Write the formulas from what the CODE does, not what comments or docs claim. If they disagree, note the discrepancy under Open questions.
 - Link related notes with `[[wikilinks]]` where they exist.
+- **Maintain the navigation layer**: add/update a one-line entry for this note in the area's Overview note (e.g. `vault/Economy/Economy Overview.md` — TL;DR-style summary + wikilink). If the area has no Overview note yet, create one (frontmatter tag `overview`, copy the structure of Economy Overview) and add the area to the list in `vault/Mod Overview.md`.
 
 ### Step 4 — Write the test
 - File: `common/src/test/java/<mirrored package>/<ClassName>Test.java`.
