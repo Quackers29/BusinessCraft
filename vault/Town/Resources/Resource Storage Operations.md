@@ -97,9 +97,11 @@ Config: none for the storage math itself. Population default comes from `ConfigL
 
 ## Test coverage
 - Test file: `common/src/test/java/com/quackers29/businesscraft/town/components/TownResourcesTest.java`
-- Covered (only the bootstrap-safe surface): null-item guards on addResource and consumeResource; all population set/remove/get/clamp/default logic on TownEconomyComponent (4 tests total, all pass without ever constructing or referencing an Item).
-- The add/remove/overflow (Math.addExact cap, max(0) clamp, zero retention), real consume, getAll with items, and all NBT save/load paths are **not unit tested** — any execution that reaches a non-null Item (even `new Item(new Item.Properties())`) triggers `ExceptionInInitializerError: Not bootstrapped` (Registries/BuiltInRegistries static init). Same limitation that forced NEEDS-MC on T-002/T-003 positive paths.
-- Note: the TestRegistryHelper stub is present (for parity with T-002) but not exercised by the retained tests. Main formulas/edges fully documented from code review instead.
+- Initial (bootstrap-safe surface only): 4 guard tests (null-item guards on addResource/consumeResource; population set/remove/get/clamp/default logic on TownEconomyComponent). These never construct or reference an Item.
+- Extended (T-007 iteration, McBootstrap): 18 additional tests covering add positive/accumulate/zero/overflow (Math.addExact cap at Long.MAX_VALUE), negative-add remove (max(0) clamp + explicit zero retention in map), count==0 noop, consume success/insufficient/exact-to-zero, getAllResources (live unmodifiable view + mutation visibility), save/load roundtrips (positive + zero entries preserved), load sanitization (<0 → 0), load skip of AIR and registry-miss items, TownEconomyComponent add delegation + combined population+resources save/load roundtrip. Includes one pinning test asserting the removePopulation(negative) "increases pop" quirk.
+- TestRegistryHelper upgraded inside the test (getItem + getItemKey now delegate to BuiltInRegistries.ITEM after @BeforeAll McBootstrap.init()) so save (needs getItemKey), load (needs getItem), and the unconditional debug getItemKey calls inside add/remove all succeed with real Items.
+- Every rule in "Rules & formulas (exact)" and every bullet in "Edge cases & behaviors" has ≥1 test with hand-computed arithmetic shown in comments (e.g. "nearMax + 10 overflows → cap", "7 + (-10) → max(0, -3) = 0 and put occurs because pre>0").
+- Total: 22 tests (4 original guard + 18 new). Filtered + full `wsl ./gradlew :common:test` green before DONE.
 
 ## Open questions
 - Zero retention in the resources map: after `add(item, -current)` the map keeps `item→0`. Callers iterating `getAllResources()` will see zero stock entries. Escrow prunes zeros; resources does not. Is this intentional (for "I once had this resource" history) or a leak? UI layers may or may not filter.
