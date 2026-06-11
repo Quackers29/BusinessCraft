@@ -234,4 +234,162 @@ class TownTest {
         // verify the map actually holds the float (for precision awareness)
         assertEquals(12345L, getWuCapViaReflection());
     }
+
+    // ============================================================
+    // T-036: Boundary Geometry Queries (getBoundaryRadius + spatial)
+    // Extends the same TownTest (big-class split per protocol).
+    // Reflection injects "border" modifier exactly like wu_cap above.
+    // All formulas have hand-computed expectations in comments.
+    // ============================================================
+
+    @SuppressWarnings("unchecked")
+    private void setBorder(float borderValue) throws Exception {
+        Field upgradesField = Town.class.getDeclaredField("upgrades");
+        upgradesField.setAccessible(true);
+        TownUpgradeComponent upgrades = (TownUpgradeComponent) upgradesField.get(town);
+
+        Field modsField = TownUpgradeComponent.class.getDeclaredField("activeModifiers");
+        modsField.setAccessible(true);
+        Map<String, Float> mods = (Map<String, Float>) modsField.get(upgrades);
+        mods.put("border", borderValue);
+    }
+
+    private float getBorderViaReflection() throws Exception {
+        Field upgradesField = Town.class.getDeclaredField("upgrades");
+        upgradesField.setAccessible(true);
+        TownUpgradeComponent upgrades = (TownUpgradeComponent) upgradesField.get(town);
+
+        Field modsField = TownUpgradeComponent.class.getDeclaredField("activeModifiers");
+        modsField.setAccessible(true);
+        Map<String, Float> mods = (Map<String, Float>) modsField.get(upgrades);
+        Float v = mods.get("border");
+        return v == null ? 0f : v;
+    }
+
+    // --- getBoundaryRadius (fallback 50 + explicit modifier) ---
+
+    @Test
+    void getBoundaryRadius_freshTown_noModifier_returnsFallback50() {
+        // No "border" entry → <=0 branch → 50
+        assertEquals(50, town.getBoundaryRadius());
+    }
+
+    @Test
+    void getBoundaryRadius_explicitBorder30_returns30() throws Exception {
+        setBorder(30.0f);
+        // (int)30.0f = 30
+        assertEquals(30, town.getBoundaryRadius());
+    }
+
+    @Test
+    void getBoundaryRadius_borderWithFraction_truncatesTowardZero() throws Exception {
+        setBorder(45.9f);
+        // (int)45.9f = 45 (truncation toward zero)
+        assertEquals(45, town.getBoundaryRadius());
+    }
+
+    @Test
+    void getBoundaryRadius_borderZeroOrNegative_fallsBackTo50() throws Exception {
+        setBorder(0.0f);
+        assertEquals(50, town.getBoundaryRadius());
+        setBorder(-7.5f);
+        assertEquals(50, town.getBoundaryRadius());
+    }
+
+    // --- isPositionInside ---
+
+    @Test
+    void isPositionInside_nullPos_returnsFalse() {
+        assertEquals(false, town.isPositionInside(null));
+    }
+
+    @Test
+    void isPositionInside_centerPos_returnsTrue() {
+        // distSqr( same pos ) = 0 <= (50*50) = 2500
+        assertEquals(true, town.isPositionInside(TOWN_POS));
+    }
+
+    @Test
+    void isPositionInside_exactBoundaryInclusive_returnsTrue() throws Exception {
+        // r=50, place a pos exactly 50 blocks away on X (distSqr = 2500)
+        BlockPos onBoundary = new BlockPos(TOWN_POS.getX() + 50, TOWN_POS.getY(), TOWN_POS.getZ());
+        // 50*50 = 2500; 2500 <= 2500 → true (inclusive)
+        assertEquals(true, town.isPositionInside(onBoundary));
+    }
+
+    @Test
+    void isPositionInside_justOutside_returnsFalse() throws Exception {
+        // r=50, 51 blocks away → 51*51=2601 > 2500
+        BlockPos justOut = new BlockPos(TOWN_POS.getX() + 51, TOWN_POS.getY(), TOWN_POS.getZ());
+        assertEquals(false, town.isPositionInside(justOut));
+    }
+
+    @Test
+    void isPositionInside_withCustomRadius_affectsResult() throws Exception {
+        setBorder(10.0f);
+        BlockPos inside = new BlockPos(TOWN_POS.getX() + 5, TOWN_POS.getY(), TOWN_POS.getZ());
+        BlockPos outside = new BlockPos(TOWN_POS.getX() + 11, TOWN_POS.getY(), TOWN_POS.getZ());
+        // 5^2=25 <= 100 → true; 11^2=121 > 100 → false
+        assertEquals(true, town.isPositionInside(inside));
+        assertEquals(false, town.isPositionInside(outside));
+    }
+
+    // --- wouldOverlapWith ---
+
+    @Test
+    void wouldOverlapWith_nullOther_returnsFalse() {
+        assertEquals(false, town.wouldOverlapWith(null));
+    }
+
+    @Test
+    void wouldOverlapWith_self_returnsTrue_forNonZeroRadius() {
+        // d=0 < (50+50) = 100 → true
+        assertEquals(true, town.wouldOverlapWith(town));
+    }
+
+    @Test
+    void wouldOverlapWith_centersExactlyAtSum_returnsFalse() throws Exception {
+        // Two towns r=50 each, centers 100 blocks apart on X
+        // d=100 == 100, 100 < 100 is false (strict <)
+        Town other = new Town(UUID.randomUUID(), new BlockPos(TOWN_POS.getX() + 100, TOWN_POS.getY(), TOWN_POS.getZ()), "Other");
+        assertEquals(false, town.wouldOverlapWith(other));
+    }
+
+    @Test
+    void wouldOverlapWith_strictlyLessThanSum_returnsTrue() throws Exception {
+        // d=99 < 100 → overlap
+        Town other = new Town(UUID.randomUUID(), new BlockPos(TOWN_POS.getX() + 99, TOWN_POS.getY(), TOWN_POS.getZ()), "Other");
+        assertEquals(true, town.wouldOverlapWith(other));
+    }
+
+    @Test
+    void wouldOverlapWith_differentRadii_usesSum() throws Exception {
+        setBorder(30.0f); // this r=30
+        Town other = new Town(UUID.randomUUID(), new BlockPos(TOWN_POS.getX() + 70, TOWN_POS.getY(), TOWN_POS.getZ()), "Other");
+        // Force other to r=50 via its own upgrades (fresh other starts at 50)
+        // 70 < (30+50)=80 → true
+        assertEquals(true, town.wouldOverlapWith(other));
+    }
+
+    // --- getMinimumDistanceRequired ---
+
+    @Test
+    void getMinimumDistanceRequired_nullOther_returnsOwnRadius() {
+        // r=50 (fresh)
+        assertEquals(50.0, town.getMinimumDistanceRequired(null), 0.0001);
+    }
+
+    @Test
+    void getMinimumDistanceRequired_twoTowns_returnsSum() throws Exception {
+        setBorder(40.0f); // this=40
+        Town other = new Town(UUID.randomUUID(), new BlockPos(TOWN_POS.getX() + 123, TOWN_POS.getY(), TOWN_POS.getZ()), "Other");
+        // other fresh r=50; 40+50=90
+        assertEquals(90.0, town.getMinimumDistanceRequired(other), 0.0001);
+    }
+
+    @Test
+    void getMinimumDistanceRequired_afterBorderChange_affectsResult() throws Exception {
+        setBorder(25.0f);
+        assertEquals(25.0, town.getMinimumDistanceRequired(null), 0.0001);
+    }
 }
