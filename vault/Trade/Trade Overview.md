@@ -9,7 +9,7 @@ tags:
 
 ## Processes in this area
 - **[[Trade/Contracts/Auction Resolution|Auction Resolution]]** — expired SellContracts with bids resolve to the highest bidder (see getHighestBidder + close logic); emeralds (bid) transfer to seller, goods released from escrow, courier reward computed as ceil(euclidean distance / 10), market records the effective transaction price; no-bid auctions refund goods to seller + apply supply pressure. Courier cost also computed at bid time for escrow + refunds.
-- **[[Trade/Contracts/Sell Contract Lifecycle|Sell Contract Lifecycle]]** *(T-004, pending)* — creation clamping, state machine (expired / completed / delivered / courier assigned), NBT round-trips, bid state.
+- **[[Trade/Contracts/Sell Contract Lifecycle|Sell Contract Lifecycle]]** — creation clamping [1,10M qty; 0.01,1M price], state machine (expired / completed / isDelivered / isDeliveryComplete / courier assigned / snail mail via zero UUID), NBT round-trips (all fields + bids), getCurrentBid always = ask (not live highest). (T-004)
 - **[[Trade/Contracts/Courier Delivery Rewards|Courier Delivery Rewards]]** *(T-005, pending)* — reward calc on delivery complete, wrong-town rejection, snail-mail vs player courier paths.
 
 ## How it connects
