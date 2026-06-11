@@ -14,3 +14,5 @@ One line per completed iteration: `YYYY-MM-DD | ID | STATUS | summary`
 2026-06-18 | T-009 | DONE | Tourist allocation (pop-proportional gaps + selectFair, 10% random-under, record spawn/remove) + 12 tests (reflection for static map + inner gap formula); recordSpawn dead in prod (pinned as quirk); full suite green — 1 iteration complete
 2026-06-19 | T-010 | DONE | VisitBuffer batch/dedup/flush + distanceMap survival documented + 20 tests (global-timer cross-origin coalescing pinned as quirk, 1s sleep path); Town+Economy overviews updated; full suite green — 1 iteration complete
 
+2026-06-20 | T-011 | DONE | 15 tests for TownLeaderboardData DTO (distanceTo sqrt, formatDistance m/km threshold+trunc, record, negative pinning); sort orders/tie/column math live in TownLeaderboardScreen (documented, not unit-testable); tourism = cumulative arrivals from recordVisit; full suite green — 1 iteration complete
+
