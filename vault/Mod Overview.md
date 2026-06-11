@@ -15,7 +15,7 @@ tags:
 
 ## System areas (one overview note each)
 - [[Economy/Economy Overview]] — tourist payments, milestones, global market, currency
-- Trade — sell contracts (towns auction surplus), courier delivery contracts, town-to-town trading *(overview pending)*
+- [[Trade/Trade Overview|Trade]] — sell contracts (towns auction surplus), courier delivery contracts, town-to-town trading
 - Town — lifecycle, population, multi-tier storage, boundaries, visit history, payment board *(overview pending)*
 - Tourists — spawning, AI behaviors (gossip/gazing), expiry, ride mechanics, capacity *(overview pending)*
 - Platforms — paths, destinations, enable/disable, visualization *(overview pending)*
