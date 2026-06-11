@@ -20,7 +20,7 @@ All code paths are relative to `common/src/main/java/com/quackers29/businesscraf
 | T-010 | Town/Visits/Visit Buffer | `town/data/VisitBuffer.java` | DONE | `.../town/data/VisitBufferTest.java` | 2026-06-11 | 20 tests; global-timer coalescing pinned |
 | T-011 | Town/Leaderboard/Ranking Calculation | `town/data/TownLeaderboardData.java` | DONE | `.../town/data/TownLeaderboardDataTest.java` | 2026-06-11 | 15 DTO tests; sort/column logic is screen-only (documented) |
 | T-012 | Town/Payment Board/Reward Claims | `town/data/TownPaymentBoard.java` + `RewardEntry.java` + `ClaimStatus.java` | BUG-FOUND | `.../town/data/RewardEntryTest.java`, `.../town/data/TownPaymentBoardTest.java` (+ starter) | 2026-06-11 | 33 tests (15+18); 7d/30d/100/elig/claim/trim/NBT/buffer covered w/ hand-computed; 2 @Disabled BUGs (partial toBuffer leak+loss) |
-| T-013 | Town/Storage/Slot-Based Storage | `town/data/SlotBasedStorage.java` | TODO | | 2026-06-11 | RE-OPENED: McBootstrap unblocks ItemStack ctor; rules already fully documented in vault note — write the tests |
+| T-013 | Town/Storage/Slot-Based Storage | `town/data/SlotBasedStorage.java` | DONE | `.../town/data/SlotBasedStorageTest.java` | 2026-06-11 | 29 tests (McBootstrap); two-pass add, NBT guard, tag asymmetry quirk pinned |
 | T-014 | Config/Configuration Loading | `config/ConfigLoader.java` | DONE | `.../config/ConfigLoaderTest.java` | 2026-06-11 | 16 tests; empty-vs-invalid milestone list quirk pinned |
 | T-015 | Town/Platforms/Platform Data Model | `platform/Platform.java` | DONE | `.../platform/PlatformTest.java` | 2026-06-11 | 25 tests; NBT roundtrips, dest sets, defensive copies |
 
