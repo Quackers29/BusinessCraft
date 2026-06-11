@@ -16,3 +16,5 @@ One line per completed iteration: `YYYY-MM-DD | ID | STATUS | summary`
 
 2026-06-20 | T-011 | DONE | 15 tests for TownLeaderboardData DTO (distanceTo sqrt, formatDistance m/km threshold+trunc, record, negative pinning); sort orders/tie/column math live in TownLeaderboardScreen (documented, not unit-testable); tourism = cumulative arrivals from recordVisit; full suite green — 1 iteration complete
 
+2026-06-21 | T-012 | NEEDS-MC | Reward Claims documented (eligibility "ALL" vs player UUID for courier fairness, 7 d forced expiry overriding 24 h ctor default, canBeClaimed/isExpired gates, claim toBuffer decision, cleanup mark+30 d prune by creation ts, MAX=100 trim, stats, NBT scalars); 0 tests committed (TownPaymentBoard eager SlotBasedStorage + RewardEntry ItemStack ctors trigger codec/registry bootstrap crash — identical blocker to T-007/T-013); vault note + Town Overview updated; full suite green — 1 iteration complete
+
