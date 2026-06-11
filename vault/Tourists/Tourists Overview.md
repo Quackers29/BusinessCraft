@@ -9,6 +9,7 @@ tags:
 
 ## Processes in this area
 - **[[Tourists/Capacity/Tourist Allocation|Tourist Allocation]]** (T-009) — `TouristAllocationTracker` maintains per-origin current vs. population-weighted target allocations; `selectFairDestination` biases toward the most under-allocated destination (with 10% random-among-unders). In current code `recordTouristSpawn` is never called, so the bias is inert and selection falls back to map iteration order.
+- **[[Tourists/Capacity/Tourist Capacity Calculation|Tourist Capacity Calculation]]** (T-027) — spawn eligibility requires enabled flag + pop >= minPopForTourists (default 5); concurrent cap comes from the "tourist_cap" upgrade modifier (truncated to int); a global maxTouristsPerTown safety still applies in the legacy canAdd path, and TownService.addTourist/removeTourist enforce the rules with explicit Result errors.
 - Tourist spawning flow (platforms → TouristSpawningHelper → fair select → TouristEntity creation with expiry and origin/dest tags).
 - Capacity rules: spawning eligibility gated by `pop >= ConfigLoader.minPopForTourists` (default 5) and `!town.canAddMoreTourists()` (which also caps at `ConfigLoader.maxTouristsPerTown` and the upgrade-driven `tourist_cap` modifier); `addTourist`/`removeTourist` now go through `TownService`.
 - Tourist lifecycle on the entity: movement distance tracking (real path for payments), ride extension (minecart/train resets expiry), expiry removal, arrival processing that triggers payment + removal record in the allocation tracker.
