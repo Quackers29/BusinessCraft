@@ -20,6 +20,17 @@ dependencies {
 
     // JetBrains annotations for @NotNull/@Nullable
     api 'org.jetbrains:annotations:23.0.0'
+
+    // Unit testing (Test + Docs Loop — see tasks/test_doc_loop.md)
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+    }
 }
 
 // Configure jar to exclude Forge runtime classes

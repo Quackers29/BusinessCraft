@@ -50,7 +50,7 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 - [ ] English only for v1; structure makes community translations possible later
 
 ## Phase F — Testing & Release
-- [ ] Thin unit-test slice for pure economy logic only: payment calculation, milestone thresholds, contract auction resolution (cheap to test, highest silent-bug risk in multiplayer; NOT a full test suite)
+- [ ] Unit test coverage for economy-critical logic — delivered via the **Test + Docs Loop** (see parallel track below); at minimum T-001 through T-005 in the Coverage Ledger should be DONE before the public beta
 - [ ] Multiplayer playtest pass: payment board claims, milestone rewards, personal storage, contract flow with 2+ players
 - [ ] Tourist vehicle stress test: minecarts + Create contraptions across chunk boundaries, server restarts, long journeys
 - [ ] Performance check: 5 active towns, 50+ simultaneous tourists
@@ -59,6 +59,23 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 - [ ] Publish public beta (0.9.x); let real feedback decide what 1.0 needs
 
 ---
+
+## Parallel Track — Test + Docs Loop (runs alongside Phases A–F)
+
+**Concept**: An AI-executable loop where each iteration picks one untested unit of pure game logic (e.g. bid price calculation), documents it in an Obsidian vault (`vault/` — open as its own vault in Obsidian), and covers it with unit tests. Iterations are small and self-verifying, so cheaper/simpler models can run them. Protocol: `tasks/test_doc_loop.md`. Tracking: `vault/_meta/Coverage Ledger.md` (14 seed targets) + `vault/_meta/Loop Log.md`.
+
+### One-time setup (capable agent, before first loop iteration)
+- [x] Write loop protocol (`tasks/test_doc_loop.md`)
+- [x] Create vault skeleton (`vault/Home.md`, `_meta/` ledger + log + note template)
+- [x] Seed Coverage Ledger with 14 priority targets (economy math first)
+- [x] Add JUnit 5 to `common/build.gradle` (junit-jupiter 5.10.2, junit-platform-launcher, `useJUnitPlatform()`)
+- [x] Add smoke test (`common/src/test/java/.../SmokeTest.java`) and verify `wsl ./gradlew :common:test` runs green — confirmed: 2 tests pass, no ForgeGradle quirks; smoke test also verifies tests can reference production classes and guards `FORCE_ALL_DEBUG == false`
+- [ ] Pilot: run iteration T-001 (distance payment calculation) with a capable agent to validate the protocol end-to-end; refine `test_doc_loop.md` based on friction found
+- [ ] Hand off to loop execution (cheap-model subagents or recurring loop runs, one ledger item per iteration)
+
+### Ongoing
+- [ ] Work through Coverage Ledger T-001 → T-014, then discover new gaps per protocol Step 1
+- [ ] Periodically review `BUG-FOUND` / `BLOCKED` rows (these need human or senior-agent attention)
 
 ## Deferred (not v1.0)
 - Town Interface worldgen → `tasks/v1.1_worldgen.md` (planning complete, implementation not started)
