@@ -9,7 +9,7 @@ tags:
 
 ## Processes in this area
 - **[[Town/Resources/Resource Storage Operations|Resource Storage Operations]]** (T-007) — `TownResources` (delegated from `TownEconomyComponent`) is the core long-count Item bag: `addResource` with `Math.addExact` overflow → `Long.MAX_VALUE` on positive, `max(0, ...)` clamp on negative (0-valued entries retained in map), `consumeResource` for atomic spend checks, full NBT roundtrip via `ResourceLocation` string keys + negative sanitization + AIR skip; population lives in the same component (set-if-≥0, remove-if-sufficient) and is persisted with resources.
-- **[[Town/Visits/Visit Buffer]]** (T-010 — pending) — arrival batching (~1s window per origin), distance accumulation, dedup, flush to history + payment.
+- **[[Town/Visits/Visit Buffer|Visit Buffer]]** (T-010) — arrival batching (~1s global quiet window per origin), count+distance accumulation + dedup, flush to VisitHistoryRecords + distanceMap snapshot for payment/milestones (T-001).
 - **[[Town/Leaderboard/Ranking Calculation]]** (T-011 — pending) — sort + tie-break on tourism metrics.
 - **[[Town/Payment Board/Reward Claims]]** (T-012 — pending) — claimable bundled rewards (tourist fares + milestones), eligibility, expiry, multiplayer.
 - **[[Town/Boundaries/Town Distance Validation|Town Distance Validation]]** (T-008) — placement/expansion gates (euclidean dist < (newB + other.getBoundaryRadius())), TownBoundaryService 1:1 pop vs Town 50-default border discrepancy documented; TownValidationService name/pos/radius/tourist/resource guards (pure paths + BlockPos).

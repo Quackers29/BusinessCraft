@@ -13,4 +13,4 @@ tags:
 - **[[Trade/Global Market/Price Calculation|Global Market Price Calculation]]** (T-006) — server-wide singleton: trades nudge prices 10% toward the deal price while accumulating volume; no-bid auctions apply 5% supply-pressure drops; hard floor 0.0001 on every path; persisted via MarketSavedData on the primary level.
 
 ## How it connects
-Tourist arrivals are batched per origin town (~1s window), then a single bundled reward (fare emeralds + any milestone items) is posted to the destination town's Payment Board for players to claim. The payment rate (`metersPerEmerald`) and milestone thresholds live in `businesscraft.toml` under `[economy]` and `[milestones]`.
+Tourist arrivals are batched per origin town by the [[Town/Visits/Visit Buffer|Visit Buffer]] (~1s global quiet window, count+real-distance accumulation), then a single bundled reward (fare emeralds + any milestone items) is posted to the destination town's Payment Board for players to claim. The payment rate (`metersPerEmerald`) and milestone thresholds live in `businesscraft.toml` under `[economy]` and `[milestones]`.
