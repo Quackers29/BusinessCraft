@@ -29,11 +29,12 @@ A configurable prestige / end-goal system that gives v1 a clear sense of long-te
 ## Pillar 3 — Town Interface World Generation
 Configurable world generation so Town Interfaces appear naturally in the world — improving discovery and world integration without breaking the transport economy fantasy. Exploration and design are complete; full implementation plan in `tasks/v1_worldgen.md`.
 
-- **Configurable modes** (combinable): off, near vanilla villages, random world spawning, or both villages + random.
-- **Config UX**: master enable switch plus independent toggles for villages/random, with tunable rarity for random mode (conservative defaults that play nice with Terralith-style worldgen mods).
+- **Villages mode** — jigsaw building in vanilla villages; town-square (platform + centred Town Interface); pre-founded on spawn; default when worldgen on. *Verified*
+- **Random mode** — optional standalone spawns; off by default; rarity via playtesting. *Verified*
+- **Config UX**: master switch **on** by default (v1.0); villages on; random off. Tunable rarity for random mode when enabled. *Verified*
 - **Boundary respect**: generated placements must go through the same `TownBoundaryService` / `TownManager` validation as player-placed towns — likely a custom `StructurePlacement` for dynamic distance checks in random mode.
 - **Platform implementation**: datapack structure assets in common, platform-specific registry injection on Forge and Fabric (exploration notes in the worldgen plan).
-- **Generated town bootstrap**: spawned towns use the same registration, boundary validation, biome kit, default platform, and notification paths as player-founded towns (no bypass shortcuts).
+- **Generated town bootstrap**: spawned towns use the same registration, boundary validation, biome kit, default platform, and notification paths as player-founded towns (no bypass shortcuts). Name from `townNames` pool; on exhaustion merge 2→3→… pool names (merged names tracked as used); pop = `defaultStartingPopulation`. *Verified*
 - **0.9 interim**: the beta still enables crafting by default so survival works before worldgen ships; worldgen is the v1.0 upgrade that makes discovery feel native.
 
 ## Supporting work (as beta feedback dictates)

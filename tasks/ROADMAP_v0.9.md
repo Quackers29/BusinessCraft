@@ -5,7 +5,7 @@
 **Guiding principle**: Ship the existing core tourism loop polished, understandable, and honest — no fake-success UI, no half-features. Let real player feedback shape the road to 1.0.
 
 ## Vision for 0.9
-A new player should be able to found their first town, immediately grasp that "tourists traveling real distance through the world generates real revenue," receive frequent satisfying feedback, and always know what to do next. Deeper systems already in the mod (sell/courier contracts, production, upgrades, global market) should feel meaningful once the core fantasy clicks.
+A new player should be able to found their first town, immediately grasp that "tourists traveling real distance through the world generates real revenue," receive frequent satisfying feedback, and always know what to do next. The beta ships as a **tourism-only economy by default**: towns spawn/consume tourists and earn rewards — no production resource loops, no town trading, no contracts, no research unless a server owner deliberately enables them after reviewing config. UI tabs stay visible; disabled systems simply do nothing. Craftable Town Interface on.
 
 **Explicitly NOT in 0.9** (moved to `ROADMAP_v1.md`): Tourist Transport Contracts, the prestige / "First to City" end-goal system, and Town Interface worldgen.
 
@@ -13,7 +13,7 @@ A new player should be able to found their first town, immediately grasp that "t
 The concrete, checkable task list lives in `tasks/todo.md` (Phases A–F). Summary of what 0.9 includes:
 
 ### 1. Release hygiene (todo.md Phase B)
-License alignment, survival crafting access for the Town Interface block, debug flags off, dead code/demo screens removed, mod icon, changelog, version renumbered to 0.9.0-beta.
+License alignment, **0.9 tourism-only defaults** (craftable on; production/research/trading/contracts off; tourist spawning must not cost resources; towns do not accumulate/trade resources unless owner enables those systems), audit all code paths respect the toggles, debug flags off, dead code/demo screens removed, mod icon, changelog, version renumbered to 0.9.0-beta. *Verified*
 
 ### 2. Honest UI (todo.md Phase C)
 Every button either works or doesn't exist: job assignment UI hidden (v2 logic), settings save/reset implemented or removed, visitor modal wired to real data, placeholder toggles removed.
@@ -35,7 +35,7 @@ All hardcoded UI strings funneled through translatable keys + `en_us.json`. Engl
 ### 6. Testing & release (todo.md Phase F)
 - Unit test coverage: DONE — Test + Docs Loop delivered 39 covered targets and a full documentation vault (`vault/`).
 - Fix the two payment board claim bugs found by the loop (T-012) before beta.
-- Multiplayer playtest pass (payment claims, milestones, personal storage, contracts with 2+ players).
+- Multiplayer playtest pass (payment claims, milestones, personal storage) **plus tourism-only config profile**: large subsystems off, core loop still functions; then spot-check with production/trading enabled.
 - Tourist vehicle stress test (minecarts + Create contraptions, chunk boundaries, server restarts, long journeys).
 - Performance check: 5 active towns, 50+ simultaneous tourists.
 - Full pass on BOTH loaders (Forge + Fabric).
@@ -45,7 +45,7 @@ All hardcoded UI strings funneled through translatable keys + `en_us.json`. Engl
 - [ ] All todo.md Phase A–F items completed or explicitly deferred with a tracking entry
 - [ ] All DebugConfig flags default to false
 - [ ] License consistent across root LICENSE, mods.toml, fabric.mod.json
-- [ ] Survival path to the Town Interface block exists (craftable by default)
+- [ ] Tourism-only defaults verified in code: UI visible, subsystems dormant; tourist loop works with production/trading/contracts/research off (*Verified — scope*)
 - [ ] No fake-success UI remains
 - [ ] Full playtest pass on Forge and Fabric (singleplayer + multiplayer + Create integration)
 - [ ] Performance acceptable with 5 towns / 50+ tourists

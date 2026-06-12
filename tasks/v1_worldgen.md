@@ -12,17 +12,17 @@
 Players should be able to combine generation styles. The main options are:
 
 1. **No Generation** — World spawning completely disabled.
-2. **Villager Villages** — Spawn Town Interfaces near or integrated with vanilla Minecraft villager villages.
-3. **Random World Spawning** — Spawn at random valid locations across the world, respecting town boundary rules, with a rarity/frequency setting.
+2. **Villager Villages** — Inject a new jigsaw building piece into vanilla village pools: a simple town-square structure (platform + centred Town Interface). Town is pre-founded when the structure generates. Default sub-mode when worldgen is on. *Verified*
+3. **Random World Spawning** — Rare standalone town-square structures at valid world locations (boundary checks). Optional; off by default. Rarity/spacing tuned during playtesting — no fixed number at design time. *Verified*
 4. **Both** — Villages + Random spawning enabled together (user-requested combination).
 
 ## Proposed Config Design
 Better UX than a single enum (supports combinations):
 
-- `enableTownInterfaceWorldgen` (boolean) — Master switch. Default: `false`
+- `enableTownInterfaceWorldgen` (boolean) — Master switch. Default: `true` (v1.0) — *Verified*
   - When false → no world generation at all (regardless of other settings).
-- `townInterfaceWorldgenVillages` (boolean) — Enable spawning near vanilla villages.
-- `townInterfaceWorldgenRandom` (boolean) — Enable random world spawning.
+- `townInterfaceWorldgenVillages` (boolean) — Enable village pool injection. **Default: `true` when master switch is on.**
+- `townInterfaceWorldgenRandom` (boolean) — Enable random world spawning. **Default: `false`.**
 
 When `townInterfaceWorldgenRandom` is enabled, additional settings:
 - `townInterfaceRandomSpawnRarity` (or frequency/chance per chunk or region)
@@ -34,6 +34,8 @@ Future options could include:
 - Separate rarity for villages vs random
 
 This design gives players full flexibility (off, villages only, random only, or both).
+
+**Generated town identity** — *Verified*: name drawn from `townNames` config pool; when every pool name is used, merge two unused pool names at random (e.g. `clifftown-hillcrest`) and register the merge as used; if two-name merges exhaust, merge three, and so on. Starting population uses `defaultStartingPopulation` from config. Platform is part of the spawned structure.
 
 ## Current State
 - Zero world generation or structure code exists for Town Interfaces.
@@ -110,10 +112,10 @@ All five exploration items finished. Key takeaways have been recorded above. We 
 - Expected compatibility friction with popular worldgen mods and how to handle it gracefully via config.
 
 ### Design Phase
-- [ ] Finalize config design (master enable + independent toggles for villages/random)
-- [ ] Define exact behavior for "villages" mode (inside village bounds? nearby? replaces a house? adds a platform?)
-- [ ] Define rarity model for "random" mode (chunks, regions, per-biome weight, etc.)
-- [ ] Decide how generated towns should handle initial population, naming, and default platform
+- [x] Finalize config design (master enable + independent toggles for villages/random) — *Verified*: master on; villages on; random off by default
+- [x] Define exact behavior for "villages" mode — *Verified*
+- [x] Define rarity model for "random" mode — *Verified*
+- [x] Decide how generated towns should handle initial population, naming, and default platform — *Verified*
 - [ ] Document edge cases (world border, superflat, void worlds, modded dimensions)
 
 ### Implementation Phase
@@ -121,7 +123,7 @@ All five exploration items finished. Key takeaways have been recorded above. We 
 - [ ] Extend platform abstraction (likely `RegistryHelper` or new `StructureRegistryHelper` in `api/`) for structure/worldgen registration. Keep common free of platform classes.
 - [ ] Add datapack structure assets under `common/src/main/resources/data/businesscraft/worldgen/...` (Structure JSON, StructureSet, Template Pool(s) for villages mode).
 - [ ] Implement generation logic gated by the master `enableTownInterfaceWorldgen` setting (no-op when disabled).
-- [ ] Implement "Villages" mode integration (exact approach TBD in Design: pool injection vs nearby standalone structure).
+- [ ] Implement "Villages" mode integration (inject town-square jigsaw piece into vanilla village template pools) — *Verified*
 - [ ] Implement "Random" spawning (random_spread + custom `StructurePlacement` subclass for live `TownBoundaryService` / `TownManager` checks, or hybrid static+dynamic approach).
 - [ ] Ensure generated towns go through the **exact same** registration, boundary validation, BiomeKit application, default platform creation, and notification paths (or safe equivalent that never bypasses `canPlaceTownAt`).
 - [ ] Add `DebugConfig` flag + debug logging / optional visualization for generated town locations (integrate with existing debug overlay or particle indicators where practical).

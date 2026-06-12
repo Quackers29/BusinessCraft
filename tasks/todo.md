@@ -16,7 +16,7 @@
 
 ## Phase B — Release Hygiene (the "one-day pass")
 - [ ] **License (blocker)**: pick one license and align all three places — root `LICENSE` (currently GPL v3), `forge/.../META-INF/mods.toml` (currently "All rights reserved"), `fabric/.../fabric.mod.json` (currently "MIT")
-- [ ] **Survival access (blocker for 0.9 beta)**: flip `craftableTownInterface` default to `true` (recipe already exists at `data/businesscraft/recipes/town_interface.json`) — interim path until v1.0 worldgen ships
+- [ ] **0.9 tourism-only defaults** — *Verified (scope)*: `craftableTownInterface=true`; `tourists.enabled=true`; `production.enabled=false`; `research.enabled=false`; `trading.enabled=false`; `contracts.enabled=false`. UI stays; disabled systems do nothing. Towns must not gain/trade/consume resources or pay resource costs for tourists unless owner enables those systems — audit production recipes, biome kits, trading, contracts, tourist spawn costs. Implementation + toggle-respect audit in Phase B.
 - [ ] Set `DebugConfig.TOURIST_ENTITY = false` (only flag still on; contradicts release checklist)
 - [ ] Remove/convert ~37 `System.out.println` calls (Forge/Fabric init classes + Fabric stub packets) to logger calls or delete
 - [ ] Delete orphaned Fabric dead code: stub packets under `fabric/network/packets/` not wired into `FabricModMessages`, placeholder `fabric/block/TownInterfaceBlock.java`, unused placeholder `fabric/api/` interfaces
@@ -53,7 +53,7 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 ## Phase F — Testing & Release
 - [x] Unit test coverage for economy-critical logic — delivered via the **Test + Docs Loop**: seed list exhausted June 2026, 39 ledger items (35 DONE, 1 BUG-FOUND, 3 NEEDS-MC), ~600+ tests — far beyond the T-001–T-005 minimum
 - [ ] **Fix T-012 payment board bugs (pre-beta blocker)**: two `@Disabled` tests in `TownPaymentBoardTest` pin real bugs in `toBuffer` claims — (1) partial-claim item leak while entry stays UNCLAIMED, (2) excess item loss on success. Fix production code, re-enable both tests, set ledger row to DONE
-- [ ] Multiplayer playtest pass: payment board claims, milestone rewards, personal storage, contract flow with 2+ players
+- [ ] Multiplayer playtest pass: payment board claims, milestone rewards, personal storage — **tourism-only config first** (production/trading/contracts/research off, verify loop still works), then spot-check with subsystems enabled
 - [ ] Tourist vehicle stress test: minecarts + Create contraptions across chunk boundaries, server restarts, long journeys
 - [ ] Performance check: 5 active towns, 50+ simultaneous tourists
 - [ ] Full pass on BOTH loaders (`wsl ./gradlew :forge:runClient` equivalent + `:fabric:runClient`)
