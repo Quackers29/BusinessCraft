@@ -39,7 +39,7 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 (From old ROADMAP_v1 Phases 1–2 — these survive the scope cut.)
 - [ ] First-placement experience: clear immediate feedback + guidance when the player places their first Town Interface (population requirements, what to build next)
 - [ ] "What should I do next?" suggestions area on the main Town Interface screen, driven by town state
-- [ ] Founder's Handbook / journal item granted on first placement (lightweight version is fine for v1)
+- [x] ~~Founder's Handbook~~ — cut; no in-game manual. External docs only: README + listing → wiki (`vault/`). *Verified (scope)*
 - [ ] Make the first 2–3 milestone rewards significantly easier to unlock (early dopamine)
 - [ ] Increase clarity/impact of tourist-arrival feedback (particles, notifications, sounds — vanilla sound events only)
 - [ ] Surface journey statistics (avg distance, total tourism revenue, repeat visitors) in the Town Overview tab
@@ -57,7 +57,7 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 - [ ] Tourist vehicle stress test: minecarts + Create contraptions across chunk boundaries, server restarts, long journeys
 - [ ] Performance check: 5 active towns, 50+ simultaneous tourists
 - [ ] Full pass on BOTH loaders (`wsl ./gradlew :forge:runClient` equivalent + `:fabric:runClient`)
-- [ ] Write Modrinth/CurseForge listing + basic getting-started docs (the vault's plain-language overview layer is ~80% of the material)
+- [ ] Modrinth/CurseForge listing + GitHub README (concept, tourism-only defaults, wiki link); publish `vault/` overview layer as GitHub wiki — *Verified (scope)*
 - [ ] Publish public beta (0.9.x); beta feedback shapes the v1.0 work in `tasks/ROADMAP_v1.md` (tourist contracts + prestige)
 
 ---

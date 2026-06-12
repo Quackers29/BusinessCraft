@@ -8,23 +8,23 @@
 A player who has mastered the core loop should have a reason to keep playing: accept tourist transport contracts from towns, run a transportation business with recurring routes, see their personal contribution on leaderboards, and race toward the "First to City" prestige milestone — alone or against other players on a server. New players joining a world for the first time should also be able to stumble on generated Town Interfaces in villages or across the map, giving the mod a natural discovery path beyond crafting.
 
 ## Pillar 1 — Tourist Transport Contracts
-Following the same town-initiated → player-accepted model as the existing courier contracts:
+New contract type on the existing contract board (separate from sell/courier resource contracts). Town-initiated → player-accepted. Builds on the polished tourism loop from 0.9. *Verified*
 
-- Towns post tourist transport needs on the contract board; players accept the work of actually moving the tourists (distinct from resource courier contracts).
+- Towns post tourist transport needs; players accept and physically move the tourists (not resource delivery).
 - Towns can specify departure platforms when creating tourist transport contracts.
-- Players can accept tourist contracts as **recurring contracts**, choosing the frequency and timing of repeats — the foundation of running a "transport company" loop.
+- **Recurring contracts required for v1.0** — player chooses frequency/timing of repeats (transport-company loop). *Verified*
 - Supporting polish that makes the work feel good:
   - Tourists walk toward their assigned seat or platform for a short time (~1 second) before teleporting.
   - Client-side name tag coloring for tourists based on destination town, with a config toggle or keybind to disable.
 
 ## Pillar 2 — Prestige & "First to City" (configurable end-game loop)
-A configurable prestige / end-goal system that gives v1 a clear sense of long-term progression and an initial "win condition":
+Town **tiers** in config (same spirit as `upgrades.csv` / `milestones.rewards` in TOML): a ladder of named tiers per town. **City = the max tier** in the ladder (label configurable). Each tier advance requires **both** a tourist **count** and a cumulative tourist **distance** threshold — same dual-metric pattern as milestone rewards. *Verified*
 
-- **"First to City" Town Goal (primary)**: a high, configurable tourism milestone for a town (total tourists transported, cumulative distance traveled by its tourists, or a combination). Default: enabled, set to a challenging but achievable number for a dedicated town.
-- **Player contribution tracking & display**: the existing leaderboard system upgraded to show **player contribution per town** (contracted transportation, distance, or revenue generated per player).
-- **Player Contracted Transportation Goal (secondary)**: a separate configurable milestone for individual players based on total contracted tourist transportation personally completed (across one or more towns).
-- Both goals fully configurable (thresholds, enabled/disabled, scoring formulas) so servers can tune difficulty or turn the end-goal loop off entirely.
-- Intended as a solid starting point — v2's reputation system builds directly on this tracking.
+- **Default shipped config**: tier **B** defined with count + distance goals; full ladder (e.g. A → B → City) tunable by server owners. Enabled/disabled per tier or for the whole prestige loop.
+- **"First to City"**: town reaches the **max configured tier** (City by default naming).
+- **Player contribution tracking & display**: leaderboard upgraded to show player contribution per town (contracted transportation, distance, revenue).
+- **Player Contracted Transportation Goal (secondary)**: separate configurable player milestone (contracted tourist transport completed).
+- v2 reputation builds on this tracking.
 
 ## Pillar 3 — Town Interface World Generation
 Configurable world generation so Town Interfaces appear naturally in the world — improving discovery and world integration without breaking the transport economy fantasy. Exploration and design are complete; full implementation plan in `tasks/v1_worldgen.md`.
@@ -37,6 +37,9 @@ Configurable world generation so Town Interfaces appear naturally in the world �
 - **Generated town bootstrap**: spawned towns use the same registration, boundary validation, biome kit, default platform, and notification paths as player-founded towns (no bypass shortcuts). Name from `townNames` pool; on exhaustion merge 2→3→… pool names (merged names tracked as used); pop = `defaultStartingPopulation`. *Verified*
 - **0.9 interim**: the beta still enables crafting by default so survival works before worldgen ships; worldgen is the v1.0 upgrade that makes discovery feel native.
 
+## Player documentation
+No in-game manual. Wiki (`vault/` → GitHub wiki) + README/listing fleshed out for v1 features (contracts, tiers, worldgen). *Verified*
+
 ## Supporting work (as beta feedback dictates)
 - Visual/audio delight pass on the new flows: boarding animations/particles, arrival celebration for contract completions, leaderboard screen polish.
 - Leverage the existing world visualization framework (LineRenderer3D, PathRenderer3D, VisualizationManager) to optionally display live tourist flow lines and contract routes — the "wow" moment for a growing transport network.
@@ -44,7 +47,7 @@ Configurable world generation so Town Interfaces appear naturally in the world �
 - Each new logic unit gets a Test + Docs Loop iteration (vault note + unit tests) after implementation — the loop protocol is in `tasks/test_doc_loop.md`.
 
 ## v1.0 Release readiness checklist
-- [ ] Tourist Transport Contracts implemented and playable (town-initiated, player-accepted, recurring option, departure platform selection)
+- [ ] Tourist Transport Contracts implemented and playable (new type on contract board; town-initiated, player-accepted; **recurring required**; departure platform selection)
 - [ ] Boarding behavior polish + destination name tag coloring shipped
 - [ ] "First to City" prestige system + player contribution leaderboards implemented and configurable
 - [ ] Town Interface worldgen implemented: all mode combinations (off / villages / random / both), boundary rules never violated, tested on Forge + Fabric + at least one major worldgen mod

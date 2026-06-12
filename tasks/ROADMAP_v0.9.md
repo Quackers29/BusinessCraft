@@ -21,7 +21,7 @@ Every button either works or doesn't exist: job assignment UI hidden (v2 logic),
 ### 3. Onboarding & first 30–60 minutes (todo.md Phase D — highest retention value)
 - Clear immediate feedback + guidance on first Town Interface placement (population requirements, what to build next).
 - "What should I do next?" suggestions area on the main town screen, driven by town state.
-- Lightweight Founder's Handbook / journal item granted on first placement.
+- No in-game manual for 0.9 — external docs only (see §6). *Verified*
 - First 2–3 milestone rewards significantly easier to unlock (early dopamine).
 
 ### 4. Core loop feedback & feel (todo.md Phase D)
@@ -39,7 +39,7 @@ All hardcoded UI strings funneled through translatable keys + `en_us.json`. Engl
 - Tourist vehicle stress test (minecarts + Create contraptions, chunk boundaries, server restarts, long journeys).
 - Performance check: 5 active towns, 50+ simultaneous tourists.
 - Full pass on BOTH loaders (Forge + Fabric).
-- Modrinth/CurseForge listing + getting-started docs (the vault's plain-language overview layer is the starting material).
+- **Player docs (no in-game handbook)**: Modrinth/CurseForge listing + GitHub README — concept, tourism-only defaults, link to wiki. Wiki source = `vault/` plain-language layer (publish as GitHub wiki or equivalent). Flesh out further in v1. *Verified*
 
 ## Release readiness checklist (0.9.0-beta)
 - [ ] All todo.md Phase A–F items completed or explicitly deferred with a tracking entry
