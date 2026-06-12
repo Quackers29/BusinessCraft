@@ -1,6 +1,8 @@
-# Worldgen Task (v1.0/v1.x candidate): Town Interface World Generation & Village Spawning
+# v1.0 Pillar 3: Town Interface World Generation & Village Spawning
 
-**Status**: Deferred past the 0.9 beta (decision June 2026). Planning and exploration are complete; implementation has NOT started. The survival accessibility problem this was meant to solve is addressed for the beta by enabling the Town Interface crafting recipe by default instead. Under the June 2026 versioning (0.9 beta → v1.0 with tourist contracts + prestige, see `tasks/ROADMAP_v1.md`), this lands in v1.0 if beta feedback shows town discovery is a pain point, otherwise in a v1.x update.
+**Status**: **v1.0 scope** (user decision, June 2026). Queued after the 0.9.x public beta ships. Exploration complete; design + implementation not started. The beta addresses survival access via craftable Town Interface by default — worldgen is the v1.0 upgrade for natural discovery.
+
+**Roadmap**: `tasks/ROADMAP_v1.md` (Pillar 3)
 
 **Onboarding doc**: `.claude/tasks/town-interface-worldgen/onboarding.md` (still valid — read before resuming this task).
 
@@ -134,12 +136,12 @@ All five exploration items finished. Key takeaways have been recorded above. We 
 - [ ] Performance testing in newly generated chunks
 
 ## Notes
-- Village / worldgen spawning was previously marked as deferred during the Town Interface Acquisition task, then deferred again from v1.0 to v1.1 during the release-readiness review.
+- Promoted to v1.0 Pillar 3 (June 2026) — was previously deferred as a v1.x candidate during the release-readiness review.
 - This feature directly supports the "Build Towns" part of the core player loop from ARCHITECTURE.md.
 - Quality bar should match the rest of the mod (good config UX, debuggability, clean separation of concerns).
 
 ## Pre-Work Checklist (Must be true before coding starts)
-- [ ] v1.0 has shipped (or user explicitly pulls this task forward).
+- [ ] 0.9.x public beta has shipped (or user explicitly pulls this task forward).
 - [ ] User has reviewed and re-approved this plan.
 - [ ] Onboarding doc `.claude/tasks/town-interface-worldgen/onboarding.md` has been read by the implementer.
 - [ ] Any open Design questions (especially "exact villages mode behavior" and "static vs fully dynamic boundaries for random") have been resolved or explicitly deferred with a note.

@@ -1,13 +1,13 @@
 # Task: 0.9 Public Beta Release Preparation
 
-**Context**: Full release-readiness review completed June 2026. Verdict: architecture and core tourism loop are strong (~75–80% mature), but packaging, scope, and polish gaps block a public release. **Versioning decision (user, June 2026)**: the polished core tourism loop ships as a **0.9.x public beta** (`tasks/ROADMAP_v0.9.md`); tourist transport contracts + prestige/"First to City" are NOT cut — they are the headline features of **v1.0** (`tasks/ROADMAP_v1.md`), built after beta feedback arrives. Worldgen remains a v1.0/v1.x candidate (`tasks/v1.1_worldgen.md`).
+**Context**: Full release-readiness review completed June 2026. Verdict: architecture and core tourism loop are strong (~75–80% mature), but packaging, scope, and polish gaps block a public release. **Versioning decision (user, June 2026)**: the polished core tourism loop ships as a **0.9.x public beta** (`tasks/ROADMAP_v0.9.md`); **v1.0** (`tasks/ROADMAP_v1.md`) adds tourist transport contracts, prestige/"First to City", and Town Interface worldgen — built after beta feedback arrives. Implementation plan for worldgen: `tasks/v1_worldgen.md`.
 
 **Approach**: Work through phases in order. Phases A and B are cheap and unblock everything else. Phases D–F are the bulk of remaining player-facing work.
 
 ---
 
 ## Phase A — Roadmap & Documentation Reorganisation ✅ COMPLETE (June 2026)
-- [x] Move worldgen task out of `todo.md` to `tasks/v1.1_worldgen.md` (done as part of this cleanup)
+- [x] Move worldgen task out of `todo.md` to `tasks/v1_worldgen.md` (v1.0 Pillar 3 implementation plan)
 - [x] Split the old ROADMAP_v1: lean beta scope → new `tasks/ROADMAP_v0.9.md` (polish + onboarding + feedback + docs + multiplayer testing); old file's content preserved in git history
 - [x] Create new `tasks/ROADMAP_v1.md`: Tourist Transport Contracts + prestige/"First to City" as the features that earn the 1.0 (per user decision — these were too good to cut)
 - [x] Align `tasks/ROADMAP_v2.md` with the new sequence (0.9 beta → v1.0 contracts/prestige → v2 reputation/companies)
@@ -16,7 +16,7 @@
 
 ## Phase B — Release Hygiene (the "one-day pass")
 - [ ] **License (blocker)**: pick one license and align all three places — root `LICENSE` (currently GPL v3), `forge/.../META-INF/mods.toml` (currently "All rights reserved"), `fabric/.../fabric.mod.json` (currently "MIT")
-- [ ] **Survival access (blocker)**: flip `craftableTownInterface` default to `true` (recipe already exists at `data/businesscraft/recipes/town_interface.json`) — until worldgen ships there is no survival path to the core block
+- [ ] **Survival access (blocker for 0.9 beta)**: flip `craftableTownInterface` default to `true` (recipe already exists at `data/businesscraft/recipes/town_interface.json`) — interim path until v1.0 worldgen ships
 - [ ] Set `DebugConfig.TOURIST_ENTITY = false` (only flag still on; contradicts release checklist)
 - [ ] Remove/convert ~37 `System.out.println` calls (Forge/Fabric init classes + Fabric stub packets) to logger calls or delete
 - [ ] Delete orphaned Fabric dead code: stub packets under `fabric/network/packets/` not wired into `FabricModMessages`, placeholder `fabric/block/TownInterfaceBlock.java`, unused placeholder `fabric/api/` interfaces
@@ -82,9 +82,8 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 - [ ] Re-invoke the loop only when new logic lands (e.g. Phase D features should each get an iteration after implementation) — review cadence lesson: every ~5 iterations was specified but slipped to 24; enforce it next time
 - [ ] NEEDS-MC rows (T-034 autonomous contracts, T-037 tourist spawning, T-038 entity ticking) need a GameTest harness — tracked in `tasks/toImprove.md`, not v1
 
-## Not in the 0.9 beta (next releases)
-- Tourist Transport Contracts + Prestige/"First to City" → **v1.0** (`tasks/ROADMAP_v1.md`) — the post-beta headline features
-- Town Interface worldgen → v1.0/v1.x candidate, decide after beta feedback (`tasks/v1.1_worldgen.md`, planning complete)
+## Not in the 0.9 beta (v1.0 scope)
+- Tourist Transport Contracts + Prestige/"First to City" + Town Interface worldgen → **v1.0** (`tasks/ROADMAP_v1.md`; worldgen plan in `tasks/v1_worldgen.md`)
 - `UIGridBuilder.java` refactor (2,647 lines) → post-release maintainability work (tracked in `tasks/toImprove.md`)
 
-**Status**: Plan approved by user (June 2026). Release sequence: **0.9.x beta** (this file + `ROADMAP_v0.9.md`) → **v1.0** (contracts + prestige, `ROADMAP_v1.md`) → **v2** (`ROADMAP_v2.md`). Test + Docs Loop COMPLETE for the beta (seeds exhausted, parked). Phase A COMPLETE. Next up: Phase B one-day pass, then fix T-012 payment board bugs.
+**Status**: Plan approved by user (June 2026). Release sequence: **0.9.x beta** (this file + `ROADMAP_v0.9.md`) → **v1.0** (contracts + prestige + worldgen, `ROADMAP_v1.md`) → **v2** (`ROADMAP_v2.md`). Test + Docs Loop COMPLETE for the beta (seeds exhausted, parked). Phase A COMPLETE. Next up: Phase B one-day pass, then fix T-012 payment board bugs.

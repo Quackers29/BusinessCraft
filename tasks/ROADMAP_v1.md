@@ -1,11 +1,11 @@
-# BusinessCraft v1.0 Roadmap — Tourist Contracts & "First to City"
+# BusinessCraft v1.0 Roadmap — Contracts, Prestige & World Discovery
 
 **Date**: June 2026
 **Scope**: The road from the 0.9.x public beta (see `ROADMAP_v0.9.md`) to a true 1.0.
-**Guiding principle**: 0.9 proves the core tourism loop is polished and understandable. 1.0 earns its number by adding the two features that complete the fantasy: **player-driven tourist transportation work** and **a long-term goal to chase**. Beta feedback decides ordering and tuning within this scope.
+**Guiding principle**: 0.9 proves the core tourism loop is polished and understandable. 1.0 earns its number by adding the three features that complete the fantasy: **player-driven tourist transportation work**, **a long-term goal to chase**, and **towns you can discover in the world** — not only craft. Beta feedback decides ordering and tuning within this scope.
 
 ## Vision for v1.0
-A player who has mastered the core loop should have a reason to keep playing: accept tourist transport contracts from towns, run a transportation business with recurring routes, see their personal contribution on leaderboards, and race toward the "First to City" prestige milestone — alone or against other players on a server.
+A player who has mastered the core loop should have a reason to keep playing: accept tourist transport contracts from towns, run a transportation business with recurring routes, see their personal contribution on leaderboards, and race toward the "First to City" prestige milestone — alone or against other players on a server. New players joining a world for the first time should also be able to stumble on generated Town Interfaces in villages or across the map, giving the mod a natural discovery path beyond crafting.
 
 ## Pillar 1 — Tourist Transport Contracts
 Following the same town-initiated → player-accepted model as the existing courier contracts:
@@ -26,19 +26,27 @@ A configurable prestige / end-goal system that gives v1 a clear sense of long-te
 - Both goals fully configurable (thresholds, enabled/disabled, scoring formulas) so servers can tune difficulty or turn the end-goal loop off entirely.
 - Intended as a solid starting point — v2's reputation system builds directly on this tracking.
 
+## Pillar 3 — Town Interface World Generation
+Configurable world generation so Town Interfaces appear naturally in the world — improving discovery and world integration without breaking the transport economy fantasy. Exploration and design are complete; full implementation plan in `tasks/v1_worldgen.md`.
+
+- **Configurable modes** (combinable): off, near vanilla villages, random world spawning, or both villages + random.
+- **Config UX**: master enable switch plus independent toggles for villages/random, with tunable rarity for random mode (conservative defaults that play nice with Terralith-style worldgen mods).
+- **Boundary respect**: generated placements must go through the same `TownBoundaryService` / `TownManager` validation as player-placed towns — likely a custom `StructurePlacement` for dynamic distance checks in random mode.
+- **Platform implementation**: datapack structure assets in common, platform-specific registry injection on Forge and Fabric (exploration notes in the worldgen plan).
+- **Generated town bootstrap**: spawned towns use the same registration, boundary validation, biome kit, default platform, and notification paths as player-founded towns (no bypass shortcuts).
+- **0.9 interim**: the beta still enables crafting by default so survival works before worldgen ships; worldgen is the v1.0 upgrade that makes discovery feel native.
+
 ## Supporting work (as beta feedback dictates)
 - Visual/audio delight pass on the new flows: boarding animations/particles, arrival celebration for contract completions, leaderboard screen polish.
 - Leverage the existing world visualization framework (LineRenderer3D, PathRenderer3D, VisualizationManager) to optionally display live tourist flow lines and contract routes — the "wow" moment for a growing transport network.
 - Re-balance the economy around contract income (contract rewards vs. passive tourism fares).
 - Each new logic unit gets a Test + Docs Loop iteration (vault note + unit tests) after implementation — the loop protocol is in `tasks/test_doc_loop.md`.
 
-## Candidate (v1.0 or v1.x, decide after beta)
-- **Town Interface worldgen** — planning complete in `tasks/v1.1_worldgen.md` (natural town generation in the world). Strong onboarding/discovery value; include in v1.0 if beta feedback shows discovery is a pain point, otherwise ship in a v1.x update.
-
 ## v1.0 Release readiness checklist
 - [ ] Tourist Transport Contracts implemented and playable (town-initiated, player-accepted, recurring option, departure platform selection)
 - [ ] Boarding behavior polish + destination name tag coloring shipped
 - [ ] "First to City" prestige system + player contribution leaderboards implemented and configurable
+- [ ] Town Interface worldgen implemented: all mode combinations (off / villages / random / both), boundary rules never violated, tested on Forge + Fabric + at least one major worldgen mod
 - [ ] New systems covered by Test + Docs Loop iterations (vault + unit tests)
 - [ ] Full playtest pass on both loaders, singleplayer + multiplayer + Create integration
 - [ ] 0.9 beta feedback triaged — blockers fixed, balance re-tuned
@@ -47,4 +55,4 @@ A configurable prestige / end-goal system that gives v1 a clear sense of long-te
 ---
 
 **Status**: Queued — begins after the 0.9.x public beta ships (see `ROADMAP_v0.9.md`).
-**Next after v1.0**: `ROADMAP_v2.md` — reputation, VIP contracts, automation, player companies (single-server depth), building directly on v1's contracts + prestige tracking.
+**Next after v1.0**: `ROADMAP_v2.md` — reputation, VIP contracts, automation, player companies (single-server depth), building directly on v1's contracts + prestige tracking + world-discovered towns.

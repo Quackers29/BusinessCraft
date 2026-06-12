@@ -54,4 +54,4 @@ All hardcoded UI strings funneled through translatable keys + `en_us.json`. Engl
 ---
 
 **Status**: Active — this is the current release target.
-**Next**: After 0.9 ships and feedback arrives, development moves to `ROADMAP_v1.md` (Tourist Transport Contracts + prestige/"First to City" — the features that earn the 1.0).
+**Next**: After 0.9 ships and feedback arrives, development moves to `ROADMAP_v1.md` (Tourist Transport Contracts + prestige/"First to City" + Town Interface worldgen — the features that earn the 1.0).
