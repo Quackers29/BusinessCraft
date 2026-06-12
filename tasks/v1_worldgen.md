@@ -35,6 +35,8 @@ Future options could include:
 
 This design gives players full flexibility (off, villages only, random only, or both).
 
+**Existing worlds** — *Verified*: no retrofit; structures generate only in **newly generated** chunks (enabling worldgen mid-play affects unexplored terrain only).
+
 **Generated town identity** — *Verified*: name drawn from `townNames` config pool; when every pool name is used, merge two unused pool names at random (e.g. `clifftown-hillcrest`) and register the merge as used; if two-name merges exhaust, merge three, and so on. Starting population uses `defaultStartingPopulation` from config. Platform is part of the spawned structure.
 
 ## Current State
@@ -116,7 +118,7 @@ All five exploration items finished. Key takeaways have been recorded above. We 
 - [x] Define exact behavior for "villages" mode — *Verified*
 - [x] Define rarity model for "random" mode — *Verified*
 - [x] Decide how generated towns should handle initial population, naming, and default platform — *Verified*
-- [ ] Document edge cases (world border, superflat, void worlds, modded dimensions)
+- [x] Document edge cases (world border, superflat, void worlds, modded dimensions) — *Verified*: no retrofit of existing villages/chunks; new generation only
 
 ### Implementation Phase
 - [ ] Add new config options to `ConfigLoader` + default TOML + run configs (master enable + villages + random toggles + rarity). Follow exact load/save/hot-reload pattern.

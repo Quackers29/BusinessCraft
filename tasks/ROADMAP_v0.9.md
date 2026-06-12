@@ -15,39 +15,39 @@ The concrete, checkable task list lives in `tasks/todo.md` (Phases A–F). Summa
 ### 1. Release hygiene (todo.md Phase B)
 License alignment, **0.9 tourism-only defaults** (craftable on; production/research/trading/contracts off; tourist spawning must not cost resources; towns do not accumulate/trade resources unless owner enables those systems), audit all code paths respect the toggles, debug flags off, dead code/demo screens removed, mod icon, changelog, version renumbered to 0.9.0-beta. *Verified*
 
-### 2. Honest UI (todo.md Phase C)
-Every button either works or doesn't exist: job assignment UI hidden (v2 logic), settings save/reset implemented or removed, visitor modal wired to real data, placeholder toggles removed.
+### 2. Honest UI (todo.md Phase C) — optional quick pass
+Not a beta blocker. If time: audit for leftover fake-success/placeholder UI (job assignment, visitor modal, settings buttons, etc.); fix only what still exists. *Verified*
 
 ### 3. Onboarding & first 30–60 minutes (todo.md Phase D — highest retention value)
-- Clear immediate feedback + guidance on first Town Interface placement (population requirements, what to build next).
-- "What should I do next?" suggestions area on the main town screen, driven by town state.
+- Clear immediate feedback + guidance on first Town Interface placement (population requirements, what to build next) — notifications/chat, not a persistent suggestions panel.
+- ~~"What should I do next?" UI~~ — cut permanently. *Verified*
 - No in-game manual for 0.9 — external docs only (see §6). *Verified*
-- First 2–3 milestone rewards significantly easier to unlock (early dopamine).
+- Default economy: **1 emerald / 1000 blocks**; example milestones (1000m→apple, 5000m→bread) — payments are main income, milestones are small bonus exemplars. *Verified*
+- **Distance anti-cheat**: stop loop-back track farming of the per-~2s distance counter (min delta / direction / slower sampling). *Verified*
 
 ### 4. Core loop feedback & feel (todo.md Phase D)
 - Clearer/louder tourist-arrival feedback (particles, notifications, vanilla sound events).
-- Journey statistics (avg distance, total tourism revenue, repeat visitors) in the Town Overview tab.
-- Play-test re-tune of `metersPerEmerald` and milestone thresholds.
+- ~~Extra journey stats on Overview~~ — v1 polish (0.9 has tourism count already). *Verified*
+- Play-test economy defaults + distance anti-cheat; owners tune TOML.
 
-### 5. Localization sweep (todo.md Phase E)
-All hardcoded UI strings funneled through translatable keys + `en_us.json`. English only for 0.9; structure enables community translations.
+### 5. ~~Localization sweep~~ — v1.0 (0.9 ships hardcoded English). *Verified*
 
 ### 6. Testing & release (todo.md Phase F)
 - Unit test coverage: DONE — Test + Docs Loop delivered 39 covered targets and a full documentation vault (`vault/`).
-- Fix the two payment board claim bugs found by the loop (T-012) before beta.
+- Fix payment board `toBuffer` bugs (T-012) — **0.9 blocker**. *Verified*
 - Multiplayer playtest pass (payment claims, milestones, personal storage) **plus tourism-only config profile**: large subsystems off, core loop still functions; then spot-check with production/trading enabled.
 - Tourist vehicle stress test (minecarts + Create contraptions, chunk boundaries, server restarts, long journeys).
 - Performance check: 5 active towns, 50+ simultaneous tourists.
-- Full pass on BOTH loaders (Forge + Fabric).
+- Full pass on **both loaders (Forge + Fabric)** — dual-platform ship required for 0.9+. *Verified*
 - **Player docs (no in-game handbook)**: Modrinth/CurseForge listing + GitHub README — concept, tourism-only defaults, link to wiki. Wiki source = `vault/` plain-language layer (publish as GitHub wiki or equivalent). Flesh out further in v1. *Verified*
 
 ## Release readiness checklist (0.9.0-beta)
 - [ ] All todo.md Phase A–F items completed or explicitly deferred with a tracking entry
 - [ ] All DebugConfig flags default to false
-- [ ] License consistent across root LICENSE, mods.toml, fabric.mod.json
+- [ ] License **MIT** aligned across root LICENSE, mods.toml, fabric.mod.json — *Verified*
 - [ ] Tourism-only defaults verified in code: UI visible, subsystems dormant; tourist loop works with production/trading/contracts/research off (*Verified — scope*)
-- [ ] No fake-success UI remains
-- [ ] Full playtest pass on Forge and Fabric (singleplayer + multiplayer + Create integration)
+- [ ] *(optional)* Quick fake-success UI audit — not required for beta ship
+- [ ] Full playtest pass on Forge **and** Fabric (singleplayer + multiplayer + Create) — both required for publish. *Verified*
 - [ ] Performance acceptable with 5 towns / 50+ tourists
 - [ ] Changelog written, version set to 0.9.0-beta, listing published
 

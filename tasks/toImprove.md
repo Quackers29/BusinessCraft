@@ -185,6 +185,9 @@ Vip train or plane way more lucrative, speed is key there
 
 ---
 
+## Platform loaders (v1.0)
+NeoForge and Quilt ports — see `tasks/ROADMAP_v1.md` Platform expansion. Forge + Fabric required from 0.9 onward.
+
 ## Testing Infrastructure (post-v1)
 
 ### GameTest harness for NEEDS-MC coverage

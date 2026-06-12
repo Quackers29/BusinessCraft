@@ -15,7 +15,7 @@
 - [x] Fix `README.md` overstatements: packet section rewritten with real packets (~57, was "22" with invented names), Population tab honestly marked as placeholder data, stale line counts/class name fixed, "70%+" claim softened, Fabric added to install requirements
 
 ## Phase B — Release Hygiene (the "one-day pass")
-- [ ] **License (blocker)**: pick one license and align all three places — root `LICENSE` (currently GPL v3), `forge/.../META-INF/mods.toml` (currently "All rights reserved"), `fabric/.../fabric.mod.json` (currently "MIT")
+- [ ] **License (blocker)** — *Verified (scope)*: **MIT** everywhere — replace root `LICENSE`, fix Forge `mods.toml` (currently All Rights Reserved), confirm Fabric `fabric.mod.json`. Implementation in Phase B.
 - [ ] **0.9 tourism-only defaults** — *Verified (scope)*: `craftableTownInterface=true`; `tourists.enabled=true`; `production.enabled=false`; `research.enabled=false`; `trading.enabled=false`; `contracts.enabled=false`. UI stays; disabled systems do nothing. Towns must not gain/trade/consume resources or pay resource costs for tourists unless owner enables those systems — audit production recipes, biome kits, trading, contracts, tourist spawn costs. Implementation + toggle-respect audit in Phase B.
 - [ ] Set `DebugConfig.TOURIST_ENTITY = false` (only flag still on; contradicts release checklist)
 - [ ] Remove/convert ~37 `System.out.println` calls (Forge/Fabric init classes + Fabric stub packets) to logger calls or delete
@@ -27,36 +27,34 @@
 - [ ] Create `CHANGELOG.md` and start tracking versions
 - [ ] Improve `mods.toml` description to match the better `fabric.mod.json` one
 
-## Phase C — Placeholder / Fake-Success UI Cleanup
-Principle: fake success messages are worse than missing buttons. Either implement, hide, or remove.
-- [ ] Job assignment: hide the UI ("Job assignment feature coming soon!" in `ButtonActionCoordinator.handleAssignJobs()`) — logic is post-1.0 scope
-- [ ] Settings save/reset in `ButtonActionCoordinator` (lines ~181, 195): implement for the settings that exist, or remove the buttons
-- [ ] `VisitorModalManager` hardcoded example visitor data: wire to real visit history or hide the modal
-- [ ] `TownInterfaceViewModelBuilder`: `autoCollect` / `taxes` hardcoded `false` placeholders — remove from UI or implement
-- [ ] `ContractDetailViewModelBuilder` TODO: resolve player name from UUID
+## Phase C — Placeholder / Fake-Success UI Cleanup (optional for 0.9)
+Principle: fake success messages are worse than missing buttons. Either implement, hide, or remove. *Verified (scope)*: **not a 0.9 blocker** — quick audit pass if time; many items may already be gone. Tourism-path fixes first if anything remains.
+- [ ] *(optional)* Quick UI audit: job assignment placeholder, settings save/reset, visitor modal example data, `autoCollect`/`taxes` placeholders, contract detail player-name — fix/hide only if still present
 
 ## Phase D — Onboarding & Core Loop Feedback (highest player-retention value)
 (From old ROADMAP_v1 Phases 1–2 — these survive the scope cut.)
 - [ ] First-placement experience: clear immediate feedback + guidance when the player places their first Town Interface (population requirements, what to build next)
-- [ ] "What should I do next?" suggestions area on the main Town Interface screen, driven by town state
+- [x] ~~"What should I do next?" suggestions UI~~ — cut permanently (0.9 and v1+). Wiki + first-placement notifications only. *Verified (scope)*
 - [x] ~~Founder's Handbook~~ — cut; no in-game manual. External docs only: README + listing → wiki (`vault/`). *Verified (scope)*
-- [ ] Make the first 2–3 milestone rewards significantly easier to unlock (early dopamine)
+- [ ] **Economy defaults** — *Verified (scope)*: `metersPerEmerald=1000` (1 emerald per 1000 blocks); example milestones in default TOML only — 1000m → 1 apple, 5000m → 1 bread (payments are the main reward; milestones are bonus exemplars for server owners). Implementation in Phase D/B.
+- [ ] **Distance loop anti-cheat** — *Verified (scope)*: fix back-and-forth track farming (`TouristEntity` samples every ~2s and adds all path length). Approach: sample less often and/or only credit movement ≥50m from last checkpoint and/or net progress toward destination — pick at implementation. 0.9 blocker.
 - [ ] Increase clarity/impact of tourist-arrival feedback (particles, notifications, sounds — vanilla sound events only)
-- [ ] Surface journey statistics (avg distance, total tourism revenue, repeat visitors) in the Town Overview tab
-- [ ] Play-test and re-tune `metersPerEmerald` + milestone thresholds
+- [x] ~~Journey statistics on Overview~~ (avg distance, total revenue, repeat visitors) — **v1 polish**; 0.9 keeps existing tourism count only. *Verified (scope)*
+- [ ] Play-test economy defaults + distance anti-cheat; server owners expected to tune config
 
-## Phase E — Localization Sweep
-- [ ] Funnel hardcoded UI strings (~180+ `Component.literal` across ~47 files) through `Component.translatable` + `en_us.json` — mechanical work, good for low-energy sessions; do it before release while strings are still free to change
+## Phase E — Localization Sweep → **v1.0** (not 0.9)
+- [x] ~~0.9 full localization sweep~~ — deferred to v1.0; 0.9 ships with hardcoded English. *Verified (scope)*
+- [ ] Funnel hardcoded UI strings (~180+ `Component.literal` across ~47 files) through `Component.translatable` + `en_us.json`
 - [ ] Priority order: contract screens, payment/trade messages, town notifications (`TownNotificationUtils`), contract item lore (`ContractItemHelper`), then the rest
 - [ ] English only for v1; structure makes community translations possible later
 
 ## Phase F — Testing & Release
 - [x] Unit test coverage for economy-critical logic — delivered via the **Test + Docs Loop**: seed list exhausted June 2026, 39 ledger items (35 DONE, 1 BUG-FOUND, 3 NEEDS-MC), ~600+ tests — far beyond the T-001–T-005 minimum
-- [ ] **Fix T-012 payment board bugs (pre-beta blocker)**: two `@Disabled` tests in `TownPaymentBoardTest` pin real bugs in `toBuffer` claims — (1) partial-claim item leak while entry stays UNCLAIMED, (2) excess item loss on success. Fix production code, re-enable both tests, set ledger row to DONE
+- [ ] **Fix T-012 payment board bugs** — *Verified (scope)*: **0.9 blocker**. Two `@Disabled` tests in `TownPaymentBoardTest` (`toBuffer` partial leak + excess loss). Fix production code, re-enable tests, ledger → DONE.
 - [ ] Multiplayer playtest pass: payment board claims, milestone rewards, personal storage — **tourism-only config first** (production/trading/contracts/research off, verify loop still works), then spot-check with subsystems enabled
 - [ ] Tourist vehicle stress test: minecarts + Create contraptions across chunk boundaries, server restarts, long journeys
 - [ ] Performance check: 5 active towns, 50+ simultaneous tourists
-- [ ] Full pass on BOTH loaders (`wsl ./gradlew :forge:runClient` equivalent + `:fabric:runClient`)
+- [ ] Full pass on **both** loaders (Forge + Fabric) — dual-platform 0.9 ship required. *Verified (scope)*
 - [ ] Modrinth/CurseForge listing + GitHub README (concept, tourism-only defaults, wiki link); publish `vault/` overview layer as GitHub wiki — *Verified (scope)*
 - [ ] Publish public beta (0.9.x); beta feedback shapes the v1.0 work in `tasks/ROADMAP_v1.md` (tourist contracts + prestige)
 

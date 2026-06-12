@@ -13,9 +13,9 @@ New contract type on the existing contract board (separate from sell/courier res
 - Towns post tourist transport needs; players accept and physically move the tourists (not resource delivery).
 - Towns can specify departure platforms when creating tourist transport contracts.
 - **Recurring contracts required for v1.0** — player chooses frequency/timing of repeats (transport-company loop). *Verified*
-- Supporting polish that makes the work feel good:
-  - Tourists walk toward their assigned seat or platform for a short time (~1 second) before teleporting.
-  - Client-side name tag coloring for tourists based on destination town, with a config toggle or keybind to disable.
+- Supporting polish (v1.0):
+  - Tourists walk toward seat/platform ~1s before teleport (not instant). *Verified*
+  - Client-side name tag coloring by destination town; config toggle or keybind to disable. *Verified — v1, low priority*
 
 ## Pillar 2 — Prestige & "First to City" (configurable end-game loop)
 Town **tiers** in config (same spirit as `upgrades.csv` / `milestones.rewards` in TOML): a ladder of named tiers per town. **City = the max tier** in the ladder (label configurable). Each tier advance requires **both** a tourist **count** and a cumulative tourist **distance** threshold — same dual-metric pattern as milestone rewards. *Verified*
@@ -23,7 +23,7 @@ Town **tiers** in config (same spirit as `upgrades.csv` / `milestones.rewards` i
 - **Default shipped config**: tier **B** defined with count + distance goals; full ladder (e.g. A → B → City) tunable by server owners. Enabled/disabled per tier or for the whole prestige loop.
 - **"First to City"**: town reaches the **max configured tier** (City by default naming).
 - **Player contribution tracking & display**: leaderboard upgraded to show player contribution per town (contracted transportation, distance, revenue).
-- **Player Contracted Transportation Goal (secondary)**: separate configurable player milestone (contracted tourist transport completed).
+- **Player Contracted Transportation Goal (secondary, v1.0)**: separate configurable player milestone for total contracted tourist transport completed (across towns). *Verified*
 - v2 reputation builds on this tracking.
 
 ## Pillar 3 — Town Interface World Generation
@@ -36,11 +36,19 @@ Configurable world generation so Town Interfaces appear naturally in the world �
 - **Platform implementation**: datapack structure assets in common, platform-specific registry injection on Forge and Fabric (exploration notes in the worldgen plan).
 - **Generated town bootstrap**: spawned towns use the same registration, boundary validation, biome kit, default platform, and notification paths as player-founded towns (no bypass shortcuts). Name from `townNames` pool; on exhaustion merge 2→3→… pool names (merged names tracked as used); pop = `defaultStartingPopulation`. *Verified*
 - **0.9 interim**: the beta still enables crafting by default so survival works before worldgen ships; worldgen is the v1.0 upgrade that makes discovery feel native.
+- **Existing worlds**: new chunks only — no retrofit of villages already generated. *Verified*
+
+## Platform expansion
+Add **NeoForge** and **Quilt** loader support (alongside existing Forge + Fabric from 0.9). Same common module; new platform modules + parity testing. *Verified*
+
+## Localization
+Full `Component.translatable` + `en_us.json` sweep (~180+ strings); English only; structure for community translations later. *Verified*
 
 ## Player documentation
 No in-game manual. Wiki (`vault/` → GitHub wiki) + README/listing fleshed out for v1 features (contracts, tiers, worldgen). *Verified*
 
 ## Supporting work (as beta feedback dictates)
+- **Town Overview polish**: avg tourist distance, total tourism revenue, repeat visitors (0.9 keeps existing tourism count only). *Verified*
 - Visual/audio delight pass on the new flows: boarding animations/particles, arrival celebration for contract completions, leaderboard screen polish.
 - Leverage the existing world visualization framework (LineRenderer3D, PathRenderer3D, VisualizationManager) to optionally display live tourist flow lines and contract routes — the "wow" moment for a growing transport network.
 - Re-balance the economy around contract income (contract rewards vs. passive tourism fares).
@@ -48,11 +56,11 @@ No in-game manual. Wiki (`vault/` → GitHub wiki) + README/listing fleshed out 
 
 ## v1.0 Release readiness checklist
 - [ ] Tourist Transport Contracts implemented and playable (new type on contract board; town-initiated, player-accepted; **recurring required**; departure platform selection)
-- [ ] Boarding behavior polish + destination name tag coloring shipped
+- [ ] Boarding behavior polish shipped; name tag coloring (*low priority*, ship if time)
 - [ ] "First to City" prestige system + player contribution leaderboards implemented and configurable
 - [ ] Town Interface worldgen implemented: all mode combinations (off / villages / random / both), boundary rules never violated, tested on Forge + Fabric + at least one major worldgen mod
 - [ ] New systems covered by Test + Docs Loop iterations (vault + unit tests)
-- [ ] Full playtest pass on both loaders, singleplayer + multiplayer + Create integration
+- [ ] Full playtest on Forge, Fabric, NeoForge, and Quilt; singleplayer + multiplayer + Create where applicable
 - [ ] 0.9 beta feedback triaged — blockers fixed, balance re-tuned
 - [ ] Documentation/listing updated for the new features
 
