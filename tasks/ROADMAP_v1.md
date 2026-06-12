@@ -8,9 +8,9 @@
 A player who has mastered the core loop should have a reason to keep playing: accept tourist transport contracts from towns, run a transportation business with recurring routes, see their personal contribution on leaderboards, and race toward the "First to City" prestige milestone — alone or against other players on a server. New players joining a world for the first time should also be able to stumble on generated Town Interfaces in villages or across the map, giving the mod a natural discovery path beyond crafting.
 
 ## Pillar 1 — Tourist Transport Contracts
-New contract type on the existing contract board (separate from sell/courier resource contracts). Town-initiated → player-accepted. Builds on the polished tourism loop from 0.9. *Verified*
+New contract type on the **existing contract board** — same town-to-town pattern as today's resource contracts (see `vault/Trade/` — sell auctions + courier accept/complete), but for **tourists** not items. Towns negotiate/post on the board; once settled, the associated **player transport contract** is what the player accepts and fulfils. *Verified*
 
-- Towns post tourist transport needs; players accept and physically move the tourists (not resource delivery).
+- Mirrors current flow: town-level contract resolution first → player courier/transport leg (contract item, destination match, payment board payout) adapted for moving tourists.
 - Towns can specify departure platforms when creating tourist transport contracts.
 - **Recurring contracts required for v1.0** — player chooses frequency/timing of repeats (transport-company loop). *Verified*
 - Supporting polish (v1.0):
@@ -38,6 +38,9 @@ Configurable world generation so Town Interfaces appear naturally in the world �
 - **0.9 interim**: the beta still enables crafting by default so survival works before worldgen ships; worldgen is the v1.0 upgrade that makes discovery feel native.
 - **Existing worlds**: new chunks only — no retrofit of villages already generated. *Verified*
 
+## Config defaults (v1.0)
+No change from 0.9 tourism-only subsystem defaults yet — production/trading/contracts/research stay **off**; revisit after beta feedback when heading to v1 ship. *Verified*
+
 ## Platform expansion
 Add **NeoForge** and **Quilt** loader support (alongside existing Forge + Fabric from 0.9). Same common module; new platform modules + parity testing. *Verified*
 
@@ -49,8 +52,9 @@ No in-game manual. Wiki (`vault/` → GitHub wiki) + README/listing fleshed out 
 
 ## Supporting work (as beta feedback dictates)
 - **Town Overview polish**: avg tourist distance, total tourism revenue, repeat visitors (0.9 keeps existing tourism count only). *Verified*
-- Visual/audio delight pass on the new flows: boarding animations/particles, arrival celebration for contract completions, leaderboard screen polish.
-- Leverage the existing world visualization framework (LineRenderer3D, PathRenderer3D, VisualizationManager) to optionally display live tourist flow lines and contract routes — the "wow" moment for a growing transport network.
+- **Arrival feedback** (no extra chat): maybe particles + villager sound on tourist payment or train exit. *Verified — v1*
+- Visual/audio delight on contract flows: boarding animations/particles, arrival celebration for contract completions, leaderboard screen polish.
+- Live tourist flow lines / contract routes via existing visualization framework — needs more design thought; *v1 low priority, ship if time*.
 - Re-balance the economy around contract income (contract rewards vs. passive tourism fares).
 - Each new logic unit gets a Test + Docs Loop iteration (vault note + unit tests) after implementation — the loop protocol is in `tasks/test_doc_loop.md`.
 
@@ -60,7 +64,7 @@ No in-game manual. Wiki (`vault/` → GitHub wiki) + README/listing fleshed out 
 - [ ] "First to City" prestige system + player contribution leaderboards implemented and configurable
 - [ ] Town Interface worldgen implemented: all mode combinations (off / villages / random / both), boundary rules never violated, tested on Forge + Fabric + at least one major worldgen mod
 - [ ] New systems covered by Test + Docs Loop iterations (vault + unit tests)
-- [ ] Full playtest on Forge, Fabric, NeoForge, and Quilt; singleplayer + multiplayer + Create where applicable
+- [ ] Full playtest on Forge, Fabric, NeoForge, and Quilt; **multiplayer required** (payment board, contracts, storage); Create where applicable
 - [ ] 0.9 beta feedback triaged — blockers fixed, balance re-tuned
 - [ ] Documentation/listing updated for the new features
 

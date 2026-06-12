@@ -33,12 +33,12 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 
 ## Phase D — Onboarding & Core Loop Feedback (highest player-retention value)
 (From old ROADMAP_v1 Phases 1–2 — these survive the scope cut.)
-- [ ] First-placement experience: clear immediate feedback + guidance when the player places their first Town Interface (population requirements, what to build next)
+- [x] ~~First-placement in-game guidance~~ — wiki/README only, not 0.9 code. *Verified (scope)*
 - [x] ~~"What should I do next?" suggestions UI~~ — cut permanently (0.9 and v1+). Wiki + first-placement notifications only. *Verified (scope)*
 - [x] ~~Founder's Handbook~~ — cut; no in-game manual. External docs only: README + listing → wiki (`vault/`). *Verified (scope)*
 - [ ] **Economy defaults** — *Verified (scope)*: `metersPerEmerald=1000` (1 emerald per 1000 blocks); example milestones in default TOML only — 1000m → 1 apple, 5000m → 1 bread (payments are the main reward; milestones are bonus exemplars for server owners). Implementation in Phase D/B.
 - [ ] **Distance loop anti-cheat** — *Verified (scope)*: fix back-and-forth track farming (`TouristEntity` samples every ~2s and adds all path length). Approach: sample less often and/or only credit movement ≥50m from last checkpoint and/or net progress toward destination — pick at implementation. 0.9 blocker.
-- [ ] Increase clarity/impact of tourist-arrival feedback (particles, notifications, sounds — vanilla sound events only)
+- [x] ~~Tourist-arrival feedback polish~~ — **v1**; no extra chat messages. Maybe particles + villager sound on payment/train exit. *Verified (scope)*
 - [x] ~~Journey statistics on Overview~~ (avg distance, total revenue, repeat visitors) — **v1 polish**; 0.9 keeps existing tourism count only. *Verified (scope)*
 - [ ] Play-test economy defaults + distance anti-cheat; server owners expected to tune config
 
@@ -51,11 +51,11 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 ## Phase F — Testing & Release
 - [x] Unit test coverage for economy-critical logic — delivered via the **Test + Docs Loop**: seed list exhausted June 2026, 39 ledger items (35 DONE, 1 BUG-FOUND, 3 NEEDS-MC), ~600+ tests — far beyond the T-001–T-005 minimum
 - [ ] **Fix T-012 payment board bugs** — *Verified (scope)*: **0.9 blocker**. Two `@Disabled` tests in `TownPaymentBoardTest` (`toBuffer` partial leak + excess loss). Fix production code, re-enable tests, ledger → DONE.
-- [ ] Multiplayer playtest pass: payment board claims, milestone rewards, personal storage — **tourism-only config first** (production/trading/contracts/research off, verify loop still works), then spot-check with subsystems enabled
-- [ ] Tourist vehicle stress test: minecarts + Create contraptions across chunk boundaries, server restarts, long journeys
-- [ ] Performance check: 5 active towns, 50+ simultaneous tourists
+- [x] ~~Multiplayer playtest~~ — **v1.0** (not 0.9; tourism-only defaults, SP + manual Create pass enough for beta). *Verified (scope)*
+- [ ] Tourist vehicle stress test: minecarts + **Create (required compatibility)** — chunk boundaries, server restarts, long journeys; manual playtest by owner. *Verified (scope)*
+- [ ] Performance smoke test: multiple towns + many simultaneous tourists (no fixed target yet — tune during playtesting). *Verified (scope)*
 - [ ] Full pass on **both** loaders (Forge + Fabric) — dual-platform 0.9 ship required. *Verified (scope)*
-- [ ] Modrinth/CurseForge listing + GitHub README (concept, tourism-only defaults, wiki link); publish `vault/` overview layer as GitHub wiki — *Verified (scope)*
+- [ ] Modrinth **and** CurseForge listing + GitHub README (concept, tourism-only defaults, wiki link); publish `vault/` overview layer as GitHub wiki — *Verified (scope): both platforms for 0.9 beta*
 - [ ] Publish public beta (0.9.x); beta feedback shapes the v1.0 work in `tasks/ROADMAP_v1.md` (tourist contracts + prestige)
 
 ---
@@ -79,6 +79,9 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 - [x] Senior review #2 (T-016–T-039): docs/tests quality held up; fixed plain-language drift in overview notes (T-024/T-033/T-034 entries had code jargon), reconciled Home.md area taxonomy; T-012 bugs promoted to Phase F task
 - [ ] Re-invoke the loop only when new logic lands (e.g. Phase D features should each get an iteration after implementation) — review cadence lesson: every ~5 iterations was specified but slipped to 24; enforce it next time
 - [ ] NEEDS-MC rows (T-034 autonomous contracts, T-037 tourist spawning, T-038 entity ticking) need a GameTest harness — tracked in `tasks/toImprove.md`, not v1
+
+## v1.0 config defaults
+- [x] Subsystem toggles unchanged from 0.9 for now (tourism on; production/trading/contracts/research off) — revisit post-beta. *Verified (scope)*
 
 ## Not in the 0.9 beta (v1.0 scope)
 - Tourist Transport Contracts + Prestige/"First to City" + Town Interface worldgen → **v1.0** (`tasks/ROADMAP_v1.md`; worldgen plan in `tasks/v1_worldgen.md`)
