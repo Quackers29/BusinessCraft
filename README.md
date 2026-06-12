@@ -4,17 +4,17 @@
 
 ## 🏙️ Core Systems Overview
 
-### **Town Management System** (`Town.java` - 718 lines)
+### **Town Management System** (`Town.java`)
 **✅ Full Town Management Implementation**
 
 - **Multi-Tiered Storage Architecture**:
   - Town Resources: Bread, building materials, and consumables
-  - Payment Board System: Structured reward claiming with 50+ configurable milestones
+  - Payment Board System: Structured reward claiming with configurable distance milestones
   - Personal Storage: Per-player UUID-based inventory (18 slots each)
   
 - **Advanced Population Mechanics**:
   - Dynamic population growth from tourist visits
-  - Tourist capacity management (1 tourist per 10 population)
+  - Tourist capacity management (population-driven, configurable, upgradeable)
   - Population-based platform allocation and spawning rates
   
 - **Comprehensive Visit Tracking**:
@@ -26,7 +26,7 @@
   - Delegates complex business logic to `TownService`
   - Clean separation between data model and business operations
 
-### **Block Entity System** (`TownBlockEntity.java` - 1,058 lines)
+### **Block Entity System** (`TownInterfaceEntity.java`)
 **✅ Advanced Modular Architecture**
 
 - **14 Specialized Helper Classes**:
@@ -44,7 +44,7 @@
   - Platform-based tourist spawning (up to 10 platforms/town)
   - Sophisticated client-side caching with auto-refresh
 
-### **Tourist Entity System** (`TouristEntity.java` - 448 lines)
+### **Tourist Entity System** (`TouristEntity.java`)
 **✅ Advanced Villager-Based Implementation**
 
 - **Intelligent Lifecycle Management**:
@@ -63,7 +63,7 @@
   - Integration with Create mod vehicle systems
   - Proper cleanup and accounting on entity removal
 
-### **Platform Transportation System** (`Platform.java` - 275 lines)
+### **Platform Transportation System** (`Platform.java`)
 **✅ Multi-Destination Platform Architecture**
 
 - **Comprehensive Platform Management**:
@@ -138,19 +138,16 @@ The Town Interface Block provides a well-designed tabbed interface for complete 
   - Animated presentation with smooth transitions
 
 #### **👥 Population Tab** (`PopulationTab.java`)
-**✅ Citizen Management System**
+**🚧 Citizen Display (placeholder data)**
 
-- **Advanced Citizen Display**:
-  - **Custom List Layout**: Professional citizen information display
-  - **Citizen Profiles**: Name, Job, Level for each resident
-  - **Sample Data System**: Demonstrates 10 diverse citizen profiles
-  - **Scrollable Interface**: Handle large populations efficiently
+- **Citizen Display**:
+  - **Custom List Layout**: Citizen information display (Name, Job, Level)
+  - **Scrollable Interface**: Handles large populations efficiently
+  - **Note**: currently shows placeholder citizen profiles — the job assignment system behind it is planned for a future release (see roadmaps)
 
 - **Technical Features**:
   - `StandardTabContent` with `CUSTOM_LIST` content type
   - Dynamic data supplier with real-time updates
-  - Debug logging for scroll event handling
-  - Professional job assignments (Miner, Farmer, Builder, Trader, Blacksmith, Scholar)
 
 #### **📦 Resources Tab** (`ResourcesTab.java`)
 **✅ Advanced Resource Management**
@@ -286,39 +283,27 @@ Each content type optimizes rendering and interaction patterns for specific data
 
 ## 🌐 Network Communication System
 
-### **22-Packet System** (5 organized packages)
+### **~57-Packet System** (6 organized packages + view-model sync)
 **✅ Complete Client-Server Communication**
 
-#### **Platform Management** (`network/packets/platform/` - 7 packets)
-- `AddPlatformPacket`: Platform creation and registration
-- `DeletePlatformPacket`: Platform removal with cleanup
-- `SetPlatformPathCreationModePacket`: Path building mode toggle
-- `SetSearchRadiusPacket`: Dynamic radius configuration
-- `ResetPlatformPathPacket`: Path reset functionality
-- `TogglePlatformPacket`: Enable/disable platform states
-- `SavePlatformPathPacket`: Path persistence
+#### **Platform Management** (`network/packets/platform/` - 9 packets)
+Platform creation/deletion, path setting and reset, destination selection, enable/disable, path creation mode, search radius, refresh — e.g. `AddPlatformPacket`, `SetPlatformPathPacket`, `SetPlatformDestinationPacket`, `SetPlatformEnabledPacket`
 
-#### **Storage Systems** (`network/packets/storage/` - 5 packets)
-- `TownResourcePacket`: Town resource synchronization
-- `PersonalStoragePacket`: Per-player storage management
-- `PaymentBoardPacket`: Reward system communication
-- `BufferStoragePacket`: Buffer inventory sync
-- `StorageUpdatePacket`: Real-time storage updates
+#### **Storage & Payment Board** (`network/packets/storage/` - 12 packets)
+Communal/personal/buffer storage request+response pairs, payment board sync and claims, resource trading — e.g. `PaymentBoardClaimPacket`, `PersonalStoragePacket`, `BufferStorageResponsePacket`, `TradeResourcePacket`
 
 #### **Town Management** (`network/packets/town/` - 2 packets)
-- `TownMapDataPacket`: Complete town data synchronization
-- `TownUpdatePacket`: Incremental town state updates
+`SetTownNamePacket`, `ToggleTouristSpawningPacket`
 
-#### **UI Navigation** (`network/packets/ui/` - 4 packets)
-- `OpenTownInterfacePacket`: Screen navigation
-- `SetPathCreationModePacket`: UI mode switching
-- `UIStatePacket`: UI state synchronization
-- `ScreenTransitionPacket`: Screen transition management
+#### **UI & Contracts** (`network/packets/ui/` - ~24 packets)
+Screen navigation, contract board (list/detail/bid/accept), town map data, leaderboard, boundary visualization, platform visualization — e.g. `OpenTownInterfacePacket`, `BidContractPacket`, `RequestTownMapDataPacket`, `LeaderboardDataResponsePacket`
 
-#### **Base Infrastructure** (`network/packets/misc/` - 4 packets)
+#### **View-Model Sync** (`network/packets/` root - 6 packets)
+Server-built UI view models pushed to the client: town interface, resources, production, trading, upgrades, market (`BaseViewModelSyncPacket` base class)
+
+#### **Base Infrastructure & Debug** (`misc/`, `debug/`)
 - `BaseBlockEntityPacket`: Foundation for block entity communication
-- Request/Response pattern implementations
-- Packet serialization/deserialization framework
+- `PaymentResultPacket`, town debug data request/response
 
 ---
 
@@ -370,7 +355,7 @@ Each content type optimizes rendering and interaction patterns for specific data
 
 #### **Rate Limiting & Caching**
 - Particle effect optimization with rate limiting
-- Client-side caching reduces server requests by 70%+
+- Client-side caching significantly reduces server requests
 - UI virtualization handles large data sets efficiently
 - Smart update batching prevents excessive network traffic
 
@@ -397,7 +382,7 @@ Each content type optimizes rendering and interaction patterns for specific data
 
 #### **Global Debug Features**
 - `FORCE_ALL_DEBUG`: Enable comprehensive logging
-- Debug overlay: F3+K toggles town debug visualization
+- Debug overlay: F4 toggles town debug visualization
 - Clean production logs: Debug-controlled logging system
 - Performance metrics: Built-in performance monitoring
 
@@ -413,7 +398,7 @@ Each content type optimizes rendering and interaction patterns for specific data
 
 ### **Installation Requirements**
 - **Minecraft**: 1.20.1
-- **Forge**: Compatible version for 1.20.1
+- **Loader**: Forge or Fabric (both fully supported)
 - **Memory**: Recommended 4GB+ for optimal performance
 - **Storage**: Persistent data saved with world files
 

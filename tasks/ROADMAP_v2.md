@@ -1,12 +1,12 @@
 # BusinessCraft v2 Roadmap — Town-to-Town Trading (Single-Server Economy)
 
 **Status**: Initial High-Level Plan (Subject to Change)  
-**Target**: Post v1.0  
-**Focus**: Deepening the single-server economy — starting with advanced contracts, reputation, and companies carried from v1 planning, plus town specialization and player production.
+**Target**: Post v1.0 (release sequence: 0.9.x public beta → v1.0 with Tourist Transport Contracts + prestige — see `ROADMAP_v0.9.md` and `ROADMAP_v1.md`)  
+**Focus**: Deepening the single-server economy — starting with advanced contracts, reputation, and companies, plus town specialization and player production.
 
-## v2 Opening Priorities (Advanced Features Carried from v1 Planning)
+## v2 Opening Priorities (Advanced Features Deferred from v1 Planning)
 
-To keep v1 focused, several more ambitious features were moved out of the initial release and are now the primary early focus of v2:
+To keep v1 focused on the base Tourist Transport Contracts and the initial prestige system, the more ambitious expansions are the primary early focus of v2:
 
 - **Tourist Contract Expansions**: VIP Tourist Contracts, a proper Reputation system, and fuzzy Create train name / route targeting.
 - **Deeper Automation & Route Intelligence**: Automatic contract generation, network discovery, and smart contract suggestions based on actual player routes.
@@ -36,8 +36,8 @@ The full Player Company system (also carried forward from v1 planning) including
 This pillar absorbs the "Companies & Advanced Multiplayer Systems" work moved from v1 planning and becomes a central feature of v2.
 
 ## Relationship to v1.0
-- The advanced contract, reputation, automation, and company systems that were deferred from v1 now form the opening priorities of v2.
-- Builds directly on Tourist Contracts + the new configurable prestige system ("First to City") from v1.
+- The advanced contract, reputation, automation, and company systems that were deferred from v1 planning form the opening priorities of v2.
+- Builds directly on the Tourist Transport Contracts + configurable prestige system ("First to City") delivered in v1.0 (`ROADMAP_v1.md`).
 - Deepens the existing town upgrade and production systems (already present in v1) with path-dependency mechanics.
 - Player Companies and Reputation become first-class, deeply integrated features rather than afterthoughts.
 

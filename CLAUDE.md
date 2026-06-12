@@ -37,12 +37,12 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 ### 🏗️ **Current Architecture: Multi-Platform Ready**
 - **Target Platforms**: Minecraft Forge 1.20.1 + Fabric 1.20.1 (full feature parity)
 - **Architecture**: Unified Codebase with platform-specific modules
-- **Status**: Common module complete, platform modules ready for implementation
+- **Status**: Common module complete; both platform modules implemented and working
 
 ### 📁 **Module Structure**
 - **`common/`**: All business logic, UI framework, and platform-agnostic code
-- **`forge/`**: Forge-specific platform implementations (currently empty)
-- **`fabric/`**: Fabric-specific platform implementations (currently empty)
+- **`forge/`**: Forge platform implementation (~23 classes: init, network wiring, platform helpers, events)
+- **`fabric/`**: Fabric platform implementation (~34 classes: init, network wiring, platform helpers, events; includes some stub/dead code slated for cleanup — see tasks/todo.md Phase B)
 
 ## Development Commands
 
@@ -65,8 +65,9 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 - ❌ **Command Prompt**: May cause path resolution problems
 
 ### Testing
-- **Run all tests**: `wsl ./gradlew test`
-- **Run specific test**: `wsl ./gradlew test --tests "ClassName.methodName"`
+- **Run all tests**: `wsl ./gradlew :common:test` (600+ JUnit 5 tests; uses `McBootstrap` fixture for registry-dependent logic)
+- **Run specific test**: `wsl ./gradlew :common:test --tests "com.quackers29.businesscraft.SomeClassTest"`
+- **System documentation**: `vault/` (Obsidian vault) is the ground-truth reference for game logic — built by the Test + Docs Loop (`tasks/test_doc_loop.md`, tracking in `vault/_meta/Coverage Ledger.md`)
 
 ## Task Management Files
 
@@ -109,17 +110,17 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 
 ### ✅ Fully Implemented Core Systems
 
-**Block System** (`com.yourdomain.businesscraft.block`)
+**Block System** (`com.quackers29.businesscraft.block`)
 - `TownInterfaceBlock`: Complete block implementation with custom GUI
-- `TownInterfaceEntity`: Sophisticated 977-line block entity with:
+- `TownInterfaceEntity`: Sophisticated block entity with:
   - Automatic town registration with distance validation
   - Multi-platform system (up to 10 platforms per town)
   - Real-time particle effects for platform visualization
   - Smart resource processing with client-server sync
   - Advanced debug overlay integration
 
-**Entity System** (`com.yourdomain.businesscraft.entity`)
-- `TouristEntity`: Complete villager-based tourist with 393 lines of advanced features:
+**Entity System** (`com.quackers29.businesscraft.entity`)
+- `TouristEntity`: Complete villager-based tourist with advanced features:
   - Configurable expiry system to prevent infinite accumulation
   - Movement detection from spawn position
   - Smart ride extension (resets timer when boarding minecarts/trains)
@@ -127,8 +128,8 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
   - Professional randomization and breeding prevention
 - `TouristRenderer` with custom hat layer rendering
 
-**Town Management** (`com.yourdomain.businesscraft.town`)
-- `Town`: Comprehensive 701-line implementation with:
+**Town Management** (`com.quackers29.businesscraft.town`)
+- `Town`: Comprehensive implementation (~1,200 lines) with:
   - Complete `ITownDataProvider` interface
   - Multi-tiered storage (resources, communal, personal per player)
   - Visit history tracking with persistence
@@ -137,21 +138,21 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 - `TownManager`: Level-specific management with save/load system
 - Component architecture: `TownEconomyComponent`, `TownResources`
 
-**Platform System** (`com.yourdomain.businesscraft.platform`)
-- `Platform`: Advanced 275-line implementation with:
+**Platform System** (`com.quackers29.businesscraft.platform`)
+- `Platform`: Advanced implementation with:
   - Multi-destination support with UUID tracking
   - Complete NBT serialization
   - Path validation and completion checks
   - Individual platform enable/disable
   - Real-time visualization with particle effects
 
-**World Visualization System** (`com.yourdomain.businesscraft.client.render.world`)
+**World Visualization System** (`com.quackers29.businesscraft.client.render.world`)
 - Modular 3D line rendering framework for world overlays: `LineRenderer3D`, `BoundaryRenderer3D`, `PathRenderer3D`
 - `WorldVisualizationRenderer` base class with distance culling and chunk management
 - `VisualizationManager` handles multiple visualization types (platform, route, debug, territory, quest)
 - Ready for territory boundaries, transportation routes, quest paths, and debug overlays
 
-**UI Framework** (`com.yourdomain.businesscraft.ui`) - **Production-Grade**
+**UI Framework** (`com.quackers29.businesscraft.ui`) - **Production-Grade**
 - Complete component-based architecture with 11-directory structure
 - `BCScreenBuilder`: Fluent API for screen creation with tabbed interfaces
 - Component hierarchy:
@@ -164,17 +165,18 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 - Modal system: `BCModalGridScreen`, `BCModalInventoryScreen`
 - Screen implementations: Town Interface, Platform Management, Trade, Storage
 
-**Network System** (`com.yourdomain.businesscraft.network`)
-- **22 different packet types** organized in 5 logical subpackages:
-  - `platform/`: Platform management (7 packets)
-  - `storage/`: Storage systems (5 packets)
+**Network System** (`com.quackers29.businesscraft.network`)
+- **~57 packet types** (≈60 classes incl. base classes) organized in 6 subpackages + root:
+  - `platform/`: Platform management (9 packets)
+  - `storage/`: Storage & payment board (12 packets)
   - `town/`: Town management (2 packets)
-  - `ui/`: UI navigation (4 packets)
-  - `misc/`: Miscellaneous (4 packets)
+  - `ui/`: UI navigation, contracts, map, leaderboard, boundaries (~24 packets)
+  - `misc/`: PaymentResult + `BaseBlockEntityPacket` base class
+  - `debug/`: Town debug data request/response (2 packets)
+  - package root: view-model sync packets (TownInterface, Resource, Production, Trading, Upgrade, Market + `BaseViewModelSyncPacket`)
 - All packets fully implemented with proper serialization/deserialization
-- `BaseBlockEntityPacket` base class for block entity packets
 
-**Data Management** (`com.yourdomain.businesscraft.town.data`)
+**Data Management** (`com.quackers29.businesscraft.town.data`)
 - Sophisticated helper system:
   - `ClientSyncHelper`: Server-client synchronization
   - `ContainerDataHelper`: Modular ContainerData system
@@ -203,8 +205,8 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 - **`common/`**: All shared business logic and platform-agnostic code
   - `src/main/java/com/yourdomain/businesscraft/`: Complete implementation (200+ files)
   - `src/main/resources/`: Shared assets and data files
-- **`forge/`**: Forge-specific platform implementations (currently minimal)
-- **`fabric/`**: Fabric-specific platform implementations (currently minimal)
+- **`forge/`**: Forge-specific platform implementations (init, network, helpers, events)
+- **`fabric/`**: Fabric-specific platform implementations (init, network, helpers, events)
 
 ### Common Module Package Structure
 - `block/`: Block implementations and block entities
@@ -212,7 +214,7 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 - `town/`: Core town logic, components, and data management
 - `platform/`: Platform abstraction interfaces (not implementations)
 - `ui/`: Complete UI framework (11 subdirectories)
-- `network/packets/`: Organized packet system (5 subdirectories)
+- `network/packets/`: Organized packet system (6 subdirectories + root-level view-model sync packets)
 - `init/`: Platform-agnostic registration interfaces
 - `config/`: Configuration loading
 - `command/`: Admin commands
@@ -259,7 +261,7 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 
 ### Testing and Debugging
 - Use `./gradlew :common:runClient` for development testing
-- F3+K toggles town debug overlay
+- F4 toggles town debug overlay (`TownDebugKeyHandler`)
 - Debug commands available through `/cleartowns`
 - Comprehensive logging throughout all systems
 - Test both platforms: `./gradlew :common:runClient` (Forge) and `./gradlew :fabric:runClient` (Fabric)

@@ -1,6 +1,6 @@
 # BusinessCraft - First Release Evaluation & Improvement Ideas
 
-**Note**: For a higher-level, phased, and prioritized view of the path to v1.0, see the dedicated **tasks/ROADMAP_v1.md** file. This document contains the raw detailed evaluation notes.
+**Note**: For a higher-level, phased, and prioritized view of the release path, see **tasks/ROADMAP_v0.9.md** (public beta — current target) and **tasks/ROADMAP_v1.md** (tourist contracts + prestige). This document contains the raw detailed evaluation notes.
 
 **Date**: Evaluation performed after Tourist Behavior Enhancement + Actual Distance Payment work.
 **Scope**: Full codebase review for v1.0 / first public release readiness.
