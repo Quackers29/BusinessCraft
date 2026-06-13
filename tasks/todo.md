@@ -15,17 +15,21 @@
 - [x] Fix `README.md` overstatements: packet section rewritten with real packets (~57, was "22" with invented names), Population tab honestly marked as placeholder data, stale line counts/class name fixed, "70%+" claim softened, Fabric added to install requirements
 
 ## Phase B — Release Hygiene (the "one-day pass")
-- [ ] **License (blocker)** — *Verified (scope)*: **MIT** everywhere — replace root `LICENSE`, fix Forge `mods.toml` (currently All Rights Reserved), confirm Fabric `fabric.mod.json`. Implementation in Phase B.
-- [ ] **0.9 tourism-only defaults** — *Verified (scope)*: `craftableTownInterface=true`; `tourists.enabled=true`; `production.enabled=false`; `research.enabled=false`; `trading.enabled=false`; `contracts.enabled=false`. UI stays; disabled systems do nothing. Towns must not gain/trade/consume resources or pay resource costs for tourists unless owner enables those systems — audit production recipes, biome kits, trading, contracts, tourist spawn costs. Implementation + toggle-respect audit in Phase B.
+- [ ] **License (blocker)** — *Verified (scope)*: **MIT** everywhere. Currently a three-way mismatch: root `LICENSE` is **GPLv3**, Forge `mods.toml` says "All rights reserved", `fabric.mod.json` already says MIT. Replace root LICENSE with MIT, fix `mods.toml`. Implementation in Phase B.
+- [ ] **0.9 tourism-only defaults** — *Verified (scope)*: `craftableTownInterface=true`; `tourists.enabled=true`; `milestones.enabled=true` (part of the tourism loop); `production.enabled=false`; `research.enabled=false`; `trading.enabled=false`; `contracts.enabled=false`. UI stays; disabled systems do nothing. Towns must not gain/trade/consume resources or pay resource costs for tourists unless owner enables those systems — audit production recipes, biome kits, trading, contracts, tourist spawn costs. Implementation + toggle-respect audit in Phase B.
+- [ ] **Toggle-respect packet audit** — *Code check (June 2026)*: the subsystem toggles currently gate only tick paths (`Town.tick`, `TownInterfaceEntity` spawn loop); **no network packet handler checks any toggle**, and biome kits apply starting nodes/values unconditionally in `TownManager.registerTown`. Since UI tabs stay visible, player actions (trade, contract accept/bid, research start) may still mutate "disabled" systems server-side. Audit the actual exposure per packet, then pick the cheap fix per path: gate the server-side handler (authoritative) and/or hide the tab. Might be small — confirm exposure before sizing.
 - [ ] Set `DebugConfig.TOURIST_ENTITY = false` (only flag still on; contradicts release checklist)
-- [ ] Remove/convert ~37 `System.out.println` calls (Forge/Fabric init classes + Fabric stub packets) to logger calls or delete
+- [ ] Remove/convert 37 `System.out.println` calls (Forge/Fabric init classes, Fabric stub packets, and one in common `ui/modal/specialized/TownMapModal.java`) to logger calls or delete
 - [ ] Delete orphaned Fabric dead code: stub packets under `fabric/network/packets/` not wired into `FabricModMessages`, placeholder `fabric/block/TownInterfaceBlock.java`, unused placeholder `fabric/api/` interfaces
-- [ ] Remove or move demo screens out of main sources (`ui/screens/demo/BCScreenTemplateDemo.java`, `BCModalGridExample.java`)
+- [ ] Remove or move demo screens out of main sources (`ui/screens/demo/`: `BCScreenTemplateDemo.java`, `BCModalGridExample.java`, `BCScreenExample.java`)
 - [ ] Fix Fabric build excluding loot tables from its jar (`fabric/build.gradle` line ~58)
 - [ ] Add mod icon at `assets/businesscraft/icon.png` (already referenced by `fabric.mod.json`); add to Forge metadata too
 - [ ] Renumber `mod_version` in `gradle.properties` from `1.0.0` to `0.9.0-beta` (earn the 1.0)
 - [ ] Create `CHANGELOG.md` and start tracking versions
 - [ ] Improve `mods.toml` description to match the better `fabric.mod.json` one
+- [ ] **GitHub feedback links** — GitHub repo is the feedback channel (Issues/PRs): fill `issueTrackerURL`/`displayURL` in `mods.toml` and `contact.homepage`/`sources`/`issues` in `fabric.mod.json` (currently empty); listing copy points to GitHub Issues
+- [ ] **Save-format versioning + beta caveat** — add a data-version int to the town saved-data NBT root (consider config TOML version key too) so v1.0 migrations are possible; state clearly in README + listing that 0.9 is a **beta**: worlds/config may not carry forward to v1.0
+- [ ] **Repo hygiene before going public** — git still tracks `forge/run/logs/*.gz`, `fabric/run/logs/*`, `usercache.json`, `common/build/tmp/...`, `.obsidian/`, `fabric/.gradle/` (all show as modified in `git status`). Note: `.gitignore` edits don't untrack already-tracked files — that's why the fix "isn't working". One-time `git rm -r --cached <paths>` + commit, then the existing ignore rules hold; verify with `git status` after
 
 ## Phase C — Placeholder / Fake-Success UI Cleanup (optional for 0.9)
 Principle: fake success messages are worse than missing buttons. Either implement, hide, or remove. *Verified (scope)*: **not a 0.9 blocker** — quick audit pass if time; many items may already be gone. Tourism-path fixes first if anything remains.
@@ -38,21 +42,21 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 - [x] ~~Founder's Handbook~~ — cut; no in-game manual. External docs only: README + listing → wiki (`vault/`). *Verified (scope)*
 - [ ] **Economy defaults** — *Verified (scope)*: `metersPerEmerald=1000` (1 emerald per 1000 blocks); example milestones in default TOML only — 1000m → 1 apple, 5000m → 1 bread (payments are the main reward; milestones are bonus exemplars for server owners). Implementation in Phase D/B.
 - [ ] **Distance loop anti-cheat** — *Verified (scope)*: fix back-and-forth track farming (`TouristEntity` samples every ~2s and adds all path length). Approach: sample less often and/or only credit movement ≥50m from last checkpoint and/or net progress toward destination — pick at implementation. 0.9 blocker.
+- [ ] **Min-payment floor check (sibling of anti-cheat)** — *Code check (June 2026)*: payment is `max(1, distance/metersPerEmerald × count)` (`VisitorProcessingHelper`); there is **no minimum payout distance** in code — only `minDistanceBetweenTowns=100` (town placement), so adjacent towns ~100m apart with free tourist spawns farm 1 emerald per arrival batch. Decide alongside the anti-cheat fix: add a minimum payout distance, or drop the 1-emerald floor.
+- [ ] **Tourist skin & renderer (WIP → 0.9 scope)** — finish the uncommitted custom tourist texture work (`TouristRenderer`, `TouristHatLayer`, `tourist_basic.png`, `scripts/generate_tourist_basic.py`) + an entity skin check pass — owner not fully happy with the current tourist skin
 - [x] ~~Tourist-arrival feedback polish~~ — **v1**; no extra chat messages. Maybe particles + villager sound on payment/train exit. *Verified (scope)*
 - [x] ~~Journey statistics on Overview~~ (avg distance, total revenue, repeat visitors) — **v1 polish**; 0.9 keeps existing tourism count only. *Verified (scope)*
 - [ ] Play-test economy defaults + distance anti-cheat; server owners expected to tune config
 
-## Phase E — Localization Sweep → **v1.0** (not 0.9)
-- [x] ~~0.9 full localization sweep~~ — deferred to v1.0; 0.9 ships with hardcoded English. *Verified (scope)*
-- [ ] Funnel hardcoded UI strings (~180+ `Component.literal` across ~47 files) through `Component.translatable` + `en_us.json`
-- [ ] Priority order: contract screens, payment/trade messages, town notifications (`TownNotificationUtils`), contract item lore (`ContractItemHelper`), then the rest
-- [ ] English only for v1; structure makes community translations possible later
+## Phase E — Localization → moved to **v1.0**
+0.9 ships with hardcoded English. The sweep details (string counts, priority order) now live in `tasks/ROADMAP_v1.md` § Localization. *Verified (scope)*
 
 ## Phase F — Testing & Release
 - [x] Unit test coverage for economy-critical logic — delivered via the **Test + Docs Loop**: seed list exhausted June 2026, 39 ledger items (35 DONE, 1 BUG-FOUND, 3 NEEDS-MC), ~600+ tests — far beyond the T-001–T-005 minimum
 - [ ] **Fix T-012 payment board bugs** — *Verified (scope)*: **0.9 blocker**. Two `@Disabled` tests in `TownPaymentBoardTest` (`toBuffer` partial leak + excess loss). Fix production code, re-enable tests, ledger → DONE.
 - [x] ~~Multiplayer playtest~~ — **v1.0** (not 0.9; tourism-only defaults, SP + manual Create pass enough for beta). *Verified (scope)*
-- [ ] Tourist vehicle stress test: minecarts + **Create (required compatibility)** — chunk boundaries, server restarts, long journeys; manual playtest by owner. *Verified (scope)*
+- [ ] Tourist vehicle stress test: minecarts + **Create (required compatibility)** — chunk boundaries, server restarts, long journeys; **manual playtest by owner only — no automated Create testing planned**. Note: Create detection is class-name sniffing (`create.content.trains`); Create *Fabric* is a separate port — verify it matches during the manual pass or document Create support as Forge-only for 0.9. *Verified (scope)*
+- [ ] **Dedicated-server boot smoke test (both loaders)** — public beta will be run on servers day one even though multiplayer playtest is v1.0: boot a headless server on Forge + Fabric, found a town, let tourists spawn — catches client-class-in-server-path crashes cheaply
 - [ ] Performance smoke test: multiple towns + many simultaneous tourists (no fixed target yet — tune during playtesting). *Verified (scope)*
 - [ ] Full pass on **both** loaders (Forge + Fabric) — dual-platform 0.9 ship required. *Verified (scope)*
 - [ ] Modrinth **and** CurseForge listing + GitHub README (concept, tourism-only defaults, wiki link); publish `vault/` overview layer as GitHub wiki — *Verified (scope): both platforms for 0.9 beta*
@@ -80,11 +84,9 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 - [ ] Re-invoke the loop only when new logic lands (e.g. Phase D features should each get an iteration after implementation) — review cadence lesson: every ~5 iterations was specified but slipped to 24; enforce it next time
 - [ ] NEEDS-MC rows (T-034 autonomous contracts, T-037 tourist spawning, T-038 entity ticking) need a GameTest harness — tracked in `tasks/toImprove.md`, not v1
 
-## v1.0 config defaults
-- [x] Subsystem toggles unchanged from 0.9 for now (tourism on; production/trading/contracts/research off) — revisit post-beta. *Verified (scope)*
-
 ## Not in the 0.9 beta (v1.0 scope)
 - Tourist Transport Contracts + Prestige/"First to City" + Town Interface worldgen → **v1.0** (`tasks/ROADMAP_v1.md`; worldgen plan in `tasks/v1_worldgen.md`)
+- Localization sweep → **v1.0** (`ROADMAP_v1.md` § Localization); v1.0 config defaults unchanged from 0.9 (also in `ROADMAP_v1.md`)
 - `UIGridBuilder.java` refactor (2,647 lines) → post-release maintainability work (tracked in `tasks/toImprove.md`)
 
 **Status**: Plan approved by user (June 2026). Release sequence: **0.9.x beta** (this file + `ROADMAP_v0.9.md`) → **v1.0** (contracts + prestige + worldgen, `ROADMAP_v1.md`) → **v2** (`ROADMAP_v2.md`). Test + Docs Loop COMPLETE for the beta (seeds exhausted, parked). Phase A COMPLETE. Next up: Phase B one-day pass, then fix T-012 payment board bugs.

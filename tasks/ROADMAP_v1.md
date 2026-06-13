@@ -45,7 +45,7 @@ No change from 0.9 tourism-only subsystem defaults yet — production/trading/co
 Add **NeoForge** and **Quilt** loader support (alongside existing Forge + Fabric from 0.9). Same common module; new platform modules + parity testing. *Verified*
 
 ## Localization
-Full `Component.translatable` + `en_us.json` sweep (~180+ strings); English only; structure for community translations later. *Verified*
+Full `Component.translatable` + `en_us.json` sweep — funnel the ~180+ hardcoded `Component.literal` strings across ~47 files through translation keys. Priority order: contract screens, payment/trade messages, town notifications (`TownNotificationUtils`), contract item lore (`ContractItemHelper`), then the rest. English only for v1.0; the structure makes community translations possible later. *Verified*
 
 ## Player documentation
 No in-game manual. Wiki (`vault/` → GitHub wiki) + README/listing fleshed out for v1 features (contracts, tiers, worldgen). *Verified*

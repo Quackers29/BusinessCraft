@@ -91,7 +91,7 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 - **Add new improvement ideas here** when they come up
 
 ### Debug Configuration
-- **Debug Control File**: `common/src/main/java/com/yourdomain/businesscraft/debug/DebugConfig.java`
+- **Debug Control File**: `common/src/main/java/com/quackers29/businesscraft/debug/DebugConfig.java`
 - **Toggle debug logging**: Edit boolean flags in DebugConfig.java (requires rebuild)
 - **Current debug status**: All systems disabled for clean production logs
 - **Clean Logs**: Excessive INFO logs converted to debug-controlled logging:
@@ -203,7 +203,7 @@ BusinessCraft is a sophisticated Minecraft mod featuring a complete town managem
 
 ### Multi-Module Structure
 - **`common/`**: All shared business logic and platform-agnostic code
-  - `src/main/java/com/yourdomain/businesscraft/`: Complete implementation (200+ files)
+  - `src/main/java/com/quackers29/businesscraft/`: Complete implementation (200+ files)
   - `src/main/resources/`: Shared assets and data files
 - **`forge/`**: Forge-specific platform implementations (init, network, helpers, events)
 - **`fabric/`**: Fabric-specific platform implementations (init, network, helpers, events)
