@@ -47,4 +47,8 @@ This pillar absorbs the "Companies & Advanced Multiplayer Systems" work moved fr
 - Everything must integrate cleanly with the Tourist Contracts and prestige systems delivered in v1.
 - This release stays focused on single-server depth. Cross-server federation is a v3 concern.
 
+## Technical foundations (carried from architecture work)
+- **Resource storage int→long migration** *(complete)* — Aggregated town storage (`TownResources`, escrow, contracts, payment board, network packets, view-models) uses `long` instead of `int` so large-scale economies are not capped at ~2.1B per item. Individual `ItemStack` counts stay `int` (Minecraft API); UI formats big totals as K/M/B. **Why v2 cares**: town-to-town trading and company-scale stockpiles need headroom. **Save note**: worlds with pre-migration int NBT need a load-time migration — coordinate with 0.9 beta save-version work in `todo.md` Phase B.
+- **Optional data-layer refactor** *(v2, only if needed)* — If v2 trading/company scale exposes sync or persistence pain, consider a centralized `ViewModelSyncManager` (`syncAll()`, `syncSelective()`, `markDirty()`) atop the existing `ViewModelCache` + dirty-flag path. YAGNI until profiling says otherwise.
+
 **Note**: This is an initial planning document. Exact feature scope, balance, and implementation order will be refined closer to development based on v1.0 feedback and technical realities.
