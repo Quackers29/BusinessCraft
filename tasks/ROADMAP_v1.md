@@ -51,6 +51,7 @@ Full `Component.translatable` + `en_us.json` sweep — funnel the ~180+ hardcode
 No in-game manual. Wiki (`vault/` → GitHub wiki) + README/listing fleshed out for v1 features (contracts, tiers, worldgen). *Verified*
 
 ## Supporting work (as beta feedback dictates)
+- **Optional extra milestone types** (beyond distance): one-time first-tourist-delivery bonus, volume thresholds (e.g. 10 / 50 / 100 tourists), special reward for first link between very distant towns — same configurable TOML pattern as existing distance milestones. *Optional — ship if time*
 - **Town Overview polish**: avg tourist distance, total tourism revenue, repeat visitors (0.9 keeps existing tourism count only). *Verified*
 - **Arrival feedback** (no extra chat): maybe particles + villager sound on tourist payment or train exit. *Verified — v1*
 - Visual/audio delight on contract flows: boarding animations/particles, arrival celebration for contract completions, leaderboard screen polish.
