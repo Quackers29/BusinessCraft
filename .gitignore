@@ -3,6 +3,8 @@
 /bin
 /.claude
 /.cursor
+/.openclaude
+/.vscode
 .cursorignore
 /common/run/logs
 /common/run/saves
