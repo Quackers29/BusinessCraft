@@ -8,9 +8,9 @@
 .cursorignore
 /common/run/logs
 /common/run/saves
-/common/run/logs
 /common/run/crash-reports
 /common/build
+/common/logs
 /forge/run/crash-reports
 /forge/run/backups
 /forge/run/logs 
@@ -21,14 +21,12 @@
 /fabric/run/crash-reports
 /fabric/run/saves
 /fabric/run/logs
-/common/build
 /.agent
 *.Identifier
 **/build/tmp/
 **/run/logs/
 **/run/usercache.json
 **/.gradle/loom-cache/
-/common/logs
 vault/.obsidian/graph.json
 vault/.obsidian/workspace.json
 /fabric/run/logs
