@@ -32,6 +32,6 @@
 vault/.obsidian/graph.json
 vault/.obsidian/workspace.json
 /fabric/run/logs
-/CLAUDE.md
-/.cursorignore
-/.gitattributes
+CLAUDE.md
+.cursorignore
+.gitattributes
