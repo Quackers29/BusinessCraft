@@ -15,14 +15,14 @@
 - [x] Fix `README.md` overstatements: packet section rewritten with real packets (~57, was "22" with invented names), Population tab honestly marked as placeholder data, stale line counts/class name fixed, "70%+" claim softened, Fabric added to install requirements
 
 ## Phase B — Release Hygiene (the "one-day pass")
-- [ ] **License (blocker)** — *Verified (scope)*: **MIT** everywhere. Currently a three-way mismatch: root `LICENSE` is **GPLv3**, Forge `mods.toml` says "All rights reserved", `fabric.mod.json` already says MIT. Replace root LICENSE with MIT, fix `mods.toml`. Implementation in Phase B.
+- [x] **License (blocker)** — *Verified (scope)*: **MIT** everywhere. Root LICENSE replaced with MIT, Forge `mods.toml` updated from "All rights reserved" to "MIT". `fabric.mod.json` was already correct. Done 2026-06-17.
 - [ ] **0.9 tourism-only defaults** — *Verified (scope)*: `craftableTownInterface=true`; `tourists.enabled=true`; `milestones.enabled=true` (part of the tourism loop); `production.enabled=false`; `research.enabled=false`; `trading.enabled=false`; `contracts.enabled=false`. UI stays; disabled systems do nothing. Towns must not gain/trade/consume resources or pay resource costs for tourists unless owner enables those systems — audit production recipes, biome kits, trading, contracts, tourist spawn costs. Implementation + toggle-respect audit in Phase B.
 - [ ] **Toggle-respect packet audit** — *Code check (June 2026)*: the subsystem toggles currently gate only tick paths (`Town.tick`, `TownInterfaceEntity` spawn loop); **no network packet handler checks any toggle**, and biome kits apply starting nodes/values unconditionally in `TownManager.registerTown`. Since UI tabs stay visible, player actions (trade, contract accept/bid, research start) may still mutate "disabled" systems server-side. Audit the actual exposure per packet, then pick the cheap fix per path: gate the server-side handler (authoritative) and/or hide the tab. Might be small — confirm exposure before sizing.
 - [ ] Set `DebugConfig.TOURIST_ENTITY = false` (only flag still on; contradicts release checklist)
 - [ ] Remove/convert 37 `System.out.println` calls (Forge/Fabric init classes, Fabric stub packets, and one in common `ui/modal/specialized/TownMapModal.java`) to logger calls or delete
 - [ ] Delete orphaned Fabric dead code: stub packets under `fabric/network/packets/` not wired into `FabricModMessages`, placeholder `fabric/block/TownInterfaceBlock.java`, unused placeholder `fabric/api/` interfaces
 - [ ] Remove or move demo screens out of main sources (`ui/screens/demo/`: `BCScreenTemplateDemo.java`, `BCModalGridExample.java`, `BCScreenExample.java`)
-- [ ] Fix Fabric build excluding loot tables from its jar (`fabric/build.gradle` line ~58)
+- [x] Fix Fabric build excluding loot tables from its jar (`fabric/build.gradle` line ~58) — also fixed root cause compile error (Forge-only `Block.getExplosionResistance(BlockState,...)` override). Removed exclude, loot tables now included for Fabric. Build now succeeds on both loaders. (2026-06-18)
 - [ ] Add mod icon at `assets/businesscraft/icon.png` (already referenced by `fabric.mod.json`); add to Forge metadata too
 - [ ] Renumber `mod_version` in `gradle.properties` from `1.0.0` to `0.9.0-beta` (earn the 1.0)
 - [ ] Create `CHANGELOG.md` and start tracking versions
