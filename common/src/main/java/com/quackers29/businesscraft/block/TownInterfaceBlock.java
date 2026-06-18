@@ -31,7 +31,7 @@ import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.level.Explosion;
+
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -454,11 +454,11 @@ public class TownInterfaceBlock extends BaseEntityBlock {
     }
 
     @Override
-    public float getExplosionResistance(BlockState state, BlockGetter level, BlockPos pos, Explosion explosion) {
+    public float getExplosionResistance() {
         if (!ConfigLoader.craftableTownInterface) {
             return 3600000.0F; // Bedrock-level resistance when not craftable
         }
-        return super.getExplosionResistance(state, level, pos, explosion);
+        return super.getExplosionResistance();
     }
 
     @Override

@@ -16,7 +16,7 @@ loom {
     // accessWidenerPath = file("src/main/resources/businesscraft.accesswidener")
 }
 
-    dependencies {
+dependencies {
     minecraft "com.mojang:minecraft:${project.mc_version}"
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
@@ -53,9 +53,7 @@ sourceSets.main.java.srcDirs += project(':common').sourceSets.main.java.srcDirs
 
 sourceSets.main.resources.srcDirs += project(':common').sourceSets.main.resources.srcDirs
 
-// Exclude loot tables from Fabric (they reference items that may not be registered yet)
-// We can add Fabric-specific loot tables later if needed
-sourceSets.main.resources.exclude '**/loot_tables/**/*.json'
+// Loot tables are now included for Fabric (self-drop for Town Interface block, etc.)
 
 // Process resources to replace version placeholder
 processResources {
