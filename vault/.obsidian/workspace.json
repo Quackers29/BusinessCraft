@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Economy/Economy Overview.md",
+                "file": "Mod Overview.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Economy Overview"
+              "title": "Mod Overview"
             }
           }
         ]
@@ -185,11 +185,12 @@
   },
   "active": "0fc2a8312fd10b5e",
   "lastOpenFiles": [
-    "_meta/Note Template.md",
+    "Production/Recipes/Estimated Effort Calculation.md",
     "Economy/Economy Overview.md",
     "Economy/Tourist Payments/Distance Payment Calculation.md",
-    "Home.md",
     "Mod Overview.md",
+    "_meta/Note Template.md",
+    "Home.md",
     "_meta/Coverage Ledger.md",
     "_meta/Loop Log.md"
   ]

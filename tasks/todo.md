@@ -6,6 +6,53 @@
 
 ---
 
+## 0.9 SHIP PLAN — adversarial audit, July 2026 (PROPOSED — awaiting approval)
+
+Independent code verification of all prior findings (T-012, toggles, anti-cheat, Fabric/server risk, hygiene). Everything below was confirmed in code, not taken from earlier audits. This section is the ordered execution plan; items in Phases B–F below remain valid unless corrected here.
+
+### New findings (not in any prior plan)
+
+1. **BLOCKER — production-off kills tourism.** The only sustained source of `pendingTouristSpawns` is the `tourism` recipe in `productions.csv` (`food:10;money:10 → tourist:1`), run by `TownProductionComponent.tick()`, which is gated by `productionEnabled` (`Town.java:158`). Other sources: one-time biome-kit grant (~2 tourists), trading (also planned off). Flipping the Phase F tourism-only defaults as written ships a mod where each town spawns ~2 tourists ever, then goes dead. Fix needed BEFORE the default flip: a free tourist-regen path gated by `touristSystemEnabled` (e.g. timer in `Town.tick` granting pending spawns up to cap, or run the tourism recipe cost-free when production is off). ~30–60 lines + test.
+2. **BLOCKER — Forge release jar ships without assets/data.** `forge/build.gradle:69–72` excludes `assets/**`, `data/**`, `pack.mcmeta` from the jar; `forge/src/main/resources` holds only `mods.toml`. Dev runs work via classpath; the published jar has no textures/recipes/loot tables. Remove excludes, resolve the duplicate-resources reason with `duplicatesStrategy`, verify by unzipping the built jar. Fabric already fixed; Forge was missed.
+
+### Corrections to claims elsewhere in this file (verified July 2026)
+
+- **"Free tourist spawns"** (Phase D/F wording): wrong today — generation costs food+money via production, and see New finding #1.
+- **`minDistanceBetweenTowns=100`** (Phase D min-floor item): dead config — loaded but never read outside ConfigLoader. Real placement minimum ≈ 55 blocks via boundary radii (`TownBoundaryService`). Remove from TOML or wire it; the min-payout decision should use the ~55m reality.
+- **Repo hygiene** (Phase B): overstated — run logs, `usercache.json`, `build/tmp` are already untracked. Only 8 files remain: `vault/.obsidian/*` (5) + `fabric/.gradle/loom-cache/*` (3). One small `git rm --cached`.
+- **Tourist skin "uncommitted WIP"** (Phase D): textures (`tourist_basic.png` etc.) + `scripts/generate_tourist_basic.py` are committed. Remaining work is a subjective quality pass only — owner judgment, not a code blocker.
+- **Distance anti-cheat** (Phase D): confirmed, and worse — expiry pauses while moving (`TouristEntity.java:288–309`), so a loop-track tourist accumulates unbounded path distance and never expires. Note: path-based payment was a deliberate earlier decision ("CORE CHANGE" comment, `VisitorProcessingHelper.java:182`); don't revert to straight-line. Clamp instead: `distance = min(traveled, 2 × straightLine(origin→dest))` at arrival. ~10–20 lines + tests.
+- **Toggle audit** (Phase B): confirmed small. Exact fix set: guards in `TradeResourcePacket`, `BidContractPacket`, `AcceptContractPacket`; biome-kit filtering in `TownManager.registerTown` (allowlist `pop`/`happiness`/`tourist`/`tourist_cap`/`border`; skip `startingNodes` when research off, production stock when production off); one-line guard in `Town.calculateWants()`. Production/research have no action packets — tick gating already covers them. ~50–90 lines + tests.
+- **T-012** (Phase F): both bugs confirmed. Root cause: `SlotBasedStorage.addItem` returns true on partial placement; `addToBufferStorage` assumes all-or-nothing (`TownPaymentBoard.java:134–145`). Bug 1 = partial leak + UNCLAIMED entry → re-claim dupes. Bug 2 = partial fit marked CLAIMED → remainder silently destroyed. Sibling `addToBuffer` (`:174–187`, used by inventory-overflow + communal storage) has the same flaw — fix together. Also add failure-path buffer sync + `markDirty` in `PaymentBoardClaimPacket`. ~30–50 lines; re-enable both @Disabled tests.
+
+### Ordered execution plan
+
+**Step 1 — Economy-integrity fixes (code, test-verified)**
+- [ ] T-012 payment board: transactional/all-or-nothing buffer add in `TownPaymentBoard` (+ sibling `addToBuffer`), failure-path sync + markDirty in `PaymentBoardClaimPacket`, re-enable 2 @Disabled tests, ledger T-012 → DONE
+- [ ] Distance clamp: `min(traveled, 2 × straightLine)` in `VisitorProcessingHelper.processIndividualVisitor`; decide min-payout-distance vs 1-emerald floor in the same change (real adjacent-town distance is ~55m); tests + vault note update
+- [ ] Tourism decoupling (New finding #1): free tourist-regen path gated by `touristSystemEnabled`; verify loop runs end-to-end with production/trading/contracts/research all false
+
+**Step 2 — Toggle honesty (code, small)**
+- [ ] Guards in the 3 packet handlers; biome-kit allowlist in `registerTown`; `calculateWants` guard; tests
+
+**Step 3 — Packaging & hygiene (one pass)**
+- [ ] Forge jar: remove `assets/**`/`data/**`/`pack.mcmeta` excludes (New finding #2), fix duplicates properly, verify jar contents; also remove duplicate `OpenPaymentBoardPacket` registration in `ForgeModMessages`
+- [ ] Delete dead code: 10 Fabric files (4 stub packets, `fabric/block/TownInterfaceBlock`, 5 `fabric/api/` interfaces — zero references confirmed) + 3 demo screens in `ui/screens/demo/`
+- [ ] Metadata: `mod_version` → `0.9.0-beta`; add `issueTrackerURL`/`displayURL` to `mods.toml` (keys currently absent) + fill empty `fabric.mod.json` contact fields; mod icon; `CHANGELOG.md`; improve `mods.toml` description
+- [ ] `System.out.println` sweep; `git rm --cached` the 8 remaining files; save-format data-version int in town NBT; remove or wire dead `minDistanceBetweenTowns` in TOML
+
+**Step 4 — Default flip + verification (last, as planned)**
+- [ ] Set tourism-only TOML defaults (craftable on; production/research/trading/contracts off) + economy values (`metersPerEmerald=1000`, milestone table 1000m/5000m — current 10m default fires on every arrival)
+- [ ] Dedicated-server boot smoke test, Forge + Fabric (Fabric is structurally fragile — client APIs in server-loaded `FabricModMessages`/`FabricEventCallbackHandler`; refactor ONLY if the test fails)
+- [ ] Full SP pass both loaders + manual Create pass (note: Create Fabric detection is a silent string sniff — `TouristEntity.java:564`; verify or document Forge-only). Docs must state tourists can't walk (speed 0) — routes need carts/trains
+- [ ] Listing/README/wiki, publish
+
+**Deferred (unchanged)**: Fabric class-split refactor (unless smoke test fails), tourist skin quality pass (owner), localization, multiplayer playtest, `UIGridBuilder` refactor.
+
+**Status**: PROPOSED — do not start until approved.
+
+---
+
 ## Phase A — Roadmap & Documentation Reorganisation ✅ COMPLETE (June 2026)
 - [x] Move worldgen task out of `todo.md` to `tasks/v1_worldgen.md` (v1.0 Pillar 3 implementation plan)
 - [x] Split the old ROADMAP_v1: lean beta scope → new `tasks/ROADMAP_v0.9.md` (polish + onboarding + feedback + docs + multiplayer testing); old file's content preserved in git history

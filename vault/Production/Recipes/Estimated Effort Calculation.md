@@ -9,7 +9,7 @@ tags:
 **TL;DR**: After loading productions.csv, ProductionRegistry walks each producible resource's recipes to compute a "base effort minutes per output unit" (min over recipes of (cycleTime + sum(inputQty × inputEffort)) / outputQty); the estimated emerald value is effort × 20 (default 1.0 if resource has no production path or on cycle/zero).
 
 ## What it does
-Production recipes define how raw and intermediate resources are turned into outputs over time (e.g. wheat farming, wood to planks, population growth). The effort calculator reverse-engineers a consistent "cost in minutes" for every output that can be produced. This gives the game a baseline "fair price" for every resource based purely on production time and dependency costs — used to seed contract bidding and market displays before live player trades update the GlobalMarket prices on top.
+Production recipes define how raw and intermediate resources are turned into outputs over time (e.g. wheat farming, wood to planks, population growth). The effort calculator reverse-engineers a consistent "cost in minutes" for every output that can be produced. This gives the game a baseline "fair price" for every resource based purely on production time and dependency costs — used to seed contract bidding and market displays before live trades update the GlobalMarket prices on top.
 
 ## How it works (process view)
 - At load time (called from ConfigLoader after reading the CSV), calculateEstimatedValues builds a reverse index of "which recipes produce each resource".
