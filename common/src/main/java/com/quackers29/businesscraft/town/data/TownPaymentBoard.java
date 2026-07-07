@@ -129,20 +129,21 @@ public class TownPaymentBoard {
     }
     
     /**
-     * Add items to buffer storage (2x9 grid)
+     * Add items to buffer storage (2x9 grid).
+     * Transactional (T-012 fix): either every stack fits entirely and is committed,
+     * or the buffer is left untouched and false is returned. Prevents partial-add
+     * leaks (dupe vector) and silent loss of excess counts.
      */
     private boolean addToBufferStorage(List<ItemStack> items) {
-        // Try to add all items to buffer using smart allocation
-        boolean allAdded = true;
+        SlotBasedStorage staged = bufferStorage.copy();
         for (ItemStack stack : items) {
-            if (!bufferStorage.addItem(stack)) {
-                allAdded = false;
-                // Could implement partial addition here if needed
-                break;
+            if (!staged.addItemFully(stack)) {
+                return false;
             }
         }
-        
-        return allAdded;
+
+        bufferStorage.copyFrom(staged);
+        return true;
     }
     
     /**
@@ -169,21 +170,27 @@ public class TownPaymentBoard {
 
     /**
      * Add items to buffer storage directly (legacy compatibility).
+     * Transactional (T-012 fix): either the full count is added or the buffer is
+     * left untouched and false is returned — callers rely on the boolean to know
+     * whether the items were stored (e.g. communal storage, inventory overflow).
      * Note: Individual ItemStack counts are still limited to int (MC API constraint).
      */
     public boolean addToBuffer(Item item, long count) {
         if (count <= 0) return true;
 
         // ItemStack counts are limited to int, so we add in chunks if needed
+        SlotBasedStorage staged = bufferStorage.copy();
         long remaining = count;
         while (remaining > 0) {
             int chunkSize = (int) Math.min(remaining, Integer.MAX_VALUE);
             ItemStack stackToAdd = new ItemStack(item, chunkSize);
-            if (!bufferStorage.addItem(stackToAdd)) {
+            if (!staged.addItemFully(stackToAdd)) {
                 return false;
             }
             remaining -= chunkSize;
         }
+
+        bufferStorage.copyFrom(staged);
         return true;
     }
 

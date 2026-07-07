@@ -42,6 +42,7 @@ Replaces simple `Map<Item, Integer>` bags for systems that need stable slot posi
 | `findEmptySlot()` | same (86-93) | First index whose slot `.isEmpty()`, else -1. |
 | `findStackableSlot(ItemStack)` | same (100-119) | First index that is non-empty, `isSameItemSameTags`, and has remaining space (>0), else -1. Empty input → -1 immediately. |
 | `addItem(ItemStack)` | same (127-164) | Two-pass smart insert (stack pass across all, then empty pass). Mutates in place; returns `remaining.getCount() < originalCount` (true if anything was placed, including partial). Empty input → false. |
+| `addItemFully(ItemStack)` | same (after addItem) | All-or-nothing variant (July 2026, T-012 fix): stages the add on a copy, commits only if the entire count was placed; otherwise storage is untouched and false returned. Used by the payment board's transactional buffer adds. Empty input → false. |
 | `removeItem(Item, int amount)` | same (172-202) | Slot-order removal of exact Item (==); aggregates into one result stack; shrinks and blanks emptied slots; amount≤0 or nothing available → EMPTY. May return partial. |
 | `getTotalCount(Item)` | same (209-218) | Sum of counts for exact item matches across all slots. |
 | `isEmpty()` / `clear()` | same (224-240) | All-slots scan or blanket EMPTY assignment. |
@@ -111,6 +112,6 @@ Index safety: all public mutators and `getSlot` treat negative or ≥slotCount a
 
 ## Related
 - [[Town/Town Overview]]
-- [[Town/Payment Board/Reward Claims]] (T-012 — owns the canonical 18-slot instance as `bufferStorage`; claim-to-buffer path uses `addItem` and fails the claim if not all stacks fit)
+- [[Town/Payment Board/Reward Claims]] (T-012 — owns the canonical 18-slot instance as `bufferStorage`; claim-to-buffer path uses `addItemFully` on a staged copy and fails the whole claim atomically if not all stacks fit)
 - [[Town/Resources/Resource Storage Operations]] (T-007 — the older map-based long-count bag for on-hand production/trade stock; SlotBasedStorage is the slot-exact, UI-preserving sibling used for claim staging)
 - [[Town/Visits/Visit Buffer]] (T-010 — upstream of payments that land in the buffer)

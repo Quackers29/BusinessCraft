@@ -178,6 +178,39 @@ class SlotBasedStorageTest {
         // (we can't observe the caller's remainder here; return value signals partial)
     }
 
+    // --- addItemFully (all-or-nothing, T-012 fix) ---
+
+    @Test
+    void addItemFully_partialFit_returnsFalse_andStorageUntouched() {
+        SlotBasedStorage s = new SlotBasedStorage(1);
+        s.setSlot(0, new ItemStack(Items.EMERALD, 60)); // only 4 space
+
+        assertFalse(s.addItemFully(new ItemStack(Items.EMERALD, 10)));
+        // Unlike addItem, no partial commit
+        assertEquals(60, s.getSlot(0).getCount());
+    }
+
+    @Test
+    void addItemFully_exactAndOversizeFits_placeWholeStack() {
+        SlotBasedStorage s = new SlotBasedStorage(2);
+        s.setSlot(0, new ItemStack(Items.EMERALD, 60)); // 4 space + 1 empty slot
+
+        // 4 into slot0, exact fit
+        assertTrue(s.addItemFully(new ItemStack(Items.EMERALD, 4)));
+        assertEquals(64, s.getSlot(0).getCount());
+
+        // 10 more into the empty slot 1
+        assertTrue(s.addItemFully(new ItemStack(Items.EMERALD, 10)));
+        assertEquals(74, s.getTotalCount(Items.EMERALD));
+    }
+
+    @Test
+    void addItemFully_emptyStack_returnsFalse() {
+        SlotBasedStorage s = new SlotBasedStorage(1);
+        assertFalse(s.addItemFully(ItemStack.EMPTY));
+        assertTrue(s.isEmpty());
+    }
+
     @Test
     void addItem_respectsTagsForStacking_butNotForRemove() {
         SlotBasedStorage s = new SlotBasedStorage(4);

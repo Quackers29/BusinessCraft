@@ -162,6 +162,30 @@ public class SlotBasedStorage implements SlotBasedStorageAccess {
         // Return true if we placed at least some items
         return remaining.getCount() < stack.getCount();
     }
+
+    /**
+     * Attempt to add an ItemStack, succeeding only if the entire count fits.
+     * Unlike {@link #addItem}, this is all-or-nothing: either the whole stack is
+     * placed (returns true) or the storage is left completely untouched (returns false).
+     * Needed by transactional callers like the payment board claim path (T-012).
+     * @param stack ItemStack to add
+     * @return True if the full stack was added, false if it could not fit entirely
+     */
+    public boolean addItemFully(ItemStack stack) {
+        if (stack.isEmpty()) {
+            return false;
+        }
+
+        SlotBasedStorage staged = this.copy();
+        staged.addItem(stack);
+        int placed = staged.getTotalCount(stack.getItem()) - this.getTotalCount(stack.getItem());
+        if (placed < stack.getCount()) {
+            return false;
+        }
+
+        this.copyFrom(staged);
+        return true;
+    }
     
     /**
      * Remove a specific amount of an item from storage

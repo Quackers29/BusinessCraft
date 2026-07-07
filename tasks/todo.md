@@ -28,7 +28,7 @@ Independent code verification of all prior findings (T-012, toggles, anti-cheat,
 ### Ordered execution plan
 
 **Step 1 — Economy-integrity fixes (code, test-verified)**
-- [ ] T-012 payment board: transactional/all-or-nothing buffer add in `TownPaymentBoard` (+ sibling `addToBuffer`), failure-path sync + markDirty in `PaymentBoardClaimPacket`, re-enable 2 @Disabled tests, ledger T-012 → DONE
+- [x] T-012 payment board — DONE 2026-07-06: added `SlotBasedStorage.addItemFully` (all-or-nothing, staged on a copy); `addToBufferStorage` + `addToBuffer` now transactional; claim packet overflow drops items at player's feet instead of destroying them when buffer also full; 2 @Disabled tests re-enabled asserting atomic behavior + regression tests; vault notes + ledger updated (T-012 → DONE); full `:common:test` suite green. (Failure-path sync no longer needed — failed claims are now side-effect-free.)
 - [ ] Distance clamp: `min(traveled, 2 × straightLine)` in `VisitorProcessingHelper.processIndividualVisitor`; decide min-payout-distance vs 1-emerald floor in the same change (real adjacent-town distance is ~55m); tests + vault note update
 - [ ] Tourism decoupling (New finding #1): free tourist-regen path gated by `touristSystemEnabled`; verify loop runs end-to-end with production/trading/contracts/research all false
 
@@ -106,7 +106,7 @@ Principle: fake success messages are worse than missing buttons. Either implemen
 
 ## Phase F — Testing & Release
 - [x] Unit test coverage for economy-critical logic — delivered via the **Test + Docs Loop**: seed list exhausted June 2026, 39 ledger items (35 DONE, 1 BUG-FOUND, 3 NEEDS-MC), ~600+ tests — far beyond the T-001–T-005 minimum
-- [ ] **Fix T-012 payment board bugs** — *Verified (scope)*: **0.9 blocker**. Two `@Disabled` tests in `TownPaymentBoardTest` (`toBuffer` partial leak + excess loss). Fix production code, re-enable tests, ledger → DONE.
+- [x] **Fix T-012 payment board bugs** — DONE 2026-07-06 (see Ship Plan Step 1): transactional buffer adds via `SlotBasedStorage.addItemFully`; both `@Disabled` tests re-enabled asserting the fixed atomic behavior; ledger → DONE.
 - [x] ~~Multiplayer playtest~~ — **v1.0** (not 0.9; tourism-only defaults, SP + manual Create pass enough for beta). *Verified (scope)*
 - [ ] Tourist vehicle stress test: minecarts + **Create (required compatibility)** — chunk boundaries, server restarts, long journeys; **manual playtest by owner only — no automated Create testing planned**. Note: Create detection is class-name sniffing (`create.content.trains`); Create *Fabric* is a separate port — verify it matches during the manual pass or document Create support as Forge-only for 0.9. *Verified (scope)*
 - [ ] **Dedicated-server boot smoke test (both loaders)** — public beta will be run on servers day one even though multiplayer playtest is v1.0: boot a headless server on Forge + Fabric, found a town, let tourists spawn — catches client-class-in-server-path crashes cheaply

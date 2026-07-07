@@ -19,7 +19,7 @@ The payment board replaced a simple shared "communal chest" with a structured, a
 - For each visible row the screen calls `reward.canBeClaimed(player.getStringUUID())`. If true and UNCLAIMED, a "Claim" button appears (always to buffer in current UI).
 - Claim button sends PaymentBoardClaimPacket → `claimReward(uuid, playerUUID, toBuffer)`.
   - If no entry or !canBeClaimed, returns failure with a reason string ("already claimed", "expired", "not eligible").
-  - If toBuffer: tries to add the entry's items into the board's internal 18-slot SlotBasedStorage via smart stacking; on full failure the entry stays UNCLAIMED and result says "Buffer storage is full".
+  - If toBuffer: tries to add the entry's items into the board's internal 18-slot SlotBasedStorage via smart stacking. This is atomic (July 2026 fix): either every stack fits in full and is committed, or nothing changes — the entry stays UNCLAIMED and the result says "Buffer storage is full".
   - If not toBuffer (inventory path, used by some contract flows): the entry is marked CLAIMED immediately and the caller is given the ItemStack list to place in the player's inventory (overflow falls back to buffer).
 - On every add/getUnclaimed/stats, and explicitly in the UI tick, `cleanupExpiredRewards()` runs: any entry whose `System.currentTimeMillis() > expirationTime` and status != CLAIMED gets status=EXPIRED. Then any EXPIRED whose original `timestamp < (now - 30 days)` is removed from the list entirely.
 - `getStats()` also cleans then counts by current status (UNCLAIMED/CLAIMED/EXPIRED) plus total.
@@ -79,7 +79,7 @@ From the code (write-from-implementation):
 - **claimReward decision** (after find):
   - Not found → `ClaimResult(false, "Reward not found")`
   - !canBeClaimed → reason derived from status (CLAIMED/EXPIRED) or `isExpired()` or generic "not eligible"
-  - toBuffer path success: `addToBufferStorage(entry.getRewards())` must return true for all items (uses SlotBasedStorage smart add); then set CLAIMED; return success + items. Failure (any item wouldn't fit) → `false, "Buffer storage is full"` and status unchanged.
+  - toBuffer path success: `addToBufferStorage(entry.getRewards())` is transactional — adds are staged on a copy of the buffer via `SlotBasedStorage.addItemFully` (all-or-nothing per stack) and committed only if every stack fits entirely; then set CLAIMED; return success + items. Failure (any stack wouldn't fully fit) → `false, "Buffer storage is full"`, status unchanged, buffer untouched.
   - !toBuffer path: unconditionally `setStatus(CLAIMED)` then return success + items (caller responsible for giving them to the player or overflowing).
 
 - **getUnclaimedRewards**:
@@ -109,7 +109,7 @@ From the code (write-from-implementation):
 
 - **Buffer storage**:
   - 18 slots (hard-coded `new SlotBasedStorage(18)`).
-  - addToBuffer / removeFromBuffer / getBufferStorage are legacy shims that chunk counts to Integer.MAX_VALUE because ItemStack count is int; they delegate to the slot storage.
+  - addToBuffer / removeFromBuffer / getBufferStorage are legacy shims that chunk counts to Integer.MAX_VALUE because ItemStack count is int; they delegate to the slot storage. addToBuffer is transactional (July 2026): the full count is added or the buffer is left untouched and false returned.
   - getBufferStorageSlots exposes the real SlotBasedStorage for new code.
 
 - **Equality**:
@@ -170,7 +170,7 @@ From the code (write-from-implementation):
 - **Buffer storage size hard-coded**: 18 slots is magic in TownPaymentBoard; SlotBasedStorage itself is generic. If the UI ever wants a larger claim staging area this constant must move in sync.
 - **No per-player claim tracking beyond the eligibility string**: Once claimed the entry just becomes CLAIMED with no record of *who* claimed it. For audit or "only the claimer can un-claim" features this would need to be extended (metadata already exists as an escape hatch).
 - `getRewardsDisplay`, `getTimeAgoDisplay`, etc. on RewardEntry are presentation helpers that pull from the contained ItemStacks and BCTimeUtils; they are not exercised in pure unit tests.
-- **BUG-FOUND during T-012 testing (see disabled tests in TownPaymentBoardTest)**: `addToBufferStorage` + board's claim toBuffer path commits partial ItemStack adds (via SlotBasedStorage.addItem which succeeds on "at least some" placed) for earlier stacks in a reward list, then aborts on a later stack that won't fit. On failure the claim returns "Buffer storage is full" and leaves entry UNCLAIMED — so the leaked partial items now sit in the shared town buffer while the full reward can be claimed again (or by someone else) → item duplication / inflation. Even on single-stack partial fits, a toBuffer claim can succeed while only a subset of the declared count lands in buffer (excess count disappears silently because entry is marked CLAIMED with the original list returned in the result). These are not harmless quirks; they are lossy/dupe vectors for any reward containing multiple distinct items or stacks larger than remaining buffer space. Production code change required (e.g. dry-run check or transactional snapshot of buffer before mutating). Tests are @Disabled("BUG: ...") per protocol; ledger status set to BUG-FOUND.
+- **BUG FIXED (July 2026, was BUG-FOUND during T-012 testing)**: the toBuffer claim path used to commit partial item adds and could either leak items into the buffer while the reward stayed claimable (a duplication vector) or mark a reward claimed while silently destroying the part that didn't fit. Both buffer-add paths are now transactional: adds are staged on a copy of the buffer and committed only when every stack fits in full (`SlotBasedStorage.addItemFully` + staged copy in `addToBufferStorage`/`addToBuffer`). A claim that doesn't fully fit now fails cleanly with "Buffer storage is full", leaves the reward claimable, and leaves the buffer untouched. The claim packet's inventory-overflow path also no longer destroys items when both inventory and buffer are full — the remainder is dropped at the player's feet with an honest message. The formerly @Disabled tests now assert the atomic behavior; ledger row T-012 moved to DONE.
 
 ## Related
 - [[Town/Town Overview]]

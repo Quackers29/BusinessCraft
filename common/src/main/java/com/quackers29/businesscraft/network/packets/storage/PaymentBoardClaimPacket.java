@@ -101,11 +101,18 @@ public class PaymentBoardClaimPacket {
                             // If not claiming to buffer, try to add items to player inventory
                             if (!toBuffer && !result.getClaimedItems().isEmpty()) {
                                 boolean inventoryFull = false;
+                                boolean droppedSome = false;
                                 for (ItemStack stack : result.getClaimedItems()) {
                                     if (!player.getInventory().add(stack)) {
-                                        // Inventory full - try to add remaining items to buffer
-                                        town.getPaymentBoard().addToBuffer(stack.getItem(), stack.getCount());
                                         inventoryFull = true;
+                                        // Inventory full - move the remainder to the buffer.
+                                        // addToBuffer is all-or-nothing (T-012): if the buffer can't
+                                        // take it either, drop at the player's feet instead of
+                                        // destroying the items.
+                                        if (!town.getPaymentBoard().addToBuffer(stack.getItem(), stack.getCount())) {
+                                            player.drop(stack.copy(), false);
+                                            droppedSome = true;
+                                        }
                                     }
                                 }
 
@@ -113,7 +120,9 @@ public class PaymentBoardClaimPacket {
                                     // Notify town block entity that buffer has changed due to overflow
                                     townInterfaceEntity.onTownBufferChanged();
                                     player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
-                                            "Some items were sent to buffer storage due to full inventory"));
+                                            droppedSome
+                                                    ? "Inventory and buffer storage full - some items were dropped at your feet"
+                                                    : "Some items were sent to buffer storage due to full inventory"));
                                 }
                             }
 

@@ -12,7 +12,6 @@ import net.minecraft.world.item.Items;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
@@ -34,9 +33,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * McBootstrap + TestRegistryHelper double (pattern from T-002/T-007) unblocks all ItemStack
  * and registry-dependent paths (NBT, buffer, display names).
  *
- * Two @Disabled tests document real production bugs discovered while covering the toBuffer
- * claim path (partial commits on failure + silent loss on single-stack partial fits).
- * Per protocol these are not fixed; ledger row is marked BUG-FOUND.
+ * The two bugs found during the loop (partial commits on failure + silent loss on
+ * single-stack partial fits) were fixed in July 2026: buffer adds are now transactional
+ * via SlotBasedStorage.addItemFully. The formerly @Disabled tests now assert the fixed
+ * atomic behavior; ledger row T-012 moved BUG-FOUND → DONE.
  *
  * Documentation: vault/Town/Payment Board/Reward Claims.md
  */
@@ -424,20 +424,20 @@ class TownPaymentBoardTest {
         assertEquals(3L, board.getBufferStorage().getOrDefault(Items.EMERALD, 0L));
     }
 
-    // --- BUG-FOUND: partial side-effects on toBuffer claim failure (multi-stack) ---
-    // Current impl commits adds for stacks that fit, then aborts on a later stack that doesn't.
-    // Failure leaves entry UNCLAIMED (can be claimed again) while buffer now holds the partials → dupe vector.
+    // --- T-012 BUG FIXED: toBuffer claims are now transactional (all-or-nothing) ---
+    // Formerly @Disabled BUG tests documenting partial-add leaks (dupe vector) and
+    // silent excess loss. Production fix: addToBufferStorage stages on a copy via
+    // SlotBasedStorage.addItemFully and commits only when every stack fully fits.
 
-    @Disabled("BUG: partial items added to buffer on multi-stack reward claim failure; entry remains claimable → potential duplicate payout. See vault/Town/Payment Board/Reward Claims.md Open questions and ledger T-012")
     @Test
-    void claimReward_toBuffer_multiStackReward_partialFitOnFirstStack_leaksItemsWhileLeavingEntryClaimable() {
+    void claimReward_toBuffer_multiStackReward_partialFit_failsAtomically_bufferUntouched() {
         // Arrange: 17 slots stone (blockers), 1 slot with 60 emerald (room for 4 more)
         for (int i = 0; i < 17; i++) {
             board.getBufferStorageSlots().setSlot(i, new ItemStack(Items.STONE, 1));
         }
         board.getBufferStorageSlots().setSlot(17, new ItemStack(Items.EMERALD, 60));
 
-        // Reward has two stacks: emeralds (will partially stack), then a diamond (no room at all)
+        // Reward has two stacks: emeralds (would partially stack), then a diamond (no room at all)
         List<ItemStack> reward = List.of(new ItemStack(Items.EMERALD, 5), new ItemStack(Items.DIAMOND, 1));
         UUID id = board.addReward(RewardSource.TRADE, reward, "ALL");
 
@@ -446,34 +446,53 @@ class TownPaymentBoardTest {
         assertEquals("Buffer storage is full", r.getMessage());
         // Entry still claimable
         assertEquals(ClaimStatus.UNCLAIMED, board.getRewardById(id).get().getStatus());
-        // Leak: emeralds were added (at least the partial amount that fit)
-        int emeraldInBuffer = board.getBufferStorageSlots().getTotalCount(Items.EMERALD);
-        assertTrue(emeraldInBuffer > 60, "Expected emerald count to have increased from partial add, was " + emeraldInBuffer);
-        // Diamond not present (the failing stack)
+        // No leak: buffer must be exactly as before the failed claim
+        assertEquals(60, board.getBufferStorageSlots().getTotalCount(Items.EMERALD));
         assertEquals(0, board.getBufferStorageSlots().getTotalCount(Items.DIAMOND));
+        assertEquals(17, board.getBufferStorageSlots().getTotalCount(Items.STONE));
+
+        // A later re-claim after space frees up pays out exactly once, in full
+        board.getBufferStorageSlots().clearSlot(0);
+        board.getBufferStorageSlots().clearSlot(1);
+        TownPaymentBoard.ClaimResult retry = board.claimReward(id, "claimer", true);
+        assertTrue(retry.isSuccess());
+        assertEquals(ClaimStatus.CLAIMED, board.getRewardById(id).get().getStatus());
+        assertEquals(65, board.getBufferStorageSlots().getTotalCount(Items.EMERALD)); // 60 + 5, no dupes
+        assertEquals(1, board.getBufferStorageSlots().getTotalCount(Items.DIAMOND));
     }
 
-    // --- BUG-FOUND: single-stack partial fit still "succeeds" the claim but loses excess ---
-    // addItem returns true on "placed at least some"; board treats the whole reward as claimable success.
-
-    @Disabled("BUG: toBuffer claim of a single stack that only partially fits succeeds and marks CLAIMED, but excess count is lost (never reaches buffer or player). See vault note Open questions.")
     @Test
-    void claimReward_toBuffer_singleOversizeStack_partialFit_marksClaimed_butExcessCountVanishes() {
+    void claimReward_toBuffer_singleOversizeStack_partialFit_failsAtomically_noExcessLoss() {
         // One slot with 60 emerald (room 4), all other slots full of stone
         for (int i = 0; i < 17; i++) {
             board.getBufferStorageSlots().setSlot(i, new ItemStack(Items.STONE, 1));
         }
         board.getBufferStorageSlots().setSlot(17, new ItemStack(Items.EMERALD, 60));
 
-        List<ItemStack> reward = List.of(new ItemStack(Items.EMERALD, 10)); // only 4 will fit
+        List<ItemStack> reward = List.of(new ItemStack(Items.EMERALD, 10)); // only 4 would fit
         UUID id = board.addReward(RewardSource.MILESTONE, reward, "ALL");
 
         TownPaymentBoard.ClaimResult r = board.claimReward(id, "claimer", true);
-        assertTrue(r.isSuccess(), "Current (buggy) impl treats partial single-stack add as success");
-        assertEquals(ClaimStatus.CLAIMED, board.getRewardById(id).get().getStatus());
-        // Only 4 arrived in buffer; the declared 10 are gone from the claimable side
-        assertEquals(64, board.getBufferStorageSlots().getTotalCount(Items.EMERALD)); // 60+4
-        // The result still advertises the original 10 (misleading)
-        assertEquals(10, r.getClaimedItems().get(0).getCount());
+        assertFalse(r.isSuccess(), "Partial fit must fail the whole claim, not silently lose the excess");
+        assertEquals("Buffer storage is full", r.getMessage());
+        // Entry remains claimable; nothing was destroyed
+        assertEquals(ClaimStatus.UNCLAIMED, board.getRewardById(id).get().getStatus());
+        assertEquals(60, board.getBufferStorageSlots().getTotalCount(Items.EMERALD));
+    }
+
+    // --- T-012 fix: legacy addToBuffer is transactional too (communal storage / overflow path) ---
+
+    @Test
+    void addToBuffer_partialFit_failsAtomically_bufferUntouched() {
+        for (int i = 0; i < 17; i++) {
+            board.getBufferStorageSlots().setSlot(i, new ItemStack(Items.STONE, 1));
+        }
+        board.getBufferStorageSlots().setSlot(17, new ItemStack(Items.EMERALD, 60)); // room for 4
+
+        assertFalse(board.addToBuffer(Items.EMERALD, 10), "10 don't fully fit → must fail");
+        assertEquals(60, board.getBufferStorageSlots().getTotalCount(Items.EMERALD));
+
+        assertTrue(board.addToBuffer(Items.EMERALD, 4), "exactly the remaining space → must succeed");
+        assertEquals(64, board.getBufferStorageSlots().getTotalCount(Items.EMERALD));
     }
 }
