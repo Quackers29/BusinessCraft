@@ -150,6 +150,13 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     private final Map<Item, Long> wantedResources = new HashMap<>();
     private int wantCalculationCooldown = 0;
 
+    /**
+     * Free tourist regeneration cadence: matches the tourism production recipe's
+     * cycle (0.2 min = 240 ticks = 12 s per tourist at base speed).
+     */
+    static final int FREE_TOURIST_REGEN_INTERVAL_TICKS = 240;
+    private int touristRegenCooldown = FREE_TOURIST_REGEN_INTERVAL_TICKS;
+
     public void tick() {
         economy.tick();
         if (ConfigLoader.tradingEnabled) {
@@ -161,9 +168,44 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         if (ConfigLoader.contractsEnabled) contracts.tick(); // Phase 11 global toggle
         if (ConfigLoader.researchEnabled) upgrades.tick(); // Phase 11 global toggle
 
+        tickFreeTouristRegen();
+
         if (wantCalculationCooldown-- <= 0) {
             wantCalculationCooldown = 20; // Check every 1 second
             calculateWants();
+        }
+    }
+
+    /**
+     * Free tourist regeneration for tourism-only mode (0.9 defaults).
+     *
+     * The tourism production recipe is the only sustained source of pending
+     * tourist spawns; with production disabled it never runs, and towns would
+     * spawn only their one-time biome-kit tourists and then go dead. This path
+     * grants pending spawns for free — same cadence and tourist_cap limit as
+     * the tourism recipe, but no resource cost. It only runs when production
+     * is off, so the full mod's food+money tourist economy is unchanged.
+     *
+     * Package-private for unit testing.
+     */
+    void tickFreeTouristRegen() {
+        if (!ConfigLoader.touristSystemEnabled || ConfigLoader.productionEnabled) {
+            return;
+        }
+
+        if (--touristRegenCooldown > 0) {
+            return;
+        }
+        touristRegenCooldown = FREE_TOURIST_REGEN_INTERVAL_TICKS;
+
+        if (!touristSpawningEnabled) {
+            return;
+        }
+
+        // Same capping as the tourism recipe: active tourists + queued spawns vs tourist_cap
+        int cap = (int) upgrades.getModifier("tourist_cap");
+        if (touristCount + pendingTouristSpawns < cap) {
+            addPendingTouristSpawns(1);
         }
     }
 
