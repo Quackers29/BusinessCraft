@@ -30,18 +30,22 @@ class VisitorProcessingHelperTest {
     private VisitorProcessingHelper helper;
     private VisitBuffer buffer;
     private int savedRate;
+    private int savedMinPayoutDistance;
 
     @BeforeEach
     void setUp() {
         helper = new VisitorProcessingHelper();
         buffer = new VisitBuffer();
         savedRate = ConfigLoader.metersPerEmerald;
+        savedMinPayoutDistance = ConfigLoader.minPayoutDistance;
         ConfigLoader.metersPerEmerald = 50; // default rate, fixed for determinism
+        ConfigLoader.minPayoutDistance = 0; // disabled for pure-formula tests; cutoff tests set it explicitly
     }
 
     @AfterEach
     void tearDown() {
         ConfigLoader.metersPerEmerald = savedRate;
+        ConfigLoader.minPayoutDistance = savedMinPayoutDistance;
     }
 
     // --- helpers ---
@@ -133,6 +137,82 @@ class VisitorProcessingHelperTest {
         assertEquals(10, calculatePayment(record(1)));
         // Saved distance was cleared by the first payment -> second attempt pays 0
         assertEquals(0, calculatePayment(record(1)));
+    }
+
+    // --- min payout distance (anti adjacent-town farming) ---
+
+    @Test
+    void calculatePayment_belowMinPayoutDistance_paysZero() throws Exception {
+        ConfigLoader.minPayoutDistance = 100;
+        arriveTourists(55.0); // realistic adjacent-town spacing
+        assertEquals(0, calculatePayment(record(1)));
+    }
+
+    @Test
+    void calculatePayment_belowMinPayoutDistance_manyTourists_stillPaysZero() throws Exception {
+        ConfigLoader.minPayoutDistance = 100;
+        arriveTourists(55.0, 55.0, 55.0, 55.0, 55.0);
+        assertEquals(0, calculatePayment(record(5)));
+    }
+
+    @Test
+    void calculatePayment_exactlyMinPayoutDistance_pays() throws Exception {
+        ConfigLoader.minPayoutDistance = 100;
+        arriveTourists(100.0);
+        // 100 / 50 * 1 = 2 — threshold is inclusive (distance >= min pays)
+        assertEquals(2, calculatePayment(record(1)));
+    }
+
+    @Test
+    void calculatePayment_aboveMinPayoutDistance_floorStillApplies() throws Exception {
+        ConfigLoader.minPayoutDistance = 100;
+        ConfigLoader.metersPerEmerald = 1000; // 0.9 default rate
+        arriveTourists(150.0);
+        // 150 / 1000 * 1 = 0.15 -> max(1, 0.15) = 1 (floor kept for real routes)
+        assertEquals(1, calculatePayment(record(1)));
+    }
+
+    @Test
+    void calculatePayment_belowMinPayoutDistance_clearsSavedDistance() throws Exception {
+        ConfigLoader.minPayoutDistance = 100;
+        arriveTourists(55.0);
+        buffer.processVisits(); // moves distance to the persistent map
+
+        assertEquals(0, calculatePayment(record(1)));
+        // Distance cleared: lowering the threshold afterwards can't retro-pay this batch
+        ConfigLoader.minPayoutDistance = 0;
+        assertEquals(0, calculatePayment(record(1)));
+    }
+
+    // --- traveled-distance clamp (anti loop-track farming) ---
+
+    @Test
+    void clampTraveledDistance_directRoute_unchanged() {
+        // Traveled ≈ straight line — no clamping
+        assertEquals(500.0, VisitorProcessingHelper.clampTraveledDistance(500.0, 500.0));
+    }
+
+    @Test
+    void clampTraveledDistance_windingRouteWithinCap_unchanged() {
+        // 1.8× straight line is under the 2× cap
+        assertEquals(900.0, VisitorProcessingHelper.clampTraveledDistance(900.0, 500.0));
+    }
+
+    @Test
+    void clampTraveledDistance_loopFarming_cappedAtTwiceStraightLine() {
+        // Loop track inflated path to 100,000 blocks between towns 500 apart
+        assertEquals(1000.0, VisitorProcessingHelper.clampTraveledDistance(100_000.0, 500.0));
+    }
+
+    @Test
+    void clampTraveledDistance_exactlyTwiceStraightLine_unchanged() {
+        assertEquals(1000.0, VisitorProcessingHelper.clampTraveledDistance(1000.0, 500.0));
+    }
+
+    @Test
+    void clampTraveledDistance_zeroStraightLine_clampsToZero() {
+        // Origin and destination at the same spot — nothing payable
+        assertEquals(0.0, VisitorProcessingHelper.clampTraveledDistance(300.0, 0.0));
     }
 
     @Test

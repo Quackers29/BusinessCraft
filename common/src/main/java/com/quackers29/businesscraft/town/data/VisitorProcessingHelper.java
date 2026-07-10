@@ -41,6 +41,14 @@ public class VisitorProcessingHelper {
     private static final double VISITOR_POSITION_CHANGE_THRESHOLD = 0.001;
     private static final UUID ANY_TOWN_DESTINATION = new UUID(0, 0);
 
+    /**
+     * Anti-cheat cap on payable travel distance: a tourist can be paid for at most
+     * this multiple of the straight-line origin→destination distance. Path-based
+     * payment stays (deliberate design), but loop-back track farming of the
+     * per-~2s distance counter is capped.
+     */
+    public static final double MAX_TRAVELED_DISTANCE_MULTIPLIER = 2.0;
+
     // Position tracking for visitor movement detection
     private final Map<UUID, Vec3> lastVisitorPositions = new HashMap<>();
 
@@ -181,14 +189,17 @@ public class VisitorProcessingHelper {
 
                 // CORE CHANGE: Use the actual distance the tourist *traveled* (from TouristEntity)
                 // instead of the old town A to B Euclidean distance. This is what the user requested.
+                double straightLineDistance = Math.sqrt(originPos.distSqr(townBlockPos));
                 double distance;
                 if (villager instanceof TouristEntity touristEntity) {
-                    distance = touristEntity.getTotalDistanceTraveled();
+                    distance = clampTraveledDistance(touristEntity.getTotalDistanceTraveled(), straightLineDistance);
                     DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
-                            "TOURIST DISTANCE - Using REAL traveled distance from entity: {} blocks", 
-                            String.format("%.1f", distance));
+                            "TOURIST DISTANCE - Using REAL traveled distance from entity: {} blocks (raw: {}, straight-line: {})",
+                            String.format("%.1f", distance),
+                            String.format("%.1f", touristEntity.getTotalDistanceTraveled()),
+                            String.format("%.1f", straightLineDistance));
                 } else {
-                    distance = Math.sqrt(originPos.distSqr(townBlockPos));
+                    distance = straightLineDistance;
                     DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
                             "TOURIST DISTANCE - Fallback to town-to-town distance: {} blocks", 
                             String.format("%.1f", distance));
@@ -300,6 +311,19 @@ public class VisitorProcessingHelper {
     }
 
     /**
+     * Clamps a tourist's traveled path distance to at most
+     * {@link #MAX_TRAVELED_DISTANCE_MULTIPLIER} × the straight-line
+     * origin→destination distance (anti-cheat: loop-back track farming).
+     *
+     * @param traveledDistance     the accumulated path distance from the tourist entity
+     * @param straightLineDistance the straight-line distance between origin town and destination block
+     * @return the payable distance
+     */
+    public static double clampTraveledDistance(double traveledDistance, double straightLineDistance) {
+        return Math.min(traveledDistance, MAX_TRAVELED_DISTANCE_MULTIPLIER * straightLineDistance);
+    }
+
+    /**
      * Calculates payment for a visit record based on travel distance
      */
     private int calculatePayment(VisitBuffer visitBuffer, ITownDataProvider.VisitHistoryRecord record) {
@@ -311,6 +335,16 @@ public class VisitorProcessingHelper {
         DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
                 "PAYMENT CALCULATION - Processing visitor from townId: {}, Visitors stored in buffer: {}, Average distance: {}",
                 record.getOriginTownId(), visitBuffer.getVisitorCount(), averageDistance);
+
+        if (averageDistance > 0 && averageDistance < ConfigLoader.minPayoutDistance) {
+            // Trip too short to earn anything — blocks adjacent-town farming of the
+            // 1-emerald floor. Distance is still cleared so it can't linger.
+            DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
+                    "Tourist payment skipped: averageDistance={} below minPayoutDistance={}",
+                    averageDistance, ConfigLoader.minPayoutDistance);
+            visitBuffer.clearSavedDistance(record.getOriginTownId());
+            return 0;
+        }
 
         if (averageDistance > 0) {
             // Calculate emeralds based on distance traveled and meters per emerald rate

@@ -42,6 +42,9 @@ public class ConfigLoader {
 
     // Tourism economy config
     public static int metersPerEmerald = 50;
+    // Minimum average travel distance (blocks) for an arrival batch to earn any payment.
+    // Blocks the adjacent-town exploit (~55-block spacing farming the 1-emerald floor).
+    public static int minPayoutDistance = 100;
 
     // Distance milestone config
     public static boolean enableMilestones = true;
@@ -145,6 +148,7 @@ public class ConfigLoader {
 
                 // Economy settings
                 metersPerEmerald = config.getIntOrElse("economy.metersPerEmerald", 50);
+                minPayoutDistance = config.getIntOrElse("economy.minPayoutDistance", 100);
                 currencyItem = config.getOrElse("economy.currencyItem", "minecraft:emerald");
 
                 // Milestone settings
@@ -294,6 +298,8 @@ public class ConfigLoader {
                 // Economy settings
                 config.set("economy.metersPerEmerald", metersPerEmerald);
                 config.setComment("economy.metersPerEmerald", " Meters of travel per emerald earned");
+                config.set("economy.minPayoutDistance", minPayoutDistance);
+                config.setComment("economy.minPayoutDistance", " Minimum average travel distance (blocks) before an arrival batch earns any payment");
                 config.set("economy.currencyItem", currencyItem);
                 config.setComment("economy.currencyItem", " Currency item for trading (format: modid:item)");
 

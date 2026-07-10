@@ -10,7 +10,7 @@ All code paths are relative to `common/src/main/java/com/quackers29/businesscraf
 
 | ID | Vault note path | Code target | Status | Test file | Date | Notes |
 |----|----------------|-------------|--------|-----------|------|-------|
-| T-001 | Economy/Tourist Payments/Distance Payment Calculation | `town/data/VisitorProcessingHelper.java` | DONE | `.../town/data/VisitorProcessingHelperTest.java` | 2026-06-11 | 10 tests via reflection; count=0 quirk pinned |
+| T-001 | Economy/Tourist Payments/Distance Payment Calculation | `town/data/VisitorProcessingHelper.java` | DONE | `.../town/data/VisitorProcessingHelperTest.java` | 2026-07-09 | 20 tests; count=0 quirk pinned; 2026-07-09 anti-cheat added: 2× straight-line distance clamp + `minPayoutDistance` cutoff, note + tests extended |
 | T-002 | Economy/Milestones/Distance Milestone Resolution | `town/data/DistanceMilestoneHelper.java` | DONE | `.../town/data/DistanceMilestoneHelperTest.java` | 2026-06-11 | 17 tests (McBootstrap + registry double); highest-wins selection + scaling + bad-reward resilience covered; count=0 quirk pinned |
 | T-003 | Trade/Contracts/Auction Resolution | `contract/ContractBoard.java` | DONE | `.../contract/ContractBoardTest.java` | 2026-06-11 | 7 new courier cost tests (McBootstrap + Town/BlockPos); total 18; core bid math + formula covered |
 | T-004 | Trade/Contracts/Sell Contract Lifecycle | `contract/SellContract.java` + `contract/Contract.java` | DONE | `.../contract/SellContractTest.java` | 2026-06-11 | 20 tests; state machine + NBT roundtrips |

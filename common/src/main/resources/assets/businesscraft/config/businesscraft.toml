@@ -45,6 +45,9 @@
 [economy]
     # Meters of travel per emerald earned
     metersPerEmerald = 50
+    # Minimum average travel distance (blocks) before an arrival batch earns any payment
+    # Prevents farming the 1-emerald minimum with adjacent towns
+    minPayoutDistance = 100
     # Currency item for trading (format: modid:item)
     currencyItem = "minecraft:emerald"
 

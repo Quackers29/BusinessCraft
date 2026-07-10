@@ -27,8 +27,8 @@ Not a beta blocker. If time: audit for leftover fake-success/placeholder UI (job
 - ~~"What should I do next?" UI~~ — cut permanently. *Verified*
 - No in-game manual for 0.9 — external docs only (see §6). *Verified*
 - Default economy: **1 emerald / 1000 blocks**; example milestones (1000m→apple, 5000m→bread) — payments are main income, milestones are small bonus exemplars. *Verified*
-- **Distance anti-cheat**: stop loop-back track farming of the per-~2s distance counter (min delta / direction / slower sampling). *Verified*
-- **Min-payment floor check** (sibling of anti-cheat): payment has a `max(1, …)` emerald floor and no minimum payout distance — adjacent towns + free tourists = 1 emerald per batch. Add a min payout distance or drop the floor (decide at implementation).
+- ~~**Distance anti-cheat**~~ — DONE 2026-07-09: payable distance clamped to 2× straight-line origin→destination.
+- ~~**Min-payment floor check**~~ — DONE 2026-07-09: added `economy.minPayoutDistance` (default 100 blocks); shorter trips pay 0, floor kept for real routes.
 - **Tourist skin & renderer**: finish the in-progress custom tourist texture (renderer/hat layer/`tourist_basic.png`) + entity skin check pass — current skin not satisfying.
 
 ### 4. Core loop feedback & feel (todo.md Phase D)
