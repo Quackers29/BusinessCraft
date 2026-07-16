@@ -49,7 +49,6 @@ All code paths are relative to `common/src/main/java/com/quackers29/businesscraf
 | T-037 | Tourists/Spawning/Tourist Spawning and Destination Selection | `town/data/TouristSpawningHelper.java` | NEEDS-MC | `.../town/data/TouristSpawningHelperTest.java` | 2026-06-11 | 2 smoke + sentinel pin tests; core spawn/dest select requires ServerLevel+TownManager (NEEDS-MC) |
 | T-038 | Tourists/Lifecycle/Tourist Distance Tracking, Ride Extension and Expiry | `entity/TouristEntity.java` | NEEDS-MC | `.../entity/TouristEntityTest.java` | 2026-06-11 | 23 pure formula tests (skin/level/expiry/format/thresholds + config save/restore); entity+tick NEEDS-MC |
 | T-039 | Town/Visits/Visit History Recording | `town/Town.java` (recordVisit + totalTouristsArrived/totalTouristDistance + trim) | DONE | `.../town/TownTest.java` | 2026-06-11 | 11 tests; euclid accum vs real-path quirk noted |
-| T-040 | Tourists/Tourists Overview (free regen bullet) | `town/Town.java` (tickFreeTouristRegen) | DONE | `.../town/TownFreeTouristRegenTest.java` | 2026-07-10 | 11 tests; tourism-only free tourist regen (0.9 Ship Plan Step 1): 240-tick cadence, tourist_cap limit incl. active tourists, inert when production on / tourist system off / per-town spawning off |
 
 ## Adding new rows
 When the seeds run out (or you find a better target while reading code), append rows with the next T-### ID. Keep the vault note path in `System/Subsystem/Process Name` form, matching the area taxonomy in `vault/Home.md`. Big classes (e.g. `Town.java`) should be split across multiple rows by concern.
