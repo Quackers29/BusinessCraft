@@ -63,9 +63,9 @@ Decisions: (1) **remove** `minDistanceBetweenTowns`; (2) **generate placeholder 
 - [x] Placeholder `assets/businesscraft/icon.png` (256×256; replace later)
 - [x] Root `CHANGELOG.md` for 0.9.0-beta
 
-**3e — Repo hygiene**
-- [ ] Expand `.gitignore` for full `vault/.obsidian/` + `fabric/.gradle/` (current rules incomplete)
-- [ ] `git rm --cached` the 8 tracked files (5 obsidian + 3 loom-cache) — commit when user asks
+**3e — Repo hygiene** — DONE 2026-07-16 (staged; commit when you ask)
+- [x] Expanded `.gitignore`: `vault/.obsidian/` + `fabric/.gradle/`
+- [x] `git rm --cached` the 8 tracked files (still on disk; no longer in index)
 
 **3f — Save-format version**
 - [ ] Add `dataVersion` int on `TownSavedData` NBT root (default `1` if absent); optional small test
@@ -108,7 +108,7 @@ Decisions: (1) **remove** `minDistanceBetweenTowns`; (2) **generate placeholder 
 - [x] Improve `mods.toml` description — DONE 2026-07-16 via Step 3d
 - [x] **GitHub feedback links** — DONE 2026-07-16 via Step 3d
 - [ ] **Save-format versioning + beta caveat** — add a data-version int to the town saved-data NBT root (consider config TOML version key too) so v1.0 migrations are possible; state clearly in README + listing that 0.9 is a **beta**: worlds/config may not carry forward to v1.0
-- [ ] **Repo hygiene before going public** — git still tracks `forge/run/logs/*.gz`, `fabric/run/logs/*`, `usercache.json`, `common/build/tmp/...`, `.obsidian/`, `fabric/.gradle/` (all show as modified in `git status`). Note: `.gitignore` edits don't untrack already-tracked files — that's why the fix "isn't working". One-time `git rm -r --cached <paths>` + commit, then the existing ignore rules hold; verify with `git status` after
+- [x] **Repo hygiene before going public** — DONE 2026-07-16 via Step 3e (`vault/.obsidian/` + `fabric/.gradle/` ignored + untracked; commit still pending)
 
 ## Phase C — Placeholder / Fake-Success UI Cleanup (optional for 0.9)
 Principle: fake success messages are worse than missing buttons. Either implement, hide, or remove. *Verified (scope)*: **not a 0.9 blocker** — quick audit pass if time; many items may already be gone. Tourism-path fixes first if anything remains.

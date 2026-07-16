@@ -6,8 +6,10 @@
 /forge/build
 /fabric/build
 /fabric/run
-vault/.obsidian/graph.json
-vault/.obsidian/workspace.json
+# Obsidian local UI state (per-machine; not shared docs)
+vault/.obsidian/
+# Loom/Gradle caches under the Fabric module (root /.gradle does not cover this)
+fabric/.gradle/
 CLAUDE.md
 .cursorignore
 .gitattributes
