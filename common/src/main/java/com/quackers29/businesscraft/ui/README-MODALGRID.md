@@ -157,4 +157,4 @@ screen.withColors(
 
 ## Complete Example
 
-For full examples of usage, see the `BCModalGridExample.java` class. 
+See production screens that use `BCModalGridScreen` (e.g. payment board / storage modals) for live usage patterns. 
