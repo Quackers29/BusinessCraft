@@ -32,9 +32,16 @@ Independent code verification of all prior findings (T-012, toggles, anti-cheat,
 - [x] Distance clamp — DONE 2026-07-09: `clampTraveledDistance` (public static, `min(traveled, 2 × straightLine)`) applied in `processIndividualVisitor` before the distance enters the batch; caps loop-track farming and (since it's upstream) milestone farming too. Min-payout decision: kept the 1-emerald floor, added `economy.minPayoutDistance` (default 100, inclusive threshold) — batches averaging below it pay 0 and their saved distance is cleared. 10 new tests (clamp + cutoff) in `VisitorProcessingHelperTest`, full `:common:test` green; vault note + ledger (T-001) updated.
 - [x] **Tourism Option C** — DONE 2026-07-16: `tickTourismRecipe()` gated by `tourists.enabled`; production skips `tourism`; free CSV + `tourism` on `basic_settlement`; tourist_cap stall fix; 9 tests + T-040. (Research still works with production off if enabled — AI + deposit slot; no start packet.) Manual in-game trace deferred to Step 4.
 
-**Step 2 — Toggle honesty (code, small)**
-- [ ] Guards in the 3 packet handlers; biome-kit allowlist in `registerTown`; `calculateWants` guard; tests
-  - ⚠️ Keep `basic_settlement` (or `tourist_cap` + `tourism`) when research off — else Option C loop dies.
+**Step 2 — Toggle honesty (code, small)** — NEXT; plan verified in code 2026-07-16 (see `.claude/tasks/step2-toggle-honesty_onboarding.md`)
+- [ ] Guard `TradeResourcePacket.handle` with `ConfigLoader.tradingEnabled` (early return)
+- [ ] Guard `BidContractPacket` + `AcceptContractPacket` with `ConfigLoader.contractsEnabled`
+- [ ] Guard `Town.calculateWants()` with `researchEnabled` (clear wants + return) — currently called every 20 ticks ungated
+- [ ] Filter `TownManager.registerTown` startingNodes: when research off, unlock **`basic_settlement` only** (skip `farming_advanced` / `tourism_basic` / `research_basic` / etc.)
+  - ⚠️ Do NOT skip all nodes — `basic_settlement` grants `tourism` + `tourist_cap:2` required by Option C
+- [ ] Filter `registerTown` startingValues: always keep `pop`/`happiness`/`tourist`/`*_cap`/`border`; skip ResourceRegistry grants when `productionEnabled` is false
+- [ ] *(recommended)* Guard contract-item branch in `TownInterfaceEntity.processResourcesInSlot` with `contractsEnabled` (bypasses Bid/Accept packets)
+- [ ] Tests: kit filter (research off keeps tourism unlock; production off drops food/wood/money); `calculateWants` no-op; packet early-return if feasible
+- [ ] `:common:test` green; mark Step 2 done
 
 **Step 3 — Packaging & hygiene (one pass)**
 - [ ] Forge jar: remove `assets/**`/`data/**`/`pack.mcmeta` excludes (New finding #2), fix duplicates properly, verify jar contents; also remove duplicate `OpenPaymentBoardPacket` registration in `ForgeModMessages`
