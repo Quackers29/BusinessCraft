@@ -38,7 +38,7 @@ Not a beta blocker. Quick fake-success audit if time.
 ### 3. Onboarding & first session (Phase D)
 - Default economy values ship at Step 4: **1 emerald / 1000 blocks**; example milestones (1000m→apple, 5000m→bread)
 - ~~Distance anti-cheat~~ DONE · ~~Min-payout floor~~ DONE
-- **Tourist skin**: owner quality call — finish before Step 4 or defer out of 0.9
+- **Tourist skin rework**: strategy A done (distinct tiers + hat UV layer); owner in-game visual OK still open
 
 ### 4. Testing & release (Phase F / Step 4)
 - ~~Unit coverage~~ DONE · ~~T-012~~ DONE

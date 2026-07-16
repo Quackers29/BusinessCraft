@@ -6,7 +6,6 @@ import net.minecraft.client.model.VillagerModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
-import net.minecraft.client.renderer.entity.layers.VillagerProfessionLayer;
 import net.minecraft.resources.ResourceLocation;
 
 public class TouristRenderer extends MobRenderer<TouristEntity, VillagerModel<TouristEntity>> {
@@ -17,17 +16,15 @@ public class TouristRenderer extends MobRenderer<TouristEntity, VillagerModel<To
     };
     private static final ResourceLocation FALLBACK_SKIN =
         new ResourceLocation("textures/entity/villager/villager.png");
-    
-    public TouristRenderer(EntityRendererProvider.Context context) {
-        super(context, 
-              new VillagerModel<>(context.bakeLayer(ModelLayers.VILLAGER)), 
-              0.5F);
-        
-        this.addLayer(new VillagerProfessionLayer<>(this, context.getResourceManager(), "villager"));
 
+    public TouristRenderer(EntityRendererProvider.Context context) {
+        super(context,
+              new VillagerModel<>(context.bakeLayer(ModelLayers.VILLAGER)),
+              0.5F);
+        // No VillagerProfessionLayer — tourists use Profession.NONE and custom body textures.
         this.addLayer(new TouristHatLayer(this, new VillagerModel<>(context.bakeLayer(ModelLayers.VILLAGER))));
     }
-    
+
     @Override
     public ResourceLocation getTextureLocation(TouristEntity entity) {
         int tier = entity.getSkinTier();
@@ -36,4 +33,4 @@ public class TouristRenderer extends MobRenderer<TouristEntity, VillagerModel<To
         }
         return FALLBACK_SKIN;
     }
-} 
+}

@@ -43,19 +43,32 @@
 
 ## Before Step 4 (get fully ready)
 
-Decide these so Step 4 is only defaults + verify + publish:
+- [ ] **Commit** pending work when you ask (3e untrack + border/toggle/packaging/oasis/skin work)
+- [x] **Oasis pop**: bumped oasis kit `pop:4` → `pop:5` (matches `minPopForTourists=5`; only kit that was below). Kept minPop at 5.
+- [x] **Tourist skins (strategy A, rebuilt from original PNGs)** — no generator scripts; **needs in-game OK**
+- [ ] **Phase C** (optional): quick fake-success UI audit — skip unless you want it
 
-- [ ] **Commit** pending work when you ask (3e untrack + border/toggle/packaging changes still uncommitted)
-- [ ] **Oasis pop vs tourists**: kits have oasis `pop:4` but `minPopForTourists=5` → no spawns with tourism-only (no pop growth). Pick one: bump oasis (and any other &lt;5 kits) **or** lower `minPopForTourists` (e.g. 4)
-- [ ] **Tourist skin**: finish quality pass now, **or** defer to post-beta / owner-only (roadmap still lists it under 0.9)
-- [ ] **Phase C** (optional): quick fake-success UI audit — not a blocker; do now or skip
+### Tourist skin rework — rebuilt from original UV masks; await in-game OK
+
+**Approach (2nd pass)**
+- Deleted `scripts/generate_tourist_*.py` (no committed generators)
+- Used restored `tourist_basic.png` + `tourist_hat_red.png` as UV/mask source of truth
+- Hat overlays: same opaque mask as original red hat (480 px); clean solid crown/band colors
+- Bodies: keep original head + camera; darken baked hat shell under overlay; recolor clothing for tiers
+  - basic ≈ original safari (hat shell darkened)
+  - experienced = deeper olive / browns
+  - luxury = navy / charcoal (+ gold lens)
+
+**Code**
+- [x] No profession layer; hat layer renders `hat` + `hat_rim`
+- [ ] **Owner**: Forge client — check tiers + colored hats sit on head
 
 ---
 
 ## Step 4 — Default flip + verification (LAST)
 
 - [ ] Tourism-only defaults: `craftableTownInterface=true`; tourists/milestones on; production/research/trading/contracts **off**; `metersPerEmerald=1000`; milestones 1000m→apple, 5000m→bread; `minPayoutDistance=100`; confirm free tourism CSV
-- [ ] Apply oasis/`minPop` decision from above; manual Option C in-game trace (tourism with production off)
+- [ ] Manual Option C in-game trace (tourism with production off; oasis pop=5 OK)
 - [ ] Dedicated-server boot smoke — Forge + Fabric (refactor Fabric server paths **only if** smoke fails)
 - [ ] Full SP pass both loaders + manual Create pass (Create Fabric = class-name sniff; verify or document Forge-only). Docs: tourists can't walk (speed 0) — need carts/trains
 - [ ] Performance smoke: multiple towns / many tourists (thresholds TBD in playtest)
@@ -65,13 +78,10 @@ Decide these so Step 4 is only defaults + verify + publish:
 
 ---
 
-## Optional / owner (not blocking Step 4 start)
+## Optional / owner
 
 ### Phase C — Fake-success UI (optional)
 - [ ] Quick audit: job assignment, settings save/reset, visitor modal example data, `autoCollect`/`taxes`, contract player-name — fix/hide only if still present
-
-### Phase D — Skin (owner call)
-- [ ] Tourist skin & renderer quality pass — or explicitly defer out of 0.9
 
 ---
 
