@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import com.quackers29.businesscraft.ui.util.BCRenderUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Enhanced base component for BusinessCraft UI system.
@@ -18,6 +20,7 @@ import com.quackers29.businesscraft.ui.util.BCRenderUtils;
  * positioning, visibility control, styling, and event handling.
  */
 public abstract class BCComponent implements UIComponent {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BCComponent.class);
     // Basic properties
     protected int x, y, width, height;
     protected boolean visible = true;
@@ -317,7 +320,7 @@ public abstract class BCComponent implements UIComponent {
                     handler.accept(this);
                 } catch (Exception e) {
                     // Log the error but don't break the event chain
-                    System.err.println("Error in event handler for event " + event + ": " + e.getMessage());
+                    LOGGER.error("Error in event handler for event {}", event, e);
                 }
             }
         }

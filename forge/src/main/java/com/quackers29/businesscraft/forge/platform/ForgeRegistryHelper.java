@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.forge.platform;
 
 import com.quackers29.businesscraft.api.RegistryHelper;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -12,6 +13,8 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.function.Supplier;
 
@@ -19,6 +22,7 @@ import java.util.function.Supplier;
  * Forge implementation of RegistryHelper using strong types.
  */
 public class ForgeRegistryHelper implements RegistryHelper {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ForgeRegistryHelper.class);
     private static final String MOD_ID = "businesscraft";
 
     public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
@@ -31,17 +35,13 @@ public class ForgeRegistryHelper implements RegistryHelper {
             MOD_ID);
 
     public static void register(IEventBus modEventBus) {
-        System.out.println("DEBUG: Registering BLOCKS DeferredRegister");
+        DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION,
+                "Registering DeferredRegisters (blocks, items, entities, block entities, menus)");
         BLOCKS.register(modEventBus);
-        System.out.println("DEBUG: Registering ITEMS DeferredRegister");
         ITEMS.register(modEventBus);
-        System.out.println("DEBUG: Registering ENTITY_TYPES DeferredRegister");
         ENTITY_TYPES.register(modEventBus);
-        System.out.println("DEBUG: Registering BLOCK_ENTITY_TYPES DeferredRegister");
         BLOCK_ENTITY_TYPES.register(modEventBus);
-        System.out.println("DEBUG: Registering MENU_TYPES DeferredRegister");
         MENU_TYPES.register(modEventBus);
-        System.out.println("DEBUG: All DeferredRegisters registered");
     }
 
     @Override

@@ -94,14 +94,10 @@ public class BusinessCraftForge {
     public static final TouristVehicleManager TOURIST_VEHICLE_MANAGER = new TouristVehicleManager();
 
     public BusinessCraftForge() {
-        LOGGER.info("BusinessCraft Forge constructor called!");
-        System.out.println("DEBUG: BusinessCraft Forge mod starting up!");
+        LOGGER.info("BusinessCraft Forge mod starting up");
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
-        // Register DeferredRegisters with the mod event bus
-        System.out.println("DEBUG: About to register DeferredRegisters with mod event bus");
         ((ForgeRegistryHelper) REGISTRY).register(modEventBus);
-        System.out.println("DEBUG: DeferredRegisters registered with mod event bus");
 
         // Initialize Forge-specific registrations
         ForgeModBlocks.register();
@@ -109,10 +105,7 @@ public class BusinessCraftForge {
         ForgeModBlockEntities.register();
         ForgeModMenuTypes.register();
 
-        // Register our mod's event handlers
-        System.out.println("DEBUG: Registering event listeners");
         modEventBus.addListener(this::commonSetup);
-        System.out.println("DEBUG: Event listeners registered");
 
         // Initialize networking
         ForgeModMessages.register();
@@ -131,7 +124,6 @@ public class BusinessCraftForge {
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
-        System.out.println("DEBUG: commonSetup method called!");
         LOGGER.info("BusinessCraft Forge common setup starting");
 
         ConfigLoader.loadConfig();

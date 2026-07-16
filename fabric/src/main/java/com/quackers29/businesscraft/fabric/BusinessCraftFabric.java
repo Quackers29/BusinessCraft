@@ -55,8 +55,7 @@ public class BusinessCraftFabric implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        LOGGER.info("BusinessCraft Fabric constructor called!");
-        System.out.println("DEBUG: BusinessCraft Fabric mod starting up!");
+        LOGGER.info("BusinessCraft Fabric mod starting up");
 
         // Initialize platform abstractions for common code access
         PlatformAccess.platform = PLATFORM;

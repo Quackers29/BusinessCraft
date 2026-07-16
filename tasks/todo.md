@@ -53,8 +53,8 @@ Decisions: (1) **remove** `minDistanceBetweenTowns`; (2) **generate placeholder 
 - [x] Deleted 3 demo screens under `common/.../ui/screens/demo/`; updated `README-MODALGRID.md` pointer
 - [x] `:fabric:compileJava` / `:common:compileJava` green
 
-**3c — Log hygiene**
-- [ ] Convert/delete remaining `System.out.println` (~26 after stub deletes; also stray `System.err` in Fabric BE init + `TownMapModal`)
+**3c — Log hygiene** — DONE 2026-07-16
+- [x] Converted/removed remaining `System.out`/`System.err` in Forge init, ForgeRegistryHelper, Fabric init, FabricModBlockEntities, TownMapModal, BCComponent → slf4j LOGGER
 
 **3d — Metadata & listing polish**
 - [ ] `gradle.properties` `mod_version` → `0.9.0-beta`
@@ -98,7 +98,7 @@ Decisions: (1) **remove** `minDistanceBetweenTowns`; (2) **generate placeholder 
 - [x] **License (blocker)** — *Verified (scope)*: **MIT** everywhere. Root LICENSE replaced with MIT, Forge `mods.toml` updated from "All rights reserved" to "MIT". `fabric.mod.json` was already correct. Done 2026-06-17.
 - [x] **Toggle-respect packet audit** — DONE 2026-07-16 via Ship Plan Step 2: packet guards (Trade/Bid/Accept), `applyBiomeKit` filtering, `calculateWants` + deposit-slot contract guards; UI tabs remain visible-but-inert (intentional). Tests in `ToggleHonestyTest`. Default flip still at end of Phase F.
 - [x] Set `DebugConfig.TOURIST_ENTITY = false` (only flag still on; contradicts release checklist) — Done 2026-06-18. Only remaining production debug flag turned off.
-- [ ] Remove/convert 37 `System.out.println` calls (Forge/Fabric init classes, Fabric stub packets, and one in common `ui/modal/specialized/TownMapModal.java`) to logger calls or delete
+- [x] Remove/convert `System.out.println` calls — DONE 2026-07-16 via Step 3c (stubs deleted in 3b; remaining → LOGGER)
 - [x] Delete orphaned Fabric dead code — DONE 2026-07-16 via Step 3b
 - [x] Remove demo screens — DONE 2026-07-16 via Step 3b
 - [x] Fix Fabric build excluding loot tables from its jar (`fabric/build.gradle` line ~58) — also fixed root cause compile error (Forge-only `Block.getExplosionResistance(BlockState,...)` override). Removed exclude, loot tables now included for Fabric. Build now succeeds on both loaders. (2026-06-18)

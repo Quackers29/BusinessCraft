@@ -1,17 +1,20 @@
 package com.quackers29.businesscraft.fabric.init;
 
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.fabric.block.entity.FabricTownInterfaceEntity;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.entity.BlockEntityType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Fabric block entity registration using direct Fabric API calls.
  */
 public class FabricModBlockEntities {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FabricModBlockEntities.class);
     private static final String MOD_ID = "businesscraft";
 
     // Store the registered block entity type for later retrieval
@@ -24,42 +27,39 @@ public class FabricModBlockEntities {
     }
 
     public static void register() {
-        System.out.println("DEBUG: FabricModBlockEntities.register() called");
+        DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "FabricModBlockEntities.register() called");
         if (registrationAttempted && registrationSuccessful) {
-            System.out.println("DEBUG: Block entities already registered successfully, skipping");
-            return; // Already registered successfully
+            DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION,
+                    "Block entities already registered successfully, skipping");
+            return;
         }
 
         registrationAttempted = true;
-        System.out.println("DEBUG: FabricModBlockEntities.register() - Attempting block entity registration");
+        DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "Attempting block entity registration");
 
-        // Check if blocks are registered first
         net.minecraft.world.level.block.Block townInterfaceBlock = BuiltInRegistries.BLOCK
                 .get(new ResourceLocation("businesscraft", "town_interface"));
         if (townInterfaceBlock == null) {
-            System.out.println("DEBUG: Town interface block not found in registry - blocks may not be registered yet");
-            // Try to register anyway with a placeholder or skip for now
+            LOGGER.warn("Town interface block not found in registry - blocks may not be registered yet");
         } else {
-            System.out.println("DEBUG: Found town interface block in registry: " + townInterfaceBlock);
+            DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION,
+                    "Found town interface block in registry: {}", townInterfaceBlock);
         }
 
-        // In Fabric, register block entities directly during mod initialization
         try {
             registerBlockEntities();
             registrationSuccessful = true;
-            System.out.println("DEBUG: Block entity registration completed successfully!");
+            DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION,
+                    "Block entity registration completed successfully");
         } catch (Exception e) {
-            System.err.println("ERROR: Block entity registration failed: " + e.getMessage());
-            e.printStackTrace();
-            // Try one more time after a short delay
+            LOGGER.error("Block entity registration failed", e);
             try {
                 Thread.sleep(1000);
                 registerBlockEntities();
                 registrationSuccessful = true;
-                System.out.println("DEBUG: Block entity registration succeeded on second attempt!");
+                LOGGER.info("Block entity registration succeeded on second attempt");
             } catch (Exception e2) {
-                System.err.println("ERROR: Block entity registration failed on second attempt: " + e2.getMessage());
-                e2.printStackTrace();
+                LOGGER.error("Block entity registration failed on second attempt", e2);
                 if (e2 instanceof InterruptedException) {
                     Thread.currentThread().interrupt();
                 }
@@ -72,44 +72,37 @@ public class FabricModBlockEntities {
      */
     private static void registerBlockEntities() {
         try {
-            System.out.println("DEBUG: Registering FabricTownInterfaceEntity");
+            DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION, "Registering FabricTownInterfaceEntity");
 
-            // Get the town interface block from the registry (registered in
-            // FabricModBlocks)
             net.minecraft.world.level.block.Block townInterfaceBlock = BuiltInRegistries.BLOCK
                     .get(new ResourceLocation("businesscraft", "town_interface"));
 
             if (townInterfaceBlock != null) {
-                // Create and register the block entity type using Fabric API
-                System.out.println("DEBUG: Creating block entity type for town interface block");
+                DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION,
+                        "Creating block entity type for town interface block");
 
                 TOWN_INTERFACE_ENTITY_TYPE = FabricBlockEntityTypeBuilder.create(
                         FabricTownInterfaceEntity::new,
                         townInterfaceBlock).build();
 
-                // Register it in the registry
                 Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
-                        new ResourceLocation("businesscraft", "town_interface_entity"), TOWN_INTERFACE_ENTITY_TYPE);
+                        new ResourceLocation(MOD_ID, "town_interface_entity"), TOWN_INTERFACE_ENTITY_TYPE);
 
-                System.out.println(
-                        "DEBUG: Successfully registered FabricTownInterfaceEntity: " + TOWN_INTERFACE_ENTITY_TYPE);
+                DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION,
+                        "Successfully registered FabricTownInterfaceEntity: {}", TOWN_INTERFACE_ENTITY_TYPE);
             } else {
-                System.out.println("DEBUG: Skipping block entity type registration - town interface block not found");
-                // Try to create without specifying the block
+                LOGGER.warn("Skipping block association - town interface block not found; registering type without block");
                 TOWN_INTERFACE_ENTITY_TYPE = FabricBlockEntityTypeBuilder.create(
-                        FabricTownInterfaceEntity::new
-                // No blocks specified - this might work for dynamic association
-                ).build();
+                        FabricTownInterfaceEntity::new).build();
 
                 Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
-                        new ResourceLocation("businesscraft", "town_interface_entity"), TOWN_INTERFACE_ENTITY_TYPE);
-                System.out.println(
-                        "DEBUG: Registered block entity type without block association: " + TOWN_INTERFACE_ENTITY_TYPE);
+                        new ResourceLocation(MOD_ID, "town_interface_entity"), TOWN_INTERFACE_ENTITY_TYPE);
+                DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION,
+                        "Registered block entity type without block association: {}", TOWN_INTERFACE_ENTITY_TYPE);
             }
 
         } catch (Exception e) {
-            System.err.println("ERROR: Failed to register block entities: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.error("Failed to register block entities", e);
         }
     }
 
