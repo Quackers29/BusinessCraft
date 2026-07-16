@@ -67,11 +67,14 @@ Decisions: (1) **remove** `minDistanceBetweenTowns`; (2) **generate placeholder 
 - [x] Expanded `.gitignore`: `vault/.obsidian/` + `fabric/.gradle/`
 - [x] `git rm --cached` the 8 tracked files (still on disk; no longer in index)
 
-**3f — Save-format version**
-- [ ] Add `dataVersion` int on `TownSavedData` NBT root (default `1` if absent); optional small test
+**3f — Save-format version** — DONE 2026-07-16
+- [x] `TownSavedData`: `dataVersion` root key, `CURRENT_DATA_VERSION = 1`, missing key → 1, save always stamps
+- [x] Stepwise `applyMigrations` + `migrateStep` hook (no production migrators yet); newer-than-supported → warn + best-effort
+- [x] `TownSavedDataVersionTest` (6); also fixed `NAME` to stable `"businesscraft_towns"` (was PlatformAccess at class-init)
+- Later: same pattern on Contract/Market SavedData when they need a break; bump CURRENT + add `case 1:` in `migrateStep`
 
 **3g — Dead config**
-- [ ] `minDistanceBetweenTowns`: **remove** (recommended) or **wire** as placement floor — user decision
+- [ ] `minDistanceBetweenTowns`: **remove** (user decision locked)
 
 **Step 4 — Default flip + verification (last, as planned)**
 - [ ] Set tourism-only defaults: craftable on; tourists on; production/research/trading/contracts off; economy values (`metersPerEmerald=1000`, milestone 1000m/5000m; `minPayoutDistance=100`); confirm free tourism CSV
@@ -82,7 +85,7 @@ Decisions: (1) **remove** `minDistanceBetweenTowns`; (2) **generate placeholder 
 
 **Deferred (unchanged)**: Fabric class-split refactor (unless smoke test fails), tourist skin quality pass (owner), localization, multiplayer playtest, `UIGridBuilder` refactor.
 
-**Status**: Steps 1–2 done — next Step 3.
+**Status**: Steps 1–2 done; Step 3 through 3f done — next 3g then Step 4.
 
 ---
 
@@ -107,7 +110,7 @@ Decisions: (1) **remove** `minDistanceBetweenTowns`; (2) **generate placeholder 
 - [x] Create `CHANGELOG.md` — DONE 2026-07-16 via Step 3d
 - [x] Improve `mods.toml` description — DONE 2026-07-16 via Step 3d
 - [x] **GitHub feedback links** — DONE 2026-07-16 via Step 3d
-- [ ] **Save-format versioning + beta caveat** — add a data-version int to the town saved-data NBT root (consider config TOML version key too) so v1.0 migrations are possible; state clearly in README + listing that 0.9 is a **beta**: worlds/config may not carry forward to v1.0
+- [x] **Save-format versioning** — DONE 2026-07-16 via Step 3f (`TownSavedData.dataVersion`); README/listing beta caveat still Step 4
 - [x] **Repo hygiene before going public** — DONE 2026-07-16 via Step 3e (`vault/.obsidian/` + `fabric/.gradle/` ignored + untracked; commit still pending)
 
 ## Phase C — Placeholder / Fake-Success UI Cleanup (optional for 0.9)
