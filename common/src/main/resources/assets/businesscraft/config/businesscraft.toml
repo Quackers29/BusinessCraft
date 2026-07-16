@@ -3,9 +3,8 @@
 # Changes are automatically detected and reloaded.
 
 [general]
-    # Minimum distance between towns in blocks
-    minDistanceBetweenTowns = 100
     # Default starting population for new towns
+    # (Town spacing uses each town's boundary radius, not a flat min-distance setting.)
     defaultStartingPopulation = 5
     # When false (default): Town Interface block is nearly indestructible in survival.
     # Creative players can still place and break it.

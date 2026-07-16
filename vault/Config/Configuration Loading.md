@@ -46,7 +46,7 @@ All configuration is side-effectful mutation of public static fields. There are 
 Defaults (source of truth = the Java field initializers; must match the shipped toml and every getOrElse second argument):
 
 - Vehicles: enableCreateTrains=true, enableMinecarts=true, vehicleSearchRadius=3, minecartStopThreshold=0.001
-- Town: minDistanceBetweenTowns=100, defaultStartingPopulation=5, craftableTownInterface=false, townNames=<14 names via getDefault...>, maxTouristsPerTown=1000, populationPerTourist=5, maxPopBasedTourists=20, minPopForTourists=5
+- Town: defaultStartingPopulation=5, craftableTownInterface=false, townNames=<14 names via getDefault...>, maxTouristsPerTown=1000, populationPerTourist=5, maxPopBasedTourists=20, minPopForTourists=5 (town spacing uses boundary radii, not a flat min-distance config)
 - Tourist: touristExpiryMinutes=120.0, enableTouristExpiry=true, notifyOnTouristDeparture=true, touristSystemEnabled=true
 - Economy: metersPerEmerald=50, currencyItem="minecraft:emerald"
 - Milestones: enableMilestones=true, milestoneRewards populated by loadMilestoneRewards
@@ -114,7 +114,8 @@ Error handling: every I/O or platform failure path in loadConfig / saveConfig / 
 - Pattern: identical @BeforeEach/@AfterEach save+restore of ConfigLoader statics + PlatformAccess.platform as seen in T-001, T-004, T-009 etc. Private method tested via reflection. No MC Item/Block/Entity construction.
 
 ## Open questions
-- No value-range or semantic validation lives in the loader (e.g. minDistanceBetweenTowns=0, metersPerEmerald=0, negative expiry minutes, tickInterval=0 are all accepted and can produce bad game behavior downstream). Consumers (TownValidationService, payment math, etc.) are responsible; this is a latent foot-gun.
+- No value-range or semantic validation lives in the loader (e.g. metersPerEmerald=0, negative expiry minutes, tickInterval=0 are all accepted and can produce bad game behavior downstream). Consumers (TownValidationService, payment math, etc.) are responsible; this is a latent foot-gun.
+- `general.minDistanceBetweenTowns` was removed (July 2026): it was loaded/saved but never read by gameplay. Placement uses `TownBoundaryService` boundary radii instead.
 - saveConfig destroys any keys/comments not explicitly known to it (no "preserve unknown" mode).
 - The default milestone is baked into loadMilestoneRewards rather than the default toml resource or a constant; changing the default requires editing code + the example toml.
 - loadRegistries() is called unconditionally on every loadConfig, even when only one scalar changed; the registries themselves do their own platform.getConfigDirectory() work.

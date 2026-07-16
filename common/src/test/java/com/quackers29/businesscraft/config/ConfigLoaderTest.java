@@ -48,7 +48,7 @@ class ConfigLoaderTest {
     private boolean savedEnableTouristExpiry, savedNotifyOnTouristDeparture, savedTouristSystemEnabled;
     private boolean savedEnableMilestones, savedPlayerTracking, savedTownBoundaryMessages;
     private boolean savedTradingEnabled, savedProductionEnabled, savedResearchEnabled, savedContractsEnabled;
-    private int savedVehicleSearchRadius, savedMinDistanceBetweenTowns, savedDefaultStartingPopulation;
+    private int savedVehicleSearchRadius, savedDefaultStartingPopulation;
     private int savedMaxTouristsPerTown, savedPopulationPerTourist, savedMaxPopBasedTourists;
     private int savedMinPopForTourists, savedMetersPerEmerald, savedTradingTickInterval;
     private int savedProductionTickInterval, savedDailyTickInterval, savedMinStockPercent, savedExcessStockPercent;
@@ -76,7 +76,6 @@ class ConfigLoaderTest {
 
         savedTownNames = new ArrayList<>(ConfigLoader.townNames);
         savedMinPopForTourists = ConfigLoader.minPopForTourists;
-        savedMinDistanceBetweenTowns = ConfigLoader.minDistanceBetweenTowns;
         savedDefaultStartingPopulation = ConfigLoader.defaultStartingPopulation;
         savedCraftableTownInterface = ConfigLoader.craftableTownInterface;
         savedMaxTouristsPerTown = ConfigLoader.maxTouristsPerTown;
@@ -144,7 +143,6 @@ class ConfigLoaderTest {
 
         ConfigLoader.townNames = new ArrayList<>(savedTownNames);
         ConfigLoader.minPopForTourists = savedMinPopForTourists;
-        ConfigLoader.minDistanceBetweenTowns = savedMinDistanceBetweenTowns;
         ConfigLoader.defaultStartingPopulation = savedDefaultStartingPopulation;
         ConfigLoader.craftableTownInterface = savedCraftableTownInterface;
         ConfigLoader.maxTouristsPerTown = savedMaxTouristsPerTown;
@@ -243,7 +241,6 @@ class ConfigLoaderTest {
         assertEquals(0.001, ConfigLoader.minecartStopThreshold, 1e-9);
 
         assertEquals(5, ConfigLoader.minPopForTourists);
-        assertEquals(100, ConfigLoader.minDistanceBetweenTowns);
         assertEquals(5, ConfigLoader.defaultStartingPopulation);
         assertFalse(ConfigLoader.craftableTownInterface);
         assertEquals(1000, ConfigLoader.maxTouristsPerTown);
@@ -307,7 +304,6 @@ class ConfigLoaderTest {
     void loadConfig_customToml_overridesScalarsAndLists() throws IOException {
         writeToml("""
             [general]
-            minDistanceBetweenTowns = 250
             defaultStartingPopulation = 12
             craftableTownInterface = true
             townNames = ["Alpha", "Beta"]
@@ -343,7 +339,6 @@ class ConfigLoaderTest {
 
         ConfigLoader.loadConfig();
 
-        assertEquals(250, ConfigLoader.minDistanceBetweenTowns);
         assertEquals(12, ConfigLoader.defaultStartingPopulation);
         assertTrue(ConfigLoader.craftableTownInterface);
         assertEquals(List.of("Alpha", "Beta"), ConfigLoader.townNames);
@@ -498,7 +493,6 @@ class ConfigLoaderTest {
         ConfigLoader.loadConfig();
 
         // After copy, the values must match the shipped defaults (identical to Java inits)
-        assertEquals(100, ConfigLoader.minDistanceBetweenTowns);
         assertEquals(5, ConfigLoader.defaultStartingPopulation);
         assertEquals(50, ConfigLoader.metersPerEmerald);
         assertTrue(ConfigLoader.milestoneRewards.containsKey(10));

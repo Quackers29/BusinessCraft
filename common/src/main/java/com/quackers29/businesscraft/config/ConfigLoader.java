@@ -28,7 +28,6 @@ public class ConfigLoader {
     // Town-related config
     public static List<String> townNames = new ArrayList<>();
     public static int minPopForTourists = 5;
-    public static int minDistanceBetweenTowns = 100;
     public static int defaultStartingPopulation = 5;
     public static boolean craftableTownInterface = false;
     public static int maxTouristsPerTown = 1000;
@@ -125,7 +124,7 @@ public class ConfigLoader {
                 config.load();
 
                 // General settings
-                minDistanceBetweenTowns = config.getIntOrElse("general.minDistanceBetweenTowns", 100);
+                // Town spacing uses boundary radii (TownBoundaryService), not a flat min-distance key
                 defaultStartingPopulation = config.getIntOrElse("general.defaultStartingPopulation", 5);
                 craftableTownInterface = config.getOrElse("general.craftableTownInterface", false);
                 townNames = config.getOrElse("general.townNames", getDefaultTownNames());
@@ -258,8 +257,6 @@ public class ConfigLoader {
                     .build()) {
 
                 // General settings
-                config.set("general.minDistanceBetweenTowns", minDistanceBetweenTowns);
-                config.setComment("general.minDistanceBetweenTowns", " Minimum distance between towns in blocks");
                 config.set("general.defaultStartingPopulation", defaultStartingPopulation);
                 config.setComment("general.defaultStartingPopulation", " Default starting population for new towns");
                 config.set("general.craftableTownInterface", craftableTownInterface);

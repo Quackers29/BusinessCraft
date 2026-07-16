@@ -73,8 +73,8 @@ Decisions: (1) **remove** `minDistanceBetweenTowns`; (2) **generate placeholder 
 - [x] `TownSavedDataVersionTest` (6); also fixed `NAME` to stable `"businesscraft_towns"` (was PlatformAccess at class-init)
 - Later: same pattern on Contract/Market SavedData when they need a break; bump CURRENT + add `case 1:` in `migrateStep`
 
-**3g — Dead config**
-- [ ] `minDistanceBetweenTowns`: **remove** (user decision locked)
+**3g — Dead config** — DONE 2026-07-16
+- [x] Removed `minDistanceBetweenTowns` from ConfigLoader, shipped TOML, ConfigLoaderTest; vault Configuration Loading note updated. Placement remains boundary-radius based.
 
 **Step 4 — Default flip + verification (last, as planned)**
 - [ ] Set tourism-only defaults: craftable on; tourists on; production/research/trading/contracts off; economy values (`metersPerEmerald=1000`, milestone 1000m/5000m; `minPayoutDistance=100`); confirm free tourism CSV
@@ -85,7 +85,7 @@ Decisions: (1) **remove** `minDistanceBetweenTowns`; (2) **generate placeholder 
 
 **Deferred (unchanged)**: Fabric class-split refactor (unless smoke test fails), tourist skin quality pass (owner), localization, multiplayer playtest, `UIGridBuilder` refactor.
 
-**Status**: Steps 1–2 done; Step 3 through 3f done — next 3g then Step 4.
+**Status**: Steps 1–2 done; Step 3 complete (3a–3g). Next: Step 4.
 
 ---
 
