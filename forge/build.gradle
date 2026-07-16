@@ -66,8 +66,6 @@ jar {
         ])
     }
 
-    // Exclude duplicate resources
-    exclude 'assets/**'
-    exclude 'data/**'
-    exclude 'pack.mcmeta'
+    // Common resources are merged via sourceSets; keep first on path if any clash
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

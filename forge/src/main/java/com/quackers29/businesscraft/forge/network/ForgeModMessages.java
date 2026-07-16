@@ -2,15 +2,10 @@ package com.quackers29.businesscraft.forge.network;
 
 import com.quackers29.businesscraft.forge.platform.ForgeNetworkHelper;
 import com.quackers29.businesscraft.network.PacketRegistry;
-import com.quackers29.businesscraft.network.packets.ui.OpenPaymentBoardPacket;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.simple.SimpleChannel;
-
-import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 
 /**
  * Forge-specific network message registration and handling
@@ -29,16 +24,6 @@ public class ForgeModMessages {
         for (PacketRegistry.PacketDefinition<?> packet : PacketRegistry.getPackets()) {
             registerPacket(net, packet);
         }
-
-        int pbId = id();
-        net.messageBuilder(OpenPaymentBoardPacket.class, pbId, NetworkDirection.PLAY_TO_SERVER)
-            .decoder(OpenPaymentBoardPacket::decode)
-            .encoder(OpenPaymentBoardPacket::encode)
-            .consumerMainThread((msg, ctxSupplier) -> {
-                NetworkEvent.Context ctx = ctxSupplier.get();
-                msg.handle(ctx);
-                ctx.setPacketHandled(true);
-            }).add();
     }
 
     private static <MSG> void registerPacket(SimpleChannel net, PacketRegistry.PacketDefinition<MSG> packetDef) {

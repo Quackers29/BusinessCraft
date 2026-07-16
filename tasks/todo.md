@@ -40,11 +40,38 @@ Independent code verification of all prior findings (T-012, toggles, anti-cheat,
 - [x] Guard contract-item branch in `TownInterfaceEntity.processResourcesInSlot` with `contractsEnabled`
 - [x] Tests: `ToggleHonestyTest` (4) — kit filter + calculateWants; full `:common:test` green
 
-**Step 3 — Packaging & hygiene (one pass)** — NEXT
-- [ ] Forge jar: remove `assets/**`/`data/**`/`pack.mcmeta` excludes (New finding #2), fix duplicates properly, verify jar contents; also remove duplicate `OpenPaymentBoardPacket` registration in `ForgeModMessages`
-- [ ] Delete dead code: 10 Fabric files (4 stub packets, `fabric/block/TownInterfaceBlock`, 5 `fabric/api/` interfaces — zero references confirmed) + 3 demo screens in `ui/screens/demo/`
-- [ ] Metadata: `mod_version` → `0.9.0-beta`; add `issueTrackerURL`/`displayURL` to `mods.toml` (keys currently absent) + fill empty `fabric.mod.json` contact fields; mod icon; `CHANGELOG.md`; improve `mods.toml` description
-- [ ] `System.out.println` sweep; `git rm --cached` the 8 remaining files; save-format data-version int in town NBT; remove or wire dead `minDistanceBetweenTowns` in TOML
+**Step 3 — Packaging & hygiene (one pass)** — IN PROGRESS; plan verified 2026-07-16 (see `.claude/tasks/step3-packaging-hygiene_onboarding.md`)
+Decisions: (1) **remove** `minDistanceBetweenTowns`; (2) **generate placeholder icon** (owner replaces later).
+
+**3a — Forge jar (release blocker)** — DONE 2026-07-16
+- [x] Remove `exclude 'assets/**'/'data/**'/'pack.mcmeta'` from `forge/build.gradle`; add `duplicatesStrategy = DuplicatesStrategy.EXCLUDE`
+- [x] Delete duplicate `OpenPaymentBoardPacket` registration in `ForgeModMessages`
+- [x] Verified `:forge:build` jar contains `pack.mcmeta`, 29 `assets/` entries, 12 `data/` entries (incl. loot tables + recipes)
+
+**3b — Dead code (13 files)** — DONE 2026-07-16
+- [x] Deleted 4 Fabric stub packets + `fabric/block/TownInterfaceBlock` + 5 unused `fabric/api/` interfaces
+- [x] Deleted 3 demo screens under `common/.../ui/screens/demo/`; updated `README-MODALGRID.md` pointer
+- [x] `:fabric:compileJava` / `:common:compileJava` green
+
+**3c — Log hygiene**
+- [ ] Convert/delete remaining `System.out.println` (~26 after stub deletes; also stray `System.err` in Fabric BE init + `TownMapModal`)
+
+**3d — Metadata & listing polish**
+- [ ] `gradle.properties` `mod_version` → `0.9.0-beta`
+- [ ] `mods.toml`: `issueTrackerURL`/`displayURL` → GitHub (`Quackers29/BusinessCraft`); `logoFile`; improve description to match Fabric
+- [ ] `fabric.mod.json`: fill `contact.homepage`/`sources`/`issues`
+- [ ] Add `common/.../assets/businesscraft/icon.png` (referenced by Fabric; missing today)
+- [ ] Create root `CHANGELOG.md` for 0.9.0-beta
+
+**3e — Repo hygiene**
+- [ ] Expand `.gitignore` for full `vault/.obsidian/` + `fabric/.gradle/` (current rules incomplete)
+- [ ] `git rm --cached` the 8 tracked files (5 obsidian + 3 loom-cache) — commit when user asks
+
+**3f — Save-format version**
+- [ ] Add `dataVersion` int on `TownSavedData` NBT root (default `1` if absent); optional small test
+
+**3g — Dead config**
+- [ ] `minDistanceBetweenTowns`: **remove** (recommended) or **wire** as placement floor — user decision
 
 **Step 4 — Default flip + verification (last, as planned)**
 - [ ] Set tourism-only defaults: craftable on; tourists on; production/research/trading/contracts off; economy values (`metersPerEmerald=1000`, milestone 1000m/5000m; `minPayoutDistance=100`); confirm free tourism CSV
@@ -72,8 +99,8 @@ Independent code verification of all prior findings (T-012, toggles, anti-cheat,
 - [x] **Toggle-respect packet audit** — DONE 2026-07-16 via Ship Plan Step 2: packet guards (Trade/Bid/Accept), `applyBiomeKit` filtering, `calculateWants` + deposit-slot contract guards; UI tabs remain visible-but-inert (intentional). Tests in `ToggleHonestyTest`. Default flip still at end of Phase F.
 - [x] Set `DebugConfig.TOURIST_ENTITY = false` (only flag still on; contradicts release checklist) — Done 2026-06-18. Only remaining production debug flag turned off.
 - [ ] Remove/convert 37 `System.out.println` calls (Forge/Fabric init classes, Fabric stub packets, and one in common `ui/modal/specialized/TownMapModal.java`) to logger calls or delete
-- [ ] Delete orphaned Fabric dead code: stub packets under `fabric/network/packets/` not wired into `FabricModMessages`, placeholder `fabric/block/TownInterfaceBlock.java`, unused placeholder `fabric/api/` interfaces
-- [ ] Remove or move demo screens out of main sources (`ui/screens/demo/`: `BCScreenTemplateDemo.java`, `BCModalGridExample.java`, `BCScreenExample.java`)
+- [x] Delete orphaned Fabric dead code — DONE 2026-07-16 via Step 3b
+- [x] Remove demo screens — DONE 2026-07-16 via Step 3b
 - [x] Fix Fabric build excluding loot tables from its jar (`fabric/build.gradle` line ~58) — also fixed root cause compile error (Forge-only `Block.getExplosionResistance(BlockState,...)` override). Removed exclude, loot tables now included for Fabric. Build now succeeds on both loaders. (2026-06-18)
 - [ ] Add mod icon at `assets/businesscraft/icon.png` (already referenced by `fabric.mod.json`); add to Forge metadata too
 - [ ] Renumber `mod_version` in `gradle.properties` from `1.0.0` to `0.9.0-beta` (earn the 1.0)
