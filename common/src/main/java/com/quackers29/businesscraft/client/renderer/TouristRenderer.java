@@ -22,7 +22,7 @@ public class TouristRenderer extends MobRenderer<TouristEntity, VillagerModel<To
               new VillagerModel<>(context.bakeLayer(ModelLayers.VILLAGER)),
               0.5F);
         // No VillagerProfessionLayer — tourists use Profession.NONE and custom body textures.
-        this.addLayer(new TouristHatLayer(this, new VillagerModel<>(context.bakeLayer(ModelLayers.VILLAGER))));
+        this.addLayer(new TouristHatLayer(this));
     }
 
     @Override

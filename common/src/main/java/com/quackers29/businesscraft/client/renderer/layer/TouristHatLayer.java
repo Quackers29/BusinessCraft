@@ -13,7 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 
 /**
  * Renders the villager {@code hat} (+ {@code hat_rim}) with a tourist hat texture.
- * Hat PNGs are overlay-only: opaque pixels match the villager hat UV island (around 32,0).
+ * Applies the parent head transform so the hat follows gaze / look yaw-pitch.
  */
 public class TouristHatLayer extends RenderLayer<TouristEntity, VillagerModel<TouristEntity>> {
     private static final ResourceLocation[] HAT_TEXTURES = {
@@ -23,12 +23,8 @@ public class TouristHatLayer extends RenderLayer<TouristEntity, VillagerModel<To
         new ResourceLocation("businesscraft", "textures/entity/tourist_hat_green.png")
     };
 
-    private final VillagerModel<TouristEntity> model;
-
-    public TouristHatLayer(RenderLayerParent<TouristEntity, VillagerModel<TouristEntity>> parent,
-                          VillagerModel<TouristEntity> model) {
+    public TouristHatLayer(RenderLayerParent<TouristEntity, VillagerModel<TouristEntity>> parent) {
         super(parent);
-        this.model = model;
     }
 
     /** Level 1→red, 2→blue, 3→green. */
@@ -45,17 +41,17 @@ public class TouristHatLayer extends RenderLayer<TouristEntity, VillagerModel<To
             return;
         }
 
-        this.getParentModel().copyPropertiesTo(this.model);
-        this.model.prepareMobModel(tourist, limbSwing, limbSwingAmount, partialTicks);
-        this.model.setupAnim(tourist, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+        // Parent model is already animated for this frame — use its head pose.
+        ModelPart head = this.getParentModel().getHead();
+        ModelPart hat = head.getChild("hat");
 
         ResourceLocation hatTexture = HAT_TEXTURES[getColorIndex(tourist)];
         var vertexConsumer = buffer.getBuffer(RenderType.entityCutoutNoCull(hatTexture));
 
-        ModelPart hat = this.model.getHead().getChild("hat");
+        poseStack.pushPose();
+        // Critical: hat is a child of head; rendering hat alone skips head yaw/pitch.
+        head.translateAndRotate(poseStack);
         hat.render(poseStack, vertexConsumer, packedLight, OverlayTexture.NO_OVERLAY);
-        if (hat.hasChild("hat_rim")) {
-            hat.getChild("hat_rim").render(poseStack, vertexConsumer, packedLight, OverlayTexture.NO_OVERLAY);
-        }
+        poseStack.popPose();
     }
 }
