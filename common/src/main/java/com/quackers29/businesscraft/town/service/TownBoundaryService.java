@@ -12,157 +12,142 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 
 /**
- * Service for town boundary calculations and validation.
- * Handles population-based boundary system with dynamic distance calculations.
+ * Town boundary calculations and validation.
+ * Radii come from the {@code border} upgrade/kit modifier (plus
+ * {@link ConfigLoader#defaultBorderRadius} fallback) — never from population.
+ * Optional population-linked border growth belongs in production recipes
+ * (e.g. {@code pop:>80%pop_cap} → {@code border:1}), not this service.
  */
 public class TownBoundaryService {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownBoundaryService.class);
-    
+
     /**
-     * Calculates the boundary radius for a town based on population (1:1 ratio)
-     * 
-     * @param town The town to calculate boundary for
-     * @return The boundary radius in blocks
+     * Boundary radius for a town (delegates to {@link Town#getBoundaryRadius()}).
      */
     public int calculateBoundaryRadius(Town town) {
         if (town == null) {
             DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, "Cannot calculate boundary for null town");
-            return ConfigLoader.defaultStartingPopulation; // Fallback to default
+            return ConfigLoader.defaultBorderRadius;
         }
-        
-        int radius = (int) town.getPopulation();
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
-            "Calculated boundary radius for town {}: {} blocks (population: {})", 
-            town.getName(), radius, town.getPopulation());
-        
+
+        int radius = town.getBoundaryRadius();
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                "Boundary radius for town {}: {} blocks (border modifier)",
+                town.getName(), radius);
         return radius;
     }
-    
+
     /**
-     * Validates if a new town can be placed at the specified position without boundary conflicts
-     * 
-     * @param newTownPos Position where new town would be placed
-     * @param existingTowns Collection of existing towns to check against
-     * @return Result indicating success or failure with detailed error information
+     * Validates new town placement: distance must be &gt;= defaultBorder + existing border.
      */
     public Result<Void, BCError.TownError> checkTownPlacement(BlockPos newTownPos, Collection<Town> existingTowns) {
         if (newTownPos == null) {
             return Result.failure(new BCError.TownError("INVALID_POSITION", "Town position cannot be null"));
         }
-        
+
         if (existingTowns == null || existingTowns.isEmpty()) {
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
-                "No existing towns to check placement against at {}", newTownPos);
+            DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                    "No existing towns to check placement against at {}", newTownPos);
             return Result.success(null);
         }
-        
-        // New towns start with default population boundary
-        int newTownBoundary = ConfigLoader.defaultStartingPopulation;
-        
+
+        int newTownBoundary = ConfigLoader.defaultBorderRadius;
+
         for (Town existingTown : existingTowns) {
             double distance = Math.sqrt(newTownPos.distSqr(existingTown.getPosition()));
             double requiredDistance = newTownBoundary + existingTown.getBoundaryRadius();
-            
+
             if (distance < requiredDistance) {
                 String errorMessage = String.format(
-                    "Town too close to existing town '%s' - distance: %.1f, required: %.1f (your boundary: %d + their boundary: %d)",
-                    existingTown.getName(), distance, requiredDistance, newTownBoundary, existingTown.getBoundaryRadius()
-                );
-                
-                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
-                    "Town placement blocked: {}", errorMessage);
-                
+                        "Town too close to existing town '%s' - distance: %.1f, required: %.1f (your boundary: %d + their boundary: %d)",
+                        existingTown.getName(), distance, requiredDistance, newTownBoundary,
+                        existingTown.getBoundaryRadius());
+
+                DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                        "Town placement blocked: {}", errorMessage);
+
                 return Result.failure(new BCError.TownError("BOUNDARY_CONFLICT", errorMessage));
             }
         }
-        
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
-            "Town placement validated successfully at {} with {} existing towns checked", 
-            newTownPos, existingTowns.size());
-        
+
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                "Town placement validated successfully at {} with {} existing towns checked",
+                newTownPos, existingTowns.size());
+
         return Result.success(null);
     }
-    
+
     /**
-     * Calculates the minimum distance required between two towns based on their boundaries
-     * 
-     * @param town1 First town
-     * @param town2 Second town
-     * @return The minimum required distance in blocks
+     * Minimum distance required between two towns (sum of border radii).
+     * Null sides use {@link ConfigLoader#defaultBorderRadius}.
      */
     public double getMinimumDistanceRequired(Town town1, Town town2) {
         if (town1 == null && town2 == null) {
-            return ConfigLoader.defaultStartingPopulation * 2.0; // Two default boundaries
+            return ConfigLoader.defaultBorderRadius * 2.0;
         }
-        
+
         if (town1 == null) {
-            return ConfigLoader.defaultStartingPopulation + town2.getBoundaryRadius();
+            return ConfigLoader.defaultBorderRadius + town2.getBoundaryRadius();
         }
-        
+
         if (town2 == null) {
-            return town1.getBoundaryRadius() + ConfigLoader.defaultStartingPopulation;
+            return town1.getBoundaryRadius() + ConfigLoader.defaultBorderRadius;
         }
-        
+
         double minDistance = town1.getBoundaryRadius() + town2.getBoundaryRadius();
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
-            "Minimum distance between '{}' and '{}': {} blocks ({}+{})", 
-            town1.getName(), town2.getName(), minDistance, 
-            town1.getBoundaryRadius(), town2.getBoundaryRadius());
-        
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                "Minimum distance between '{}' and '{}': {} blocks ({}+{})",
+                town1.getName(), town2.getName(), minDistance,
+                town1.getBoundaryRadius(), town2.getBoundaryRadius());
+
         return minDistance;
     }
-    
+
     /**
-     * Checks if a town's boundary expansion would cause conflicts with existing towns
-     * 
-     * @param expandingTown The town that would expand
-     * @param newPopulation The proposed new population
-     * @param existingTowns Collection of existing towns to check against
-     * @return Result indicating if expansion is safe or would cause conflicts
+     * Checks whether growing a town's border to {@code proposedBorderRadius} would
+     * overlap another town. Population changes do not call this — production/upgrade
+     * paths that change the border modifier may use it when conflict checks are wired.
      */
-    public Result<Void, BCError.TownError> checkBoundaryExpansion(Town expandingTown, int newPopulation, Collection<Town> existingTowns) {
+    public Result<Void, BCError.TownError> checkBorderExpansion(Town expandingTown, int proposedBorderRadius,
+            Collection<Town> existingTowns) {
         if (expandingTown == null) {
             return Result.failure(new BCError.TownError("INVALID_TOWN", "Expanding town cannot be null"));
         }
-        
-        if (newPopulation <= expandingTown.getPopulation()) {
+
+        int currentBoundaryRadius = expandingTown.getBoundaryRadius();
+        if (proposedBorderRadius <= currentBoundaryRadius) {
             return Result.success(null); // Not actually expanding
         }
-        
-        int newBoundaryRadius = newPopulation; // 1:1 ratio
-        int currentBoundaryRadius = expandingTown.getBoundaryRadius();
-        
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
-            "Checking boundary expansion for '{}': {} -> {} (radius: {} -> {})", 
-            expandingTown.getName(), expandingTown.getPopulation(), newPopulation, 
-            currentBoundaryRadius, newBoundaryRadius);
-        
+
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                "Checking border expansion for '{}': {} -> {}",
+                expandingTown.getName(), currentBoundaryRadius, proposedBorderRadius);
+
         if (existingTowns != null) {
             for (Town otherTown : existingTowns) {
                 if (otherTown.getId().equals(expandingTown.getId())) {
-                    continue; // Skip self
+                    continue;
                 }
-                
+
                 double distance = Math.sqrt(expandingTown.getPosition().distSqr(otherTown.getPosition()));
-                double requiredDistance = newBoundaryRadius + otherTown.getBoundaryRadius();
-                
+                double requiredDistance = proposedBorderRadius + otherTown.getBoundaryRadius();
+
                 if (distance < requiredDistance) {
                     String errorMessage = String.format(
-                        "Boundary expansion would conflict with town '%s' - distance: %.1f, would require: %.1f",
-                        otherTown.getName(), distance, requiredDistance
-                    );
-                    
-                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
-                        "Boundary expansion blocked: {}", errorMessage);
-                    
+                            "Border expansion would conflict with town '%s' - distance: %.1f, would require: %.1f",
+                            otherTown.getName(), distance, requiredDistance);
+
+                    DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                            "Border expansion blocked: {}", errorMessage);
+
                     return Result.failure(new BCError.TownError("EXPANSION_CONFLICT", errorMessage));
                 }
             }
         }
-        
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS, 
-            "Boundary expansion validated for '{}' - no conflicts detected", expandingTown.getName());
-        
+
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                "Border expansion validated for '{}' - no conflicts detected", expandingTown.getName());
+
         return Result.success(null);
     }
 }

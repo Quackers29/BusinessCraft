@@ -6,5 +6,5 @@ farming,Basic Wheat Farming,0.02,,food:40
 woodcutting,Woodcutting,0.05,,wood:50
 sawmill,Sawmill,0.01,wu:20;wood:25;wood:>min;money:1,planks:100
 taxes,Taxes,0.4,,money:1*pop
-border_expansion_production,Expand Border,0.5,,border:1
+border_expansion_production,Expand Border,0.5,pop:>80%pop_cap,border:1
 work_unit_production,Work Units,0.1,,wu:1*pop

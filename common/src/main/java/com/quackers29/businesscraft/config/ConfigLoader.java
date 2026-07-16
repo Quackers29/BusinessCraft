@@ -29,6 +29,8 @@ public class ConfigLoader {
     public static List<String> townNames = new ArrayList<>();
     public static int minPopForTourists = 5;
     public static int defaultStartingPopulation = 5;
+    /** Default town boundary radius (blocks) when no {@code border} modifier is set. */
+    public static int defaultBorderRadius = 50;
     public static boolean craftableTownInterface = false;
     public static int maxTouristsPerTown = 1000;
     public static int populationPerTourist = 5;
@@ -126,6 +128,7 @@ public class ConfigLoader {
                 // General settings
                 // Town spacing uses boundary radii (TownBoundaryService), not a flat min-distance key
                 defaultStartingPopulation = config.getIntOrElse("general.defaultStartingPopulation", 5);
+                defaultBorderRadius = config.getIntOrElse("general.defaultBorderRadius", 50);
                 craftableTownInterface = config.getOrElse("general.craftableTownInterface", false);
                 townNames = config.getOrElse("general.townNames", getDefaultTownNames());
 
@@ -259,6 +262,8 @@ public class ConfigLoader {
                 // General settings
                 config.set("general.defaultStartingPopulation", defaultStartingPopulation);
                 config.setComment("general.defaultStartingPopulation", " Default starting population for new towns");
+                config.set("general.defaultBorderRadius", defaultBorderRadius);
+                config.setComment("general.defaultBorderRadius", " Default town boundary radius in blocks when no border modifier is set. Also used for new-town placement spacing.");
                 config.set("general.craftableTownInterface", craftableTownInterface);
                 config.setComment("general.craftableTownInterface", " When false (default): Town Interface is nearly indestructible in survival. Creative players can still break it. When true: block is craftable and breakable with diamond pickaxe or better.");
                 config.set("general.townNames", townNames);

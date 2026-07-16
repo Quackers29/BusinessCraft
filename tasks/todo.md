@@ -18,7 +18,7 @@ Independent code verification of all prior findings (T-012, toggles, anti-cheat,
 ### Corrections to claims elsewhere in this file (verified July 2026)
 
 - **"Free tourist spawns"** (Phase D/F wording): 0.9 ships free tourism via Option C CSV; full-mod can restore costs in config `productions.csv`.
-- **`minDistanceBetweenTowns=100`** (Phase D min-floor item): dead config — loaded but never read outside ConfigLoader. Real placement minimum ≈ 55 blocks via boundary radii (`TownBoundaryService`). Remove from TOML or wire it; the min-payout decision should use the ~55m reality.
+- **`minDistanceBetweenTowns=100`** (Phase D min-floor item): removed (Step 3g). Placement minimum is now `defaultBorderRadius + existing.getBoundaryRadius()` (100 for two fresh towns at default 50).
 - **Repo hygiene** (Phase B): overstated — run logs, `usercache.json`, `build/tmp` are already untracked. Only 8 files remain: `vault/.obsidian/*` (5) + `fabric/.gradle/loom-cache/*` (3). One small `git rm --cached`.
 - **Tourist skin "uncommitted WIP"** (Phase D): textures (`tourist_basic.png` etc.) + `scripts/generate_tourist_basic.py` are committed. Remaining work is a subjective quality pass only — owner judgment, not a code blocker.
 - **Distance anti-cheat** (Phase D): confirmed, and worse — expiry pauses while moving (`TouristEntity.java:288–309`), so a loop-track tourist accumulates unbounded path distance and never expires. Note: path-based payment was a deliberate earlier decision ("CORE CHANGE" comment, `VisitorProcessingHelper.java:182`); don't revert to straight-line. Clamp instead: `distance = min(traveled, 2 × straightLine(origin→dest))` at arrival. ~10–20 lines + tests.
@@ -76,6 +76,13 @@ Decisions: (1) **remove** `minDistanceBetweenTowns`; (2) **generate placeholder 
 **3g — Dead config** — DONE 2026-07-16
 - [x] Removed `minDistanceBetweenTowns` from ConfigLoader, shipped TOML, ConfigLoaderTest; vault Configuration Loading note updated. Placement remains boundary-radius based.
 
+**Border / population cleanup** — DONE 2026-07-16
+- [x] `Town.getBoundaryRadius()` / `TownBoundaryService` — border modifier only; `ConfigLoader.defaultBorderRadius=50` (config + TOML)
+- [x] Placement new-side uses `defaultBorderRadius` (not population); two fresh towns need ≥100 blocks
+- [x] `checkBorderExpansion(proposedRadius)` replaces pop-as-radius API
+- [x] Production path verified/wired: `border_expansion_production` condition `pop:>80%pop_cap` → `border:1`; unlock via `border_expansion` upgrade effect
+- [x] Tests + vault (T-008 / T-036 / Configuration Loading) updated
+
 **Step 4 — Default flip + verification (last, as planned)**
 - [ ] Set tourism-only defaults: craftable on; tourists on; production/research/trading/contracts off; economy values (`metersPerEmerald=1000`, milestone 1000m/5000m; `minPayoutDistance=100`); confirm free tourism CSV
   - ⚠️ `minPopForTourists=5` + no pop growth → oasis `pop:4` never spawns; bump kits or lower default. Manual Option C trace here.
@@ -85,7 +92,7 @@ Decisions: (1) **remove** `minDistanceBetweenTowns`; (2) **generate placeholder 
 
 **Deferred (unchanged)**: Fabric class-split refactor (unless smoke test fails), tourist skin quality pass (owner), localization, multiplayer playtest, `UIGridBuilder` refactor.
 
-**Status**: Steps 1–2 done; Step 3 complete (3a–3g). Next: Step 4.
+**Status**: Steps 1–3 done; border cleanup done. Next: Step 4.
 
 ---
 

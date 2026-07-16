@@ -48,7 +48,7 @@ class ConfigLoaderTest {
     private boolean savedEnableTouristExpiry, savedNotifyOnTouristDeparture, savedTouristSystemEnabled;
     private boolean savedEnableMilestones, savedPlayerTracking, savedTownBoundaryMessages;
     private boolean savedTradingEnabled, savedProductionEnabled, savedResearchEnabled, savedContractsEnabled;
-    private int savedVehicleSearchRadius, savedDefaultStartingPopulation;
+    private int savedVehicleSearchRadius, savedDefaultStartingPopulation, savedDefaultBorderRadius;
     private int savedMaxTouristsPerTown, savedPopulationPerTourist, savedMaxPopBasedTourists;
     private int savedMinPopForTourists, savedMetersPerEmerald, savedTradingTickInterval;
     private int savedProductionTickInterval, savedDailyTickInterval, savedMinStockPercent, savedExcessStockPercent;
@@ -77,6 +77,7 @@ class ConfigLoaderTest {
         savedTownNames = new ArrayList<>(ConfigLoader.townNames);
         savedMinPopForTourists = ConfigLoader.minPopForTourists;
         savedDefaultStartingPopulation = ConfigLoader.defaultStartingPopulation;
+        savedDefaultBorderRadius = ConfigLoader.defaultBorderRadius;
         savedCraftableTownInterface = ConfigLoader.craftableTownInterface;
         savedMaxTouristsPerTown = ConfigLoader.maxTouristsPerTown;
         savedPopulationPerTourist = ConfigLoader.populationPerTourist;
@@ -144,6 +145,7 @@ class ConfigLoaderTest {
         ConfigLoader.townNames = new ArrayList<>(savedTownNames);
         ConfigLoader.minPopForTourists = savedMinPopForTourists;
         ConfigLoader.defaultStartingPopulation = savedDefaultStartingPopulation;
+        ConfigLoader.defaultBorderRadius = savedDefaultBorderRadius;
         ConfigLoader.craftableTownInterface = savedCraftableTownInterface;
         ConfigLoader.maxTouristsPerTown = savedMaxTouristsPerTown;
         ConfigLoader.populationPerTourist = savedPopulationPerTourist;
@@ -242,6 +244,7 @@ class ConfigLoaderTest {
 
         assertEquals(5, ConfigLoader.minPopForTourists);
         assertEquals(5, ConfigLoader.defaultStartingPopulation);
+        assertEquals(50, ConfigLoader.defaultBorderRadius);
         assertFalse(ConfigLoader.craftableTownInterface);
         assertEquals(1000, ConfigLoader.maxTouristsPerTown);
         assertEquals(5, ConfigLoader.populationPerTourist);
@@ -494,6 +497,7 @@ class ConfigLoaderTest {
 
         // After copy, the values must match the shipped defaults (identical to Java inits)
         assertEquals(5, ConfigLoader.defaultStartingPopulation);
+        assertEquals(50, ConfigLoader.defaultBorderRadius);
         assertEquals(50, ConfigLoader.metersPerEmerald);
         assertTrue(ConfigLoader.milestoneRewards.containsKey(10));
     }
@@ -505,6 +509,7 @@ class ConfigLoaderTest {
         // Start from known state
         ConfigLoader.metersPerEmerald = 77;
         ConfigLoader.defaultStartingPopulation = 9;
+        ConfigLoader.defaultBorderRadius = 75;
         ConfigLoader.milestoneRewards.clear();
         ConfigLoader.milestoneRewards.put(25, List.of("minecraft:emerald:3"));
 
@@ -514,12 +519,14 @@ class ConfigLoaderTest {
         // Mutate in memory, then reload should restore what was saved
         ConfigLoader.metersPerEmerald = 999;
         ConfigLoader.defaultStartingPopulation = 1;
+        ConfigLoader.defaultBorderRadius = 1;
         ConfigLoader.milestoneRewards.clear();
 
         ConfigLoader.loadConfig();
 
         assertEquals(77, ConfigLoader.metersPerEmerald);
         assertEquals(9, ConfigLoader.defaultStartingPopulation);
+        assertEquals(75, ConfigLoader.defaultBorderRadius);
         assertEquals(1, ConfigLoader.milestoneRewards.size());
         assertEquals(List.of("minecraft:emerald:3"), ConfigLoader.milestoneRewards.get(25));
     }

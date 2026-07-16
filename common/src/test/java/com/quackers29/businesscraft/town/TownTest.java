@@ -272,7 +272,8 @@ class TownTest {
 
     @Test
     void getBoundaryRadius_freshTown_noModifier_returnsFallback50() {
-        // No "border" entry → <=0 branch → 50
+        // No "border" entry → ConfigLoader.defaultBorderRadius (50)
+        assertEquals(ConfigLoader.defaultBorderRadius, town.getBoundaryRadius());
         assertEquals(50, town.getBoundaryRadius());
     }
 
@@ -291,11 +292,11 @@ class TownTest {
     }
 
     @Test
-    void getBoundaryRadius_borderZeroOrNegative_fallsBackTo50() throws Exception {
+    void getBoundaryRadius_borderZeroOrNegative_fallsBackToDefaultBorderRadius() throws Exception {
         setBorder(0.0f);
-        assertEquals(50, town.getBoundaryRadius());
+        assertEquals(ConfigLoader.defaultBorderRadius, town.getBoundaryRadius());
         setBorder(-7.5f);
-        assertEquals(50, town.getBoundaryRadius());
+        assertEquals(ConfigLoader.defaultBorderRadius, town.getBoundaryRadius());
     }
 
     // --- isPositionInside ---

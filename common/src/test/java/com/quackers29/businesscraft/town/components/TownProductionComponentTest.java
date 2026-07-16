@@ -404,6 +404,19 @@ class TownProductionComponentTest {
         assertTrue(invokeCheckConditions(r));
     }
 
+    @Test
+    void checkConditions_popGreaterThan80PercentPopCap() throws Exception {
+        // productions.csv border_expansion_production uses pop:>80%pop_cap
+        setStorageCapMod("pop_cap", 100f);
+        setPop(80);
+        Condition c = new Condition("pop", ">", "80%pop_cap", false);
+        ProductionRecipe r = recipeWithConditions("border_pct", 1f, List.of(), List.of(), List.of(c));
+        assertFalse(invokeCheckConditions(r)); // 80 > 80 is false
+
+        setPop(81);
+        assertTrue(invokeCheckConditions(r)); // 81 > 80
+    }
+
     // --- config live read + edges ---
 
     @Test

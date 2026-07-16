@@ -46,7 +46,7 @@ All configuration is side-effectful mutation of public static fields. There are 
 Defaults (source of truth = the Java field initializers; must match the shipped toml and every getOrElse second argument):
 
 - Vehicles: enableCreateTrains=true, enableMinecarts=true, vehicleSearchRadius=3, minecartStopThreshold=0.001
-- Town: defaultStartingPopulation=5, craftableTownInterface=false, townNames=<14 names via getDefault...>, maxTouristsPerTown=1000, populationPerTourist=5, maxPopBasedTourists=20, minPopForTourists=5 (town spacing uses boundary radii, not a flat min-distance config)
+- Town: defaultStartingPopulation=5, defaultBorderRadius=50, craftableTownInterface=false, townNames=<14 names via getDefault...>, maxTouristsPerTown=1000, populationPerTourist=5, maxPopBasedTourists=20, minPopForTourists=5 (town spacing uses boundary radii / defaultBorderRadius, not a flat min-distance config)
 - Tourist: touristExpiryMinutes=120.0, enableTouristExpiry=true, notifyOnTouristDeparture=true, touristSystemEnabled=true
 - Economy: metersPerEmerald=50, currencyItem="minecraft:emerald"
 - Milestones: enableMilestones=true, milestoneRewards populated by loadMilestoneRewards
