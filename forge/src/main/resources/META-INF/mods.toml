@@ -1,13 +1,16 @@
 modLoader="javafml"
 loaderVersion="[4,)"
 license="MIT"
+issueTrackerURL="https://github.com/Quackers29/BusinessCraft/issues"
 
 [[mods]]
 modId="businesscraft"
 version="${file.jarVersion}"
 displayName="BusinessCraft"
+displayURL="https://github.com/Quackers29/BusinessCraft"
+logoFile="assets/businesscraft/icon.png"
 description='''
-A Minecraft mod for town management and business simulation.
+A comprehensive business simulation mod with towns, tourism, and economic systems. Public beta (0.9.x) — worlds and config may not carry forward to v1.0. Feedback: GitHub Issues.
 '''
 authors="Quackers29"
 credits="Quackers29"

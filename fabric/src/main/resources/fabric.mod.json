@@ -3,13 +3,14 @@
   "id": "businesscraft",
   "version": "${version}",
   "name": "BusinessCraft",
-  "description": "A comprehensive business simulation mod with towns, tourism, and economic systems.",
+  "description": "A comprehensive business simulation mod with towns, tourism, and economic systems. Public beta (0.9.x) — worlds and config may not carry forward to v1.0. Feedback: GitHub Issues.",
   "authors": [
     "Quackers29"
   ],
   "contact": {
-    "homepage": "",
-    "sources": ""
+    "homepage": "https://github.com/Quackers29/BusinessCraft",
+    "sources": "https://github.com/Quackers29/BusinessCraft",
+    "issues": "https://github.com/Quackers29/BusinessCraft/issues"
   },
   "license": "MIT",
   "icon": "assets/businesscraft/icon.png",

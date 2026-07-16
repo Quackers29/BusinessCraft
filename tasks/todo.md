@@ -56,12 +56,12 @@ Decisions: (1) **remove** `minDistanceBetweenTowns`; (2) **generate placeholder 
 **3c — Log hygiene** — DONE 2026-07-16
 - [x] Converted/removed remaining `System.out`/`System.err` in Forge init, ForgeRegistryHelper, Fabric init, FabricModBlockEntities, TownMapModal, BCComponent → slf4j LOGGER
 
-**3d — Metadata & listing polish**
-- [ ] `gradle.properties` `mod_version` → `0.9.0-beta`
-- [ ] `mods.toml`: `issueTrackerURL`/`displayURL` → GitHub (`Quackers29/BusinessCraft`); `logoFile`; improve description to match Fabric
-- [ ] `fabric.mod.json`: fill `contact.homepage`/`sources`/`issues`
-- [ ] Add `common/.../assets/businesscraft/icon.png` (referenced by Fabric; missing today)
-- [ ] Create root `CHANGELOG.md` for 0.9.0-beta
+**3d — Metadata & listing polish** — DONE 2026-07-16
+- [x] `gradle.properties` `mod_version` → `0.9.0-beta`
+- [x] `mods.toml`: `issueTrackerURL`/`displayURL` → GitHub; `logoFile`; description aligned with Fabric + beta caveat
+- [x] `fabric.mod.json`: `contact.homepage`/`sources`/`issues` filled
+- [x] Placeholder `assets/businesscraft/icon.png` (256×256; replace later)
+- [x] Root `CHANGELOG.md` for 0.9.0-beta
 
 **3e — Repo hygiene**
 - [ ] Expand `.gitignore` for full `vault/.obsidian/` + `fabric/.gradle/` (current rules incomplete)
@@ -102,11 +102,11 @@ Decisions: (1) **remove** `minDistanceBetweenTowns`; (2) **generate placeholder 
 - [x] Delete orphaned Fabric dead code — DONE 2026-07-16 via Step 3b
 - [x] Remove demo screens — DONE 2026-07-16 via Step 3b
 - [x] Fix Fabric build excluding loot tables from its jar (`fabric/build.gradle` line ~58) — also fixed root cause compile error (Forge-only `Block.getExplosionResistance(BlockState,...)` override). Removed exclude, loot tables now included for Fabric. Build now succeeds on both loaders. (2026-06-18)
-- [ ] Add mod icon at `assets/businesscraft/icon.png` (already referenced by `fabric.mod.json`); add to Forge metadata too
-- [ ] Renumber `mod_version` in `gradle.properties` from `1.0.0` to `0.9.0-beta` (earn the 1.0)
-- [ ] Create `CHANGELOG.md` and start tracking versions
-- [ ] Improve `mods.toml` description to match the better `fabric.mod.json` one
-- [ ] **GitHub feedback links** — GitHub repo is the feedback channel (Issues/PRs): fill `issueTrackerURL`/`displayURL` in `mods.toml` and `contact.homepage`/`sources`/`issues` in `fabric.mod.json` (currently empty); listing copy points to GitHub Issues
+- [x] Add mod icon — DONE 2026-07-16 via Step 3d (placeholder; owner replaces later)
+- [x] Renumber `mod_version` to `0.9.0-beta` — DONE 2026-07-16 via Step 3d
+- [x] Create `CHANGELOG.md` — DONE 2026-07-16 via Step 3d
+- [x] Improve `mods.toml` description — DONE 2026-07-16 via Step 3d
+- [x] **GitHub feedback links** — DONE 2026-07-16 via Step 3d
 - [ ] **Save-format versioning + beta caveat** — add a data-version int to the town saved-data NBT root (consider config TOML version key too) so v1.0 migrations are possible; state clearly in README + listing that 0.9 is a **beta**: worlds/config may not carry forward to v1.0
 - [ ] **Repo hygiene before going public** — git still tracks `forge/run/logs/*.gz`, `fabric/run/logs/*`, `usercache.json`, `common/build/tmp/...`, `.obsidian/`, `fabric/.gradle/` (all show as modified in `git status`). Note: `.gitignore` edits don't untrack already-tracked files — that's why the fix "isn't working". One-time `git rm -r --cached <paths>` + commit, then the existing ignore rules hold; verify with `git status` after
 
