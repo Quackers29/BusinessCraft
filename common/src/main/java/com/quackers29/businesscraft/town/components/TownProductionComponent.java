@@ -19,6 +19,12 @@ import java.util.Map;
 public class TownProductionComponent implements TownComponent {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownProductionComponent.class);
 
+    /**
+     * Tourist generation recipe id in productions.csv. Owned by the tourist system
+     * (Option C): ticked via {@link #tickTourismRecipe()}, never by {@link #tick()}.
+     */
+    public static final String TOURISM_RECIPE_ID = "tourism";
+
     private final Town town;
     private final Map<String, Float> recipeProgress = new HashMap<>(); // recipeId -> days accumulated
 
@@ -101,6 +107,11 @@ public class TownProductionComponent implements TownComponent {
         }
 
         for (ProductionRecipe recipe : ProductionRegistry.getAll()) {
+            // Tourism is owned by the tourist system — see tickTourismRecipe()
+            if (TOURISM_RECIPE_ID.equals(recipe.getId())) {
+                continue;
+            }
+
             if (recipe.getId().equals("population_maintenance") && shouldLog) {
                 DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
                         "DEBUG: population_maintenance check - Modifier: {}, Unlocked: {}",
@@ -118,6 +129,23 @@ public class TownProductionComponent implements TownComponent {
 
             processRecipe(recipe);
         }
+    }
+
+    /**
+     * Advances the tourism production recipe when the tourist system is enabled.
+     * Uses the same processRecipe path as economy recipes (cycle time, inputs,
+     * conditions, tourist_cap stall) so server owners tune tourism via productions.csv.
+     * Must not be called from {@link #tick()} — that loop skips this recipe id.
+     */
+    public void tickTourismRecipe() {
+        ProductionRecipe recipe = ProductionRegistry.get(TOURISM_RECIPE_ID);
+        if (recipe == null) {
+            return;
+        }
+        if (town.getUpgrades().getModifier(TOURISM_RECIPE_ID) <= 0) {
+            return;
+        }
+        processRecipe(recipe);
     }
 
     private void processRecipe(ProductionRecipe recipe) {
@@ -256,48 +284,37 @@ public class TownProductionComponent implements TownComponent {
             if (resId.equals("pop"))
                 continue;
 
-            // Resolve resourceId to Item for cap check (or use trading cap by ID string)
-            // Use trading logic for cap as it has the logic "storage_cap_ID"
             float current = 0f;
-            com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
-                    .get(resId);
-            if (type != null) {
-                net.minecraft.world.item.Item item = com.quackers29.businesscraft.api.PlatformAccess.getRegistry()
-                        .getItem(type.getMcItemId());
-                if (item != null) {
-                    // Current = Hand + Escrow + InTransit (Incoming)
-                    current = town.getTotalResourceCount(item) + town.getInTransitResourceCount(item);
-                }
-            } else {
-                // If type is null (not a registered resource, pop, or tourist), assume it is a
-                // stat (like border, happiness, etc.)
-                // Stats do not have a "storage cap" in the inventory sense that stalls
-                // production.
-                // Continue to next output.
-                continue;
-            }
-
-            // Special handling for tourist cap
             float cap;
+
+            // Non-item outputs first: tourist/wu are not in ResourceRegistry; checking them
+            // after a null-type continue made tourist_cap / wu_cap stall dead code.
             if (resId.equals("tourist")) {
-                // If spawning is disabled, treat as full
                 if (!town.isTouristSpawningEnabled()) {
                     if (shouldLog)
                         DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
                                 "Recipe {} tourist production stalled: Spawning Disabled", recipe.getId());
-                    // Stall
                     float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
                     recipeProgress.put(recipe.getId(), currentProgress);
                     return;
                 }
-
-                current = town.getTouristCount() + town.getPendingTouristSpawns();
                 current = town.getTouristCount() + town.getPendingTouristSpawns();
                 cap = town.getUpgrades().getModifier("tourist_cap");
             } else if (resId.equals("wu")) {
                 current = town.getWorkUnits();
                 cap = town.getUpgrades().getModifier("wu_cap");
             } else {
+                com.quackers29.businesscraft.economy.ResourceType type = com.quackers29.businesscraft.economy.ResourceRegistry
+                        .get(resId);
+                if (type == null) {
+                    // Stat output (border, happiness, etc.) — no inventory stall
+                    continue;
+                }
+                net.minecraft.world.item.Item item = com.quackers29.businesscraft.api.PlatformAccess.getRegistry()
+                        .getItem(type.getMcItemId());
+                if (item != null) {
+                    current = town.getTotalResourceCount(item) + town.getInTransitResourceCount(item);
+                }
                 cap = town.getTrading().getStorageCap(resId);
             }
 
@@ -305,7 +322,6 @@ public class TownProductionComponent implements TownComponent {
                 if (shouldLog)
                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
                             "Recipe {} output full: {} (Need space for {})", recipe.getId(), resId, amount);
-                // Stall - ensure progress is tracked
                 float currentProgress = recipeProgress.getOrDefault(recipe.getId(), 0f);
                 recipeProgress.put(recipe.getId(), currentProgress);
                 return; // Stall

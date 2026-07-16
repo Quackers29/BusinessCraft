@@ -158,6 +158,10 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         if (ConfigLoader.productionEnabled) {
             production.tick();
         }
+        // Option C: tourism recipe is owned by the tourist system, not production.enabled
+        if (ConfigLoader.touristSystemEnabled) {
+            production.tickTourismRecipe();
+        }
         if (ConfigLoader.contractsEnabled) contracts.tick(); // Phase 11 global toggle
         if (ConfigLoader.researchEnabled) upgrades.tick(); // Phase 11 global toggle
 

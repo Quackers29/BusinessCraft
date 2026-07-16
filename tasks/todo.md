@@ -12,12 +12,12 @@ Independent code verification of all prior findings (T-012, toggles, anti-cheat,
 
 ### New findings (not in any prior plan)
 
-1. **BLOCKER — production-off kills tourism.** The only sustained source of `pendingTouristSpawns` is the `tourism` recipe in `productions.csv` (`happiness:>70;food:10;money:10 → tourist:1`), run by `TownProductionComponent.tick()`, which is gated by `productionEnabled` (`Town.java:153–160`). Other sources: one-time biome-kit grant, trading (also planned off). Free-regen workaround was implemented then **reverted** (2026-07-16). **Chosen fix: Option C** — tourist system owns ticking the `tourism` recipe (still read from `ProductionRegistry` / `productions.csv`); see redesign section below.
+1. **~~BLOCKER — production-off kills tourism~~** — FIXED Option C (2026-07-16): `tourists.enabled` ticks the `tourism` recipe from `productions.csv`; `production.enabled` skips it. Free CSV row + `tourism` on `basic_settlement`. See Step 1.
 2. **BLOCKER — Forge release jar ships without assets/data.** `forge/build.gradle:69–72` excludes `assets/**`, `data/**`, `pack.mcmeta` from the jar; `forge/src/main/resources` holds only `mods.toml`. Dev runs work via classpath; the published jar has no textures/recipes/loot tables. Remove excludes, resolve the duplicate-resources reason with `duplicatesStrategy`, verify by unzipping the built jar. Fabric already fixed; Forge was missed.
 
 ### Corrections to claims elsewhere in this file (verified July 2026)
 
-- **"Free tourist spawns"** (Phase D/F wording): wrong today — generation costs food+money via production, and see New finding #1.
+- **"Free tourist spawns"** (Phase D/F wording): 0.9 ships free tourism via Option C CSV; full-mod can restore costs in config `productions.csv`.
 - **`minDistanceBetweenTowns=100`** (Phase D min-floor item): dead config — loaded but never read outside ConfigLoader. Real placement minimum ≈ 55 blocks via boundary radii (`TownBoundaryService`). Remove from TOML or wire it; the min-payout decision should use the ~55m reality.
 - **Repo hygiene** (Phase B): overstated — run logs, `usercache.json`, `build/tmp` are already untracked. Only 8 files remain: `vault/.obsidian/*` (5) + `fabric/.gradle/loom-cache/*` (3). One small `git rm --cached`.
 - **Tourist skin "uncommitted WIP"** (Phase D): textures (`tourist_basic.png` etc.) + `scripts/generate_tourist_basic.py` are committed. Remaining work is a subjective quality pass only — owner judgment, not a code blocker.
@@ -30,66 +30,11 @@ Independent code verification of all prior findings (T-012, toggles, anti-cheat,
 **Step 1 — Economy-integrity fixes (code, test-verified)**
 - [x] T-012 payment board — DONE 2026-07-06: added `SlotBasedStorage.addItemFully` (all-or-nothing, staged on a copy); `addToBufferStorage` + `addToBuffer` now transactional; claim packet overflow drops items at player's feet instead of destroying them when buffer also full; 2 @Disabled tests re-enabled asserting atomic behavior + regression tests; vault notes + ledger updated (T-012 → DONE); full `:common:test` suite green. (Failure-path sync no longer needed — failed claims are now side-effect-free.)
 - [x] Distance clamp — DONE 2026-07-09: `clampTraveledDistance` (public static, `min(traveled, 2 × straightLine)`) applied in `processIndividualVisitor` before the distance enters the batch; caps loop-track farming and (since it's upstream) milestone farming too. Min-payout decision: kept the 1-emerald floor, added `economy.minPayoutDistance` (default 100, inclusive threshold) — batches averaging below it pay 0 and their saved distance is cleared. 10 new tests (clamp + cutoff) in `VisitorProcessingHelperTest`, full `:common:test` green; vault note + ledger (T-001) updated.
-- [ ] **Tourism via production config — Option C** (New finding #1, chosen 2026-07-16) — see redesign section below. Ready to implement after plan check-in.
-
-### Tourism generation redesign — Option C CHOSEN (2026-07-16)
-
-**Decision**: Tourist system owns ticking the `tourism` recipe; `production.enabled` only gates economy recipes. Recipe definition stays in `productions.csv` / `ProductionRegistry` (rate, costs, conditions, cap stall). No free-regen timer. No production-off carve-out.
-
-**Target tick shape**
-```
-Town.tick()
-  if productionEnabled → production.tick()     // all recipes EXCEPT "tourism"
-  if touristSystemEnabled → tickTourismRecipe() // ProductionRegistry.get("tourism") via shared process helper
-```
-
-**Double-run rule**: production loop must `continue` past `tourism`; only the tourist tick processes it. Full-mod (both toggles on) = one grant per cycle.
-
-**CSV for 0.9 defaults**: free tourism row, e.g. `tourism,Tourist Generation,0.2,,tourist:1` (drop food/money; drop or soften `happiness:>70` — oasis kits at 60). Full-mod owners restore costs in their config-dir copy of `productions.csv`.
-
-**Current facts (re-verified)**
-- Today `Town.tick()` only calls `production.tick()` when `productionEnabled`; tourism is inside that loop.
-- Unlock: modifier `tourism > 0` from `tourism_basic`. Cap: `tourist_cap` (mostly `basic_settlement`).
-- Many biome kits lack `tourism_basic` → tourism stays locked until research unlocks it (or kits grant it).
-- Spawn still gated by `tourists.enabled`, per-town toggle, `canSpawnTourists` (`minPopForTourists=5`), platforms.
-
-**Rejected alternatives (kept for history)**: A (production on + strip unlocks), B (TOML categories), D (allowlist carve-out), E (dual CSV profiles).
-
----
-
-#### Related finding — upgrades vs production (verified 2026-07-16)
-
-**Question**: With production off but research/upgrades on, can a player manually feed resources into a town and still upgrade it?
-
-**Answer: Yes.** Research does not depend on production.
-
-How it works today:
-1. **Deposit path is ungated** — `TownInterfaceEntity.processResourcesInSlot()` (called every block-entity tick) takes items from the town interface input slot and calls `town.addResource(item, 1)`. No check of `productionEnabled` / `researchEnabled` / `tradingEnabled`.
-2. **Research is AI-driven, not a player packet** — there is no `StartResearchPacket`. When `researchEnabled`, `TownUpgradeComponent.tick()` runs; if idle, `TownResearchAI` picks an affordable node and calls `startResearch`, which deducts cost from town stock via `trading.adjustStock` → `town.addResource` (economy storage).
-3. **Affordability reads town economy stock** — `canAffordResearch` / `getStock` resolve resource IDs to real items in town resources (wood, food, money/emeralds, etc.), not communal/personal storage.
-4. **Completing research still applies effects** even if production is off — e.g. `tourist_cap`, `border`, `pop_cap`, `happiness`, and recipe unlock modifiers like `farming` / `tourism`. Recipe unlocks are inert while `production.enabled=false` (those recipes don’t tick), but **stat modifiers take effect immediately**. Under Option C, unlocking `tourism` would start the tourist-owned recipe tick once `tourists.enabled` is on.
-
-Implications for 0.9:
-- Tourism-only defaults keep `research.enabled=false` so this path is off by default — correct for “no upgrade tree in beta.”
-- Servers that set `production=false` + `research=true` get a valid hybrid: player-fed resources → AI research → caps/borders/tourism unlock without auto-farming/taxes.
-- Step 2 toggle audit: no research *start* packet to guard (AI-only), but deposit slot + `upgrades.tick` already respect `researchEnabled` for the tick; deposit itself always works (by design — towns can hold resources for other systems).
-- Optional later: if we ever add manual “player picks research target,” that packet must check `researchEnabled`.
-
----
-
-#### Implementation checklist (Option C)
-- [ ] Extract/share single-recipe processing (`TownProductionComponent.processRecipe` or helper) callable for one recipe id
-- [ ] `production.tick()` skips `tourism`; `Town.tick()` calls tourism recipe when `touristSystemEnabled`
-- [ ] Update default `productions.csv` tourism row (free / no happiness gate as agreed for 0.9)
-- [ ] Ensure every new town has `tourism` unlock + `tourist_cap > 0` under tourism-only defaults (kits / `basic_settlement` / fallback) — required even with Option C
-- [ ] Unit tests: tourists on + production off → pending grows; production on + tourists off → no tourism grants; both on → single grant/cycle; cap stall; free CSV costs; paid CSV still consumes when costs restored
-- [ ] Vault note + Coverage Ledger row; docs: tourism tuned via `productions.csv`, gated by `tourists.enabled`
-- [ ] Manual trace: recipe → pending → `TownInterfaceEntity` spawn → arrival payment with production/trading/contracts/research off
+- [x] **Tourism Option C** — DONE 2026-07-16: `tickTourismRecipe()` gated by `tourists.enabled`; production skips `tourism`; free CSV + `tourism` on `basic_settlement`; tourist_cap stall fix; 9 tests + T-040. (Research still works with production off if enabled — AI + deposit slot; no start packet.) Manual in-game trace deferred to Step 4.
 
 **Step 2 — Toggle honesty (code, small)**
 - [ ] Guards in the 3 packet handlers; biome-kit allowlist in `registerTown`; `calculateWants` guard; tests
-  - ⚠️ Must still grant `tourist_cap` + tourism unlock when research off (`basic_settlement` / `tourism_basic` or fallback). Cap 0 or locked `tourism` kills Option C.
-  - Note: research has no start packet (AI-only via `upgrades.tick` + `researchEnabled`). Deposit slot is intentionally ungated.
+  - ⚠️ Keep `basic_settlement` (or `tourist_cap` + `tourism`) when research off — else Option C loop dies.
 
 **Step 3 — Packaging & hygiene (one pass)**
 - [ ] Forge jar: remove `assets/**`/`data/**`/`pack.mcmeta` excludes (New finding #2), fix duplicates properly, verify jar contents; also remove duplicate `OpenPaymentBoardPacket` registration in `ForgeModMessages`
@@ -98,15 +43,15 @@ Implications for 0.9:
 - [ ] `System.out.println` sweep; `git rm --cached` the 8 remaining files; save-format data-version int in town NBT; remove or wire dead `minDistanceBetweenTowns` in TOML
 
 **Step 4 — Default flip + verification (last, as planned)**
-- [ ] Set tourism-only defaults: craftable on; `tourists.enabled=true`; `production.enabled=false`; `research.enabled=false`; trading/contracts off; economy values (`metersPerEmerald=1000`, milestone table 1000m/5000m; `minPayoutDistance=100`) + free tourism CSV row if not done in Step 1
-  - ⚠️ `canSpawnTourists` requires pop ≥ `minPopForTourists` (5); with economy recipes off, pop never grows — kits with pop < 5 (e.g. desert oasis `pop:4`) never spawn. Bump kits or lower default.
+- [ ] Set tourism-only defaults: craftable on; tourists on; production/research/trading/contracts off; economy values (`metersPerEmerald=1000`, milestone 1000m/5000m; `minPayoutDistance=100`); confirm free tourism CSV
+  - ⚠️ `minPopForTourists=5` + no pop growth → oasis `pop:4` never spawns; bump kits or lower default. Manual Option C trace here.
 - [ ] Dedicated-server boot smoke test, Forge + Fabric (Fabric is structurally fragile — client APIs in server-loaded `FabricModMessages`/`FabricEventCallbackHandler`; refactor ONLY if the test fails)
 - [ ] Full SP pass both loaders + manual Create pass (note: Create Fabric detection is a silent string sniff — `TouristEntity.java:564`; verify or document Forge-only). Docs must state tourists can't walk (speed 0) — routes need carts/trains
 - [ ] Listing/README/wiki, publish
 
 **Deferred (unchanged)**: Fabric class-split refactor (unless smoke test fails), tourist skin quality pass (owner), localization, multiplayer playtest, `UIGridBuilder` refactor.
 
-**Status**: Option C chosen — awaiting check-in to start Step 1 tourism implementation.
+**Status**: Step 1 done — next Step 2.
 
 ---
 

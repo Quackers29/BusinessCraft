@@ -1,5 +1,5 @@
 node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_minutes,required_items,effects
-basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,0,,pop_cap:100;tourist_cap:2;storage_cap_all:2000;happiness:50;population_maintenance;population_growth;taxes;farming_basic
+basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,0,,pop_cap:100;tourist_cap:2;storage_cap_all:2000;happiness:50;tourism;population_maintenance;population_growth;taxes;farming_basic
 farming_basic,farming,Farming,,basic_settlement,Starts food production,0.5,food:100,farming
 woodcutting_basic,woodcutting,Woodcutting,,basic_settlement,Starts wood production,0.5,food:3000,woodcutting
 sawmill_basic,woodcutting,Sawmill,,woodcutting_basic,Starts plank production,0.5,food:4000,sawmill

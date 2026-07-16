@@ -100,7 +100,7 @@ public class UpgradeRegistry {
             writer.write(
                     "node_id,category,display_name,repeat,prereq_nodes,benefit_description,research_minutes,required_items,effects\n");
             writer.write(
-                    "basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,0,,pop_cap:10;tourist_cap:2;storage_cap_all:200;happiness:50;population_maintenance;population_growth;basic_taxes\n");
+                    "basic_settlement,housing,Basic Settlement,,,Unlocks basic survival,0,,pop_cap:10;tourist_cap:2;storage_cap_all:200;happiness:50;tourism;population_maintenance;population_growth;basic_taxes\n");
             writer.write(
                     "farming_basic,farming,Basic Farming,,basic_settlement,Starts food production,1,wood:10,basic_farming\n");
         } catch (IOException e) {
