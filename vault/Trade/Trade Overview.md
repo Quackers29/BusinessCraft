@@ -19,4 +19,4 @@ tags:
 ## How it connects
 Sell contracts are created by towns automatically offering their surplus ([[Town/Contracts/Autonomous Bidding and Sell Contract Creation|autonomous trading]]) or by players. Bids come from other towns — players through the UI, or the towns' own bidding logic. When the auction timer ends the winner is picked, the courier fee (the same distance-based formula used when budgeting a bid) is paid out, and the result feeds the global market's price discovery. Rewards and contract items land on the relevant town's [[Town/Payment Board/Reward Claims|Payment Board]].
 
-Contract timing (auction duration, courier acceptance window, delivery time per distance) is configurable in `businesscraft.toml` and hot-reloads.
+Contract timing (auction duration, courier acceptance window, delivery time per distance) is configurable in `businesscraft.toml` and hot-reloads. When trading or contracts are disabled in settings, player trade and bid/accept actions (and contract-item delivery at the town interface) are refused on the server even if the UI tabs remain visible — see [[Config/Subsystem Toggle Honesty]].

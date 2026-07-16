@@ -1133,7 +1133,8 @@ public ViewModelCache getVmCache() {
         if (stackObj instanceof net.minecraft.world.item.ItemStack stack) {
             if (!stack.isEmpty() && townId != null) {
                 if (level instanceof ServerLevel sLevel) {
-                    if (com.quackers29.businesscraft.util.ContractItemHelper.isContractItem(stack)) {
+                    if (ConfigLoader.contractsEnabled
+                            && com.quackers29.businesscraft.util.ContractItemHelper.isContractItem(stack)) {
                         UUID contractId = com.quackers29.businesscraft.util.ContractItemHelper.getContractId(stack);
                         CompoundTag contractData = com.quackers29.businesscraft.util.ContractItemHelper
                                 .getContractData(stack);

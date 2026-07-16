@@ -32,18 +32,15 @@ Independent code verification of all prior findings (T-012, toggles, anti-cheat,
 - [x] Distance clamp — DONE 2026-07-09: `clampTraveledDistance` (public static, `min(traveled, 2 × straightLine)`) applied in `processIndividualVisitor` before the distance enters the batch; caps loop-track farming and (since it's upstream) milestone farming too. Min-payout decision: kept the 1-emerald floor, added `economy.minPayoutDistance` (default 100, inclusive threshold) — batches averaging below it pay 0 and their saved distance is cleared. 10 new tests (clamp + cutoff) in `VisitorProcessingHelperTest`, full `:common:test` green; vault note + ledger (T-001) updated.
 - [x] **Tourism Option C** — DONE 2026-07-16: `tickTourismRecipe()` gated by `tourists.enabled`; production skips `tourism`; free CSV + `tourism` on `basic_settlement`; tourist_cap stall fix; 9 tests + T-040. (Research still works with production off if enabled — AI + deposit slot; no start packet.) Manual in-game trace deferred to Step 4.
 
-**Step 2 — Toggle honesty (code, small)** — NEXT; plan verified in code 2026-07-16 (see `.claude/tasks/step2-toggle-honesty_onboarding.md`)
-- [ ] Guard `TradeResourcePacket.handle` with `ConfigLoader.tradingEnabled` (early return)
-- [ ] Guard `BidContractPacket` + `AcceptContractPacket` with `ConfigLoader.contractsEnabled`
-- [ ] Guard `Town.calculateWants()` with `researchEnabled` (clear wants + return) — currently called every 20 ticks ungated
-- [ ] Filter `TownManager.registerTown` startingNodes: when research off, unlock **`basic_settlement` only** (skip `farming_advanced` / `tourism_basic` / `research_basic` / etc.)
-  - ⚠️ Do NOT skip all nodes — `basic_settlement` grants `tourism` + `tourist_cap:2` required by Option C
-- [ ] Filter `registerTown` startingValues: always keep `pop`/`happiness`/`tourist`/`*_cap`/`border`; skip ResourceRegistry grants when `productionEnabled` is false
-- [ ] *(recommended)* Guard contract-item branch in `TownInterfaceEntity.processResourcesInSlot` with `contractsEnabled` (bypasses Bid/Accept packets)
-- [ ] Tests: kit filter (research off keeps tourism unlock; production off drops food/wood/money); `calculateWants` no-op; packet early-return if feasible
-- [ ] `:common:test` green; mark Step 2 done
+**Step 2 — Toggle honesty (code, small)** — DONE 2026-07-16 (see `.claude/tasks/step2-toggle-honesty_onboarding.md`)
+- [x] Guard `TradeResourcePacket.handle` with `ConfigLoader.tradingEnabled` (early return)
+- [x] Guard `BidContractPacket` + `AcceptContractPacket` with `ConfigLoader.contractsEnabled`
+- [x] Guard `Town.calculateWants()` with `researchEnabled` (clear wants + return)
+- [x] Filter via extracted `TownManager.applyBiomeKit`: research off → unlock **`basic_settlement` only**; always apply pop/happiness/tourist/*_cap/border; skip ResourceRegistry grants when production off
+- [x] Guard contract-item branch in `TownInterfaceEntity.processResourcesInSlot` with `contractsEnabled`
+- [x] Tests: `ToggleHonestyTest` (4) — kit filter + calculateWants; full `:common:test` green
 
-**Step 3 — Packaging & hygiene (one pass)**
+**Step 3 — Packaging & hygiene (one pass)** — NEXT
 - [ ] Forge jar: remove `assets/**`/`data/**`/`pack.mcmeta` excludes (New finding #2), fix duplicates properly, verify jar contents; also remove duplicate `OpenPaymentBoardPacket` registration in `ForgeModMessages`
 - [ ] Delete dead code: 10 Fabric files (4 stub packets, `fabric/block/TownInterfaceBlock`, 5 `fabric/api/` interfaces — zero references confirmed) + 3 demo screens in `ui/screens/demo/`
 - [ ] Metadata: `mod_version` → `0.9.0-beta`; add `issueTrackerURL`/`displayURL` to `mods.toml` (keys currently absent) + fill empty `fabric.mod.json` contact fields; mod icon; `CHANGELOG.md`; improve `mods.toml` description
@@ -58,7 +55,7 @@ Independent code verification of all prior findings (T-012, toggles, anti-cheat,
 
 **Deferred (unchanged)**: Fabric class-split refactor (unless smoke test fails), tourist skin quality pass (owner), localization, multiplayer playtest, `UIGridBuilder` refactor.
 
-**Status**: Step 1 done — next Step 2.
+**Status**: Steps 1–2 done — next Step 3.
 
 ---
 
@@ -72,14 +69,7 @@ Independent code verification of all prior findings (T-012, toggles, anti-cheat,
 
 ## Phase B — Release Hygiene (the "one-day pass")
 - [x] **License (blocker)** — *Verified (scope)*: **MIT** everywhere. Root LICENSE replaced with MIT, Forge `mods.toml` updated from "All rights reserved" to "MIT". `fabric.mod.json` was already correct. Done 2026-06-17.
-- [ ] **Toggle-respect packet audit** (keep in hygiene phase) — *Code check (June 2026)*: the subsystem toggles currently gate only tick paths (`Town.tick`, `TownInterfaceEntity` spawn loop); **no network packet handler checks any toggle**, and biome kits apply starting nodes/values unconditionally in `TownManager.registerTown`. Since UI tabs stay visible, player actions (trade, contract accept/bid, research start) may still mutate "disabled" systems server-side. Audit the actual exposure per packet, then pick the cheap fix per path: gate the server-side handler (authoritative) and/or hide the tab. Might be small — confirm exposure before sizing. (The actual default flip itself is now at end of Phase F.)
-  Sub-plan:
-  - [ ] Audit biome kit application in TownManager.registerTown (startingNodes for upgrades, startingValues for resources)
-  - [ ] Find all packet handlers that can trigger production/trading/contracts/research (e.g. BidContractPacket, AcceptContractPacket, TradeResourcePacket, research start packets, etc.)
-  - [ ] Decide per path: add server-side if (!ConfigLoader.xxxEnabled) return; or similar guard
-  - [ ] Check UI tab content builders — do they need guards or is "visible but inert" acceptable?
-  - [ ] Test toggles manually or with notes (since defaults stay full for now)
-  - [ ] Update any comments / todo cross refs
+- [x] **Toggle-respect packet audit** — DONE 2026-07-16 via Ship Plan Step 2: packet guards (Trade/Bid/Accept), `applyBiomeKit` filtering, `calculateWants` + deposit-slot contract guards; UI tabs remain visible-but-inert (intentional). Tests in `ToggleHonestyTest`. Default flip still at end of Phase F.
 - [x] Set `DebugConfig.TOURIST_ENTITY = false` (only flag still on; contradicts release checklist) — Done 2026-06-18. Only remaining production debug flag turned off.
 - [ ] Remove/convert 37 `System.out.println` calls (Forge/Fabric init classes, Fabric stub packets, and one in common `ui/modal/specialized/TownMapModal.java`) to logger calls or delete
 - [ ] Delete orphaned Fabric dead code: stub packets under `fabric/network/packets/` not wired into `FabricModMessages`, placeholder `fabric/block/TownInterfaceBlock.java`, unused placeholder `fabric/api/` interfaces

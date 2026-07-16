@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.contract.Contract;
 import com.quackers29.businesscraft.contract.ContractBoard;
 import com.quackers29.businesscraft.contract.CourierContract;
@@ -45,6 +46,9 @@ public class BidContractPacket {
         PlatformAccess.getNetwork().enqueueWork(context, () -> {
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (senderObj instanceof ServerPlayer player) {
+                if (!ConfigLoader.contractsEnabled)
+                    return;
+
                 net.minecraft.server.level.ServerLevel level = (net.minecraft.server.level.ServerLevel) player.level();
                 ContractBoard board = ContractBoard.get(level);
                 Contract contract = board.getContract(contractId);

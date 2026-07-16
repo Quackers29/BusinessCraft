@@ -117,74 +117,7 @@ public class TownManager {
 
             if (kit != null) {
                 town.setBiomeVariant(kit.variantName);
-
-                // Apply starting nodes
-                if (kit.startingNodes != null) {
-                    for (String node : kit.startingNodes) {
-                        String nodeId = node;
-                        int level = 1;
-                        if (node.contains(":")) {
-                            String[] parts = node.split(":");
-                            nodeId = parts[0];
-                            try {
-                                level = Integer.parseInt(parts[1]);
-                            } catch (NumberFormatException e) {
-                                LOGGER.warn("Invalid level format in starting node: {}", node);
-                            }
-                        }
-
-                        // Unlock the node 'level' times to reach the desired level
-                        // This handles both setting the level and triggering any recursive
-                        // unlocks/effects
-                        for (int i = 0; i < level; i++) {
-                            town.getUpgrades().unlockNode(nodeId);
-                        }
-                    }
-                }
-
-                // Apply starting values
-                if (kit.startingValues != null) {
-                    for (Map.Entry<String, Float> entry : kit.startingValues.entrySet()) {
-                        String key = entry.getKey();
-                        float value = entry.getValue();
-
-                        if (key.equals("pop") || key.equals("population")) {
-                            town.setPopulation((int) value);
-                        } else if (key.equals("happiness")) {
-                            town.setHappiness(value);
-                        } else if (key.equals("tourist")) {
-                            // Add to pending spawns so they actually appear in the world
-                            town.addPendingTouristSpawns((int) value);
-                        } else if (key.endsWith("_cap") || key.endsWith("_modifier") || key.equals("border")) {
-                            // Apply as a permanent flat modifier to the upgrade component
-                            town.getUpgrades().addFlatModifier(key, value);
-                        } else {
-                            // Try to treat as a resource
-                            if (key.equals("money") || key.equals("coins")) {
-                                // Special case for money if not in registry (though it is usually)
-                                // Add directly via trading/economy which handles currency
-                                // Assuming "money" ResourceType exists as seen in ResourceRegistry default
-                            }
-
-                            com.quackers29.businesscraft.economy.ResourceType rt = com.quackers29.businesscraft.economy.ResourceRegistry
-                                    .get(key);
-                            if (rt != null) {
-                                net.minecraft.resources.ResourceLocation loc = rt.getCanonicalItemId();
-                                net.minecraft.world.item.Item item = (net.minecraft.world.item.Item) com.quackers29.businesscraft.api.PlatformAccess
-                                        .getRegistry().getItem(loc);
-                                if (item != null) {
-                                    town.addResource(item, (int) value);
-                                } else {
-                                    LOGGER.warn("TownManager: Item not found for resource '{}'", key);
-                                }
-                            } else {
-                                // If not a known resource, maybe a custom stat?
-                                // For now, log warning if not recognized
-                                LOGGER.warn("TownManager: Unrecognized starting value key '{}'", key);
-                            }
-                        }
-                    }
-                }
+                applyBiomeKit(town, kit);
             }
         }
 
@@ -200,6 +133,83 @@ public class TownManager {
         }
 
         return townId;
+    }
+
+    /**
+     * Applies biome-kit starting nodes and values, respecting subsystem toggles.
+     * <ul>
+     * <li>Research off: unlock {@code basic_settlement} only (keeps Option C tourism /
+     * tourist_cap); skip other starting nodes.</li>
+     * <li>Starting stats ({@code pop}/{@code happiness}/{@code tourist}/{@code *_cap}/
+     * {@code border}) always apply.</li>
+     * <li>Production off: skip ResourceRegistry stock grants (food/wood/money/…).</li>
+     * </ul>
+     * Package-visible for unit tests.
+     */
+    static void applyBiomeKit(Town town, com.quackers29.businesscraft.world.BiomeRegistry.BiomeKit kit) {
+        if (kit == null || town == null) {
+            return;
+        }
+
+        if (kit.startingNodes != null) {
+            for (String node : kit.startingNodes) {
+                String nodeId = node;
+                int nodeLevel = 1;
+                if (node.contains(":")) {
+                    String[] parts = node.split(":");
+                    nodeId = parts[0];
+                    try {
+                        nodeLevel = Integer.parseInt(parts[1]);
+                    } catch (NumberFormatException e) {
+                        LOGGER.warn("Invalid level format in starting node: {}", node);
+                    }
+                }
+
+                // Tourism Option C needs basic_settlement even when research is off
+                if (!ConfigLoader.researchEnabled && !"basic_settlement".equals(nodeId)) {
+                    continue;
+                }
+
+                for (int i = 0; i < nodeLevel; i++) {
+                    town.getUpgrades().unlockNode(nodeId);
+                }
+            }
+        }
+
+        if (kit.startingValues != null) {
+            for (Map.Entry<String, Float> entry : kit.startingValues.entrySet()) {
+                String key = entry.getKey();
+                float value = entry.getValue();
+
+                if (key.equals("pop") || key.equals("population")) {
+                    town.setPopulation((int) value);
+                } else if (key.equals("happiness")) {
+                    town.setHappiness(value);
+                } else if (key.equals("tourist")) {
+                    town.addPendingTouristSpawns((int) value);
+                } else if (key.endsWith("_cap") || key.endsWith("_modifier") || key.equals("border")) {
+                    town.getUpgrades().addFlatModifier(key, value);
+                } else if (!ConfigLoader.productionEnabled) {
+                    // Resource stock only feeds production/trading loops — skip when production off
+                    continue;
+                } else {
+                    com.quackers29.businesscraft.economy.ResourceType rt = com.quackers29.businesscraft.economy.ResourceRegistry
+                            .get(key);
+                    if (rt != null) {
+                        net.minecraft.resources.ResourceLocation loc = rt.getCanonicalItemId();
+                        Item item = (Item) com.quackers29.businesscraft.api.PlatformAccess
+                                .getRegistry().getItem(loc);
+                        if (item != null) {
+                            town.addResource(item, (int) value);
+                        } else {
+                            LOGGER.warn("TownManager: Item not found for resource '{}'", key);
+                        }
+                    } else {
+                        LOGGER.warn("TownManager: Unrecognized starting value key '{}'", key);
+                    }
+                }
+            }
+        }
     }
 
     /**

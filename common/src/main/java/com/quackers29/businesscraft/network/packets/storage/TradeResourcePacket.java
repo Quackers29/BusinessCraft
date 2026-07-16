@@ -18,6 +18,7 @@ import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.network.packets.misc.PaymentResultPacket;
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.config.ConfigLoader;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import com.quackers29.businesscraft.menu.TradeMenu;
@@ -73,6 +74,9 @@ public class TradeResourcePacket extends BaseBlockEntityPacket {
             // Get the player who sent the packet
             Object senderObj = PlatformAccess.getNetwork().getSender(context);
             if (!(senderObj instanceof ServerPlayer player))
+                return;
+
+            if (!ConfigLoader.tradingEnabled)
                 return;
 
             // Check if the item to trade is empty

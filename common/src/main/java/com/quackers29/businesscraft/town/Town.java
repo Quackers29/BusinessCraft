@@ -173,6 +173,9 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
 
     public void calculateWants() {
         wantedResources.clear();
+        if (!ConfigLoader.researchEnabled) {
+            return;
+        }
         String bestNodeId = com.quackers29.businesscraft.town.ai.TownResearchAI.getBestUpgradeTarget(this);
 
         // If we are already researching the best target, we don't "want" resources for

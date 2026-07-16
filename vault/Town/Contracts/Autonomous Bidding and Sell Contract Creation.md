@@ -134,4 +134,5 @@ All values are live at decision time (ConfigLoader, ResourceRegistry, board mark
 - [[Town/Trading/Stock and Capacity Resolution]] (T-031 — provides the getStock / getStorageCap / getWantedResources used here)
 - [[Economy/Resources/Resource Type Expansion and Lookup]] (T-019 — only registered resources generate contracts)
 - [[Config/Configuration Loading]] (T-014 — the *StockPercent and contract* timing knobs)
+- [[Config/Subsystem Toggle Honesty]] (T-041 — `contracts.tick` already gated by `contractsEnabled`; wanted-resource bids also go quiet when research is off because `calculateWants` clears)
 - [[Town/Production/Recipe Execution and Dynamic Evaluation]] (T-029 — production can create the excess that this component liquidates)

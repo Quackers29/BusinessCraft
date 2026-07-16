@@ -124,6 +124,7 @@ Error handling: every I/O or platform failure path in loadConfig / saveConfig / 
 - NightConfig CommentedConfig / CommentedFileConfig are used directly; their exact getOrElse null-vs-absent semantics are relied upon but not unit-tested here beyond the loader's usage.
 
 ## Related
+- [[Config/Subsystem Toggle Honesty]] (how trading/contracts/research/production flags gate packets, wants, and biome kits)
 - [[Economy/Economy Overview]] (metersPerEmerald and currencyItem feed T-001 payment calc and T-006 GlobalMarket)
 - [[Town/Town Overview]] (most town sizing, pop, tourist capacity, and boundary numbers come from here)
 - [[Tourists/Tourists Overview]] (minPopForTourists, maxTouristsPerTown, expiry, enabled flags)

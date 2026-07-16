@@ -14,11 +14,11 @@ The upgrade system is defined entirely by data files so that modpack authors and
 ## How it works (process view)
 - ConfigLoader (or explicit call) invokes `UpgradeRegistry.load()`.
 - The platform tells the registry where the config directory lives; it looks for `businesscraft/upgrades.csv`.
-- If the file is absent, a default is written containing the header plus "basic_settlement" (the root node that gives initial pop/tourist/storage/happiness) and "farming_basic" (a simple prereq-gated food producer).
+- If the file is absent, a default is written containing the header plus "basic_settlement" (the root node that gives initial pop/tourist/storage/happiness **and the bare `tourism` flag used by Option C tourist generation**) and "farming_basic" (a simple prereq-gated food producer).
 - Each subsequent line is split on commas (9+ fields expected). The 5th field (0-based index 4) is a semicolon-separated prereq list; minutes/costs/effects are parsed by the shared DataParser helpers.
 - Successfully parsed nodes are stored under their ID. Lines that are too short, have unparsable numbers, or throw in the effect/cost parser are logged and skipped.
 - Callers then use `get("basic_settlement")` to fetch a single definition or `getAll()` to iterate for UI lists and AI scoring.
-- **Worked example (default load)**: after a clean load, `get("basic_settlement")` returns a node with 0 research minutes, empty required items, and six effects (pop_cap:10, tourist_cap:2, storage_cap_all:200, happiness:50, plus two population behaviors). `get("farming_basic")` has 1 minute research, a wood:10 cost, and the "basic_farming" effect string. `getAll()` returns both plus any additional rows from a custom CSV.
+- **Worked example (default load)**: after a clean load, `get("basic_settlement")` returns a node with 0 research minutes, empty required items, and effects including pop_cap, tourist_cap:2, storage_cap_all, happiness:50, tourism (flag → 1.0), plus population behaviors. The shipped `assets/.../upgrades.csv` also chains `farming_basic` as an effect name (cascade unlock). `get("farming_basic")` is a prereq-gated food producer. Toggle honesty keeps unlocking this node when research is off so tourism still works — see [[Config/Subsystem Toggle Honesty]].
 - The REQ_FILE constant ("upgrade_requirements.csv") is declared but never consulted by the loader.
 
 ---
@@ -98,3 +98,5 @@ REQ_FILE constant is initialized but load/loadNodes never reference it.
 - [[Production/Recipes/Estimated Effort Calculation]] (T-025 — sibling data-driven registry using the same config-dir + CSV + DataParser pattern)
 - [[Town/Production/Recipe Execution and Dynamic Evaluation]] (T-029 — production side of the same data pipeline)
 - [[Config/Configuration Loading]] (T-014 — the caller that usually triggers UpgradeRegistry.load)
+- [[Config/Subsystem Toggle Honesty]] (T-041 — biome kits keep unlocking `basic_settlement` when research is off)
+- [[Tourists/Tourists Overview]] (Option C depends on the `tourism` effect from that node)
