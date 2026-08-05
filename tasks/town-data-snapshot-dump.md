@@ -1,10 +1,12 @@
 # Plan: Town Data Snapshot Dump (Option C)
 
-**Status**: Plan — awaiting owner verification before implementation  
+**Status**: Implemented  
 **Scope**: Op-only server command that writes a **full-picture** snapshot of all BusinessCraft persisted state. Not a live HUD; not F4 changes.  
 **Permission**: Brigadier `.requires(source -> source.hasPermission(2))` (same as `/bc debug clear_contracts`)  
 **Format**: SNBT (Minecraft `CompoundTag` text) — zero extra deps, matches save format, dynamic by construction  
-**Out of scope for this task**: F4 overlay changes, in-game tree UI, dump-on-shutdown, CSV
+**Out of scope for this task**: F4 overlay changes, in-game tree UI, dump-on-shutdown, CSV  
+
+**Owner decisions**: path A; platforms + slim BE; tourists deferred (possibly v1); UTC via `DateTimeFormatter.ISO_INSTANT` + filename `yyyyMMdd-HHmmss` UTC (same Instant style as `ErrorReporter`).
 
 ---
 
@@ -248,15 +250,21 @@ Keep command class thin (permission + IO); builder owns schema assembly.
 
 ### Checklist
 
-- [ ] `TownDataSnapshotBuilder` assembles envelope from `Town.save` + BE platforms + contracts + market
-- [ ] SNBT written under `<world>/businesscraft/dumps/bc-dump-<timestamp>.snbt`
-- [ ] `/bc debug dump` registered, `hasPermission(2)`, works on Forge + Fabric
-- [ ] Chat success: path + counts (towns, contracts, whether market present)
-- [ ] Chat failure paths: IO error, no server
-- [ ] Document in command feedback that dump reflects **save()** output (including known asymmetries)
-- [ ] Unit test: builder includes nested `economy` / `paymentBoard` without hardcoding every leaf
+- [x] `TownDataSnapshotBuilder` assembles envelope from `Town.save` + BE platforms + contracts + market
+- [x] SNBT written under `<world>/businesscraft/dumps/bc-dump-<timestamp>.snbt`
+- [x] `/bc debug dump` registered, `hasPermission(2)`, works on Forge + Fabric
+- [x] Chat success: path + counts (towns, contracts, whether market present)
+- [x] Chat failure paths: IO error, no server
+- [x] Document in command feedback that dump reflects **save()** output (including known asymmetries)
+- [x] Unit test: builder includes nested `economy` / `paymentBoard` without hardcoding every leaf
 - [ ] Manual smoke: create 2 towns + platform + reward → dump → open file, confirm sections present
-- [ ] Do **not** change F4, SavedData formats, or “fix” escrow/happiness in this task
+- [x] Do **not** change F4, SavedData formats, or “fix” escrow/happiness in this task
+
+**Code landed**
+- `common/.../debug/TownDataSnapshotBuilder.java`
+- `common/.../command/DumpTownDataCommand.java`
+- `common/.../debug/TownDataSnapshotBuilderTest.java` (4 tests)
+- Registered in `BusinessCraftForge` + `FabricEventCallbackHandler`
 
 ### Non-goals / explicit exclusions
 
@@ -291,13 +299,17 @@ Dev/ops tooling — **not a 0.9 beta blocker**. Can land anytime; useful for pla
 
 ---
 
-## Open decisions (owner)
+## Decisions (resolved)
 
-Confirm before coding:
+1. Path **A** — `<world>/businesscraft/dumps/bc-dump-<UTC>.snbt`
+2. Platforms list **and** slim `blockEntity` (platforms peeled out of BE save)
+3. Live tourist scan **deferred** (possible v1)
+4. UTC — `dumpTimestampIso` = `DateTimeFormatter.ISO_INSTANT`; filename stamp UTC `yyyyMMdd-HHmmss`
 
-1. Output path **A** (`businesscraft/dumps/…`) vs B?  
-2. Include slim `blockEntity` compound, or **platforms list only**?  
-3. Include live tourist entity scan in v1, or defer? (plan defers)  
-4. Filename timestamp timezone: local vs UTC?
+## Usage
 
-**Defaults if no reply:** A; platforms + slim BE; defer tourists; UTC in filename + `dumpTimestampIso`.
+```
+/bc debug dump
+```
+
+Op (permission 2). File appears under the active world's `businesscraft/dumps/`.

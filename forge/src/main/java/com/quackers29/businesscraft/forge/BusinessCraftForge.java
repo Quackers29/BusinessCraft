@@ -149,6 +149,7 @@ public class BusinessCraftForge {
         ClearTownsCommand.register(event.getDispatcher());
 
         com.quackers29.businesscraft.command.ClearContractsCommand.register(event.getDispatcher());
+        com.quackers29.businesscraft.command.DumpTownDataCommand.register(event.getDispatcher());
     }
 
     private void onServerStopping(ServerStoppingEvent event) {
