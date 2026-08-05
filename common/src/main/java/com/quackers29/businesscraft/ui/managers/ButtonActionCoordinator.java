@@ -48,27 +48,6 @@ public class ButtonActionCoordinator {
     }
 
     /**
-     * Handles the view visitors action.
-     */
-    public void handleViewVisitors() {
-        try {
-            DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling view visitors action");
-            // Save current tab before opening modal
-            if (screen instanceof com.quackers29.businesscraft.ui.screens.BaseTownScreen) {
-                ((com.quackers29.businesscraft.ui.screens.BaseTownScreen<?>) screen).saveActiveTab();
-            }
-
-            modalCoordinator.showVisitorModal(closedModal -> {
-                // Trigger data refresh when modal closes
-                refreshScreenData();
-            });
-        } catch (Exception e) {
-            LOGGER.error("Failed to handle view visitors action", e);
-            screen.sendChatMessage("Unable to open visitor list");
-        }
-    }
-
-    /**
      * Handles the trade resources action.
      */
     public void handleTradeResources() {

@@ -2,7 +2,6 @@ package com.quackers29.businesscraft.ui.managers;
 
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
-import com.quackers29.businesscraft.ui.modal.core.BCModalScreen;
 import com.quackers29.businesscraft.ui.screens.BaseTownScreen;
 import net.minecraft.core.BlockPos;
 import org.slf4j.Logger;
@@ -83,30 +82,6 @@ public class ModalCoordinator {
         } catch (Exception e) {
             LOGGER.error("Failed to show storage modal", e);
             screen.sendChatMessage("Unable to open storage interface");
-        }
-    }
-    
-    /**
-     * Shows the visitor list modal screen.
-     * 
-     * @param onClose Optional callback when modal is closed
-     * @return The created modal screen, or null if creation failed
-     */
-    public BCModalScreen showVisitorModal(Consumer<BCModalScreen> onClose) {
-        try {
-            BCModalScreen createdModal = VisitorModalManager.showVisitorListModal(closedModal -> {
-                DebugConfig.debug(LOGGER, DebugConfig.MODAL_MANAGERS, "Visitor modal closed");
-                if (onClose != null) {
-                    onClose.accept(closedModal);
-                }
-            });
-            
-            DebugConfig.debug(LOGGER, DebugConfig.MODAL_MANAGERS, "Visitor modal created successfully");
-            return createdModal;
-        } catch (Exception e) {
-            LOGGER.error("Failed to show visitor modal", e);
-            screen.sendChatMessage("Unable to open visitor list");
-            return null;
         }
     }
     

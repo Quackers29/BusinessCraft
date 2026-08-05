@@ -46,7 +46,7 @@
 - [x] **Commit** pending work (done by owner)
 - [x] **Oasis pop**: bumped oasis kit `pop:4` → `pop:5` (matches `minPopForTourists=5`; only kit that was below). Kept minPop at 5.
 - [ ] **Tourist skins (strategy A, rebuilt from original PNGs)** — deferred (owner working on it); in-game OK still open
-- [ ] **Phase C** (optional): fake-success UI audit — in progress (job assignment OK; Save→Ranking done)
+- [x] **Phase C** (optional): fake-success UI audit — done for 0.9 (see Optional section)
 
 ### Tourist skin rework — rebuilt from original UV masks; await in-game OK
 
@@ -81,15 +81,18 @@
 ## Optional / owner
 
 ### Phase C — Fake-success UI (optional)
-- [x] Job assignment / population viewer — not in live UI (`TownTabController` only registers overview/resources/production/settings; no Population tab; Assign Jobs only on dead `population` bottom-button path — leave for future)
+- [x] Job assignment / population viewer — not in live UI (dead `population` path; leave for future)
 - [x] Settings Save button → replaced with Ranking (same as Overview); Edit Name kept
-- [ ] Remaining audit: visitor modal example data, `autoCollect`/`taxes`, contract player-name — fix/hide only if still present
+- [x] Hardcoded visitor modal — deleted `VisitorModalManager` + call chain (real visitor history kept)
+- [x] `autoCollect` placeholder removed (ViewModel/State/Menu); unused, always false; no gameplay readers. `taxes` placeholder left (same pattern, not requested)
+- [x] Contract courier player-name resolution → deferred to v1 (`ROADMAP_v1.md`)
 
 ---
 
 ## Not in 0.9 (v1.0+)
 - Tourist Transport Contracts, prestige/"First to City", Town Interface worldgen → `ROADMAP_v1.md` / `v1_worldgen.md`
 - Localization sweep → `ROADMAP_v1.md`
+- Contract courier player-name lookup (shows ID/"Assigned" today) → `ROADMAP_v1.md`
 - `UIGridBuilder` refactor → `toImprove.md`
 
 **Test + Docs Loop**: parked (seeds exhausted). Re-invoke when new logic lands.

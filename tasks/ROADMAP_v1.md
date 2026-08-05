@@ -55,6 +55,7 @@ No in-game manual. Wiki (`vault/` → GitHub wiki) + README/listing fleshed out 
 - **Town Overview polish**: avg tourist distance, total tourism revenue, repeat visitors (0.9 keeps existing tourism count only). *Verified*
 - **Arrival feedback** (no extra chat): maybe particles + villager sound on tourist payment or train exit. *Verified — v1*
 - Visual/audio delight on contract flows: boarding animations/particles, arrival celebration for contract completions, leaderboard screen polish.
+- **Courier player-name resolution**: contract detail currently shows `"Assigned"` / `"Courier (ID: …)"` — look up real player name from UUID (deferred from 0.9 Phase C).
 - Live tourist flow lines / contract routes via existing visualization framework — needs more design thought; *v1 low priority, ship if time*.
 - Re-balance the economy around contract income (contract rewards vs. passive tourism fares).
 - Each new logic unit gets a Test + Docs Loop iteration (vault note + unit tests) after implementation — the loop protocol is in `tasks/test_doc_loop.md`.

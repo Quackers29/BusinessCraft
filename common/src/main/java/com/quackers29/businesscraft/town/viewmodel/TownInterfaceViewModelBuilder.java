@@ -72,9 +72,6 @@ public class TownInterfaceViewModelBuilder {
 
         // 6. Settings
         boolean spawning = town.canSpawnTourists();
-        // Uses entity method for auto-collect as it might be block-specific in
-        // future/current logic
-        boolean autoCollect = false; // Placeholder if not in Town object yet
         boolean taxes = false; // Placeholder
 
         // 7. Search Radius
@@ -102,7 +99,6 @@ public class TownInterfaceViewModelBuilder {
                 happyStatus,
                 wuStatus,
                 spawning,
-                autoCollect,
                 taxes,
                 radius,
                 (int) totalTouristsArrived,
@@ -117,7 +113,7 @@ public class TownInterfaceViewModelBuilder {
                 message, "Unknown", "Unknown",
                 "-/-", "-/-", "-%", "-/-",
                 Status.CRITICAL, Status.CRITICAL, Status.CRITICAL,
-                false, false, false,
+                false, false,
                 radius,
                 0,    // totalTouristsArrived
                 0.0,  // totalTouristDistance

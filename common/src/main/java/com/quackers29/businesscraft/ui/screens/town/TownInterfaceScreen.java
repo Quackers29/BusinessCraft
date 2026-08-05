@@ -107,15 +107,6 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     }
 
     @Override
-    public void onViewVisitors() {
-        if (dependencies != null) {
-            dependencies.getButtonCoordinator().handleViewVisitors();
-        } else {
-            LOGGER.warn("Dependencies not available for onViewVisitors");
-        }
-    }
-
-    @Override
     public void onTradeResources() {
         if (dependencies != null) {
             dependencies.getButtonCoordinator().handleTradeResources();

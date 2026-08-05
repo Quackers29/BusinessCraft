@@ -15,8 +15,6 @@ public class BottomButtonManager {
     public interface ButtonActionHandler {
         void onEditDetails();
 
-        void onViewVisitors();
-
         void onTradeResources();
 
         void onManageStorage();

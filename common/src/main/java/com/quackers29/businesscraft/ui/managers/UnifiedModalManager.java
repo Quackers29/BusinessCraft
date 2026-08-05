@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.ui.managers;
 
-import com.quackers29.businesscraft.ui.modal.core.BCModalScreen;
 import com.quackers29.businesscraft.ui.modal.core.BCPopupScreen;
 import com.quackers29.businesscraft.ui.modal.specialized.BCModalInventoryScreen;
 import com.quackers29.businesscraft.ui.modal.specialized.BCModalGridScreen;
@@ -25,7 +24,6 @@ public class UnifiedModalManager {
      */
     public enum ModalType {
         TOWN_NAME_POPUP,
-        VISITOR_LIST,
         TRADE_RESOURCES,
         STORAGE,
         VISITOR_HISTORY
@@ -113,11 +111,6 @@ public class UnifiedModalManager {
                     popup -> safeCallback(config.getOnCloseCallback(), null)
                 );
                 
-            case VISITOR_LIST:
-                return VisitorModalManager.showVisitorListModal(
-                    modal -> safeCallback(config.getOnCloseCallback(), null)
-                );
-                
             case TRADE_RESOURCES:
                 String tradeTargetTab = config.getTargetTab() != null ? config.getTargetTab() : "resources";
                 TradeModalManager.showTradeResourcesModal(
@@ -175,15 +168,6 @@ public class UnifiedModalManager {
             .withBlockPos(blockPos)
             .withCloseCallback(onClose);
         return (BCPopupScreen) createModal(config);
-    }
-    
-    /**
-     * Convenience method for creating a visitor list modal.
-     */
-    public static BCModalScreen createVisitorListModal(Consumer<Object> onClose) {
-        ModalConfig config = ModalConfig.of(ModalType.VISITOR_LIST)
-            .withCloseCallback(onClose);
-        return (BCModalScreen) createModal(config);
     }
     
     /**

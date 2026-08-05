@@ -70,7 +70,6 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     private int bronzeCoins = 0;
 
     // Settings
-    private boolean autoCollectEnabled = false;
     private boolean taxesEnabled = false;
     // Local cache for client-side
     private int clientSearchRadius = 10;
@@ -381,15 +380,6 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
 
     public int getBronzeCoins() {
         return bronzeCoins;
-    }
-
-    public boolean isAutoCollectEnabled() {
-        return autoCollectEnabled;
-    }
-
-    public void setAutoCollectEnabled(boolean enabled) {
-        this.autoCollectEnabled = enabled;
-        // In a real implementation, this would trigger a server-side update
     }
 
     public boolean isTaxesEnabled() {

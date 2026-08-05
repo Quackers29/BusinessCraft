@@ -34,7 +34,6 @@ public class TownInterfaceState {
     private int touristCount = 0;
     private int maxTourists = 5;
     private int searchRadius = 10;
-    private boolean autoCollectEnabled = false;
     private boolean taxesEnabled = false;
     
     // Resource State
@@ -178,17 +177,6 @@ public class TownInterfaceState {
     public void setSearchRadius(int radius) {
         if (this.searchRadius != radius) {
             this.searchRadius = radius;
-            notifyStateChange();
-        }
-    }
-    
-    public boolean isAutoCollectEnabled() {
-        return autoCollectEnabled;
-    }
-    
-    public void setAutoCollectEnabled(boolean enabled) {
-        if (this.autoCollectEnabled != enabled) {
-            this.autoCollectEnabled = enabled;
             notifyStateChange();
         }
     }

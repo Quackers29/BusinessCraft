@@ -41,7 +41,6 @@ public class TownInterfaceViewModel implements IViewModel {
 
     // Settings (True/False state only)
     private final boolean spawningEnabled;
-    private final boolean autoCollectEnabled;
     private final boolean taxesEnabled;
 
     // Configurable values that need to be edited
@@ -67,7 +66,6 @@ public class TownInterfaceViewModel implements IViewModel {
             Status happinessStatus,
             Status workUnitsStatus,
             boolean spawningEnabled,
-            boolean autoCollectEnabled,
             boolean taxesEnabled,
             int searchRadius,
             int totalTouristsArrived,
@@ -85,7 +83,6 @@ public class TownInterfaceViewModel implements IViewModel {
         this.happinessStatus = happinessStatus;
         this.workUnitsStatus = workUnitsStatus;
         this.spawningEnabled = spawningEnabled;
-        this.autoCollectEnabled = autoCollectEnabled;
         this.taxesEnabled = taxesEnabled;
         this.searchRadius = searchRadius;
         this.totalTouristsArrived = totalTouristsArrived;
@@ -106,7 +103,6 @@ public class TownInterfaceViewModel implements IViewModel {
         this.happinessStatus = buf.readEnum(Status.class);
         this.workUnitsStatus = buf.readEnum(Status.class);
         this.spawningEnabled = buf.readBoolean();
-        this.autoCollectEnabled = buf.readBoolean();
         this.taxesEnabled = buf.readBoolean();
         this.searchRadius = buf.readInt();
         this.totalTouristsArrived = buf.readInt();
@@ -127,7 +123,6 @@ public class TownInterfaceViewModel implements IViewModel {
         buf.writeEnum(happinessStatus);
         buf.writeEnum(workUnitsStatus);
         buf.writeBoolean(spawningEnabled);
-        buf.writeBoolean(autoCollectEnabled);
         buf.writeBoolean(taxesEnabled);
         buf.writeInt(searchRadius);
         buf.writeInt(totalTouristsArrived);
@@ -179,10 +174,6 @@ public class TownInterfaceViewModel implements IViewModel {
 
     public boolean isSpawningEnabled() {
         return spawningEnabled;
-    }
-
-    public boolean isAutoCollectEnabled() {
-        return autoCollectEnabled;
     }
 
     public boolean isTaxesEnabled() {
