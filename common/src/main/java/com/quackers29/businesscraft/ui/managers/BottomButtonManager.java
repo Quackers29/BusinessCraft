@@ -217,8 +217,8 @@ public class BottomButtonManager {
      */
     private void configureSettingsButtons() {
         bottomButtonsGrid
-                .addButtonWithTooltip(0, 0, "Save Settings", "Save current town settings",
-                        v -> actionHandler.onSaveSettings(), TownInterfaceTheme.SUCCESS_COLOR)
+                .addButtonWithTooltip(0, 0, "Ranking", "View town rankings",
+                        v -> actionHandler.onViewLeaderboard(), TownInterfaceTheme.PRIMARY_COLOR)
                 .addButtonWithTooltip(0, 1, "Edit Name", "Edit town name",
                         v -> actionHandler.onEditDetails(), TownInterfaceTheme.PRIMARY_COLOR);
     }

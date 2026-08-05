@@ -43,10 +43,10 @@
 
 ## Before Step 4 (get fully ready)
 
-- [ ] **Commit** pending work when you ask (3e untrack + border/toggle/packaging/oasis/skin work)
+- [x] **Commit** pending work (done by owner)
 - [x] **Oasis pop**: bumped oasis kit `pop:4` → `pop:5` (matches `minPopForTourists=5`; only kit that was below). Kept minPop at 5.
-- [x] **Tourist skins (strategy A, rebuilt from original PNGs)** — no generator scripts; **needs in-game OK**
-- [ ] **Phase C** (optional): quick fake-success UI audit — skip unless you want it
+- [ ] **Tourist skins (strategy A, rebuilt from original PNGs)** — deferred (owner working on it); in-game OK still open
+- [ ] **Phase C** (optional): fake-success UI audit — in progress (job assignment OK; Save→Ranking done)
 
 ### Tourist skin rework — rebuilt from original UV masks; await in-game OK
 
@@ -81,7 +81,9 @@
 ## Optional / owner
 
 ### Phase C — Fake-success UI (optional)
-- [ ] Quick audit: job assignment, settings save/reset, visitor modal example data, `autoCollect`/`taxes`, contract player-name — fix/hide only if still present
+- [x] Job assignment / population viewer — not in live UI (`TownTabController` only registers overview/resources/production/settings; no Population tab; Assign Jobs only on dead `population` bottom-button path — leave for future)
+- [x] Settings Save button → replaced with Ranking (same as Overview); Edit Name kept
+- [ ] Remaining audit: visitor modal example data, `autoCollect`/`taxes`, contract player-name — fix/hide only if still present
 
 ---
 
