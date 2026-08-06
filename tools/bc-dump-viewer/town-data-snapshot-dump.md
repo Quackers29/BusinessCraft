@@ -313,3 +313,5 @@ Dev/ops tooling — **not a 0.9 beta blocker**. Can land anytime; useful for pla
 ```
 
 Op (permission 2). File appears under the active world's `businesscraft/dumps/`.
+
+**Viewer (not part of the mod):** open `tools/bc-dump-viewer/index.html` in a browser, then load the `.snbt` file. Split outline + collapsible tree. See `tools/bc-dump-viewer/README.md`.

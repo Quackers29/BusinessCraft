@@ -38,6 +38,7 @@
 - [x] Phase D anti-cheat + min-payout (via Step 1)
 - [x] Phase F unit coverage + T-012 (Test + Docs Loop parked; 39 ledger rows)
 - [x] Scope cuts verified: no in-game handbook / next-suggestions UI; arrival polish + journey stats → v1; multiplayer playtest → v1; localization → v1
+- [x] Town data snapshot dump: `/bc debug dump` (op) + standalone viewer in `tools/bc-dump-viewer/` (`tasks/town-data-snapshot-dump.md`)
 
 ---
 

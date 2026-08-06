@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BusinessCraft Dump Viewer</title>
+  <style>
+    :root {
+      --bg: #14161a;
+      --bg2: #1c1f26;
+      --bg3: #252a33;
+      --border: #333945;
+      --text: #e8eaed;
+      --muted: #9aa3b2;
+      --accent: #6cb6ff;
+      --accent-dim: #3d6f9c;
+      --key: #9cdcfe;
+      --str: #ce9178;
+      --num: #b5cea8;
+      --type: #c586c0;
+      --warn: #dcdcaa;
+      --hover: #2a3140;
+      --sel: #1e3a5f;
+      --collapse: #7d8590;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font: 13px/1.45 ui-monospace, "Cascadia Code", "Segoe UI Mono", Consolas, monospace;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 {
+      font: 600 14px/1 system-ui, sans-serif;
+      margin: 0 8px 0 0;
+      letter-spacing: 0.02em;
+    }
+    .meta { color: var(--muted); font-size: 12px; margin-right: auto; }
+    button, label.btn {
+      background: var(--bg3);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font: inherit;
+    }
+    button:hover, label.btn:hover { background: var(--hover); border-color: var(--accent-dim); }
+    button.active { background: var(--sel); border-color: var(--accent); }
+    input[type="search"], input[type="text"] {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 5px 8px;
+      min-width: 180px;
+      font: inherit;
+    }
+    input[type="file"] { display: none; }
+    #dropHint {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      border: 2px dashed var(--border);
+      margin: 24px;
+      border-radius: 8px;
+      font: 15px/1.5 system-ui, sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    #dropHint.drag { border-color: var(--accent); color: var(--accent); }
+    #workspace {
+      display: none;
+      flex: 1;
+      min-height: 0;
+    }
+    #workspace.split {
+      display: grid;
+      grid-template-columns: minmax(220px, 28%) 5px 1fr;
+    }
+    #nav, #detail {
+      overflow: auto;
+      min-height: 0;
+      background: var(--bg);
+    }
+    #nav {
+      background: var(--bg2);
+      padding: 8px 0 24px;
+    }
+    #splitter {
+      background: var(--border);
+      cursor: col-resize;
+    }
+    #splitter:hover { background: var(--accent-dim); }
+    .nav-section {
+      padding: 6px 12px 2px;
+      color: var(--muted);
+      font: 600 11px/1.2 system-ui, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .nav-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      padding: 4px 12px 4px 16px;
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .nav-item:hover { background: var(--hover); }
+    .nav-item.selected { background: var(--sel); color: var(--accent); }
+    .nav-item.depth-1 { padding-left: 28px; color: var(--muted); }
+    .nav-item.depth-2 { padding-left: 40px; font-size: 12px; }
+    #detail { padding: 10px 14px 40px; }
+    .pathbar {
+      font: 12px/1.4 system-ui, sans-serif;
+      color: var(--muted);
+      margin-bottom: 10px;
+      word-break: break-all;
+    }
+    .pathbar strong { color: var(--accent); font-weight: 600; }
+    .tree { list-style: none; margin: 0; padding: 0 0 0 14px; }
+    .tree > li { margin: 1px 0; }
+    .row {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+    .row:hover { background: var(--hover); }
+    .twisty {
+      width: 14px;
+      flex: 0 0 14px;
+      color: var(--collapse);
+      cursor: pointer;
+      user-select: none;
+      text-align: center;
+    }
+    .twisty.empty { cursor: default; visibility: hidden; }
+    .k { color: var(--key); }
+    .v-str { color: var(--str); }
+    .v-num { color: var(--num); }
+    .v-type { color: var(--type); font-size: 11px; margin-left: 4px; }
+    .v-muted { color: var(--muted); }
+    .v-uuid { color: var(--warn); }
+    .badge {
+      display: inline-block;
+      font-size: 10px;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 0 4px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .collapsed > .tree { display: none; }
+    #status {
+      border-top: 1px solid var(--border);
+      padding: 4px 14px;
+      color: var(--muted);
+      font: 11px/1.4 system-ui, sans-serif;
+      background: var(--bg2);
+    }
+    .err { color: #f48771; white-space: pre-wrap; padding: 16px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>BC Dump Viewer</h1>
+    <span class="meta" id="fileMeta">Open an SNBT dump from businesscraft/dumps/</span>
+    <label class="btn">Open file<input type="file" id="fileInput" accept=".snbt,.nbt,.txt,*/*" /></label>
+    <input type="search" id="filter" placeholder="Filter keys…" disabled />
+    <button type="button" id="btnExpand" disabled>Expand all</button>
+    <button type="button" id="btnCollapse" disabled>Collapse all</button>
+    <button type="button" id="btnCollapseHeavy" disabled title="Collapse contracts, history, storage, bids…">Collapse heavy</button>
+  </header>
+
+  <div id="dropHint">
+    Drop a <code>bc-dump-*.snbt</code> file here<br />
+    <span style="font-size:12px;opacity:.8">or use Open file — typically under<br />
+    forge/run/saves/&lt;world&gt;/businesscraft/dumps/</span>
+  </div>
+
+  <div id="workspace" class="split">
+    <nav id="nav" aria-label="Outline"></nav>
+    <div id="splitter" title="Drag to resize"></div>
+    <main id="detail"></main>
+  </div>
+  <div id="status">Ready</div>
+
+  <script>
+(function () {
+  "use strict";
+
+  const HEAVY_KEYS = new Set([
+    "contracts", "contractsAll", "visitHistory", "personalStorage",
+    "bids", "rewards", "bufferStorage", "visitors", "wantedResources",
+    "escrowedResources", "tradingStocks", "recipeProgress", "Slots", "platforms"
+  ]);
+
+  const els = {
+    dropHint: document.getElementById("dropHint"),
+    workspace: document.getElementById("workspace"),
+    nav: document.getElementById("nav"),
+    detail: document.getElementById("detail"),
+    status: document.getElementById("status"),
+    fileMeta: document.getElementById("fileMeta"),
+    fileInput: document.getElementById("fileInput"),
+    filter: document.getElementById("filter"),
+    btnExpand: document.getElementById("btnExpand"),
+    btnCollapse: document.getElementById("btnCollapse"),
+    btnCollapseHeavy: document.getElementById("btnCollapseHeavy"),
+    splitter: document.getElementById("splitter"),
+  };
+
+  let rootValue = null;
+  let selectedPath = [];
+  let filterText = "";
+
+  // --- SNBT parser ---
+  class SnbtParser {
+    constructor(text) {
+      this.s = text;
+      this.i = 0;
+    }
+    peek() { return this.s[this.i]; }
+    eof() { return this.i >= this.s.length; }
+    skipWs() {
+      while (!this.eof()) {
+        const c = this.peek();
+        if (c === " " || c === "\t" || c === "\n" || c === "\r") this.i++;
+        else break;
+      }
+    }
+    expect(ch) {
+      this.skipWs();
+      if (this.peek() !== ch) throw new Error(`Expected '${ch}' at ${this.i}, got '${this.peek()}'`);
+      this.i++;
+    }
+    parse() {
+      this.skipWs();
+      const v = this.parseValue();
+      this.skipWs();
+      if (!this.eof()) throw new Error(`Trailing input at ${this.i}`);
+      return v;
+    }
+    parseValue() {
+      this.skipWs();
+      const c = this.peek();
+      if (c === "{") return this.parseCompound();
+      if (c === "[") return this.parseListOrArray();
+      if (c === '"' || c === "'") return this.parseString();
+      return this.parseBare();
+    }
+    parseCompound() {
+      this.expect("{");
+      const obj = { __type: "compound", entries: [] };
+      this.skipWs();
+      if (this.peek() === "}") { this.i++; return obj; }
+      while (true) {
+        this.skipWs();
+        const key = this.parseKey();
+        this.skipWs();
+        this.expect(":");
+        const value = this.parseValue();
+        obj.entries.push({ key, value });
+        this.skipWs();
+        if (this.peek() === ",") { this.i++; continue; }
+        if (this.peek() === "}") { this.i++; break; }
+        throw new Error(`Expected ',' or '}' in compound at ${this.i}`);
+      }
+      return obj;
+    }
+    parseKey() {
+      this.skipWs();
+      if (this.peek() === '"' || this.peek() === "'") return this.parseString().value;
+      let start = this.i;
+      while (!this.eof()) {
+        const c = this.peek();
+        if (/[A-Za-z0-9_\.\+\-]/.test(c)) this.i++;
+        else break;
+      }
+      if (this.i === start) throw new Error(`Invalid key at ${this.i}`);
+      return this.s.slice(start, this.i);
+    }
+    parseString() {
+      const quote = this.peek();
+      this.i++;
+      let out = "";
+      while (!this.eof()) {
+        const c = this.s[this.i++];
+        if (c === quote) return { __type: "string", value: out };
+        if (c === "\\") {
+          if (this.eof()) throw new Error("Bad escape");
+          const e = this.s[this.i++];
+          const map = { n: "\n", t: "\t", r: "\r", '"': '"', "'": "'", "\\": "\\" };
+          out += map[e] !== undefined ? map[e] : e;
+        } else out += c;
+      }
+      throw new Error("Unterminated string");
+    }
+    parseListOrArray() {
+      this.expect("[");
+      this.skipWs();
+      // Typed arrays: [I; ...], [B; ...], [L; ...]
+      if (/[BILbils]/.test(this.peek() || "") && this.s[this.i + 1] === ";") {
+        const kind = this.s[this.i].toUpperCase();
+        this.i += 2;
+        const items = [];
+        this.skipWs();
+        if (this.peek() === "]") { this.i++; return { __type: "array", kind, items }; }
+        while (true) {
+          items.push(this.parseValue());
+          this.skipWs();
+          if (this.peek() === ",") { this.i++; continue; }
+          if (this.peek() === "]") { this.i++; break; }
+          throw new Error(`Expected ',' or ']' in array at ${this.i}`);
+        }
+        return { __type: "array", kind, items };
+      }
+      const items = [];
+      if (this.peek() === "]") { this.i++; return { __type: "list", items }; }
+      while (true) {
+        items.push(this.parseValue());
+        this.skipWs();
+        if (this.peek() === ",") { this.i++; continue; }
+        if (this.peek() === "]") { this.i++; break; }
+        throw new Error(`Expected ',' or ']' in list at ${this.i}`);
+      }
+      return { __type: "list", items };
+    }
+    parseBare() {
+      let start = this.i;
+      while (!this.eof()) {
+        const c = this.peek();
+        if (/[,\{\}\[\]\s]/.test(c)) break;
+        this.i++;
+      }
+      const raw = this.s.slice(start, this.i);
+      if (!raw) throw new Error(`Expected value at ${this.i}`);
+      if (raw === "true") return { __type: "byte", value: 1, raw };
+      if (raw === "false") return { __type: "byte", value: 0, raw };
+      const m = raw.match(/^([+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)([bBsSlLfFdD])?$/);
+      if (m) {
+        const num = Number(m[1]);
+        const suf = (m[2] || "").toLowerCase();
+        const type = suf === "b" ? "byte" : suf === "s" ? "short" : suf === "l" ? "long"
+          : suf === "f" ? "float" : suf === "d" ? "double" : (m[1].includes(".") || /e/i.test(m[1]) ? "double" : "int");
+        return { __type: type, value: num, raw };
+      }
+      return { __type: "string", value: raw };
+    }
+  }
+
+  function compoundMap(comp) {
+    const m = new Map();
+    if (!comp || comp.__type !== "compound") return m;
+    for (const e of comp.entries) m.set(e.key, e.value);
+    return m;
+  }
+
+  function getPath(root, path) {
+    let cur = root;
+    for (const seg of path) {
+      if (!cur) return null;
+      if (cur.__type === "compound") {
+        cur = compoundMap(cur).get(seg);
+      } else if (cur.__type === "list" || cur.__type === "array") {
+        cur = cur.items[Number(seg)];
+      } else return null;
+    }
+    return cur;
+  }
+
+  function intToHex(n) {
+    let u = n | 0;
+    if (u < 0) u = u + 0x100000000;
+    return u.toString(16).padStart(8, "0");
+  }
+
+  function formatUuidArray(items) {
+    if (!items || items.length !== 4) return null;
+    const parts = items.map((it) => intToHex(it.value | 0));
+    const s = parts.join("");
+    return `${s.slice(0, 8)}-${s.slice(8, 12)}-${s.slice(12, 16)}-${s.slice(16, 20)}-${s.slice(20)}`;
+  }
+
+  function summarize(value) {
+    if (!value) return "";
+    switch (value.__type) {
+      case "compound": return `{${value.entries.length}}`;
+      case "list": return `[${value.items.length}]`;
+      case "array": {
+        if (value.kind === "I" && value.items.length === 4) {
+          const u = formatUuidArray(value.items);
+          if (u) return u;
+        }
+        return `[${value.kind}; ${value.items.length}]`;
+      }
+      case "string": return JSON.stringify(value.value);
+      case "byte": return value.raw || String(value.value) + "b";
+      default: return value.raw || String(value.value);
+    }
+  }
+
+  function isContainer(v) {
+    return v && (v.__type === "compound" || v.__type === "list" || v.__type === "array");
+  }
+
+  function childCount(v) {
+    if (!v) return 0;
+    if (v.__type === "compound") return v.entries.length;
+    if (v.__type === "list" || v.__type === "array") return v.items.length;
+    return 0;
+  }
+
+  // --- Nav outline ---
+  function buildNav(root) {
+    const nav = els.nav;
+    nav.innerHTML = "";
+    const map = compoundMap(root);
+
+    addNavSection("Dump");
+    addNavItem("Root", [], 0);
+    if (map.has("dumpTimestampIso")) {
+      const iso = map.get("dumpTimestampIso");
+      const label = iso.__type === "string" ? iso.value : summarize(iso);
+      addNavItem("meta · " + label, [], 0, true);
+    }
+
+    const levels = map.get("levels");
+    if (levels && levels.__type === "compound") {
+      addNavSection("Levels");
+      for (const { key: dim, value: level } of levels.entries) {
+        addNavItem(dim, ["levels", dim], 0);
+        const lm = compoundMap(level);
+        const towns = lm.get("towns");
+        if (towns && towns.__type === "compound") {
+          for (const { key: tid, value: entry } of towns.entries) {
+            const em = compoundMap(entry);
+            const town = em.get("town");
+            const tm = compoundMap(town);
+            const nameVal = tm.get("name");
+            const name = nameVal && nameVal.__type === "string" ? nameVal.value : tid.slice(0, 8);
+            addNavItem(name, ["levels", dim, "towns", tid], 1);
+            const sections = ["town", "platforms", "blockEntity", "contracts"];
+            for (const sec of sections) {
+              if (em.has(sec)) {
+                const n = childCount(em.get(sec));
+                addNavItem(`${sec}${n ? " · " + n : ""}`, ["levels", dim, "towns", tid, sec], 2);
+              }
+            }
+          }
+        }
+        if (lm.has("contractsAll")) {
+          const n = childCount(lm.get("contractsAll"));
+          addNavItem(`contractsAll · ${n}`, ["levels", dim, "contractsAll"], 1);
+        }
+      }
+    }
+
+    if (map.has("market")) {
+      addNavSection("Market");
+      addNavItem("market", ["market"], 0);
+      const mm = compoundMap(map.get("market"));
+      for (const k of ["prices", "volume"]) {
+        if (mm.has(k)) addNavItem(k + " · " + childCount(mm.get(k)), ["market", k], 1);
+      }
+    }
+  }
+
+  function addNavSection(title) {
+    const d = document.createElement("div");
+    d.className = "nav-section";
+    d.textContent = title;
+    els.nav.appendChild(d);
+  }
+
+  function addNavItem(label, path, depth, inert) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "nav-item depth-" + depth;
+    b.textContent = label;
+    b.title = path.length ? path.join(" / ") : "root";
+    if (!inert) {
+      b.addEventListener("click", () => {
+        selectedPath = path.slice();
+        renderDetail();
+        highlightNav();
+      });
+    } else {
+      b.style.cursor = "default";
+      b.style.opacity = "0.75";
+    }
+    b.dataset.path = JSON.stringify(path);
+    els.nav.appendChild(b);
+  }
+
+  function highlightNav() {
+    const target = JSON.stringify(selectedPath);
+    els.nav.querySelectorAll(".nav-item").forEach((el) => {
+      el.classList.toggle("selected", el.dataset.path === target);
+    });
+  }
+
+  // --- Tree render ---
+  function renderDetail() {
+    const node = selectedPath.length ? getPath(rootValue, selectedPath) : rootValue;
+    const pathLabel = selectedPath.length ? selectedPath.join(" / ") : "(root)";
+    els.detail.innerHTML = "";
+    const pathbar = document.createElement("div");
+    pathbar.className = "pathbar";
+    pathbar.innerHTML = "Path: <strong></strong>";
+    pathbar.querySelector("strong").textContent = pathLabel;
+    els.detail.appendChild(pathbar);
+
+    if (!node) {
+      els.detail.appendChild(Object.assign(document.createElement("div"), {
+        className: "err", textContent: "Path not found"
+      }));
+      return;
+    }
+
+    const ul = document.createElement("ul");
+    ul.className = "tree";
+    ul.dataset.root = "1";
+    if (node.__type === "compound") {
+      for (const e of node.entries) ul.appendChild(renderEntry(e.key, e.value, selectedPath.concat(e.key), 0));
+    } else if (node.__type === "list" || node.__type === "array") {
+      node.items.forEach((item, idx) => {
+        ul.appendChild(renderEntry(String(idx), item, selectedPath.concat(String(idx)), 0));
+      });
+    } else {
+      ul.appendChild(renderEntry("(value)", node, selectedPath, 0));
+    }
+    els.detail.appendChild(ul);
+    applyFilter();
+    applyHeavyDefaults(ul);
+    highlightNav();
+  }
+
+  function renderEntry(key, value, path, depth) {
+    const li = document.createElement("li");
+    li.dataset.key = key;
+    li.dataset.path = path.join("\0");
+    const hasKids = isContainer(value) && childCount(value) > 0;
+    if (hasKids) li.classList.add("collapsed");
+
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const twisty = document.createElement("span");
+    twisty.className = "twisty" + (hasKids ? "" : " empty");
+    twisty.textContent = hasKids ? "▶" : "·";
+    if (hasKids) {
+      twisty.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        toggleLi(li);
+      });
+      row.addEventListener("dblclick", () => toggleLi(li));
+    }
+
+    const keyEl = document.createElement("span");
+    keyEl.className = "k";
+    keyEl.textContent = key;
+
+    row.appendChild(twisty);
+    row.appendChild(keyEl);
+
+    if (hasKids) {
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      badge.textContent = summarize(value);
+      row.appendChild(badge);
+      const type = document.createElement("span");
+      type.className = "v-type";
+      type.textContent = value.__type === "array" ? `array[${value.kind}]` : value.__type;
+      row.appendChild(type);
+    } else {
+      const colon = document.createElement("span");
+      colon.className = "v-muted";
+      colon.textContent = ":";
+      row.appendChild(colon);
+      row.appendChild(formatLeaf(value));
+    }
+
+    li.appendChild(row);
+
+    if (hasKids) {
+      const childUl = document.createElement("ul");
+      childUl.className = "tree";
+      if (value.__type === "compound") {
+        for (const e of value.entries) {
+          childUl.appendChild(renderEntry(e.key, e.value, path.concat(e.key), depth + 1));
+        }
+      } else {
+        const labelFor = (item, idx) => {
+          if (item.__type === "compound") {
+            const m = compoundMap(item);
+            if (m.has("name") && m.get("name").__type === "string") return `${idx} · ${m.get("name").value}`;
+            if (m.has("issuerTownName") && m.has("type")) {
+              const t = m.get("type").__type === "string" ? m.get("type").value : "?";
+              const n = m.get("issuerTownName").value;
+              const res = m.has("resourceId") && m.get("resourceId").__type === "string" ? m.get("resourceId").value : "";
+              return `${idx} · ${t} · ${n}${res ? " · " + res : ""}`;
+            }
+            if (m.has("Name") && m.get("Name").__type === "string") return `${idx} · ${m.get("Name").value}`;
+          }
+          return String(idx);
+        };
+        value.items.forEach((item, idx) => {
+          childUl.appendChild(renderEntry(labelFor(item, idx), item, path.concat(String(idx)), depth + 1));
+        });
+      }
+      li.appendChild(childUl);
+    }
+    return li;
+  }
+
+  function formatLeaf(value) {
+    const span = document.createElement("span");
+    if (value.__type === "array" && value.kind === "I" && value.items.length === 4) {
+      const u = formatUuidArray(value.items);
+      if (u) {
+        span.className = "v-uuid";
+        span.textContent = " " + u;
+        span.title = value.items.map((x) => x.raw || x.value).join(", ");
+        return span;
+      }
+    }
+    if (value.__type === "string") {
+      span.className = "v-str";
+      span.textContent = " " + JSON.stringify(value.value);
+      return span;
+    }
+    if (value.__type === "list" || value.__type === "array" || value.__type === "compound") {
+      span.className = "v-muted";
+      span.textContent = " " + summarize(value);
+      return span;
+    }
+    span.className = "v-num";
+    span.textContent = " " + (value.raw || String(value.value));
+    const t = document.createElement("span");
+    t.className = "v-type";
+    t.textContent = value.__type;
+    const wrap = document.createElement("span");
+    wrap.appendChild(span);
+    wrap.appendChild(t);
+    return wrap;
+  }
+
+  function toggleLi(li) {
+    const open = li.classList.toggle("collapsed") === false;
+    const twisty = li.querySelector(":scope > .row > .twisty");
+    if (twisty && !twisty.classList.contains("empty")) twisty.textContent = open ? "▼" : "▶";
+  }
+
+  function setAllCollapsed(collapsed) {
+    els.detail.querySelectorAll("li").forEach((li) => {
+      if (!li.querySelector(":scope > .tree")) return;
+      li.classList.toggle("collapsed", collapsed);
+      const twisty = li.querySelector(":scope > .row > .twisty");
+      if (twisty && !twisty.classList.contains("empty")) twisty.textContent = collapsed ? "▶" : "▼";
+    });
+  }
+
+  function applyHeavyDefaults(rootUl) {
+    rootUl.querySelectorAll("li").forEach((li) => {
+      const key = li.dataset.key;
+      // strip "0 · sell · …" list labels → check base key from path
+      const path = (li.dataset.path || "").split("\0");
+      const last = path[path.length - 1];
+      const heavy = HEAVY_KEYS.has(key) || HEAVY_KEYS.has(last);
+      if (heavy && li.querySelector(":scope > .tree")) {
+        li.classList.add("collapsed");
+        const twisty = li.querySelector(":scope > .row > .twisty");
+        if (twisty) twisty.textContent = "▶";
+      }
+    });
+    // Keep top-level of current view expanded
+    rootUl.querySelectorAll(":scope > li").forEach((li) => {
+      if (li.querySelector(":scope > .tree")) {
+        li.classList.remove("collapsed");
+        const twisty = li.querySelector(":scope > .row > .twisty");
+        if (twisty) twisty.textContent = "▼";
+      }
+    });
+  }
+
+  function applyFilter() {
+    const q = filterText.trim().toLowerCase();
+    const lis = els.detail.querySelectorAll("li");
+    if (!q) {
+      lis.forEach((li) => { li.style.display = ""; });
+      return;
+    }
+    lis.forEach((li) => {
+      const hit = (li.dataset.path || "").toLowerCase().includes(q)
+        || (li.dataset.key || "").toLowerCase().includes(q)
+        || (li.textContent || "").toLowerCase().includes(q);
+      li.style.display = hit ? "" : "none";
+      if (hit) {
+        let p = li.parentElement;
+        while (p) {
+          if (p.tagName === "LI") {
+            p.style.display = "";
+            p.classList.remove("collapsed");
+            const twisty = p.querySelector(":scope > .row > .twisty");
+            if (twisty && !twisty.classList.contains("empty")) twisty.textContent = "▼";
+          }
+          p = p.parentElement;
+        }
+      }
+    });
+  }
+
+  // --- Load ---
+  function loadText(text, name) {
+    try {
+      rootValue = new SnbtParser(text).parse();
+    } catch (e) {
+      els.dropHint.style.display = "flex";
+      els.workspace.style.display = "none";
+      els.status.textContent = "Parse error";
+      els.detail.innerHTML = "";
+      els.nav.innerHTML = "";
+      els.dropHint.innerHTML = `<div class="err">Failed to parse SNBT:\n${e.message}</div>`;
+      setControls(false);
+      return;
+    }
+    selectedPath = [];
+    filterText = "";
+    els.filter.value = "";
+    els.dropHint.style.display = "none";
+    els.workspace.style.display = "grid";
+    els.workspace.classList.add("split");
+    const map = compoundMap(rootValue);
+    const iso = map.get("dumpTimestampIso");
+    const ver = map.get("dumpVersion");
+    els.fileMeta.textContent = [
+      name || "dump",
+      iso && iso.__type === "string" ? iso.value : null,
+      ver ? "v" + (ver.raw || ver.value) : null,
+      Math.round(text.length / 1024) + " KB",
+    ].filter(Boolean).join(" · ");
+    buildNav(rootValue);
+    renderDetail();
+    setControls(true);
+    els.status.textContent = `Loaded ${name || "dump"} — click outline to focus; heavy sections start collapsed`;
+  }
+
+  function setControls(on) {
+    els.filter.disabled = !on;
+    els.btnExpand.disabled = !on;
+    els.btnCollapse.disabled = !on;
+    els.btnCollapseHeavy.disabled = !on;
+  }
+
+  function readFile(file) {
+    const reader = new FileReader();
+    reader.onload = () => loadText(String(reader.result), file.name);
+    reader.onerror = () => { els.status.textContent = "Failed to read file"; };
+    reader.readAsText(file);
+  }
+
+  // --- Splitter ---
+  (function setupSplitter() {
+    let dragging = false;
+    els.splitter.addEventListener("mousedown", (e) => {
+      dragging = true;
+      e.preventDefault();
+      document.body.style.cursor = "col-resize";
+    });
+    window.addEventListener("mousemove", (e) => {
+      if (!dragging) return;
+      const rect = els.workspace.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const pct = Math.min(50, Math.max(15, (x / rect.width) * 100));
+      els.workspace.style.gridTemplateColumns = `${pct}% 5px 1fr`;
+    });
+    window.addEventListener("mouseup", () => {
+      dragging = false;
+      document.body.style.cursor = "";
+    });
+  })();
+
+  // --- Events ---
+  els.fileInput.addEventListener("change", () => {
+    const f = els.fileInput.files && els.fileInput.files[0];
+    if (f) readFile(f);
+  });
+  els.filter.addEventListener("input", () => {
+    filterText = els.filter.value;
+    applyFilter();
+  });
+  els.btnExpand.addEventListener("click", () => setAllCollapsed(false));
+  els.btnCollapse.addEventListener("click", () => setAllCollapsed(true));
+  els.btnCollapseHeavy.addEventListener("click", () => {
+    setAllCollapsed(false);
+    applyHeavyDefaults(els.detail.querySelector(".tree"));
+  });
+
+  ["dragenter", "dragover"].forEach((ev) => {
+    window.addEventListener(ev, (e) => {
+      e.preventDefault();
+      els.dropHint.classList.add("drag");
+    });
+  });
+  ["dragleave", "drop"].forEach((ev) => {
+    window.addEventListener(ev, (e) => {
+      e.preventDefault();
+      els.dropHint.classList.remove("drag");
+    });
+  });
+  window.addEventListener("drop", (e) => {
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) readFile(f);
+  });
+})();
+  </script>
+</body>
+</html>
