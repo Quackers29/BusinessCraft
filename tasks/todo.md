@@ -68,7 +68,7 @@
 
 ## Step 4 — Default flip + verification (LAST)
 
-- [ ] Tourism-only defaults: `craftableTownInterface=true`; tourists/milestones on; production/research/trading/contracts **off**; `metersPerEmerald=1000`; milestones 1000m→apple, 5000m→bread; `minPayoutDistance=100`; confirm free tourism CSV
+- [x] Tourism-only defaults: `craftableTownInterface=true`; tourists/milestones on; production/research/trading/contracts **off**; `metersPerEmerald=1000`; milestones 1000m→apple, 5000m→bread; `minPayoutDistance=100`; confirm free tourism CSV
 - [ ] Manual Option C in-game trace (tourism with production off; oasis pop=5 OK)
 - [ ] Dedicated-server boot smoke — Forge + Fabric (refactor Fabric server paths **only if** smoke fails)
 - [ ] Full SP pass both loaders + manual Create pass (Create Fabric = class-name sniff; verify or document Forge-only). Docs: tourists can't walk (speed 0) — need carts/trains

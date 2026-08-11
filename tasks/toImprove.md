@@ -32,7 +32,7 @@
 
 ### 2. Core Tourism Loop Balance & Feedback
 - Tourist spawning, travel, and reward loop exists but feels opaque.
-- Payment rate (`metersPerEmerald = 50`) and milestone thresholds need tuning/playtesting.
+- Payment rate (`metersPerEmerald = 1000`) and milestone thresholds need tuning/playtesting.
 - **Suggestions**:
   - Add more frequent positive feedback when tourists arrive (particles, better notifications).
   - Show "tourist journey" stats in the Town Overview UI (average distance, total revenue).

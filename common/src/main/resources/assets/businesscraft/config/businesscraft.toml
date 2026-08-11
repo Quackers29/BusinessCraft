@@ -9,10 +9,10 @@
     # Default town boundary radius (blocks) when no border modifier is set.
     # New-town placement requires defaultBorderRadius + existing town's border.
     defaultBorderRadius = 50
-    # When false (default): Town Interface block is nearly indestructible in survival.
+    # When false: Town Interface block is nearly indestructible in survival.
     # Creative players can still place and break it.
-    # When true: Block is craftable and can be mined with a diamond pickaxe or better (obsidian difficulty).
-    craftableTownInterface = false
+    # When true (default): Block is craftable and can be mined with a diamond pickaxe or better (obsidian difficulty).
+    craftableTownInterface = true
     # List of random town names for auto-naming
     townNames = ["Riverside", "Hillcrest", "Meadowbrook", "Oakville", "Stonebridge", "Willowglen", "Sunnyvale", "Cedarwood", "Maplehaven", "Brookside", "Fairview", "Pinehurst", "Elmwood", "Greystone"]
 
@@ -46,7 +46,7 @@
 
 [economy]
     # Meters of travel per emerald earned
-    metersPerEmerald = 50
+    metersPerEmerald = 1000
     # Minimum average travel distance (blocks) before an arrival batch earns any payment
     # Prevents farming the 1-emerald minimum with adjacent towns
     minPayoutDistance = 100
@@ -61,11 +61,15 @@
     # Each [[milestones.rewards]] entry defines a distance threshold and item rewards
     # Format: distance = meters, items = ["modid:item:count", ...]
     [[milestones.rewards]]
-        distance = 10
-        items = ["minecraft:bread:1", "minecraft:experience_bottle:2"]
+        distance = 1000
+        items = ["minecraft:apple:1"]
+
+    [[milestones.rewards]]
+        distance = 5000
+        items = ["minecraft:bread:1"]
 
 [contracts]
-    enabled = true
+    enabled = false
     # Enable contract system (auction, bidding, delivery)
     # Auction duration in minutes
     auctionDurationMinutes = 1.0
@@ -78,7 +82,7 @@
 
 [production]
     # Enable automatic production system
-    enabled = true
+    enabled = false
     # Ticks between production cycles
     tickInterval = 100
     # Daily tick interval for consumption
@@ -90,7 +94,7 @@
 
 [trading]
     # Enable trading system
-    enabled = true
+    enabled = false
     # Ticks between trading cycles
     tickInterval = 60
     # Restock rate multiplier
@@ -110,5 +114,5 @@
     townBoundaryMessages = true
 
 [research]
-enabled = true
+enabled = false
 # Enable research/upgrade system

@@ -245,7 +245,7 @@ class ConfigLoaderTest {
         assertEquals(5, ConfigLoader.minPopForTourists);
         assertEquals(5, ConfigLoader.defaultStartingPopulation);
         assertEquals(50, ConfigLoader.defaultBorderRadius);
-        assertFalse(ConfigLoader.craftableTownInterface);
+        assertTrue(ConfigLoader.craftableTownInterface);
         assertEquals(1000, ConfigLoader.maxTouristsPerTown);
         assertEquals(5, ConfigLoader.populationPerTourist);
         assertEquals(20, ConfigLoader.maxPopBasedTourists);
@@ -254,25 +254,27 @@ class ConfigLoaderTest {
         assertTrue(ConfigLoader.enableTouristExpiry);
         assertTrue(ConfigLoader.notifyOnTouristDeparture);
 
-        assertEquals(50, ConfigLoader.metersPerEmerald);
+        assertEquals(1000, ConfigLoader.metersPerEmerald);
         assertEquals("minecraft:emerald", ConfigLoader.currencyItem);
 
         assertTrue(ConfigLoader.enableMilestones);
         // NOTE: when the very first class load hits the null-platform NPE path (caught),
         // loadMilestoneRewards is never reached and the map stays at its Java init (empty).
-        // The default (10 -> bread+exp) only appears after a *successful* loadConfig that
+        // The default (1000 -> apple, 5000 -> bread) only appears after a *successful* loadConfig that
         // parsed a toml (see loadConfig_noTomlInDir... and the empty-rewards tests).
-        assertTrue(ConfigLoader.milestoneRewards.isEmpty() || ConfigLoader.milestoneRewards.containsKey(10));
+        assertTrue(ConfigLoader.milestoneRewards.isEmpty()
+                || (ConfigLoader.milestoneRewards.containsKey(1000)
+                && ConfigLoader.milestoneRewards.containsKey(5000)));
 
         assertTrue(ConfigLoader.playerTracking);
         assertTrue(ConfigLoader.townBoundaryMessages);
 
-        assertTrue(ConfigLoader.tradingEnabled);
+        assertFalse(ConfigLoader.tradingEnabled);
         assertEquals(60, ConfigLoader.tradingTickInterval);
         assertEquals(0.5f, ConfigLoader.tradingRestockRate, 1e-6f);
         assertEquals(1000.0f, ConfigLoader.tradingDefaultMaxStock, 1e-6f);
 
-        assertTrue(ConfigLoader.productionEnabled);
+        assertFalse(ConfigLoader.productionEnabled);
         assertEquals(100, ConfigLoader.productionTickInterval);
         assertEquals(24000, ConfigLoader.dailyTickInterval);
         assertEquals(60, ConfigLoader.minStockPercent);
@@ -282,10 +284,10 @@ class ConfigLoaderTest {
         assertEquals(2.0, ConfigLoader.contractCourierAcceptanceMinutes, 1e-9);
         assertEquals(0.05, ConfigLoader.contractCourierDeliveryMinutesPerMeter, 1e-9);
         assertEquals(0.1, ConfigLoader.contractSnailMailDeliveryMinutesPerMeter, 1e-9);
-        assertTrue(ConfigLoader.contractsEnabled);
+        assertFalse(ConfigLoader.contractsEnabled);
 
         assertEquals("UTC", ConfigLoader.displayTimezone);
-        assertTrue(ConfigLoader.researchEnabled);
+        assertFalse(ConfigLoader.researchEnabled);
         assertTrue(ConfigLoader.touristSystemEnabled);
     }
 
@@ -389,9 +391,9 @@ class ConfigLoaderTest {
         ConfigLoader.loadConfig();
 
         assertTrue(ConfigLoader.enableMilestones);
-        assertEquals(1, ConfigLoader.milestoneRewards.size());
-        assertEquals(List.of("minecraft:bread:1", "minecraft:experience_bottle:2"),
-                ConfigLoader.milestoneRewards.get(10));
+        assertEquals(2, ConfigLoader.milestoneRewards.size());
+        assertEquals(List.of("minecraft:apple:1"), ConfigLoader.milestoneRewards.get(1000));
+        assertEquals(List.of("minecraft:bread:1"), ConfigLoader.milestoneRewards.get(5000));
     }
 
     @Test
@@ -498,8 +500,9 @@ class ConfigLoaderTest {
         // After copy, the values must match the shipped defaults (identical to Java inits)
         assertEquals(5, ConfigLoader.defaultStartingPopulation);
         assertEquals(50, ConfigLoader.defaultBorderRadius);
-        assertEquals(50, ConfigLoader.metersPerEmerald);
-        assertTrue(ConfigLoader.milestoneRewards.containsKey(10));
+        assertEquals(1000, ConfigLoader.metersPerEmerald);
+        assertTrue(ConfigLoader.milestoneRewards.containsKey(1000));
+        assertTrue(ConfigLoader.milestoneRewards.containsKey(5000));
     }
 
     // --- saveConfig roundtrip (write then re-load) ---
