@@ -17,13 +17,13 @@ The mod's entire behavior (town spacing, tourist spawning thresholds, payment ra
 - It then opens the file with NightConfig's CommentedFileConfig, calls load(), and for every known key does `config.getIntOrElse("section.key", DEFAULT)` or `getOrElse(...)` (the defaults exactly match the Java field initializers and the shipped toml).
 - Special cases:
   - `general.townNames` falls back to an internal list of 14 themed names via private getDefaultTownNames().
-  - `milestones.rewards` (a list of tables) is handled by loadMilestoneRewards: if the list is absent or empty the map is populated with a single default entry (distance 10 → bread×1 + experience_bottle×2); otherwise each entry is parsed (distance as Number, items as list of "modid:item:count" strings) and inserted only if distance > 0 and items non-empty.
+  - `milestones.rewards` (a list of tables) is handled by loadMilestoneRewards: if the list is absent or empty the map is populated with two default entries (distance 1000 → apple×1, distance 5000 → bread×1); otherwise each entry is parsed (distance as Number, items as list of "modid:item:count" strings) and inserted only if distance > 0 and items non-empty.
 - After the TOML block, loadRegistries() is called (Resource/Production/Upgrade/Biome registries, which themselves may consult the platform config dir).
 - Hot reload: registerWithHotReload() registers the main config with ConfigurationService, which sets up a JDK WatchService on the parent directory and a 250 ms debounced executor callback that re-invokes loadConfig() on detected modify/create.
 - saveConfig() (also used by the in-game "save" path if needed) rebuilds a fresh CommentedFileConfig, sets every current static value plus a descriptive comment, handles milestone serialization symmetrically, and writes it.
 - All values are live: changing a static (in tests, via commands, or after reload) immediately affects every reader (e.g. TouristEntity.expiry, payment math, boundary checks, name picker).
 
-**Worked example**: A fresh install has no businesscraft.toml. loadConfig copies the resource default (metersPerEmerald = 50, one 10 m milestone, 14 town names, all systems enabled). A player edits the file to add `metersPerEmerald = 100` under [economy] and `[[milestones.rewards]] distance=50 items=["minecraft:emerald:1"]`, saves, and (with hot reload) the next tourist arrival batch uses the 100 m/emerald rate and the 50 m milestone becomes available. If the player sets `townNames = []`, name generation falls back to the literal "DefaultTown" in the two call sites.
+**Worked example**: A fresh install has no businesscraft.toml. loadConfig copies the resource default (metersPerEmerald = 1000, milestones at 1000m→apple and 5000m→bread, 14 town names, tourism-only toggles: tourists/milestones on, production/research/trading/contracts off, craftableTownInterface=true). A player edits the file to add `metersPerEmerald = 100` under [economy] and `[[milestones.rewards]] distance=50 items=["minecraft:emerald:1"]`, saves, and (with hot reload) the next tourist arrival batch uses the 100 m/emerald rate and the 50 m milestone becomes available. If the player sets `townNames = []`, name generation falls back to the literal "DefaultTown" in the two call sites.
 
 ---
 > [!info]- Deep reference
@@ -46,16 +46,16 @@ All configuration is side-effectful mutation of public static fields. There are 
 Defaults (source of truth = the Java field initializers; must match the shipped toml and every getOrElse second argument):
 
 - Vehicles: enableCreateTrains=true, enableMinecarts=true, vehicleSearchRadius=3, minecartStopThreshold=0.001
-- Town: defaultStartingPopulation=5, defaultBorderRadius=50, craftableTownInterface=false, townNames=<14 names via getDefault...>, maxTouristsPerTown=1000, populationPerTourist=5, maxPopBasedTourists=20, minPopForTourists=5 (town spacing uses boundary radii / defaultBorderRadius, not a flat min-distance config)
+- Town: defaultStartingPopulation=5, defaultBorderRadius=50, craftableTownInterface=true, townNames=<14 names via getDefault...>, maxTouristsPerTown=1000, populationPerTourist=5, maxPopBasedTourists=20, minPopForTourists=5 (town spacing uses boundary radii / defaultBorderRadius, not a flat min-distance config)
 - Tourist: touristExpiryMinutes=120.0, enableTouristExpiry=true, notifyOnTouristDeparture=true, touristSystemEnabled=true
-- Economy: metersPerEmerald=50, currencyItem="minecraft:emerald"
-- Milestones: enableMilestones=true, milestoneRewards populated by loadMilestoneRewards
+- Economy: metersPerEmerald=1000, minPayoutDistance=100, currencyItem="minecraft:emerald"
+- Milestones: enableMilestones=true, milestoneRewards populated by loadMilestoneRewards (default empty-list path: 1000→apple, 5000→bread)
 - Player: playerTracking=true, townBoundaryMessages=true
-- Trading: tradingEnabled=true, tradingTickInterval=60, tradingRestockRate=0.5f, tradingDefaultMaxStock=1000.0f
-- Production: productionEnabled=true, productionTickInterval=100, dailyTickInterval=24000, minStockPercent=60, excessStockPercent=80
-- Contracts: contractAuctionDurationMinutes=1.0, contractCourierAcceptanceMinutes=2.0, contractCourierDeliveryMinutesPerMeter=0.05, contractSnailMailDeliveryMinutesPerMeter=0.1, contractsEnabled=true
+- Trading: tradingEnabled=false, tradingTickInterval=60, tradingRestockRate=0.5f, tradingDefaultMaxStock=1000.0f
+- Production: productionEnabled=false, productionTickInterval=100, dailyTickInterval=24000, minStockPercent=60, excessStockPercent=80
+- Contracts: contractAuctionDurationMinutes=1.0, contractCourierAcceptanceMinutes=2.0, contractCourierDeliveryMinutesPerMeter=0.05, contractSnailMailDeliveryMinutesPerMeter=0.1, contractsEnabled=false
 - Display: displayTimezone="UTC" (also pushed to BCTimeUtils on load)
-- Research/phase11: researchEnabled=true
+- Research/phase11: researchEnabled=false
 
 Parsing rules (loadConfig, lines ~124-182):
 - Uses `getIntOrElse`, `getOrElse`, and for floats: `config.<Number>getOrElse("key", d).floatValue()` (or .doubleValue() in save path).
@@ -68,8 +68,8 @@ Milestone load logic (exact, from loadMilestoneRewards):
 milestoneRewards.clear();
 List<CommentedConfig> rewards = config.getOrElse("milestones.rewards", new ArrayList<>());
 if (rewards.isEmpty()) {
-    List<String> defaultRewards = List.of("minecraft:bread:1", "minecraft:experience_bottle:2");
-    milestoneRewards.put(10, new ArrayList<>(defaultRewards));
+    milestoneRewards.put(1000, new ArrayList<>(List.of("minecraft:apple:1")));
+    milestoneRewards.put(5000, new ArrayList<>(List.of("minecraft:bread:1")));
     return;
 }
 for (CommentedConfig reward : rewards) {
@@ -95,7 +95,7 @@ Error handling: every I/O or platform failure path in loadConfig / saveConfig / 
 - Platform not initialized (common in pure unit tests): `PlatformAccess.platform` is null → NPE on .getConfigDirectory() inside the try → caught → all fields retain their declared = defaults. (This is why tests can safely read/mutate ConfigLoader.* without a full mod bootstrap.)
 - Missing businesscraft.toml: copy of the jar resource (or saveConfig() minimal if resource absent).
 - Key present but value missing/wrong type in toml: NightConfig getOrElse supplies the documented default.
-- `milestones.rewards = []` (empty list in file) → default (10 m) milestone is installed.
+- `milestones.rewards = []` (empty list in file) → default (1000m apple, 5000m bread) milestones are installed.
 - `milestones.rewards` present with entries but every entry has distance <= 0 or empty items → map ends up empty (no default is retroactively installed).
 - `general.townNames = []` in toml → field becomes empty list; both name-picking sites return the literal "DefaultTown".
 - Overriding `townNames` to a custom list replaces the 14-name set entirely for that run.

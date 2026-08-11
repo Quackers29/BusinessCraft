@@ -31,7 +31,7 @@ public class ConfigLoader {
     public static int defaultStartingPopulation = 5;
     /** Default town boundary radius (blocks) when no {@code border} modifier is set. */
     public static int defaultBorderRadius = 50;
-    public static boolean craftableTownInterface = false;
+    public static boolean craftableTownInterface = true;
     public static int maxTouristsPerTown = 1000;
     public static int populationPerTourist = 5;
     public static int maxPopBasedTourists = 20;
@@ -42,7 +42,7 @@ public class ConfigLoader {
     public static boolean notifyOnTouristDeparture = true;
 
     // Tourism economy config
-    public static int metersPerEmerald = 50;
+    public static int metersPerEmerald = 1000;
     // Minimum average travel distance (blocks) for an arrival batch to earn any payment.
     // Blocks the adjacent-town exploit (~55-block spacing farming the 1-emerald floor).
     public static int minPayoutDistance = 100;
@@ -56,14 +56,14 @@ public class ConfigLoader {
     public static boolean townBoundaryMessages = true;
 
     // Trading config
-    public static boolean tradingEnabled = true;
+    public static boolean tradingEnabled = false;
     public static int tradingTickInterval = 60;
     public static float tradingRestockRate = 0.5f;
     public static float tradingDefaultMaxStock = 1000.0f;
     public static String currencyItem = "minecraft:emerald";
 
     // Production config
-    public static boolean productionEnabled = true;
+    public static boolean productionEnabled = false;
     public static int productionTickInterval = 100;
     public static int dailyTickInterval = 24000;
     public static int minStockPercent = 60;
@@ -80,8 +80,8 @@ public class ConfigLoader {
 
     // Phase 11: Global system toggles
     public static boolean touristSystemEnabled = true;
-    public static boolean contractsEnabled = true;
-    public static boolean researchEnabled = true;
+    public static boolean contractsEnabled = false;
+    public static boolean researchEnabled = false;
 
     public static final ConfigLoader INSTANCE = new ConfigLoader();
 
@@ -129,7 +129,7 @@ public class ConfigLoader {
                 // Town spacing uses boundary radii (TownBoundaryService), not a flat min-distance key
                 defaultStartingPopulation = config.getIntOrElse("general.defaultStartingPopulation", 5);
                 defaultBorderRadius = config.getIntOrElse("general.defaultBorderRadius", 50);
-                craftableTownInterface = config.getOrElse("general.craftableTownInterface", false);
+                craftableTownInterface = config.getOrElse("general.craftableTownInterface", true);
                 townNames = config.getOrElse("general.townNames", getDefaultTownNames());
 
                 // Vehicle settings
@@ -149,7 +149,7 @@ public class ConfigLoader {
                 touristSystemEnabled = config.getOrElse("tourists.enabled", true);
 
                 // Economy settings
-                metersPerEmerald = config.getIntOrElse("economy.metersPerEmerald", 50);
+                metersPerEmerald = config.getIntOrElse("economy.metersPerEmerald", 1000);
                 minPayoutDistance = config.getIntOrElse("economy.minPayoutDistance", 100);
                 currencyItem = config.getOrElse("economy.currencyItem", "minecraft:emerald");
 
@@ -162,18 +162,18 @@ public class ConfigLoader {
                 contractCourierAcceptanceMinutes = config.getOrElse("contracts.courierAcceptanceMinutes", 2.0);
                 contractCourierDeliveryMinutesPerMeter = config.getOrElse("contracts.courierDeliveryMinutesPerMeter", 0.05);
                 contractSnailMailDeliveryMinutesPerMeter = config.getOrElse("contracts.snailMailDeliveryMinutesPerMeter", 0.1);
-                contractsEnabled = config.getOrElse("contracts.enabled", true);
+                contractsEnabled = config.getOrElse("contracts.enabled", false);
 
                 // Production settings
-                productionEnabled = config.getOrElse("production.enabled", true);
+                productionEnabled = config.getOrElse("production.enabled", false);
                 productionTickInterval = config.getIntOrElse("production.tickInterval", 100);
                 dailyTickInterval = config.getIntOrElse("production.dailyTickInterval", 24000);
                 minStockPercent = config.getIntOrElse("production.minStockPercent", 60);
                 excessStockPercent = config.getIntOrElse("production.excessStockPercent", 80);
-                researchEnabled = config.getOrElse("research.enabled", true);
+                researchEnabled = config.getOrElse("research.enabled", false);
 
                 // Trading settings
-                tradingEnabled = config.getOrElse("trading.enabled", true);
+                tradingEnabled = config.getOrElse("trading.enabled", false);
                 tradingTickInterval = config.getIntOrElse("trading.tickInterval", 60);
                 tradingRestockRate = config.<Number>getOrElse("trading.restockRate", 0.5).floatValue();
                 tradingDefaultMaxStock = config.<Number>getOrElse("trading.defaultMaxStock", 1000.0).floatValue();
@@ -217,9 +217,9 @@ public class ConfigLoader {
 
         List<CommentedConfig> rewards = config.getOrElse("milestones.rewards", new ArrayList<>());
         if (rewards.isEmpty()) {
-            // Default milestone
-            List<String> defaultRewards = List.of("minecraft:bread:1", "minecraft:experience_bottle:2");
-            milestoneRewards.put(10, new ArrayList<>(defaultRewards));
+            // Tourism-only beta defaults: 1000m apple, 5000m bread
+            milestoneRewards.put(1000, new ArrayList<>(List.of("minecraft:apple:1")));
+            milestoneRewards.put(5000, new ArrayList<>(List.of("minecraft:bread:1")));
             return;
         }
 
@@ -265,7 +265,7 @@ public class ConfigLoader {
                 config.set("general.defaultBorderRadius", defaultBorderRadius);
                 config.setComment("general.defaultBorderRadius", " Default town boundary radius in blocks when no border modifier is set. Also used for new-town placement spacing.");
                 config.set("general.craftableTownInterface", craftableTownInterface);
-                config.setComment("general.craftableTownInterface", " When false (default): Town Interface is nearly indestructible in survival. Creative players can still break it. When true: block is craftable and breakable with diamond pickaxe or better.");
+                config.setComment("general.craftableTownInterface", " When false: Town Interface is nearly indestructible in survival. Creative players can still break it. When true (default): block is craftable and breakable with diamond pickaxe or better.");
                 config.set("general.townNames", townNames);
                 config.setComment("general.townNames", " List of random town names for auto-naming");
 

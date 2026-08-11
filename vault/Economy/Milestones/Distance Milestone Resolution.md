@@ -17,7 +17,7 @@ Long tourist journeys award bonus items (food, XP bottles, or custom) on top of 
 - Otherwise the *highest* qualifying threshold is selected; its reward string list (e.g. `["minecraft:bread:1", "minecraft:experience_bottle:2"]`) is parsed into ItemStacks, each stack's count multiplied by the tourist count in the batch, and returned in the result.
 - If the result has rewards, they are either added as a standalone MILESTONE reward entry or bundled with the fare into a TOURIST_ARRIVAL entry on the destination town's Payment Board.
 - Players see a gold "🏆 Distance Milestone | 123m journey | +4 Bread, 8 Experience Bottles" notification (if notify enabled).
-- **Worked example (default config)**: milestone at 10 blocks with `["minecraft:bread:1", "minecraft:experience_bottle:2"]`. 4 tourists travel 15 blocks average → checkMilestones(15, 4) selects 10, yields two stacks: bread count=1*4=4, exp_bottle count=2*4=8. These items go to the Payment Board for claiming.
+- **Worked example (default config)**: milestones at 1000 blocks (apple) and 5000 blocks (bread). 4 tourists travel 1200 blocks average → checkMilestones(1200, 4) selects 1000, yields apple count=1*4=4. These items go to the Payment Board for claiming.
 - Config is hot-reloadable; changing enabled or the rewards list affects the next arrival batch immediately.
 
 ---
@@ -33,7 +33,7 @@ Long tourist journeys award bonus items (food, XP bottles, or custom) on top of 
 | `DistanceMilestoneHelper.parseRewardString(String)` (private) | same (line 124) | "namespace:item" or "namespace:item:count" → ResourceLocation → registry.getItem → ItemStack (count default 1); all failures → ItemStack.EMPTY + log warn; outer try/catch |
 | `DistanceMilestoneHelper.deliverRewards(Town, MilestoneResult)` (public) | same (line 180) | If hasRewards, copies list and calls town.getPaymentBoard().addReward(RewardSource.MILESTONE, list, "ALL"); returns true on non-null id |
 | `DistanceMilestoneHelper.getMilestoneDistances()` / `getMilestoneRewards(int)` | same (lines 221, 233) | Return sorted list of configured distances; or the raw reward string list for a distance (or empty) |
-| `ConfigLoader.enableMilestones` / `milestoneRewards` (Map<Integer, List<String>>) | `common/src/main/java/com/quackers29/businesscraft/config/ConfigLoader.java` (lines 47-48, 151-152, 209-227) | Source of truth; loaded from `[milestones]` section (or defaults to 10→[bread:1, exp_bottle:2] if no entries) |
+| `ConfigLoader.enableMilestones` / `milestoneRewards` (Map<Integer, List<String>>) | `common/src/main/java/com/quackers29/businesscraft/config/ConfigLoader.java` (lines 47-48, 151-152, 209-227) | Source of truth; loaded from `[milestones]` section (or defaults to 1000→apple, 5000→bread if no entries) |
 
 ## Rules & formulas (exact)
 Selection (checkMilestones, ~lines 60-89):
@@ -64,7 +64,7 @@ return new MilestoneResult(distance, achievedMilestone, rewards, touristCount);
   - count = 1; if >=3 parts, Integer.parseInt(parts[2]); if parse fails or result <=0 → count=1 + warn.
   - Lookup: `PlatformAccess.getRegistry().getItem(itemId)` — expected to return Item or something castable; null or non-Item → EMPTY + warn.
   - Final: `new ItemStack(item, count)` (the scaled mutation happens on this instance in caller).
-- Defaults (when toml has no `[[milestones.rewards]]` or empty): milestone 10 with `["minecraft:bread:1", "minecraft:experience_bottle:2"]`.
+- Defaults (when toml has no `[[milestones.rewards]]` or empty): milestones 1000 (apple) and 5000 (bread).
 - deliverRewards only acts if `hasRewards()`; it does a shallow copy of the list before posting.
 - All config values read live from the public statics at call time (hot-reload friendly).
 

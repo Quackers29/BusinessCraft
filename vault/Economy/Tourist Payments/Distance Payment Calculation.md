@@ -6,7 +6,7 @@ tags:
 # Distance Payment Calculation
 
 **Breadcrumb**: Economy > Tourist Payments > Distance Payment Calculation
-**TL;DR**: An arrival batch pays the destination town `floor(max(1, avgDistanceTraveled ÷ metersPerEmerald × touristCount))` emeralds — real traveled distance (capped at 2× the straight-line origin→destination distance), default rate 50 m/emerald, minimum 1 per batch, 0 if no distance recorded **or** if the average distance is below `minPayoutDistance` (default 100 blocks).
+**TL;DR**: An arrival batch pays the destination town `floor(max(1, avgDistanceTraveled ÷ metersPerEmerald × touristCount))` emeralds — real traveled distance (capped at 2× the straight-line origin→destination distance), default rate 1000 m/emerald, minimum 1 per batch, 0 if no distance recorded **or** if the average distance is below `minPayoutDistance` (default 100 blocks).
 
 ## What it does
 When tourists arrive at a destination town, the town earns emeralds based on how far the tourists actually traveled. This is the core formula of the entire mod's economy. The payment lands on the destination town's Payment Board as part of a bundled "tourist arrival" reward (fare plus any milestone bonuses), which players can then claim.
@@ -17,8 +17,8 @@ When tourists arrive at a destination town, the town earns emeralds based on how
 - **Anti-cheat cap**: each tourist's traveled distance is clamped to at most **2× the straight-line distance** between origin town and destination block before it enters the batch average. Winding routes still pay more than direct ones, but loop-back track farming (riding circles to inflate the counter) is capped.
 - Payment = average distance ÷ rate × number of tourists, rounded down, with a minimum of 1 emerald per batch.
 - **Minimum payout distance**: if the batch's average distance is below `minPayoutDistance` (default 100 blocks), the batch pays **nothing** — this blocks farming the 1-emerald floor with adjacent towns (real minimum town spacing is ~55 blocks).
-- **Worked example**: 2 tourists from Town A traveled 400 and 600 blocks → average 500 → (500 ÷ 50) × 2 = **20 emeralds**.
-- The rate (`metersPerEmerald`, default 50) and `minPayoutDistance` are configurable in `businesscraft.toml` under `[economy]` and hot-reload live.
+- **Worked example**: 2 tourists from Town A traveled 4000 and 6000 blocks → average 5000 → (5000 ÷ 1000) × 2 = **10 emeralds**.
+- The rate (`metersPerEmerald`, default 1000) and `minPayoutDistance` are configurable in `businesscraft.toml` under `[economy]` and hot-reload live.
 
 ---
 > [!info]- Deep reference
@@ -32,7 +32,7 @@ When tourists arrive at a destination town, the town earns emeralds based on how
 | `VisitorProcessingHelper.clampTraveledDistance(traveled, straightLine)` | same file | **Anti-cheat clamp** (public static, pure): `min(traveled, MAX_TRAVELED_DISTANCE_MULTIPLIER × straightLine)`; multiplier constant = 2.0 |
 | `VisitorProcessingHelper.processVisitBuffer(...)` | same file (~line 242) | Orchestrates: records visits, captures average distance (before payment clears it), calls `calculatePayment`, checks milestones, creates the bundled reward |
 | `VisitBuffer.addVisitor` / `updateVisitorDistance` / `getAverageDistance` | `common/src/main/java/com/quackers29/businesscraft/town/data/VisitBuffer.java` | Batches arrivals per origin town for ~1s; accumulates total distance and computes the per-batch average that feeds the formula |
-| `ConfigLoader.metersPerEmerald` | `common/src/main/java/com/quackers29/businesscraft/config/ConfigLoader.java` (line 44) | The rate. Public static int, default `50`, loaded from `[economy] metersPerEmerald` in `businesscraft.toml` |
+| `ConfigLoader.metersPerEmerald` | `common/src/main/java/com/quackers29/businesscraft/config/ConfigLoader.java` (line 44) | The rate. Public static int, default `1000`, loaded from `[economy] metersPerEmerald` in `businesscraft.toml` |
 | `ConfigLoader.minPayoutDistance` | same file (just below `metersPerEmerald`) | Minimum average batch distance for any payout. Public static int, default `100`, loaded from `[economy] minPayoutDistance` |
 
 ## Rules & formulas (exact)
