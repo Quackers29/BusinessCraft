@@ -20,8 +20,14 @@
 #   3. /opt/businesscraft/superflat-template
 #
 # A normal client launch does not pass -Pshowcase, so the harness stays off.
+#
+# Window and GUI scale are fixed for comparable Forge/Fabric PNGs (see
+# tools/showcase-options.txt and -PshowcaseWidth / -PshowcaseHeight).
 
 set -euo pipefail
+
+SHOWCASE_WIDTH="${SHOWCASE_WIDTH:-1920}"
+SHOWCASE_HEIGHT="${SHOWCASE_HEIGHT:-1080}"
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
@@ -73,13 +79,16 @@ rm -f "$WORLD/session.lock"
 mkdir -p "$SHOTDIR"
 rm -f "$SHOTDIR"/showcase_*.png
 
-# The game must keep ticking when the window is not focused, or the harness
-# never reaches its first shot.
-if [[ -f "$OPTIONS" ]]; then
-    sed -i 's/^pauseOnLostFocus:.*/pauseOnLostFocus:false/' "$OPTIONS"
-fi
+mkdir -p "$RUN_DIR"
+cp "$ROOT/tools/showcase-options.txt" "$OPTIONS"
 
-GRADLE_PROPS=(-PquickPlay=zz_showcase -Pshowcase="$SCENES" -PshowcaseTemplate="$TEMPLATE")
+GRADLE_PROPS=(
+    -PquickPlay=zz_showcase
+    -Pshowcase="$SCENES"
+    -PshowcaseTemplate="$TEMPLATE"
+    -PshowcaseWidth="$SHOWCASE_WIDTH"
+    -PshowcaseHeight="$SHOWCASE_HEIGHT"
+)
 
 set +e
 bash ./gradlew --no-daemon "$GRADLE_TASK" "${GRADLE_PROPS[@]}" --console=plain >"$LOG" 2>&1

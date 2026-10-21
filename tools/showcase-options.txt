@@ -1,0 +1,10 @@
+version:3465
+fullscreen:false
+pauseOnLostFocus:false
+renderDistance:8
+simulationDistance:6
+maxFps:60
+enableVsync:false
+guiScale:2
+resourcePacks:["vanilla","file/readable-menus"]
+lang:en_us
