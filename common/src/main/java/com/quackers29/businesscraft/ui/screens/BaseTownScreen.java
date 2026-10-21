@@ -9,6 +9,7 @@ import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import com.quackers29.businesscraft.ui.modal.core.BCModalScreen;
 import com.quackers29.businesscraft.ui.modal.core.BCPopupScreen;
 import com.quackers29.businesscraft.ui.components.containers.BCTabPanel;
+import com.quackers29.businesscraft.ui.layout.TownScreenLayout;
 import com.quackers29.businesscraft.ui.managers.*;
 import com.quackers29.businesscraft.data.cache.TownDataCache;
 import com.quackers29.businesscraft.api.ITownDataProvider;
@@ -72,6 +73,11 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
     // Resource cleanup management
     private boolean isCleanedUp = false;
 
+    private TownScreenLayout.Chrome layoutChrome = new TownScreenLayout.Chrome(
+            TownScreenLayout.DEFAULT_TITLE_MARGIN,
+            TownScreenLayout.DEFAULT_BOTTOM_GAP,
+            TownScreenLayout.DEFAULT_BOTTOM_ROW_HEIGHT);
+
     // Logger for all town screens
     protected static final Logger LOGGER = LoggerFactory.getLogger(BaseTownScreen.class);
 
@@ -86,8 +92,8 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
         super(menu, inventory, title);
 
         // Set standard dimensions for town screens
-        this.imageWidth = 256;
-        this.imageHeight = 204;
+        this.imageWidth = TownScreenLayout.PANEL_WIDTH;
+        this.imageHeight = TownScreenLayout.PANEL_HEIGHT;
 
         // Move the inventory label off-screen to hide it
         this.inventoryLabelY = 300; // Position it below the visible area
@@ -140,6 +146,7 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
     @Override
     protected void init() {
         super.init();
+        applyTownLayout();
 
         // Apply our custom theme for this screen
         BCTheme.setActiveTheme(customTheme);
@@ -152,6 +159,50 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
 
         // Allow subclasses to perform additional initialization
         performAdditionalInit();
+        onTownLayoutApplied();
+    }
+
+    @Override
+    public void resize(Minecraft minecraft, int width, int height) {
+        super.resize(minecraft, width, height);
+        applyTownLayout();
+        repositionTabPanel();
+        onTownLayoutApplied();
+    }
+
+    /**
+     * Centres panel + title + bottom buttons in the scaled viewport.
+     */
+    protected void applyTownLayout() {
+        this.layoutChrome = TownScreenLayout.fitChrome(this.height, this.imageHeight);
+        this.leftPos = TownScreenLayout.panelLeftX(this.width, this.imageWidth);
+        this.topPos = TownScreenLayout.panelTopY(this.height, this.imageHeight, layoutChrome);
+    }
+
+    protected void repositionTabPanel() {
+        if (tabPanel == null) {
+            return;
+        }
+        int pad = getScreenPadding();
+        tabPanel.position(getLeftPos() + pad, getTopPos() + pad);
+    }
+
+    public int getTitleMarginAbove() {
+        return layoutChrome.titleMargin();
+    }
+
+    public int getBottomButtonGap() {
+        return layoutChrome.bottomGap();
+    }
+
+    public int getBottomButtonRowHeight() {
+        return layoutChrome.bottomRowHeight();
+    }
+
+    /**
+     * Subclasses refresh managers that depend on {@link #leftPos} / {@link #topPos}.
+     */
+    protected void onTownLayoutApplied() {
     }
 
     /**

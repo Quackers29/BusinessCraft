@@ -1007,7 +1007,7 @@ public class UIGridBuilder {
         // Render tooltips for hovered elements
         for (UIGridElement element : elements) {
             boolean hasTooltip = element.tooltip != null && !element.tooltip.isEmpty();
-            boolean showTooltip = element.isHovered && (hasTooltip || element.isTruncated);
+            boolean showTooltip = element.isHovered && (element.isTruncated || hasTooltip);
 
             if (showTooltip) {
                 // Use Minecraft's tooltip rendering (converted to Component)
@@ -1015,7 +1015,8 @@ public class UIGridBuilder {
                 if (clientHelper != null) {
                     Object fontObj = clientHelper.getFont();
                     if (fontObj instanceof net.minecraft.client.gui.Font font) {
-                        String tooltipText = hasTooltip ? element.tooltip : element.text;
+                        String tooltipText = element.isTruncated ? element.text
+                                : (hasTooltip ? element.tooltip : element.text);
                         String[] lines = tooltipText.split("\n");
                         List<Component> tooltipComponents = new ArrayList<>();
                         for (String line : lines) {
@@ -1085,7 +1086,7 @@ public class UIGridBuilder {
         element.isTruncated = false;
         if (font.width(displayText) > availableWidth) {
             element.isTruncated = true;
-            String ellipsis = "...";
+            String ellipsis = "\u2026";
             int ellipsisWidth = font.width(ellipsis);
             if (availableWidth > ellipsisWidth) {
                 displayText = font.plainSubstrByWidth(displayText, availableWidth - ellipsisWidth) + ellipsis;

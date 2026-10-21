@@ -44,6 +44,8 @@ public class BottomButtonManager {
     private int screenTopPos;
     private int screenWidth;
     private int screenHeight;
+    private int bottomGap = 10;
+    private int bottomRowHeight = 30;
 
     /**
      * Creates a new bottom button manager.
@@ -63,10 +65,17 @@ public class BottomButtonManager {
      * @param height  Screen height
      */
     public void updateScreenPosition(int leftPos, int topPos, int width, int height) {
+        updateScreenPosition(leftPos, topPos, width, height, 10, 30);
+    }
+
+    public void updateScreenPosition(int leftPos, int topPos, int width, int height,
+            int bottomGap, int bottomRowHeight) {
         this.screenLeftPos = leftPos;
         this.screenTopPos = topPos;
         this.screenWidth = width;
         this.screenHeight = height;
+        this.bottomGap = bottomGap;
+        this.bottomRowHeight = bottomRowHeight;
     }
 
     /**
@@ -75,9 +84,9 @@ public class BottomButtonManager {
     public void createBottomButtonsGrid() {
         // Calculate button panel dimensions
         int buttonPanelWidth = this.screenWidth - 40; // Leave 20px margin on each side
-        int buttonPanelHeight = 30; // Reduced by 50% from 60px to 30px
+        int buttonPanelHeight = this.bottomRowHeight;
         int buttonPanelX = this.screenLeftPos + (this.screenWidth - buttonPanelWidth) / 2;
-        int buttonPanelY = this.screenTopPos + this.screenHeight + 10;
+        int buttonPanelY = this.screenTopPos + this.screenHeight + this.bottomGap;
 
         // Create a 1x2 grid (1 row, 2 columns)
         bottomButtonsGrid = new UIGridBuilder(buttonPanelX, buttonPanelY, buttonPanelWidth, buttonPanelHeight, 1, 2)
@@ -97,9 +106,9 @@ public class BottomButtonManager {
         // Calculate button panel dimensions (must be recalculated in case window was
         // resized)
         int buttonPanelWidth = this.screenWidth - 40;
-        int buttonPanelHeight = 30;
+        int buttonPanelHeight = this.bottomRowHeight;
         int buttonPanelX = this.screenLeftPos + (this.screenWidth - buttonPanelWidth) / 2;
-        int buttonPanelY = this.screenTopPos + this.screenHeight + 10;
+        int buttonPanelY = this.screenTopPos + this.screenHeight + this.bottomGap;
 
         // Create a new grid builder with current dimensions
         bottomButtonsGrid = new UIGridBuilder(buttonPanelX, buttonPanelY, buttonPanelWidth, buttonPanelHeight, 1, 2)
@@ -179,9 +188,9 @@ public class BottomButtonManager {
     private void configureResourcesButtons() {
         // Create a 1x3 grid for resources tab
         int buttonPanelWidth = this.screenWidth - 40;
-        int buttonPanelHeight = 30;
+        int buttonPanelHeight = this.bottomRowHeight;
         int buttonPanelX = this.screenLeftPos + (this.screenWidth - buttonPanelWidth) / 2;
-        int buttonPanelY = this.screenTopPos + this.screenHeight + 10;
+        int buttonPanelY = this.screenTopPos + this.screenHeight + this.bottomGap;
 
         bottomButtonsGrid = new UIGridBuilder(buttonPanelX, buttonPanelY, buttonPanelWidth, buttonPanelHeight, 1, 3)
                 .withBackgroundColor(TownInterfaceTheme.BACKGROUND_COLOR)
