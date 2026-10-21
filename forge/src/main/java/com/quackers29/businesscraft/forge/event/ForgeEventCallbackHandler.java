@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.forge.event;
 
 import com.quackers29.businesscraft.api.EventCallbacks;
+import com.quackers29.businesscraft.client.showcase.Showcase;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -112,6 +113,7 @@ public class ForgeEventCallbackHandler {
         @SubscribeEvent
         public static void onClientTick(TickEvent.ClientTickEvent event) {
             if (event.phase == TickEvent.Phase.END) {
+                Showcase.tick();
                 for (EventCallbacks.ClientTickCallback callback : clientTickCallbacks) {
                     callback.onClientTick();
                 }
