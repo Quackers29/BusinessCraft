@@ -69,3 +69,22 @@ jar {
     // Common resources are merged via sourceSets; keep first on path if any clash
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+
+// Dev-only client flags. -PquickPlay=<save> jumps into that world.
+// -Pshowcase=<scenes> sets businesscraft.showcase for the screenshot harness.
+// ForgeGradle registers runClient during its own afterEvaluate, so this has to
+// configure the task when it appears. Args live on the task so a quick-play
+// world is already present before launch, instead of the default save.
+tasks.configureEach { task ->
+    if (task.name != 'runClient') {
+        return
+    }
+    def quickPlayWorld = project.findProperty('quickPlay')
+    if (quickPlayWorld != null && !quickPlayWorld.toString().trim().isEmpty()) {
+        task.args '--quickPlaySingleplayer', quickPlayWorld.toString()
+    }
+    def showcaseScenes = project.findProperty('showcase')
+    if (showcaseScenes != null) {
+        task.systemProperty 'businesscraft.showcase', showcaseScenes.toString()
+    }
+}

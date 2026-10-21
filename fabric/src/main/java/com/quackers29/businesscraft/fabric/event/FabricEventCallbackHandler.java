@@ -7,6 +7,7 @@ import com.quackers29.businesscraft.network.packets.ui.OpenTownInterfacePacket;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.event.TownEventHandler;
+import com.quackers29.businesscraft.client.showcase.Showcase;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
@@ -164,6 +165,7 @@ public class FabricEventCallbackHandler {
     public static void registerClientEvents() {
         // Client Tick
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            Showcase.tick();
             for (EventCallbacks.ClientTickCallback callback : clientTickCallbacks) {
                 callback.onClientTick();
             }
