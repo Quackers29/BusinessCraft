@@ -43,8 +43,8 @@ import java.util.List;
  * <p>Shot names: {@code warmup}, {@code town_interface}, {@code town_interface_back},
  * {@code town_overview}, {@code town_resources}, {@code town_production},
  * {@code town_settings}. Scenes: {@code block}, {@code town}, {@code all}.
- * The first shot waits long enough for chunks to draw. {@code before} actions
- * that change the world must run on the server thread.
+ * {@code warmup} waits for chunks to draw but is not written to disk. {@code before}
+ * actions that change the world must run on the server thread.
  */
 public final class Showcase {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/Showcase");
@@ -52,6 +52,8 @@ public final class Showcase {
     private static final int JOIN_DELAY_TICKS = 40;
     private static final int FIRST_SHOT_TICKS = 100;
     private static final int QUIT_DELAY_TICKS = 40;
+
+    private static int processExitCode;
 
     private static boolean configured;
     private static int joinTicks;
@@ -91,10 +93,7 @@ public final class Showcase {
             return;
         }
         if (quitting) {
-            if (++quitTicks >= QUIT_DELAY_TICKS) {
-                LOGGER.info("Showcase finished: {} shots", saved);
-                minecraft.stop();
-            }
+            shutdown(minecraft);
             return;
         }
         if (!buildDone) {
@@ -132,7 +131,9 @@ public final class Showcase {
         if (ticksOnShot < wait) {
             return;
         }
-        grab(minecraft, shot.name);
+        if (!"warmup".equals(shot.name)) {
+            grab(minecraft, shot.name);
+        }
         boolean last = shotIndex + 1 >= plan.size();
         if (!last && !plan.get(shotIndex + 1).screen && minecraft.screen != null) {
             minecraft.setScreen(null);
@@ -303,11 +304,20 @@ public final class Showcase {
     private static void finish(Minecraft minecraft) {
         if (!quitting) {
             LOGGER.error("Showcase failed: {}", failure);
+            processExitCode = 1;
             quitting = true;
             quitTicks = 0;
         }
+        shutdown(minecraft);
+    }
+
+    private static void shutdown(Minecraft minecraft) {
         if (++quitTicks >= QUIT_DELAY_TICKS) {
+            if (processExitCode == 0) {
+                LOGGER.info("Showcase finished: {} screenshots", saved);
+            }
             minecraft.stop();
+            System.exit(processExitCode);
         }
     }
 

@@ -70,3 +70,19 @@ jar {
         rename { "${it}_${project.base.archivesBaseName}" }
     }
 }
+
+// Dev-only client flags. -PquickPlay=<save> jumps into that world.
+// -Pshowcase=<scenes> sets businesscraft.showcase for the screenshot harness.
+tasks.configureEach { task ->
+    if (task.name != 'runClient') {
+        return
+    }
+    def quickPlayWorld = project.findProperty('quickPlay')
+    if (quickPlayWorld != null && !quickPlayWorld.toString().trim().isEmpty()) {
+        task.args '--quickPlaySingleplayer', quickPlayWorld.toString()
+    }
+    def showcaseScenes = project.findProperty('showcase')
+    if (showcaseScenes != null) {
+        task.systemProperty 'businesscraft.showcase', showcaseScenes.toString()
+    }
+}

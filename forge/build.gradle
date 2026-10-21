@@ -72,6 +72,8 @@ jar {
 
 // Dev-only client flags. -PquickPlay=<save> jumps into that world.
 // -Pshowcase=<scenes> sets businesscraft.showcase for the screenshot harness.
+// Template world copy for tools/showcase.sh: SHOWCASE_TEMPLATE, showcaseTemplate
+// in gradle.properties, or -PshowcaseTemplate=...
 // ForgeGradle registers runClient during its own afterEvaluate, so this has to
 // configure the task when it appears. Args live on the task so a quick-play
 // world is already present before launch, instead of the default save.
