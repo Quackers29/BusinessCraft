@@ -13,6 +13,8 @@ public final class TownScreenLayout {
     public static final int DEFAULT_BOTTOM_ROW_HEIGHT = 30;
     /** Vanilla {@code Window.calculateScale} minimum scaled framebuffer. */
     public static final int MIN_SCALED_FRAME_HEIGHT = 240;
+    /** Breathing room between the UI block and the scaled screen edge (each side). */
+    public static final int MIN_EDGE_MARGIN = 4;
 
     private TownScreenLayout() {
     }
@@ -24,26 +26,28 @@ public final class TownScreenLayout {
     }
 
     /**
-     * Picks title/button chrome so the full block fits in {@code scaledHeight},
-     * trimming margins before shrinking the button row.
+     * Picks title/button chrome so the full block fits in {@code scaledHeight}
+     * with at least {@link #MIN_EDGE_MARGIN} px above the title and below the
+     * bottom button row, trimming margins before shrinking the button row.
      */
     public static Chrome fitChrome(int scaledHeight, int panelHeight) {
+        int budget = Math.max(panelHeight, scaledHeight - (MIN_EDGE_MARGIN * 2));
         int title = DEFAULT_TITLE_MARGIN;
         int gap = DEFAULT_BOTTOM_GAP;
         int row = DEFAULT_BOTTOM_ROW_HEIGHT;
 
-        while (title + panelHeight + gap + row > scaledHeight && gap > 2) {
+        while (title + panelHeight + gap + row > budget && gap > 2) {
             gap--;
         }
-        while (title + panelHeight + gap + row > scaledHeight && row > 18) {
+        while (title + panelHeight + gap + row > budget && row > 16) {
             row--;
         }
-        while (title + panelHeight + gap + row > scaledHeight && title > 4) {
+        while (title + panelHeight + gap + row > budget && title > 4) {
             title--;
         }
-        if (title + panelHeight + gap + row > scaledHeight) {
+        if (title + panelHeight + gap + row > budget) {
             gap = Math.min(gap, 2);
-            row = Math.min(row, 18);
+            row = Math.min(row, 16);
             title = Math.min(title, 4);
         }
         return new Chrome(title, gap, row);
@@ -51,8 +55,32 @@ public final class TownScreenLayout {
 
     public static int panelTopY(int scaledHeight, int panelHeight, Chrome chrome) {
         int total = chrome.totalHeight(panelHeight);
-        int visualTop = Math.max(0, (scaledHeight - total) / 2);
+        int visualTop = Math.max(MIN_EDGE_MARGIN, (scaledHeight - total) / 2);
+        int bottom = visualTop + total;
+        if (bottom > scaledHeight - MIN_EDGE_MARGIN) {
+            visualTop = scaledHeight - MIN_EDGE_MARGIN - total;
+        }
+        visualTop = Math.max(MIN_EDGE_MARGIN, visualTop);
         return visualTop + chrome.titleMargin;
+    }
+
+    /** Visual top of the title (panel top minus title margin), in scaled pixels. */
+    public static int visualTopY(int scaledHeight, int panelHeight, Chrome chrome) {
+        return panelTopY(scaledHeight, panelHeight, chrome) - chrome.titleMargin();
+    }
+
+    /** Bottom edge of the bottom button row, in scaled pixels. */
+    public static int bottomRowBottomY(int scaledHeight, int panelHeight, Chrome chrome) {
+        int top = panelTopY(scaledHeight, panelHeight, chrome);
+        return top + panelHeight + chrome.bottomGap() + chrome.bottomRowHeight();
+    }
+
+    public static int bottomMargin(int scaledHeight, int panelHeight, Chrome chrome) {
+        return scaledHeight - bottomRowBottomY(scaledHeight, panelHeight, chrome);
+    }
+
+    public static int topMargin(int scaledHeight, int panelHeight, Chrome chrome) {
+        return visualTopY(scaledHeight, panelHeight, chrome);
     }
 
     public static int panelLeftX(int scaledWidth, int panelWidth) {

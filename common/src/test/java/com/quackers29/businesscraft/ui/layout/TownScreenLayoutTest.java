@@ -16,11 +16,12 @@ class TownScreenLayoutTest {
 
     @Test
     void fitChrome_fitsMinimum240ScaledHeight() {
-        TownScreenLayout.Chrome chrome = TownScreenLayout.fitChrome(240, TownScreenLayout.PANEL_HEIGHT);
-        assertTrue(chrome.totalHeight(TownScreenLayout.PANEL_HEIGHT) <= 240);
-        int top = TownScreenLayout.panelTopY(240, TownScreenLayout.PANEL_HEIGHT, chrome);
-        int bottom = top + TownScreenLayout.PANEL_HEIGHT + chrome.bottomGap() + chrome.bottomRowHeight();
-        assertTrue(top - chrome.titleMargin() >= 0);
-        assertTrue(bottom <= 240);
+        int scaledHeight = 240;
+        TownScreenLayout.Chrome chrome = TownScreenLayout.fitChrome(scaledHeight, TownScreenLayout.PANEL_HEIGHT);
+        assertTrue(chrome.totalHeight(TownScreenLayout.PANEL_HEIGHT) <= scaledHeight - (TownScreenLayout.MIN_EDGE_MARGIN * 2));
+        assertTrue(TownScreenLayout.topMargin(scaledHeight, TownScreenLayout.PANEL_HEIGHT, chrome)
+                >= TownScreenLayout.MIN_EDGE_MARGIN);
+        assertTrue(TownScreenLayout.bottomMargin(scaledHeight, TownScreenLayout.PANEL_HEIGHT, chrome)
+                >= TownScreenLayout.MIN_EDGE_MARGIN);
     }
 }
