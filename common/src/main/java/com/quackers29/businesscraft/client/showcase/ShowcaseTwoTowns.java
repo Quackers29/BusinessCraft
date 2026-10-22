@@ -215,6 +215,8 @@ public final class ShowcaseTwoTowns {
         ShowcaseSetup.resetForTests();
         ShowcaseSetup.prepareOnce(server, townB);
         player.setGameMode(GameType.SPECTATOR);
+        player.teleportTo(level, townB.getX() + 0.5, townB.getY(), townB.getZ() + 3.5, 180f, 0f);
+        player.setYHeadRot(180f);
         minecraft.execute(() -> {
             ShowcaseAllViews.setEmbeddedMode(true);
             ShowcaseAllViews.reset(minecraft);
