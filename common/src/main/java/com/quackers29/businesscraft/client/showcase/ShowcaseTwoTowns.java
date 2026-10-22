@@ -280,24 +280,30 @@ public final class ShowcaseTwoTowns {
         verifyTicks++;
         BlockPos active = Showcase.getActiveTownBlockPos();
         if (verifyTicks == 1) {
+            ShowcaseNavigator.runStep(minecraft, active, "open-town");
+        } else if (verifyTicks == 25) {
             ShowcaseNavigator.runStep(minecraft, active, "set-tab:overview");
-        } else if (verifyTicks == 5) {
+        } else if (verifyTicks == 35) {
             ShowcaseNavigator.runStep(minecraft, active, "press-button:id:" + ShowcaseButtonIds.RANKING);
-        } else if (verifyTicks >= 100) {
-            boolean rankingOk = false;
-            int count = 0;
+        } else if (verifyTicks >= 60) {
             if (minecraft.screen instanceof TownLeaderboardScreen screen) {
-                count = screen.getTownDataCount();
-                rankingOk = count >= 2;
+                int count = screen.getTownDataCount();
+                if (count >= 2) {
+                    LOGGER.info("SHOWCASE_VERIFY_RANKING_TOWNS={}", count);
+                    recordStep("verify_ranking_two_towns", true, Map.of("townCount", count));
+                    phase = Phase.QUIT;
+                    return;
+                }
             }
-            LOGGER.info("SHOWCASE_VERIFY_RANKING_TOWNS={}", count);
-            recordStep("verify_ranking_two_towns", rankingOk, Map.of("townCount", count));
-            if (!rankingOk) {
+            if (verifyTicks >= 220) {
+                int count = minecraft.screen instanceof TownLeaderboardScreen screen
+                        ? screen.getTownDataCount() : 0;
+                LOGGER.info("SHOWCASE_VERIFY_RANKING_TOWNS={}", count);
+                recordStep("verify_ranking_two_towns", false, Map.of(
+                        "townCount", count,
+                        "screen", String.valueOf(minecraft.screen)));
                 fail("verify_ranking_two_towns");
-                return;
             }
-            phase = Phase.QUIT;
-            return;
         }
     }
 
