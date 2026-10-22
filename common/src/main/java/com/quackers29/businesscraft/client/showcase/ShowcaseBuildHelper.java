@@ -63,6 +63,8 @@ final class ShowcaseBuildHelper {
                 onFailure.accept("town interface was not placed at " + placeAt);
                 return;
             }
+            player.teleportTo(level, placeAt.getX() + 0.5, placeAt.getY(), placeAt.getZ() + 3.5, 180f, 0f);
+            player.setYHeadRot(180f);
             player.setGameMode(GameType.SPECTATOR);
             onSuccess.accept(placeAt.immutable());
         } catch (RuntimeException e) {

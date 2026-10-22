@@ -5,7 +5,7 @@ showcase_output_init() {
     local mode="$1"
     local loader="$2"
     local root="$3"
-    SHOWCASE_OUTPUT_ROOT="${SHOWCASE_OUTPUT_ROOT:-$root/showcase-output}"
+    export SHOWCASE_OUTPUT_ROOT="${SHOWCASE_OUTPUT_ROOT:-$root/showcase-output}"
     SHOWCASE_RUN_TS="$(date -u +%Y-%m-%d_%H%M%S)"
     SHOWCASE_RUN_DIR="$SHOWCASE_OUTPUT_ROOT/${SHOWCASE_RUN_TS}_${mode}_${loader}"
     mkdir -p "$SHOWCASE_RUN_DIR/screenshots" "$SHOWCASE_RUN_DIR/logs"
