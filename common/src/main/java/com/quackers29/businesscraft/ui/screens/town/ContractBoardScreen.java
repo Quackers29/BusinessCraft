@@ -8,6 +8,7 @@ import com.quackers29.businesscraft.contract.viewmodel.ContractSummaryViewModel;
 import com.quackers29.businesscraft.menu.ContractBoardMenu;
 import com.quackers29.businesscraft.network.packets.ui.BidContractPacket;
 import com.quackers29.businesscraft.network.packets.ui.RequestContractListPacket;
+import com.quackers29.businesscraft.client.showcase.ShowcaseButtonIds;
 import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import com.quackers29.businesscraft.ui.managers.TownDataCacheManager;
 import com.quackers29.businesscraft.ui.util.InventoryRenderer;
@@ -232,7 +233,8 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
                 buttonColor = 0xFF666666;
             }
             
-            contractGrid.addButtonWithTooltip(i, 3, buttonText, buttonTooltip,
+            String buttonId = (selectedTab == 0) ? ShowcaseButtonIds.CONTRACT_VIEW : null;
+            contractGrid.addButtonWithTooltip(i, 3, buttonId, buttonText, buttonTooltip,
                     (Consumer<Void>) v -> openContractDetails(contractId), buttonColor);
         }
 
@@ -548,6 +550,14 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
             return contractGrid.mouseScrolled(mx - sx, my - sy, delta);
         }
         return super.mouseScrolled(mx, my, delta);
+    }
+
+    public boolean showcaseInvokeButton(String elementId) {
+        return contractGrid != null && contractGrid.invokeButtonById(elementId);
+    }
+
+    public boolean showcaseHasAuctionContracts() {
+        return selectedTab == 0 && currentContracts != null && !currentContracts.isEmpty();
     }
 
     @Override

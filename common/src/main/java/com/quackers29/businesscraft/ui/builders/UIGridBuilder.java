@@ -549,13 +549,61 @@ public class UIGridBuilder {
      */
     public UIGridBuilder addButtonWithTooltip(int row, int column, String text, String tooltip, Consumer<Void> onClick,
             int bgColor) {
+        return addButtonWithTooltip(row, column, null, text, tooltip, onClick, bgColor);
+    }
+
+    /**
+     * Adds a button with optional stable {@code elementId} for automated navigation (showcase harness).
+     */
+    public UIGridBuilder addButtonWithTooltip(int row, int column, String elementId, String text, String tooltip,
+            Consumer<Void> onClick, int bgColor) {
         UIGridElement element = new UIGridElement(UIElementType.BUTTON, row, column, 1, 1);
+        element.elementId = elementId;
         element.text = text;
         element.tooltip = tooltip;
         element.onClick = onClick;
         element.backgroundColor = bgColor;
         elements.add(element);
         return this;
+    }
+
+    /**
+     * Invokes a button's {@code onClick} handler by stable id (no mouse coordinates).
+     */
+    public boolean invokeButtonById(String elementId) {
+        if (elementId == null || elementId.isBlank()) {
+            return false;
+        }
+        for (UIGridElement element : elements) {
+            if (element.type == UIElementType.BUTTON && elementId.equals(element.elementId)) {
+                return invokeButton(element);
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Invokes a button's {@code onClick} handler by visible label (case-insensitive).
+     */
+    public boolean invokeButtonByLabel(String label) {
+        if (label == null || label.isBlank()) {
+            return false;
+        }
+        for (UIGridElement element : elements) {
+            if (element.type == UIElementType.BUTTON && element.text != null
+                    && element.text.equalsIgnoreCase(label.trim())) {
+                return invokeButton(element);
+            }
+        }
+        return false;
+    }
+
+    private static boolean invokeButton(UIGridElement element) {
+        if (element.onClick != null) {
+            element.onClick.accept(null);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -1391,6 +1439,7 @@ public class UIGridBuilder {
         UIElementType type;
         int row, column;
         int rowSpan, colSpan;
+        String elementId;
         String text;
         int textColor = 0xFFFFFFFF;
         int backgroundColor = 0xA0335599;
@@ -1776,6 +1825,7 @@ public class UIGridBuilder {
         private Consumer<Void> onClick;
         private Consumer<Boolean> onToggle;
         private int bgColor = 0xA0335599; // Default background color
+        private String elementId;
 
         // Constructor for text
         public static GridContent text(String text, int textColor) {
@@ -1815,11 +1865,16 @@ public class UIGridBuilder {
 
         // Constructor for button
         public static GridContent button(String text, Consumer<Void> onClick, int bgColor) {
+            return button(text, onClick, bgColor, null);
+        }
+
+        public static GridContent button(String text, Consumer<Void> onClick, int bgColor, String elementId) {
             GridContent content = new GridContent();
             content.type = GridContentType.BUTTON;
             content.value = text;
             content.onClick = onClick;
             content.bgColor = bgColor;
+            content.elementId = elementId;
             return content;
         }
 
@@ -1921,10 +1976,14 @@ public class UIGridBuilder {
                         break;
 
                     case BUTTON:
-                        addButton(rowIndex, colIndex, (String) content.value, content.onClick, content.bgColor);
-                        if (content.tooltip != null) {
-                            // Update last added element with tooltip
-                            elements.get(elements.size() - 1).tooltip = content.tooltip;
+                        if (content.elementId != null) {
+                            addButtonWithTooltip(rowIndex, colIndex, content.elementId, (String) content.value,
+                                    content.tooltip, content.onClick, content.bgColor);
+                        } else {
+                            addButton(rowIndex, colIndex, (String) content.value, content.onClick, content.bgColor);
+                            if (content.tooltip != null) {
+                                elements.get(elements.size() - 1).tooltip = content.tooltip;
+                            }
                         }
                         break;
                 }
@@ -2634,9 +2693,10 @@ public class UIGridBuilder {
             String buttonText = (String) buttonData[0];
             @SuppressWarnings("unchecked")
             Consumer<Void> onClick = (Consumer<Void>) buttonData[1];
+            String elementId = buttonData.length > 2 && buttonData[2] instanceof String id ? id : null;
 
             columnData[0].add(GridContent.text(label, labelColor));
-            columnData[1].add(GridContent.button(buttonText, onClick, buttonColor));
+            columnData[1].add(GridContent.button(buttonText, onClick, buttonColor, elementId));
         }
 
         // Use the column data

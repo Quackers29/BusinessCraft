@@ -82,8 +82,14 @@ public final class Showcase {
             configured = true;
             minecraft.options.pauseOnLostFocus = false;
             minecraft.options.hideGui = true;
-            plan = planFor(property);
-            LOGGER.info("Showcase enabled ({}): {}", property.isBlank() ? "all" : property, plan.stream().map(s -> s.name).toList());
+            if (ShowcaseSelection.allViewsMode(property)) {
+                plan = List.of();
+                LOGGER.info("Showcase all-views enabled: {} routes", ShowcaseAllViews.expectedRouteCount());
+            } else {
+                plan = planFor(property);
+                LOGGER.info("Showcase enabled ({}): {}", property.isBlank() ? "all" : property,
+                        plan.stream().map(s -> s.name).toList());
+            }
         }
         if (failure != null) {
             finish(minecraft);
@@ -102,6 +108,13 @@ public final class Showcase {
                 MinecraftServer server = minecraft.getSingleplayerServer();
                 server.execute(() -> build(server));
             }
+            return;
+        }
+        if (ShowcaseSelection.allViewsMode(property)) {
+            if (buildDone && minecraft.getSingleplayerServer() != null) {
+                ShowcaseSetup.prepareOnce(minecraft.getSingleplayerServer(), townPos);
+            }
+            ShowcaseAllViews.tick(minecraft, townPos);
             return;
         }
         if (plan.isEmpty()) {

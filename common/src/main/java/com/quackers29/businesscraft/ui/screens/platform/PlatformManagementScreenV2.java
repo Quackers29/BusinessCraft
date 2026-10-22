@@ -11,6 +11,7 @@ import com.quackers29.businesscraft.network.packets.platform.ResetPlatformPathPa
 import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.client.PlatformPathKeyHandler;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.client.showcase.ShowcaseButtonIds;
 import com.quackers29.businesscraft.ui.util.ScreenNavigationHelper;
 import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import com.quackers29.businesscraft.ui.util.InventoryRenderer;
@@ -197,7 +198,9 @@ public class PlatformManagementScreenV2 extends Screen {
             String destTooltip = platform.hasNoEnabledDestinations()
                     ? "No destinations selected - allows any destination"
                     : "Specific destinations selected";
-            platformListGrid.addButtonWithTooltip(i, 3, "Dest",
+            platformListGrid.addButtonWithTooltip(i, 3,
+                    i == 0 ? ShowcaseButtonIds.platformDestinations(0) : null,
+                    "Dest",
                     destTooltip,
                     (v) -> openDestinationsByIndex(platformIndex), INFO_COLOR);
 
@@ -575,6 +578,17 @@ public class PlatformManagementScreenV2 extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false; // Don't pause the game like Payment Board and other BC screens
+    }
+
+    public boolean showcaseInvokeButton(String elementId) {
+        if (platformListGrid == null) {
+            return false;
+        }
+        return platformListGrid.invokeButtonById(elementId);
+    }
+
+    public boolean showcaseHasPlatforms() {
+        return platforms != null && !platforms.isEmpty();
     }
 
     /**

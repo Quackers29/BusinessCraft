@@ -7,6 +7,8 @@
 #   bash tools/showcase.sh block                 # front and back of the block
 #   bash tools/showcase.sh block fabric          # same scene on Fabric
 #   bash tools/showcase.sh town_overview,town_settings forge
+#   bash tools/showcase.sh all-views forge   # every registered UI route + HTML index
+#   bash tools/showcase.sh all-views fabric
 #
 # -PquickPlay names the save. -Pshowcase selects scenes (block, town, all)
 # or exact shot names and is what turns the harness on.
@@ -77,7 +79,8 @@ rm -rf "$WORLD"
 cp -a "$TEMPLATE" "$WORLD"
 rm -f "$WORLD/session.lock"
 mkdir -p "$SHOTDIR"
-rm -f "$SHOTDIR"/showcase_*.png
+rm -f "$SHOTDIR"/showcase_*.png "$SHOTDIR"/showcase_view_*.png
+rm -f "$RUN_DIR/showcase-views-manifest.json"
 
 mkdir -p "$RUN_DIR"
 cp "$ROOT/tools/showcase-options.txt" "$OPTIONS"
@@ -89,20 +92,29 @@ GRADLE_PROPS=(
     -PshowcaseWidth="$SHOWCASE_WIDTH"
     -PshowcaseHeight="$SHOWCASE_HEIGHT"
 )
+if [[ "$SCENES" == "all-views" ]]; then
+    GRADLE_PROPS+=(-PshowcaseLoader="$LOADER")
+    export BUSINESSCRAFT_SHOWCASE_LOADER="$LOADER"
+fi
 
 set +e
 bash ./gradlew --no-daemon "$GRADLE_TASK" "${GRADLE_PROPS[@]}" --console=plain >"$LOG" 2>&1
 code=$?
 set -e
 
-count="$(find "$SHOTDIR" -maxdepth 1 -name 'showcase_*.png' | wc -l | tr -d ' ')"
-echo "Showcase ($LOADER) shots: $count (gradle exit $code)"
+count="$(find "$SHOTDIR" -maxdepth 1 -name 'showcase_*.png' 2>/dev/null | wc -l | tr -d ' ')"
+view_count="$(find "$SHOTDIR" -maxdepth 1 -name 'showcase_view_*.png' 2>/dev/null | wc -l | tr -d ' ')"
+echo "Showcase ($LOADER) shots: $count views: $view_count (gradle exit $code)"
 echo "Log: $LOG"
+
+MANIFEST="$RUN_DIR/showcase-views-manifest.json"
+ALL_VIEWS_EXPECT=14
 
 case "$SCENES" in
     "" | all | ALL) expect=6 ;;
     town) expect=4 ;;
     block) expect=2 ;;
+    all-views) expect=0 ;;
     *) expect=0 ;;
 esac
 
@@ -113,13 +125,34 @@ fi
 
 grep -nE "ERROR|Exception" "$LOG" | grep -v "Unable to delete file" | grep -v "ALSA" | head -n 30 || true
 
-if [[ "$count" -eq 0 ]]; then
-    echo "No showcase screenshots were written" >&2
-    exit 1
-fi
-if [[ "$expect" -gt 0 && "$count" -ne "$expect" ]]; then
-    echo "Expected $expect shots, found $count" >&2
-    exit 1
+if [[ "$SCENES" == "all-views" ]]; then
+    if [[ ! -f "$MANIFEST" ]]; then
+        echo "Missing showcase manifest: $MANIFEST" >&2
+        exit 1
+    fi
+    if [[ "$view_count" -lt "$ALL_VIEWS_EXPECT" ]]; then
+        echo "Expected at least $ALL_VIEWS_EXPECT view PNGs, found $view_count" >&2
+        code=1
+    fi
+    if grep -q '"ok": false' "$MANIFEST"; then
+        echo "One or more routes failed (see manifest)" >&2
+        code=1
+    fi
+    ARTIFACT_DIR="${SHOWCASE_ARTIFACT_DIR:-/opt/cursor/artifacts/showcase-all-views/$LOADER}"
+    mkdir -p "$ARTIFACT_DIR/screenshots"
+    cp -f "$MANIFEST" "$ARTIFACT_DIR/"
+    cp -f "$SHOTDIR"/showcase_view_*.png "$ARTIFACT_DIR/screenshots/" 2>/dev/null || true
+    bash "$ROOT/tools/showcase-generate-index.sh" "$ARTIFACT_DIR/showcase-views-index.html" "$MANIFEST"
+    echo "Artifacts: $ARTIFACT_DIR"
+else
+    if [[ "$count" -eq 0 ]]; then
+        echo "No showcase screenshots were written" >&2
+        exit 1
+    fi
+    if [[ "$expect" -gt 0 && "$count" -ne "$expect" ]]; then
+        echo "Expected $expect shots, found $count" >&2
+        exit 1
+    fi
 fi
 if [[ "$code" -ne 0 ]]; then
     echo "Client exit code $code" >&2

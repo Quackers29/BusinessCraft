@@ -402,6 +402,25 @@ public class StandardTabContent extends BCComponent {
         }
     }
 
+    /**
+     * Invokes a settings-style grid button by stable id (showcase harness).
+     */
+    public boolean invokeShowcaseButtonById(String elementId) {
+        if (contentType != ContentType.BUTTON_GRID || buttonGridSupplier == null || elementId == null) {
+            return false;
+        }
+        UIGridBuilder temp = UIGridBuilder.createLabelButtonGrid(
+                x, y, width, height,
+                TEXT_COLOR, TownInterfaceTheme.PRIMARY_COLOR,
+                buttonGridSupplier.get())
+                .withBackgroundColor(BACKGROUND_COLOR)
+                .withBorderColor(BORDER_COLOR)
+                .withMargins(15, 10)
+                .withSpacing(15, 10)
+                .drawBorder(true);
+        return temp.invokeButtonById(elementId);
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         // For button grids, check if we have a custom click handler first
