@@ -67,9 +67,21 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
 
     @Override
     protected void performAdditionalInit() {
-        // Initialize the button manager with screen position
-        buttonManager.updateScreenPosition(this.leftPos, this.topPos, this.imageWidth, this.imageHeight);
+        syncBottomButtonLayout();
         buttonManager.createBottomButtonsGrid();
+    }
+
+    @Override
+    protected void onTownLayoutApplied() {
+        syncBottomButtonLayout();
+        if (tabPanel != null && buttonManager != null) {
+            buttonManager.updateBottomButtons(tabPanel.getActiveTabId());
+        }
+    }
+
+    private void syncBottomButtonLayout() {
+        buttonManager.updateScreenPosition(this.leftPos, this.topPos, this.imageWidth, this.imageHeight,
+                getBottomButtonGap(), getBottomButtonRowHeight());
     }
 
     @Override

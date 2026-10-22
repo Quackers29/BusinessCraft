@@ -33,6 +33,9 @@ public class TownScreenRenderManager {
         int getTopPos();
         int getImageWidth();
         int getImageHeight();
+        int getTitleMarginAbove();
+        int getBottomButtonGap();
+        int getBottomButtonRowHeight();
         Font getFont();
         Component getTitle();
         void renderBackground(GuiGraphics graphics);
@@ -189,7 +192,8 @@ public class TownScreenRenderManager {
             int width = layoutProvider.getImageWidth();
             int height = layoutProvider.getImageHeight();
             
-            buttonManager.updateScreenPosition(leftPos, topPos, width, height);
+            buttonManager.updateScreenPosition(leftPos, topPos, width, height,
+                    layoutProvider.getBottomButtonGap(), layoutProvider.getBottomButtonRowHeight());
             buttonManager.updateBottomButtons(tabPanel.getActiveTabId());
             buttonManager.render(graphics, mouseX, mouseY);
         }
@@ -225,7 +229,8 @@ public class TownScreenRenderManager {
         int topPos = layoutProvider.getTopPos();
         int width = layoutProvider.getImageWidth();
         
-        graphics.drawCenteredString(font, title, leftPos + width / 2, topPos - 12, TEXT_COLOR);
+        graphics.drawCenteredString(font, title, leftPos + width / 2,
+                topPos - layoutProvider.getTitleMarginAbove(), TEXT_COLOR);
     }
     
     /**
