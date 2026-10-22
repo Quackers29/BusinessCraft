@@ -97,5 +97,9 @@ tasks.configureEach { task ->
         if (showcaseWidth != null && showcaseHeight != null) {
             task.args '--width', showcaseWidth.toString(), '--height', showcaseHeight.toString()
         }
+        def testbedChecks = project.findProperty('testbedChecks')
+        if (testbedChecks != null) {
+            task.systemProperty 'businesscraft.showcase.testbed.checks', testbedChecks.toString()
+        }
     }
 }

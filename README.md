@@ -434,6 +434,20 @@ Server-built UI view models pushed to the client: town interface, resources, pro
 
 ---
 
+## Showcase testbed (dev harness)
+
+For automated two-town scenarios and feature checks in a throwaway client world, see **[tools/SHOWCASE-TESTBED.md](tools/SHOWCASE-TESTBED.md)**.
+
+Quick start:
+
+```bash
+bash tools/showcase.sh testbed forge
+```
+
+Related: `bash tools/showcase.sh two-towns forge` (boundary tests + all-views on town B).
+
+---
+
 ## 🔗 Integration & Compatibility
 
 ### **Mod Integration Support**

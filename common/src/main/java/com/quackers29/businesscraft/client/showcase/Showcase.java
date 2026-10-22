@@ -63,6 +63,7 @@ public final class Showcase {
     private static volatile BlockPos townPos = BlockPos.ZERO;
     private static volatile BlockPos activeTownBlockPos = BlockPos.ZERO;
     private static boolean twoTownsConfigured;
+    private static boolean testbedConfigured;
     private static List<PlannedShot> plan = List.of();
     private static int shotIndex;
     private static int ticksOnShot;
@@ -87,6 +88,9 @@ public final class Showcase {
             if (ShowcaseSelection.twoTownsMode(property)) {
                 plan = List.of();
                 LOGGER.info("Showcase two-towns scenario enabled");
+            } else if (ShowcaseSelection.testbedMode(property)) {
+                plan = List.of();
+                LOGGER.info("Showcase testbed scenario enabled");
             } else if (ShowcaseSelection.allViewsMode(property)) {
                 plan = List.of();
                 LOGGER.info("Showcase all-views enabled: {} routes", ShowcaseAllViews.expectedRouteCount());
@@ -109,6 +113,17 @@ public final class Showcase {
                 ShowcaseTwoTowns.reset(minecraft);
             }
             ShowcaseTwoTowns.tick(minecraft);
+            return;
+        }
+        if (ShowcaseSelection.testbedMode(property)) {
+            if (minecraft.player == null || minecraft.level == null || minecraft.getSingleplayerServer() == null) {
+                return;
+            }
+            if (!testbedConfigured) {
+                testbedConfigured = true;
+                ShowcaseTestbed.reset(minecraft);
+            }
+            ShowcaseTestbed.tick(minecraft);
             return;
         }
         if (minecraft.player == null || minecraft.level == null || minecraft.getSingleplayerServer() == null) {

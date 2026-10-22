@@ -32,6 +32,7 @@ public final class ShowcaseSelection {
 
     public static final String ALL_VIEWS = "all-views";
     public static final String TWO_TOWNS = "two-towns";
+    public static final String TESTBED = "testbed";
 
     public static boolean enabled(String property) {
         return property != null;
@@ -45,8 +46,12 @@ public final class ShowcaseSelection {
         return property != null && TWO_TOWNS.equalsIgnoreCase(property.trim());
     }
 
+    public static boolean testbedMode(String property) {
+        return property != null && TESTBED.equalsIgnoreCase(property.trim());
+    }
+
     public static List<String> shotsFor(String property) {
-        if (!enabled(property) || allViewsMode(property) || twoTownsMode(property)) {
+        if (!enabled(property) || allViewsMode(property) || twoTownsMode(property) || testbedMode(property)) {
             return List.of();
         }
         List<String> selected = new ArrayList<>();

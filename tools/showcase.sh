@@ -11,6 +11,8 @@
 #   bash tools/showcase.sh all-views fabric
 #   bash tools/showcase.sh two-towns forge   # boundary tests + all-views on town B
 #   bash tools/showcase.sh two-towns fabric
+#   bash tools/showcase.sh testbed forge                    # all registered testbed checks
+#   bash tools/showcase.sh testbed fabric trade-contract    # single check
 #
 # -PquickPlay names the save. -Pshowcase selects scenes (block, town, all)
 # or exact shot names and is what turns the harness on.
@@ -37,7 +39,10 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 SCENES="${1:-all}"
-LOADER="${2:-forge}"
+shift || true
+LOADER="${1:-forge}"
+shift || true
+TESTBED_CHECKS="${*:-all}"
 
 case "$LOADER" in
     forge | fabric) ;;
@@ -94,9 +99,12 @@ GRADLE_PROPS=(
     -PshowcaseWidth="$SHOWCASE_WIDTH"
     -PshowcaseHeight="$SHOWCASE_HEIGHT"
 )
-if [[ "$SCENES" == "all-views" || "$SCENES" == "two-towns" ]]; then
+if [[ "$SCENES" == "all-views" || "$SCENES" == "two-towns" || "$SCENES" == "testbed" ]]; then
     GRADLE_PROPS+=(-PshowcaseLoader="$LOADER")
     export BUSINESSCRAFT_SHOWCASE_LOADER="$LOADER"
+fi
+if [[ "$SCENES" == "testbed" ]]; then
+    GRADLE_PROPS+=(-PtestbedChecks="$TESTBED_CHECKS")
 fi
 
 set +e
@@ -118,6 +126,7 @@ case "$SCENES" in
     block) expect=2 ;;
     all-views) expect=0 ;;
     two-towns) expect=0 ;;
+    testbed) expect=0 ;;
     *) expect=0 ;;
 esac
 
@@ -129,6 +138,45 @@ fi
 grep -nE "ERROR|Exception" "$LOG" | grep -v "Unable to delete file" | grep -v "ALSA" | head -n 30 || true
 
 TWO_TOWNS_REPORT="$RUN_DIR/showcase-two-towns-report.json"
+TESTBED_REPORT="$RUN_DIR/showcase-testbed-report.json"
+
+write_testbed_step_log() {
+    local artifact_dir="$1"
+    local report="$2"
+    local log_out="$artifact_dir/checks.log"
+    mkdir -p "$artifact_dir"
+    if [[ ! -f "$report" ]]; then
+        echo "Missing testbed report: $report" >&2
+        return 1
+    fi
+    cp -f "$report" "$artifact_dir/"
+    cp -f "$LOG" "$artifact_dir/showcase.log" 2>/dev/null || true
+    mkdir -p "$artifact_dir/screenshots"
+    cp -f "$SHOTDIR"/showcase_testbed_*.png "$artifact_dir/screenshots/" 2>/dev/null || true
+    {
+        echo "# testbed showcase ($LOADER) checks=$TESTBED_CHECKS — $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        python3 - "$report" <<'PY'
+import json, sys
+report = json.load(open(sys.argv[1]))
+print(f"loader: {report.get('loader')}")
+print(f"checksRequested: {report.get('checksRequested')}")
+print("results:")
+failed = False
+for row in report.get("results", []):
+    ok = row.get("pass")
+    name = row.get("check")
+    mark = "PASS" if ok else "FAIL"
+    print(f"  {name}: {mark}")
+    if not ok:
+        failed = True
+print(f"exitCode: {report.get('exitCode')}")
+sys.exit(1 if failed or report.get("exitCode", 0) != 0 else 0)
+PY
+    } >"$log_out" || return 1
+    echo "Artifacts: $artifact_dir"
+    echo "Check log: $log_out"
+    return 0
+}
 
 write_two_towns_step_log() {
     local artifact_dir="$1"
@@ -207,6 +255,19 @@ elif [[ "$SCENES" == "two-towns" ]]; then
     ARTIFACT_DIR="${SHOWCASE_ARTIFACT_DIR:-/opt/cursor/artifacts/showcase-two-towns/$LOADER}"
     if [[ -f "$TWO_TOWNS_REPORT" ]]; then
         if ! write_two_towns_step_log "$ARTIFACT_DIR" "$TWO_TOWNS_REPORT"; then
+            code=1
+        fi
+    fi
+elif [[ "$SCENES" == "testbed" ]]; then
+    testbed_shots="$(find "$SHOTDIR" -maxdepth 1 -name 'showcase_testbed_*.png' 2>/dev/null | wc -l | tr -d ' ')"
+    echo "Testbed screenshots: $testbed_shots"
+    if [[ ! -f "$TESTBED_REPORT" ]]; then
+        echo "Missing testbed report: $TESTBED_REPORT" >&2
+        code=1
+    fi
+    ARTIFACT_DIR="${SHOWCASE_ARTIFACT_DIR:-/opt/cursor/artifacts/showcase-testbed/$LOADER}"
+    if [[ -f "$TESTBED_REPORT" ]]; then
+        if ! write_testbed_step_log "$ARTIFACT_DIR" "$TESTBED_REPORT"; then
             code=1
         fi
     fi
