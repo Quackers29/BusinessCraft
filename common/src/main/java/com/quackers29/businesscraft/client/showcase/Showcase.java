@@ -61,6 +61,8 @@ public final class Showcase {
     private static volatile boolean buildDone;
     private static volatile String failure;
     private static volatile BlockPos townPos = BlockPos.ZERO;
+    private static volatile BlockPos activeTownBlockPos = BlockPos.ZERO;
+    private static boolean twoTownsConfigured;
     private static List<PlannedShot> plan = List.of();
     private static int shotIndex;
     private static int ticksOnShot;
@@ -82,7 +84,10 @@ public final class Showcase {
             configured = true;
             minecraft.options.pauseOnLostFocus = false;
             minecraft.options.hideGui = true;
-            if (ShowcaseSelection.allViewsMode(property)) {
+            if (ShowcaseSelection.twoTownsMode(property)) {
+                plan = List.of();
+                LOGGER.info("Showcase two-towns scenario enabled");
+            } else if (ShowcaseSelection.allViewsMode(property)) {
                 plan = List.of();
                 LOGGER.info("Showcase all-views enabled: {} routes", ShowcaseAllViews.expectedRouteCount());
             } else {
@@ -93,6 +98,17 @@ public final class Showcase {
         }
         if (failure != null) {
             finish(minecraft);
+            return;
+        }
+        if (ShowcaseSelection.twoTownsMode(property)) {
+            if (minecraft.player == null || minecraft.level == null || minecraft.getSingleplayerServer() == null) {
+                return;
+            }
+            if (!twoTownsConfigured) {
+                twoTownsConfigured = true;
+                ShowcaseTwoTowns.reset(minecraft);
+            }
+            ShowcaseTwoTowns.tick(minecraft);
             return;
         }
         if (minecraft.player == null || minecraft.level == null || minecraft.getSingleplayerServer() == null) {
@@ -332,6 +348,15 @@ public final class Showcase {
             minecraft.stop();
             System.exit(processExitCode);
         }
+    }
+
+    public static void setActiveTownBlockPos(BlockPos pos) {
+        activeTownBlockPos = pos != null ? pos.immutable() : BlockPos.ZERO;
+        townPos = activeTownBlockPos;
+    }
+
+    public static BlockPos getActiveTownBlockPos() {
+        return activeTownBlockPos;
     }
 
     private static final class PlannedShot {

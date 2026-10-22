@@ -9,6 +9,8 @@
 #   bash tools/showcase.sh town_overview,town_settings forge
 #   bash tools/showcase.sh all-views forge   # every registered UI route + HTML index
 #   bash tools/showcase.sh all-views fabric
+#   bash tools/showcase.sh two-towns forge   # boundary tests + all-views on town B
+#   bash tools/showcase.sh two-towns fabric
 #
 # -PquickPlay names the save. -Pshowcase selects scenes (block, town, all)
 # or exact shot names and is what turns the harness on.
@@ -92,7 +94,7 @@ GRADLE_PROPS=(
     -PshowcaseWidth="$SHOWCASE_WIDTH"
     -PshowcaseHeight="$SHOWCASE_HEIGHT"
 )
-if [[ "$SCENES" == "all-views" ]]; then
+if [[ "$SCENES" == "all-views" || "$SCENES" == "two-towns" ]]; then
     GRADLE_PROPS+=(-PshowcaseLoader="$LOADER")
     export BUSINESSCRAFT_SHOWCASE_LOADER="$LOADER"
 fi
@@ -115,6 +117,7 @@ case "$SCENES" in
     town) expect=4 ;;
     block) expect=2 ;;
     all-views) expect=0 ;;
+    two-towns) expect=0 ;;
     *) expect=0 ;;
 esac
 
@@ -124,6 +127,50 @@ if grep -n "Showcase failed" "$LOG"; then
 fi
 
 grep -nE "ERROR|Exception" "$LOG" | grep -v "Unable to delete file" | grep -v "ALSA" | head -n 30 || true
+
+TWO_TOWNS_REPORT="$RUN_DIR/showcase-two-towns-report.json"
+
+write_two_towns_step_log() {
+    local artifact_dir="$1"
+    local report="$2"
+    local log_out="$artifact_dir/steps.log"
+    mkdir -p "$artifact_dir"
+    if [[ ! -f "$report" ]]; then
+        echo "Missing two-towns report: $report" >&2
+        return 1
+    fi
+    cp -f "$report" "$artifact_dir/"
+    cp -f "$LOG" "$artifact_dir/showcase.log" 2>/dev/null || true
+    cp -f "$MANIFEST" "$artifact_dir/showcase-views-manifest.json" 2>/dev/null || true
+    mkdir -p "$artifact_dir/screenshots"
+    cp -f "$SHOTDIR"/showcase_view_*.png "$artifact_dir/screenshots/" 2>/dev/null || true
+    {
+        echo "# two-towns showcase ($LOADER) — $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        python3 - "$report" <<'PY'
+import json, sys
+report = json.load(open(sys.argv[1]))
+print(f"loader: {report.get('loader')}")
+print(f"townA: {report.get('townA')} townB: {report.get('townB')}")
+print(f"requiredCentreDistance: {report.get('requiredCentreDistance')}")
+print(f"defaultBorderRadius: {report.get('defaultBorderRadius')}")
+print(f"rejectionMessage: {report.get('rejectionMessage')}")
+print("steps:")
+failed = False
+for step in report.get("steps", []):
+    ok = step.get("pass")
+    name = step.get("step")
+    mark = "PASS" if ok else "FAIL"
+    print(f"  {name}: {mark}")
+    if not ok:
+        failed = True
+print(f"exitCode: {report.get('exitCode')}")
+sys.exit(1 if failed or report.get("exitCode", 0) != 0 else 0)
+PY
+    } >"$log_out" || return 1
+    echo "Artifacts: $artifact_dir"
+    echo "Step log: $log_out"
+    return 0
+}
 
 if [[ "$SCENES" == "all-views" ]]; then
     if [[ ! -f "$MANIFEST" ]]; then
@@ -144,6 +191,25 @@ if [[ "$SCENES" == "all-views" ]]; then
     cp -f "$SHOTDIR"/showcase_view_*.png "$ARTIFACT_DIR/screenshots/" 2>/dev/null || true
     bash "$ROOT/tools/showcase-generate-index.sh" "$ARTIFACT_DIR/showcase-views-index.html" "$MANIFEST"
     echo "Artifacts: $ARTIFACT_DIR"
+elif [[ "$SCENES" == "two-towns" ]]; then
+    if [[ ! -f "$TWO_TOWNS_REPORT" ]]; then
+        echo "Missing two-towns report: $TWO_TOWNS_REPORT" >&2
+        code=1
+    fi
+    if [[ "$view_count" -lt "$ALL_VIEWS_EXPECT" ]]; then
+        echo "Expected at least $ALL_VIEWS_EXPECT view PNGs for town B all-views, found $view_count" >&2
+        code=1
+    fi
+    if [[ -f "$MANIFEST" ]] && grep -q '"ok": false' "$MANIFEST"; then
+        echo "One or more all-views routes failed (see manifest)" >&2
+        code=1
+    fi
+    ARTIFACT_DIR="${SHOWCASE_ARTIFACT_DIR:-/opt/cursor/artifacts/showcase-two-towns/$LOADER}"
+    if [[ -f "$TWO_TOWNS_REPORT" ]]; then
+        if ! write_two_towns_step_log "$ARTIFACT_DIR" "$TWO_TOWNS_REPORT"; then
+            code=1
+        fi
+    fi
 else
     if [[ "$count" -eq 0 ]]; then
         echo "No showcase screenshots were written" >&2

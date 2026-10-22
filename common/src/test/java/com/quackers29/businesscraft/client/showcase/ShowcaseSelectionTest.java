@@ -20,6 +20,8 @@ class ShowcaseSelectionTest {
     void allViewsMode_usesRouteRegistryNotShots() {
         assertTrue(ShowcaseSelection.allViewsMode("all-views"));
         assertEquals(List.of(), ShowcaseSelection.shotsFor("all-views"));
+        assertTrue(ShowcaseSelection.twoTownsMode("two-towns"));
+        assertEquals(List.of(), ShowcaseSelection.shotsFor("two-towns"));
         assertEquals(14, ShowcaseRouteRegistry.allRoutes().size());
     }
 
