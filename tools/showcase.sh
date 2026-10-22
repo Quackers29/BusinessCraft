@@ -236,6 +236,10 @@ elif [[ "$SCENES" == "map-sweep" ]]; then
         echo "Expected map sweep PNG" >&2
         code=1
     fi
+    if ! grep -q "SHOWCASE_MAP_SWEEP_CAPTURED" "$LOG"; then
+        echo "Map sweep did not capture TownMapModal" >&2
+        code=1
+    fi
 else
     if [[ "$count" -eq 0 ]]; then
         echo "No showcase screenshots were written" >&2

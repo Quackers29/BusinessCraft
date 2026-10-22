@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.client.showcase;
 
+import com.quackers29.businesscraft.ui.modal.specialized.TownMapModal;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.core.BlockPos;
@@ -19,6 +20,7 @@ public final class ShowcaseMapSweep {
         JOIN,
         BUILD,
         OPEN_MAP,
+        WAIT_MAP,
         CAPTURE,
         QUIT
     }
@@ -90,11 +92,29 @@ public final class ShowcaseMapSweep {
                 } else if (ticks == 15) {
                     ShowcaseNavigator.runStep(minecraft, townPos, "press-button:id:" + ShowcaseButtonIds.MAP_VIEW);
                 } else if (ticks >= SETTLE_TICKS) {
-                    phase = Phase.CAPTURE;
+                    phase = Phase.WAIT_MAP;
                     ticks = 0;
                 }
             }
+            case WAIT_MAP -> {
+                if (minecraft.screen instanceof TownMapModal) {
+                    phase = Phase.CAPTURE;
+                    ticks = 0;
+                } else if (ticks >= 120) {
+                    LOGGER.error("Map sweep: TownMapModal did not open (screen={})", minecraft.screen);
+                    exitCode = 1;
+                    phase = Phase.QUIT;
+                }
+            }
             case CAPTURE -> {
+                if (!(minecraft.screen instanceof TownMapModal)) {
+                    exitCode = 1;
+                    phase = Phase.QUIT;
+                    return;
+                }
+                if (ticks < 10) {
+                    return;
+                }
                 String tag = System.getProperty("businesscraft.showcase.mapTag", "map");
                 String file = "showcase_map_" + tag + ".png";
                 Screenshot.grab(minecraft.gameDirectory, file, minecraft.getMainRenderTarget(), message ->
