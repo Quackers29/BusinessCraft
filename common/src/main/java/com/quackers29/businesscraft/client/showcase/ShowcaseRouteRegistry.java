@@ -55,7 +55,7 @@ public final class ShowcaseRouteRegistry {
                     "set-tab:settings",
                     "wait-tab:settings",
                     "press-button:id:" + ShowcaseButtonIds.EDIT_NAME,
-                    "wait-for-screen:BCPopupScreen:80")));
+                    "wait-for-popup:80")));
 
     private ShowcaseRouteRegistry() {
     }
@@ -77,6 +77,9 @@ public final class ShowcaseRouteRegistry {
                     if (parts.length >= 2) {
                         covered.add(parts[1]);
                     }
+                }
+                if (step.startsWith("wait-for-popup:")) {
+                    covered.add("BCPopupScreen");
                 }
             }
         }

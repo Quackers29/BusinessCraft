@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.client.showcase;
 import com.quackers29.businesscraft.block.TownInterfaceBlock;
 import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import com.quackers29.businesscraft.ui.managers.BottomButtonManager;
+import com.quackers29.businesscraft.ui.screens.BaseTownScreen;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -59,13 +60,19 @@ public final class ShowcaseNavigator {
             }
             return null;
         }
-        if (step.startsWith("wait-for-screen:")) {
+        if (step.startsWith("wait-for-screen:") || step.startsWith("wait-for-popup:")) {
             return null;
         }
         return "unknown step: " + step;
     }
 
     public static boolean waitConditionMet(Minecraft minecraft, String step, String activeTabHint) {
+        if (step.startsWith("wait-for-popup:")) {
+            if (minecraft.screen instanceof BaseTownScreen<?> town) {
+                return town.getActivePopup() != null;
+            }
+            return false;
+        }
         if (step.startsWith("wait-for-screen:")) {
             String[] parts = step.split(":");
             if (parts.length < 2) {
@@ -89,7 +96,8 @@ public final class ShowcaseNavigator {
     }
 
     public static int waitTimeoutTicks(String step) {
-        if (step.startsWith("wait-for-screen:") || step.startsWith("wait-tab:")) {
+        if (step.startsWith("wait-for-screen:") || step.startsWith("wait-tab:")
+                || step.startsWith("wait-for-popup:")) {
             String[] parts = step.split(":");
             if (parts.length >= 3) {
                 try {
@@ -104,7 +112,8 @@ public final class ShowcaseNavigator {
     }
 
     public static boolean isWaitStep(String step) {
-        return step.startsWith("wait-for-screen:") || step.startsWith("wait-tab:");
+        return step.startsWith("wait-for-screen:") || step.startsWith("wait-tab:")
+                || step.startsWith("wait-for-popup:");
     }
 
     private static boolean pressBottomButton(Minecraft minecraft, String id, String label) {
