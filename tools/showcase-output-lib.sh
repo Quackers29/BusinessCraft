@@ -6,8 +6,8 @@ showcase_output_init() {
     local loader="$2"
     local root="$3"
     export SHOWCASE_OUTPUT_ROOT="${SHOWCASE_OUTPUT_ROOT:-$root/showcase-output}"
-    SHOWCASE_RUN_TS="$(date -u +%Y-%m-%d_%H%M%S)"
-    SHOWCASE_RUN_DIR="$SHOWCASE_OUTPUT_ROOT/${SHOWCASE_RUN_TS}_${mode}_${loader}"
+    export SHOWCASE_RUN_TS="$(date -u +%Y-%m-%d_%H%M%S)"
+    export SHOWCASE_RUN_DIR="$SHOWCASE_OUTPUT_ROOT/${SHOWCASE_RUN_TS}_${mode}_${loader}"
     mkdir -p "$SHOWCASE_RUN_DIR/screenshots" "$SHOWCASE_RUN_DIR/logs"
     mkdir -p "$SHOWCASE_OUTPUT_ROOT"
     cat >"$SHOWCASE_RUN_DIR/run-meta.json" <<EOF
@@ -15,7 +15,6 @@ showcase_output_init() {
 EOF
     ln -sfn "$SHOWCASE_RUN_DIR" "$SHOWCASE_OUTPUT_ROOT/latest"
     ln -sfn "$SHOWCASE_RUN_DIR" "$SHOWCASE_OUTPUT_ROOT/latest_${mode}_${loader}"
-    echo "$SHOWCASE_RUN_DIR"
 }
 
 showcase_collect_logs() {

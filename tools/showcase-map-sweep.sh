@@ -26,7 +26,8 @@ case "$LOADER" in
         ;;
 esac
 
-SWEEP_ROOT="$(showcase_output_init "map-sweep-batch" "$LOADER" "$ROOT")"
+showcase_output_init "map-sweep-batch" "$LOADER" "$ROOT"
+SWEEP_ROOT="$SHOWCASE_RUN_DIR"
 RUNS_DIR="$SWEEP_ROOT/runs"
 mkdir -p "$RUNS_DIR"
 BATCH_LOG="$SWEEP_ROOT/logs/batch.log"

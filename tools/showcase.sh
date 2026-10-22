@@ -50,7 +50,7 @@ case "$LOADER" in
 esac
 
 MODE="$SCENES"
-SHOWCASE_RUN_DIR="$(showcase_output_init "$MODE" "$LOADER" "$ROOT")"
+showcase_output_init "$MODE" "$LOADER" "$ROOT"
 echo "Output: $SHOWCASE_RUN_DIR"
 
 read_gradle_showcase_template() {
