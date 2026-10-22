@@ -88,6 +88,10 @@ tasks.configureEach { task ->
     def showcaseScenes = project.findProperty('showcase')
     if (showcaseScenes != null) {
         task.systemProperty 'businesscraft.showcase', showcaseScenes.toString()
+        def showcaseLoader = project.findProperty('showcaseLoader')
+        if (showcaseLoader != null) {
+            task.systemProperty 'businesscraft.showcase.loader', showcaseLoader.toString()
+        }
         def showcaseWidth = project.findProperty('showcaseWidth')
         def showcaseHeight = project.findProperty('showcaseHeight')
         if (showcaseWidth != null && showcaseHeight != null) {

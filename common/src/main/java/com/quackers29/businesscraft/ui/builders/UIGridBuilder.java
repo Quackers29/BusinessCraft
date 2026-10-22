@@ -549,13 +549,61 @@ public class UIGridBuilder {
      */
     public UIGridBuilder addButtonWithTooltip(int row, int column, String text, String tooltip, Consumer<Void> onClick,
             int bgColor) {
+        return addButtonWithTooltip(row, column, null, text, tooltip, onClick, bgColor);
+    }
+
+    /**
+     * Adds a button with optional stable {@code elementId} for automated navigation (showcase harness).
+     */
+    public UIGridBuilder addButtonWithTooltip(int row, int column, String elementId, String text, String tooltip,
+            Consumer<Void> onClick, int bgColor) {
         UIGridElement element = new UIGridElement(UIElementType.BUTTON, row, column, 1, 1);
+        element.elementId = elementId;
         element.text = text;
         element.tooltip = tooltip;
         element.onClick = onClick;
         element.backgroundColor = bgColor;
         elements.add(element);
         return this;
+    }
+
+    /**
+     * Invokes a button's {@code onClick} handler by stable id (no mouse coordinates).
+     */
+    public boolean invokeButtonById(String elementId) {
+        if (elementId == null || elementId.isBlank()) {
+            return false;
+        }
+        for (UIGridElement element : elements) {
+            if (element.type == UIElementType.BUTTON && elementId.equals(element.elementId)) {
+                return invokeButton(element);
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Invokes a button's {@code onClick} handler by visible label (case-insensitive).
+     */
+    public boolean invokeButtonByLabel(String label) {
+        if (label == null || label.isBlank()) {
+            return false;
+        }
+        for (UIGridElement element : elements) {
+            if (element.type == UIElementType.BUTTON && element.text != null
+                    && element.text.equalsIgnoreCase(label.trim())) {
+                return invokeButton(element);
+            }
+        }
+        return false;
+    }
+
+    private static boolean invokeButton(UIGridElement element) {
+        if (element.onClick != null) {
+            element.onClick.accept(null);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -1391,6 +1439,7 @@ public class UIGridBuilder {
         UIElementType type;
         int row, column;
         int rowSpan, colSpan;
+        String elementId;
         String text;
         int textColor = 0xFFFFFFFF;
         int backgroundColor = 0xA0335599;

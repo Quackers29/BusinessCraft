@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.ui.managers;
 
+import com.quackers29.businesscraft.client.showcase.ShowcaseButtonIds;
 import com.quackers29.businesscraft.ui.templates.TownInterfaceTheme;
 import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import net.minecraft.client.gui.GuiGraphics;
@@ -182,9 +183,10 @@ public class BottomButtonManager {
      */
     private void configureProductionButtons() {
         bottomButtonsGrid
-                .addButtonWithTooltip(0, 0, "Production", "View active production processes",
+                .addButtonWithTooltip(0, 0, ShowcaseButtonIds.PRODUCTION, "Production",
+                        "View active production processes",
                         v -> actionHandler.onGenericAction("view_active_production"), TownInterfaceTheme.PRIMARY_COLOR)
-                .addButtonWithTooltip(0, 1, "Upgrades", "View town upgrades and research",
+                .addButtonWithTooltip(0, 1, ShowcaseButtonIds.UPGRADES, "Upgrades", "View town upgrades and research",
                         v -> actionHandler.onGenericAction("view_upgrades"), TownInterfaceTheme.SECONDARY_COLOR);
     }
 
@@ -193,9 +195,10 @@ public class BottomButtonManager {
      */
     private void configureOverviewButtons() {
         bottomButtonsGrid
-                .addButtonWithTooltip(0, 0, "Ranking", "View town rankings",
+                .addButtonWithTooltip(0, 0, ShowcaseButtonIds.RANKING, "Ranking", "View town rankings",
                         v -> actionHandler.onViewLeaderboard(), TownInterfaceTheme.PRIMARY_COLOR)
-                .addButtonWithTooltip(0, 1, "Map View", "View town map with surrounding areas",
+                .addButtonWithTooltip(0, 1, ShowcaseButtonIds.MAP_VIEW, "Map View",
+                        "View town map with surrounding areas",
                         v -> actionHandler.onManagePlatforms(), TownInterfaceTheme.SECONDARY_COLOR);
     }
 
@@ -206,11 +209,11 @@ public class BottomButtonManager {
         bottomButtonsGrid = newBottomGrid(3);
 
         bottomButtonsGrid
-                .addButtonWithTooltip(0, 0, "Trade", "Trade resources with other towns",
+                .addButtonWithTooltip(0, 0, ShowcaseButtonIds.TRADE, "Trade", "Trade resources with other towns",
                         v -> actionHandler.onTradeResources(), TownInterfaceTheme.PRIMARY_COLOR)
-                .addButtonWithTooltip(0, 1, "Payment", "View payment board and rewards",
+                .addButtonWithTooltip(0, 1, ShowcaseButtonIds.PAYMENT, "Payment", "View payment board and rewards",
                         v -> actionHandler.onManageStorage(), TownInterfaceTheme.SECONDARY_COLOR)
-                .addButtonWithTooltip(0, 2, "Contracts", "View and manage contracts",
+                .addButtonWithTooltip(0, 2, ShowcaseButtonIds.CONTRACTS, "Contracts", "View and manage contracts",
                         v -> actionHandler.onContractBoard(), TownInterfaceTheme.ACCENT_COLOR);
     }
 
@@ -219,9 +222,11 @@ public class BottomButtonManager {
      */
     private void configurePopulationButtons() {
         bottomButtonsGrid
-                .addButtonWithTooltip(0, 0, "Assign Jobs", "Assign jobs to town citizens",
+                .addButtonWithTooltip(0, 0, ShowcaseButtonIds.ASSIGN_JOBS, "Assign Jobs",
+                        "Assign jobs to town citizens",
                         v -> actionHandler.onAssignJobs(), TownInterfaceTheme.PRIMARY_COLOR)
-                .addButtonWithTooltip(0, 1, "View Visitors", "View history of visitors to your town",
+                .addButtonWithTooltip(0, 1, ShowcaseButtonIds.VIEW_VISITORS, "View Visitors",
+                        "View history of visitors to your town",
                         v -> actionHandler.onViewVisitorHistory(), TownInterfaceTheme.SECONDARY_COLOR);
     }
 
@@ -230,9 +235,9 @@ public class BottomButtonManager {
      */
     private void configureSettingsButtons() {
         bottomButtonsGrid
-                .addButtonWithTooltip(0, 0, "Ranking", "View town rankings",
+                .addButtonWithTooltip(0, 0, ShowcaseButtonIds.RANKING, "Ranking", "View town rankings",
                         v -> actionHandler.onViewLeaderboard(), TownInterfaceTheme.PRIMARY_COLOR)
-                .addButtonWithTooltip(0, 1, "Edit Name", "Edit town name",
+                .addButtonWithTooltip(0, 1, ShowcaseButtonIds.EDIT_NAME, "Edit Name", "Edit town name",
                         v -> actionHandler.onEditDetails(), TownInterfaceTheme.PRIMARY_COLOR);
     }
 

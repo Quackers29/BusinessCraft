@@ -30,12 +30,18 @@ public final class ShowcaseSelection {
     private ShowcaseSelection() {
     }
 
+    public static final String ALL_VIEWS = "all-views";
+
     public static boolean enabled(String property) {
         return property != null;
     }
 
+    public static boolean allViewsMode(String property) {
+        return property != null && ALL_VIEWS.equalsIgnoreCase(property.trim());
+    }
+
     public static List<String> shotsFor(String property) {
-        if (!enabled(property)) {
+        if (!enabled(property) || allViewsMode(property)) {
             return List.of();
         }
         List<String> selected = new ArrayList<>();
