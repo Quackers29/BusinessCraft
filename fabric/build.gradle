@@ -97,5 +97,9 @@ tasks.configureEach { task ->
         if (testbedChecks != null) {
             task.systemProperty 'businesscraft.showcase.testbed.checks', testbedChecks.toString()
         }
+        def showcaseMapTag = project.findProperty('showcaseMapTag')
+        if (showcaseMapTag != null) {
+            task.systemProperty 'businesscraft.showcase.mapTag', showcaseMapTag.toString()
+        }
     }
 }

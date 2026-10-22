@@ -442,7 +442,10 @@ Quick start:
 
 ```bash
 bash tools/showcase.sh testbed forge
+bash tools/showcase-map-sweep.sh forge   # map modal across resolutions / GUI scales
 ```
+
+Outputs land under **`showcase-output/`** (see [tools/SHOWCASE-TESTBED.md](tools/SHOWCASE-TESTBED.md)).
 
 Related: `bash tools/showcase.sh two-towns forge` (boundary tests + all-views on town B).
 

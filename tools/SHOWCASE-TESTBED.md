@@ -11,7 +11,25 @@ bash tools/showcase.sh testbed forge trade-contract
 bash tools/showcase.sh testbed fabric trade-contract,example-dev-item
 ```
 
-Omit check names to run every registered check. The client writes `showcase-testbed-report.json` and PNGs under `screenshots/showcase_testbed_*.png`. Artifacts default to `/opt/cursor/artifacts/showcase-testbed/<loader>/`.
+Omit check names to run every registered check.
+
+## Output layout
+
+Every `tools/showcase.sh` run writes a timestamped folder:
+
+```text
+showcase-output/<YYYY-MM-DD_HHMMSS>_<mode>_<loader>/
+  screenshots/
+  logs/client.log          # Minecraft latest.log (full client session)
+  logs/server.log          # Dedicated server log when present; else integrated note
+  logs/gradle-console.log  # Gradle + JVM console
+  run-meta.json
+  … mode-specific JSON / steps.log / checks.log / index.html …
+```
+
+Symlinks: `showcase-output/latest`, `showcase-output/latest_<mode>_<loader>`, and `showcase-output/index.html`.
+
+Set `SHOWCASE_ARTIFACT_DIR=/opt/cursor/artifacts/...` to mirror a copy elsewhere. The `showcase-output/` tree is gitignored.
 
 ## Registered checks
 

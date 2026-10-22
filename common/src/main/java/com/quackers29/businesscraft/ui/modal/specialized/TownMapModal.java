@@ -54,6 +54,14 @@ public class TownMapModal extends Screen {
     private Button closeButton;
     private Button recenterButton;
 
+    /** Layout chrome: axis label gutters and button row (scale with font / GUI). */
+    private int leftAxisGutter;
+    private int bottomAxisGutter;
+    private int rightAxisGutter;
+    private int buttonRowTop;
+    private static final int BUTTON_ROW_HEIGHT = 20;
+    private static final int BUTTON_ROW_PAD = 8;
+
     // Mouse interaction
     private boolean isDragging = false;
     private double lastMouseX;
@@ -120,15 +128,7 @@ public class TownMapModal extends Screen {
         this.panelLeft = (this.width - panelWidth) / 2;
         this.panelTop = (this.height - panelHeight) / 2;
 
-        // Calculate map area from the available panel space so it stays usable on
-        // small screens.
-        int horizontalPadding = 40;
-        int topReserved = 50; // title + separator + breathing room
-        int bottomReserved = 70; // controls help + buttons
-        this.mapWidth = Math.max(MIN_MAP_WIDTH, Math.min(MAX_MAP_WIDTH, panelWidth - (horizontalPadding * 2)));
-        this.mapHeight = Math.max(MIN_MAP_HEIGHT, Math.min(MAX_MAP_HEIGHT, panelHeight - topReserved - bottomReserved));
-        this.mapCenterX = panelLeft + panelWidth / 2;
-        this.mapCenterY = panelTop + topReserved + mapHeight / 2;
+        computeMapLayout();
 
         // Load town data
         loadTownData();
@@ -163,24 +163,66 @@ public class TownMapModal extends Screen {
     }
 
     /**
+     * Reserves left/bottom/right gutters for axis labels and a dedicated button row below the map.
+     */
+    private void computeMapLayout() {
+        int topReserved = 50;
+        int sampleLabel = Math.max(font.width("500"), font.width("5000"));
+        leftAxisGutter = 10 + sampleLabel;
+        bottomAxisGutter = 8 + font.lineHeight + 6;
+        rightAxisGutter = 10 + font.width("X") + 4;
+        buttonRowTop = panelTop + panelHeight - BUTTON_ROW_PAD - BUTTON_ROW_HEIGHT;
+
+        int mapAreaLeft = panelLeft + leftAxisGutter;
+        int mapAreaRight = panelLeft + panelWidth - rightAxisGutter;
+        int mapAreaTop = panelTop + topReserved;
+        int mapAreaBottom = buttonRowTop - bottomAxisGutter;
+
+        int availableW = Math.max(MIN_MAP_WIDTH, mapAreaRight - mapAreaLeft);
+        int availableH = Math.max(MIN_MAP_HEIGHT, mapAreaBottom - mapAreaTop);
+        this.mapWidth = Math.min(MAX_MAP_WIDTH, availableW);
+        this.mapHeight = Math.min(MAX_MAP_HEIGHT, availableH);
+        this.mapCenterX = mapAreaLeft + mapWidth / 2;
+        this.mapCenterY = mapAreaTop + mapHeight / 2;
+    }
+
+    /**
      * Create UI buttons
      */
     private void createButtons() {
-        // Close button
+        int closeW = 60;
+        int recenterW = 80;
+        int gap = 6;
+        int closeX = panelLeft + panelWidth - closeW - BUTTON_ROW_PAD;
+        int recenterX = closeX - gap - recenterW;
+
         this.closeButton = this.addRenderableWidget(Button.builder(
                 Component.literal("Close"),
                 button -> this.onClose())
-                .pos(panelLeft + panelWidth - 70, panelTop + panelHeight - 30)
-                .size(60, 20)
+                .pos(closeX, buttonRowTop)
+                .size(closeW, BUTTON_ROW_HEIGHT)
                 .build());
 
-        // Recenter button
         this.recenterButton = this.addRenderableWidget(Button.builder(
                 Component.literal("Recenter"),
                 button -> this.centerOnCurrentTown())
-                .pos(panelLeft + 10, panelTop + panelHeight - 30)
-                .size(80, 20)
+                .pos(recenterX, buttonRowTop)
+                .size(recenterW, BUTTON_ROW_HEIGHT)
                 .build());
+    }
+
+    private boolean overlapsButtonRow(int labelLeft, int labelTop, int labelWidth, int labelHeight) {
+        int labelRight = labelLeft + labelWidth;
+        int labelBottom = labelTop + labelHeight;
+        int rowBottom = buttonRowTop + BUTTON_ROW_HEIGHT;
+        if (labelBottom < buttonRowTop - 2 || labelTop > rowBottom + 2) {
+            return false;
+        }
+        int recenterLeft = recenterButton != null ? recenterButton.getX() : panelLeft;
+        int recenterRight = recenterButton != null ? recenterLeft + recenterButton.getWidth() : recenterLeft;
+        int closeLeft = closeButton != null ? closeButton.getX() : panelLeft + panelWidth;
+        int closeRight = closeButton != null ? closeLeft + closeButton.getWidth() : closeLeft + 60;
+        return labelRight >= recenterLeft - 4 && labelLeft <= closeRight + 4;
     }
 
     /**
@@ -490,11 +532,13 @@ public class TownMapModal extends Screen {
                 // Draw tick mark
                 guiGraphics.vLine(screenX, mapBottom, mapBottom + 5, BORDER_COLOR);
 
-                // Draw coordinate label
                 String xLabel = String.valueOf(worldX);
                 int labelWidth = this.font.width(xLabel);
-                guiGraphics.drawString(this.font, xLabel,
-                        screenX - labelWidth / 2, mapBottom + 7, TEXT_COLOR);
+                int labelY = mapBottom + 7;
+                if (labelY + font.lineHeight >= buttonRowTop) {
+                    continue;
+                }
+                guiGraphics.drawString(this.font, xLabel, screenX - labelWidth / 2, labelY, TEXT_COLOR);
             }
         }
 
@@ -509,28 +553,36 @@ public class TownMapModal extends Screen {
                         mapLeft - 50 <= panelLeft + 200; // Info panel extends to 200px
 
                 if (!wouldOverlapInfo) {
-                    // Draw tick mark
-                    guiGraphics.hLine(mapLeft - 5, mapLeft, screenY, BORDER_COLOR);
-
-                    // Draw coordinate label
                     String zLabel = String.valueOf(worldZ);
                     int labelWidth = this.font.width(zLabel);
-                    guiGraphics.drawString(this.font, zLabel,
-                            mapLeft - labelWidth - 7, screenY - 4, TEXT_COLOR);
+                    int labelX = mapLeft - labelWidth - 7;
+                    int labelY = screenY - 4;
+                    if (overlapsButtonRow(labelX, labelY, labelWidth, font.lineHeight)) {
+                        continue;
+                    }
+                    if (labelX < panelLeft + 4) {
+                        continue;
+                    }
+                    guiGraphics.hLine(mapLeft - 5, mapLeft, screenY, BORDER_COLOR);
+                    guiGraphics.drawString(this.font, zLabel, labelX, labelY, TEXT_COLOR);
                 }
             }
         }
 
-        // Draw axis labels
-        guiGraphics.drawString(this.font, "X", mapRight + 5, mapBottom + 7, 0xFFCCCCCC);
+        // Draw axis labels (inside reserved gutters)
+        int xAxisLabelY = mapBottom + 7;
+        if (xAxisLabelY + font.lineHeight < buttonRowTop) {
+            guiGraphics.drawString(this.font, "X", mapRight + 5, xAxisLabelY, 0xFFCCCCCC);
+        }
 
-        // Only draw Z axis label if it won't overlap with town info panel
         boolean zAxisOverlapsInfo = selectedTown != null &&
                 mapTop - 10 >= panelTop + 50 && mapTop - 10 <= panelTop + 110 &&
-                mapLeft - 15 <= panelLeft + 200; // Info panel extends to 200px
+                mapLeft - 15 <= panelLeft + 200;
 
-        if (!zAxisOverlapsInfo) {
-            guiGraphics.drawString(this.font, "Z", mapLeft - 15, mapTop - 10, 0xFFCCCCCC);
+        int zTitleX = mapLeft - 15;
+        int zTitleY = mapTop - 10;
+        if (!zAxisOverlapsInfo && zTitleX >= panelLeft + 4 && zTitleY + font.lineHeight < buttonRowTop) {
+            guiGraphics.drawString(this.font, "Z", zTitleX, zTitleY, 0xFFCCCCCC);
         }
     }
 
