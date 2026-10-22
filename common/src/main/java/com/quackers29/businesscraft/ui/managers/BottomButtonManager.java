@@ -3,6 +3,9 @@ package com.quackers29.businesscraft.ui.managers;
 import com.quackers29.businesscraft.ui.templates.TownInterfaceTheme;
 import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import net.minecraft.client.gui.GuiGraphics;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.function.Consumer;
 
 /**
@@ -10,6 +13,8 @@ import java.util.function.Consumer;
  * Extracted from TownInterfaceScreen to improve code organization.
  */
 public class BottomButtonManager {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BottomButtonManager.class);
+    private static final String SHOWCASE_PROPERTY = "businesscraft.showcase";
 
     // Button configuration interface
     public interface ButtonActionHandler {
@@ -82,19 +87,42 @@ public class BottomButtonManager {
      * Creates the bottom button grid with proper positioning.
      */
     public void createBottomButtonsGrid() {
-        // Calculate button panel dimensions
-        int buttonPanelWidth = this.screenWidth - 40; // Leave 20px margin on each side
+        bottomButtonsGrid = newBottomGrid(2);
+    }
+
+    private int buttonPanelY() {
+        return this.screenTopPos + this.screenHeight + this.bottomGap;
+    }
+
+    private UIGridBuilder newBottomGrid(int columns) {
+        int buttonPanelWidth = this.screenWidth - 40;
         int buttonPanelHeight = this.bottomRowHeight;
         int buttonPanelX = this.screenLeftPos + (this.screenWidth - buttonPanelWidth) / 2;
-        int buttonPanelY = this.screenTopPos + this.screenHeight + this.bottomGap;
+        int buttonPanelY = buttonPanelY();
+        logBottomLayout(buttonPanelX, buttonPanelY, buttonPanelWidth, buttonPanelHeight);
 
-        // Create a 1x2 grid (1 row, 2 columns)
-        bottomButtonsGrid = new UIGridBuilder(buttonPanelX, buttonPanelY, buttonPanelWidth, buttonPanelHeight, 1, 2)
+        int verticalMargin = buttonPanelHeight <= 20 ? 2 : 5;
+        int horizontalMargin = buttonPanelHeight <= 20 ? 3 : 5;
+        int rowHeight = Math.max(8, buttonPanelHeight - (verticalMargin * 2));
+        if (buttonPanelHeight > 20) {
+            rowHeight = 20;
+        }
+
+        return new UIGridBuilder(buttonPanelX, buttonPanelY, buttonPanelWidth, buttonPanelHeight, 1, columns)
                 .withBackgroundColor(TownInterfaceTheme.BACKGROUND_COLOR)
                 .withBorderColor(TownInterfaceTheme.BORDER_COLOR)
-                .withMargins(5, 5) // Reduce margins for smaller height
-                .withSpacing(20, 0)
-                .withRowHeight(20); // Reduced by 50% from 40px to 20px
+                .withMargins(horizontalMargin, verticalMargin)
+                .withSpacing(columns == 3 ? 10 : 20, 0)
+                .withRowHeight(rowHeight);
+    }
+
+    private void logBottomLayout(int x, int y, int w, int h) {
+        if (System.getProperty(SHOWCASE_PROPERTY) == null) {
+            return;
+        }
+        LOGGER.info(
+                "Showcase bottom grid: panelTopPos={} imageH={} gap={} rowH={} gridY={} gridH={} gridBottom={}",
+                screenTopPos, screenHeight, bottomGap, bottomRowHeight, y, h, y + h);
     }
 
     /**
@@ -105,18 +133,7 @@ public class BottomButtonManager {
     public void updateBottomButtons(String activeTab) {
         // Calculate button panel dimensions (must be recalculated in case window was
         // resized)
-        int buttonPanelWidth = this.screenWidth - 40;
-        int buttonPanelHeight = this.bottomRowHeight;
-        int buttonPanelX = this.screenLeftPos + (this.screenWidth - buttonPanelWidth) / 2;
-        int buttonPanelY = this.screenTopPos + this.screenHeight + this.bottomGap;
-
-        // Create a new grid builder with current dimensions
-        bottomButtonsGrid = new UIGridBuilder(buttonPanelX, buttonPanelY, buttonPanelWidth, buttonPanelHeight, 1, 2)
-                .withBackgroundColor(TownInterfaceTheme.BACKGROUND_COLOR)
-                .withBorderColor(TownInterfaceTheme.BORDER_COLOR)
-                .withMargins(5, 5)
-                .withSpacing(20, 0)
-                .withRowHeight(20);
+        bottomButtonsGrid = newBottomGrid(2);
 
         // Default to overview if no active tab
         if (activeTab == null) {
@@ -186,18 +203,7 @@ public class BottomButtonManager {
      * Configures buttons for the Resources tab.
      */
     private void configureResourcesButtons() {
-        // Create a 1x3 grid for resources tab
-        int buttonPanelWidth = this.screenWidth - 40;
-        int buttonPanelHeight = this.bottomRowHeight;
-        int buttonPanelX = this.screenLeftPos + (this.screenWidth - buttonPanelWidth) / 2;
-        int buttonPanelY = this.screenTopPos + this.screenHeight + this.bottomGap;
-
-        bottomButtonsGrid = new UIGridBuilder(buttonPanelX, buttonPanelY, buttonPanelWidth, buttonPanelHeight, 1, 3)
-                .withBackgroundColor(TownInterfaceTheme.BACKGROUND_COLOR)
-                .withBorderColor(TownInterfaceTheme.BORDER_COLOR)
-                .withMargins(5, 5)
-                .withSpacing(10, 0) // Reduced spacing for 3 buttons
-                .withRowHeight(20);
+        bottomButtonsGrid = newBottomGrid(3);
 
         bottomButtonsGrid
                 .addButtonWithTooltip(0, 0, "Trade", "Trade resources with other towns",

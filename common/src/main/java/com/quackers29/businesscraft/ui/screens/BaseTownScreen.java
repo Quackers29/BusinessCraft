@@ -177,6 +177,17 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
         this.layoutChrome = TownScreenLayout.fitChrome(this.height, this.imageHeight);
         this.leftPos = TownScreenLayout.panelLeftX(this.width, this.imageWidth);
         this.topPos = TownScreenLayout.panelTopY(this.height, this.imageHeight, layoutChrome);
+        if (System.getProperty("businesscraft.showcase") != null) {
+            LOGGER.info(
+                    "Showcase town layout: scaled={}x{} topPos={} chrome={} bottomRowBottom={} marginTop={} marginBottom={}",
+                    this.width,
+                    this.height,
+                    this.topPos,
+                    layoutChrome,
+                    TownScreenLayout.bottomRowBottomY(this.height, this.imageHeight, layoutChrome),
+                    TownScreenLayout.topMargin(this.height, this.imageHeight, layoutChrome),
+                    TownScreenLayout.bottomMargin(this.height, this.imageHeight, layoutChrome));
+        }
     }
 
     protected void repositionTabPanel() {
