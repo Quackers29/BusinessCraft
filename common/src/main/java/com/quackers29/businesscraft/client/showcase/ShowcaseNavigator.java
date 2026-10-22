@@ -4,7 +4,11 @@ import com.quackers29.businesscraft.block.TownInterfaceBlock;
 import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import com.quackers29.businesscraft.ui.managers.BottomButtonManager;
 import com.quackers29.businesscraft.ui.screens.BaseTownScreen;
+import com.quackers29.businesscraft.ui.screens.platform.PlatformManagementScreenV2;
+import com.quackers29.businesscraft.ui.screens.town.ContractBoardScreen;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
+import com.quackers29.businesscraft.ui.screens.town.TownLeaderboardScreen;
+import com.quackers29.businesscraft.ui.tabs.SettingsTab;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
@@ -28,6 +32,10 @@ public final class ShowcaseNavigator {
         if (step == null || step.isBlank()) {
             return "empty step";
         }
+        if (step.startsWith("setup:")) {
+            MinecraftServer server = minecraft.getSingleplayerServer();
+            return ShowcaseSetup.runStep(server, townPos, step);
+        }
         if ("open-town".equals(step)) {
             openTownInterface(minecraft, townPos);
             return null;
@@ -48,15 +56,23 @@ public final class ShowcaseNavigator {
         }
         if (step.startsWith("press-button:id:")) {
             String id = step.substring("press-button:id:".length());
-            if (!pressBottomButton(minecraft, id, null)) {
+            if (!pressButton(minecraft, id, null)) {
                 return "button id not found or not pressed: " + id;
             }
             return null;
         }
         if (step.startsWith("press-button:label:")) {
             String label = step.substring("press-button:label:".length());
-            if (!pressBottomButton(minecraft, null, label)) {
+            if (!pressButton(minecraft, null, label)) {
                 return "button label not found or not pressed: " + label;
+            }
+            return null;
+        }
+        if (step.startsWith("open-leaderboard-detail:")) {
+            int row = Integer.parseInt(step.substring("open-leaderboard-detail:".length()));
+            if (!(minecraft.screen instanceof TownLeaderboardScreen ranking)
+                    || !ranking.showcaseOpenDetailRow(row)) {
+                return "could not open leaderboard detail row " + row;
             }
             return null;
         }
@@ -92,12 +108,20 @@ public final class ShowcaseNavigator {
             }
             return tab.equals(town.getTabPanel().getActiveTabId());
         }
+        if (step.startsWith("wait-for-contracts:")) {
+            return minecraft.screen instanceof ContractBoardScreen board && board.showcaseHasAuctionContracts();
+        }
+        if (step.startsWith("wait-for-platforms:")) {
+            return minecraft.screen instanceof PlatformManagementScreenV2 platform
+                    && platform.showcaseHasPlatforms();
+        }
         return true;
     }
 
     public static int waitTimeoutTicks(String step) {
         if (step.startsWith("wait-for-screen:") || step.startsWith("wait-tab:")
-                || step.startsWith("wait-for-popup:")) {
+                || step.startsWith("wait-for-popup:") || step.startsWith("wait-for-contracts:")
+                || step.startsWith("wait-for-platforms:")) {
             String[] parts = step.split(":");
             if (parts.length >= 3) {
                 try {
@@ -113,25 +137,39 @@ public final class ShowcaseNavigator {
 
     public static boolean isWaitStep(String step) {
         return step.startsWith("wait-for-screen:") || step.startsWith("wait-tab:")
-                || step.startsWith("wait-for-popup:");
+                || step.startsWith("wait-for-popup:") || step.startsWith("wait-for-contracts:")
+                || step.startsWith("wait-for-platforms:");
     }
 
-    private static boolean pressBottomButton(Minecraft minecraft, String id, String label) {
-        if (!(minecraft.screen instanceof TownInterfaceScreen townScreen)) {
-            return false;
+    private static boolean pressButton(Minecraft minecraft, String id, String label) {
+        Screen screen = minecraft.screen;
+        if (screen instanceof PlatformManagementScreenV2 platform && id != null) {
+            return platform.showcaseInvokeButton(id);
         }
-        BottomButtonManager manager = townScreen.getButtonManager();
-        if (manager == null) {
-            return false;
+        if (screen instanceof ContractBoardScreen contracts && id != null) {
+            return contracts.showcaseInvokeButton(id);
         }
-        UIGridBuilder grid = manager.getBottomButtonsGrid();
-        if (grid == null) {
-            return false;
+        if (screen instanceof TownInterfaceScreen townScreen) {
+            if (id != null && id.startsWith("town.settings.") && townScreen.getTabController() != null) {
+                Object tab = townScreen.getTabController().getTab("settings");
+                if (tab instanceof SettingsTab settingsTab && settingsTab.showcaseInvokeButton(id)) {
+                    return true;
+                }
+            }
+            BottomButtonManager manager = townScreen.getButtonManager();
+            if (manager == null) {
+                return false;
+            }
+            UIGridBuilder grid = manager.getBottomButtonsGrid();
+            if (grid == null) {
+                return false;
+            }
+            if (id != null) {
+                return grid.invokeButtonById(id);
+            }
+            return grid.invokeButtonByLabel(label);
         }
-        if (id != null) {
-            return grid.invokeButtonById(id);
-        }
-        return grid.invokeButtonByLabel(label);
+        return false;
     }
 
     private static void openTownInterface(Minecraft minecraft, BlockPos pos) {

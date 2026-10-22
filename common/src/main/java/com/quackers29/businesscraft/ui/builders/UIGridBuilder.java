@@ -1825,6 +1825,7 @@ public class UIGridBuilder {
         private Consumer<Void> onClick;
         private Consumer<Boolean> onToggle;
         private int bgColor = 0xA0335599; // Default background color
+        private String elementId;
 
         // Constructor for text
         public static GridContent text(String text, int textColor) {
@@ -1864,11 +1865,16 @@ public class UIGridBuilder {
 
         // Constructor for button
         public static GridContent button(String text, Consumer<Void> onClick, int bgColor) {
+            return button(text, onClick, bgColor, null);
+        }
+
+        public static GridContent button(String text, Consumer<Void> onClick, int bgColor, String elementId) {
             GridContent content = new GridContent();
             content.type = GridContentType.BUTTON;
             content.value = text;
             content.onClick = onClick;
             content.bgColor = bgColor;
+            content.elementId = elementId;
             return content;
         }
 
@@ -1970,10 +1976,14 @@ public class UIGridBuilder {
                         break;
 
                     case BUTTON:
-                        addButton(rowIndex, colIndex, (String) content.value, content.onClick, content.bgColor);
-                        if (content.tooltip != null) {
-                            // Update last added element with tooltip
-                            elements.get(elements.size() - 1).tooltip = content.tooltip;
+                        if (content.elementId != null) {
+                            addButtonWithTooltip(rowIndex, colIndex, content.elementId, (String) content.value,
+                                    content.tooltip, content.onClick, content.bgColor);
+                        } else {
+                            addButton(rowIndex, colIndex, (String) content.value, content.onClick, content.bgColor);
+                            if (content.tooltip != null) {
+                                elements.get(elements.size() - 1).tooltip = content.tooltip;
+                            }
                         }
                         break;
                 }
@@ -2683,9 +2693,10 @@ public class UIGridBuilder {
             String buttonText = (String) buttonData[0];
             @SuppressWarnings("unchecked")
             Consumer<Void> onClick = (Consumer<Void>) buttonData[1];
+            String elementId = buttonData.length > 2 && buttonData[2] instanceof String id ? id : null;
 
             columnData[0].add(GridContent.text(label, labelColor));
-            columnData[1].add(GridContent.button(buttonText, onClick, buttonColor));
+            columnData[1].add(GridContent.button(buttonText, onClick, buttonColor, elementId));
         }
 
         // Use the column data

@@ -362,6 +362,17 @@ public class TownLeaderboardScreen extends Screen {
         return super.mouseScrolled(mouseX, mouseY, delta);
     }
 
+    /**
+     * Opens town detail for the Nth data row (0-based, showcase harness).
+     */
+    public boolean showcaseOpenDetailRow(int dataRowIndex) {
+        if (townData.isEmpty() || dataRowIndex < 0 || dataRowIndex >= townData.size()) {
+            return false;
+        }
+        openDetailScreen(townData.get(dataRowIndex));
+        return true;
+    }
+
     private void openDetailScreen(TownLeaderboardData town) {
         TownDetailScreen detailScreen = new TownDetailScreen(
             Component.literal("Town Details"),

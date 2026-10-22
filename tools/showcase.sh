@@ -108,7 +108,7 @@ echo "Showcase ($LOADER) shots: $count views: $view_count (gradle exit $code)"
 echo "Log: $LOG"
 
 MANIFEST="$RUN_DIR/showcase-views-manifest.json"
-ALL_VIEWS_EXPECT=10
+ALL_VIEWS_EXPECT=14
 
 case "$SCENES" in
     "" | all | ALL) expect=6 ;;

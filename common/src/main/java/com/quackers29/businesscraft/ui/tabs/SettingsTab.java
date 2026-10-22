@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.ui.tabs;
 
+import com.quackers29.businesscraft.client.showcase.ShowcaseButtonIds;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
 import com.quackers29.businesscraft.ui.layout.BCFlowLayout;
 import com.quackers29.businesscraft.ui.components.containers.StandardTabContent;
@@ -48,12 +49,9 @@ public class SettingsTab extends BaseTownTab {
                 
                 // Add platforms row
                 settingsData.put("Platforms:", new Object[] {
-                    "Set Platforms", 
-                    (Consumer<Void>) button -> {
-                        parentScreen.playButtonClickSound();
-                        // Open the platform management screen instead of just showing a message
-                        parentScreen.openPlatformManagementScreen();
-                    }
+                    "Set Platforms",
+                    (Consumer<Void>) button -> pressSetPlatforms(),
+                    ShowcaseButtonIds.SETTINGS_SET_PLATFORMS
                 });
                 
                 // Add search radius row - use the cached value for display
@@ -89,6 +87,15 @@ public class SettingsTab extends BaseTownTab {
         }
     }
     
+    public void pressSetPlatforms() {
+        parentScreen.playButtonClickSound();
+        parentScreen.openPlatformManagementScreen();
+    }
+
+    public boolean showcaseInvokeButton(String elementId) {
+        return contentComponent != null && contentComponent.invokeShowcaseButtonById(elementId);
+    }
+
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         // Settings tab doesn't need scrolling, but we'll forward the event anyway

@@ -111,6 +111,9 @@ public final class Showcase {
             return;
         }
         if (ShowcaseSelection.allViewsMode(property)) {
+            if (buildDone && minecraft.getSingleplayerServer() != null) {
+                ShowcaseSetup.prepareOnce(minecraft.getSingleplayerServer(), townPos);
+            }
             ShowcaseAllViews.tick(minecraft, townPos);
             return;
         }
