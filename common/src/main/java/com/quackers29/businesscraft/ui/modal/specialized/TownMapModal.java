@@ -67,12 +67,14 @@ public class TownMapModal extends Screen {
     private int xAxisLabelBaselineY;
     private int zAxisTitleY;
     private int controlsHelpY;
+    private boolean showControlsHelp;
+    private int titleAreaBottom;
     private static final int BUTTON_ROW_HEIGHT = 20;
     private static final int BUTTON_ROW_PAD = 8;
-    private static final int TITLE_AREA_BOTTOM = 42;
     private static final int GAP_GRID_TO_X = 0;
     private static final int GAP_X_TO_HELP = 2;
     private static final int GAP_HELP_TO_BUTTONS = 4;
+    private static final int MIN_MAP_GRID_HEIGHT = 24;
 
     // Mouse interaction
     private boolean isDragging = false;
@@ -134,9 +136,10 @@ public class TownMapModal extends Screen {
     protected void init() {
         super.init();
 
-        // Calculate panel dimensions - use most of the screen
-        this.panelWidth = Math.min(500, this.width - 60);
-        this.panelHeight = Math.min(400, this.height - 60);
+        // Use tighter margins on short GUI viewports (e.g. 854×480 @ guiScale 4).
+        int outerMargin = this.height <= 150 ? 8 : 30;
+        this.panelWidth = Math.min(500, Math.max(120, this.width - outerMargin * 2));
+        this.panelHeight = Math.min(400, Math.max(72, this.height - outerMargin * 2));
         this.panelLeft = (this.width - panelWidth) / 2;
         this.panelTop = (this.height - panelHeight) / 2;
 
@@ -185,25 +188,52 @@ public class TownMapModal extends Screen {
         topAxisGutter = font.lineHeight + 4;
         xAxisBandHeight = 5 + 7 + font.lineHeight;
 
-        buttonRowTop = panelTop + panelHeight - BUTTON_ROW_PAD - BUTTON_ROW_HEIGHT;
-        int helpBand = font.lineHeight + GAP_HELP_TO_BUTTONS;
-        mapGridBottom = buttonRowTop - helpBand - xAxisBandHeight - GAP_GRID_TO_X;
-        int mapRegionTop = panelTop + TITLE_AREA_BOTTOM + topAxisGutter;
+        titleAreaBottom = panelHeight <= 100 ? 30 : 42;
+
+        int panelBottom = panelTop + panelHeight;
+        int stackBottom = panelBottom - BUTTON_ROW_PAD;
+        buttonRowTop = stackBottom - BUTTON_ROW_HEIGHT;
+        stackBottom = buttonRowTop - GAP_HELP_TO_BUTTONS;
+
+        int helpBand = font.lineHeight;
+        showControlsHelp = true;
+        int minStackForHelp = xAxisBandHeight + GAP_GRID_TO_X + MIN_MAP_GRID_HEIGHT + topAxisGutter
+                + titleAreaBottom + helpBand + GAP_X_TO_HELP;
+        if (panelHeight < minStackForHelp) {
+            showControlsHelp = false;
+            helpBand = 0;
+        }
+
+        if (showControlsHelp) {
+            controlsHelpY = stackBottom - helpBand;
+            stackBottom = controlsHelpY - GAP_X_TO_HELP;
+        }
+
+        int xAxisBandBottom = stackBottom;
+        mapGridBottom = xAxisBandBottom - xAxisBandHeight - GAP_GRID_TO_X;
+        int mapRegionTop = panelTop + titleAreaBottom + topAxisGutter;
+
         int availH = mapGridBottom - mapRegionTop;
         int contentW = panelWidth - leftAxisGutter - rightAxisGutter;
         int availW = Math.max(20, contentW);
 
-        mapHeight = Math.min(MAX_MAP_HEIGHT, Math.max(20, Math.min(availH, MAX_MAP_HEIGHT)));
-        mapWidth = Math.min(MAX_MAP_WIDTH, Math.max(20, Math.min(availW, MAX_MAP_WIDTH)));
-        if (mapHeight > availH) {
-            mapHeight = Math.max(20, availH);
+        mapHeight = Math.min(MAX_MAP_HEIGHT, availH);
+        mapHeight = Math.max(MIN_MAP_GRID_HEIGHT, Math.min(mapHeight, MAX_MAP_HEIGHT));
+        if (availH < MIN_MAP_GRID_HEIGHT) {
+            mapHeight = Math.max(12, availH);
         }
 
         mapGridTop = mapGridBottom - mapHeight;
         if (mapGridTop < mapRegionTop) {
             mapGridTop = mapRegionTop;
-            mapHeight = Math.max(20, mapGridBottom - mapGridTop);
+            mapHeight = Math.max(12, mapGridBottom - mapGridTop);
         }
+        if (mapGridBottom <= mapGridTop) {
+            mapGridBottom = mapGridTop + MIN_MAP_GRID_HEIGHT;
+            mapHeight = MIN_MAP_GRID_HEIGHT;
+        }
+
+        mapWidth = Math.min(MAX_MAP_WIDTH, Math.max(20, Math.min(availW, MAX_MAP_WIDTH)));
 
         mapGridLeft = panelLeft + leftAxisGutter + Math.max(0, (contentW - mapWidth) / 2);
         mapGridRight = mapGridLeft + mapWidth;
@@ -212,8 +242,10 @@ public class TownMapModal extends Screen {
         mapCenterY = (mapGridTop + mapGridBottom) / 2;
 
         xAxisLabelBaselineY = mapGridBottom + 7;
-        zAxisTitleY = mapGridTop - topAxisGutter + 2;
-        controlsHelpY = mapGridBottom + xAxisBandHeight + GAP_X_TO_HELP;
+        zAxisTitleY = panelTop + titleAreaBottom + 2;
+        if (!showControlsHelp) {
+            controlsHelpY = -1;
+        }
     }
 
     /**
@@ -556,33 +588,43 @@ public class TownMapModal extends Screen {
 
         // Draw Z-axis markers (left side of map)
         int startZ = ((int) (mapOffsetZ - viewHeightInWorld / 2) / coordSpacing) * coordSpacing;
+        int zLabelMinY = zAxisTitleY + font.lineHeight + 1;
+        int zLabelMaxBottom = mapGridBottom + xAxisBandHeight;
         for (int worldZ = startZ; worldZ <= mapOffsetZ + viewHeightInWorld / 2; worldZ += coordSpacing) {
             int screenY = worldToScreenZ(worldZ);
-            if (screenY >= mapTop - font.lineHeight && screenY <= mapBottom + font.lineHeight) {
-                boolean wouldOverlapInfo = selectedTown != null &&
-                        screenY >= panelTop + 50 && screenY <= panelTop + 110 &&
-                        mapLeft - 50 <= panelLeft + 200;
-
-                if (!wouldOverlapInfo) {
-                    String zLabel = String.valueOf(worldZ);
-                    int labelWidth = this.font.width(zLabel);
-                    int labelX = mapLeft - labelWidth - 7;
-                    int labelY = screenY - font.lineHeight / 2;
-                    if (labelY < zAxisTitleY + font.lineHeight + 1) {
-                        labelY = zAxisTitleY + font.lineHeight + 1;
-                    }
-                    if (labelX < panelLeft + 2) {
-                        continue;
-                    }
-                    int maxZLabelBottom = mapGridBottom + xAxisBandHeight;
-                    if (labelY + font.lineHeight > maxZLabelBottom) {
-                        continue;
-                    }
-                    int tickY = Math.max(mapTop, Math.min(mapBottom, screenY));
-                    guiGraphics.hLine(mapLeft - 5, mapLeft, tickY, BORDER_COLOR);
-                    guiGraphics.drawString(this.font, zLabel, labelX, labelY, TEXT_COLOR);
-                }
+            if (screenY < mapTop - font.lineHeight || screenY > mapBottom + font.lineHeight) {
+                continue;
             }
+            boolean wouldOverlapInfo = selectedTown != null &&
+                    screenY >= panelTop + 50 && screenY <= panelTop + 110 &&
+                    mapLeft - 50 <= panelLeft + 200;
+            if (wouldOverlapInfo) {
+                continue;
+            }
+
+            String zLabel = String.valueOf(worldZ);
+            int labelWidth = this.font.width(zLabel);
+            int labelX = mapLeft - labelWidth - 7;
+            if (labelX < panelLeft + 2) {
+                continue;
+            }
+
+            int labelY;
+            if (screenY <= mapTop + 2) {
+                labelY = mapTop;
+            } else if (screenY >= mapBottom - 2) {
+                labelY = mapBottom - font.lineHeight;
+            } else {
+                labelY = screenY - font.lineHeight / 2;
+                labelY = Math.max(zLabelMinY, labelY);
+            }
+            if (labelY + font.lineHeight > zLabelMaxBottom) {
+                continue;
+            }
+
+            int tickY = Math.max(mapTop, Math.min(mapBottom, screenY));
+            guiGraphics.hLine(mapLeft - 5, mapLeft, tickY, BORDER_COLOR);
+            guiGraphics.drawString(this.font, zLabel, labelX, labelY, TEXT_COLOR);
         }
 
         guiGraphics.drawString(this.font, "X", mapRight + 5, xAxisLabelBaselineY, 0xFFCCCCCC);
@@ -1170,16 +1212,14 @@ public class TownMapModal extends Screen {
      * Draw controls help text
      */
     private void drawControlsHelp(GuiGraphics guiGraphics) {
-        String[] helpText = {
-                "Drag to pan • Scroll to zoom • Click town for info"
-        };
-
-        int helpX = panelLeft + panelWidth / 2;
-        for (int i = 0; i < helpText.length; i++) {
-            int textWidth = this.font.width(helpText[i]);
-            guiGraphics.drawString(this.font, helpText[i],
-                    helpX - textWidth / 2, controlsHelpY + i * 12, 0xFFAAAAAA);
+        if (!showControlsHelp || controlsHelpY < 0) {
+            return;
         }
+        String helpText = "Drag to pan • Scroll to zoom • Click town for info";
+        int helpX = panelLeft + panelWidth / 2;
+        int textWidth = this.font.width(helpText);
+        guiGraphics.drawString(this.font, helpText,
+                helpX - textWidth / 2, controlsHelpY, 0xFFAAAAAA);
     }
 
     /**
