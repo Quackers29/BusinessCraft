@@ -16,6 +16,7 @@ public class ForgeClientSetup {
 
     @SubscribeEvent
     public static void init(FMLClientSetupEvent event) {
+        com.quackers29.businesscraft.client.network.ClientPacketHandler.register();
         // Initialize client helper only on client side
         com.quackers29.businesscraft.api.PlatformAccess.client = new com.quackers29.businesscraft.forge.platform.ForgeClientHelper();
         com.quackers29.businesscraft.api.PlatformAccess.render = new com.quackers29.businesscraft.forge.platform.ForgeRenderHelper();

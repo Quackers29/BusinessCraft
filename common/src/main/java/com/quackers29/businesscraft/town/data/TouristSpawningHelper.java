@@ -230,12 +230,14 @@ public class TouristSpawningHelper {
             boolean success = level.addFreshEntity(tourist);
 
             if (success) {
-                // Log the tourist spawn
                 DebugConfig.debug(LOGGER, DebugConfig.TOURIST_SPAWNING, "Spawned tourist at {} from {} to {}", pos,
                         originTown.getName(), destinationName);
 
-                // Update town stats
                 originTown.addTourist();
+                if (destinationTownId != null && !ANY_TOWN_DESTINATION.equals(destinationTownId)) {
+                    com.quackers29.businesscraft.town.utils.TouristAllocationTracker
+                            .recordTouristSpawn(originTown.getId(), destinationTownId);
+                }
             }
             return success;
         }

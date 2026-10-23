@@ -1,0 +1,31 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+      - name: Unit tests and both loader jars
+        run: ./gradlew --no-daemon :common:test :forge:build :fabric:build
+
+  dedicated-server:
+    runs-on: ubuntu-latest
+    needs: test-and-build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+      - name: Boot Forge and Fabric dedicated servers
+        run: bash tools/server-boot-smoke.sh

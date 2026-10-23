@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.fabric;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.client.CommonClientSetup;
+import com.quackers29.businesscraft.fabric.event.FabricClientEventHooks;
 import com.quackers29.businesscraft.fabric.event.FabricEventCallbackHandler;
 import com.quackers29.businesscraft.fabric.FabricModMessages;
 import net.fabricmc.api.ClientModInitializer;
@@ -20,6 +21,7 @@ public class FabricClientSetup implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         try {
+            com.quackers29.businesscraft.client.network.ClientPacketHandler.register();
             // CRITICAL: Register client-side packet handlers FIRST
             registerClientPackets();
 
@@ -30,7 +32,7 @@ public class FabricClientSetup implements ClientModInitializer {
 
             // Register client-side events
             try {
-                FabricEventCallbackHandler.registerClientEvents();
+                FabricClientEventHooks.register();
             } catch (Exception e) {
                 LOGGER.warn("Could not register client events", e);
             }

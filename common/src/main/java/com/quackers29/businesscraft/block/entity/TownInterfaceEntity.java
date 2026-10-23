@@ -152,8 +152,8 @@ public class TownInterfaceEntity extends BlockEntity
     private List<LivingEntity> tourists = new ArrayList<>();
     private ITownDataProvider townDataProvider;
 
-    private long lastMarkDirtyTime = 0;
-    private static final long MARK_DIRTY_COOLDOWN_MS = 2000; // 2 seconds between calls
+    private static final double SYNC_RADIUS_SQR = 64.0D * 64.0D;
+    private int lastPushedRevision = -1;
     private long lastSearchRadiusLogTime = 0; // For rate-limiting debug logs
 
     private final TouristVehicleManager touristVehicleManager = new TouristVehicleManager();
@@ -210,18 +210,23 @@ public class TownInterfaceEntity extends BlockEntity
         BlockPos pos = getBlockPos();
 
         vmCache.syncAllDirty(vm -> {
+            Object packet = null;
             if (vm instanceof TownResourceViewModel rvm) {
-                ResourceViewModelSyncPacket packet = new ResourceViewModelSyncPacket(pos, rvm);
-                serverLevel.players().forEach(player -> PlatformAccess.getNetworkMessages().sendToPlayer(packet, player));
+                packet = new ResourceViewModelSyncPacket(pos, rvm);
             } else if (vm instanceof ProductionStatusViewModel pvm) {
-                ProductionViewModelSyncPacket packet = new ProductionViewModelSyncPacket(pos, pvm);
-                serverLevel.players().forEach(player -> PlatformAccess.getNetworkMessages().sendToPlayer(packet, player));
+                packet = new ProductionViewModelSyncPacket(pos, pvm);
             } else if (vm instanceof com.quackers29.businesscraft.town.viewmodel.UpgradeStatusViewModel uvm) {
-                com.quackers29.businesscraft.network.packets.UpgradeViewModelSyncPacket packet = new com.quackers29.businesscraft.network.packets.UpgradeViewModelSyncPacket(pos, uvm);
-                serverLevel.players().forEach(player -> PlatformAccess.getNetworkMessages().sendToPlayer(packet, player));
+                packet = new com.quackers29.businesscraft.network.packets.UpgradeViewModelSyncPacket(pos, uvm);
             } else if (vm instanceof com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel ivm) {
-                com.quackers29.businesscraft.network.packets.TownInterfaceViewModelSyncPacket packet = new com.quackers29.businesscraft.network.packets.TownInterfaceViewModelSyncPacket(pos, ivm);
-                serverLevel.players().forEach(player -> PlatformAccess.getNetworkMessages().sendToPlayer(packet, player));
+                packet = new com.quackers29.businesscraft.network.packets.TownInterfaceViewModelSyncPacket(pos, ivm);
+            }
+            if (packet != null) {
+                Object toSend = packet;
+                for (ServerPlayer player : serverLevel.players()) {
+                    if (shouldSyncTo(player, pos)) {
+                        PlatformAccess.getNetworkMessages().sendToPlayer(toSend, player);
+                    }
+                }
             }
         });
     }
@@ -255,12 +260,10 @@ public ViewModelCache getVmCache() {
 
         TradingViewModelSyncPacket packet = new TradingViewModelSyncPacket(viewModel);
 
-        int syncRadius = 64;
-        double syncRadiusSqr = syncRadius * syncRadius;
         BlockPos pos = getBlockPos();
 
-        for (net.minecraft.server.level.ServerPlayer player : serverLevel.players()) {
-            if (player.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()) < syncRadiusSqr) {
+        for (ServerPlayer player : serverLevel.players()) {
+            if (shouldSyncTo(player, pos)) {
                 PlatformAccess.getNetworkMessages().sendToPlayer(packet, player);
             }
         }
@@ -668,14 +671,21 @@ public ViewModelCache getVmCache() {
     public void tick(Level level, BlockPos pos, BlockState state, TownInterfaceEntity blockEntity) {
         processResourcesInSlot();
 
-        if (level.getGameTime() % 10 == 0) { // Every 10 ticks (0.5 seconds) for snappier UI
-            updateFromTownProvider();
-            setChanged(); // Force sync of resources to client
+        if (level.getGameTime() % 10 == 0) {
+            boolean fieldsChanged = updateFromTownProvider();
+            if (fieldsChanged) {
+                setChanged();
+            }
 
-            if (!level.isClientSide && level instanceof ServerLevel) {
-                updateAllTownVMs();
-                syncAllDirtyTownVMsToPlayers();
-                syncTradingViewModelToNearbyPlayers();
+            if (!level.isClientSide && level instanceof ServerLevel serverLevel) {
+                Town town = townId == null ? null : TownManager.get(serverLevel).getTown(townId);
+                int revision = town == null ? 0 : town.getRevision();
+                if (fieldsChanged || revision != lastPushedRevision) {
+                    updateAllTownVMs();
+                    syncAllDirtyTownVMsToPlayers();
+                    syncTradingViewModelToNearbyPlayers();
+                    lastPushedRevision = revision;
+                }
             }
 
             if (bufferManager != null) {
@@ -891,7 +901,7 @@ public ViewModelCache getVmCache() {
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
             provider.setPathStart(pos);
-            markDirtyWithRateLimit(provider);
+            provider.markDirty();
         }
 
         setChanged();
@@ -903,7 +913,7 @@ public ViewModelCache getVmCache() {
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
             provider.setPathEnd(pos);
-            markDirtyWithRateLimit(provider);
+            provider.markDirty();
         }
 
         setChanged();
@@ -1051,7 +1061,7 @@ public ViewModelCache getVmCache() {
         ITownDataProvider provider = getTownDataProvider();
         if (provider != null) {
             provider.setTouristSpawningEnabled(enabled);
-            markDirtyWithRateLimit(provider);
+            provider.markDirty();
         }
 
         if (level != null && !level.isClientSide()) {
@@ -1098,31 +1108,59 @@ public ViewModelCache getVmCache() {
     /**
      * Updates cached values from the town data provider
      */
-    private void updateFromTownProvider() {
+    private boolean updateFromTownProvider() {
         ITownDataProvider provider = getTownDataProvider();
-        if (provider != null) {
-            this.touristSpawningEnabled = provider.isTouristSpawningEnabled();
-            this.pathStart = provider.getPathStart();
-            this.pathEnd = provider.getPathEnd();
-            this.searchRadius = provider.getSearchRadius();
-
-            if (level != null && !level.isClientSide() && this.townId != null) {
-                markDirtyWithRateLimit(provider);
-            }
+        if (provider == null) {
+            return false;
         }
+        boolean changed = false;
+        if (this.touristSpawningEnabled != provider.isTouristSpawningEnabled()) {
+            this.touristSpawningEnabled = provider.isTouristSpawningEnabled();
+            changed = true;
+        }
+        if (!java.util.Objects.equals(this.pathStart, provider.getPathStart())) {
+            this.pathStart = provider.getPathStart();
+            changed = true;
+        }
+        if (!java.util.Objects.equals(this.pathEnd, provider.getPathEnd())) {
+            this.pathEnd = provider.getPathEnd();
+            changed = true;
+        }
+        if (this.searchRadius != provider.getSearchRadius()) {
+            this.searchRadius = provider.getSearchRadius();
+            changed = true;
+        }
+        return changed;
     }
 
-    /**
-     * Marks the provider as dirty with rate limiting to reduce excessive updates
-     * 
-     * @param provider The provider to mark as dirty
-     */
-    private void markDirtyWithRateLimit(ITownDataProvider provider) {
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastMarkDirtyTime > MARK_DIRTY_COOLDOWN_MS) {
-            provider.markDirty();
-            lastMarkDirtyTime = currentTime;
+    private boolean shouldSyncTo(ServerPlayer player, BlockPos pos) {
+        if (player == null || player.level() != this.level) {
+            return false;
         }
+        if (isViewingThisTown(player, pos)) {
+            return true;
+        }
+        return player.distanceToSqr(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D) <= SYNC_RADIUS_SQR;
+    }
+
+    private boolean isViewingThisTown(ServerPlayer player, BlockPos pos) {
+        var menu = player.containerMenu;
+        if (menu instanceof TownInterfaceMenu townMenu) {
+            return pos.equals(townMenu.getBlockPos());
+        }
+        if (menu instanceof com.quackers29.businesscraft.menu.PaymentBoardMenu paymentMenu) {
+            return pos.equals(paymentMenu.getTownBlockPos());
+        }
+        if (menu instanceof com.quackers29.businesscraft.menu.TradeMenu tradeMenu) {
+            return pos.equals(tradeMenu.getTownBlockPos());
+        }
+        if (menu instanceof com.quackers29.businesscraft.menu.ContractBoardMenu contractMenu) {
+            return pos.equals(contractMenu.getTownBlockPos());
+        }
+        if (menu instanceof com.quackers29.businesscraft.menu.StorageMenu storageMenu) {
+            return pos.equals(storageMenu.getTownBlockPos());
+        }
+        return false;
     }
 
     public void processResourcesInSlot() {

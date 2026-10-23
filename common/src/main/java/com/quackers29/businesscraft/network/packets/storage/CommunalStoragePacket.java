@@ -13,6 +13,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.network.LoadedTownAccess;
+import com.quackers29.businesscraft.network.PlayerItemExchange;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.network.packets.storage.CommunalStorageResponsePacket;
 import com.quackers29.businesscraft.api.PlatformAccess;
@@ -79,17 +81,14 @@ public class CommunalStoragePacket extends BaseBlockEntityPacket {
                 return;
             }
             
-            // Get the level
-            Level level = player.level();
-            if (!(level instanceof ServerLevel serverLevel)) {
+            if (!(player.level() instanceof ServerLevel serverLevel)) {
                 LOGGER.warn("Player level is not a ServerLevel");
                 return;
             }
-            
-            // Get the town block entity at the position
-            BlockEntity blockEntity = level.getBlockEntity(pos);
-            if (!(blockEntity instanceof TownInterfaceEntity townInterfaceEntity)) {
-                LOGGER.warn("No town block entity found at position {} for player {}", pos, player.getName().getString());
+            Level level = serverLevel;
+
+            TownInterfaceEntity townInterfaceEntity = LoadedTownAccess.getIfLoadedInReach(player, pos);
+            if (townInterfaceEntity == null) {
                 return;
             }
             
@@ -127,33 +126,36 @@ public class CommunalStoragePacket extends BaseBlockEntityPacket {
                 return;
             }
             
-            // Process the storage operation
             int itemCount = itemStack.getCount();
+            if (itemCount <= 0) {
+                return;
+            }
             Item item = itemStack.getItem();
-            
-            // Add to or remove from communal storage
+
             boolean success;
             if (isAddOperation) {
-                // Add items to storage
-                success = town.addToCommunalStorage(item, itemCount);
-                
-                if (success) {
-                    // Send success message to player
-                    player.sendSystemMessage(Component.literal("Added " + itemCount + " " + 
-                        item.getDescription().getString() + " to " + town.getName() + "'s communal storage."));
+                if (!PlayerItemExchange.tryTake(player, item, itemCount)) {
+                    player.sendSystemMessage(Component.literal("You don't have enough " +
+                            item.getDescription().getString() + " to deposit."));
+                    success = false;
+                } else {
+                    success = town.addToCommunalStorage(item, itemCount);
+                    if (!success) {
+                        PlayerItemExchange.give(player, item, itemCount);
+                    } else {
+                        player.sendSystemMessage(Component.literal("Added " + itemCount + " " +
+                                item.getDescription().getString() + " to " + town.getName() + "'s communal storage."));
+                    }
                 }
             } else {
-                // Remove items from storage (negative count)
                 success = town.addToCommunalStorage(item, -itemCount);
-                
                 if (success) {
-                    // Send success message to player
-                    player.sendSystemMessage(Component.literal("Removed " + itemCount + " " + 
-                        item.getDescription().getString() + " from " + town.getName() + "'s communal storage."));
+                    PlayerItemExchange.give(player, item, itemCount);
+                    player.sendSystemMessage(Component.literal("Removed " + itemCount + " " +
+                            item.getDescription().getString() + " from " + town.getName() + "'s communal storage."));
                 } else {
-                    // Send failure message
-                    player.sendSystemMessage(Component.literal("Not enough " + 
-                        item.getDescription().getString() + " in communal storage."));
+                    player.sendSystemMessage(Component.literal("Not enough " +
+                            item.getDescription().getString() + " in communal storage."));
                 }
             }
             

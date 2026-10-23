@@ -13,6 +13,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.network.LoadedTownAccess;
+import com.quackers29.businesscraft.network.PlayerItemExchange;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import net.minecraft.world.level.Level;
@@ -79,17 +81,14 @@ public class BufferStoragePacket extends BaseBlockEntityPacket {
                 return;
             }
 
-            // Get the level
-            Level level = player.level();
-            if (!(level instanceof ServerLevel serverLevel)) {
+            if (!(player.level() instanceof ServerLevel serverLevel)) {
                 LOGGER.warn("Player level is not a ServerLevel");
                 return;
             }
+            Level level = serverLevel;
 
-            // Get the town block entity at the position
-            BlockEntity blockEntity = level.getBlockEntity(pos);
-            if (!(blockEntity instanceof TownInterfaceEntity townInterfaceEntity)) {
-                LOGGER.warn("No town block entity found at position {} for player {}", pos, player.getName().getString());
+            TownInterfaceEntity townInterfaceEntity = LoadedTownAccess.getIfLoadedInReach(player, pos);
+            if (townInterfaceEntity == null) {
                 return;
             }
 
@@ -125,30 +124,27 @@ public class BufferStoragePacket extends BaseBlockEntityPacket {
                 return;
             }
 
-            // Process the buffer storage operation
             int itemCount = itemStack.getCount();
+            if (itemCount <= 0) {
+                return;
+            }
             Item item = itemStack.getItem();
 
-            // Add to or remove from buffer storage
             boolean success;
             if (isAddOperation) {
-                // Add items to buffer storage
-                success = town.addToCommunalStorage(item, itemCount);
-
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                    "Buffer storage ADD - Player {} {} {} {} to town {}",
-                    player.getName().getString(),
-                    success ? "successfully added" : "failed to add",
-                    itemCount, item.getDescription().getString(), town.getName());
+                if (!PlayerItemExchange.tryTake(player, item, itemCount)) {
+                    success = false;
+                } else {
+                    success = town.addToCommunalStorage(item, itemCount);
+                    if (!success) {
+                        PlayerItemExchange.give(player, item, itemCount);
+                    }
+                }
             } else {
-                // Remove items from buffer storage (negative count)
                 success = town.addToCommunalStorage(item, -itemCount);
-
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                    "Buffer storage REMOVE - Player {} {} {} {} from town {}",
-                    player.getName().getString(),
-                    success ? "successfully removed" : "failed to remove",
-                    itemCount, item.getDescription().getString(), town.getName());
+                if (success) {
+                    PlayerItemExchange.give(player, item, itemCount);
+                }
             }
 
             if (success) {

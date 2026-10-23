@@ -7,32 +7,19 @@ import com.quackers29.businesscraft.network.packets.ui.OpenTownInterfacePacket;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.event.TownEventHandler;
-import com.quackers29.businesscraft.client.showcase.Showcase;
-
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents;
 
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.network.chat.Component;
-import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,16 +39,13 @@ public class FabricEventCallbackHandler {
     private static final List<EventCallbacks.PlayerLogoutCallback> playerLogoutCallbacks = new ArrayList<>();
     private static final List<EventCallbacks.RightClickBlockCallback> rightClickBlockCallbacks = new ArrayList<>();
 
-    // Client-side callbacks
-    private static final List<EventCallbacks.ClientTickCallback> clientTickCallbacks = new ArrayList<>();
-    private static final List<EventCallbacks.KeyInputCallback> keyInputCallbacks = new ArrayList<>();
-    private static final List<EventCallbacks.MouseScrollCallback> mouseScrollCallbacks = new ArrayList<>();
-    private static final List<EventCallbacks.RenderLevelCallback> renderLevelCallbacks = new ArrayList<>();
-    private static final List<EventCallbacks.LevelUnloadCallback> levelUnloadCallbacks = new ArrayList<>();
-
-    // Key state tracking for key input callbacks
-    private static final Map<Integer, Boolean> previousKeyStates = new HashMap<>();
-    private static boolean scrollCallbackRegistered = false;
+    // Client-side callbacks. Package-visible so FabricClientEventHooks can run them
+    // without this server-loaded class referencing client types.
+    static final List<EventCallbacks.ClientTickCallback> clientTickCallbacks = new ArrayList<>();
+    static final List<EventCallbacks.KeyInputCallback> keyInputCallbacks = new ArrayList<>();
+    static final List<EventCallbacks.MouseScrollCallback> mouseScrollCallbacks = new ArrayList<>();
+    static final List<EventCallbacks.RenderLevelCallback> renderLevelCallbacks = new ArrayList<>();
+    static final List<EventCallbacks.LevelUnloadCallback> levelUnloadCallbacks = new ArrayList<>();
 
     /**
      * Check if we're running on a server (as opposed to client-only)
@@ -157,88 +141,6 @@ public class FabricEventCallbackHandler {
                     com.quackers29.businesscraft.command.ClearContractsCommand.register(dispatcher);
                     com.quackers29.businesscraft.command.DumpTownDataCommand.register(dispatcher);
                 });
-    }
-
-    /**
-     * Register client-side events (called from FabricClientSetup)
-     */
-    public static void registerClientEvents() {
-        // Client Tick
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            Showcase.tick();
-            for (EventCallbacks.ClientTickCallback callback : clientTickCallbacks) {
-                callback.onClientTick();
-            }
-
-            // Key Input handling (simulated via tick)
-            if (!keyInputCallbacks.isEmpty() && client.getWindow() != null) {
-                long windowHandle = client.getWindow().getWindow();
-
-                // Check F4 (debug)
-                int keyCode = GLFW.GLFW_KEY_F4;
-                int currentState = GLFW.glfwGetKey(windowHandle, keyCode);
-                boolean previousState = previousKeyStates.getOrDefault(keyCode, false);
-
-                if (currentState == GLFW.GLFW_PRESS && !previousState) {
-                    for (EventCallbacks.KeyInputCallback callback : keyInputCallbacks) {
-                        if (callback.onKeyInput(keyCode, GLFW.GLFW_PRESS)) {
-                            break;
-                        }
-                    }
-                }
-                previousKeyStates.put(keyCode, currentState == GLFW.GLFW_PRESS);
-            }
-        });
-
-        // Mouse Scroll (using GLFW callback - register once)
-        ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            if (!scrollCallbackRegistered && client.getWindow() != null) {
-                long windowHandle = client.getWindow().getWindow();
-
-                // Register GLFW scroll callback once
-                GLFW.glfwSetScrollCallback(windowHandle, (window, xOffset, yOffset) -> {
-                    for (EventCallbacks.MouseScrollCallback callback : mouseScrollCallbacks) {
-                        if (callback.onMouseScroll(yOffset)) {
-                            break;
-                        }
-                    }
-                });
-                scrollCallbackRegistered = true;
-                LOGGER.debug("Registered GLFW scroll callback");
-            }
-        });
-
-        // Client World Unload (via Disconnect)
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-            if (client.level != null) {
-                for (EventCallbacks.LevelUnloadCallback callback : levelUnloadCallbacks) {
-                    callback.onLevelUnload(client.level);
-                }
-            }
-        });
-
-        // UseBlockCallback for menu opening (Client side check to send packet)
-        UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
-            if (hand != InteractionHand.MAIN_HAND)
-                return InteractionResult.PASS;
-
-            BlockPos pos = hitResult.getBlockPos();
-            if (world.getBlockState(pos).getBlock() instanceof com.quackers29.businesscraft.block.TownInterfaceBlock) {
-                PlatformAccess.getNetworkMessages().sendToServer(new OpenTownInterfacePacket(pos));
-                return InteractionResult.PASS; // Allow interaction to proceed (or should we consume it?)
-            }
-            return InteractionResult.PASS;
-        });
-
-        // World Render Event (After Translucent) - Critical for platform/boundary
-        // visualization
-        net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents.AFTER_TRANSLUCENT.register(context -> {
-            for (EventCallbacks.RenderLevelCallback callback : renderLevelCallbacks) {
-                // Pass "AFTER_TRANSLUCENT_BLOCKS" to match the common RenderHelper.RenderStage
-                // constant
-                callback.onRenderLevel("AFTER_TRANSLUCENT_BLOCKS", context.tickDelta(), context);
-            }
-        });
     }
 
     // Registration methods

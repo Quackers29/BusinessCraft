@@ -1,13 +1,10 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
 import com.quackers29.businesscraft.town.data.TownLeaderboardData;
-import com.quackers29.businesscraft.ui.screens.town.TownLeaderboardScreen;
 import com.quackers29.businesscraft.api.PlatformAccess;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
+import com.quackers29.businesscraft.network.ClientPacketDispatcher;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -63,23 +60,12 @@ public class LeaderboardDataResponsePacket {
     }
 
     public static void handle(LeaderboardDataResponsePacket packet, Object context) {
-        PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            Minecraft minecraft = Minecraft.getInstance();
-            Screen currentScreen = minecraft.screen;
-
-            // Open the ranking screen with the received data
-            if (minecraft.player != null) {
-                TownLeaderboardScreen rankingScreen = new TownLeaderboardScreen(
-                    Component.literal("Town Ranking"),
-                    currentScreen,
-                    minecraft.player.blockPosition(),
-                    packet.currentTownName
-                );
-                rankingScreen.setTownData(packet.towns);
-                minecraft.setScreen(rankingScreen);
-            }
-        });
+        PlatformAccess.getNetwork().enqueueWork(context, () -> ClientPacketDispatcher.dispatch(packet));
         PlatformAccess.getNetwork().setPacketHandled(context);
+    }
+
+    public String getCurrentTownName() {
+        return currentTownName;
     }
 
     public List<TownLeaderboardData> getTowns() {

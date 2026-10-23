@@ -61,31 +61,8 @@ public class TownMapDataResponsePacket {
     }
     
     public void handle(Object context) {
-        PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            try {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                    "Received town map data response with {} towns", townData.size());
-
-                ClientTownMapCache.getInstance().updateTownData(townData);
-
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                    "Updated client town map cache with {} towns", townData.size());
-
-                // Try to refresh any open town map modals
-                com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
-                if (clientHelper != null) {
-                    Object currentScreen = clientHelper.getCurrentScreen();
-                    if (currentScreen instanceof com.quackers29.businesscraft.ui.modal.specialized.TownMapModal mapModal) {
-                        mapModal.refreshFromCache();
-                        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, 
-                            "Refreshed open town map modal with new data");
-                    }
-                }
-                
-            } catch (Exception e) {
-                LOGGER.error("Error handling TownMapDataResponsePacket", e);
-            }
-        });
+        PlatformAccess.getNetwork().enqueueWork(context, () ->
+                com.quackers29.businesscraft.network.ClientPacketDispatcher.dispatch(this));
         PlatformAccess.getNetwork().setPacketHandled(context);
     }
     

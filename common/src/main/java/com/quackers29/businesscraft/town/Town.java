@@ -125,6 +125,9 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     // Stats
     private float happiness = 50.0f; // 0-100
     private float happinessModifier = 0f; // Calculated from upgrades
+    private boolean legacyVisitHistoryMigrated;
+    /** Bumps on every {@link #markDirty()} so block entities can sync only after a real change. */
+    private int revision;
 
     public TownUpgradeComponent getUpgrades() {
         return upgrades;
@@ -141,6 +144,29 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
 
     public void adjustHappiness(float delta) {
         this.happiness = Math.max(0.0f, Math.min(100.0f, this.happiness + delta));
+    }
+
+    public int getRevision() {
+        return revision;
+    }
+
+    public boolean isLegacyVisitHistoryMigrated() {
+        return legacyVisitHistoryMigrated;
+    }
+
+    public void setLegacyVisitHistoryMigrated(boolean migrated) {
+        this.legacyVisitHistoryMigrated = migrated;
+    }
+
+    /**
+     * Appends one legacy block-entity visit without recounting arrival totals.
+     */
+    public void importLegacyVisit(long timestamp, UUID originTownId, int count, BlockPos originPos) {
+        visitHistory.add(new ITownDataProvider.VisitHistoryRecord(timestamp, originTownId, count, originPos));
+        visitHistory.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
+        while (visitHistory.size() > MAX_HISTORY_SIZE) {
+            visitHistory.remove(visitHistory.size() - 1);
+        }
     }
 
     public TownContractComponent getContracts() {
@@ -219,7 +245,11 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
 
     @Override
     public void addResource(Item item, long count) {
+        if (item == null || count == 0) {
+            return;
+        }
         economy.addResource(item, count);
+        markDirty();
     }
 
     @Override
@@ -492,6 +522,8 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         tag.putInt("touristCount", touristCount);
         tag.putString("biome", biome);
         tag.putString("biomeVariant", biomeVariant);
+        tag.putFloat("happiness", happiness);
+        tag.putBoolean("legacyVisitHistoryMigrated", legacyVisitHistoryMigrated);
 
         tag.putLong("workUnits", workUnits);
 
@@ -676,6 +708,9 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         if (tag.contains("happiness")) {
             town.happiness = tag.getFloat("happiness");
         }
+        if (tag.contains("legacyVisitHistoryMigrated")) {
+            town.legacyVisitHistoryMigrated = tag.getBoolean("legacyVisitHistoryMigrated");
+        }
 
         if (tag.contains("PathStart")) {
             CompoundTag startPos = tag.getCompound("PathStart");
@@ -821,8 +856,10 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
             });
         }
 
-        if (tag.contains("escrow")) {
-            CompoundTag escrowTag = tag.getCompound("escrow");
+        String escrowKey = tag.contains("escrowedResources") ? "escrowedResources"
+                : (tag.contains("escrow") ? "escrow" : null);
+        if (escrowKey != null) {
+            CompoundTag escrowTag = tag.getCompound(escrowKey);
             escrowTag.getAllKeys().forEach(key -> {
                 try {
                     net.minecraft.resources.ResourceLocation resourceLocation = new net.minecraft.resources.ResourceLocation(
@@ -961,6 +998,7 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
 
     @Override
     public void markDirty() {
+        revision++;
         // Find the TownManager for all loaded levels and mark the town data as dirty
         // Platform-agnostic: iterate through all TownManager instances
         boolean foundInAnyLevel = false;

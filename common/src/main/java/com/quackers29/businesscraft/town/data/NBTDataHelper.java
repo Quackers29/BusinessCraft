@@ -121,9 +121,8 @@ public class NBTDataHelper {
             if (level instanceof ServerLevel sLevel) {
                 result.town = TownManager.get(sLevel).getTown(result.townId);
                 
-                // Migrate any legacy visit history from block entity to Town
                 if (result.town != null && tag.contains("visitHistory")) {
-                    migrateLegacyVisitHistory(tag, result.town, sLevel);
+                    LegacyVisitHistoryMigration.apply(tag, result.town);
                 }
                 
                 if (result.town != null) {
@@ -160,72 +159,6 @@ public class NBTDataHelper {
         }
         
         return result;
-    }
-    
-    /**
-     * Migrates legacy visit history from block entity NBT to Town object
-     * This handles backward compatibility for older save files
-     */
-    private void migrateLegacyVisitHistory(CompoundTag tag, Town town, ServerLevel serverLevel) {
-        ITownDataProvider provider = town;
-        ListTag historyTag = tag.getList("visitHistory", Tag.TAG_COMPOUND);
-        LOGGER.info("Migrating {} visit history records to Town {}", historyTag.size(), town.getName());
-        
-        for (int i = 0; i < historyTag.size(); i++) {
-            CompoundTag visitTag = historyTag.getCompound(i);
-            
-            long timestamp = visitTag.getLong("timestamp");
-            int count = visitTag.getInt("count");
-            
-            // Get the town ID or generate one from the name
-            UUID originTownId = null;
-            if (visitTag.contains("townId")) {
-                originTownId = visitTag.getUUID("townId");
-            } else if (visitTag.contains("town")) {
-                // Legacy format - generate a UUID from the name
-                String townName = visitTag.getString("town");
-                originTownId = UUID.nameUUIDFromBytes(townName.getBytes());
-                LOGGER.info("Converted legacy town name '{}' to UUID: {}", townName, originTownId);
-            } else {
-                continue; // Skip if no town identifier
-            }
-            
-            BlockPos originPos = BlockPos.ZERO;
-            if (visitTag.contains("pos")) {
-                CompoundTag posTag = visitTag.getCompound("pos");
-                originPos = new BlockPos(
-                    posTag.getInt("x"),
-                    posTag.getInt("y"),
-                    posTag.getInt("z")
-                );
-            }
-            
-            // Add the record to the Town using the provider
-            try {
-                // Use reflection to access the private list directly (to preserve exact timestamps)
-                java.lang.reflect.Field historyField = Town.class.getDeclaredField("visitHistory");
-                historyField.setAccessible(true);
-                @SuppressWarnings("unchecked")
-                List<ITownDataProvider.VisitHistoryRecord> visitHistory = 
-                    (List<ITownDataProvider.VisitHistoryRecord>) historyField.get(town);
-                visitHistory.add(new ITownDataProvider.VisitHistoryRecord(timestamp, originTownId, count, originPos));
-                
-                // Ensure list is sorted by timestamp (newest first)
-                visitHistory.sort((a, b) -> Long.compare(b.getTimestamp(), a.getTimestamp()));
-                
-                // Trim if needed
-                while (visitHistory.size() > 50) { // MAX_HISTORY_SIZE
-                    visitHistory.remove(visitHistory.size() - 1);
-                }
-                
-                // Mark town as dirty
-                provider.markDirty();
-            } catch (Exception e) {
-                // Fallback to the standard method if reflection fails
-                LOGGER.error("Error migrating visit history: {}", e.getMessage());
-                provider.recordVisit(originTownId, count, originPos);
-            }
-        }
     }
     
     /**

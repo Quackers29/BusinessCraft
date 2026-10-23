@@ -110,42 +110,9 @@ public class PaymentBoardResponsePacket {
     }
 
     public void handle(Object context) {
-        PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            // Client-side handling
-            handleClientSide();
-        });
+        PlatformAccess.getNetwork().enqueueWork(context, () ->
+                com.quackers29.businesscraft.network.ClientPacketDispatcher.dispatch(this));
         PlatformAccess.getNetwork().setPacketHandled(context);
-    }
-
-    private void handleClientSide() {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-            "Received payment board update with {} rewards", rewards.size());
-
-        // Get the client helper
-        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
-        if (clientHelper == null) {
-            LOGGER.warn("ClientHelper not available (server side?)");
-            return;
-        }
-
-        clientHelper.executeOnClientThread(() -> {
-            try {
-                Object currentScreen = clientHelper.getCurrentScreen();
-                // If the current screen is PaymentBoardScreen, update its data
-                if (currentScreen instanceof com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen paymentScreen) {
-                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                        "Updating PaymentBoardScreen with reward data");
-                    paymentScreen.updateRewardData(rewards);
-
-                    // Also update the menu's cached data
-                    com.quackers29.businesscraft.menu.PaymentBoardMenu paymentMenu =
-                        (com.quackers29.businesscraft.menu.PaymentBoardMenu) paymentScreen.getMenu();
-                    paymentMenu.updateCachedRewards(rewards);
-                }
-            } catch (Exception e) {
-                LOGGER.error("Error handling payment board update", e);
-            }
-        });
     }
 
     /**
