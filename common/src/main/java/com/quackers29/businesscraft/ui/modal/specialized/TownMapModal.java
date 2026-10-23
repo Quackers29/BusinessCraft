@@ -182,7 +182,7 @@ public class TownMapModal extends Screen {
      * Shrinks the grid when vertical space is tight — never grows into the button row.
      */
     private void computeMapLayout() {
-        int sampleLabel = Math.max(font.width("-500"), font.width("5000"));
+        int sampleLabel = Math.max(font.width("-10000"), font.width("10000"));
         leftAxisGutter = 8 + sampleLabel;
         rightAxisGutter = 8 + font.width("X") + 6;
         topAxisGutter = font.lineHeight + 4;
