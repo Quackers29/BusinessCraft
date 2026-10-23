@@ -47,8 +47,22 @@ public final class ShowcaseAllViews {
     private static int saved;
     private static int exitCode;
     private static boolean initialized;
+    private static boolean embeddedMode;
+    private static boolean runComplete;
 
     private ShowcaseAllViews() {
+    }
+
+    public static void setEmbeddedMode(boolean embedded) {
+        embeddedMode = embedded;
+    }
+
+    public static boolean isComplete() {
+        return runComplete;
+    }
+
+    public static int exitCode() {
+        return exitCode;
     }
 
     public static void reset(Minecraft minecraft) {
@@ -65,6 +79,7 @@ public final class ShowcaseAllViews {
         quitTicks = 0;
         saved = 0;
         exitCode = 0;
+        runComplete = false;
         initialized = true;
         deleteManifest(minecraft);
         LOGGER.info("Showcase all-views: {} routes", routes.size());
@@ -144,6 +159,7 @@ public final class ShowcaseAllViews {
         if (routeIndex >= routes.size()) {
             writeManifest(minecraft, true);
             quitting = true;
+            runComplete = true;
         }
     }
 
@@ -154,6 +170,7 @@ public final class ShowcaseAllViews {
         stepFailure = reason;
         writeManifest(minecraft, false);
         quitting = true;
+        runComplete = true;
     }
 
     private static ShowcaseRoute findRoute(String name) {
@@ -224,6 +241,10 @@ public final class ShowcaseAllViews {
     }
 
     private static void shutdown(Minecraft minecraft) {
+        if (embeddedMode) {
+            runComplete = true;
+            return;
+        }
         if (++quitTicks >= 40) {
             if (exitCode == 0) {
                 LOGGER.info("Showcase all-views finished: {} views", saved);

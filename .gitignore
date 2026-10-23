@@ -6,6 +6,7 @@
 /forge/build
 /fabric/build
 /fabric/run
+/showcase-output/
 # Obsidian local UI state (per-machine; not shared docs)
 vault/.obsidian/
 # Loom/Gradle caches under the Fabric module (root /.gradle does not cover this)

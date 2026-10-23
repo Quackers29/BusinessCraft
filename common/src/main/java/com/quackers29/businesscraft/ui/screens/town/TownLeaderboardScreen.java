@@ -84,6 +84,11 @@ public class TownLeaderboardScreen extends Screen {
         sortData();
     }
 
+    /** Town rows currently loaded (showcase / diagnostics). */
+    public int getTownDataCount() {
+        return townData.size();
+    }
+
     private void sortData() {
         townData.sort(getComparatorForMode(sortMode));
     }
