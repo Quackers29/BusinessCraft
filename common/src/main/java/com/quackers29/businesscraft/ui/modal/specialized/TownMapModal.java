@@ -569,12 +569,12 @@ public class TownMapModal extends Screen {
         double viewWidthInWorld = mapWidth / (zoomLevel * COORDINATE_CONVERSION);
         double viewHeightInWorld = mapHeight / (zoomLevel * COORDINATE_CONVERSION);
 
-        // Calculate coordinate spacing based on zoom level
-        int coordSpacing = getCoordinateSpacing();
+        int xCoordSpacing = getCoordinateSpacingForView(viewWidthInWorld, viewHeightInWorld);
+        int zCoordSpacing = getCoordinateSpacingForView(viewHeightInWorld, viewWidthInWorld);
 
         // Draw X-axis markers (bottom of map)
-        int startX = ((int) (mapOffsetX - viewWidthInWorld / 2) / coordSpacing) * coordSpacing;
-        for (int worldX = startX; worldX <= mapOffsetX + viewWidthInWorld / 2; worldX += coordSpacing) {
+        int startX = (int) (Math.floor((mapOffsetX - viewWidthInWorld / 2) / (double) xCoordSpacing) * xCoordSpacing);
+        for (int worldX = startX; worldX <= mapOffsetX + viewWidthInWorld / 2; worldX += xCoordSpacing) {
             int screenX = worldToScreenX(worldX);
             if (screenX >= mapLeft && screenX <= mapRight) {
                 // Draw tick mark
@@ -587,47 +587,24 @@ public class TownMapModal extends Screen {
         }
 
         // Draw Z-axis markers (left side of map)
-        int startZ = ((int) (mapOffsetZ - viewHeightInWorld / 2) / coordSpacing) * coordSpacing;
+        double minVisibleZ = mapOffsetZ - viewHeightInWorld / 2;
+        double maxVisibleZ = mapOffsetZ + viewHeightInWorld / 2;
+        int startZ = (int) (Math.floor(minVisibleZ / (double) zCoordSpacing) * zCoordSpacing);
+        int endZ = (int) (Math.floor(maxVisibleZ / (double) zCoordSpacing) * zCoordSpacing);
         int zLabelMinY = zAxisTitleY + font.lineHeight + 1;
         int zLabelMaxBottom = mapGridBottom + xAxisBandHeight;
-        for (int worldZ = startZ; worldZ <= mapOffsetZ + viewHeightInWorld / 2; worldZ += coordSpacing) {
-            int screenY = worldToScreenZ(worldZ);
-            if (screenY < mapTop - font.lineHeight || screenY > mapBottom + font.lineHeight) {
-                continue;
-            }
-            boolean wouldOverlapInfo = selectedTown != null &&
-                    screenY >= panelTop + 50 && screenY <= panelTop + 110 &&
-                    mapLeft - 50 <= panelLeft + 200;
-            if (wouldOverlapInfo) {
-                continue;
-            }
-
-            String zLabel = String.valueOf(worldZ);
-            int labelWidth = this.font.width(zLabel);
-            int labelX = mapLeft - labelWidth - 7;
-            if (labelX < panelLeft + 2) {
-                continue;
-            }
-
-            int labelY;
-            if (screenY <= mapTop + 2) {
-                labelY = mapTop;
-            } else if (screenY >= mapBottom - 2) {
-                labelY = mapBottom - font.lineHeight;
-            } else {
-                labelY = screenY - font.lineHeight / 2;
-                labelY = Math.max(zLabelMinY, labelY);
-            }
-            if (labelY + font.lineHeight > zLabelMaxBottom) {
-                continue;
-            }
-
-            int tickY = Math.max(mapTop, Math.min(mapBottom, screenY));
-            guiGraphics.hLine(mapLeft - 5, mapLeft, tickY, BORDER_COLOR);
-            guiGraphics.drawString(this.font, zLabel, labelX, labelY, TEXT_COLOR);
+        for (int worldZ = startZ; worldZ <= endZ; worldZ += zCoordSpacing) {
+            drawZAxisTickLabel(guiGraphics, mapLeft, mapTop, mapBottom, worldZ, zLabelMinY, zLabelMaxBottom, -1);
         }
 
-        guiGraphics.drawString(this.font, "X", mapRight + 5, xAxisLabelBaselineY, 0xFFCCCCCC);
+        if (startZ != endZ) {
+            drawZAxisTickLabel(guiGraphics, mapLeft, mapTop, mapBottom, startZ, zLabelMinY, zLabelMaxBottom, mapTop);
+            drawZAxisTickLabel(guiGraphics, mapLeft, mapTop, mapBottom, endZ, zLabelMinY, zLabelMaxBottom,
+                    mapBottom - font.lineHeight);
+        }
+
+        int xMarkX = panelLeft + panelWidth - rightAxisGutter + (rightAxisGutter - font.width("X")) / 2;
+        guiGraphics.drawString(this.font, "X", xMarkX, xAxisLabelBaselineY, 0xFFCCCCCC);
 
         boolean zAxisOverlapsInfo = selectedTown != null &&
                 zAxisTitleY >= panelTop + 50 && zAxisTitleY <= panelTop + 110 &&
@@ -639,17 +616,57 @@ public class TownMapModal extends Screen {
     }
 
     /**
+     * Draw one Z-axis tick and label. When {@code forcedLabelY >= 0}, pin the label to that Y (north/south edge).
+     */
+    private void drawZAxisTickLabel(GuiGraphics guiGraphics, int mapLeft, int mapTop, int mapBottom, int worldZ,
+            int zLabelMinY, int zLabelMaxBottom, int forcedLabelY) {
+        int screenY = worldToScreenZ(worldZ);
+        if (forcedLabelY < 0 && (screenY < mapTop - font.lineHeight || screenY > mapBottom + font.lineHeight)) {
+            return;
+        }
+        boolean wouldOverlapInfo = selectedTown != null &&
+                screenY >= panelTop + 50 && screenY <= panelTop + 110 &&
+                mapLeft - 50 <= panelLeft + 200;
+        if (wouldOverlapInfo) {
+            return;
+        }
+
+        String zLabel = String.valueOf(worldZ);
+        int labelWidth = this.font.width(zLabel);
+        int labelX = Math.max(panelLeft + 2, mapLeft - labelWidth - 7);
+
+        int labelY;
+        if (forcedLabelY >= 0) {
+            labelY = forcedLabelY;
+        } else if (screenY <= mapTop + 2) {
+            labelY = mapTop;
+        } else if (screenY >= mapBottom - 2) {
+            labelY = mapBottom - font.lineHeight;
+        } else {
+            labelY = screenY - font.lineHeight / 2;
+            labelY = Math.max(zLabelMinY, labelY);
+        }
+        if (labelY + font.lineHeight > zLabelMaxBottom || labelY < panelTop) {
+            return;
+        }
+
+        int tickY = Math.max(mapTop, Math.min(mapBottom, screenY));
+        guiGraphics.hLine(mapLeft - 5, mapLeft, tickY, BORDER_COLOR);
+        guiGraphics.drawString(this.font, zLabel, labelX, labelY, TEXT_COLOR);
+    }
+
+    /**
      * Calculate coordinate marker spacing based on zoom level
      * Ensures maximum ~7 markers per axis (increased from 5 by 2)
      */
     private int getCoordinateSpacing() {
         double viewWidthInWorld = mapWidth / (zoomLevel * COORDINATE_CONVERSION);
         double viewHeightInWorld = mapHeight / (zoomLevel * COORDINATE_CONVERSION);
+        return getCoordinateSpacingForView(viewWidthInWorld, viewHeightInWorld);
+    }
 
-        // Find the maximum view dimension
-        double maxViewDimension = Math.max(viewWidthInWorld, viewHeightInWorld);
-
-        // Calculate spacing to have approximately 7 markers maximum (increased from 5)
+    private int getCoordinateSpacingForView(double primaryAxisView, double otherAxisView) {
+        double maxViewDimension = Math.max(primaryAxisView, otherAxisView * 0.35);
         double targetSpacing = maxViewDimension / 7.0;
 
         // Round to nice numbers (powers of 10, 25, 50)
