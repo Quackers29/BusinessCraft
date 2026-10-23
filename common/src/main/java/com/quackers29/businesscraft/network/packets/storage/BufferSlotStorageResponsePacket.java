@@ -55,44 +55,9 @@ public class BufferSlotStorageResponsePacket {
     }
 
     public void handle(Object context) {
-        PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            // Client-side handling
-            handleClientSide();
-        });
+        PlatformAccess.getNetwork().enqueueWork(context, () ->
+                com.quackers29.businesscraft.network.ClientPacketDispatcher.dispatch(this));
         PlatformAccess.getNetwork().setPacketHandled(context);
-    }
-
-    private void handleClientSide() {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-            "Received slot-based buffer storage update with {} slots", slotStorage.getSlotCount());
-        
-        // Get the client helper
-        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
-        if (clientHelper == null) {
-            LOGGER.warn("ClientHelper not available (server side?)");
-            return;
-        }
-
-        clientHelper.executeOnClientThread(() -> {
-            try {
-                Object currentScreen = clientHelper.getCurrentScreen();
-                // Update both PaymentBoardScreen and PaymentBoardMenu
-                if (currentScreen instanceof com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen paymentScreen) {
-                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                        "Updating PaymentBoardScreen with slot-based buffer storage data");
-                    
-                    // Update the screen's menu with slot-based data
-                    var menu = paymentScreen.getMenu();
-                    if (menu instanceof com.quackers29.businesscraft.menu.PaymentBoardMenu) {
-                        com.quackers29.businesscraft.menu.PaymentBoardMenu paymentMenu = 
-                            (com.quackers29.businesscraft.menu.PaymentBoardMenu) menu;
-                        paymentMenu.updateBufferStorageSlots(slotStorage);
-                    }
-                }
-            } catch (Exception e) {
-                LOGGER.error("Error handling slot-based buffer storage update", e);
-            }
-        });
     }
     
     /**

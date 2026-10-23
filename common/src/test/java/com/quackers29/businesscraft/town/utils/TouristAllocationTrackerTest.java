@@ -19,8 +19,8 @@ import static org.junit.jupiter.api.Assertions.*;
  *   - Selection prefers most negative gap (most under-allocated), 10% random among unders.
  *   - recordSpawn / recordRemoval mutate the per-origin counters (used by select).
  *
- * recordTouristSpawn is private to the logic (never called from prod today — see vault note);
- * the static originTrackers map is cleared via reflection in @BeforeEach (no prod changes).
+ * recordTouristSpawn is called from TouristSpawningHelper after a successful spawn.
+ * The static originTrackers map is cleared via reflection in @BeforeEach.
  * Documentation: vault/Tourists/Capacity/Tourist Allocation.md
  */
 class TouristAllocationTrackerTest {
@@ -209,6 +209,19 @@ class TouristAllocationTrackerTest {
         opts.put(DEST_B, 60);
         UUID chosen = TouristAllocationTracker.selectFairDestination(ORIGIN, opts);
         assertEquals(DEST_A, chosen);
+    }
+
+    @Test
+    void recordTouristSpawn_equalPopulations_prefersTheUnderAllocatedDestination() {
+        TouristAllocationTracker.recordTouristSpawn(ORIGIN, DEST_A);
+        TouristAllocationTracker.recordTouristSpawn(ORIGIN, DEST_A);
+        TouristAllocationTracker.recordTouristSpawn(ORIGIN, DEST_B);
+
+        Map<UUID, Integer> opts = new LinkedHashMap<>();
+        opts.put(DEST_A, 10);
+        opts.put(DEST_B, 10);
+
+        assertEquals(DEST_B, TouristAllocationTracker.selectFairDestination(ORIGIN, opts));
     }
 
     // --- isolation ---

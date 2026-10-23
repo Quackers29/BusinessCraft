@@ -114,9 +114,6 @@ public class PlayerBoundaryTracker {
 
         } else if (oldTown != null && newTown != null && !oldTown.getId().equals(newTown.getId())) {
             sendLeavingMessage(player, oldTown.getName());
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ignored) {}
             sendWelcomeMessage(player, newTown.getName());
             state.markNotificationSent();
         }

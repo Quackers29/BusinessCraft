@@ -65,9 +65,20 @@ public class TownManager {
         return INSTANCES.computeIfAbsent(level, key -> new TownManager(level));
     }
 
+    /** Test-only manager that is not attached to a world. */
+    TownManager(TownSavedData savedData) {
+        this.level = null;
+        this.savedData = savedData;
+        this.boundaryService = new TownBoundaryService();
+    }
+
+    static void installForTest(TownManager manager) {
+        INSTANCES.put(null, manager);
+    }
+
     /**
-     * Cleans up instances that might be stale
-     * Call this when server is stopping or restarting
+     * Cleans up instances that might be stale.
+     * Call this when the server is stopping or restarting.
      */
     public static void clearInstances() {
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Clearing {} TownManager instances", INSTANCES.size());

@@ -70,41 +70,9 @@ public class PersonalStorageResponsePacket {
     }
 
     public void handle(Object context) {
-        PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            // Client-side handling
-            handleClientSide();
-        });
+        PlatformAccess.getNetwork().enqueueWork(context, () ->
+                com.quackers29.businesscraft.network.ClientPacketDispatcher.dispatch(this));
         PlatformAccess.getNetwork().setPacketHandled(context);
-    }
-
-    private void handleClientSide() {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-            "Received personal storage update with {} items", storageItems.size());
-        
-        // Get the client helper
-        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
-        if (clientHelper == null) {
-            LOGGER.warn("ClientHelper not available (server side?)");
-            return;
-        }
-
-        clientHelper.executeOnClientThread(() -> {
-            Object currentScreen = clientHelper.getCurrentScreen();
-            // If the current screen is StorageScreen, update its inventory
-            if (currentScreen instanceof com.quackers29.businesscraft.ui.screens.town.StorageScreen storageScreen) {
-                storageScreen.updatePersonalStorageItems(storageItems);
-            }
-            // Also check for our modal inventory screen
-            else if (currentScreen instanceof com.quackers29.businesscraft.ui.modal.specialized.BCModalInventoryScreen<?> modalScreen) {
-                // Check if the container is a StorageMenu
-                if (modalScreen.getMenu() instanceof com.quackers29.businesscraft.menu.StorageMenu storageMenu) {
-                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                        "Updating personal storage in modal screen");
-                    // Update the storage menu's inventory with the personal storage items
-                    storageMenu.updatePersonalStorageItems(storageItems);
-                }
-            }
-        });
     }
     
     /**

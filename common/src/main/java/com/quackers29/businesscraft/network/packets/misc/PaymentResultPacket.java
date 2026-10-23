@@ -5,9 +5,7 @@ import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.quackers29.businesscraft.api.PlatformAccess;
-import com.quackers29.businesscraft.ui.modal.specialized.BCModalInventoryScreen;
-import com.quackers29.businesscraft.menu.TradeMenu;
-import com.quackers29.businesscraft.debug.DebugConfig;
+import com.quackers29.businesscraft.network.ClientPacketDispatcher;
 
 /**
  * Client-bound packet that sends the result of a resource trade (emerald payment) back to the client.
@@ -43,40 +41,8 @@ public class PaymentResultPacket {
     }
 
     public void handle(Object context) {
-        PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            // Client-side handling
-            handleClientSide();
-        });
+        PlatformAccess.getNetwork().enqueueWork(context, () -> ClientPacketDispatcher.dispatch(this));
         PlatformAccess.getNetwork().setPacketHandled(context);
-    }
-
-    private void handleClientSide() {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-            "Payment result received: {}", paymentItem);
-        
-        // Get the client helper
-        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
-        if (clientHelper == null) {
-            LOGGER.warn("ClientHelper not available (server side?)");
-            return;
-        }
-
-        clientHelper.executeOnClientThread(() -> {
-            Object currentScreen = clientHelper.getCurrentScreen();
-            // Handle traditional TradeScreen first
-            if (currentScreen instanceof com.quackers29.businesscraft.ui.screens.town.TradeScreen tradeScreen) {
-                tradeScreen.setOutputItem(paymentItem);
-            } 
-            // Also check for our new modal inventory screen
-            else if (currentScreen instanceof BCModalInventoryScreen<?> modalScreen) {
-                // Check if the container is a TradeMenu
-                if (modalScreen.getMenu() instanceof TradeMenu tradeMenu) {
-                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                        "Setting payment item in BCModalInventoryScreen: {}", paymentItem);
-                    tradeMenu.setOutputItem(paymentItem.copy());
-                }
-            }
-        });
     }
     
     /**

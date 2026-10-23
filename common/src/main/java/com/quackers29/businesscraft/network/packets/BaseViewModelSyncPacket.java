@@ -1,11 +1,9 @@
 package com.quackers29.businesscraft.network.packets;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
-import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
-import net.minecraft.client.Minecraft;
+import com.quackers29.businesscraft.network.ClientPacketDispatcher;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import com.quackers29.businesscraft.town.viewmodel.IViewModel;
 
 public abstract class BaseViewModelSyncPacket<T extends IViewModel> {
@@ -37,23 +35,16 @@ public abstract class BaseViewModelSyncPacket<T extends IViewModel> {
         throw new UnsupportedOperationException("Use subclass decode");
     }
 
+    public BlockPos getPos() {
+        return pos;
+    }
+
+    public T getViewModel() {
+        return viewModel;
+    }
+
     public void handle(Object context) {
-        PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            var mc = Minecraft.getInstance();
-            var level = mc.level;
-            if (level == null) return;
-
-            BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof TownInterfaceEntity entity) {
-                @SuppressWarnings("unchecked")
-                Class<T> vmClass = (Class<T>) viewModel.getClass();
-                entity.getVmCache().update(vmClass, viewModel);
-
-                if (mc.screen instanceof com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen screen) {
-                    screen.getMenu().refreshDataSlots();
-                }
-            }
-        });
+        PlatformAccess.getNetwork().enqueueWork(context, () -> ClientPacketDispatcher.dispatch(this));
         PlatformAccess.getNetwork().setPacketHandled(context);
     }
 }

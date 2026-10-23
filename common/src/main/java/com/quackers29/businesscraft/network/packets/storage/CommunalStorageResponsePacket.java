@@ -71,45 +71,9 @@ public class CommunalStorageResponsePacket {
     }
 
     public void handle(Object context) {
-        PlatformAccess.getNetwork().enqueueWork(context, () -> {
-            // Client-side handling
-            handleClientSide();
-        });
+        PlatformAccess.getNetwork().enqueueWork(context, () ->
+                com.quackers29.businesscraft.network.ClientPacketDispatcher.dispatch(this));
         PlatformAccess.getNetwork().setPacketHandled(context);
-    }
-
-    private void handleClientSide() {
-        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-            "Received communal storage update with {} items", storageItems.size());
-        
-        // Get the client helper
-        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
-        if (clientHelper == null) {
-            LOGGER.warn("ClientHelper not available (server side?)");
-            return;
-        }
-
-        clientHelper.executeOnClientThread(() -> {
-            try {
-                Object currentScreen = clientHelper.getCurrentScreen();
-                // If the current screen is StorageScreen, update its inventory
-                if (currentScreen instanceof com.quackers29.businesscraft.ui.screens.town.StorageScreen storageScreen) {
-                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                        "Updating StorageScreen with communal storage data");
-                    storageScreen.updateStorageItems(storageItems);
-                } else if (currentScreen instanceof com.quackers29.businesscraft.ui.modal.specialized.BCModalInventoryScreen<?> modalScreen) {
-                    // Check if the container is a StorageMenu
-                    if (modalScreen.getMenu() instanceof com.quackers29.businesscraft.menu.StorageMenu storageMenu) {
-                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                            "Updating communal storage in BCModalInventoryScreen");
-                        // Update the storage menu's inventory with the communal storage items
-                        storageMenu.updateStorageItems(storageItems);
-                    }
-                }
-            } catch (Exception e) {
-                LOGGER.error("Error handling communal storage update", e);
-            }
-        });
     }
     
     /**
