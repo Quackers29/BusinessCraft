@@ -51,12 +51,27 @@ public class OverviewTab extends BaseTownTab {
             Map<String, String> overviewData = new LinkedHashMap<>(); // Use LinkedHashMap to maintain order
             overviewData.put("Town Name:", parentScreen.getCachedTownName());
 
-            // Population: 16 (40)
+            overviewData.put("Tourists:", parentScreen.getTouristString());
+            var ifaceVm = parentScreen.getCacheManager().getInterfaceViewModel();
+            if (ifaceVm != null) {
+                overviewData.put("Waiting:", ifaceVm.getWaitingTouristsSummary());
+                overviewData.put("Recent arrivals:", ifaceVm.getRecentArrivalsSummary());
+            }
+
+            int totalTourists = parentScreen.getCacheManager().getCachedTotalTouristsArrived();
+            double totalDist = parentScreen.getCacheManager().getCachedTotalTouristDistance();
+            String distStr;
+            if (totalDist >= 1000) {
+                distStr = String.format("%.1fkm", totalDist / 1000.0);
+            } else {
+                distStr = String.format("%dm", (int) totalDist);
+            }
+            overviewData.put("Tourism:", String.format("%d (%s)", totalTourists, distStr));
+
             String popStr = parentScreen.getCachedPopulation() + " ("
                     + (int) parentScreen.getCacheManager().getCachedPopulationCap() + ")";
             overviewData.put("Population:", popStr);
 
-            // Happiness
             float hap = parentScreen.getCacheManager().getCachedHappiness();
             String hapStr = String.format("%.0f%%", hap);
             if (hap >= 80)
@@ -67,26 +82,11 @@ public class OverviewTab extends BaseTownTab {
                 hapStr += " (Normal)";
             overviewData.put("Happiness:", hapStr);
 
-            // Border Radius
             float border = parentScreen.getCacheManager().getCachedBorderRadius();
             overviewData.put("Border Radius:", String.format("%.0fm", border));
 
-            // Research Speed
             float resSpeed = parentScreen.getCacheManager().getCachedResearchSpeed();
             overviewData.put("Research Speed:", String.format("%.0f%%", resSpeed * 100));
-
-            overviewData.put("Tourists:", parentScreen.getTouristString());
-
-            // Add cumulative tourism stats
-            int totalTourists = parentScreen.getCacheManager().getCachedTotalTouristsArrived();
-            double totalDist = parentScreen.getCacheManager().getCachedTotalTouristDistance();
-            String distStr;
-            if (totalDist >= 1000) {
-                distStr = String.format("%.1fkm", totalDist / 1000.0);
-            } else {
-                distStr = String.format("%dm", (int) totalDist);
-            }
-            overviewData.put("Tourism:", String.format("%d (%s)", totalTourists, distStr));
 
             String biome = parentScreen.getCacheManager().getCachedBiome();
             String variant = parentScreen.getCacheManager().getCachedBiomeVariant();

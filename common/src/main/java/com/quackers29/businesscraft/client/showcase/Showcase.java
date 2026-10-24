@@ -231,6 +231,9 @@ public final class Showcase {
     }
 
     private static int pauseFor(String name) {
+        if ("town_overview".equals(name)) {
+            return 50;
+        }
         return name.startsWith("town_") && !name.startsWith("town_interface") ? 30 : 20;
     }
 
@@ -288,6 +291,7 @@ public final class Showcase {
                 return;
             }
             townPos = placeAt.immutable();
+            ShowcaseTourismSeed.seed(level, townPos);
             player.setGameMode(GameType.SPECTATOR);
             LOGGER.info("Showcase placed town interface at {}", townPos);
             buildDone = true;
@@ -402,6 +406,10 @@ public final class Showcase {
 
     public static BlockPos getActiveTownBlockPos() {
         return activeTownBlockPos;
+    }
+
+    public static void setProcessExitCode(int code) {
+        processExitCode = code;
     }
 
     private static final class PlannedShot {

@@ -45,11 +45,17 @@
     notifyOnTouristDeparture = true
 
 [economy]
-    # Meters of travel per emerald earned
-    metersPerEmerald = 1000
+    # Blocks traveled per emerald per tourist (linear curve when payoutCurveExponent = 1.0).
+    # Default 100 → 1 km ≈ 10 emeralds/tourist; 300/500/1000/1500 blocks → 3/5/10/15.
+    metersPerEmerald = 100
     # Minimum average travel distance (blocks) before an arrival batch earns any payment
     # Prevents farming the 1-emerald minimum with adjacent towns
     minPayoutDistance = 100
+    # Fare curve exponent: 1.0 = linear (distance ÷ metersPerEmerald).
+    # Other values: (distance ÷ payoutReferenceBlocks)^exponent × payoutEmeraldsPerTouristAtReference
+    payoutCurveExponent = 1.0
+    payoutReferenceBlocks = 1000
+    payoutEmeraldsPerTouristAtReference = 10.0
     # Currency item for trading (format: modid:item)
     currencyItem = "minecraft:emerald"
 

@@ -325,6 +325,41 @@ public class PlatformManagementScreenV2 extends Screen {
         String headerText = platforms.isEmpty() ? "No Platforms" : "Platforms (" + platforms.size() + ")";
         guiGraphics.drawString(this.font, headerText,
                 x + PLATFORM_LIST_X + 6, y + PLATFORM_LIST_Y - 12, HEADER_COLOR);
+
+        String waiting = resolveWaitingSummary();
+        String recent = resolveRecentArrivalsSummary();
+        int lineY = y + imageHeight - 22;
+        guiGraphics.drawString(this.font, "Waiting: " + waiting,
+                x + PLATFORM_LIST_X, lineY, 0xFFCCCCCC);
+        guiGraphics.drawString(this.font, "Recent: " + recent,
+                x + PLATFORM_LIST_X, lineY + 10, 0xFFAAAAAA);
+    }
+
+    private String resolveWaitingSummary() {
+        com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel vm = loadInterfaceViewModel();
+        return vm != null ? vm.getWaitingTouristsSummary() : "—";
+    }
+
+    private String resolveRecentArrivalsSummary() {
+        com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel vm = loadInterfaceViewModel();
+        return vm != null ? vm.getRecentArrivalsSummary() : "—";
+    }
+
+    private com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel loadInterfaceViewModel() {
+        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
+        if (clientHelper == null) {
+            return null;
+        }
+        Object levelObj = clientHelper.getClientLevel();
+        if (!(levelObj instanceof Level level)) {
+            return null;
+        }
+        BlockEntity be = level.getBlockEntity(townBlockPos);
+        if (be instanceof TownInterfaceEntity townInterface) {
+            return townInterface.getVmCache()
+                    .get(com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel.class);
+        }
+        return null;
     }
 
     @Override

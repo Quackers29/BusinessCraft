@@ -4,6 +4,7 @@ import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.api.ITouristHelper;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.config.ConfigLoader;
+import com.quackers29.businesscraft.economy.TouristPaymentCalculator;
 import com.quackers29.businesscraft.entity.TouristEntity;
 import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.town.Town;
@@ -239,6 +240,11 @@ public class VisitorProcessingHelper {
                             originTown.getName(), originTown.getTouristCount(), originTown.getMaxTourists());
                 }
 
+                if (villager instanceof TouristEntity touristEntity) {
+                    com.quackers29.businesscraft.entity.TouristEffects.playArrival(
+                            serverLevel, touristEntity.position());
+                }
+
                 villager.remove(Entity.RemovalReason.DISCARDED);
                 return true; // Villager was processed and removed
             }
@@ -347,15 +353,16 @@ public class VisitorProcessingHelper {
         }
 
         if (averageDistance > 0) {
-            // Calculate emeralds based on distance traveled and meters per emerald rate
             DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
-                    "Tourist payment calculation: averageDistance={}, metersPerEmerald={}, touristCount={}",
-                    averageDistance, ConfigLoader.metersPerEmerald, record.getCount());
+                    "Tourist payment calculation: averageDistance={}, metersPerEmerald={}, curveExponent={}, touristCount={}",
+                    averageDistance, ConfigLoader.metersPerEmerald, ConfigLoader.payoutCurveExponent,
+                    record.getCount());
 
-            int payment = (int) Math.max(1, (averageDistance / ConfigLoader.metersPerEmerald) * record.getCount());
+            int payment = TouristPaymentCalculator.computeBatchPayment(averageDistance, record.getCount());
             DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,
-                    "Calculated payment: {} emeralds (distance={}, rate=1 per {} meters)",
-                    payment, averageDistance, ConfigLoader.metersPerEmerald);
+                    "Calculated payment: {} emeralds (avgDistance={}, emeraldsPerTourist={})",
+                    payment, averageDistance,
+                    TouristPaymentCalculator.emeraldsPerTouristUnrounded(averageDistance));
 
             // Clear the saved distance after using it
             visitBuffer.clearSavedDistance(record.getOriginTownId());
