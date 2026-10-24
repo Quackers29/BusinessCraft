@@ -110,8 +110,8 @@ public final class TouristUiSummaries {
             return "None yet";
         }
 
-        int start = Math.max(0, history.size() - MAX_RECENT);
-        List<VisitHistoryRecord> recent = history.subList(start, history.size());
+        int count = Math.min(MAX_RECENT, history.size());
+        List<VisitHistoryRecord> recent = history.subList(0, count);
 
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < recent.size(); i++) {
@@ -122,7 +122,7 @@ public final class TouristUiSummaries {
             String name = nameResolver.apply(rec.getOriginTownId());
             sb.append(truncate(name, 12));
             if (rec.getCount() > 1) {
-                sb.append(" x").append(rec.getCount());
+                sb.append(" ×").append(rec.getCount());
             }
         }
         return sb.toString();

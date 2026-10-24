@@ -1,8 +1,9 @@
 package com.quackers29.businesscraft.town.utils;
 
-import com.quackers29.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
 import com.quackers29.businesscraft.town.Town;
+import com.quackers29.businesscraft.testutil.McBootstrap;
 import net.minecraft.core.BlockPos;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
@@ -10,6 +11,11 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TouristUiSummariesTest {
+
+    @BeforeAll
+    static void bootstrap() {
+        McBootstrap.init();
+    }
 
     @Test
     void formatRecentArrivals_emptyHistory() {
@@ -28,5 +34,6 @@ class TouristUiSummariesTest {
         String summary = TouristUiSummaries.formatRecentArrivals(town, id -> id.equals(a) ? "Alpha" : "Beta");
         assertTrue(summary.contains("Alpha ×2"));
         assertTrue(summary.contains("Beta"));
+        assertTrue(summary.indexOf("Beta") < summary.indexOf("Alpha"), "newest visit first");
     }
 }

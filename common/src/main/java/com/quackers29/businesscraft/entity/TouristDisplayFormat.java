@@ -23,7 +23,8 @@ public final class TouristDisplayFormat {
                 .append(Component.literal(dest).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
     }
 
-    public static MutableComponent secondaryLine(String originName, TouristType type, double distanceMeters) {
+    /** Second line: origin + type (kept short so it fits above the head). */
+    public static MutableComponent secondaryLine(String originName, TouristType type) {
         String origin = sanitize(originName, "Unknown");
         MutableComponent line = Component.literal("from ").withStyle(ChatFormatting.DARK_GRAY)
                 .append(Component.literal(origin).withStyle(ChatFormatting.WHITE));
@@ -31,11 +32,13 @@ public final class TouristDisplayFormat {
             line = line.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY))
                     .append(Component.literal(type.displayName()).withStyle(ChatFormatting.AQUA));
         }
-        if (distanceMeters > 0.5) {
-            line = line.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY))
-                    .append(Component.literal(formatDistance(distanceMeters)).withStyle(ChatFormatting.YELLOW));
-        }
         return line;
+    }
+
+    /** Optional third line: distance traveled. */
+    public static MutableComponent distanceLine(double distanceMeters) {
+        return Component.literal(formatDistance(distanceMeters) + " traveled")
+                .withStyle(ChatFormatting.YELLOW);
     }
 
     public static String formatDistance(double meters) {

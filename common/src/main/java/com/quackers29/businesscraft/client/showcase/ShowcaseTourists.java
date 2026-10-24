@@ -132,7 +132,7 @@ public final class ShowcaseTourists {
     private static void aimAtTourists(Minecraft minecraft) {
         BlockPos pos = Showcase.getActiveTownBlockPos();
         Vec3 target = Vec3.atCenterOf(pos.east(3));
-        Vec3 eye = target.add(2.5, 1.8, 1.5);
+        Vec3 eye = target.add(3.2, 2.4, 2.0);
         float[] facing = ShowcaseSelection.facing(eye.x, eye.y, eye.z, target.x, target.y + 1, target.z);
         MinecraftServer server = minecraft.getSingleplayerServer();
         if (server == null) {

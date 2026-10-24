@@ -5,6 +5,7 @@ import com.quackers29.businesscraft.entity.TouristDisplayFormat;
 import com.quackers29.businesscraft.entity.TouristEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.model.VillagerModel;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -14,7 +15,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TouristRenderer extends MobRenderer<TouristEntity, VillagerModel<TouristEntity>> {
+    private static final float NAME_TAG_SCALE = 0.025F;
+    private static final int LINE_SPACING = 10;
+
     private static final ResourceLocation[] SKIN_TEXTURES = {
         new ResourceLocation("businesscraft", "textures/entity/tourist_basic.png"),
         new ResourceLocation("businesscraft", "textures/entity/tourist_experienced.png"),
@@ -27,7 +34,6 @@ public class TouristRenderer extends MobRenderer<TouristEntity, VillagerModel<To
         super(context,
               new VillagerModel<>(context.bakeLayer(ModelLayers.VILLAGER)),
               0.5F);
-        // No VillagerProfessionLayer — tourists use Profession.NONE and custom body textures.
         this.addLayer(new TouristHatLayer(this));
     }
 
@@ -52,30 +58,33 @@ public class TouristRenderer extends MobRenderer<TouristEntity, VillagerModel<To
             return;
         }
 
-        Component primary = TouristDisplayFormat.primaryLine(entity.getSyncedDestLabel(), entity.isAnyTownDestination());
-        Component secondary = TouristDisplayFormat.secondaryLine(
+        List<Component> lines = new ArrayList<>();
+        lines.add(TouristDisplayFormat.primaryLine(entity.getSyncedDestLabel(), entity.isAnyTownDestination()));
+        lines.add(TouristDisplayFormat.secondaryLine(
                 entity.getSyncedOriginLabel(),
-                entity.getTouristType(),
-                entity.getTotalDistanceTraveled());
+                entity.getTouristType()));
+        double traveled = entity.getTotalDistanceTraveled();
+        if (traveled > 0.5) {
+            lines.add(TouristDisplayFormat.distanceLine(traveled));
+        }
 
-        float scale = 0.025F;
+        float scale = NAME_TAG_SCALE;
         poseStack.pushPose();
-        poseStack.translate(0.0D, entity.getBbHeight() + 0.65F, 0.0D);
+        poseStack.translate(0.0D, entity.getBbHeight() + 1.05F, 0.0D);
         poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
         poseStack.scale(-scale, -scale, scale);
 
+        Font font = this.getFont();
         Matrix4f matrix = poseStack.last().pose();
-        var font = this.getFont();
-        float primaryWidth = font.width(primary);
-        font.drawInBatch(primary, -primaryWidth / 2.0F, 0, 0xFFFFFF, false, matrix, buffer,
-                net.minecraft.client.gui.Font.DisplayMode.SEE_THROUGH, 0x40000000, packedLight);
-        float secondaryWidth = font.width(secondary);
-        font.drawInBatch(secondary, -secondaryWidth / 2.0F, 10, 0xFFFFFF, false, matrix, buffer,
-                net.minecraft.client.gui.Font.DisplayMode.SEE_THROUGH, 0x40000000, packedLight);
-        font.drawInBatch(primary, -primaryWidth / 2.0F, 0, 0xFFFFFF, false, matrix, buffer,
-                net.minecraft.client.gui.Font.DisplayMode.NORMAL, 0, packedLight);
-        font.drawInBatch(secondary, -secondaryWidth / 2.0F, 10, 0xFFFFFF, false, matrix, buffer,
-                net.minecraft.client.gui.Font.DisplayMode.NORMAL, 0, packedLight);
+        for (int i = 0; i < lines.size(); i++) {
+            Component line = lines.get(i);
+            float lineWidth = font.width(line);
+            float y = i * LINE_SPACING;
+            font.drawInBatch(line, -lineWidth / 2.0F, y, 0xFFFFFF, false, matrix, buffer,
+                    Font.DisplayMode.SEE_THROUGH, 0x40000000, packedLight);
+            font.drawInBatch(line, -lineWidth / 2.0F, y, 0xFFFFFF, false, matrix, buffer,
+                    Font.DisplayMode.NORMAL, 0, packedLight);
+        }
 
         poseStack.popPose();
     }
