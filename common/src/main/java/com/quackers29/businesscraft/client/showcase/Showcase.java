@@ -65,6 +65,7 @@ public final class Showcase {
     private static boolean twoTownsConfigured;
     private static boolean testbedConfigured;
     private static boolean mapSweepConfigured;
+    private static boolean touristLineupConfigured;
     private static List<PlannedShot> plan = List.of();
     private static int shotIndex;
     private static int ticksOnShot;
@@ -95,6 +96,9 @@ public final class Showcase {
             } else if (ShowcaseSelection.mapSweepMode(property)) {
                 plan = List.of();
                 LOGGER.info("Showcase map-sweep enabled");
+            } else if (ShowcaseSelection.touristsMode(property)) {
+                plan = List.of();
+                LOGGER.info("Showcase tourist lineup enabled");
             } else if (ShowcaseSelection.allViewsMode(property)) {
                 plan = List.of();
                 LOGGER.info("Showcase all-views enabled: {} routes", ShowcaseAllViews.expectedRouteCount());
@@ -139,6 +143,17 @@ public final class Showcase {
                 ShowcaseMapSweep.reset(minecraft);
             }
             ShowcaseMapSweep.tick(minecraft);
+            return;
+        }
+        if (ShowcaseSelection.touristsMode(property)) {
+            if (minecraft.player == null || minecraft.level == null || minecraft.getSingleplayerServer() == null) {
+                return;
+            }
+            if (!touristLineupConfigured) {
+                touristLineupConfigured = true;
+                ShowcaseTouristLineup.reset(minecraft);
+            }
+            ShowcaseTouristLineup.tick(minecraft);
             return;
         }
         if (minecraft.player == null || minecraft.level == null || minecraft.getSingleplayerServer() == null) {

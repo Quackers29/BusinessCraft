@@ -27,6 +27,7 @@ import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.api.ClientHelper;
 import com.quackers29.businesscraft.api.RenderHelper;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
@@ -112,6 +113,7 @@ public class BusinessCraftForge {
 
         // Register ourselves for server and other game events
         MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.addListener(this::onAddReloadListeners);
 
         // Register server lifecycle events
         MinecraftForge.EVENT_BUS.addListener(this::onServerStopping);
@@ -142,6 +144,10 @@ public class BusinessCraftForge {
         com.quackers29.businesscraft.event.TownEventHandler.initialize();
 
         LOGGER.info("BusinessCraft Forge common setup complete.");
+    }
+
+    private void onAddReloadListeners(AddReloadListenerEvent event) {
+        event.addListener(new com.quackers29.businesscraft.entity.tourist.TouristLookReloadListener());
     }
 
     @SubscribeEvent

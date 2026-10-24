@@ -34,6 +34,7 @@ public final class ShowcaseSelection {
     public static final String TWO_TOWNS = "two-towns";
     public static final String TESTBED = "testbed";
     public static final String MAP_SWEEP = "map-sweep";
+    public static final String TOURISTS = "tourists";
 
     public static boolean enabled(String property) {
         return property != null;
@@ -55,9 +56,13 @@ public final class ShowcaseSelection {
         return property != null && MAP_SWEEP.equalsIgnoreCase(property.trim());
     }
 
+    public static boolean touristsMode(String property) {
+        return property != null && TOURISTS.equalsIgnoreCase(property.trim());
+    }
+
     public static List<String> shotsFor(String property) {
         if (!enabled(property) || allViewsMode(property) || twoTownsMode(property) || testbedMode(property)
-                || mapSweepMode(property)) {
+                || mapSweepMode(property) || touristsMode(property)) {
             return List.of();
         }
         List<String> selected = new ArrayList<>();

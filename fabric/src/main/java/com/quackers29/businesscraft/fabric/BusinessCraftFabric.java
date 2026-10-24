@@ -24,6 +24,8 @@ import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 // PHASE 3.2: ResourceSyncPacket removed - replaced by ResourceViewModelSyncPacket
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import com.quackers29.businesscraft.town.TownManager;
@@ -137,6 +139,9 @@ public class BusinessCraftFabric implements ModInitializer {
         com.quackers29.businesscraft.event.PlayerBoundaryTracker.initialize();
         com.quackers29.businesscraft.event.PlatformPathHandler.initialize();
         com.quackers29.businesscraft.event.TownEventHandler.initialize();
+
+        ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(
+                new com.quackers29.businesscraft.fabric.FabricTouristLookReloadListener());
 
         // Load registries
         com.quackers29.businesscraft.economy.ResourceRegistry.load();

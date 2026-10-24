@@ -1,36 +1,57 @@
 package com.quackers29.businesscraft.client.renderer;
 
-import com.quackers29.businesscraft.client.renderer.layer.TouristHatLayer;
+import com.quackers29.businesscraft.client.model.TouristModel;
+import com.quackers29.businesscraft.client.renderer.layer.TouristAccessoryLayer;
+import com.quackers29.businesscraft.client.renderer.layer.TouristHeadwearLayer;
+import com.quackers29.businesscraft.client.renderer.layer.TouristOutfitLayer;
 import com.quackers29.businesscraft.entity.TouristEntity;
-import net.minecraft.client.model.VillagerModel;
-import net.minecraft.client.model.geom.ModelLayers;
+import com.quackers29.businesscraft.entity.tourist.TouristAppearance;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
-public class TouristRenderer extends MobRenderer<TouristEntity, VillagerModel<TouristEntity>> {
-    private static final ResourceLocation[] SKIN_TEXTURES = {
-        new ResourceLocation("businesscraft", "textures/entity/tourist_basic.png"),
-        new ResourceLocation("businesscraft", "textures/entity/tourist_experienced.png"),
-        new ResourceLocation("businesscraft", "textures/entity/tourist_luxury.png"),
-    };
-    private static final ResourceLocation FALLBACK_SKIN =
-        new ResourceLocation("textures/entity/villager/villager.png");
-
+/**
+ * Humanoid tourist. Name tags stay on {@link MobRenderer} so a name-tag change
+ * can override {@code renderNameTag} without owning this model.
+ */
+public class TouristRenderer extends MobRenderer<TouristEntity, TouristModel> {
     public TouristRenderer(EntityRendererProvider.Context context) {
-        super(context,
-              new VillagerModel<>(context.bakeLayer(ModelLayers.VILLAGER)),
-              0.5F);
-        // No VillagerProfessionLayer — tourists use Profession.NONE and custom body textures.
-        this.addLayer(new TouristHatLayer(this));
+        super(context, new TouristModel(context.bakeLayer(TouristModel.LAYER)), 0.5F);
+        this.addLayer(new TouristOutfitLayer(this));
+        this.addLayer(new TouristHeadwearLayer(this));
+        this.addLayer(new TouristAccessoryLayer(this));
+    }
+
+    @Override
+    public void render(TouristEntity entity, float entityYaw, float partialTicks, PoseStack poseStack,
+            MultiBufferSource buffer, int packedLight) {
+        int packed = entity.getLookPacked();
+        if (packed == TouristAppearance.UNSET) {
+            packed = 0;
+        }
+        this.model.prepare(packed);
+        super.render(entity, entityYaw, partialTicks, poseStack, buffer, packedLight);
     }
 
     @Override
     public ResourceLocation getTextureLocation(TouristEntity entity) {
-        int tier = entity.getSkinTier();
-        if (tier >= 0 && tier < SKIN_TEXTURES.length) {
-            return SKIN_TEXTURES[tier];
+        int packed = entity.getLookPacked();
+        int skin = packed == TouristAppearance.UNSET ? 0 : TouristAppearance.skin(packed);
+        return TouristTextures.skin(skin);
+    }
+
+    @Override
+    protected RenderType getRenderType(TouristEntity entity, boolean bodyVisible, boolean translucent, boolean glowing) {
+        ResourceLocation texture = this.getTextureLocation(entity);
+        if (!bodyVisible) {
+            return glowing ? RenderType.outline(texture) : null;
         }
-        return FALLBACK_SKIN;
+        if (translucent) {
+            return RenderType.itemEntityTranslucentCull(texture);
+        }
+        return RenderType.entityCutoutNoCull(texture);
     }
 }

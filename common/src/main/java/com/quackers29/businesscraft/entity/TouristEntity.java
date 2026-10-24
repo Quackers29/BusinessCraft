@@ -40,6 +40,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 import com.quackers29.businesscraft.debug.DebugConfig;
+import com.quackers29.businesscraft.entity.tourist.TouristAppearance;
+import com.quackers29.businesscraft.entity.tourist.TouristLook;
+import com.quackers29.businesscraft.entity.tourist.TouristLooks;
 
 public class TouristEntity extends Villager {
     private static final Logger LOGGER = LoggerFactory.getLogger(TouristEntity.class);
@@ -48,6 +51,9 @@ public class TouristEntity extends Villager {
     private static final EntityDataAccessor<Float> DATA_DISTANCE_TRAVELED =
         SynchedEntityData.defineId(TouristEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Integer> DATA_SKIN_TIER =
+        SynchedEntityData.defineId(TouristEntity.class, EntityDataSerializers.INT);
+    /** Packed skin/outfit/headwear/accessory. Chosen on the server, synced to clients. */
+    private static final EntityDataAccessor<Integer> DATA_LOOK =
         SynchedEntityData.defineId(TouristEntity.class, EntityDataSerializers.INT);
 
     public static final int SKIN_TIER_BASIC = 0;
@@ -100,6 +106,9 @@ public class TouristEntity extends Villager {
     // Override merchant offers (Villager already implements Merchant)
     private MerchantOffers customOffers;
 
+    /** Look id saved beside the packed int so reloads stay readable. Not synced. */
+    private String lookId = "";
+
     // Distance-based leveling config
     private static final double DISTANCE_PER_LEVEL = 20.0; // 20m per level
     private static final int MAX_LEVEL = 3; // Max level 3 (starts at 1)
@@ -118,6 +127,7 @@ public class TouristEntity extends Villager {
         super.defineSynchedData();
         this.entityData.define(DATA_DISTANCE_TRAVELED, 0.0f);
         this.entityData.define(DATA_SKIN_TIER, SKIN_TIER_BASIC);
+        this.entityData.define(DATA_LOOK, TouristAppearance.UNSET);
     }
 
     public TouristEntity(EntityType<? extends Villager> entityType, Level level,
@@ -150,6 +160,9 @@ public class TouristEntity extends Villager {
                 destinationName);
 
         this.setRandomProfession();
+        if (!level.isClientSide) {
+            this.assignLook();
+        }
     }
 
     @Override
@@ -183,6 +196,9 @@ public class TouristEntity extends Villager {
     @Override
     public void tick() {
         super.tick();
+        if (!this.level().isClientSide && this.getLookPacked() == TouristAppearance.UNSET) {
+            this.assignLook();
+        }
 
         // Force offer refresh for live updates when trading
         if (!this.level().isClientSide && this.getTradingPlayer() != null) {
@@ -404,6 +420,25 @@ public class TouristEntity extends Villager {
         return this.entityData.get(DATA_SKIN_TIER);
     }
 
+    /** Packed look, or {@link TouristAppearance#UNSET} until the server chooses one. */
+    public int getLookPacked() {
+        return this.entityData.get(DATA_LOOK);
+    }
+
+    public String getLookId() {
+        return this.lookId == null ? "" : this.lookId;
+    }
+
+    /** Server and showcase use this so the choice is stored before the entity is tracked. */
+    public void applyLook(TouristLook look) {
+        this.lookId = look.id();
+        this.entityData.set(DATA_LOOK, look.packed());
+    }
+
+    private void assignLook() {
+        this.applyLook(TouristLooks.pick(this.getRandom()::nextInt));
+    }
+
     public double getTotalDistanceTraveled() {
         return this.level().isClientSide ? this.entityData.get(DATA_DISTANCE_TRAVELED) : totalDistanceTraveled;
     }
@@ -446,6 +481,10 @@ public class TouristEntity extends Villager {
         }
         if (destinationTownName != null) {
             tag.putString("DestinationTownName", destinationTownName);
+        }
+        if (this.getLookPacked() != TouristAppearance.UNSET) {
+            tag.putInt("TouristLook", this.getLookPacked());
+            tag.putString("TouristLookId", this.lookId == null ? "" : this.lookId);
         }
     }
 
@@ -510,6 +549,12 @@ public class TouristEntity extends Villager {
         }
         if (tag.contains("DestinationTownName")) {
             destinationTownName = tag.getString("DestinationTownName");
+        }
+        if (tag.contains("TouristLook")) {
+            this.entityData.set(DATA_LOOK, tag.getInt("TouristLook"));
+        }
+        if (tag.contains("TouristLookId")) {
+            this.lookId = tag.getString("TouristLookId");
         }
 
         syncSkinTierFromLevel();
