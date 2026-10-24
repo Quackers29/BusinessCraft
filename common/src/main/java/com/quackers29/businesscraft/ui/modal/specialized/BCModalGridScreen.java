@@ -108,8 +108,9 @@ public class BCModalGridScreen<T> extends Screen {
         this.panelLeft = (this.width - panelWidth) / 2;
         this.panelTop = (this.height - panelHeight) / 2 - 10;
         
-        // Calculate button position
-        int buttonX = this.width / 2 - 50;
+        // Wide enough for "Back to Leaderboard" without clipping the last letters.
+        int buttonWidth = Math.max(100, this.font.width(backButtonText) + 16);
+        int buttonX = this.width / 2 - buttonWidth / 2;
         int buttonY = panelTop + panelHeight + 5;
         
         // Create close button
@@ -117,7 +118,7 @@ public class BCModalGridScreen<T> extends Screen {
             Component.literal(backButtonText), 
             button -> this.onClose())
             .pos(buttonX, buttonY)
-            .size(100, 20)
+            .size(buttonWidth, 20)
             .build()
         );
         

@@ -14,8 +14,21 @@ public record TownLeaderboardData(
     long population,
     long money,
     float happiness,
-    long tourism
+    long tourism,
+    double journeyDistance,
+    String notorietyLabel
 ) {
+    public TownLeaderboardData {
+        if (notorietyLabel == null) {
+            notorietyLabel = "";
+        }
+    }
+
+    /** Older call sites that do not carry journey distance. */
+    public TownLeaderboardData(UUID townId, String name, BlockPos position,
+            long population, long money, float happiness, long tourism) {
+        this(townId, name, position, population, money, happiness, tourism, 0.0, "");
+    }
     /**
      * Calculate distance from this town to another position.
      *

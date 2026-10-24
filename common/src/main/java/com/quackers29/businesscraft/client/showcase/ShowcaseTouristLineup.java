@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.client.showcase;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.quackers29.businesscraft.entity.TouristEntity;
+import com.quackers29.businesscraft.entity.TouristType;
 import com.quackers29.businesscraft.entity.tourist.TouristLook;
 import com.quackers29.businesscraft.entity.tourist.TouristLooks;
 import com.quackers29.businesscraft.init.CommonModEntityTypes;
@@ -122,6 +123,22 @@ public final class ShowcaseTouristLineup {
             }
             return;
         }
+        if (phase == 3) {
+            Spot tagged = spots.get(0);
+            if (phaseTicks == 1) {
+                showNameTag(minecraft, tagged);
+                Vec3 target = new Vec3(tagged.x, tagged.y + 2.55, tagged.z);
+                Vec3 eye = new Vec3(tagged.x, tagged.y + 2.15, tagged.z + 3.6);
+                aim(minecraft, eye, target);
+            }
+            if (phaseTicks >= SETTLE_TICKS) {
+                grab(minecraft, "tourists_nametag");
+                writeManifest(minecraft);
+                quitting = true;
+                quitTicks = 0;
+            }
+            return;
+        }
         Spot currentSpot = spots.get(lookIndex);
         if (phaseTicks == 1) {
             aimSpot(minecraft, currentSpot, sideShot);
@@ -146,9 +163,8 @@ public final class ShowcaseTouristLineup {
         phaseTicks = 0;
         lookIndex++;
         if (lookIndex >= spots.size()) {
-            writeManifest(minecraft);
-            quitting = true;
-            quitTicks = 0;
+            phase = 3;
+            phaseTicks = 0;
         }
     }
 
@@ -266,6 +282,29 @@ public final class ShowcaseTouristLineup {
                 ? new Vec3(spot.x - 0.2, spot.y + 1.15, spot.z + 2.4)
                 : new Vec3(spot.x, spot.y + 1.15, spot.z + 2.55);
         aim(minecraft, eye, target);
+    }
+
+    private static void showNameTag(Minecraft minecraft, Spot spot) {
+        applySample(minecraft.level == null ? null : minecraft.level.getEntity(spot.networkId));
+        MinecraftServer server = minecraft.getSingleplayerServer();
+        if (server == null) {
+            return;
+        }
+        server.execute(() -> {
+            for (ServerLevel level : server.getAllLevels()) {
+                Entity entity = level.getEntity(spot.networkId);
+                if (entity != null) {
+                    applySample(entity);
+                    return;
+                }
+            }
+        });
+    }
+
+    private static void applySample(Entity entity) {
+        if (entity instanceof TouristEntity tourist) {
+            tourist.applyDisplaySample("Maplehaven", "Hillcrest", TouristType.SIGHTSEER, 1800);
+        }
     }
 
     private static void faceTourist(Minecraft minecraft, Spot spot, float yaw) {

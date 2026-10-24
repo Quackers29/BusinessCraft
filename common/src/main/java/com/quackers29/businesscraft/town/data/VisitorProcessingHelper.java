@@ -4,6 +4,7 @@ import com.quackers29.businesscraft.api.ITownDataProvider;
 import com.quackers29.businesscraft.api.ITouristHelper;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.config.ConfigLoader;
+import com.quackers29.businesscraft.economy.JourneyProgress;
 import com.quackers29.businesscraft.economy.TouristPaymentCalculator;
 import com.quackers29.businesscraft.entity.TouristEntity;
 import com.quackers29.businesscraft.platform.Platform;
@@ -242,7 +243,7 @@ public class VisitorProcessingHelper {
 
                 if (villager instanceof TouristEntity touristEntity) {
                     com.quackers29.businesscraft.entity.TouristEffects.playArrival(
-                            serverLevel, touristEntity.position());
+                            serverLevel, touristEntity.position(), touristEntity.getTotalDistanceTraveled());
                 }
 
                 villager.remove(Entity.RemovalReason.DISCARDED);
@@ -266,16 +267,23 @@ public class VisitorProcessingHelper {
         // Add to the town data provider (single source of truth)
         for (ITownDataProvider.VisitHistoryRecord record : newVisits) {
             try {
-                // Record the visit in the Town
-                provider.recordVisit(record.getOriginTownId(), record.getCount(), record.getOriginPos());
+                // Payable path length, before payment clears the buffer's distance map.
+                double averageDistance = visitBuffer.getAverageDistance(record.getOriginTownId());
+                int tierBefore = JourneyProgress.townLevel(
+                        thisTown.getTotalTouristDistance(), ConfigLoader.notorietyDistances);
+                if (provider == thisTown) {
+                    thisTown.recordVisit(record.getOriginTownId(), record.getCount(),
+                            record.getOriginPos(), averageDistance);
+                } else {
+                    provider.recordVisit(record.getOriginTownId(), record.getCount(), record.getOriginPos());
+                }
+                int tierAfter = JourneyProgress.townLevel(
+                        thisTown.getTotalTouristDistance(), ConfigLoader.notorietyDistances);
 
                 // Each visitor should be processed by adding them to the town's tally
                 for (int i = 0; i < record.getCount(); i++) {
                     thisTown.addVisitor(record.getOriginTownId());
                 }
-
-                // Get distance before it gets cleared by payment calculation
-                double averageDistance = visitBuffer.getAverageDistance(record.getOriginTownId());
 
                 // Calculate payment based on travel distance
                 int payment = calculatePayment(visitBuffer, record);
@@ -297,6 +305,11 @@ public class VisitorProcessingHelper {
 
                 // Send grouped notification with payment and milestone information
                 if (ConfigLoader.notifyOnTouristDeparture) {
+                    String progress = JourneyProgress.arrivalDetail(
+                            averageDistance,
+                            ConfigLoader.touristLevelDistances,
+                            thisTown.getTotalTouristDistance(),
+                            ConfigLoader.notorietyDistances);
                     TownNotificationUtils.notifyTouristArrivals(
                             serverLevel,
                             townBlockPos,
@@ -305,7 +318,13 @@ public class VisitorProcessingHelper {
                             record.getCount(),
                             payment,
                             averageDistance,
-                            milestoneResult);
+                            milestoneResult,
+                            progress);
+                    if (tierAfter > tierBefore) {
+                        TownNotificationUtils.notifyNotoriety(
+                                serverLevel, townBlockPos, townName,
+                                JourneyProgress.townTierName(tierAfter));
+                    }
                 }
             } catch (Exception e) {
                 LOGGER.error("Error processing visitor batch: {}", e.getMessage());

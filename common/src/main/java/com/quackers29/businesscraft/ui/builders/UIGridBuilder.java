@@ -58,6 +58,8 @@ public class UIGridBuilder {
 
     // Custom row height (default 14px - drastically smaller than before)
     private Integer customRowHeight = 14;
+    /** Relative column widths. Null keeps the historic equal integer split. */
+    private float[] columnWeights;
 
     // Drag scrolling state variables
     private boolean isDraggingVertical = false;
@@ -123,6 +125,74 @@ public class UIGridBuilder {
         this.horizontalSpacing = horizontalSpacing;
         this.verticalSpacing = verticalSpacing;
         return this;
+    }
+
+    /**
+     * Relative column widths. The last column absorbs rounding so the row still
+     * fills the grid. Ignored while horizontal scrolling is on.
+     */
+    public UIGridBuilder withColumnWeights(float[] weights) {
+        this.columnWeights = weights == null ? null : weights.clone();
+        return this;
+    }
+
+    /**
+     * Pixel widths for one row. Equal columns use the same integer division as
+     * before. Weighted columns give the remainder to the last column.
+     */
+    private int[] columnPixelWidths(int cellsWidth, int columnCount) {
+        int count = Math.max(1, columnCount);
+        int gaps = horizontalSpacing * Math.max(0, count - 1);
+        int usable = Math.max(0, cellsWidth - gaps);
+        int[] widths = new int[count];
+        boolean weighted = columnWeights != null && columnWeights.length == count && !horizontalScrollEnabled;
+        if (!weighted) {
+            int cell = count == 0 ? usable : usable / count;
+            java.util.Arrays.fill(widths, cell);
+            return widths;
+        }
+        float sum = 0f;
+        for (float weight : columnWeights) {
+            sum += Math.max(0f, weight);
+        }
+        if (sum <= 0f) {
+            java.util.Arrays.fill(widths, usable / count);
+            return widths;
+        }
+        int assigned = 0;
+        for (int i = 0; i < count; i++) {
+            if (i == count - 1) {
+                widths[i] = Math.max(0, usable - assigned);
+            } else {
+                widths[i] = (int) Math.floor(usable * (Math.max(0f, columnWeights[i]) / sum));
+                assigned += widths[i];
+            }
+        }
+        return widths;
+    }
+
+    private int columnOffset(int[] widths, int column) {
+        int offset = 0;
+        int limit = Math.max(0, Math.min(column, widths.length));
+        for (int i = 0; i < limit; i++) {
+            offset += widths[i] + horizontalSpacing;
+        }
+        return offset;
+    }
+
+    private int spanWidth(int[] widths, int column, int span) {
+        if (widths.length == 0 || column >= widths.length || column < 0) {
+            return 0;
+        }
+        int width = 0;
+        int count = Math.max(1, span);
+        for (int i = 0; i < count && column + i < widths.length; i++) {
+            if (i > 0) {
+                width += horizontalSpacing;
+            }
+            width += widths[column + i];
+        }
+        return width;
     }
 
     /**
@@ -968,6 +1038,7 @@ public class UIGridBuilder {
         int effectiveRows = verticalScrollEnabled ? Math.min(visibleRows, rows) : rows;
 
         int cellWidth = (cellsWidth - (horizontalSpacing * (effectiveColumns - 1))) / effectiveColumns;
+        int[] columnWidths = columnPixelWidths(cellsWidth, effectiveColumns);
 
         // Rate-limit debug logging - only log once per second
         long currentTime = System.currentTimeMillis();
@@ -1005,9 +1076,9 @@ public class UIGridBuilder {
             int adjustedRow = verticalScrollEnabled ? element.row - verticalScrollOffset : element.row;
 
             // Calculate element position and size, accounting for spans
-            int elementX = x + horizontalMargin + (adjustedColumn * (cellWidth + horizontalSpacing));
+            int elementX = x + horizontalMargin + columnOffset(columnWidths, adjustedColumn);
             int elementY = y + verticalMargin + (adjustedRow * (rowHeight + verticalSpacing));
-            int elementWidth = cellWidth * element.colSpan + (element.colSpan - 1) * horizontalSpacing;
+            int elementWidth = spanWidth(columnWidths, adjustedColumn, element.colSpan);
             int elementHeight = rowHeight * element.rowSpan + (element.rowSpan - 1) * verticalSpacing;
 
             // Check if element is hovered
@@ -1652,6 +1723,8 @@ public class UIGridBuilder {
         // Calculate column width
         int columnCount = horizontalScrollEnabled ? visibleColumns : columns;
         int cellWidth = availableWidth / columnCount;
+        int cellsWidth = availableWidth + (horizontalSpacing * Math.max(0, columnCount - 1));
+        int[] columnWidths = columnPixelWidths(cellsWidth, columnCount);
 
         DebugConfig.debug(LOGGER, DebugConfig.UI_GRID_BUILDER,
                 String.format(
@@ -1692,9 +1765,9 @@ public class UIGridBuilder {
                 if (useScrollButtons) {
                     startX += scrollButtonSize; // Account for left scroll button
                 }
-                elementX = startX + (adjustedColumn * (cellWidth + horizontalSpacing));
+                elementX = startX + columnOffset(columnWidths, adjustedColumn);
             } else {
-                elementX = x + horizontalMargin + (element.column * (cellWidth + horizontalSpacing));
+                elementX = x + horizontalMargin + columnOffset(columnWidths, element.column);
             }
 
             if (verticalScrollEnabled) {
@@ -1704,7 +1777,9 @@ public class UIGridBuilder {
                 elementY = y + verticalMargin + (element.row * (cellHeight + verticalSpacing));
             }
 
-            int elementWidth = (cellWidth * element.colSpan) + ((element.colSpan - 1) * horizontalSpacing);
+            int elementWidth = spanWidth(columnWidths,
+                    horizontalScrollEnabled ? element.column - horizontalScrollOffset : element.column,
+                    element.colSpan);
             int elementHeight = (cellHeight * element.rowSpan) + ((element.rowSpan - 1) * verticalSpacing);
 
             // Check if click is within this element

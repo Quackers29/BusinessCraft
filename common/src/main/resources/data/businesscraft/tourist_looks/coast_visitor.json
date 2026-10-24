@@ -1,1 +1,1 @@
-{ "id": "coast_visitor", "order": 4, "skin": 4, "outfit": 4, "headwear": 4, "accessory": 0 }
+{ "id": "coast_visitor", "order": 4, "type": "SIGHTSEER", "skin": 4, "outfit": 4, "headwear": 4, "accessory": 0 }

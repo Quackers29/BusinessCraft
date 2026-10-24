@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.entity.tourist;
 
+import com.quackers29.businesscraft.entity.TouristType;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,9 +19,14 @@ public final class TouristLook {
     private final int outfit;
     private final int headwear;
     private final int accessory;
+    private final TouristType type;
     private final int packed;
 
     public TouristLook(String id, int order, int skin, int outfit, int headwear, int accessory) {
+        this(id, order, skin, outfit, headwear, accessory, null);
+    }
+
+    public TouristLook(String id, int order, int skin, int outfit, int headwear, int accessory, TouristType type) {
         if (id == null || !ID_VALUE.matcher(id).matches()) {
             throw new IllegalArgumentException("tourist look id must match [a-z0-9_]+, was " + id);
         }
@@ -29,6 +36,7 @@ public final class TouristLook {
         this.outfit = outfit;
         this.headwear = headwear;
         this.accessory = accessory;
+        this.type = type;
         this.packed = TouristAppearance.pack(skin, outfit, headwear, accessory);
     }
 
@@ -42,7 +50,7 @@ public final class TouristLook {
         int outfit = requiredInt(json, "outfit");
         int headwear = requiredInt(json, "headwear");
         int accessory = requiredInt(json, "accessory");
-        return new TouristLook(id, order, skin, outfit, headwear, accessory);
+        return new TouristLook(id, order, skin, outfit, headwear, accessory, typeField(json));
     }
 
     public String id() {
@@ -67,6 +75,11 @@ public final class TouristLook {
 
     public int accessory() {
         return accessory;
+    }
+
+    /** Flavour label that matches this costume. Null keeps a random type. */
+    public TouristType type() {
+        return type;
     }
 
     public int packed() {
@@ -95,6 +108,18 @@ public final class TouristLook {
     private static int intField(String json, String key, int fallback) {
         Integer value = findInt(json, key);
         return value == null ? fallback : value;
+    }
+
+    private static TouristType typeField(String json) {
+        Matcher matcher = Pattern.compile("\"type\"\\s*:\\s*\"([A-Za-z_]+)\"").matcher(json);
+        if (!matcher.find()) {
+            return null;
+        }
+        try {
+            return TouristType.valueOf(matcher.group(1));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("unknown tourist type " + matcher.group(1));
+        }
     }
 
     private static Integer findInt(String json, String key) {

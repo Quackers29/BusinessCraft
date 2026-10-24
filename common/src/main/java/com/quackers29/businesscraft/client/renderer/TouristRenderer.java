@@ -4,6 +4,7 @@ import com.quackers29.businesscraft.client.model.TouristModel;
 import com.quackers29.businesscraft.client.renderer.layer.TouristAccessoryLayer;
 import com.quackers29.businesscraft.client.renderer.layer.TouristHeadwearLayer;
 import com.quackers29.businesscraft.client.renderer.layer.TouristOutfitLayer;
+import com.quackers29.businesscraft.economy.JourneyProgress;
 import com.quackers29.businesscraft.entity.TouristDisplayFormat;
 import com.quackers29.businesscraft.entity.TouristEntity;
 import com.quackers29.businesscraft.entity.tourist.TouristAppearance;
@@ -78,31 +79,32 @@ public class TouristRenderer extends MobRenderer<TouristEntity, TouristModel> {
             return;
         }
 
+        String tier = JourneyProgress.tierName(entity.getVillagerData().getLevel());
         List<Component> lines = new ArrayList<>();
         lines.add(TouristDisplayFormat.primaryLine(entity.getSyncedDestLabel(), entity.isAnyTownDestination()));
         lines.add(TouristDisplayFormat.originLine(entity.getSyncedOriginLabel()));
         Component typeAndDistance = TouristDisplayFormat.typeAndDistanceLine(
-                entity.getTouristType(), entity.getTotalDistanceTraveled());
+                entity.getTouristType(), tier, entity.getTotalDistanceTraveled());
         if (typeAndDistance != null) {
             lines.add(typeAndDistance);
         }
 
         float scale = NAME_TAG_SCALE;
         poseStack.pushPose();
-        poseStack.translate(0.0D, entity.getBbHeight() + 1.05F, 0.0D);
+        // Anchor sits above the tallest hat. Negative font Y (after the flip) stacks lines upward.
+        poseStack.translate(0.0D, entity.getBbHeight() + 0.95F, 0.0D);
         poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
         poseStack.scale(-scale, -scale, scale);
 
         Font font = this.getFont();
         Matrix4f matrix = poseStack.last().pose();
+        int background = 0xB0000000;
         for (int i = 0; i < lines.size(); i++) {
             Component line = lines.get(i);
             float lineWidth = font.width(line);
-            float y = i * LINE_SPACING;
+            float y = -((lines.size() - 1 - i) * LINE_SPACING);
             font.drawInBatch(line, -lineWidth / 2.0F, y, 0xFFFFFF, false, matrix, buffer,
-                    Font.DisplayMode.SEE_THROUGH, 0x40000000, packedLight);
-            font.drawInBatch(line, -lineWidth / 2.0F, y, 0xFFFFFF, false, matrix, buffer,
-                    Font.DisplayMode.NORMAL, 0, packedLight);
+                    Font.DisplayMode.NORMAL, background, packedLight);
         }
 
         poseStack.popPose();

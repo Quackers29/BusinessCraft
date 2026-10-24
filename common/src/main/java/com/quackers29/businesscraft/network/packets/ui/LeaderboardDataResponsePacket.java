@@ -33,7 +33,10 @@ public class LeaderboardDataResponsePacket {
             long money = buf.readLong();
             float happiness = buf.readFloat();
             long tourism = buf.readLong();
-            this.towns.add(new TownLeaderboardData(townId, name, position, population, money, happiness, tourism));
+            double journeyDistance = buf.readDouble();
+            String notorietyLabel = buf.readUtf();
+            this.towns.add(new TownLeaderboardData(
+                    townId, name, position, population, money, happiness, tourism, journeyDistance, notorietyLabel));
         }
     }
 
@@ -48,6 +51,8 @@ public class LeaderboardDataResponsePacket {
             buf.writeLong(town.money());
             buf.writeFloat(town.happiness());
             buf.writeLong(town.tourism());
+            buf.writeDouble(town.journeyDistance());
+            buf.writeUtf(town.notorietyLabel());
         }
     }
 

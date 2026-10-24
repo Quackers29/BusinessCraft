@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.town.utils;
 
+import com.quackers29.businesscraft.entity.TouristDisplayFormat;
 import com.quackers29.businesscraft.entity.TouristEntity;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
@@ -195,16 +196,28 @@ public class TownNotificationUtils {
     public static void notifyTouristArrivals(ServerLevel level, BlockPos platformPos,
             String originTownName, String destinationName,
             int count, int payment, double distance, DistanceMilestoneHelper.MilestoneResult milestoneResult) {
+        notifyTouristArrivals(level, platformPos, originTownName, destinationName,
+                count, payment, distance, milestoneResult, null);
+    }
+
+    /**
+     * Arrival chat. {@code progressDetail} is the tourist rank and the town's
+     * notoriety after this visit, or null when the caller has no journey data.
+     */
+    public static void notifyTouristArrivals(ServerLevel level, BlockPos platformPos,
+            String originTownName, String destinationName,
+            int count, int payment, double distance, DistanceMilestoneHelper.MilestoneResult milestoneResult,
+            String progressDetail) {
         // Enhanced arrival notification with refined styling
         Component message;
-        int distanceRounded = (int) Math.round(distance);
+        String distanceLabel = TouristDisplayFormat.formatDistance(distance);
 
         if (count == 1) {
             if (payment > 0) {
                 message = Component.literal("💰 Tourism Revenue | ")
                         .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
                         .append(Component
-                                .literal(originTownName + " → " + destinationName + " (" + distanceRounded + "m) | +")
+                                .literal(originTownName + " → " + destinationName + " (" + distanceLabel + ") | +")
                                 .withStyle(ChatFormatting.WHITE))
                         .append(Component.literal(payment + " emeralds")
                                 .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD));
@@ -212,14 +225,14 @@ public class TownNotificationUtils {
                 message = Component.literal("🚶 Tourist Arrival | ")
                         .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
                         .append(Component
-                                .literal(originTownName + " → " + destinationName + " (" + distanceRounded + "m)")
+                                .literal(originTownName + " → " + destinationName + " (" + distanceLabel + ")")
                                 .withStyle(ChatFormatting.WHITE));
             }
         } else {
             if (payment > 0) {
                 message = Component.literal("💰 Tourism Revenue | ")
                         .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
-                        .append(Component.literal(count + " from " + originTownName + " (" + distanceRounded + "m) | +")
+                        .append(Component.literal(count + " from " + originTownName + " (" + distanceLabel + ") | +")
                                 .withStyle(ChatFormatting.WHITE))
                         .append(Component.literal(payment + " emeralds")
                                 .withStyle(ChatFormatting.GREEN, ChatFormatting.BOLD));
@@ -228,9 +241,13 @@ public class TownNotificationUtils {
                         .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
                         .append(Component
                                 .literal(count + " from " + originTownName + " → " + destinationName + " ("
-                                        + distanceRounded + "m)")
+                                        + distanceLabel + ")")
                                 .withStyle(ChatFormatting.WHITE));
             }
+        }
+
+        if (progressDetail != null && !progressDetail.isBlank()) {
+            message = message.copy().append(Component.literal(" | " + progressDetail).withStyle(ChatFormatting.GOLD));
         }
 
         // Send arrival notification
@@ -244,6 +261,21 @@ public class TownNotificationUtils {
         if (milestoneResult != null && milestoneResult.hasRewards()) {
             notifyMilestoneAchievement(level, platformPos, milestoneResult);
         }
+    }
+
+    /**
+     * Extra line when a town's notoriety tier increases from this arrival.
+     */
+    public static void notifyNotoriety(ServerLevel level, BlockPos platformPos, String townName, String tierName) {
+        Component message = Component.literal(townName + " is now known as a " + tierName + ".")
+                .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD);
+        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
+            if (player.level() == level && isNearPosition(player.blockPosition(), platformPos, NOTIFICATION_RANGE)) {
+                player.sendSystemMessage(message);
+            }
+        }
+        DebugConfig.debug(LOGGER, DebugConfig.TOWN_DATA_SYSTEMS,
+                "{} reached notoriety {}", townName, tierName);
     }
 
     /**

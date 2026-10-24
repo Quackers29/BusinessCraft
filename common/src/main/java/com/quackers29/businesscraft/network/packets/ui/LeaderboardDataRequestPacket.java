@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
+import com.quackers29.businesscraft.config.ConfigLoader;
+import com.quackers29.businesscraft.economy.JourneyProgress;
 import com.quackers29.businesscraft.town.TownManager;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.data.TownLeaderboardData;
@@ -54,6 +56,7 @@ public class LeaderboardDataRequestPacket {
             // Convert to leaderboard data
             List<TownLeaderboardData> leaderboardData = new ArrayList<>();
             for (Town town : allTowns.values()) {
+                double journey = town.getTotalTouristDistance();
                 TownLeaderboardData data = new TownLeaderboardData(
                     town.getId(),
                     town.getName(),
@@ -61,7 +64,9 @@ public class LeaderboardDataRequestPacket {
                     town.getPopulation(),
                     town.getResourceCount(Items.EMERALD),
                     town.getHappiness(),
-                    town.getTotalTouristsArrived()
+                    town.getTotalTouristsArrived(),
+                    journey,
+                    JourneyProgress.formatTownNotoriety(journey, ConfigLoader.notorietyDistances)
                 );
                 leaderboardData.add(data);
             }

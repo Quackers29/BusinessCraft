@@ -93,15 +93,18 @@ public class TouristModel extends PlayerModel<TouristEntity> {
         root.addOrReplaceChild("accessory_suitcase", CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-2, 8, -5, 4, 5, 3)
                 .texOffs(24, 0).addBox(-1, 7, -4, 2, 1, 1), PartPose.offset(5.0F, 2.0F, 0.0F));
-        // Wider than the torso so the pack reads from the front and from a three-quarter side.
+        // Pack sits behind the torso. Shoulder straps cross the chest so the hiker
+        // still reads as a hiker from the front and from a three-quarter side.
         root.addOrReplaceChild("accessory_backpack", CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-5, 2, 2, 10, 8, 4)
-                .texOffs(32, 0).addBox(-4, 2, 6, 8, 5, 1), PartPose.ZERO);
+                .texOffs(32, 0).addBox(-4, 2, 6, 8, 5, 1)
+                .texOffs(0, 16).addBox(-4, 1, -2, 1, 7, 1)
+                .texOffs(8, 16).addBox(3, 1, -2, 1, 7, 1), PartPose.ZERO);
         PartDefinition mapRoot = root.addOrReplaceChild("accessory_map", CubeListBuilder.create(),
                 PartPose.offset(-5.0F, 2.0F, 0.0F));
         mapRoot.addOrReplaceChild("sheet",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-3, 0, -2, 6, 1, 4),
-                PartPose.offsetAndRotation(0.0F, 9.0F, -1.0F, -0.95F, 0.25F, 0.0F));
+                CubeListBuilder.create().texOffs(0, 0).addBox(-4, 0, -3, 8, 1, 6),
+                PartPose.offsetAndRotation(0.0F, 8.0F, -2.5F, -1.2F, 0.45F, 0.2F));
         return LayerDefinition.create(mesh, 64, 64);
     }
 
