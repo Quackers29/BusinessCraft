@@ -254,7 +254,7 @@ class ConfigLoaderTest {
         assertTrue(ConfigLoader.enableTouristExpiry);
         assertTrue(ConfigLoader.notifyOnTouristDeparture);
 
-        assertEquals(1000, ConfigLoader.metersPerEmerald);
+        assertEquals(100, ConfigLoader.metersPerEmerald);
         assertEquals("minecraft:emerald", ConfigLoader.currencyItem);
 
         assertTrue(ConfigLoader.enableMilestones);
@@ -500,7 +500,7 @@ class ConfigLoaderTest {
         // After copy, the values must match the shipped defaults (identical to Java inits)
         assertEquals(5, ConfigLoader.defaultStartingPopulation);
         assertEquals(50, ConfigLoader.defaultBorderRadius);
-        assertEquals(1000, ConfigLoader.metersPerEmerald);
+        assertEquals(100, ConfigLoader.metersPerEmerald);
         assertTrue(ConfigLoader.milestoneRewards.containsKey(1000));
         assertTrue(ConfigLoader.milestoneRewards.containsKey(5000));
     }

@@ -15,8 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * T-001: Distance Payment Calculation (Test + Docs Loop).
  *
- * Covers the core economy formula in VisitorProcessingHelper.calculatePayment():
- *   payment = (int) Math.max(1, (averageDistance / metersPerEmerald) * touristCount)
+ * Covers VisitorProcessingHelper.calculatePayment() via {@link com.quackers29.businesscraft.economy.TouristPaymentCalculator}.
  *
  * The method is private, so it is invoked via reflection rather than modifying
  * production code (loop rule). Documentation:
