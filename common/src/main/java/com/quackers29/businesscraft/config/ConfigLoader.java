@@ -42,10 +42,17 @@ public class ConfigLoader {
     public static boolean notifyOnTouristDeparture = true;
 
     // Tourism economy config
-    public static int metersPerEmerald = 1000;
+    /** Blocks traveled per emerald (linear curve: exponent = 1). Default 100 → 1 km ≈ 10 emeralds/tourist. */
+    public static int metersPerEmerald = 100;
     // Minimum average travel distance (blocks) for an arrival batch to earn any payment.
     // Blocks the adjacent-town exploit (~55-block spacing farming the 1-emerald floor).
     public static int minPayoutDistance = 100;
+    /** Power exponent for the optional non-linear fare curve (1.0 = linear via metersPerEmerald). */
+    public static double payoutCurveExponent = 1.0;
+    /** Reference distance (blocks) when payoutCurveExponent != 1.0. */
+    public static int payoutReferenceBlocks = 1000;
+    /** Emeralds per tourist at payoutReferenceBlocks when using a non-linear exponent. */
+    public static double payoutEmeraldsPerTouristAtReference = 10.0;
 
     // Distance milestone config
     public static boolean enableMilestones = true;
@@ -149,8 +156,12 @@ public class ConfigLoader {
                 touristSystemEnabled = config.getOrElse("tourists.enabled", true);
 
                 // Economy settings
-                metersPerEmerald = config.getIntOrElse("economy.metersPerEmerald", 1000);
+                metersPerEmerald = config.getIntOrElse("economy.metersPerEmerald", 100);
                 minPayoutDistance = config.getIntOrElse("economy.minPayoutDistance", 100);
+                payoutCurveExponent = config.getOrElse("economy.payoutCurveExponent", 1.0);
+                payoutReferenceBlocks = config.getIntOrElse("economy.payoutReferenceBlocks", 1000);
+                payoutEmeraldsPerTouristAtReference = config
+                        .getOrElse("economy.payoutEmeraldsPerTouristAtReference", 10.0);
                 currencyItem = config.getOrElse("economy.currencyItem", "minecraft:emerald");
 
                 // Milestone settings
@@ -299,9 +310,22 @@ public class ConfigLoader {
 
                 // Economy settings
                 config.set("economy.metersPerEmerald", metersPerEmerald);
-                config.setComment("economy.metersPerEmerald", " Meters of travel per emerald earned");
+                config.setComment("economy.metersPerEmerald",
+                        " Blocks traveled per emerald per tourist when payoutCurveExponent = 1.0 (linear). "
+                                + "Default 100 → ~10 emeralds/tourist at 1 km; 300/500/1500 blocks pay 3/5/15.");
                 config.set("economy.minPayoutDistance", minPayoutDistance);
-                config.setComment("economy.minPayoutDistance", " Minimum average travel distance (blocks) before an arrival batch earns any payment");
+                config.setComment("economy.minPayoutDistance",
+                        " Minimum average travel distance (blocks) before an arrival batch earns any payment");
+                config.set("economy.payoutCurveExponent", payoutCurveExponent);
+                config.setComment("economy.payoutCurveExponent",
+                        " Fare curve exponent. 1.0 = linear (distance ÷ metersPerEmerald). "
+                                + "Other values use (distance ÷ payoutReferenceBlocks)^exponent × payoutEmeraldsPerTouristAtReference.");
+                config.set("economy.payoutReferenceBlocks", payoutReferenceBlocks);
+                config.setComment("economy.payoutReferenceBlocks",
+                        " Reference distance (blocks) for non-linear curves (ignored when exponent = 1.0)");
+                config.set("economy.payoutEmeraldsPerTouristAtReference", payoutEmeraldsPerTouristAtReference);
+                config.setComment("economy.payoutEmeraldsPerTouristAtReference",
+                        " Emeralds per tourist at payoutReferenceBlocks for non-linear curves (ignored when exponent = 1.0)");
                 config.set("economy.currencyItem", currencyItem);
                 config.setComment("economy.currencyItem", " Currency item for trading (format: modid:item)");
 
