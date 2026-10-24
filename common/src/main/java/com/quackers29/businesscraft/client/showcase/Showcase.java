@@ -353,7 +353,7 @@ public final class Showcase {
         Vec3 eye = switch (shot.name) {
             case "town_interface_back" -> centre.add(-2.6, 3.0, -7.2);
             case "town_interface", "warmup" -> centre.add(3.0, 3.0, 6.4);
-            case "platform_interface" -> target.add(4.6, 2.4, 2.2);
+            case "platform_interface" -> target.add(-3.6, 2.3, -3.4);
             default -> centre.add(0.0, 1.2, 2.4);
         };
         double lookUp = kioskShot ? 0.4 : 1.0;
