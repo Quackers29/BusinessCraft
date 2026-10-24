@@ -93,11 +93,10 @@ public class TouristModel extends PlayerModel<TouristEntity> {
         root.addOrReplaceChild("accessory_suitcase", CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-2, 8, -5, 4, 5, 3)
                 .texOffs(24, 0).addBox(-1, 7, -4, 2, 1, 1), PartPose.offset(5.0F, 2.0F, 0.0F));
+        // Wider than the torso so the pack reads from the front and from a three-quarter side.
         root.addOrReplaceChild("accessory_backpack", CubeListBuilder.create()
-                .texOffs(0, 0).addBox(-3, 2, 3, 6, 8, 3)
-                .texOffs(24, 0).addBox(-2, 2, 6, 4, 4, 1)
-                .texOffs(32, 0).addBox(-4, 1, 0, 1, 7, 3)
-                .texOffs(40, 0).addBox(3, 1, 0, 1, 7, 3), PartPose.ZERO);
+                .texOffs(0, 0).addBox(-5, 2, 2, 10, 8, 4)
+                .texOffs(32, 0).addBox(-4, 2, 6, 8, 5, 1), PartPose.ZERO);
         PartDefinition mapRoot = root.addOrReplaceChild("accessory_map", CubeListBuilder.create(),
                 PartPose.offset(-5.0F, 2.0F, 0.0F));
         mapRoot.addOrReplaceChild("sheet",
