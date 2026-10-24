@@ -203,7 +203,13 @@ public class StandardTabContent extends BCComponent {
         int maxScroll = Math.max(0, contentHeight - viewH);
         labelScroll = Math.max(0, Math.min(labelScroll, maxScroll));
 
-        guiGraphics.enableScissor(x + 2, viewTop, x + width - 2, viewTop + viewH);
+        // The tab panel translates into the content area. Scissor is screen space
+        // and does not follow that pose, so add the current translation.
+        var pose = guiGraphics.pose().last().pose();
+        int originX = Math.round(pose.m30());
+        int originY = Math.round(pose.m31());
+        guiGraphics.enableScissor(originX + x + 2, originY + viewTop,
+                originX + x + width - 2, originY + viewTop + viewH);
         int cursor = viewTop - labelScroll;
         String hovered = null;
         for (Row row : rows) {

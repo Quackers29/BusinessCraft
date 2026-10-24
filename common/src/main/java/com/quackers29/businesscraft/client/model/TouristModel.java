@@ -98,8 +98,8 @@ public class TouristModel extends PlayerModel<TouristEntity> {
         root.addOrReplaceChild("accessory_backpack", CubeListBuilder.create()
                 .texOffs(0, 0).addBox(-5, 2, 2, 10, 8, 4)
                 .texOffs(32, 0).addBox(-4, 2, 6, 8, 5, 1)
-                .texOffs(0, 16).addBox(-4, 1, -2, 1, 7, 1)
-                .texOffs(8, 16).addBox(3, 1, -2, 1, 7, 1), PartPose.ZERO);
+                .texOffs(0, 16).addBox(-3, 1, -3, 1, 7, 1)
+                .texOffs(8, 16).addBox(2, 1, -3, 1, 7, 1), PartPose.ZERO);
         PartDefinition mapRoot = root.addOrReplaceChild("accessory_map", CubeListBuilder.create(),
                 PartPose.offset(-5.0F, 2.0F, 0.0F));
         mapRoot.addOrReplaceChild("sheet",
