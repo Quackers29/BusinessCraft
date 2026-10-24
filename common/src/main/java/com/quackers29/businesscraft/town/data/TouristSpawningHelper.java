@@ -233,6 +233,11 @@ public class TouristSpawningHelper {
                 DebugConfig.debug(LOGGER, DebugConfig.TOURIST_SPAWNING, "Spawned tourist at {} from {} to {}", pos,
                         originTown.getName(), destinationName);
 
+                if (level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                    com.quackers29.businesscraft.entity.TouristEffects.playSpawn(
+                            serverLevel, tourist.position());
+                }
+
                 originTown.addTourist();
                 if (destinationTownId != null && !ANY_TOWN_DESTINATION.equals(destinationTownId)) {
                     com.quackers29.businesscraft.town.utils.TouristAllocationTracker

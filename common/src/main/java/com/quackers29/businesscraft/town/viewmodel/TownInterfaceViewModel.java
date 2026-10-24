@@ -54,6 +54,10 @@ public class TownInterfaceViewModel implements IViewModel {
     // Warnings (Server-side validation)
     private final String primaryWarning; // e.g. "Town Hall Missing!" or empty
 
+    // Tourism panel helpers (display-only)
+    private final String waitingTouristsSummary;
+    private final String recentArrivalsSummary;
+
     public TownInterfaceViewModel(
             String townName,
             String biomeFormatted,
@@ -71,7 +75,9 @@ public class TownInterfaceViewModel implements IViewModel {
             int totalTouristsArrived,
             double totalTouristDistance,
             float borderRadius,
-            String primaryWarning) {
+            String primaryWarning,
+            String waitingTouristsSummary,
+            String recentArrivalsSummary) {
         this.townName = townName;
         this.biomeFormatted = biomeFormatted;
         this.biomeVariantFormatted = biomeVariantFormatted;
@@ -89,6 +95,8 @@ public class TownInterfaceViewModel implements IViewModel {
         this.totalTouristDistance = totalTouristDistance;
         this.borderRadius = borderRadius;
         this.primaryWarning = primaryWarning;
+        this.waitingTouristsSummary = waitingTouristsSummary;
+        this.recentArrivalsSummary = recentArrivalsSummary;
     }
 
     public TownInterfaceViewModel(FriendlyByteBuf buf) {
@@ -109,6 +117,8 @@ public class TownInterfaceViewModel implements IViewModel {
         this.totalTouristDistance = buf.readDouble();
         this.borderRadius = buf.readFloat();
         this.primaryWarning = buf.readUtf();
+        this.waitingTouristsSummary = buf.readUtf();
+        this.recentArrivalsSummary = buf.readUtf();
     }
 
     public void toBytes(FriendlyByteBuf buf) {
@@ -129,6 +139,8 @@ public class TownInterfaceViewModel implements IViewModel {
         buf.writeDouble(totalTouristDistance);
         buf.writeFloat(borderRadius);
         buf.writeUtf(primaryWarning);
+        buf.writeUtf(waitingTouristsSummary);
+        buf.writeUtf(recentArrivalsSummary);
     }
 
     // Getters
@@ -202,5 +214,13 @@ public class TownInterfaceViewModel implements IViewModel {
 
     public float getBorderRadius() {
         return borderRadius;
+    }
+
+    public String getWaitingTouristsSummary() {
+        return waitingTouristsSummary;
+    }
+
+    public String getRecentArrivalsSummary() {
+        return recentArrivalsSummary;
     }
 }

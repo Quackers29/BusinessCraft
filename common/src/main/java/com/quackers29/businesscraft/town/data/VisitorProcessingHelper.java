@@ -240,6 +240,11 @@ public class VisitorProcessingHelper {
                             originTown.getName(), originTown.getTouristCount(), originTown.getMaxTourists());
                 }
 
+                if (villager instanceof TouristEntity touristEntity) {
+                    com.quackers29.businesscraft.entity.TouristEffects.playArrival(
+                            serverLevel, touristEntity.position());
+                }
+
                 villager.remove(Entity.RemovalReason.DISCARDED);
                 return true; // Villager was processed and removed
             }

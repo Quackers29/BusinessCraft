@@ -49,6 +49,14 @@ public class TouristEntity extends Villager {
         SynchedEntityData.defineId(TouristEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Integer> DATA_SKIN_TIER =
         SynchedEntityData.defineId(TouristEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> DATA_TOURIST_TYPE =
+        SynchedEntityData.defineId(TouristEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> DATA_HAT_VARIANT =
+        SynchedEntityData.defineId(TouristEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<String> DATA_ORIGIN_LABEL =
+        SynchedEntityData.defineId(TouristEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> DATA_DEST_LABEL =
+        SynchedEntityData.defineId(TouristEntity.class, EntityDataSerializers.STRING);
 
     public static final int SKIN_TIER_BASIC = 0;
     public static final int SKIN_TIER_EXPERIENCED = 1;
@@ -118,6 +126,10 @@ public class TouristEntity extends Villager {
         super.defineSynchedData();
         this.entityData.define(DATA_DISTANCE_TRAVELED, 0.0f);
         this.entityData.define(DATA_SKIN_TIER, SKIN_TIER_BASIC);
+        this.entityData.define(DATA_TOURIST_TYPE, TouristType.SIGHTSEER.index());
+        this.entityData.define(DATA_HAT_VARIANT, 0);
+        this.entityData.define(DATA_ORIGIN_LABEL, "");
+        this.entityData.define(DATA_DEST_LABEL, "");
     }
 
     public TouristEntity(EntityType<? extends Villager> entityType, Level level,
@@ -133,14 +145,14 @@ public class TouristEntity extends Villager {
         this.destinationTownId = destinationTownId;
         this.destinationTownName = destinationName;
 
-        String displayName;
         if (destinationTownId.equals(ANY_TOWN_DESTINATION)) {
-            displayName = "Tourist to Any Town";
             this.destinationTownName = ANY_TOWN_NAME;
-        } else {
-            displayName = "Tourist to " + destinationName;
         }
-        this.setCustomName(Component.literal(displayName));
+
+        assignSpawnVariety();
+        refreshSyncedLabels();
+        this.setCustomName(Component.literal("Tourist"));
+        this.setCustomNameVisible(true);
 
         PlatformAccess.getTouristHelper().addStandardTouristTags(
                 this,
@@ -404,6 +416,42 @@ public class TouristEntity extends Villager {
         return this.entityData.get(DATA_SKIN_TIER);
     }
 
+    public TouristType getTouristType() {
+        return TouristType.fromIndex(this.entityData.get(DATA_TOURIST_TYPE));
+    }
+
+    public int getHatVariant() {
+        return this.entityData.get(DATA_HAT_VARIANT);
+    }
+
+    public String getSyncedOriginLabel() {
+        return this.entityData.get(DATA_ORIGIN_LABEL);
+    }
+
+    public String getSyncedDestLabel() {
+        return this.entityData.get(DATA_DEST_LABEL);
+    }
+
+    public boolean isAnyTownDestination() {
+        return ANY_TOWN_DESTINATION.equals(destinationTownId);
+    }
+
+    private void assignSpawnVariety() {
+        TouristType type = TouristType.random(this.random);
+        this.entityData.set(DATA_TOURIST_TYPE, type.index());
+        this.entityData.set(DATA_HAT_VARIANT, this.random.nextInt(4));
+    }
+
+    private void refreshSyncedLabels() {
+        this.entityData.set(DATA_ORIGIN_LABEL,
+                TouristDisplayFormat.sanitize(originTownName, "Unknown"));
+        String dest = destinationTownName != null ? destinationTownName : "Unknown";
+        if (isAnyTownDestination()) {
+            dest = ANY_TOWN_NAME;
+        }
+        this.entityData.set(DATA_DEST_LABEL, TouristDisplayFormat.sanitize(dest, "Unknown"));
+    }
+
     public double getTotalDistanceTraveled() {
         return this.level().isClientSide ? this.entityData.get(DATA_DISTANCE_TRAVELED) : totalDistanceTraveled;
     }
@@ -447,6 +495,8 @@ public class TouristEntity extends Villager {
         if (destinationTownName != null) {
             tag.putString("DestinationTownName", destinationTownName);
         }
+        tag.putInt("TouristType", this.entityData.get(DATA_TOURIST_TYPE));
+        tag.putInt("HatVariant", this.entityData.get(DATA_HAT_VARIANT));
     }
 
     @Override
@@ -511,8 +561,15 @@ public class TouristEntity extends Villager {
         if (tag.contains("DestinationTownName")) {
             destinationTownName = tag.getString("DestinationTownName");
         }
+        if (tag.contains("TouristType")) {
+            this.entityData.set(DATA_TOURIST_TYPE, tag.getInt("TouristType"));
+        }
+        if (tag.contains("HatVariant")) {
+            this.entityData.set(DATA_HAT_VARIANT, tag.getInt("HatVariant"));
+        }
 
         syncSkinTierFromLevel();
+        refreshSyncedLabels();
     }
 
     @Nullable
@@ -558,6 +615,14 @@ public class TouristEntity extends Villager {
     @Override
     public boolean startRiding(Entity entity, boolean force) {
         boolean result = super.startRiding(entity, force);
+
+        if (result && !this.level().isClientSide) {
+            if (entity instanceof AbstractMinecart || entity.getClass().getName().contains("create.content.trains")) {
+                if (this.level() instanceof ServerLevel serverLevel) {
+                    TouristEffects.playBoarding(serverLevel, this, entity);
+                }
+            }
+        }
 
         if (result && !hasReceivedRideExtension) {
             // Check if the vehicle is a minecart or Create train carriage

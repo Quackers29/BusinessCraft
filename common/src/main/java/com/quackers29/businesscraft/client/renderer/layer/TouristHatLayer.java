@@ -27,10 +27,9 @@ public class TouristHatLayer extends RenderLayer<TouristEntity, VillagerModel<To
         super(parent);
     }
 
-    /** Level 1→red, 2→blue, 3→green. */
+    /** Spawn variety: 0=default, 1=red, 2=blue, 3=green. */
     private int getColorIndex(TouristEntity tourist) {
-        int level = tourist.getVillagerData().getLevel();
-        return Math.min(Math.max(level, 1), 3);
+        return Math.floorMod(tourist.getHatVariant(), HAT_TEXTURES.length);
     }
 
     @Override

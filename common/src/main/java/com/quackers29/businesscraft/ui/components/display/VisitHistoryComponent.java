@@ -68,15 +68,13 @@ public class VisitHistoryComponent extends BCScrollableListComponent<VisitHistor
     private static String formatVisitText(VisitEntry entry) {
         StringBuilder sb = new StringBuilder();
         
-        // Format: [Time] VisitorName (count: N)
+        // Format: [Time] from VisitorName ×N
         sb.append(TIME_FORMAT.format(new Date(entry.getTimestamp())));
-        sb.append(" - ");
+        sb.append("  from ");
         sb.append(entry.getVisitorName());
-        
         if (entry.getCount() > 1) {
-            sb.append(" (x");
+            sb.append(" ×");
             sb.append(entry.getCount());
-            sb.append(")");
         }
         
         return sb.toString();

@@ -55,9 +55,13 @@ public final class ShowcaseSelection {
         return property != null && MAP_SWEEP.equalsIgnoreCase(property.trim());
     }
 
+    public static boolean touristsMode(String property) {
+        return property != null && "tourists".equalsIgnoreCase(property.trim());
+    }
+
     public static List<String> shotsFor(String property) {
         if (!enabled(property) || allViewsMode(property) || twoTownsMode(property) || testbedMode(property)
-                || mapSweepMode(property)) {
+                || mapSweepMode(property) || touristsMode(property)) {
             return List.of();
         }
         List<String> selected = new ArrayList<>();
