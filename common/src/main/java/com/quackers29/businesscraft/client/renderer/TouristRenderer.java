@@ -60,12 +60,11 @@ public class TouristRenderer extends MobRenderer<TouristEntity, VillagerModel<To
 
         List<Component> lines = new ArrayList<>();
         lines.add(TouristDisplayFormat.primaryLine(entity.getSyncedDestLabel(), entity.isAnyTownDestination()));
-        lines.add(TouristDisplayFormat.secondaryLine(
-                entity.getSyncedOriginLabel(),
-                entity.getTouristType()));
-        double traveled = entity.getTotalDistanceTraveled();
-        if (traveled > 0.5) {
-            lines.add(TouristDisplayFormat.distanceLine(traveled));
+        lines.add(TouristDisplayFormat.originLine(entity.getSyncedOriginLabel()));
+        Component typeAndDistance = TouristDisplayFormat.typeAndDistanceLine(
+                entity.getTouristType(), entity.getTotalDistanceTraveled());
+        if (typeAndDistance != null) {
+            lines.add(typeAndDistance);
         }
 
         float scale = NAME_TAG_SCALE;

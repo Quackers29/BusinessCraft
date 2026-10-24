@@ -23,22 +23,32 @@ public final class TouristDisplayFormat {
                 .append(Component.literal(dest).withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD));
     }
 
-    /** Second line: origin + type (kept short so it fits above the head). */
-    public static MutableComponent secondaryLine(String originName, TouristType type) {
+    /** Second line: origin only (keeps width narrow). */
+    public static MutableComponent originLine(String originName) {
         String origin = sanitize(originName, "Unknown");
-        MutableComponent line = Component.literal("from ").withStyle(ChatFormatting.DARK_GRAY)
+        return Component.literal("from ").withStyle(ChatFormatting.DARK_GRAY)
                 .append(Component.literal(origin).withStyle(ChatFormatting.WHITE));
-        if (type != null) {
-            line = line.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY))
-                    .append(Component.literal(type.displayName()).withStyle(ChatFormatting.AQUA));
-        }
-        return line;
     }
 
-    /** Optional third line: distance traveled. */
-    public static MutableComponent distanceLine(double distanceMeters) {
-        return Component.literal(formatDistance(distanceMeters) + " traveled")
-                .withStyle(ChatFormatting.YELLOW);
+    /** Third line: type + distance (both optional). */
+    public static MutableComponent typeAndDistanceLine(TouristType type, double distanceMeters) {
+        if (type == null && distanceMeters <= 0.5) {
+            return null;
+        }
+        MutableComponent line = null;
+        if (type != null) {
+            line = Component.literal(type.displayName()).withStyle(ChatFormatting.AQUA);
+        }
+        if (distanceMeters > 0.5) {
+            MutableComponent dist = Component.literal(formatDistance(distanceMeters))
+                    .withStyle(ChatFormatting.YELLOW);
+            if (line == null) {
+                line = dist;
+            } else {
+                line = line.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY)).append(dist);
+            }
+        }
+        return line;
     }
 
     public static String formatDistance(double meters) {
