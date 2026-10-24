@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Spawns every tourist look in a line and photographs the group plus each look
@@ -123,8 +122,15 @@ public final class ShowcaseTouristLineup {
             }
             return;
         }
+        Spot currentSpot = spots.get(lookIndex);
         if (phaseTicks == 1) {
-            aimSpot(minecraft, spots.get(lookIndex), sideShot);
+            aimSpot(minecraft, currentSpot, sideShot);
+        }
+        // Body yaw is not synced. Reapply it after the entity tick so the
+        // renderer sees the side pose on this frame. Other looks stay facing forward.
+        for (Spot other : spots) {
+            float yaw = sideShot && other.networkId == currentSpot.networkId ? 70f : 0f;
+            faceTourist(minecraft, other, yaw);
         }
         if (phaseTicks < SHOT_TICKS) {
             return;
@@ -218,7 +224,7 @@ public final class ShowcaseTouristLineup {
                 tourist.setYBodyRot(0f);
                 tourist.yBodyRotO = 0f;
                 level.addFreshEntity(tourist);
-                built.add(new Spot(look.id(), x, y, z, tourist.getUUID()));
+                built.add(new Spot(look.id(), x, y, z, tourist.getId()));
             }
             spots = List.copyOf(built);
             floorY = ground + 1.0;
@@ -252,41 +258,47 @@ public final class ShowcaseTouristLineup {
     }
 
     private static void aimSpot(Minecraft minecraft, Spot spot, boolean side) {
-        // Turn the tourist for the side shot. The camera stays in the open
-        // ground in front of the row, so it does not stand inside a neighbor.
-        faceTourist(minecraft, spot, side ? 75f : 0f);
+        // Camera stays in front of this tourist. The subject is yawed so the
+        // shot reads as a side view without standing inside the row.
+        faceTourist(minecraft, spot, side ? 70f : 0f);
         Vec3 target = new Vec3(spot.x, spot.y + 1.15, spot.z);
         Vec3 eye = side
-                ? new Vec3(spot.x + 0.9, spot.y + 1.2, spot.z + 2.65)
+                ? new Vec3(spot.x - 0.2, spot.y + 1.15, spot.z + 2.4)
                 : new Vec3(spot.x, spot.y + 1.15, spot.z + 2.55);
         aim(minecraft, eye, target);
     }
 
     private static void faceTourist(Minecraft minecraft, Spot spot, float yaw) {
+        if (minecraft.level != null) {
+            applyYaw(minecraft.level.getEntity(spot.networkId), yaw);
+        }
         MinecraftServer server = minecraft.getSingleplayerServer();
         if (server == null) {
             return;
         }
         server.execute(() -> {
-            Entity entity = null;
             for (ServerLevel level : server.getAllLevels()) {
-                entity = level.getEntity(spot.entityId);
+                Entity entity = level.getEntity(spot.networkId);
                 if (entity != null) {
-                    break;
+                    applyYaw(entity, yaw);
+                    return;
                 }
             }
-            if (!(entity instanceof TouristEntity tourist)) {
-                return;
-            }
-            tourist.setYRot(yaw);
-            tourist.yRotO = yaw;
-            tourist.setXRot(0f);
-            tourist.xRotO = 0f;
-            tourist.setYHeadRot(yaw);
-            tourist.yHeadRotO = yaw;
-            tourist.setYBodyRot(yaw);
-            tourist.yBodyRotO = yaw;
         });
+    }
+
+    private static void applyYaw(Entity entity, float yaw) {
+        if (!(entity instanceof TouristEntity tourist)) {
+            return;
+        }
+        tourist.setYRot(yaw);
+        tourist.yRotO = yaw;
+        tourist.setXRot(0f);
+        tourist.xRotO = 0f;
+        tourist.setYHeadRot(yaw);
+        tourist.yHeadRotO = yaw;
+        tourist.setYBodyRot(yaw);
+        tourist.yBodyRotO = yaw;
     }
 
     private static void aim(Minecraft minecraft, Vec3 eye, Vec3 target) {
@@ -349,6 +361,6 @@ public final class ShowcaseTouristLineup {
         }
     }
 
-    private record Spot(String id, double x, double y, double z, UUID entityId) {
+    private record Spot(String id, double x, double y, double z, int networkId) {
     }
 }
