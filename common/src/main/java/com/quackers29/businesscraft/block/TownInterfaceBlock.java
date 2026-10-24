@@ -34,6 +34,7 @@ import net.minecraft.world.level.block.state.properties.DirectionProperty;
 
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -58,7 +59,7 @@ public class TownInterfaceBlock extends BaseEntityBlock {
     private final Map<UUID, Long> platformIndicatorSpawnTimes = new HashMap<>();
     private final Map<UUID, Long> extendedIndicatorPlayers = new HashMap<>();
 
-    private static final VoxelShape SHAPE = Block.box(1, 0, 1, 15, 16, 15);
+    private static final VoxelShape SHAPE = Shapes.block();
 
     public TownInterfaceBlock(Properties properties) {
         super(properties);
@@ -97,7 +98,7 @@ public class TownInterfaceBlock extends BaseEntityBlock {
                     PlatformAccess.getNetwork().openScreen(serverPlayer, new MenuProvider() {
                         @Override
                         public Component getDisplayName() {
-                            return Component.translatable("block.businesscraft.town_interface");
+                            return Component.translatable("container.businesscraft.town_interface");
                         }
 
                         @Override

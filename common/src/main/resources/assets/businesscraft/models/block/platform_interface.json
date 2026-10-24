@@ -1,0 +1,89 @@
+{
+  "parent": "block/block",
+  "textures": {
+    "particle": "minecraft:block/cyan_terracotta",
+    "stone": "minecraft:block/stone_bricks",
+    "wood": "minecraft:block/spruce_planks",
+    "sign": "minecraft:block/cyan_terracotta",
+    "roof": "minecraft:block/dark_oak_planks",
+    "post": "minecraft:block/stripped_spruce_log",
+    "lamp": "minecraft:block/shroomlight"
+  },
+  "elements": [
+    {
+      "name": "base",
+      "from": [2, 0, 2],
+      "to": [14, 2, 14],
+      "faces": {
+        "north": {"uv": [2, 14, 14, 16], "texture": "#stone"},
+        "east": {"uv": [2, 14, 14, 16], "texture": "#stone"},
+        "south": {"uv": [2, 14, 14, 16], "texture": "#stone"},
+        "west": {"uv": [2, 14, 14, 16], "texture": "#stone"},
+        "up": {"uv": [2, 2, 14, 14], "texture": "#stone"},
+        "down": {"uv": [2, 2, 14, 14], "texture": "#stone"}
+      }
+    },
+    {
+      "name": "counter",
+      "from": [3, 2, 5],
+      "to": [13, 7, 12],
+      "faces": {
+        "north": {"uv": [3, 9, 13, 14], "texture": "#wood"},
+        "east": {"uv": [4, 9, 11, 14], "texture": "#wood"},
+        "south": {"uv": [3, 9, 13, 14], "texture": "#wood"},
+        "west": {"uv": [4, 9, 11, 14], "texture": "#wood"},
+        "up": {"uv": [3, 4, 13, 11], "texture": "#wood"}
+      }
+    },
+    {
+      "name": "post",
+      "from": [7, 2, 9],
+      "to": [9, 16, 11],
+      "faces": {
+        "north": {"uv": [4, 0, 6, 14], "texture": "#post"},
+        "east": {"uv": [4, 0, 6, 14], "texture": "#post"},
+        "south": {"uv": [4, 0, 6, 14], "texture": "#post"},
+        "west": {"uv": [4, 0, 6, 14], "texture": "#post"},
+        "up": {"uv": [4, 4, 6, 6], "texture": "#post"}
+      }
+    },
+    {
+      "name": "sign",
+      "from": [1, 7, 3],
+      "to": [15, 14, 6],
+      "faces": {
+        "north": {"uv": [1, 2, 15, 9], "texture": "#sign"},
+        "east": {"uv": [0, 2, 3, 9], "texture": "#sign"},
+        "south": {"uv": [1, 2, 15, 9], "texture": "#wood"},
+        "west": {"uv": [0, 2, 3, 9], "texture": "#sign"},
+        "up": {"uv": [1, 3, 15, 6], "texture": "#wood"},
+        "down": {"uv": [1, 3, 15, 6], "texture": "#wood"}
+      }
+    },
+    {
+      "name": "roof",
+      "from": [0, 14, 2],
+      "to": [16, 16, 13],
+      "faces": {
+        "north": {"uv": [0, 0, 16, 2], "texture": "#roof"},
+        "east": {"uv": [0, 0, 11, 2], "texture": "#roof"},
+        "south": {"uv": [0, 0, 16, 2], "texture": "#roof"},
+        "west": {"uv": [0, 0, 11, 2], "texture": "#roof"},
+        "up": {"uv": [0, 2, 16, 13], "texture": "#roof"},
+        "down": {"uv": [0, 2, 16, 13], "texture": "#roof"}
+      }
+    },
+    {
+      "name": "lamp",
+      "from": [6, 16, 6],
+      "to": [10, 19, 10],
+      "faces": {
+        "north": {"uv": [6, 0, 10, 3], "texture": "#lamp"},
+        "east": {"uv": [6, 0, 10, 3], "texture": "#lamp"},
+        "south": {"uv": [6, 0, 10, 3], "texture": "#lamp"},
+        "west": {"uv": [6, 0, 10, 3], "texture": "#lamp"},
+        "up": {"uv": [6, 6, 10, 10], "texture": "#lamp"}
+      }
+    }
+  ]
+}

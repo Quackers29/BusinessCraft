@@ -53,7 +53,7 @@ public class OpenTownInterfacePacket {
                     PlatformAccess.getNetwork().openScreen(player, new MenuProvider() {
                         @Override
                         public Component getDisplayName() {
-                            return Component.translatable("block.businesscraft.town_interface");
+                            return Component.translatable("container.businesscraft.town_interface");
                         }
 
                         @Override

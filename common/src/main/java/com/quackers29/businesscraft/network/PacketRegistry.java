@@ -337,5 +337,15 @@ public class PacketRegistry {
                                 NetworkDirection.PLAY_TO_CLIENT,
                                 VisitHistoryResponsePacket::decode, VisitHistoryResponsePacket::encode,
                                 VisitHistoryResponsePacket::handle);
+
+                register(PlatformInterfaceSyncPacket.class, "platform_interface_sync_packet",
+                                NetworkDirection.PLAY_TO_CLIENT,
+                                PlatformInterfaceSyncPacket::decode, PlatformInterfaceSyncPacket::encode,
+                                PlatformInterfaceSyncPacket::handle);
+
+                register(PlatformInterfaceActionPacket.class, "platform_interface_action_packet",
+                                NetworkDirection.PLAY_TO_SERVER,
+                                PlatformInterfaceActionPacket::decode, PlatformInterfaceActionPacket::encode,
+                                PlatformInterfaceActionPacket::handle);
         }
 }

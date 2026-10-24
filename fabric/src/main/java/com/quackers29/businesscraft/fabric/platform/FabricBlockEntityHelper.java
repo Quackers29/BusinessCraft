@@ -13,4 +13,9 @@ public class FabricBlockEntityHelper implements BlockEntityHelper {
     public BlockEntityType<?> getTownInterfaceEntityType() {
         return FabricModBlockEntities.getTownInterfaceEntityType();
     }
+
+    @Override
+    public BlockEntityType<?> getPlatformInterfaceEntityType() {
+        return FabricModBlockEntities.getPlatformInterfaceEntityType();
+    }
 }

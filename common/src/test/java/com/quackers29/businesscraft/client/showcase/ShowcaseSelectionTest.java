@@ -24,7 +24,7 @@ class ShowcaseSelectionTest {
         assertEquals(List.of(), ShowcaseSelection.shotsFor("two-towns"));
         assertTrue(ShowcaseSelection.testbedMode("testbed"));
         assertEquals(List.of(), ShowcaseSelection.shotsFor("testbed"));
-        assertEquals(15, ShowcaseRouteRegistry.allRoutes().size());
+        assertEquals(16, ShowcaseRouteRegistry.allRoutes().size());
     }
 
     @Test
@@ -45,7 +45,8 @@ class ShowcaseSelectionTest {
     @Test
     void blockScene_isFrontAndBackPlusWarmup() {
         assertEquals(
-                List.of("warmup", "town_interface", "town_interface_back"),
+                List.of("warmup", "town_interface", "town_interface_back", "platform_interface",
+                        "platform_interface_ui"),
                 ShowcaseSelection.shotsFor("block"));
         assertFalse(ShowcaseSelection.includes("block", "town_overview"));
     }

@@ -1,6 +1,10 @@
 package com.quackers29.businesscraft.client.showcase;
 
+import com.quackers29.businesscraft.block.PlatformInterfaceBlock;
 import com.quackers29.businesscraft.block.TownInterfaceBlock;
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.init.CommonModBlocks;
+import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import com.quackers29.businesscraft.ui.managers.BottomButtonManager;
 import com.quackers29.businesscraft.ui.screens.BaseTownScreen;
@@ -17,6 +21,12 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -38,6 +48,10 @@ public final class ShowcaseNavigator {
         }
         if ("open-town".equals(step)) {
             openTownInterface(minecraft, townPos);
+            return null;
+        }
+        if ("open-platform-interface".equals(step)) {
+            openPlatformInterface(minecraft, townPos);
             return null;
         }
         if (step.startsWith("set-tab:")) {
@@ -170,6 +184,63 @@ public final class ShowcaseNavigator {
             return grid.invokeButtonByLabel(label);
         }
         return false;
+    }
+
+    /**
+     * Places a Town Interface on the first complete platform stop if one is not
+     * already there, stands the player beside it, and opens its screen.
+     */
+    private static void openPlatformInterface(Minecraft minecraft, BlockPos townPos) {
+        minecraft.setScreen(null);
+        MinecraftServer server = minecraft.getSingleplayerServer();
+        if (server == null || townPos == null || minecraft.player == null) {
+            return;
+        }
+        server.execute(() -> {
+            ServerPlayer serverPlayer = server.getPlayerList().getPlayer(minecraft.player.getUUID());
+            if (serverPlayer == null) {
+                return;
+            }
+            ServerLevel level = serverPlayer.serverLevel();
+            BlockEntity blockEntity = level.getBlockEntity(townPos);
+            if (!(blockEntity instanceof TownInterfaceEntity centre)) {
+                return;
+            }
+            Platform platform = null;
+            for (Platform candidate : centre.getPlatforms()) {
+                if (candidate.isComplete()) {
+                    platform = candidate;
+                    break;
+                }
+            }
+            if (platform == null) {
+                return;
+            }
+            BlockPos kioskAt = platform.getStartPos().above();
+            GameType previous = serverPlayer.gameMode.getGameModeForPlayer();
+            if (!(level.getBlockState(kioskAt).getBlock() instanceof PlatformInterfaceBlock)) {
+                serverPlayer.setGameMode(GameType.CREATIVE);
+                level.setBlock(kioskAt, Blocks.AIR.defaultBlockState(), 3);
+                serverPlayer.teleportTo(level, kioskAt.getX() + 0.5, kioskAt.getY(), kioskAt.getZ() + 1.5, 180f, 0f);
+                ItemStack stack = new ItemStack(CommonModBlocks.PLATFORM_INTERFACE_BLOCK.get());
+                if (stack.getItem() instanceof BlockItem item) {
+                    serverPlayer.setItemInHand(InteractionHand.MAIN_HAND, stack);
+                    BlockHitResult hit = new BlockHitResult(
+                            Vec3.atCenterOf(platform.getStartPos()).add(0, 0.5, 0),
+                            Direction.UP,
+                            platform.getStartPos(),
+                            false);
+                    item.place(new BlockPlaceContext(serverPlayer, InteractionHand.MAIN_HAND, stack, hit));
+                }
+            }
+            serverPlayer.teleportTo(level, kioskAt.getX() + 0.5, kioskAt.getY(), kioskAt.getZ() + 1.5, 180f, 0f);
+            serverPlayer.setGameMode(previous);
+            BlockState state = level.getBlockState(kioskAt);
+            if (state.getBlock() instanceof PlatformInterfaceBlock block) {
+                block.use(state, level, kioskAt, serverPlayer, InteractionHand.MAIN_HAND,
+                        new BlockHitResult(Vec3.atCenterOf(kioskAt), Direction.UP, kioskAt, false));
+            }
+        });
     }
 
     private static void openTownInterface(Minecraft minecraft, BlockPos pos) {

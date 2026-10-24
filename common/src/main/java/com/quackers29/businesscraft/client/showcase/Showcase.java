@@ -1,7 +1,11 @@
 package com.quackers29.businesscraft.client.showcase;
 
+import com.quackers29.businesscraft.block.PlatformInterfaceBlock;
 import com.quackers29.businesscraft.block.TownInterfaceBlock;
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.init.CommonModBlocks;
+import com.quackers29.businesscraft.platform.Platform;
+import com.quackers29.businesscraft.ui.screens.platform.PlatformInterfaceScreen;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
@@ -41,6 +45,7 @@ import java.util.List;
  * </pre>
  *
  * <p>Shot names: {@code warmup}, {@code town_interface}, {@code town_interface_back},
+ * {@code platform_interface}, {@code platform_interface_ui},
  * {@code town_overview}, {@code town_resources}, {@code town_production},
  * {@code town_settings}. Scenes: {@code block}, {@code town}, {@code all}.
  * {@code warmup} waits for chunks to draw but is not written to disk. {@code before}
@@ -61,6 +66,7 @@ public final class Showcase {
     private static volatile boolean buildDone;
     private static volatile String failure;
     private static volatile BlockPos townPos = BlockPos.ZERO;
+    private static volatile BlockPos kioskPos = BlockPos.ZERO;
     private static volatile BlockPos activeTownBlockPos = BlockPos.ZERO;
     private static boolean twoTownsConfigured;
     private static boolean testbedConfigured;
@@ -220,7 +226,14 @@ public final class Showcase {
         for (String name : ShowcaseSelection.shotsFor(property)) {
             boolean screen = screenShot(name);
             String tab = tabFor(name);
-            Runnable before = screen ? () -> showTab(Minecraft.getInstance(), tab) : null;
+            Runnable before;
+            if ("platform_interface_ui".equals(name)) {
+                before = () -> openPlatformInterface(Minecraft.getInstance());
+            } else if (screen) {
+                before = () -> showTab(Minecraft.getInstance(), tab);
+            } else {
+                before = null;
+            }
             shots.add(new PlannedShot(name, pauseFor(name), screen, before));
         }
         return List.copyOf(shots);
@@ -230,11 +243,15 @@ public final class Showcase {
         if ("town_overview".equals(name)) {
             return 50;
         }
+        if ("platform_interface_ui".equals(name)) {
+            return 30;
+        }
         return name.startsWith("town_") && !name.startsWith("town_interface") ? 30 : 20;
     }
 
     private static boolean screenShot(String name) {
-        return name.startsWith("town_") && !name.startsWith("town_interface");
+        return "platform_interface_ui".equals(name)
+                || (name.startsWith("town_") && !name.startsWith("town_interface"));
     }
 
     private static void build(MinecraftServer server) {
@@ -257,8 +274,8 @@ public final class Showcase {
             BlockPos feet = player.blockPosition();
             BlockPos placeAt = new BlockPos(feet.getX() + 8, feet.getY(), feet.getZ());
             BlockPos support = placeAt.below();
-            for (int dx = -5; dx <= 5; dx++) {
-                for (int dz = -5; dz <= 5; dz++) {
+            for (int dx = -8; dx <= 8; dx++) {
+                for (int dz = -8; dz <= 8; dz++) {
                     BlockPos floor = support.offset(dx, 0, dz);
                     level.setBlock(floor, Blocks.SMOOTH_STONE.defaultBlockState(), 3);
                     for (int dy = 1; dy <= 8; dy++) {
@@ -287,9 +304,37 @@ public final class Showcase {
                 return;
             }
             townPos = placeAt.immutable();
+            if (!(level.getBlockEntity(townPos) instanceof TownInterfaceEntity centreEntity)
+                    || centreEntity.getPlatforms().isEmpty()
+                    || !centreEntity.getPlatforms().get(0).isComplete()) {
+                failure = "town centre has no platform stop";
+                LOGGER.error("Showcase failed: {}", failure);
+                return;
+            }
+            Platform linked = centreEntity.getPlatforms().get(0);
+            BlockPos kioskAt = linked.getStartPos().above();
+            level.setBlock(kioskAt, Blocks.AIR.defaultBlockState(), 3);
+            player.teleportTo(level, kioskAt.getX() + 0.5, kioskAt.getY(), kioskAt.getZ() + 2.5, 180f, 0f);
+            player.setYHeadRot(180f);
+            ItemStack kioskStack = new ItemStack(CommonModBlocks.PLATFORM_INTERFACE_BLOCK.get());
+            if (!(kioskStack.getItem() instanceof BlockItem kioskItem)) {
+                failure = "platform interface item is not a block item";
+                LOGGER.error("Showcase failed: {}", failure);
+                return;
+            }
+            player.setItemInHand(InteractionHand.MAIN_HAND, kioskStack);
+            BlockHitResult kioskHit = new BlockHitResult(
+                    Vec3.atCenterOf(linked.getStartPos()).add(0, 0.5, 0), Direction.UP, linked.getStartPos(), false);
+            kioskItem.place(new BlockPlaceContext(player, InteractionHand.MAIN_HAND, kioskStack, kioskHit));
+            if (!(level.getBlockState(kioskAt).getBlock() instanceof PlatformInterfaceBlock)) {
+                failure = "platform interface was not placed at " + kioskAt + " beside stop " + linked.getStartPos();
+                LOGGER.error("Showcase failed: {}", failure);
+                return;
+            }
+            kioskPos = kioskAt.immutable();
             ShowcaseTourismSeed.seed(level, townPos);
             player.setGameMode(GameType.SPECTATOR);
-            LOGGER.info("Showcase placed town interface at {}", townPos);
+            LOGGER.info("Showcase placed town centre at {} and platform interface at {}", townPos, kioskPos);
             buildDone = true;
         } catch (RuntimeException exception) {
             failure = exception.toString();
@@ -298,14 +343,17 @@ public final class Showcase {
     }
 
     private static void aim(Minecraft minecraft, PlannedShot shot) {
-        BlockPos pos = townPos;
-        Vec3 target = Vec3.atCenterOf(pos);
+        boolean kioskShot = "platform_interface".equals(shot.name) && !kioskPos.equals(BlockPos.ZERO);
+        Vec3 centre = Vec3.atCenterOf(townPos);
+        Vec3 target = kioskShot ? Vec3.atCenterOf(kioskPos) : centre;
         Vec3 eye = switch (shot.name) {
-            case "town_interface_back" -> target.add(-1.8, 1.6, -3.2);
-            case "town_interface", "warmup" -> target.add(1.8, 1.6, 3.2);
-            default -> target.add(0.0, 1.2, 2.4);
+            case "town_interface_back" -> centre.add(-2.6, 3.0, -7.2);
+            case "town_interface", "warmup" -> centre.add(3.0, 3.0, 6.4);
+            case "platform_interface" -> target.add(4.6, 2.4, 2.2);
+            default -> centre.add(0.0, 1.2, 2.4);
         };
-        float[] facing = ShowcaseSelection.facing(eye.x, eye.y, eye.z, target.x, target.y + 0.2, target.z);
+        double lookUp = kioskShot ? 0.4 : 1.0;
+        float[] facing = ShowcaseSelection.facing(eye.x, eye.y, eye.z, target.x, target.y + lookUp, target.z);
         Player player = minecraft.player;
         double feetY = eye.y - player.getEyeHeight();
         player.setYRot(facing[0]);
@@ -324,6 +372,9 @@ public final class Showcase {
 
     /** True once the town screen is open on this shot's tab. A tab change waits one tick so it draws. */
     private static boolean tabReady(Minecraft minecraft, PlannedShot shot) {
+        if ("platform_interface_ui".equals(shot.name)) {
+            return minecraft.screen instanceof PlatformInterfaceScreen;
+        }
         if (!(minecraft.screen instanceof TownInterfaceScreen screen) || screen.getTabPanel() == null) {
             return false;
         }
@@ -342,6 +393,26 @@ public final class Showcase {
             case "town_settings" -> "settings";
             default -> "overview";
         };
+    }
+
+    private static void openPlatformInterface(Minecraft minecraft) {
+        BlockPos pos = kioskPos;
+        MinecraftServer server = minecraft.getSingleplayerServer();
+        if (server == null || pos.equals(BlockPos.ZERO)) {
+            return;
+        }
+        server.execute(() -> {
+            ServerPlayer serverPlayer = server.getPlayerList().getPlayer(minecraft.player.getUUID());
+            if (serverPlayer == null) {
+                return;
+            }
+            ServerLevel level = serverPlayer.serverLevel();
+            BlockState state = level.getBlockState(pos);
+            if (state.getBlock() instanceof PlatformInterfaceBlock block) {
+                block.use(state, level, pos, serverPlayer, InteractionHand.MAIN_HAND,
+                        new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false));
+            }
+        });
     }
 
     private static void showTab(Minecraft minecraft, String tab) {

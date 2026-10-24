@@ -165,6 +165,10 @@ public final class ShowcaseRouteRegistry {
                 "wait-for-platforms:120",
                 "press-button:id:" + ShowcaseButtonIds.platformDestinations(0),
                 "wait-for-screen:DestinationsScreenV2:160")));
+        routes.add(new ShowcaseRoute("platform/interface", List.of(
+                "setup:world",
+                "open-platform-interface",
+                "wait-for-screen:PlatformInterfaceScreen:160")));
         return List.copyOf(routes);
     }
 

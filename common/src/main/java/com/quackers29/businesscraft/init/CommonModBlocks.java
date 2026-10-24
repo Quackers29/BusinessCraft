@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.init;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.block.PlatformInterfaceBlock;
 import com.quackers29.businesscraft.block.TownInterfaceBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -10,7 +11,10 @@ import net.minecraft.world.level.block.SoundType;
 import java.util.function.Supplier;
 
 public class CommonModBlocks {
+    /** Registry id stays {@code town_interface} so existing worlds keep their centre block. */
     public static Supplier<Block> TOWN_INTERFACE_BLOCK;
+    /** Per-platform Town Interface. New id; does not replace the centre. */
+    public static Supplier<Block> PLATFORM_INTERFACE_BLOCK;
 
     public static void register() {
         TOWN_INTERFACE_BLOCK = PlatformAccess.getRegistry().registerBlock("town_interface",
@@ -18,8 +22,19 @@ public class CommonModBlocks {
                         .mapColor(MapColor.STONE)
                         .strength(50.0f, 1200.0f) // Obsidian-tier baseline when craftableTownInterface = true
                         .sound(SoundType.STONE)
+                        .noOcclusion()
                         .requiresCorrectToolForDrops()));
 
         PlatformAccess.getRegistry().registerBlockItem("town_interface", TOWN_INTERFACE_BLOCK::get);
+
+        PLATFORM_INTERFACE_BLOCK = PlatformAccess.getRegistry().registerBlock("platform_interface",
+                () -> new PlatformInterfaceBlock(BlockBehaviour.Properties.of()
+                        .mapColor(MapColor.COLOR_CYAN)
+                        .strength(3.5f, 6.0f)
+                        .sound(SoundType.WOOD)
+                        .noOcclusion()
+                        .requiresCorrectToolForDrops()));
+
+        PlatformAccess.getRegistry().registerBlockItem("platform_interface", PLATFORM_INTERFACE_BLOCK::get);
     }
 }

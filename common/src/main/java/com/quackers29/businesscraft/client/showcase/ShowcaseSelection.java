@@ -18,13 +18,15 @@ public final class ShowcaseSelection {
             "warmup",
             "town_interface",
             "town_interface_back",
+            "platform_interface",
+            "platform_interface_ui",
             "town_overview",
             "town_resources",
             "town_production",
             "town_settings");
 
     private static final Map<String, List<String>> SCENES = Map.of(
-            "block", List.of("town_interface", "town_interface_back"),
+            "block", List.of("town_interface", "town_interface_back", "platform_interface", "platform_interface_ui"),
             "town", List.of("town_overview", "town_resources", "town_production", "town_settings"));
 
     private ShowcaseSelection() {

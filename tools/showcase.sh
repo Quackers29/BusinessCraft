@@ -4,7 +4,7 @@
 #
 #   bash tools/showcase.sh                       # every shot (Forge)
 #   bash tools/showcase.sh town                  # the four town tabs
-#   bash tools/showcase.sh block                 # front and back of the block
+#   bash tools/showcase.sh block                 # town centre, platform interface, and its screen
 #   bash tools/showcase.sh block fabric          # same scene on Fabric
 #   bash tools/showcase.sh all-views forge
 #   bash tools/showcase.sh two-towns forge
@@ -132,13 +132,13 @@ map_count="$(find "$SHOWCASE_RUN_DIR/screenshots" -maxdepth 1 -name 'showcase_ma
 echo "Showcase ($LOADER) shots: $count views: $view_count map: $map_count (gradle exit $code)"
 
 MANIFEST="$MC_RUN/showcase-views-manifest.json"
-ALL_VIEWS_EXPECT=15
+ALL_VIEWS_EXPECT=16
 
 case "$SCENES" in
-    "" | all | ALL) expect=6 ;;
+    "" | all | ALL) expect=8 ;;
     town) expect=4 ;;
     tourists) expect=1 ;;
-    block) expect=2 ;;
+    block) expect=4 ;;
     all-views | two-towns | testbed | map-sweep) expect=0 ;;
     *) expect=0 ;;
 esac

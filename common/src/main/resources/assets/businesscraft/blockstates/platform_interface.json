@@ -1,0 +1,12 @@
+{
+  "variants": {
+    "facing=north,active=true": { "model": "businesscraft:block/platform_interface" },
+    "facing=east,active=true": { "model": "businesscraft:block/platform_interface", "y": 90 },
+    "facing=south,active=true": { "model": "businesscraft:block/platform_interface", "y": 180 },
+    "facing=west,active=true": { "model": "businesscraft:block/platform_interface", "y": 270 },
+    "facing=north,active=false": { "model": "businesscraft:block/platform_interface_inactive" },
+    "facing=east,active=false": { "model": "businesscraft:block/platform_interface_inactive", "y": 90 },
+    "facing=south,active=false": { "model": "businesscraft:block/platform_interface_inactive", "y": 180 },
+    "facing=west,active=false": { "model": "businesscraft:block/platform_interface_inactive", "y": 270 }
+  }
+}

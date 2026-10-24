@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.forge.init;
 
+import com.quackers29.businesscraft.block.entity.PlatformInterfaceEntity;
 import com.quackers29.businesscraft.forge.block.entity.ForgeTownInterfaceEntity;
 import com.quackers29.businesscraft.forge.platform.ForgeRegistryHelper;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -13,6 +14,13 @@ public class ForgeModBlockEntities {
                         .register("town_interface",
                                         () -> BlockEntityType.Builder.of(ForgeTownInterfaceEntity::new,
                                                         com.quackers29.businesscraft.init.CommonModBlocks.TOWN_INTERFACE_BLOCK
+                                                                        .get())
+                                                        .build(null));
+
+        public static RegistryObject<BlockEntityType<PlatformInterfaceEntity>> PLATFORM_INTERFACE_ENTITY = ForgeRegistryHelper.BLOCK_ENTITY_TYPES
+                        .register("platform_interface",
+                                        () -> BlockEntityType.Builder.of(PlatformInterfaceEntity::new,
+                                                        com.quackers29.businesscraft.init.CommonModBlocks.PLATFORM_INTERFACE_BLOCK
                                                                         .get())
                                                         .build(null));
 

@@ -4,4 +4,6 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 
 public interface BlockEntityHelper {
     BlockEntityType<?> getTownInterfaceEntityType();
+
+    BlockEntityType<?> getPlatformInterfaceEntityType();
 }

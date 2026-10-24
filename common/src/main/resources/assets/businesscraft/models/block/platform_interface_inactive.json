@@ -1,0 +1,12 @@
+{
+  "parent": "businesscraft:block/platform_interface",
+  "textures": {
+    "particle": "minecraft:block/gray_terracotta",
+    "stone": "minecraft:block/cobblestone",
+    "wood": "minecraft:block/spruce_planks",
+    "sign": "minecraft:block/gray_terracotta",
+    "roof": "minecraft:block/cobblestone",
+    "post": "minecraft:block/stripped_spruce_log",
+    "lamp": "minecraft:block/clay"
+  }
+}
