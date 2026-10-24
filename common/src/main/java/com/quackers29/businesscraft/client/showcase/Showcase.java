@@ -196,10 +196,14 @@ public final class Showcase {
         ticksOnShot++;
         if (shot.screen && !tabReady(minecraft, shot)) {
             if (ticksOnShot == 40 || ticksOnShot == 70) {
-                showTab(minecraft, tabFor(shot.name));
+                if ("platform_interface_ui".equals(shot.name)) {
+                    openPlatformInterface(minecraft);
+                } else {
+                    showTab(minecraft, tabFor(shot.name));
+                }
             }
             if (ticksOnShot > 100) {
-                failure = "town screen did not show " + shot.name;
+                failure = "screen did not show " + shot.name;
             }
             return;
         }
