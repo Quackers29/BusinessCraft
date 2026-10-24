@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.entity;
 
+import com.quackers29.businesscraft.config.ConfigLoader;
+import com.quackers29.businesscraft.economy.JourneyProgress;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -16,6 +18,7 @@ public final class TouristEffects {
 
     public static void playSpawn(ServerLevel level, Vec3 pos) {
         burst(level, pos, ParticleTypes.HAPPY_VILLAGER, 6);
+        burst(level, pos, ParticleTypes.END_ROD, 3);
         level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.VILLAGER_YES, SoundSource.NEUTRAL, 0.55f, 1.15f);
     }
 
@@ -25,10 +28,35 @@ public final class TouristEffects {
         level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.MINECART_INSIDE, SoundSource.NEUTRAL, 0.35f, 1.25f);
     }
 
-    public static void playArrival(ServerLevel level, Vec3 pos) {
-        burst(level, pos, ParticleTypes.TOTEM_OF_UNDYING, 8);
-        burst(level, pos, ParticleTypes.HAPPY_VILLAGER, 4);
-        level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.PLAYER_LEVELUP, SoundSource.NEUTRAL, 0.35f, 1.6f);
+    /**
+     * Arrival feedback scaled by trip length. Short hops stay quiet; a Voyager-length
+     * trip (and anything longer) gets the totem burst.
+     */
+    public static void playArrival(ServerLevel level, Vec3 pos, double distance) {
+        int rank = JourneyProgress.levelForDistance(distance, ConfigLoader.touristLevelDistances);
+        if (distance < ConfigLoader.minPayoutDistance) {
+            burst(level, pos, ParticleTypes.SMOKE, 4);
+            level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.VILLAGER_NO, SoundSource.NEUTRAL, 0.25f, 0.9f);
+            return;
+        }
+        burst(level, pos, ParticleTypes.HAPPY_VILLAGER, 6);
+        burst(level, pos, ParticleTypes.END_ROD, 4);
+        if (rank >= 4) {
+            burst(level, pos, ParticleTypes.TOTEM_OF_UNDYING, 8);
+            level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.PLAYER_LEVELUP, SoundSource.NEUTRAL, 0.45f, 1.15f);
+        } else if (rank >= 3) {
+            burst(level, pos, ParticleTypes.TOTEM_OF_UNDYING, 4);
+            level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.PLAYER_LEVELUP, SoundSource.NEUTRAL, 0.3f, 1.45f);
+        } else {
+            level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.VILLAGER_CELEBRATE, SoundSource.NEUTRAL, 0.45f, 1.15f);
+        }
+    }
+
+    public static void playRankUp(ServerLevel level, Vec3 pos, int rank) {
+        burst(level, pos, ParticleTypes.HAPPY_VILLAGER, 8);
+        burst(level, pos, ParticleTypes.END_ROD, 6);
+        float pitch = Math.min(1.8f, 1.2f + rank * 0.08f);
+        level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.PLAYER_LEVELUP, SoundSource.NEUTRAL, 0.35f, pitch);
     }
 
     private static void burst(ServerLevel level, Vec3 pos, net.minecraft.core.particles.ParticleOptions particle,

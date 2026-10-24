@@ -3,10 +3,16 @@ package com.quackers29.businesscraft.ui.components.containers;
 import com.quackers29.businesscraft.ui.components.basic.BCComponent;
 import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import com.quackers29.businesscraft.ui.templates.TownInterfaceTheme;
+import com.quackers29.businesscraft.ui.util.UiTextWrap;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -39,6 +45,9 @@ public class StandardTabContent extends BCComponent {
     private final ContentType contentType;
     private final String title;
     private UIGridBuilder grid;
+    /** Pixel scroll for the overview label list. Long values wrap, so the grid is not used. */
+    private int labelScroll;
+    private int labelContentHeight;
 
     // Data suppliers for different content types
     private Supplier<Map<String, String>> labelValueSupplier;
@@ -149,58 +158,92 @@ public class StandardTabContent extends BCComponent {
     }
 
     /**
-     * Render label-value grid (Overview tab style)
+     * Overview rows. A value that fits beside its label stays on one line.
+     * Anything longer wraps under the label across the full content width.
      */
     private void renderLabelValueGrid(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        if (labelValueSupplier != null) {
-            Map<String, String> data = labelValueSupplier.get();
-            Map<String, String> tooltips = labelValueTooltipSupplier != null ? labelValueTooltipSupplier.get() : null;
+        if (labelValueSupplier == null) {
+            return;
+        }
+        Map<String, String> data = labelValueSupplier.get();
+        Map<String, String> tooltips = labelValueTooltipSupplier != null ? labelValueTooltipSupplier.get() : null;
+        Font font = Minecraft.getInstance().font;
 
-            int totalRows = data.size();
+        guiGraphics.fill(x, y, x + width, y + height, BACKGROUND_COLOR);
+        guiGraphics.hLine(x, x + width - 1, y, BORDER_COLOR);
+        guiGraphics.hLine(x, x + width - 1, y + height - 1, BORDER_COLOR);
+        guiGraphics.vLine(x, y, y + height - 1, BORDER_COLOR);
+        guiGraphics.vLine(x + width - 1, y, y + height - 1, BORDER_COLOR);
 
-            // Create or update grid
-            if (grid == null) {
-                // Calculate visible rows manually
-                int visibleRows = Math.max(1, (height - 20) / 21); // (height - margin) / (rowHeight + spacing)
+        int pad = 8;
+        int innerW = Math.max(8, width - pad * 2 - 6);
+        int viewTop = y + 6;
+        int viewH = Math.max(font.lineHeight, height - 12);
+        int labelCap = (int) (innerW * 0.46f);
 
-                grid = UIGridBuilder.create(x, y, width, height, 2)
-                        .withRowHeight(16)
-                        .withBackgroundColor(BACKGROUND_COLOR)
-                        .withBorderColor(BORDER_COLOR)
-                        .withMargins(15, 10)
-                        .withSpacing(15, 5)
-                        .drawBorder(true)
-                        .withVerticalScroll(true, visibleRows);
+        record Row(String key, String value, List<String> lines, boolean beside, int height, String tooltip) {}
+        List<Row> rows = new ArrayList<>();
+        int contentHeight = 0;
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            String key = entry.getKey() == null ? "" : entry.getKey();
+            String value = entry.getValue() == null ? "" : entry.getValue();
+            String tooltip = tooltips != null ? tooltips.get(entry.getKey()) : null;
+            int valueRoom = Math.max(8, innerW - Math.min(font.width(key) + 6, labelCap) - 4);
+            boolean beside = font.width(key) <= labelCap && font.width(value) <= valueRoom;
+            List<String> lines = beside
+                    ? List.of(value)
+                    : UiTextWrap.wrap(value, innerW, text -> font.width(text));
+            int rowHeight = beside
+                    ? font.lineHeight + 4
+                    : font.lineHeight + 2 + lines.size() * (font.lineHeight + 1) + 3;
+            rows.add(new Row(key, value, lines, beside, rowHeight, tooltip));
+            contentHeight += rowHeight;
+        }
+        labelContentHeight = contentHeight;
+        int maxScroll = Math.max(0, contentHeight - viewH);
+        labelScroll = Math.max(0, Math.min(labelScroll, maxScroll));
 
-                // Add content manually
-                int i = 0;
-                for (Map.Entry<String, String> entry : data.entrySet()) {
-                    String tooltip = tooltips != null ? tooltips.get(entry.getKey()) : null;
-                    grid.addLabelWithTooltip(i, 0, entry.getKey(), tooltip, TEXT_COLOR);
-                    grid.addLabelWithTooltip(i, 1, entry.getValue(), tooltip, TEXT_HIGHLIGHT);
-                    i++;
-                }
-                grid.updateTotalRows(totalRows);
-
-            } else {
-                grid.clearElements();
-
-                int i = 0;
-                for (Map.Entry<String, String> entry : data.entrySet()) {
-                    String tooltip = tooltips != null ? tooltips.get(entry.getKey()) : null;
-                    grid.addLabelWithTooltip(i, 0, entry.getKey(), tooltip, TEXT_COLOR);
-                    grid.addLabelWithTooltip(i, 1, entry.getValue(), tooltip, TEXT_HIGHLIGHT);
-                    i++;
-                }
-                grid.updateTotalRows(totalRows);
-
-                // Re-calculate visible rows and enforce scroll settings
-                int visibleRows = Math.max(1, (height - 20) / 21);
-                grid.withVerticalScroll(true, visibleRows);
+        // The tab panel translates into the content area. Scissor is screen space
+        // and does not follow that pose, so add the current translation.
+        var pose = guiGraphics.pose().last().pose();
+        int originX = Math.round(pose.m30());
+        int originY = Math.round(pose.m31());
+        guiGraphics.enableScissor(originX + x + 2, originY + viewTop,
+                originX + x + width - 2, originY + viewTop + viewH);
+        int cursor = viewTop - labelScroll;
+        String hovered = null;
+        for (Row row : rows) {
+            int rowBottom = cursor + row.height();
+            boolean over = mouseX >= x && mouseX < x + width && mouseY >= cursor && mouseY < rowBottom;
+            if (over && row.tooltip() != null) {
+                hovered = row.tooltip();
             }
+            if (rowBottom > viewTop && cursor < viewTop + viewH) {
+                guiGraphics.drawString(font, row.key(), x + pad, cursor, TEXT_COLOR, false);
+                if (row.beside()) {
+                    int valueX = x + pad + Math.min(font.width(row.key()) + 6, labelCap);
+                    guiGraphics.drawString(font, row.value(), valueX, cursor, TEXT_HIGHLIGHT, false);
+                } else {
+                    int lineY = cursor + font.lineHeight + 2;
+                    for (String line : row.lines()) {
+                        guiGraphics.drawString(font, line, x + pad, lineY, TEXT_HIGHLIGHT, false);
+                        lineY += font.lineHeight + 1;
+                    }
+                }
+            }
+            cursor += row.height();
+        }
+        guiGraphics.disableScissor();
 
-            // Render the grid
-            grid.render(guiGraphics, mouseX, mouseY);
+        if (maxScroll > 0) {
+            int trackX = x + width - 6;
+            int thumbH = Math.max(8, viewH * viewH / contentHeight);
+            int thumbY = viewTop + (int) ((viewH - thumbH) * (labelScroll / (float) maxScroll));
+            guiGraphics.fill(trackX, viewTop, trackX + 3, viewTop + viewH, 0x40FFFFFF);
+            guiGraphics.fill(trackX, thumbY, trackX + 3, thumbY + thumbH, 0xD0FFFFFF);
+        }
+        if (hovered != null) {
+            guiGraphics.renderTooltip(font, Component.literal(hovered), mouseX, mouseY);
         }
     }
 
@@ -454,6 +497,15 @@ public class StandardTabContent extends BCComponent {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (contentType == ContentType.LABEL_VALUE_GRID) {
+            int viewH = Math.max(1, height - 12);
+            int maxScroll = Math.max(0, labelContentHeight - viewH);
+            if (maxScroll == 0) {
+                return false;
+            }
+            labelScroll = (int) Math.max(0, Math.min(maxScroll, labelScroll - delta * 12));
+            return true;
+        }
         if (grid != null) {
             return grid.mouseScrolled(mouseX, mouseY, delta);
         }

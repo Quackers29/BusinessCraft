@@ -33,9 +33,9 @@ Tourists are not teleported — they physically move (or ride) through the world
 | `TouristEntity.tick()` | `common/src/main/java/com/quackers29/businesscraft/entity/TouristEntity.java` (~184-311) | Main driver: hasMoved detection, 2 s stationary/speed/distance sampler, expiry countdown (only when stationary), level update |
 | `TouristEntity.startRiding(Entity, boolean)` / startRiding(Entity) | same (~559-581) | One-time ride extension: full expiry reset + flag when boarding minecart or Create carriage |
 | `TouristEntity.setPos(double,double,double)` | same (~584-595) | Captures initial spawnPos* and recentPos* on first call (the 0,0,0 sentinel) |
-| `updateLevelFromDistance()` (private) | same (~732-743) | target = min(MAX_LEVEL, 1 + (int)(total / DISTANCE_PER_LEVEL)); set if higher and sync skin |
-| `skinTierForLevel(int)` (private static) | same (~411-413) | `Math.min(Math.max(level,1), MAX_LEVEL) - 1` |
-| `getVillagerXp()` (override) | same (~696-715) | Distance-into-level scaled to vanilla XP thresholds (10/70/150) for the progress bar |
+| `updateLevelFromDistance()` (private) | same | `JourneyProgress.levelForDistance` against `ConfigLoader.touristLevelDistances`; plays a rank-up effect when the rank rises |
+| `skinTierForLevel(int)` (private static) | same | `min(max(level,1), JourneyProgress.maxLevel(thresholds)) - 1`. Rendering uses the packed look, not this tier |
+| `getVillagerXp()` (override) | same | Fills the vanilla XP cap across the current rank's distance span (`JourneyProgress.xpForDistance`) |
 | `getTotalDistanceTraveled()` | same (~407-409) | Server field or client entityData float; consumed by arrival payment logic |
 | `formatTicks(int)` (private) | same (~855-860) | `"%dm %ds"` used in the info paper lore |
 | `addAdditionalSaveData` / `readAdditionalSaveData` | same (~420-520) | Full persistence of all tracking fields, flags, origin/dest, spawnTime |
@@ -71,27 +71,25 @@ if (result && !hasReceivedRideExtension) {
 }
 ```
 
-Level from distance:
-```java
-int targetLevel = 1 + (int)(totalDistanceTraveled / DISTANCE_PER_LEVEL); // DISTANCE_PER_LEVEL = 20.0
-targetLevel = Math.min(targetLevel, MAX_LEVEL); // 3
-if (targetLevel > currentLevel ...) { setLevel(targetLevel); syncSkinTierFromLevel(); }
+Level from distance (`JourneyProgress`, config `tourists.levelDistances`):
+```text
+defaults: 500, 1500, 3000, 6000
+rank 1 Wanderer from 0
+rank 2 Traveler at 500 m   (~5 emeralds at 100 m/emerald)
+rank 3 Voyager at 1500 m   (~15 emeralds, past the 1 km apple)
+rank 4 Veteran at 3000 m   (~30 emeralds)
+rank 5 Renowned at 6000 m  (~60 emeralds, past the 5 km bread)
 ```
+The old formula (`1 + floor(meters / 20)`, cap 3) reached rank 3 at 40 m, before the first emerald. Fare defaults are unchanged: `metersPerEmerald=100`, `payoutCurveExponent=1.0`, `minPayoutDistance=100`.
 
-Skin tier:
-```java
-private static int skinTierForLevel(int level) {
-    return Math.min(Math.max(level, 1), MAX_LEVEL) - 1;  // 1→0, 2→1, 3→2
-}
+Town notoriety uses cumulative payable visitor-meters (`economy.notorietyDistances`):
+```text
+defaults: 2000, 10000, 40000, 120000
+Wayside, Halt, Station, Destination, Landmark
 ```
+`Town.recordVisit` adds that payable distance when the visitor processor passes it. The 3-arg call still adds straight-line distance.
 
-XP shown in trading UI (client uses synced distance):
-```java
-double distanceIntoCurrentLevel = distance - ((currentLevel-1) * 20.0);
-int maxXpForLevel = (currentLevel==1 ? 10 : currentLevel==2 ? 70 : 150);
-int xp = (int)((distanceIntoCurrentLevel / 20.0) * maxXpForLevel);
-return Math.max(0, Math.min(maxXpForLevel, xp));
-```
+XP shown in trading UI fills the current rank's span up to the vanilla cap (10 / 70 / 150 / 250). At the last rank the bar stays full.
 
 Spawn/ctor/ride expiry injection (duplicated):
 ```java
@@ -109,8 +107,8 @@ Constants (all private static final unless noted):
 - POSITION_UPDATE_INTERVAL = 40
 - SPEED_THRESHOLD = 0.5 (blocks/s)
 - SPEED_REACTION_COOLDOWN = 100 ticks
-- DISTANCE_PER_LEVEL = 20.0
-- MAX_LEVEL = 3
+- Tourist ranks: `JourneyProgress.DEFAULT_TOURIST_LEVELS` = 500, 1500, 3000, 6000 (config `tourists.levelDistances`)
+- Town tiers: `JourneyProgress.DEFAULT_TOWN_TIERS` = 2000, 10000, 40000, 120000 (config `economy.notorietyDistances`)
 - ANY_TOWN_DESTINATION = new UUID(0, 0)  (public)
 
 ## Edge cases & behaviors
@@ -121,8 +119,8 @@ Constants (all private static final unless noted):
 - First setPos (the 0,0,0 guard) is what seeds both the "hasMoved from spawn" reference and the recent sampler. If an entity is constructed but never positioned, these stay 0.
 - hasMoved starts false; a tourist that expires without ever moving >2 m from spawn position suppresses the visual departure notification (see notifyOriginTownOfQuitting).
 - Level and skin are derived; setting via other means is overridden by the distance rule on next sample.
-- Speed celebrate has its own 10 s cooldown independent of expiry; 50 % random chance even when eligible.
-- Distance is a double and can grow without bound in theory (no cap); the level math just clamps at 3.
+- Speed celebrate has its own 10 s cooldown independent of expiry; 25 % random chance even when eligible.
+- Distance is a double and can grow without bound. Tourist rank stops at Renowned; town notoriety stops at Landmark. Both keep accumulating meters.
 - NBT restores every tracking field; a tourist that was mid-journey keeps its exact accumulated meters and remaining ticks across restarts.
 - Client-side tick still runs the movement math for the local entityData sync, but expiry decrement is guarded by !isClientSide.
 - The "real path" distance (this field) replaced the old Euclidean town-to-town calc for payments (see VisitorProcessingHelper processIndividualVisitor and the comment "CORE CHANGE").

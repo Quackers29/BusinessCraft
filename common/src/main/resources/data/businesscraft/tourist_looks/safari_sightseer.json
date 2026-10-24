@@ -1,1 +1,1 @@
-{ "id": "safari_sightseer", "order": 0, "skin": 1, "outfit": 0, "headwear": 1, "accessory": 1 }
+{ "id": "safari_sightseer", "order": 0, "type": "SIGHTSEER", "skin": 1, "outfit": 0, "headwear": 1, "accessory": 1 }

@@ -429,6 +429,15 @@ class TownTest {
     }
 
     @Test
+    void recordVisit_payableDistance_replacesStraightLine() {
+        // Straight line of ORIGIN_POS_A is 50 m. A passed path of 400 m is what counts.
+        // 400 * 2 = 800, not 50 * 2.
+        town.recordVisit(ORIGIN_U, 2, ORIGIN_POS_A, 400.0);
+        assertEquals(800.0, town.getTotalTouristDistance(), 1e-9);
+        assertEquals(2L, town.getTotalTouristsArrived());
+    }
+
+    @Test
     void recordVisit_multipleRecords_newestIsFirst() {
         town.recordVisit(ORIGIN_U, 1, ORIGIN_POS_A);
         UUID v = UUID.randomUUID();

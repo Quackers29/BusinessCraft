@@ -31,7 +31,7 @@ class TownLeaderboardDataTest {
     @Test
     void recordConstruction_storesAllFields() {
         TownLeaderboardData data = new TownLeaderboardData(
-                SAMPLE_ID, "TestTown", ORIGIN, 42L, 123L, 67.5f, 19L);
+                SAMPLE_ID, "TestTown", ORIGIN, 42L, 123L, 67.5f, 19L, 12500.0, "Halt · 12.5 km");
 
         assertEquals(SAMPLE_ID, data.townId());
         assertEquals("TestTown", data.name());
@@ -40,6 +40,8 @@ class TownLeaderboardDataTest {
         assertEquals(123L, data.money());
         assertEquals(67.5f, data.happiness());
         assertEquals(19L, data.tourism());
+        assertEquals(12500.0, data.journeyDistance(), 1e-9);
+        assertEquals("Halt · 12.5 km", data.notorietyLabel());
     }
 
     // --- distanceTo ---

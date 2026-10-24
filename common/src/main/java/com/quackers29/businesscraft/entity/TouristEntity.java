@@ -5,6 +5,7 @@ import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.town.utils.TownNotificationUtils;
 import com.quackers29.businesscraft.config.ConfigLoader;
+import com.quackers29.businesscraft.economy.JourneyProgress;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -114,10 +115,6 @@ public class TouristEntity extends Villager {
 
     /** Look id saved beside the packed int so reloads stay readable. Not synced. */
     private String lookId = "";
-
-    // Distance-based leveling config
-    private static final double DISTANCE_PER_LEVEL = 20.0; // 20m per level
-    private static final int MAX_LEVEL = 3; // Max level 3 (starts at 1)
 
     public TouristEntity(EntityType<? extends Villager> entityType, Level level) {
         super(entityType, level);
@@ -283,7 +280,7 @@ public class TouristEntity extends Villager {
                                 this.getId(), String.format("%.1f", speed), cooldownRemaining);
                     } else {
                         // 50% chance to celebrate when going fast (increased for testing)
-                        if (this.random.nextFloat() < 0.5f) {
+                        if (this.random.nextFloat() < 0.25f) {
                             this.playSound(SoundEvents.VILLAGER_CELEBRATE, 1.0f, 1.0f);
                             this.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
                             lastSpeedReactionTick = currentTick;
@@ -445,7 +442,30 @@ public class TouristEntity extends Villager {
     }
 
     private void assignLook() {
-        this.applyLook(TouristLooks.pick(this.getRandom()::nextInt));
+        TouristLook look = TouristLooks.pick(this.getRandom()::nextInt);
+        this.applyLook(look);
+        if (look.type() != null) {
+            this.entityData.set(DATA_TOURIST_TYPE, look.type().index());
+        }
+    }
+
+    /**
+     * Showcase (and tests that have a live entity) use this to pin the name-tag lines.
+     */
+    public void applyDisplaySample(String origin, String destination, TouristType type, double distance) {
+        this.originTownName = origin;
+        this.destinationTownName = destination;
+        if (type != null) {
+            this.entityData.set(DATA_TOURIST_TYPE, type.index());
+        }
+        this.totalDistanceTraveled = Math.max(0.0, distance);
+        this.entityData.set(DATA_DISTANCE_TRAVELED, (float) this.totalDistanceTraveled);
+        int rank = JourneyProgress.levelForDistance(this.totalDistanceTraveled, ConfigLoader.touristLevelDistances);
+        this.setVillagerData(this.getVillagerData().setLevel(rank));
+        syncSkinTierFromLevel();
+        refreshSyncedLabels();
+        this.setCustomName(Component.literal("Tourist"));
+        this.setCustomNameVisible(true);
     }
 
     public TouristType getTouristType() {
@@ -485,7 +505,8 @@ public class TouristEntity extends Villager {
     }
 
     private static int skinTierForLevel(int level) {
-        return Math.min(Math.max(level, 1), MAX_LEVEL) - 1;
+        int max = Math.max(1, JourneyProgress.maxLevel(ConfigLoader.touristLevelDistances));
+        return Math.min(Math.max(level, 1), max) - 1;
     }
 
     private void syncSkinTierFromLevel() {
@@ -793,24 +814,9 @@ public class TouristEntity extends Villager {
 
     @Override
     public int getVillagerXp() {
-        // Map distance to Minecraft's villager XP thresholds
-        // Level 1→2: 10 XP, Level 2→3: 70 XP, Level 3→4: 150 XP
         double distance = this.level().isClientSide ? this.entityData.get(DATA_DISTANCE_TRAVELED) : totalDistanceTraveled;
         int currentLevel = this.getVillagerData().getLevel();
-        double distanceIntoCurrentLevel = distance - ((currentLevel - 1) * DISTANCE_PER_LEVEL);
-
-        // Scale distance (0-20m) to vanilla XP thresholds based on level
-        int maxXpForLevel;
-        switch (currentLevel) {
-            case 1: maxXpForLevel = 10; break;   // Novice → Apprentice
-            case 2: maxXpForLevel = 70; break;   // Apprentice → Journeyman
-            case 3: maxXpForLevel = 150; break;  // Journeyman → Expert
-            default: maxXpForLevel = 10; break;
-        }
-
-        // Map distance progress to XP: (distance / 20m) * maxXpForLevel
-        int xp = (int) ((distanceIntoCurrentLevel / DISTANCE_PER_LEVEL) * maxXpForLevel);
-        return Math.max(0, Math.min(maxXpForLevel, xp));
+        return JourneyProgress.xpForDistance(distance, currentLevel, ConfigLoader.touristLevelDistances);
     }
 
     @Override
@@ -829,15 +835,21 @@ public class TouristEntity extends Villager {
      * Update tourist level based on distance traveled
      */
     private void updateLevelFromDistance() {
-        int targetLevel = 1 + (int) (totalDistanceTraveled / DISTANCE_PER_LEVEL);
-        targetLevel = Math.min(targetLevel, MAX_LEVEL);
+        int maxLevel = JourneyProgress.maxLevel(ConfigLoader.touristLevelDistances);
+        int targetLevel = Math.min(
+                JourneyProgress.levelForDistance(totalDistanceTraveled, ConfigLoader.touristLevelDistances),
+                maxLevel);
 
         int currentLevel = this.getVillagerData().getLevel();
-        if (targetLevel > currentLevel && targetLevel <= MAX_LEVEL) {
+        if (targetLevel > currentLevel && targetLevel <= maxLevel) {
             this.setVillagerData(this.getVillagerData().setLevel(targetLevel));
             syncSkinTierFromLevel();
+            if (this.level() instanceof ServerLevel serverLevel) {
+                TouristEffects.playRankUp(serverLevel, this.position(), targetLevel);
+            }
             DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
-                "Tourist leveled up to {} at {:.1f}m", targetLevel, totalDistanceTraveled);
+                "Tourist leveled up to {} ({}) at {:.1f}m",
+                targetLevel, JourneyProgress.tierName(targetLevel), totalDistanceTraveled);
         }
     }
 
@@ -945,6 +957,20 @@ public class TouristEntity extends Villager {
                 0.15f // priceMultiplier
             );
             offers.add(level3Trade);
+        }
+
+        if (currentLevel >= 4) {
+            offers.add(new MerchantOffer(
+                    new ItemStack(Items.BREAD, 4),
+                    new ItemStack(Items.COMPASS, 1),
+                    1, 0, 0.05f));
+        }
+
+        if (currentLevel >= 5) {
+            offers.add(new MerchantOffer(
+                    new ItemStack(Items.BREAD, 2),
+                    new ItemStack(Items.CLOCK, 1),
+                    1, 0, 0.05f));
         }
 
         DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Total offers created: {} (level {})", offers.size(), currentLevel);

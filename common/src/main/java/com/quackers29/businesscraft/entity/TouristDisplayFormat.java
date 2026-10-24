@@ -26,27 +26,24 @@ public final class TouristDisplayFormat {
     /** Second line: origin only (keeps width narrow). */
     public static MutableComponent originLine(String originName) {
         String origin = sanitize(originName, "Unknown");
-        return Component.literal("from ").withStyle(ChatFormatting.DARK_GRAY)
+        return Component.literal("from ").withStyle(ChatFormatting.GRAY)
                 .append(Component.literal(origin).withStyle(ChatFormatting.WHITE));
     }
 
-    /** Third line: type + distance (both optional). */
-    public static MutableComponent typeAndDistanceLine(TouristType type, double distanceMeters) {
-        if (type == null && distanceMeters <= 0.5) {
-            return null;
-        }
+    /** Third line: type, journey rank, and distance. */
+    public static MutableComponent typeAndDistanceLine(TouristType type, String tierName, double distanceMeters) {
         MutableComponent line = null;
         if (type != null) {
             line = Component.literal(type.displayName()).withStyle(ChatFormatting.AQUA);
         }
+        if (tierName != null && !tierName.isBlank()) {
+            MutableComponent tier = Component.literal(tierName).withStyle(ChatFormatting.GREEN);
+            line = line == null ? tier : line.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY)).append(tier);
+        }
         if (distanceMeters > 0.5) {
             MutableComponent dist = Component.literal(formatDistance(distanceMeters))
                     .withStyle(ChatFormatting.YELLOW);
-            if (line == null) {
-                line = dist;
-            } else {
-                line = line.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY)).append(dist);
-            }
+            line = line == null ? dist : line.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY)).append(dist);
         }
         return line;
     }
