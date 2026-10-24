@@ -141,6 +141,17 @@ public final class Showcase {
             ShowcaseMapSweep.tick(minecraft);
             return;
         }
+        if (ShowcaseTourists.isMode(property)) {
+            if (minecraft.player == null || minecraft.level == null || minecraft.getSingleplayerServer() == null) {
+                return;
+            }
+            if (!configured) {
+                configured = true;
+                ShowcaseTourists.reset(minecraft);
+            }
+            ShowcaseTourists.tick(minecraft);
+            return;
+        }
         if (minecraft.player == null || minecraft.level == null || minecraft.getSingleplayerServer() == null) {
             return;
         }
@@ -387,6 +398,10 @@ public final class Showcase {
 
     public static BlockPos getActiveTownBlockPos() {
         return activeTownBlockPos;
+    }
+
+    public static void setProcessExitCode(int code) {
+        processExitCode = code;
     }
 
     private static final class PlannedShot {

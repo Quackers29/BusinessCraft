@@ -76,6 +76,11 @@ public class OverviewTab extends BaseTownTab {
             overviewData.put("Research Speed:", String.format("%.0f%%", resSpeed * 100));
 
             overviewData.put("Tourists:", parentScreen.getTouristString());
+            var ifaceVm = parentScreen.getCacheManager().getInterfaceViewModel();
+            if (ifaceVm != null) {
+                overviewData.put("Waiting:", ifaceVm.getWaitingTouristsSummary());
+                overviewData.put("Recent arrivals:", ifaceVm.getRecentArrivalsSummary());
+            }
 
             // Add cumulative tourism stats
             int totalTourists = parentScreen.getCacheManager().getCachedTotalTouristsArrived();

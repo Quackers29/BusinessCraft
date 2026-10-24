@@ -2,6 +2,8 @@ package com.quackers29.businesscraft.town.viewmodel;
 
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.town.utils.TouristUiSummaries;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.ChatFormatting;
 import com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel.Status;
 
@@ -87,6 +89,14 @@ public class TownInterfaceViewModelBuilder {
         if (pop == 0)
             warning = "No Population!";
 
+        String waitingSummary = "—";
+        String recentSummary = "—";
+        if (entity.getLevel() instanceof ServerLevel serverLevel) {
+            waitingSummary = TouristUiSummaries.formatWaitingAtPlatforms(serverLevel, town, entity);
+            recentSummary = TouristUiSummaries.formatRecentArrivals(
+                    town, TouristUiSummaries.townNameResolver(serverLevel));
+        }
+
         return new TownInterfaceViewModel(
                 town.getName(),
                 biomeFormatted,
@@ -104,7 +114,9 @@ public class TownInterfaceViewModelBuilder {
                 (int) totalTouristsArrived,
                 totalTouristDistance,
                 borderRadius,
-                warning);
+                warning,
+                waitingSummary,
+                recentSummary);
     }
 
     private static TownInterfaceViewModel createErrorViewModel(String message, TownInterfaceEntity entity) {
@@ -118,7 +130,9 @@ public class TownInterfaceViewModelBuilder {
                 0,    // totalTouristsArrived
                 0.0,  // totalTouristDistance
                 50f,  // borderRadius default
-                "Town Data Unavailable");
+                "Town Data Unavailable",
+                "—",
+                "—");
     }
 
     private static String formatBiomeName(String raw) {

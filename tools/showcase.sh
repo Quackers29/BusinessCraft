@@ -137,6 +137,7 @@ ALL_VIEWS_EXPECT=14
 case "$SCENES" in
     "" | all | ALL) expect=6 ;;
     town) expect=4 ;;
+    tourists) expect=1 ;;
     block) expect=2 ;;
     all-views | two-towns | testbed | map-sweep) expect=0 ;;
     *) expect=0 ;;
