@@ -237,20 +237,24 @@ public final class ShowcaseTouristLineup {
         Spot last = current.get(current.size() - 1);
         double cx = (first.x + last.x) / 2.0;
         double cz = first.z;
-        double half = Math.abs(last.x - first.x) / 2.0 + 1.2;
-        double distance = Math.max(8.0, half / Math.tan(Math.toRadians(35.0)) + 2.5);
+        double span = Math.abs(last.x - first.x);
+        double half = span / 2.0 + 0.9;
+        double frontDistance = Math.max(6.5, half / Math.tan(Math.toRadians(35.0)) + 0.4);
+        // Side view stands in front of the first tourist and looks down the row.
+        // A camera past the end of the line makes every figure a few pixels tall.
         Vec3 eye = front
-                ? new Vec3(cx, floorY + 1.55, cz + distance)
-                : new Vec3(first.x - distance * 0.85, floorY + 1.9, cz + distance * 0.45);
-        Vec3 target = new Vec3(cx, floorY + 1.15, cz);
+                ? new Vec3(cx, floorY + 1.25, cz + frontDistance)
+                : new Vec3(first.x - 0.6, floorY + 1.35, cz + Math.max(3.2, span * 0.28));
+        Vec3 target = new Vec3(front ? cx : cx + span * 0.08, floorY + 1.1, cz);
         aim(minecraft, eye, target);
     }
 
     private static void aimSpot(Minecraft minecraft, Spot spot, boolean side) {
-        Vec3 target = new Vec3(spot.x, spot.y + 1.25, spot.z);
+        Vec3 target = new Vec3(spot.x, spot.y + 1.15, spot.z);
+        // Stay in front of the row. A camera on the line stands inside the previous tourist.
         Vec3 eye = side
-                ? new Vec3(spot.x - 3.3, spot.y + 1.45, spot.z + 1.15)
-                : new Vec3(spot.x, spot.y + 1.45, spot.z + 3.5);
+                ? new Vec3(spot.x - 2.15, spot.y + 1.2, spot.z + 1.35)
+                : new Vec3(spot.x, spot.y + 1.15, spot.z + 2.55);
         aim(minecraft, eye, target);
     }
 
