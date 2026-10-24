@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.client;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.client.model.TouristModel;
 import com.quackers29.businesscraft.client.renderer.TouristRenderer;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.event.ClientRenderEvents;
@@ -18,6 +19,8 @@ import com.quackers29.businesscraft.ui.screens.town.ContractBoardScreen;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
+import net.minecraft.client.model.geom.ModelLayerLocation;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -27,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 
 public class CommonClientSetup {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft Client");
@@ -60,5 +64,9 @@ public class CommonClientSetup {
     public static void registerRenderers(BiConsumer<EntityType<?>, EntityRendererProvider<?>> rendererRegistrar) {
         LOGGER.info("Registering renderers...");
         rendererRegistrar.accept(CommonModEntityTypes.TOURIST.get(), (EntityRendererProvider) TouristRenderer::new);
+    }
+
+    public static void registerLayerDefinitions(BiConsumer<ModelLayerLocation, Supplier<LayerDefinition>> registrar) {
+        registrar.accept(TouristModel.LAYER, TouristModel::createBodyLayer);
     }
 }

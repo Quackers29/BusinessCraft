@@ -10,6 +10,7 @@
 #   bash tools/showcase.sh two-towns forge
 #   bash tools/showcase.sh testbed forge trade-contract
 #   bash tools/showcase.sh map-sweep forge 1920x1080_gui4
+#   bash tools/showcase.sh tourists forge          # every tourist look, front and side
 #   bash tools/showcase-map-sweep.sh forge       # full resolution/gui matrix
 #
 # Each run writes:
@@ -240,6 +241,34 @@ elif [[ "$SCENES" == "map-sweep" ]]; then
     if ! grep -q "SHOWCASE_MAP_SWEEP_CAPTURED" "$LOG"; then
         echo "Map sweep did not capture TownMapModal" >&2
         code=1
+    fi
+elif [[ "$SCENES" == "tourists" ]]; then
+    MANIFEST_T="$MC_RUN/showcase-tourists.json"
+    if [[ ! -f "$MANIFEST_T" ]]; then
+        echo "Missing tourist showcase manifest: $MANIFEST_T" >&2
+        code=1
+    else
+        cp -f "$MANIFEST_T" "$SHOWCASE_RUN_DIR/showcase-tourists.json"
+        if ! python3 - "$MANIFEST_T" "$SHOWCASE_RUN_DIR/screenshots" <<'PY'
+import json, sys
+from pathlib import Path
+manifest = json.load(open(sys.argv[1]))
+shots = manifest.get("shots", [])
+folder = Path(sys.argv[2])
+missing = [s for s in shots if not (folder / f"showcase_{s}.png").is_file()]
+front = [s for s in shots if s.endswith("_front")]
+side = [s for s in shots if s.endswith("_side")]
+if len(shots) < 2 or not front or not side:
+    print("expected front and side tourist shots", file=sys.stderr)
+    sys.exit(1)
+if missing:
+    print("missing shots: " + ", ".join(missing), file=sys.stderr)
+    sys.exit(1)
+print(f"tourist shots ok: {len(shots)}")
+PY
+        then
+            code=1
+        fi
     fi
 else
     if [[ "$count" -eq 0 ]]; then

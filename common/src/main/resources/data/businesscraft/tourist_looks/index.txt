@@ -1,0 +1,11 @@
+# Builtin tourist looks, one id per line. Blank lines and # comments are ignored.
+# A datapack can add more under data/<namespace>/tourist_looks/<id>.json
+# without editing this file. See TouristLooks for the full steps.
+safari_sightseer
+market_shopper
+station_scholar
+trail_hiker
+coast_visitor
+night_luxury
+desert_guide
+festival_guest

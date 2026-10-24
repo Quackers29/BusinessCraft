@@ -1,14 +1,17 @@
 package com.quackers29.businesscraft.client.renderer;
 
-import com.quackers29.businesscraft.client.renderer.layer.TouristHatLayer;
+import com.quackers29.businesscraft.client.model.TouristModel;
+import com.quackers29.businesscraft.client.renderer.layer.TouristAccessoryLayer;
+import com.quackers29.businesscraft.client.renderer.layer.TouristHeadwearLayer;
+import com.quackers29.businesscraft.client.renderer.layer.TouristOutfitLayer;
 import com.quackers29.businesscraft.entity.TouristDisplayFormat;
 import com.quackers29.businesscraft.entity.TouristEntity;
+import com.quackers29.businesscraft.entity.tourist.TouristAppearance;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.model.VillagerModel;
-import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.network.chat.Component;
@@ -18,32 +21,49 @@ import org.joml.Matrix4f;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TouristRenderer extends MobRenderer<TouristEntity, VillagerModel<TouristEntity>> {
+/**
+ * Humanoid tourist. Appearance comes from the packed look (skin, outfit, headwear,
+ * accessory). Name tags are the multi-line destination / origin / type lines.
+ */
+public class TouristRenderer extends MobRenderer<TouristEntity, TouristModel> {
     private static final float NAME_TAG_SCALE = 0.025F;
     private static final int LINE_SPACING = 10;
 
-    private static final ResourceLocation[] SKIN_TEXTURES = {
-        new ResourceLocation("businesscraft", "textures/entity/tourist_basic.png"),
-        new ResourceLocation("businesscraft", "textures/entity/tourist_experienced.png"),
-        new ResourceLocation("businesscraft", "textures/entity/tourist_luxury.png"),
-    };
-    private static final ResourceLocation FALLBACK_SKIN =
-        new ResourceLocation("textures/entity/villager/villager.png");
-
     public TouristRenderer(EntityRendererProvider.Context context) {
-        super(context,
-              new VillagerModel<>(context.bakeLayer(ModelLayers.VILLAGER)),
-              0.5F);
-        this.addLayer(new TouristHatLayer(this));
+        super(context, new TouristModel(context.bakeLayer(TouristModel.LAYER)), 0.5F);
+        this.addLayer(new TouristOutfitLayer(this));
+        this.addLayer(new TouristHeadwearLayer(this));
+        this.addLayer(new TouristAccessoryLayer(this));
+    }
+
+    @Override
+    public void render(TouristEntity entity, float entityYaw, float partialTicks, PoseStack poseStack,
+            MultiBufferSource buffer, int packedLight) {
+        int packed = entity.getLookPacked();
+        if (packed == TouristAppearance.UNSET) {
+            packed = 0;
+        }
+        this.model.prepare(packed);
+        super.render(entity, entityYaw, partialTicks, poseStack, buffer, packedLight);
     }
 
     @Override
     public ResourceLocation getTextureLocation(TouristEntity entity) {
-        int tier = entity.getSkinTier();
-        if (tier >= 0 && tier < SKIN_TEXTURES.length) {
-            return SKIN_TEXTURES[tier];
+        int packed = entity.getLookPacked();
+        int skin = packed == TouristAppearance.UNSET ? 0 : TouristAppearance.skin(packed);
+        return TouristTextures.skin(skin);
+    }
+
+    @Override
+    protected RenderType getRenderType(TouristEntity entity, boolean bodyVisible, boolean translucent, boolean glowing) {
+        ResourceLocation texture = this.getTextureLocation(entity);
+        if (!bodyVisible) {
+            return glowing ? RenderType.outline(texture) : null;
         }
-        return FALLBACK_SKIN;
+        if (translucent) {
+            return RenderType.itemEntityTranslucentCull(texture);
+        }
+        return RenderType.entityCutoutNoCull(texture);
     }
 
     @Override

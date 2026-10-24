@@ -35,6 +35,11 @@ public class ForgeClientSetup {
     }
 
     @SubscribeEvent
+    public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
+        CommonClientSetup.registerLayerDefinitions(event::registerLayerDefinition);
+    }
+
+    @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         // Register renderers using common setup
         CommonClientSetup.registerRenderers((type, provider) -> {

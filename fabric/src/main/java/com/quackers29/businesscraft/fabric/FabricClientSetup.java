@@ -7,6 +7,7 @@ import com.quackers29.businesscraft.fabric.event.FabricEventCallbackHandler;
 import com.quackers29.businesscraft.fabric.FabricModMessages;
 import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.client.gui.screens.MenuScreens;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,10 @@ public class FabricClientSetup implements ClientModInitializer {
 
             // Initialize common client setup (key handlers, render events)
             CommonClientSetup.init();
+
+            EntityModelLayerRegistry.registerModelLayer(
+                    com.quackers29.businesscraft.client.model.TouristModel.LAYER,
+                    com.quackers29.businesscraft.client.model.TouristModel::createBodyLayer);
 
             // Register entity renderers
             CommonClientSetup.registerRenderers((type, provider) -> {
