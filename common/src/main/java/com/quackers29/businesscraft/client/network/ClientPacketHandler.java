@@ -14,6 +14,8 @@ import com.quackers29.businesscraft.network.packets.storage.CommunalStorageRespo
 import com.quackers29.businesscraft.network.packets.storage.PaymentBoardResponsePacket;
 import com.quackers29.businesscraft.network.packets.storage.PersonalStorageResponsePacket;
 import com.quackers29.businesscraft.network.packets.ui.LeaderboardDataResponsePacket;
+import com.quackers29.businesscraft.network.packets.ui.VisitHistoryResponsePacket;
+import com.quackers29.businesscraft.ui.managers.VisitorHistoryManager;
 import com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket;
 import com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket;
 import com.quackers29.businesscraft.network.packets.ui.ClientTownMapCache;
@@ -51,6 +53,8 @@ public final class ClientPacketHandler {
     public static void handle(Object packet) {
         if (packet instanceof LeaderboardDataResponsePacket leaderboard) {
             openLeaderboard(leaderboard);
+        } else if (packet instanceof VisitHistoryResponsePacket visitHistory) {
+            VisitorHistoryManager.openFromServerResponse(visitHistory);
         } else if (packet instanceof BaseViewModelSyncPacket<?> viewModel) {
             applyViewModel(viewModel);
         } else if (packet instanceof PaymentResultPacket payment) {

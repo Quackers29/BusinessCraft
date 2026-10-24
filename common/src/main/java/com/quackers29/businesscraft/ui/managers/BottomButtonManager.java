@@ -235,8 +235,9 @@ public class BottomButtonManager {
      */
     private void configureSettingsButtons() {
         bottomButtonsGrid
-                .addButtonWithTooltip(0, 0, ShowcaseButtonIds.RANKING, "Ranking", "View town rankings",
-                        v -> actionHandler.onViewLeaderboard(), TownInterfaceTheme.PRIMARY_COLOR)
+                .addButtonWithTooltip(0, 0, ShowcaseButtonIds.VIEW_VISITORS, "Visitor History",
+                        "View history of visitors to your town",
+                        v -> actionHandler.onViewVisitorHistory(), TownInterfaceTheme.PRIMARY_COLOR)
                 .addButtonWithTooltip(0, 1, ShowcaseButtonIds.EDIT_NAME, "Edit Name", "Edit town name",
                         v -> actionHandler.onEditDetails(), TownInterfaceTheme.PRIMARY_COLOR);
     }

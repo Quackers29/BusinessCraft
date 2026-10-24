@@ -132,7 +132,7 @@ map_count="$(find "$SHOWCASE_RUN_DIR/screenshots" -maxdepth 1 -name 'showcase_ma
 echo "Showcase ($LOADER) shots: $count views: $view_count map: $map_count (gradle exit $code)"
 
 MANIFEST="$MC_RUN/showcase-views-manifest.json"
-ALL_VIEWS_EXPECT=14
+ALL_VIEWS_EXPECT=15
 
 case "$SCENES" in
     "" | all | ALL) expect=6 ;;

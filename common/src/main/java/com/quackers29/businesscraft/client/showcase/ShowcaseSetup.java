@@ -8,6 +8,7 @@ import com.quackers29.businesscraft.town.TownManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,9 +50,28 @@ public final class ShowcaseSetup {
                 LOGGER.info("Showcase setup: added default platform");
             }
             seedAuctionContract(level, town);
+            seedVisitHistory(level, town, townPos, townInterface);
             prepared = true;
             LOGGER.info("Showcase setup complete for {}", town.getName());
         });
+    }
+
+    private static void seedVisitHistory(ServerLevel level, Town town, BlockPos townPos,
+            TownInterfaceEntity townInterface) {
+        if (!town.getVisitHistory().isEmpty()) {
+            return;
+        }
+        for (Town other : TownManager.get(level).getAllTowns().values()) {
+            if (other.getId().equals(town.getId())) {
+                continue;
+            }
+            town.recordVisit(other.getId(), 3, other.getPosition());
+            LOGGER.info("Showcase setup: seeded visit from {} to {}", other.getName(), town.getName());
+            townInterface.setChanged();
+            level.sendBlockUpdated(townPos, townInterface.getBlockState(), townInterface.getBlockState(),
+                    Block.UPDATE_ALL);
+            return;
+        }
     }
 
     private static void seedAuctionContract(ServerLevel level, Town town) {

@@ -108,7 +108,8 @@ public class BCModalGridFactory {
                   Themes.BC_DEFAULT[3],  // Header
                   Themes.BC_DEFAULT[4]   // Text
               )
-              .withAlternatingRowColors(0x30FFFFFF, 0x20FFFFFF);
+              .withAlternatingRowColors(0x30FFFFFF, 0x20FFFFFF)
+              .withPanelSize(0.72f, 0.62f);
         
         return screen;
     }
@@ -230,20 +231,6 @@ public class BCModalGridFactory {
         
         // Use the lookup function to get the actual town name
         String originName = townNameLookup.apply(townId);
-        
-        // Add direction if position available
-        if (record.getOriginPos() != null) {
-            BlockPos originPos = record.getOriginPos();
-            
-            if (originPos != null && !originPos.equals(BlockPos.ZERO)) {
-                // Calculate direction based on the origin position
-                int x = originPos.getX();
-                int z = originPos.getZ();
-                
-                String direction = " at " + x + "," + z;
-                originName += direction;
-            }
-        }
         
         return originName;
     }

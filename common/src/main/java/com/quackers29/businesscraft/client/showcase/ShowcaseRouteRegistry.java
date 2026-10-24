@@ -137,6 +137,14 @@ public final class ShowcaseRouteRegistry {
                 "wait-tab:settings",
                 "press-button:id:" + ShowcaseButtonIds.EDIT_NAME,
                 "wait-for-popup:80")));
+        routes.add(new ShowcaseRoute("town/visitor-history", List.of(
+                "setup:world",
+                "open-town",
+                "wait-for-screen:TownInterfaceScreen:120",
+                "set-tab:settings",
+                "wait-tab:settings",
+                "press-button:id:" + ShowcaseButtonIds.VIEW_VISITORS,
+                "wait-for-screen:BCModalGridScreen:120")));
         routes.add(new ShowcaseRoute("platform/management", List.of(
                 "setup:world",
                 "open-town",
