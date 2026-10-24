@@ -133,7 +133,7 @@ public class UnifiedModalManager {
                 return null; // StorageModalManager doesn't return the modal
                 
             case VISITOR_HISTORY:
-                String historyTargetTab = config.getTargetTab() != null ? config.getTargetTab() : "population";
+                String historyTargetTab = config.getTargetTab() != null ? config.getTargetTab() : "settings";
                 VisitorHistoryManager.showVisitorHistoryScreen(
                     config.getParentScreen(),
                     config.getBlockPos(),

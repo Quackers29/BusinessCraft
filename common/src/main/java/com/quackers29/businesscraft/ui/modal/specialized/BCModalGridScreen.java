@@ -72,6 +72,10 @@ public class BCModalGridScreen<T> extends Screen {
     
     // Title scale factor
     private float titleScale = 1.5f;
+
+    // Optional panel size ratios (applied in init when screen dimensions are known)
+    private Float panelWidthRatio;
+    private Float panelHeightRatio;
     
     /**
      * Constructor for the modal grid screen
@@ -94,8 +98,13 @@ public class BCModalGridScreen<T> extends Screen {
         super.init();
         
         // Calculate panel dimensions - default to 70% of screen height
-        this.panelWidth = Math.min(400, this.width - 40);
-        this.panelHeight = (int)(this.height * 0.7) - 40;
+        if (panelWidthRatio != null && panelHeightRatio != null) {
+            this.panelWidth = Math.min((int) (this.width * panelWidthRatio), this.width - 40);
+            this.panelHeight = (int) (this.height * panelHeightRatio);
+        } else {
+            this.panelWidth = Math.min(400, this.width - 40);
+            this.panelHeight = (int) (this.height * 0.7) - 40;
+        }
         this.panelLeft = (this.width - panelWidth) / 2;
         this.panelTop = (this.height - panelHeight) / 2 - 10;
         
@@ -462,12 +471,11 @@ public class BCModalGridScreen<T> extends Screen {
      * Set custom panel size (as ratio of screen size)
      */
     public BCModalGridScreen<T> withPanelSize(float widthRatio, float heightRatio) {
+        this.panelWidthRatio = widthRatio;
+        this.panelHeightRatio = heightRatio;
         if (this.minecraft != null) {
-            int screenWidth = this.minecraft.getWindow().getGuiScaledWidth();
-            int screenHeight = this.minecraft.getWindow().getGuiScaledHeight();
-            
-            this.panelWidth = (int)(screenWidth * widthRatio);
-            this.panelHeight = (int)(screenHeight * heightRatio);
+            this.panelWidth = Math.min((int) (this.width * widthRatio), this.width - 40);
+            this.panelHeight = (int) (this.height * heightRatio);
         }
         return this;
     }

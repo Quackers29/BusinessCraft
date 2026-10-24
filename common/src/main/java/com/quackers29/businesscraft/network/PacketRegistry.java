@@ -203,6 +203,11 @@ public class PacketRegistry {
                                 LeaderboardDataRequestPacket::decode, LeaderboardDataRequestPacket::encode,
                                 LeaderboardDataRequestPacket::handle);
 
+                register(VisitHistoryRequestPacket.class, "visit_history_request_packet",
+                                NetworkDirection.PLAY_TO_SERVER,
+                                VisitHistoryRequestPacket::decode, VisitHistoryRequestPacket::encode,
+                                VisitHistoryRequestPacket::handle);
+
                 // Client-bound packets (PLAY_TO_CLIENT)
                 register(RefreshPlatformsPacket.class, "refresh_platforms_packet", NetworkDirection.PLAY_TO_CLIENT,
                                 RefreshPlatformsPacket::decode, RefreshPlatformsPacket::encode,
@@ -327,5 +332,10 @@ public class PacketRegistry {
                                 NetworkDirection.PLAY_TO_CLIENT,
                                 LeaderboardDataResponsePacket::decode, LeaderboardDataResponsePacket::encode,
                                 LeaderboardDataResponsePacket::handle);
+
+                register(VisitHistoryResponsePacket.class, "visit_history_response_packet",
+                                NetworkDirection.PLAY_TO_CLIENT,
+                                VisitHistoryResponsePacket::decode, VisitHistoryResponsePacket::encode,
+                                VisitHistoryResponsePacket::handle);
         }
 }
