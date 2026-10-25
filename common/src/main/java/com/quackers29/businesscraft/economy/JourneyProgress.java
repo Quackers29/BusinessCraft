@@ -40,6 +40,38 @@ public final class JourneyProgress {
         return 1 + (thresholds == null ? 0 : thresholds.length);
     }
 
+    /** Distance required to be this rank. Rank 1 is 0. */
+    public static int distanceToReach(int level, int[] thresholds) {
+        if (level <= 1 || thresholds == null || thresholds.length == 0) {
+            return 0;
+        }
+        int index = Math.min(level - 2, thresholds.length - 1);
+        return Math.max(0, thresholds[index]);
+    }
+
+    /** Distance required to reach the next rank, or null at the last rank. */
+    public static Integer distanceToNext(int level, int[] thresholds) {
+        if (thresholds == null || thresholds.length == 0 || level >= maxLevel(thresholds) || level < 1) {
+            return null;
+        }
+        int index = level - 1;
+        if (index < 0 || index >= thresholds.length) {
+            return null;
+        }
+        return thresholds[index];
+    }
+
+    /** 0 at the start of this rank, 1 at the next rank (or at the last rank). */
+    public static double rankFraction(double distance, int level, int[] thresholds) {
+        Integer next = distanceToNext(level, thresholds);
+        if (next == null) {
+            return 1.0;
+        }
+        double start = distanceToReach(level, thresholds);
+        double span = Math.max(1.0, next - start);
+        return Math.max(0.0, Math.min(1.0, (distance - start) / span));
+    }
+
     public static int townLevel(double cumulativeDistance, int[] thresholds) {
         return levelForDistance(cumulativeDistance, thresholds);
     }

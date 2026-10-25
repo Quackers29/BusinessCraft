@@ -34,6 +34,7 @@ public final class ShowcaseAllViews {
     }
 
     private static List<ShowcaseRoute> routes = List.of();
+    private static List<ShowcaseRoute> routeOverride;
     private static int routeIndex;
     private static int stepIndex;
     private static int waitTicks;
@@ -65,8 +66,13 @@ public final class ShowcaseAllViews {
         return exitCode;
     }
 
+    /** Null uses every registered route. Tourist-screen mode passes its own list. */
+    public static void useRoutes(List<ShowcaseRoute> custom) {
+        routeOverride = custom;
+    }
+
     public static void reset(Minecraft minecraft) {
-        routes = ShowcaseRouteRegistry.allRoutes();
+        routes = routeOverride != null ? List.copyOf(routeOverride) : ShowcaseRouteRegistry.allRoutes();
         routeIndex = 0;
         stepIndex = 0;
         waitTicks = 0;

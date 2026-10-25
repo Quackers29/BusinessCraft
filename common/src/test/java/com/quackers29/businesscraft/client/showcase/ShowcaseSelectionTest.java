@@ -26,7 +26,10 @@ class ShowcaseSelectionTest {
         assertEquals(List.of(), ShowcaseSelection.shotsFor("testbed"));
         assertTrue(ShowcaseSelection.touristsMode("tourists"));
         assertEquals(List.of(), ShowcaseSelection.shotsFor("tourists"));
-        assertEquals(15, ShowcaseRouteRegistry.allRoutes().size());
+        assertTrue(ShowcaseSelection.touristScreenMode("tourist-screen"));
+        assertEquals(List.of(), ShowcaseSelection.shotsFor("tourist-screen"));
+        assertEquals(19, ShowcaseRouteRegistry.allRoutes().size());
+        assertEquals(4, ShowcaseRouteRegistry.touristScreenRoutes().size());
     }
 
     @Test

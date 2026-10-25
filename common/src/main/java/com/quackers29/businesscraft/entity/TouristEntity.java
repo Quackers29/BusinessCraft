@@ -28,8 +28,6 @@ import net.minecraft.world.entity.npc.VillagerProfession;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.trading.Merchant;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.sounds.SoundEvent;
@@ -112,6 +110,12 @@ public class TouristEntity extends Villager {
 
     // Override merchant offers (Villager already implements Merchant)
     private MerchantOffers customOffers;
+
+    /**
+     * Showcase sets this so one interaction still opens the vanilla merchant
+     * screen. Players never set it. It exists to photograph the old UI.
+     */
+    public static boolean showcaseVanillaScreen = false;
 
     /** Look id saved beside the packed int so reloads stay readable. Not synced. */
     private String lookId = "";
@@ -204,34 +208,6 @@ public class TouristEntity extends Villager {
         super.tick();
         if (!this.level().isClientSide && this.getLookPacked() == TouristAppearance.UNSET) {
             this.assignLook();
-        }
-
-        // Force offer refresh for live updates when trading
-        if (!this.level().isClientSide && this.getTradingPlayer() != null) {
-            // Refresh offers for live data
-            if (this.tickCount % 10 == 0) {
-                // Regenerate offers preserving use counts
-                this.refreshOffersWithLiveData();
-
-                // Send packet to sync offers to client screen
-                if (this.getTradingPlayer() instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-                    if (serverPlayer.containerMenu instanceof net.minecraft.world.inventory.MerchantMenu) {
-                        serverPlayer.connection.send(
-                            new net.minecraft.network.protocol.game.ClientboundMerchantOffersPacket(
-                                serverPlayer.containerMenu.containerId,
-                                this.getOffers(),
-                                this.getVillagerData().getLevel(),
-                                this.getVillagerXp(),
-                                this.showProgressBar(),
-                                this.canRestock()
-                            )
-                        );
-                        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
-                            "Sent merchant offers packet to client - {} offers, XP: {}",
-                            this.getOffers().size(), this.getVillagerXp());
-                    }
-                }
-            }
         }
 
         if (!hasMoved && !this.level().isClientSide) {
@@ -390,16 +366,8 @@ public class TouristEntity extends Villager {
         return this.originTownId;
     }
 
-    public String getOriginTownName() {
-        return this.originTownName;
-    }
-
     public UUID getDestinationTownId() {
         return this.destinationTownId;
-    }
-
-    public String getDestinationTownName() {
-        return this.destinationTownName;
     }
 
     public boolean isGossiping() {
@@ -466,6 +434,61 @@ public class TouristEntity extends Villager {
         refreshSyncedLabels();
         this.setCustomName(Component.literal("Tourist"));
         this.setCustomNameVisible(true);
+        this.customOffers = null;
+    }
+
+    /**
+     * Pins the journey shown on the tourist screen. {@code anyTown} uses the
+     * saved "Any Town" destination id, which is not a real town.
+     */
+    public void applyJourneyForScreen(String origin, String destination, boolean anyTown,
+            TouristType type, double distance) {
+        applyDisplaySample(origin, anyTown ? ANY_TOWN_NAME : destination, type, distance);
+        if (anyTown) {
+            this.destinationTownId = ANY_TOWN_DESTINATION;
+            this.destinationTownName = ANY_TOWN_NAME;
+        } else {
+            if (this.destinationTownId == null || ANY_TOWN_DESTINATION.equals(this.destinationTownId)) {
+                this.destinationTownId = UUID.randomUUID();
+            }
+            this.destinationTownName = destination;
+        }
+        refreshSyncedLabels();
+        this.customOffers = null;
+    }
+
+    public String getOriginTownName() {
+        if (this.originTownName != null && !this.originTownName.isBlank()) {
+            return this.originTownName;
+        }
+        String synced = getSyncedOriginLabel();
+        return synced == null || synced.isBlank() ? "Unknown" : synced;
+    }
+
+    public String getDestinationTownName() {
+        if (isAnyTownDestination()) {
+            return ANY_TOWN_NAME;
+        }
+        if (this.destinationTownName != null && !this.destinationTownName.isBlank()) {
+            return this.destinationTownName;
+        }
+        String synced = getSyncedDestLabel();
+        return synced == null || synced.isBlank() ? "Unknown" : synced;
+    }
+
+    public boolean isStationary() {
+        return this.isCurrentlyStationary;
+    }
+
+    public int getJourneyTicks() {
+        long age = this.level().getGameTime() - this.spawnTime;
+        if (age < 0L) {
+            return 0;
+        }
+        if (age > Integer.MAX_VALUE) {
+            return Integer.MAX_VALUE;
+        }
+        return (int) age;
     }
 
     public TouristType getTouristType() {
@@ -724,9 +747,13 @@ public class TouristEntity extends Villager {
                 // Play greeting sound
                 this.playSound(SoundEvents.VILLAGER_YES, 1.0f, 1.0f);
 
-                // Use villager's built-in trading screen
                 this.setTradingPlayer(player);
-                this.openTradingScreen(player, this.getDisplayName(), this.getVillagerData().getLevel());
+                if (showcaseVanillaScreen) {
+                    // Old villager window, kept so the showcase can photograph it.
+                    this.openTradingScreen(player, this.getDisplayName(), this.getVillagerData().getLevel());
+                } else {
+                    this.openTouristScreen(player);
+                }
             }
             return net.minecraft.world.InteractionResult.CONSUME;
         }
@@ -774,42 +801,8 @@ public class TouristEntity extends Villager {
     public void refreshOffersWithLiveData() {
         MerchantOffers oldOffers = this.customOffers;
         MerchantOffers newOffers = createOffers();
-
-        // Preserve use counts from old offers (even when level up adds new trades)
-        if (oldOffers != null) {
-            for (MerchantOffer newOffer : newOffers) {
-                // Find matching old offer by comparing items
-                for (MerchantOffer oldOffer : oldOffers) {
-                    if (offersMatch(oldOffer, newOffer)) {
-                        // Copy use count to new offer
-                        for (int j = 0; j < oldOffer.getUses(); j++) {
-                            newOffer.increaseUses();
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
+        TouristTradeCatalog.copyUses(oldOffers, newOffers);
         this.customOffers = newOffers;
-    }
-
-    /**
-     * Check if two offers are the same trade (same items + counts)
-     */
-    private boolean offersMatch(MerchantOffer offer1, MerchantOffer offer2) {
-        return itemStacksMatch(offer1.getBaseCostA(), offer2.getBaseCostA()) &&
-               itemStacksMatch(offer1.getCostB(), offer2.getCostB()) &&
-               itemStacksMatch(offer1.getResult(), offer2.getResult());
-    }
-
-    /**
-     * Check if two ItemStacks match (type, NBT, AND count)
-     */
-    private boolean itemStacksMatch(ItemStack stack1, ItemStack stack2) {
-        if (stack1.isEmpty() && stack2.isEmpty()) return true;
-        if (stack1.isEmpty() || stack2.isEmpty()) return false;
-        return ItemStack.isSameItemSameTags(stack1, stack2) && stack1.getCount() == stack2.getCount();
     }
 
     @Override
@@ -844,6 +837,7 @@ public class TouristEntity extends Villager {
         if (targetLevel > currentLevel && targetLevel <= maxLevel) {
             this.setVillagerData(this.getVillagerData().setLevel(targetLevel));
             syncSkinTierFromLevel();
+            this.refreshOffersWithLiveData();
             if (this.level() instanceof ServerLevel serverLevel) {
                 TouristEffects.playRankUp(serverLevel, this.position(), targetLevel);
             }
@@ -859,128 +853,34 @@ public class TouristEntity extends Villager {
     }
 
     /**
-     * Creates the merchant offers for this tourist.
-     * First offer is an info display, followed by actual trades.
+     * Real deals only. The old barrier "info" row is not included, except when
+     * the showcase is photographing the vanilla merchant screen.
      */
     private MerchantOffers createOffers() {
-        MerchantOffers offers = new MerchantOffers();
-
-        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Creating merchant offers for tourist");
-
-        // Get synced distance for client-side rendering
-        double distance = this.level().isClientSide ? this.entityData.get(DATA_DISTANCE_TRAVELED) : totalDistanceTraveled;
-
-        // Info "trade" - displays tourist information (not actually tradeable)
-        String journeyTime = formatTicks((int) (this.level().getGameTime() - this.spawnTime));
-        String timeLeft = formatTicks(this.expiryTicks);
-
-        // Create info display item with tourist details in lore
-        ItemStack infoDisplay = new ItemStack(Items.PAPER);
-        infoDisplay.setHoverName(Component.literal("§6Tourist Information"));
-
-        // Add lore with tourist data
-        net.minecraft.nbt.CompoundTag displayTag = infoDisplay.getOrCreateTagElement("display");
-        net.minecraft.nbt.ListTag loreList = new net.minecraft.nbt.ListTag();
-        loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Origin: §f" + (this.originTownName != null ? this.originTownName : "Unknown")))));
-        loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Destination: §f" + (this.destinationTownName != null ? this.destinationTownName : "Unknown")))));
-        loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal(""))));
-        loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Journey Time: §f" + journeyTime))));
-        loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Time Remaining: §f" + timeLeft))));
-        loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Distance Traveled: §f" + String.format("%.1f", distance) + "m"))));
-        loreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7Status: §f" + (this.isCurrentlyStationary ? "Stationary" : "Moving")))));
-        displayTag.put("Lore", loreList);
-
-        // Info offer - cannot be traded (uses Barrier as impossible cost)
-        MerchantOffer infoOffer = new MerchantOffer(
-            new ItemStack(Items.BARRIER), // Unobtainable in survival - can't complete trade
-            infoDisplay,
-            1, // Only 1 use (doesn't matter since cost is impossible)
-            0, // No XP
-            0.0f // No price multiplier
-        );
-        offers.add(infoOffer);
-        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Added info display offer (untradeable)");
-
-        // Travel ticket trade - always available (free souvenir from tourist)
-        ItemStack travelTicket = new ItemStack(Items.PAPER);
-        travelTicket.setHoverName(Component.literal("§6Travel Ticket"));
-
-        net.minecraft.nbt.CompoundTag ticketDisplayTag = travelTicket.getOrCreateTagElement("display");
-        net.minecraft.nbt.ListTag ticketLoreList = new net.minecraft.nbt.ListTag();
-        ticketLoreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7From: §f" + (this.originTownName != null ? this.originTownName : "Unknown")))));
-        ticketLoreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§7To: §f" + (this.destinationTownName != null ? this.destinationTownName : "Unknown")))));
-        ticketLoreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal(""))));
-        ticketLoreList.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.literal("§8A souvenir from a traveling tourist"))));
-        ticketDisplayTag.put("Lore", ticketLoreList);
-
-        MerchantOffer ticketTrade = new MerchantOffer(
-            new ItemStack(Items.PAPER, 1), // Cost: 1 paper
-            travelTicket,
-            1,   
-            0, // No XP
-            0.0f // No price multiplier
-        );
-        offers.add(ticketTrade);
-        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Added travel ticket offer");
-
-        // Add level-based trades
-        int currentLevel = this.getVillagerData().getLevel();
-
-        if (currentLevel >= 1) {
-            MerchantOffer level1Trade = new MerchantOffer(
-                new ItemStack(Items.BREAD, 8),
-                new ItemStack(Items.IRON_INGOT, 2),
-                1, // maxUses
-                0, // villagerXp
-                0.05f // priceMultiplier
-            );
-            offers.add(level1Trade);
+        int level = this.getVillagerData().getLevel();
+        double distance = this.level().isClientSide
+                ? this.entityData.get(DATA_DISTANCE_TRAVELED)
+                : totalDistanceTraveled;
+        TouristTradeCatalog.TradeContext context = new TouristTradeCatalog.TradeContext(
+                getOriginTownName(),
+                getDestinationTownName(),
+                isAnyTownDestination(),
+                JourneyProgress.tierName(level),
+                distance,
+                TouristTradeCatalog.formatDuration(getJourneyTicks() / 20),
+                TouristTradeCatalog.formatDuration(Math.max(0, this.expiryTicks) / 20),
+                this.isCurrentlyStationary);
+        if (showcaseVanillaScreen) {
+            return TouristTradeCatalog.offersForVanillaScreenshot(level, context);
         }
-
-        if (currentLevel >= 2) {
-            MerchantOffer level2Trade = new MerchantOffer(
-                new ItemStack(Items.BREAD, 6),
-                new ItemStack(Items.IRON_INGOT, 2),
-                1, // maxUses
-                0, // villagerXp
-                0.1f // priceMultiplier
-            );
-            offers.add(level2Trade);
-        }
-
-        if (currentLevel >= 3) {
-            MerchantOffer level3Trade = new MerchantOffer(
-                new ItemStack(Items.BREAD, 4),
-                new ItemStack(Items.IRON_INGOT, 2),
-                1, // maxUses
-                0, // villagerXp
-                0.15f // priceMultiplier
-            );
-            offers.add(level3Trade);
-        }
-
-        if (currentLevel >= 4) {
-            offers.add(new MerchantOffer(
-                    new ItemStack(Items.BREAD, 4),
-                    new ItemStack(Items.COMPASS, 1),
-                    1, 0, 0.05f));
-        }
-
-        if (currentLevel >= 5) {
-            offers.add(new MerchantOffer(
-                    new ItemStack(Items.BREAD, 2),
-                    new ItemStack(Items.CLOCK, 1),
-                    1, 0, 0.05f));
-        }
-
-        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Total offers created: {} (level {})", offers.size(), currentLevel);
+        MerchantOffers offers = TouristTradeCatalog.offersFor(level, context);
+        DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
+                "Total offers created: {} (level {})", offers.size(), level);
         return offers;
     }
 
-    private String formatTicks(int ticks) {
-        int seconds = ticks / 20;
-        int minutes = seconds / 60;
-        seconds = seconds % 60;
-        return String.format("%dm %ds", minutes, seconds);
+    private void openTouristScreen(Player player) {
+        com.quackers29.businesscraft.api.PlatformAccess.getNetwork()
+                .openScreen(player, new com.quackers29.businesscraft.menu.TouristMenuProvider(this));
     }
 }

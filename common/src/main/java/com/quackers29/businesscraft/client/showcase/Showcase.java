@@ -99,7 +99,13 @@ public final class Showcase {
             } else if (ShowcaseSelection.touristsMode(property)) {
                 plan = List.of();
                 LOGGER.info("Showcase tourist lineup enabled");
+            } else if (ShowcaseSelection.touristScreenMode(property)) {
+                ShowcaseAllViews.useRoutes(ShowcaseRouteRegistry.touristScreenRoutes());
+                plan = List.of();
+                LOGGER.info("Showcase tourist screen enabled: {} routes",
+                        ShowcaseRouteRegistry.touristScreenRoutes().size());
             } else if (ShowcaseSelection.allViewsMode(property)) {
+                ShowcaseAllViews.useRoutes(null);
                 plan = List.of();
                 LOGGER.info("Showcase all-views enabled: {} routes", ShowcaseAllViews.expectedRouteCount());
             } else {
@@ -171,7 +177,7 @@ public final class Showcase {
             }
             return;
         }
-        if (ShowcaseSelection.allViewsMode(property)) {
+        if (ShowcaseSelection.allViewsMode(property) || ShowcaseSelection.touristScreenMode(property)) {
             if (buildDone && minecraft.getSingleplayerServer() != null) {
                 ShowcaseSetup.prepareOnce(minecraft.getSingleplayerServer(), townPos);
             }

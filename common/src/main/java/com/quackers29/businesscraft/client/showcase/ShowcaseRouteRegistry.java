@@ -14,9 +14,7 @@ public final class ShowcaseRouteRegistry {
             new ShowcaseCoverageExclusion("TradeScreen",
                     "Legacy MenuScreens handler; trade UI opens only via BCModalInventoryScreen (route town/trade)."),
             new ShowcaseCoverageExclusion("StorageScreen",
-                    "Legacy MenuScreens handler; communal/personal storage opens only via BCModalInventoryScreen."),
-            new ShowcaseCoverageExclusion("TouristScreen",
-                    "TouristMenu exists but MenuScreens.register for TouristScreen is commented out in CommonClientSetup — no client screen factory."));
+                    "Legacy MenuScreens handler; communal/personal storage opens only via BCModalInventoryScreen."));
 
     private static final List<ShowcaseRoute> ROUTES = buildRoutes();
 
@@ -25,6 +23,13 @@ public final class ShowcaseRouteRegistry {
 
     public static List<ShowcaseRoute> allRoutes() {
         return ROUTES;
+    }
+
+    /** Before (vanilla merchant window) and after (tourist screen) shots. */
+    public static List<ShowcaseRoute> touristScreenRoutes() {
+        return ROUTES.stream()
+                .filter(route -> route.name().startsWith("tourist/"))
+                .toList();
     }
 
     public static List<ShowcaseCoverageExclusion> coverageExclusions() {
@@ -165,7 +170,23 @@ public final class ShowcaseRouteRegistry {
                 "wait-for-platforms:120",
                 "press-button:id:" + ShowcaseButtonIds.platformDestinations(0),
                 "wait-for-screen:DestinationsScreenV2:160")));
+        routes.add(tourist("tourist/before", "legacy"));
+        routes.add(tourist("tourist/wanderer", "wanderer"));
+        routes.add(tourist("tourist/voyager", "voyager"));
+        routes.add(new ShowcaseRoute("tourist/ticket", List.of(
+                "setup:world",
+                "open-tourist:wanderer",
+                "wait-for-screen:TouristScreen:160",
+                "hover-tourist-trade:0")));
         return List.copyOf(routes);
+    }
+
+    private static ShowcaseRoute tourist(String routeName, String which) {
+        String screen = "legacy".equals(which) ? "MerchantScreen" : "TouristScreen";
+        return new ShowcaseRoute(routeName, List.of(
+                "setup:world",
+                "open-tourist:" + which,
+                "wait-for-screen:" + screen + ":160"));
     }
 
     private static ShowcaseRoute townTab(String routeName, String tabId) {
