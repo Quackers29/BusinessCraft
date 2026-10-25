@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.forge.platform;
 
 import com.quackers29.businesscraft.api.NetworkHelper;
+import com.quackers29.businesscraft.menu.OpeningDataWriter;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -107,7 +108,11 @@ public class ForgeNetworkHelper implements NetworkHelper {
     public void openScreen(Object player, Object menuProvider) {
         if (player instanceof ServerPlayer serverPlayer &&
             menuProvider instanceof MenuProvider menuProv) {
-            NetworkHooks.openScreen(serverPlayer, menuProv);
+            if (menuProv instanceof OpeningDataWriter writer) {
+                NetworkHooks.openScreen(serverPlayer, menuProv, writer::writeOpeningData);
+            } else {
+                NetworkHooks.openScreen(serverPlayer, menuProv);
+            }
         }
     }
 

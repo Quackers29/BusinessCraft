@@ -4,6 +4,13 @@ All notable changes to BusinessCraft are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+- Right-clicking a tourist opens a tourist screen instead of the villager trade window. The title uses the distance ranks (Wanderer, Traveler, Voyager, Veteran, Renowned) and shows the origin town, destination, distance, and progress to the next rank.
+- The old barrier "info" row is gone. Locked deals say which rank unlocks them. The Travel Ticket tooltip explains that it is a souvenir, not a ride, and what Any Town means.
+- The item exchanges are unchanged: 1 paper for a Travel Ticket, then bread for iron, a compass, and a clock at the same ranks as before.
+
 ## [0.9.0-beta] — 2026-07-16
 
 First public beta. Focus: polished core tourism loop on Forge and Fabric 1.20.1.

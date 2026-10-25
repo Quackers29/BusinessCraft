@@ -82,7 +82,28 @@ public class FabricNetworkHelper implements NetworkHelper {
     @Override
     public void openScreen(Object player, Object menuProvider, Object blockPos) {
         if (player instanceof ServerPlayer serverPlayer && menuProvider instanceof MenuProvider provider) {
-            if (provider instanceof net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory) {
+            if (provider instanceof com.quackers29.businesscraft.menu.OpeningDataWriter writer) {
+                net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory factory =
+                        new net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory() {
+                            @Override
+                            public net.minecraft.world.inventory.AbstractContainerMenu createMenu(int syncId,
+                                    net.minecraft.world.entity.player.Inventory inv,
+                                    net.minecraft.world.entity.player.Player player) {
+                                return provider.createMenu(syncId, inv, player);
+                            }
+
+                            @Override
+                            public net.minecraft.network.chat.Component getDisplayName() {
+                                return provider.getDisplayName();
+                            }
+
+                            @Override
+                            public void writeScreenOpeningData(ServerPlayer player, net.minecraft.network.FriendlyByteBuf buf) {
+                                writer.writeOpeningData(buf);
+                            }
+                        };
+                serverPlayer.openMenu(factory);
+            } else if (provider instanceof net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory) {
                 serverPlayer.openMenu(provider);
             } else {
                 net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory factory = new net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory() {

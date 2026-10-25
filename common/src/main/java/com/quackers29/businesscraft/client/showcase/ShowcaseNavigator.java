@@ -1,7 +1,11 @@
 package com.quackers29.businesscraft.client.showcase;
 
 import com.quackers29.businesscraft.block.TownInterfaceBlock;
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.entity.TouristEntity;
+import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
+import com.quackers29.businesscraft.ui.screens.TouristScreen;
 import com.quackers29.businesscraft.ui.managers.BottomButtonManager;
 import com.quackers29.businesscraft.ui.screens.BaseTownScreen;
 import com.quackers29.businesscraft.ui.screens.platform.PlatformManagementScreenV2;
@@ -17,9 +21,17 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Executes showcase route steps without simulating mouse clicks.
@@ -78,6 +90,17 @@ public final class ShowcaseNavigator {
         }
         if (step.startsWith("wait-for-screen:") || step.startsWith("wait-for-popup:")) {
             return null;
+        }
+        if (step.startsWith("open-tourist:")) {
+            return openTourist(minecraft, townPos, step.substring("open-tourist:".length()));
+        }
+        if (step.startsWith("hover-tourist-trade:")) {
+            int index = Integer.parseInt(step.substring("hover-tourist-trade:".length()));
+            if (minecraft.screen instanceof TouristScreen screen) {
+                screen.showcaseHoverTrade(index);
+                return null;
+            }
+            return "tourist screen not open for hover";
         }
         return "unknown step: " + step;
     }
@@ -170,6 +193,107 @@ public final class ShowcaseNavigator {
             return grid.invokeButtonByLabel(label);
         }
         return false;
+    }
+
+    /**
+     * Opens a tourist who is standing on Brookside's platform. {@code legacy}
+     * still uses the vanilla merchant window so the before shot stays reproducible.
+     */
+    private static String openTourist(Minecraft minecraft, BlockPos townPos, String which) {
+        MinecraftServer server = minecraft.getSingleplayerServer();
+        if (server == null || minecraft.player == null || townPos == null) {
+            return "no server for tourist screen";
+        }
+        boolean legacy = "legacy".equals(which);
+        boolean anyTown = legacy || "wanderer".equals(which) || "ticket".equals(which);
+        double distance = "voyager".equals(which) ? 1800.0 : 120.0;
+        String destination = anyTown ? TouristEntity.ANY_TOWN_NAME : "Hillcrest";
+        UUID playerId = minecraft.player.getUUID();
+        minecraft.setScreen(null);
+        // After setScreen, so the closing tourist screen cannot clear the flag.
+        TouristScreen.showcaseSuppressHover(true);
+        server.execute(() -> openTouristOnServer(server, playerId, townPos, legacy, anyTown, destination, distance));
+        return null;
+    }
+
+    private static void openTouristOnServer(MinecraftServer server, UUID playerId, BlockPos townPos,
+            boolean legacy, boolean anyTown, String destination, double distance) {
+        ServerPlayer player = server.getPlayerList().getPlayer(playerId);
+        if (player == null) {
+            return;
+        }
+        ServerLevel level = player.serverLevel();
+        player.setGameMode(GameType.CREATIVE);
+        give(player, Items.PAPER, 1);
+        give(player, Items.BREAD, 8);
+        TouristEntity tourist = nearestTourist(level, townPos);
+        if (tourist == null) {
+            tourist = spawnTourist(level, townPos);
+        }
+        if (tourist == null) {
+            return;
+        }
+        tourist.applyJourneyForScreen("Brookside", destination, anyTown, tourist.getTouristType(), distance);
+        player.teleportTo(level, tourist.getX(), tourist.getY(), tourist.getZ() + 2.0, 180.0f, 0.0f);
+        TouristEntity.showcaseVanillaScreen = legacy;
+        try {
+            tourist.mobInteract(player, InteractionHand.MAIN_HAND);
+        } finally {
+            TouristEntity.showcaseVanillaScreen = false;
+        }
+    }
+
+    private static void give(ServerPlayer player, net.minecraft.world.item.Item item, int want) {
+        int have = 0;
+        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+            ItemStack stack = player.getInventory().getItem(slot);
+            if (stack.is(item)) {
+                have += stack.getCount();
+            }
+        }
+        if (have < want) {
+            player.getInventory().add(new ItemStack(item, want - have));
+        }
+    }
+
+    private static TouristEntity nearestTourist(ServerLevel level, BlockPos townPos) {
+        AABB box = new AABB(townPos).inflate(64);
+        List<TouristEntity> tourists = level.getEntitiesOfClass(TouristEntity.class, box);
+        TouristEntity nearest = null;
+        double best = Double.MAX_VALUE;
+        for (TouristEntity tourist : tourists) {
+            double distance = tourist.distanceToSqr(Vec3.atCenterOf(townPos));
+            if (distance < best) {
+                best = distance;
+                nearest = tourist;
+            }
+        }
+        return nearest;
+    }
+
+    private static TouristEntity spawnTourist(ServerLevel level, BlockPos townPos) {
+        BlockEntity be = level.getBlockEntity(townPos);
+        if (!(be instanceof TownInterfaceEntity townInterface)) {
+            return null;
+        }
+        Town town = townInterface.getTown();
+        if (town == null) {
+            return null;
+        }
+        TouristEntity tourist = new TouristEntity(
+                (net.minecraft.world.entity.EntityType<TouristEntity>) com.quackers29.businesscraft.api.PlatformAccess
+                        .getEntities().getTouristEntityType(),
+                level,
+                town,
+                null,
+                UUID.randomUUID(),
+                "Hillcrest");
+        BlockPos pos = townPos.east(3);
+        tourist.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+        if (!level.addFreshEntity(tourist)) {
+            return null;
+        }
+        return tourist;
     }
 
     private static void openTownInterface(Minecraft minecraft, BlockPos pos) {

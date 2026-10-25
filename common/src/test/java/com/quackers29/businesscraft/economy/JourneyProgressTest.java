@@ -69,6 +69,23 @@ class JourneyProgressTest {
     }
 
     @Test
+    void distanceToNext_isTheEndOfTheCurrentRank() {
+        assertEquals(0, JourneyProgress.distanceToReach(1, TOURIST));
+        assertEquals(500, JourneyProgress.distanceToReach(2, TOURIST));
+        assertEquals(6000, JourneyProgress.distanceToReach(5, TOURIST));
+        assertEquals(500, JourneyProgress.distanceToNext(1, TOURIST));
+        assertEquals(3000, JourneyProgress.distanceToNext(3, TOURIST));
+        assertEquals(null, JourneyProgress.distanceToNext(5, TOURIST));
+    }
+
+    @Test
+    void rankFraction_fillsTheCurrentSpan() {
+        assertEquals(0.24, JourneyProgress.rankFraction(120, 1, TOURIST), 0.001);
+        assertEquals(0.2, JourneyProgress.rankFraction(1800, 3, TOURIST), 0.001);
+        assertEquals(1.0, JourneyProgress.rankFraction(9000, 5, TOURIST), 0.001);
+    }
+
+    @Test
     void customThresholds_stayStrictlyConfigDriven() {
         int[] custom = {10, 20};
         assertEquals(1, JourneyProgress.levelForDistance(9, custom));

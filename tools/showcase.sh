@@ -11,6 +11,7 @@
 #   bash tools/showcase.sh testbed forge trade-contract
 #   bash tools/showcase.sh map-sweep forge 1920x1080_gui4
 #   bash tools/showcase.sh tourists forge          # every tourist look, front and side
+#   bash tools/showcase.sh tourist-screen forge   # vanilla merchant screen, then the tourist screen
 #   bash tools/showcase-map-sweep.sh forge       # full resolution/gui matrix
 #
 # Each run writes:
@@ -133,14 +134,14 @@ map_count="$(find "$SHOWCASE_RUN_DIR/screenshots" -maxdepth 1 -name 'showcase_ma
 echo "Showcase ($LOADER) shots: $count views: $view_count map: $map_count (gradle exit $code)"
 
 MANIFEST="$MC_RUN/showcase-views-manifest.json"
-ALL_VIEWS_EXPECT=15
+ALL_VIEWS_EXPECT=19
 
 case "$SCENES" in
     "" | all | ALL) expect=6 ;;
     town) expect=4 ;;
     tourists) expect=1 ;;
     block) expect=2 ;;
-    all-views | two-towns | testbed | map-sweep) expect=0 ;;
+    all-views | two-towns | testbed | map-sweep | tourist-screen) expect=0 ;;
     *) expect=0 ;;
 esac
 
@@ -242,6 +243,23 @@ elif [[ "$SCENES" == "map-sweep" ]]; then
         echo "Map sweep did not capture TownMapModal" >&2
         code=1
     fi
+elif [[ "$SCENES" == "tourist-screen" ]]; then
+    if [[ ! -f "$MANIFEST" ]]; then
+        echo "Missing showcase manifest: $MANIFEST" >&2
+        code=1
+    fi
+    if [[ "$view_count" -lt 4 ]]; then
+        echo "Expected at least 4 tourist screen views, found $view_count" >&2
+        code=1
+    fi
+    if grep -q '"ok": false' "$MANIFEST" 2>/dev/null; then
+        echo "One or more tourist screen routes failed (see manifest)" >&2
+        code=1
+    fi
+    if [[ -f "$MANIFEST" ]]; then
+        cp -f "$MANIFEST" "$SHOWCASE_RUN_DIR/showcase-views-manifest.json"
+        bash "$ROOT/tools/showcase-generate-index.sh" "$SHOWCASE_RUN_DIR/index.html" "$SHOWCASE_RUN_DIR/showcase-views-manifest.json"
+    fi
 elif [[ "$SCENES" == "tourists" ]]; then
     MANIFEST_T="$MC_RUN/showcase-tourists.json"
     if [[ ! -f "$MANIFEST_T" ]]; then
@@ -287,7 +305,10 @@ showcase_append_index "${SHOWCASE_OUTPUT_ROOT}" "$SHOWCASE_RUN_DIR" "$MODE" "$LO
 
 if [[ -n "${SHOWCASE_ARTIFACT_DIR:-}" ]]; then
     mkdir -p "$SHOWCASE_ARTIFACT_DIR"
-    cp -a "$SHOWCASE_RUN_DIR/." "$SHOWCASE_ARTIFACT_DIR/"
+    # cp -a preserves ownership and fails on artifact dirs the agent cannot chown.
+    if ! cp -a "$SHOWCASE_RUN_DIR/." "$SHOWCASE_ARTIFACT_DIR/"; then
+        cp -R --no-preserve=mode,ownership "$SHOWCASE_RUN_DIR/." "$SHOWCASE_ARTIFACT_DIR/"
+    fi
 fi
 
 if [[ "$code" -ne 0 ]]; then

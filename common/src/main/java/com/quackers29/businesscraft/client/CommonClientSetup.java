@@ -55,9 +55,8 @@ public class CommonClientSetup {
         MenuScreens.register(CommonModMenuTypes.STORAGE_MENU.get(), StorageScreen::new);
         MenuScreens.register(CommonModMenuTypes.PAYMENT_BOARD_MENU.get(), PaymentBoardScreen::new);
         MenuScreens.register(CommonModMenuTypes.CONTRACT_BOARD_MENU.get(), ContractBoardScreen::new);
-        // TouristEntity now uses vanilla MerchantScreen via Merchant interface
-        // MenuScreens.register(CommonModMenuTypes.TOURIST_MENU.get(),
-        //         com.quackers29.businesscraft.ui.screens.TouristScreen::new);
+        MenuScreens.register(CommonModMenuTypes.TOURIST_MENU.get(),
+                com.quackers29.businesscraft.ui.screens.TouristScreen::new);
     }
 
     @SuppressWarnings("unchecked")
