@@ -42,6 +42,7 @@ class TouristLooksTest {
             assertTrue(TouristParts.knownAccessory(look.accessory()), look.id());
             headwear.add(look.headwear());
             accessories.add(look.accessory());
+            assertTrue(look.type() != null, look.id() + " should name the matching tourist type");
             assertEquals(look.packed(), TouristAppearance.pack(look.skin(), look.outfit(), look.headwear(), look.accessory()));
         }
         assertTrue(headwear.size() >= 4, "headwear should vary");

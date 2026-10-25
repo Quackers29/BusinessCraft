@@ -130,8 +130,9 @@ public class PlatformManagementScreenV2 extends Screen {
                 PLATFORM_LIST_X, PLATFORM_LIST_Y + 5,
                 PLATFORM_LIST_WIDTH - 8, PLATFORM_LIST_HEIGHT - 10,
                 5) // 5 columns: Status, Name, Toggle, Destinations, Actions
+                .withColumnWeights(new float[] {0.08f, 0.34f, 0.16f, 0.20f, 0.22f})
                 .withRowHeight(18)
-                .withSpacing(8, 3) // Back to normal spacing
+                .withSpacing(4, 3) // Back to normal spacing
                 .withMargins(4, 2) // Reduced vertical margin from 4 to 2 to fit more rows
                 .drawBackground(false)
                 .drawBorder(false);
@@ -177,8 +178,8 @@ public class PlatformManagementScreenV2 extends Screen {
             boolean canSpawn = platform.isEnabled() && platform.isComplete();
             platformListGrid.addStatusIndicator(i, 0, canSpawn, SUCCESS_COLOR, DISABLED_COLOR, 13);
 
-            // Column 1: Platform name and number (shortened for better fit)
-            String nameText = "Plat #" + (i + 1);
+            // Column 1: Platform name. The name column is wide enough for the full word.
+            String nameText = "Platform " + (i + 1);
             if (platform.isComplete()) {
                 nameText += " ✓";
             }
@@ -328,11 +329,29 @@ public class PlatformManagementScreenV2 extends Screen {
 
         String waiting = resolveWaitingSummary();
         String recent = resolveRecentArrivalsSummary();
-        int lineY = y + imageHeight - 22;
-        guiGraphics.drawString(this.font, "Waiting: " + waiting,
-                x + PLATFORM_LIST_X, lineY, 0xFFCCCCCC);
-        guiGraphics.drawString(this.font, "Recent: " + recent,
-                x + PLATFORM_LIST_X, lineY + 10, 0xFFAAAAAA);
+        int lineY = y + imageHeight - 24;
+        int textX = x + 8;
+        int maxText = imageWidth - 16;
+        guiGraphics.fill(x + 4, lineY - 3, x + imageWidth - 4, y + imageHeight - 4, 0xF0101218);
+        guiGraphics.drawString(this.font, fitFooter("Waiting: " + waiting, maxText),
+                textX, lineY, 0xFFE8E8E8);
+        guiGraphics.drawString(this.font, fitFooter("Recent: " + recent, maxText),
+                textX, lineY + 11, 0xFFD0D0D0);
+    }
+
+    private String fitFooter(String text, int maxWidth) {
+        if (text == null) {
+            return "";
+        }
+        if (this.font.width(text) <= maxWidth) {
+            return text;
+        }
+        String ellipsis = "…";
+        int room = maxWidth - this.font.width(ellipsis);
+        if (room <= 0) {
+            return ellipsis;
+        }
+        return this.font.plainSubstrByWidth(text, room) + ellipsis;
     }
 
     private String resolveWaitingSummary() {

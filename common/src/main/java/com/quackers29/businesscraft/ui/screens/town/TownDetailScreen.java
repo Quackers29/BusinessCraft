@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.ui.screens.town;
 
+import com.quackers29.businesscraft.config.ConfigLoader;
+import com.quackers29.businesscraft.economy.JourneyProgress;
 import com.quackers29.businesscraft.town.data.TownLeaderboardData;
 import com.quackers29.businesscraft.ui.modal.specialized.BCModalGridScreen;
 import com.quackers29.businesscraft.ui.templates.TownInterfaceTheme;
@@ -45,6 +47,12 @@ public class TownDetailScreen extends BCModalGridScreen<TownDetailEntry> {
         List<TownDetailEntry> details = new ArrayList<>();
         details.add(new TownDetailEntry("Town Name", townData.name()));
         details.add(new TownDetailEntry("Distance", TownLeaderboardData.formatDistance(townData.distanceTo(currentTownPosition))));
+        String notoriety = townData.notorietyLabel();
+        if (notoriety == null || notoriety.isEmpty()) {
+            notoriety = JourneyProgress.formatTownNotoriety(
+                    townData.journeyDistance(), ConfigLoader.notorietyDistances);
+        }
+        details.add(new TownDetailEntry("Notoriety", notoriety));
         details.add(new TownDetailEntry("Coordinates", formatPosition(townData.position())));
 
         // Only show metrics that have values

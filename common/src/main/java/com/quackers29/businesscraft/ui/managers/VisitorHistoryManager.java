@@ -96,6 +96,7 @@ public class VisitorHistoryManager extends BaseModalManager {
                 pending.parentScreen(),
                 visitHistory,
                 townNameLookup,
+                pending.blockPos(),
                 pending.onScreenClosed());
     }
 
@@ -103,6 +104,7 @@ public class VisitorHistoryManager extends BaseModalManager {
             Screen parentScreen,
             List<VisitHistoryRecord> visitHistory,
             Function<UUID, String> townNameLookup,
+            BlockPos townPos,
             Consumer<BCModalGridScreen<VisitHistoryRecord>> onScreenClosed) {
 
         BCModalGridScreen<VisitHistoryRecord> visitorScreen = BCModalGridFactory.createVisitorHistoryScreen(
@@ -110,7 +112,8 @@ public class VisitorHistoryManager extends BaseModalManager {
                 parentScreen,
                 visitHistory,
                 createStandardCallback(parentScreen, onScreenClosed),
-                townNameLookup);
+                townNameLookup,
+                townPos);
 
         visitorScreen.withBackButtonText("Back")
                 .withTitleScale(1.2f)

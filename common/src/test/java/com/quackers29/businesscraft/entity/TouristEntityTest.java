@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.entity;
 
 import com.quackers29.businesscraft.config.ConfigLoader;
+import com.quackers29.businesscraft.economy.JourneyProgress;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,40 +48,36 @@ class TouristEntityTest {
     // initializers (EntityDataAccessor + SynchedEntityData + EntityDataSerializers) require full MC bootstrap
     // beyond what McBootstrap provides; see vault note "Test coverage".
 
+    private static int skinTier(int level) {
+        int max = Math.max(1, JourneyProgress.maxLevel(JourneyProgress.DEFAULT_TOURIST_LEVELS));
+        return Math.min(Math.max(level, 1), max) - 1;
+    }
+
     @Test
     void skinTierFormula_level1_is0() {
-        // Exact body: Math.min(Math.max(level, 1), MAX_LEVEL) - 1
-        // Hand-computed for level=1: min(max(1,1),3) - 1 = 0
-        int level = 1;
-        assertEquals(0, Math.min(Math.max(level, 1), 3) - 1);
+        // max rank is 5 (1 + four thresholds). Level 1 → tier 0.
+        assertEquals(0, skinTier(1));
     }
 
     @Test
     void skinTierFormula_level2_is1() {
-        // Hand-computed for level=2: min(max(2,1),3) - 1 = 1
-        int level = 2;
-        assertEquals(1, Math.min(Math.max(level, 1), 3) - 1);
+        assertEquals(1, skinTier(2));
     }
 
     @Test
     void skinTierFormula_level3_is2() {
-        // Hand-computed for level=3: min(max(3,1),3) - 1 = 2
-        int level = 3;
-        assertEquals(2, Math.min(Math.max(level, 1), 3) - 1);
+        assertEquals(2, skinTier(3));
     }
 
     @Test
     void skinTierFormula_level0_clamps_then0() {
-        // Hand-computed: min(max(0,1),3) - 1 = 0
-        int level = 0;
-        assertEquals(0, Math.min(Math.max(level, 1), 3) - 1);
+        assertEquals(0, skinTier(0));
     }
 
     @Test
-    void skinTierFormula_level4_caps_then2() {
-        // Hand-computed: min(max(4,1),3) - 1 = 2
-        int level = 4;
-        assertEquals(2, Math.min(Math.max(level, 1), 3) - 1);
+    void skinTierFormula_level6_capsAtLastRank() {
+        // max level 5 → tier index 4. A level past that stays on the last tier.
+        assertEquals(4, skinTier(6));
     }
 
     // --- expiry injection formula (duplicated in ctor, spawn path, ride reset) ---
@@ -112,65 +109,52 @@ class TouristEntityTest {
     // --- distance to level formula (core of updateLevelFromDistance) ---
 
     @Test
-    void distanceToLevel_0m_isLevel1() {
-        // 1 + (int)(0 / 20.0) = 1
-        int target = 1 + (int) (0.0 / 20.0);
-        assertEquals(1, Math.min(target, 3));
+    void distanceToLevel_0m_isWanderer() {
+        assertEquals(1, JourneyProgress.levelForDistance(0, JourneyProgress.DEFAULT_TOURIST_LEVELS));
+        assertEquals("Wanderer", JourneyProgress.tierName(1));
     }
 
     @Test
-    void distanceToLevel_19_9m_isStillLevel1() {
-        // 1 + (int)(19.9 / 20.0) = 1 + 0 = 1
-        int target = 1 + (int) (19.9 / 20.0);
-        assertEquals(1, Math.min(target, 3));
+    void distanceToLevel_499m_isStillWanderer() {
+        // Rank 2 starts at 500 m. 499 m is still rank 1, about 5 emeralds unpaid until 500.
+        assertEquals(1, JourneyProgress.levelForDistance(499, JourneyProgress.DEFAULT_TOURIST_LEVELS));
     }
 
     @Test
-    void distanceToLevel_20m_isLevel2() {
-        // 1 + (int)(20.0 / 20.0) = 1 + 1 = 2
-        int target = 1 + (int) (20.0 / 20.0);
-        assertEquals(2, Math.min(target, 3));
+    void distanceToLevel_500m_isTraveler() {
+        assertEquals(2, JourneyProgress.levelForDistance(500, JourneyProgress.DEFAULT_TOURIST_LEVELS));
+        assertEquals("Traveler", JourneyProgress.tierName(2));
     }
 
     @Test
-    void distanceToLevel_47_3m_isLevel3() {
-        // 1 + (int)(47.3 / 20.0) = 1 + 2 = 3
-        int target = 1 + (int) (47.3 / 20.0);
-        assertEquals(3, Math.min(target, 3));
+    void distanceToLevel_1500m_isVoyager() {
+        assertEquals(3, JourneyProgress.levelForDistance(1500, JourneyProgress.DEFAULT_TOURIST_LEVELS));
+        assertEquals("Voyager", JourneyProgress.tierName(3));
     }
 
     @Test
-    void distanceToLevel_1000m_capsAtLevel3() {
-        // 1 + (int)(1000 / 20) = 1 + 50 = 51 -> min(51,3) = 3
-        int target = 1 + (int) (1000.0 / 20.0);
-        assertEquals(3, Math.min(target, 3));
+    void distanceToLevel_6000m_isRenowned() {
+        assertEquals(5, JourneyProgress.levelForDistance(6000, JourneyProgress.DEFAULT_TOURIST_LEVELS));
+        assertEquals("Renowned", JourneyProgress.tierName(5));
     }
 
-    // --- XP scaling formula (getVillagerXp distance-into-level mapping) ---
+    // --- XP scaling formula (getVillagerXp fills the current rank's distance span) ---
 
     @Test
     void xpForLevel1_0intoLevel_is0() {
-        // distanceInto=0, max=10, (0/20)*10 = 0
-        double into = 0.0;
-        int xp = (int) ((into / 20.0) * 10);
-        assertEquals(0, Math.max(0, Math.min(10, xp)));
+        assertEquals(0, JourneyProgress.xpForDistance(0, 1, JourneyProgress.DEFAULT_TOURIST_LEVELS));
     }
 
     @Test
-    void xpForLevel1_halfWay_10m_is5() {
-        // into=10, (10/20)*10 = 5
-        double into = 10.0;
-        int xp = (int) ((into / 20.0) * 10);
-        assertEquals(5, Math.max(0, Math.min(10, xp)));
+    void xpForLevel1_halfWay_250m_is5() {
+        // Rank 1 spans 0–500. Halfway is 250 m. Vanilla cap for level 1 is 10, so 5.
+        assertEquals(5, JourneyProgress.xpForDistance(250, 1, JourneyProgress.DEFAULT_TOURIST_LEVELS));
     }
 
     @Test
-    void xpForLevel2_70mInto_is70() {
-        // currentLevel=2, into = 70 (at 20m mark for L2), max=70 -> (70/20? wait into for L2 starts after 20m total
-        // but formula uses distanceIntoCurrentLevel for that level's 20m window
-        double into = 70.0; // deliberately using the max for L2
-        int xp = (int) ((into / 20.0) * 70);
-        assertEquals(70, Math.max(0, Math.min(70, xp)));
+    void xpForLevel2_at1500m_fillsTheBar() {
+        // Rank 2 spans 500–1500 (cap 70). At the end of that span the bar is full.
+        assertEquals(70, JourneyProgress.xpForDistance(1500, 2, JourneyProgress.DEFAULT_TOURIST_LEVELS));
     }
 
     // --- movement / stationary / speed window constants and derived math ---

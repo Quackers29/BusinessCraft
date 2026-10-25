@@ -46,6 +46,7 @@ public class TownLeaderboardScreen extends Screen {
         POPULATION("Population"),
         HAPPINESS("Happiness"),
         TOURISM("Tourism"),
+        NOTORIETY("Notoriety"),
         MONEY("Money");
 
         private final String displayName;
@@ -100,6 +101,7 @@ public class TownLeaderboardScreen extends Screen {
             case POPULATION -> Comparator.comparingLong(TownLeaderboardData::population).reversed();
             case HAPPINESS -> Comparator.comparingDouble(TownLeaderboardData::happiness).reversed();
             case TOURISM -> Comparator.comparingLong(TownLeaderboardData::tourism).reversed();
+            case NOTORIETY -> Comparator.comparingDouble(TownLeaderboardData::journeyDistance).reversed();
             case MONEY -> Comparator.comparingLong(TownLeaderboardData::money).reversed();
         };
     }
@@ -130,10 +132,11 @@ public class TownLeaderboardScreen extends Screen {
         boolean hasPopulation = hasAnyNonZeroValues(TownLeaderboardData::population);
         boolean hasHappiness = hasAnyNonZeroValues(data -> data.happiness());
         boolean hasTourism = hasAnyNonZeroValues(TownLeaderboardData::tourism);
+        boolean hasNotoriety = hasAnyNonZeroValues(TownLeaderboardData::journeyDistance);
         boolean hasMoney = hasAnyNonZeroValues(TownLeaderboardData::money);
 
         int availableWidth = panelWidth - 30; // Account for margins
-        int MIN_COLUMN_WIDTH = 100; // Minimum width per column
+        int MIN_COLUMN_WIDTH = 72; // Fits name, distance, and notoriety on the showcase panel
 
         // Determine how many total columns we can fit
         int maxColumns = Math.max(2, availableWidth / MIN_COLUMN_WIDTH);
@@ -152,8 +155,19 @@ public class TownLeaderboardScreen extends Screen {
             sortMode == SortMode.DISTANCE
         ));
 
-        // Build list of available columns in order
+        // Build list of available columns in order. Notoriety is first so a
+        // narrow panel still shows the distance-driven town tier.
         List<ColumnInfo> availableColumns = new ArrayList<>();
+
+        if (hasNotoriety) {
+            availableColumns.add(new ColumnInfo(
+                "Notoriety",
+                data -> data.notorietyLabel() == null || data.notorietyLabel().isEmpty()
+                        ? "-"
+                        : data.notorietyLabel(),
+                sortMode == SortMode.NOTORIETY
+            ));
+        }
 
         if (hasPopulation) {
             availableColumns.add(new ColumnInfo(
@@ -294,13 +308,14 @@ public class TownLeaderboardScreen extends Screen {
         calculateVisibleColumns();
         buildGrid();
 
-        int buttonX = this.width / 2 - 50;
+        int buttonWidth = 120;
+        int buttonX = this.width / 2 - buttonWidth / 2;
         int buttonY = panelTop + panelHeight + 5;
         this.backButton = this.addRenderableWidget(Button.builder(
             Component.literal("Back"),
             button -> this.minecraft.setScreen(parentScreen))
             .pos(buttonX, buttonY)
-            .size(100, 20)
+            .size(buttonWidth, 20)
             .build()
         );
 
@@ -309,7 +324,7 @@ public class TownLeaderboardScreen extends Screen {
             Component.literal("Sort: " + sortMode.getDisplayName()),
             button -> this.cycleSortMode())
             .pos(buttonX, buttonY)
-            .size(100, 20)
+            .size(buttonWidth, 20)
             .build()
         );
     }
@@ -320,7 +335,7 @@ public class TownLeaderboardScreen extends Screen {
         graphics.fill(0, 0, this.width, this.height, 0xB0000000);
 
         // Panel background and border
-        graphics.fill(panelLeft, panelTop, panelLeft + panelWidth, panelTop + panelHeight, TownInterfaceTheme.BACKGROUND_COLOR);
+        graphics.fill(panelLeft, panelTop, panelLeft + panelWidth, panelTop + panelHeight, 0xF014161C);
         graphics.hLine(panelLeft, panelLeft + panelWidth - 1, panelTop, TownInterfaceTheme.BORDER_COLOR);
         graphics.hLine(panelLeft, panelLeft + panelWidth - 1, panelTop + panelHeight - 1, TownInterfaceTheme.BORDER_COLOR);
         graphics.vLine(panelLeft, panelTop, panelTop + panelHeight - 1, TownInterfaceTheme.BORDER_COLOR);

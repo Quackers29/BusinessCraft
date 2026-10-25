@@ -95,7 +95,7 @@ public final class TouristUiSummaries {
             if (parts > 0) {
                 sb.append(", ");
             }
-            sb.append(entry.getValue()).append("→").append(truncate(entry.getKey(), 14));
+            sb.append(entry.getValue()).append("→").append(truncate(entry.getKey(), 28));
             parts++;
         }
         return sb.toString();
@@ -120,7 +120,7 @@ public final class TouristUiSummaries {
                 sb.append(" · ");
             }
             String name = nameResolver.apply(rec.getOriginTownId());
-            sb.append(truncate(name, 12));
+            sb.append(truncate(name, 24));
             if (rec.getCount() > 1) {
                 sb.append(" ×").append(rec.getCount());
             }

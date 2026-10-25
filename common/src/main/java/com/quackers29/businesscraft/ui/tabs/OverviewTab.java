@@ -1,5 +1,7 @@
 package com.quackers29.businesscraft.ui.tabs;
 
+import com.quackers29.businesscraft.config.ConfigLoader;
+import com.quackers29.businesscraft.economy.JourneyProgress;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
 import com.quackers29.businesscraft.ui.templates.TownInterfaceTheme;
 import com.quackers29.businesscraft.ui.components.basic.BCComponent;
@@ -60,13 +62,9 @@ public class OverviewTab extends BaseTownTab {
 
             int totalTourists = parentScreen.getCacheManager().getCachedTotalTouristsArrived();
             double totalDist = parentScreen.getCacheManager().getCachedTotalTouristDistance();
-            String distStr;
-            if (totalDist >= 1000) {
-                distStr = String.format("%.1fkm", totalDist / 1000.0);
-            } else {
-                distStr = String.format("%dm", (int) totalDist);
-            }
-            overviewData.put("Tourism:", String.format("%d (%s)", totalTourists, distStr));
+            overviewData.put("Tourism:", totalTourists + " visits");
+            overviewData.put("Notoriety:", JourneyProgress.formatTownNotoriety(
+                    totalDist, ConfigLoader.notorietyDistances));
 
             String popStr = parentScreen.getCachedPopulation() + " ("
                     + (int) parentScreen.getCacheManager().getCachedPopulationCap() + ")";

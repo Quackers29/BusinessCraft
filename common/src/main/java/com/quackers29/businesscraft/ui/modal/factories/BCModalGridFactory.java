@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.ui.modal.factories;
 
+import com.quackers29.businesscraft.town.data.TownLeaderboardData;
 import com.quackers29.businesscraft.ui.modal.specialized.BCModalGridScreen;
 import com.quackers29.businesscraft.ui.modal.specialized.BCModalInventoryScreen;
 
@@ -87,6 +88,19 @@ public class BCModalGridFactory {
             List<VisitHistoryRecord> visitHistory,
             Consumer<BCModalGridScreen<VisitHistoryRecord>> onCloseCallback,
             Function<UUID, String> townNameLookup) {
+        return createVisitorHistoryScreen(title, parentScreen, visitHistory, onCloseCallback, townNameLookup, null);
+    }
+
+    /**
+     * Visitor history with a distance column measured from {@code townPos} to each origin.
+     */
+    public static BCModalGridScreen<VisitHistoryRecord> createVisitorHistoryScreen(
+            Component title,
+            Screen parentScreen,
+            List<VisitHistoryRecord> visitHistory,
+            Consumer<BCModalGridScreen<VisitHistoryRecord>> onCloseCallback,
+            Function<UUID, String> townNameLookup,
+            BlockPos townPos) {
         
         // Create the screen
         BCModalGridScreen<VisitHistoryRecord> screen = new BCModalGridScreen<>(
@@ -97,8 +111,11 @@ public class BCModalGridFactory {
         
         // Configure with standard visitor history columns
         screen.addColumn("Time", record -> formatTime(record.getTimestamp()))
-              .addColumn("Origin", record -> formatOrigin(record, townNameLookup))
-              .addColumn("Count", record -> String.valueOf(record.getCount()))
+              .addColumn("Origin", record -> formatOrigin(record, townNameLookup));
+        if (townPos != null) {
+            screen.addColumn("Distance", record -> formatVisitDistance(record, townPos));
+        }
+        screen.addColumn("Count", record -> String.valueOf(record.getCount()))
               .withData(visitHistory)
               .withBackButtonText("Back")
               .withColors(
@@ -220,6 +237,14 @@ public class BCModalGridFactory {
     
     // Helper methods
     
+    private static String formatVisitDistance(VisitHistoryRecord record, BlockPos townPos) {
+        BlockPos origin = record.getOriginPos();
+        if (origin == null || origin.equals(BlockPos.ZERO) || townPos == null) {
+            return "—";
+        }
+        return TownLeaderboardData.formatDistance(Math.sqrt(origin.distSqr(townPos)));
+    }
+
     private static String formatTime(long timestamp) {
         SimpleDateFormat timeFormat = new SimpleDateFormat("MM/dd HH:mm");
         return timeFormat.format(new Date(timestamp));

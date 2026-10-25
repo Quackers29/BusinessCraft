@@ -1026,6 +1026,15 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     // Visit history implementation
     @Override
     public void recordVisit(UUID originTownId, int count, BlockPos originPos) {
+        recordVisit(originTownId, count, originPos, Double.NaN);
+    }
+
+    /**
+     * Records a visit. A positive {@code distancePerVisitor} is the payable path
+     * length (already clamped). Anything else falls back to the straight-line
+     * distance from the origin block, which is what seeded history and unit tests use.
+     */
+    public void recordVisit(UUID originTownId, int count, BlockPos originPos, double distancePerVisitor) {
         long timestamp = System.currentTimeMillis();
 
         // Create the visit record
@@ -1043,7 +1052,9 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
         this.totalTouristsArrived += count;
 
         if (originPos != null && originPos != BlockPos.ZERO) {
-            double distance = Math.sqrt(this.position.distSqr(originPos));
+            double distance = distancePerVisitor > 0 && !Double.isNaN(distancePerVisitor)
+                    ? distancePerVisitor
+                    : Math.sqrt(this.position.distSqr(originPos));
             this.totalTouristDistance += distance * count; // Weighted by visitor count
         }
 

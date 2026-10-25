@@ -1,1 +1,1 @@
-{ "id": "trail_hiker", "order": 3, "skin": 3, "outfit": 3, "headwear": 2, "accessory": 3 }
+{ "id": "trail_hiker", "order": 3, "type": "ADVENTURER", "skin": 3, "outfit": 3, "headwear": 2, "accessory": 3 }

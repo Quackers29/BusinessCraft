@@ -11,6 +11,7 @@ import java.util.Map;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.quackers29.businesscraft.economy.JourneyProgress;
 import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 
@@ -40,6 +41,15 @@ public class ConfigLoader {
     public static double touristExpiryMinutes = 120.0;
     public static boolean enableTouristExpiry = true;
     public static boolean notifyOnTouristDeparture = true;
+    /**
+     * Distance (blocks) required to reach tourist ranks 2, 3, …. Rank 1 is everyone below the first entry.
+     * Defaults line up with the linear fare: 500 m ≈ 5 emeralds, 6000 m ≈ 60 emeralds (past the bread milestone).
+     */
+    public static int[] touristLevelDistances = JourneyProgress.DEFAULT_TOURIST_LEVELS.clone();
+    /**
+     * Cumulative visitor-blocks required to reach town notoriety tiers 2, 3, ….
+     */
+    public static int[] notorietyDistances = JourneyProgress.DEFAULT_TOWN_TIERS.clone();
 
     // Tourism economy config
     /** Blocks traveled per emerald (linear curve: exponent = 1). Default 100 → 1 km ≈ 10 emeralds/tourist. */
@@ -154,6 +164,10 @@ public class ConfigLoader {
                 enableTouristExpiry = config.getOrElse("tourists.enableTouristExpiry", true);
                 notifyOnTouristDeparture = config.getOrElse("tourists.notifyOnTouristDeparture", true);
                 touristSystemEnabled = config.getOrElse("tourists.enabled", true);
+                touristLevelDistances = readRisingInts(config, "tourists.levelDistances",
+                        JourneyProgress.DEFAULT_TOURIST_LEVELS);
+                notorietyDistances = readRisingInts(config, "economy.notorietyDistances",
+                        JourneyProgress.DEFAULT_TOWN_TIERS);
 
                 // Economy settings
                 metersPerEmerald = config.getIntOrElse("economy.metersPerEmerald", 100);
@@ -307,6 +321,16 @@ public class ConfigLoader {
                 config.setComment("tourists.notifyOnTouristDeparture", " Notify origin town when tourist departs");
                 config.set("tourists.enabled", touristSystemEnabled);
                 config.setComment("tourists.enabled", "Master switch - completely disables tourist spawning globally");
+                config.set("tourists.levelDistances", toList(touristLevelDistances));
+                config.setComment("tourists.levelDistances",
+                        " Blocks traveled to reach tourist ranks 2, 3, ... (rank 1 is below the first number). "
+                                + "Default 500/1500/3000/6000 lines up with the linear fare "
+                                + "(about 5/15/30/60 emeralds per tourist at metersPerEmerald=100).");
+                config.set("economy.notorietyDistances", toList(notorietyDistances));
+                config.setComment("economy.notorietyDistances",
+                        " Cumulative visitor-blocks to reach town notoriety tiers 2, 3, ... "
+                                + "(Wayside below the first number, then Halt, Station, Destination, Landmark). "
+                                + "Default 2000/10000/40000/120000.");
 
                 // Economy settings
                 config.set("economy.metersPerEmerald", metersPerEmerald);
@@ -403,5 +427,47 @@ public class ConfigLoader {
 
         config.set("milestones.rewards", rewardsList);
         config.setComment("milestones.rewards", " Milestone rewards - distance in meters, items as \"modid:item:count\"");
+    }
+
+    /** Rising positive ints. A missing, empty, or unsorted list keeps {@code fallback}. */
+    private static int[] readRisingInts(CommentedFileConfig config, String key, int[] fallback) {
+        if (!config.contains(key)) {
+            return fallback.clone();
+        }
+        Object raw = config.get(key);
+        if (!(raw instanceof List<?> list) || list.isEmpty()) {
+            return fallback.clone();
+        }
+        int[] parsed = new int[list.size()];
+        int previous = 0;
+        for (int i = 0; i < list.size(); i++) {
+            Object value = list.get(i);
+            int number;
+            if (value instanceof Number numeric) {
+                number = numeric.intValue();
+            } else {
+                try {
+                    number = Integer.parseInt(String.valueOf(value));
+                } catch (NumberFormatException e) {
+                    return fallback.clone();
+                }
+            }
+            if (number <= previous) {
+                return fallback.clone();
+            }
+            parsed[i] = number;
+            previous = number;
+        }
+        return parsed;
+    }
+
+    private static List<Integer> toList(int[] values) {
+        List<Integer> list = new ArrayList<>();
+        if (values != null) {
+            for (int value : values) {
+                list.add(value);
+            }
+        }
+        return list;
     }
 }
