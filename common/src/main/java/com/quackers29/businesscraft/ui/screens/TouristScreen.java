@@ -41,14 +41,24 @@ public class TouristScreen extends AbstractContainerScreen<TouristMenu> {
     private static final int NEED = 0xFFFFA3A3;
     private static final int LOCKED = 0xFFAEB4BE;
 
-    private Layout layout = Layout.roomy(360, 6);
+    private Layout layout = Layout.roomy(420, 6);
     private final List<Button> tradeButtons = new ArrayList<>();
     private int forcedTooltipRow = -1;
 
+    /**
+     * Showcase leaves the cursor in the middle of the window, which lands on the
+     * first trade. While this is set, only an explicit hover request draws a tooltip.
+     */
+    private static boolean showcaseSuppressHover;
+
     public TouristScreen(TouristMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, Component.literal("Tourist"));
-        this.imageWidth = 360;
+        this.imageWidth = 420;
         this.imageHeight = 360;
+    }
+
+    public static void showcaseSuppressHover(boolean suppress) {
+        showcaseSuppressHover = suppress;
     }
 
     /** Showcase pins a trade tooltip without needing a real mouse. */
@@ -74,6 +84,12 @@ public class TouristScreen extends AbstractContainerScreen<TouristMenu> {
             this.tradeButtons.add(this.addRenderableWidget(button));
         }
         refreshButtons();
+    }
+
+    @Override
+    public void removed() {
+        showcaseSuppressHover = false;
+        super.removed();
     }
 
     @Override
@@ -104,9 +120,7 @@ public class TouristScreen extends AbstractContainerScreen<TouristMenu> {
         super.render(graphics, mouseX, mouseY, partialTick);
         int tip = tooltipRow(mouseX, mouseY);
         if (tip >= 0) {
-            int tipX = this.forcedTooltipRow == tip ? this.leftPos + 36 : mouseX;
-            int tipY = this.forcedTooltipRow == tip ? this.topPos + this.layout.rowsTop + 4 : mouseY;
-            graphics.renderComponentTooltip(this.font, tooltipFor(tip), tipX, tipY);
+            drawSideTooltip(graphics, tooltipFor(tip));
         }
     }
 
@@ -264,8 +278,73 @@ public class TouristScreen extends AbstractContainerScreen<TouristMenu> {
         if (forcedTooltipRow >= 0 && forcedTooltipRow < TouristTradeCatalog.all().size()) {
             return forcedTooltipRow;
         }
-        int row = rowAt(mouseX, mouseY);
-        return row;
+        if (showcaseSuppressHover) {
+            return -1;
+        }
+        return rowAt(mouseX, mouseY);
+    }
+
+    /**
+     * Draws the trade explanation beside the panel. A cursor tooltip lands on the
+     * row itself and hides the words it is explaining, and on a narrow window it
+     * runs off the edge.
+     */
+    private void drawSideTooltip(GuiGraphics graphics, List<Component> raw) {
+        int gap = 8;
+        int side = Math.max(this.leftPos, this.width - (this.leftPos + this.imageWidth)) - gap;
+        int wrap = Math.min(220, Math.max(96, side - 8));
+        List<Component> lines = fitLines(raw, wrap);
+        if (lines.isEmpty()) {
+            return;
+        }
+        int textW = 0;
+        for (Component line : lines) {
+            textW = Math.max(textW, this.font.width(line));
+        }
+        int boxW = textW + 8;
+        int boxH = lines.size() * 10 + 8;
+        int rightX = this.leftPos + this.imageWidth + gap;
+        int leftX = this.leftPos - gap - boxW;
+        int x = rightX + boxW <= this.width - 2 ? rightX : (leftX >= 2 ? leftX : 4);
+        int y = this.topPos + this.layout.rowsTop;
+        if (x + boxW > this.width - 2) {
+            x = Math.max(2, this.width - 2 - boxW);
+        }
+        if (y + boxH > this.height - 2) {
+            y = Math.max(2, this.height - 2 - boxH);
+        }
+        int textX = x + 4;
+        int textY = y + 4;
+        graphics.pose().pushPose();
+        graphics.pose().translate(0.0, 0.0, 400.0);
+        graphics.fill(textX - 4, textY - 4, textX + textW + 4, textY - 3, 0xF0100010);
+        graphics.fill(textX - 4, textY + lines.size() * 10 + 3, textX + textW + 4, textY + lines.size() * 10 + 4, 0xF0100010);
+        graphics.fill(textX - 4, textY - 3, textX + textW + 4, textY + lines.size() * 10 + 3, 0xF0100010);
+        graphics.fill(textX - 5, textY - 3, textX - 4, textY + lines.size() * 10 + 3, 0xF0100010);
+        graphics.fill(textX + textW + 4, textY - 3, textX + textW + 5, textY + lines.size() * 10 + 3, 0xF0100010);
+        int borderTop = 0x505000FF;
+        int borderBottom = 0x5028007F;
+        int innerBottom = textY + lines.size() * 10 + 3;
+        graphics.fillGradient(textX - 4, textY - 2, textX - 3, innerBottom - 1, borderTop, borderBottom);
+        graphics.fillGradient(textX + textW + 3, textY - 2, textX + textW + 4, innerBottom - 1, borderTop, borderBottom);
+        graphics.fillGradient(textX - 4, textY - 3, textX + textW + 4, textY - 2, borderTop, borderTop);
+        graphics.fillGradient(textX - 4, innerBottom - 1, textX + textW + 4, innerBottom, borderBottom, borderBottom);
+        for (int i = 0; i < lines.size(); i++) {
+            graphics.drawString(this.font, lines.get(i), textX, textY + i * 10, 0xFFFFFFFF, false);
+        }
+        graphics.pose().popPose();
+    }
+
+    private List<Component> fitLines(List<Component> raw, int maxWidth) {
+        List<Component> lines = new ArrayList<>();
+        for (Component line : raw) {
+            for (String part : UiTextWrap.wrap(line.getString(), maxWidth, this.font::width)) {
+                if (!part.isEmpty()) {
+                    lines.add(Component.literal(part).withStyle(line.getStyle()));
+                }
+            }
+        }
+        return lines;
     }
 
     private int rowAt(double mouseX, double mouseY) {
@@ -378,7 +457,9 @@ public class TouristScreen extends AbstractContainerScreen<TouristMenu> {
         }
 
         static Layout choose(int screenWidth, int screenHeight, int rows) {
-            int width = Math.min(360, Math.max(320, screenWidth - 16));
+            // 420 leaves a gutter for the trade tooltip and fits the longest row
+            // ("Offered from the first step of the journey.") beside the Trade button.
+            int width = Math.min(420, Math.max(320, screenWidth - 16));
             int roomyHeight = 174 + rows * 32;
             if (screenHeight >= roomyHeight + 8) {
                 return new Layout(width, roomyHeight, 32, 162, true,

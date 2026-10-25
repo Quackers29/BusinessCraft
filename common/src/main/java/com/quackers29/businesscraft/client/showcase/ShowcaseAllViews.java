@@ -147,6 +147,10 @@ public final class ShowcaseAllViews {
     }
 
     private static void runSettle(Minecraft minecraft, ShowcaseRoute route) {
+        if (settleTicks == 1 && route.name().startsWith("tourist/")) {
+            minecraft.options.hideGui = true;
+            minecraft.gui.getChat().clearMessages(false);
+        }
         if (settleTicks-- > 0) {
             return;
         }

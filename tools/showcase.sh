@@ -305,7 +305,10 @@ showcase_append_index "${SHOWCASE_OUTPUT_ROOT}" "$SHOWCASE_RUN_DIR" "$MODE" "$LO
 
 if [[ -n "${SHOWCASE_ARTIFACT_DIR:-}" ]]; then
     mkdir -p "$SHOWCASE_ARTIFACT_DIR"
-    cp -a "$SHOWCASE_RUN_DIR/." "$SHOWCASE_ARTIFACT_DIR/"
+    # cp -a preserves ownership and fails on artifact dirs the agent cannot chown.
+    if ! cp -a "$SHOWCASE_RUN_DIR/." "$SHOWCASE_ARTIFACT_DIR/"; then
+        cp -R --no-preserve=mode,ownership "$SHOWCASE_RUN_DIR/." "$SHOWCASE_ARTIFACT_DIR/"
+    fi
 fi
 
 if [[ "$code" -ne 0 ]]; then

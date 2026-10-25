@@ -210,6 +210,8 @@ public final class ShowcaseNavigator {
         String destination = anyTown ? TouristEntity.ANY_TOWN_NAME : "Hillcrest";
         UUID playerId = minecraft.player.getUUID();
         minecraft.setScreen(null);
+        // After setScreen, so the closing tourist screen cannot clear the flag.
+        TouristScreen.showcaseSuppressHover(true);
         server.execute(() -> openTouristOnServer(server, playerId, townPos, legacy, anyTown, destination, distance));
         return null;
     }
