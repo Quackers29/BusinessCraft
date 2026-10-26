@@ -247,7 +247,7 @@ public final class Showcase {
                 || "platform_overview".equals(name)) {
             return 50;
         }
-        if ("platform_interface".equals(name)) {
+        if ("platform_interface".equals(name) || name.startsWith("platform_") || "town_paths".equals(name)) {
             return 30;
         }
         return name.startsWith("town_") && !name.startsWith("town_interface") ? 30 : 20;
@@ -333,19 +333,32 @@ public final class Showcase {
 
     private static void aim(Minecraft minecraft, PlannedShot shot) {
         BlockPos pos = townPos;
-        BlockPos lookAt = "platform_interface".equals(shot.name)
-                ? ShowcasePlatforms.interfacePos(pos)
-                : pos;
+        boolean machineShot = "platform_interface".equals(shot.name) || "platform_front".equals(shot.name)
+                || "platform_side".equals(shot.name) || "platform_rail".equals(shot.name)
+                || "platform_hand".equals(shot.name) || "platform_path".equals(shot.name);
+        BlockPos lookAt = machineShot ? ShowcasePlatforms.interfacePos(pos) : pos;
+        if ("platform_path".equals(shot.name) && lookAt != null) {
+            lookAt = lookAt.north(4);
+        }
+        if ("town_paths".equals(shot.name)) {
+            lookAt = pos.offset(4, 0, 4);
+        }
         if (lookAt == null) {
             lookAt = pos;
         }
         Vec3 target = Vec3.atCenterOf(lookAt);
         Vec3 eye = switch (shot.name) {
             case "town_interface_back" -> target.add(-1.8, 1.6, -3.2);
-            case "platform_interface" -> target.add(2.2, 1.5, 3.4);
+            case "platform_front", "platform_interface" -> target.add(0.0, 1.15, 3.1);
+            case "platform_side" -> target.add(3.3, 1.35, 0.4);
+            case "platform_rail" -> target.add(2.6, 2.0, 2.4);
+            case "platform_hand" -> target.add(0.0, 0.2, 2.4);
+            case "platform_path" -> target.add(3.6, 2.6, 1.2);
+            case "town_paths" -> target.add(2.5, 7.5, 6.5);
             case "town_interface", "warmup" -> target.add(1.8, 1.6, 3.2);
             default -> target.add(0.0, 1.2, 2.4);
         };
+        showPaths(shot, pos);
         float[] facing = ShowcaseSelection.facing(eye.x, eye.y, eye.z, target.x, target.y + 0.2, target.z);
         Player player = minecraft.player;
         double feetY = eye.y - player.getEyeHeight();
@@ -356,10 +369,42 @@ public final class Showcase {
             server.execute(() -> {
                 ServerPlayer serverPlayer = server.getPlayerList().getPlayer(player.getUUID());
                 if (serverPlayer != null) {
+                    if ("platform_hand".equals(shot.name)) {
+                        serverPlayer.setGameMode(GameType.CREATIVE);
+                        serverPlayer.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,
+                                new net.minecraft.world.item.ItemStack(
+                                        com.quackers29.businesscraft.init.CommonModBlocks.PLATFORM_INTERFACE_BLOCK.get()));
+                    } else {
+                        serverPlayer.setGameMode(GameType.SPECTATOR);
+                    }
                     serverPlayer.teleportTo(serverPlayer.serverLevel(), eye.x, feetY, eye.z, facing[0], facing[1]);
                     serverPlayer.setYHeadRot(facing[0]);
                 }
             });
+        }
+    }
+
+    private static void showPaths(PlannedShot shot, BlockPos townPos) {
+        if (townPos == null) {
+            return;
+        }
+        BlockPos machine = ShowcasePlatforms.interfacePos(townPos);
+        BlockPos second = ShowcasePlatforms.secondPos(townPos);
+        if ("platform_path".equals(shot.name) && machine != null && ShowcasePlatforms.firstPlatformId() != null) {
+            com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer.hidePlatformVisualization(townPos);
+            if (second != null) {
+                com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer.hidePlatformVisualization(second);
+            }
+            com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer.showPlatformPath(
+                    machine, ShowcasePlatforms.firstPlatformId(), 0);
+        } else if ("town_paths".equals(shot.name)) {
+            if (machine != null) {
+                com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer.hidePlatformVisualization(machine);
+            }
+            if (second != null) {
+                com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer.hidePlatformVisualization(second);
+            }
+            com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer.showPlatformVisualization(townPos, 0);
         }
     }
 

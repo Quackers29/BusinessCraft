@@ -60,6 +60,14 @@ class ShowcaseSelectionTest {
     }
 
     @Test
+    void kioskScene_showsTheMachineAndItsPath() {
+        assertEquals(
+                List.of("warmup", "platform_front", "platform_side", "platform_rail", "platform_hand",
+                        "platform_path", "town_paths"),
+                ShowcaseSelection.shotsFor("kiosk"));
+    }
+
+    @Test
     void platformScene_isTownCentreBlockAndBothScreens() {
         assertEquals(
                 List.of("warmup", "town_overview", "platform_interface", "platform_interface_screen", "platform_overview"),

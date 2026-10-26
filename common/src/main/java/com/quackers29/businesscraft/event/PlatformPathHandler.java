@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.event;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.platform.Platform;
+import com.quackers29.businesscraft.platform.PlatformPathSync;
 import com.quackers29.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
@@ -80,11 +81,17 @@ public class PlatformPathHandler {
                         .withStyle(ChatFormatting.YELLOW)
                 );
                 awaitingSecondClick = true;
+                if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                    PlatformPathSync.show(serverPlayer, townInterface, platform);
+                }
                 LOGGER.debug("Set platform {} path start to {}, now awaiting second click", activePlatformId, clickedPos);
             }
             else {
                 townInterface.setPlatformPathEnd(activePlatformId, clickedPos);
                 townInterface.setPlatformCreationMode(false, null);
+                if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                    PlatformPathSync.show(serverPlayer, townInterface, townInterface.getPlatform(activePlatformId));
+                }
                 
                 player.sendSystemMessage(
                     Component.literal("Platform path created!")

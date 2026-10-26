@@ -247,45 +247,7 @@ public class TownInterfaceBlock extends BaseEntityBlock {
 
             if (shouldSpawnIndicators) {
                 platformIndicatorSpawnTimes.put(platformId, gameTime);
-
-                BlockPos startPos = platform.getStartPos();
-                BlockPos endPos = platform.getEndPos();
-
-                int startX = startPos.getX();
-                int startY = startPos.getY();
-                int startZ = startPos.getZ();
-                int endX = endPos.getX();
-                int endY = endPos.getY();
-                int endZ = endPos.getZ();
-
-                int dx = endX - startX;
-                int dy = endY - startY;
-                int dz = endZ - startZ;
-                double length = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                int steps = (int) Math.max(1, Math.ceil(length));
-
-                for (int i = 0; i <= steps; i++) {
-                    double t = (steps == 0) ? 0 : (double) i / steps;
-                    double x = startX + dx * t;
-                    double y = startY + dy * t + 1.0;
-                    double z = startZ + dz * t;
-
-                    ((ServerLevel) level).sendParticles(
-                            ParticleTypes.HAPPY_VILLAGER,
-                            x + 0.5,
-                            y,
-                            z + 0.5,
-                            5,
-                            0.2, 0.2, 0.2,
-                            0.0
-                    );
-                }
-
-                spawnSearchRadiusParticles(
-                        (ServerLevel) level,
-                        startPos,
-                        endPos,
-                        platform.getSearchRadius());
+                spawnIndicator((ServerLevel) level, platform);
             }
         }
     }
@@ -307,7 +269,35 @@ public class TownInterfaceBlock extends BaseEntityBlock {
                 .removeIf(platformId -> platforms.stream().noneMatch(p -> p.getId().equals(platformId)));
     }
 
-    private void spawnSearchRadiusParticles(ServerLevel level, BlockPos startPos, BlockPos endPos, int radius) {
+    /** One burst of the path particles used when a player has just selected a platform or the town. */
+    public static void spawnIndicator(ServerLevel level, com.quackers29.businesscraft.platform.Platform platform) {
+        if (level == null || platform == null || !platform.isComplete()) {
+            return;
+        }
+        BlockPos startPos = platform.getStartPos();
+        BlockPos endPos = platform.getEndPos();
+        int startX = startPos.getX();
+        int startY = startPos.getY();
+        int startZ = startPos.getZ();
+        int endX = endPos.getX();
+        int endY = endPos.getY();
+        int endZ = endPos.getZ();
+        int dx = endX - startX;
+        int dy = endY - startY;
+        int dz = endZ - startZ;
+        double length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        int steps = (int) Math.max(1, Math.ceil(length));
+        for (int i = 0; i <= steps; i++) {
+            double t = (steps == 0) ? 0 : (double) i / steps;
+            double x = startX + dx * t;
+            double y = startY + dy * t + 1.0;
+            double z = startZ + dz * t;
+            level.sendParticles(ParticleTypes.HAPPY_VILLAGER, x + 0.5, y, z + 0.5, 5, 0.2, 0.2, 0.2, 0.0);
+        }
+        spawnSearchRadiusParticles(level, startPos, endPos, platform.getSearchRadius());
+    }
+
+    private static void spawnSearchRadiusParticles(ServerLevel level, BlockPos startPos, BlockPos endPos, int radius) {
         int startX = startPos.getX();
         int startY = startPos.getY();
         int startZ = startPos.getZ();

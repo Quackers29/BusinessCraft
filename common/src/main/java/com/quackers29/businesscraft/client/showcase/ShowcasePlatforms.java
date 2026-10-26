@@ -26,7 +26,11 @@ import java.util.UUID;
 public final class ShowcasePlatforms {
     private static final Logger LOGGER = LoggerFactory.getLogger("BusinessCraft/Showcase");
     public static final BlockPos OFFSET = new BlockPos(4, 0, 0);
+    public static final BlockPos SECOND_OFFSET = new BlockPos(4, 0, 8);
     private static volatile BlockPos placedAt;
+    private static volatile BlockPos secondAt;
+    private static volatile UUID firstPlatformId;
+    private static volatile UUID secondPlatformId;
 
     private ShowcasePlatforms() {
     }
@@ -38,8 +42,27 @@ public final class ShowcasePlatforms {
         return townPos.offset(OFFSET);
     }
 
+    public static BlockPos secondPos(BlockPos townPos) {
+        if (townPos == null) {
+            return null;
+        }
+        return townPos.offset(SECOND_OFFSET);
+    }
+
     public static BlockPos lastPlaced() {
         return placedAt;
+    }
+
+    public static BlockPos lastSecond() {
+        return secondAt;
+    }
+
+    public static UUID firstPlatformId() {
+        return firstPlatformId;
+    }
+
+    public static UUID secondPlatformId() {
+        return secondPlatformId;
     }
 
     public static boolean ensure(ServerLevel level, BlockPos townPos) {
@@ -49,6 +72,7 @@ public final class ShowcasePlatforms {
         }
         placedAt = pos.immutable();
         if (level.getBlockState(pos).getBlock() instanceof PlatformInterfaceBlock) {
+            dress(level, pos, townPos);
             return true;
         }
         if (!(level.getBlockEntity(townPos) instanceof TownInterfaceEntity town) || town.getTownId() == null) {
@@ -58,7 +82,8 @@ public final class ShowcasePlatforms {
         if (level.getBlockState(pos.below()).isAir()) {
             level.setBlock(pos.below(), Blocks.SMOOTH_STONE.defaultBlockState(), 3);
         }
-        level.setBlock(pos, CommonModBlocks.PLATFORM_INTERFACE_BLOCK.get().defaultBlockState(), 3);
+        level.setBlock(pos, CommonModBlocks.PLATFORM_INTERFACE_BLOCK.get().defaultBlockState()
+                .setValue(PlatformInterfaceBlock.FACING, Direction.SOUTH), 3);
         if (!(level.getBlockEntity(pos) instanceof PlatformInterfaceEntity entity)) {
             LOGGER.warn("Showcase platform: block entity missing at {}", pos);
             return false;
@@ -70,11 +95,62 @@ public final class ShowcasePlatforms {
             return false;
         }
         entity.link(town.getTownId(), platformId, townPos);
+        firstPlatformId = platformId;
         town.setPlatformPathStart(platformId, pos.north(2));
         town.setPlatformPathEnd(platformId, pos.north(6));
+        placeSecond(level, town, townPos);
+        dress(level, pos, townPos);
         town.syncPlatforms();
         LOGGER.info("Showcase placed platform interface at {}", pos);
         return true;
+    }
+
+    private static void placeSecond(ServerLevel level, TownInterfaceEntity town, BlockPos townPos) {
+        BlockPos pos = secondPos(townPos);
+        secondAt = pos == null ? null : pos.immutable();
+        if (pos == null || level.getBlockState(pos).getBlock() instanceof PlatformInterfaceBlock) {
+            return;
+        }
+        if (level.getBlockState(pos.below()).isAir()) {
+            level.setBlock(pos.below(), Blocks.SMOOTH_STONE.defaultBlockState(), 3);
+        }
+        level.setBlock(pos, CommonModBlocks.PLATFORM_INTERFACE_BLOCK.get().defaultBlockState()
+                .setValue(PlatformInterfaceBlock.FACING, Direction.SOUTH), 3);
+        if (!(level.getBlockEntity(pos) instanceof PlatformInterfaceEntity entity)) {
+            return;
+        }
+        UUID platformId = town.addInterfacePlatform(pos);
+        if (platformId == null) {
+            level.removeBlock(pos, false);
+            return;
+        }
+        entity.link(town.getTownId(), platformId, townPos);
+        secondPlatformId = platformId;
+        town.setPlatformPathStart(platformId, pos.east(2));
+        town.setPlatformPathEnd(platformId, pos.east(6));
+    }
+
+    /** Rails along the first platform's path, so the kiosk reads as a station. */
+    private static void dress(ServerLevel level, BlockPos machine, BlockPos townPos) {
+        for (int step = 1; step <= 7; step++) {
+            BlockPos rail = machine.north(step);
+            if (level.getBlockState(rail.below()).isAir()) {
+                level.setBlock(rail.below(), Blocks.STONE_BRICKS.defaultBlockState(), 3);
+            } else if (step <= 6) {
+                level.setBlock(rail.below(), Blocks.STONE_BRICKS.defaultBlockState(), 3);
+            }
+            level.setBlock(rail, Blocks.RAIL.defaultBlockState(), 3);
+        }
+        BlockPos second = secondPos(townPos);
+        if (second == null) {
+            return;
+        }
+        for (int step = 1; step <= 6; step++) {
+            BlockPos rail = second.east(step);
+            if (level.getBlockState(rail).isAir()) {
+                level.setBlock(rail, Blocks.RAIL.defaultBlockState(), 3);
+            }
+        }
     }
 
     public static void openScreen(Minecraft minecraft, BlockPos townPos) {

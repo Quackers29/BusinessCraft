@@ -10,6 +10,7 @@ import com.quackers29.businesscraft.network.packets.platform.SetPlatformAreaPack
 import com.quackers29.businesscraft.network.packets.platform.SetPlatformDestinationPacket;
 import com.quackers29.businesscraft.network.packets.platform.SetPlatformEnabledPacket;
 import com.quackers29.businesscraft.network.packets.platform.SetPlatformPathCreationModePacket;
+import com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket;
 import com.quackers29.businesscraft.network.packets.ui.OpenDestinationsUIPacket;
 import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.ui.util.UiTextWrap;
@@ -78,6 +79,15 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
                         directions == null ? "" : directions.getOrDefault(id, "")));
             }
             destinations.sort(Comparator.comparingInt(Destination::distance).thenComparing(Destination::name));
+        }
+    }
+
+    @Override
+    public void removed() {
+        BlockPos pos = this.menu != null ? this.menu.getBlockPos() : null;
+        super.removed();
+        if (pos != null && PlatformAccess.getNetworkMessages() != null) {
+            PlatformAccess.getNetworkMessages().sendToServer(new PlayerExitUIPacket(pos));
         }
     }
 

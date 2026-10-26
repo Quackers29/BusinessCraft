@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.network.packets.platform;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.platform.Platform;
+import com.quackers29.businesscraft.platform.PlatformPathSync;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -64,6 +65,7 @@ public class ResetPlatformPathPacket {
                     platform.setStartPos(null);
                     platform.setEndPos(null);
                     townInterfaceEntity.setChanged();
+                    PlatformPathSync.show(player, townInterfaceEntity, platform);
                     
                     // NEW: Explicitly send BE data packet to the requesting player
                     ClientboundBlockEntityDataPacket bePacket = ClientboundBlockEntityDataPacket.create(townInterfaceEntity);
