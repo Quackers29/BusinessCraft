@@ -123,8 +123,8 @@ public class PlatformManagementScreenV2 extends Screen {
         platformListGrid = UIGridBuilder.create(
                 PLATFORM_LIST_X, PLATFORM_LIST_Y + 5,
                 listWidth - 8, listHeight - 10,
-                6) // Status, Name, State, Path, Destinations, Position
-                .withColumnWeights(new float[] {0.06f, 0.20f, 0.18f, 0.18f, 0.18f, 0.20f})
+                5) // Status, Name, State, Path, Destinations. The block position is on the name tooltip.
+                .withColumnWeights(new float[] {0.08f, 0.26f, 0.22f, 0.22f, 0.22f})
                 .withRowHeight(18)
                 .withSpacing(4, 3) // Back to normal spacing
                 .withMargins(4, 2) // Reduced vertical margin from 4 to 2 to fit more rows
@@ -175,8 +175,10 @@ public class PlatformManagementScreenV2 extends Screen {
             String nameText = platform.getName() == null || platform.getName().isBlank()
                     ? "Platform " + (i + 1)
                     : platform.getName();
+            net.minecraft.core.BlockPos at = platform.getInterfacePos();
+            String where = at == null ? "no block position" : "at " + at.getX() + ", " + at.getY() + ", " + at.getZ();
             platformListGrid.addLabelWithTooltip(i, 1, nameText,
-                    "Open this platform's Platform Interface to change it", TEXT_COLOR);
+                    "Open this platform's Platform Interface to change it (" + where + ")", TEXT_COLOR);
 
             String state = platform.isEnabled() ? "Enabled" : "Disabled";
             platformListGrid.addLabel(i, 2, state, platform.isEnabled() ? SUCCESS_COLOR : DISABLED_COLOR);
@@ -186,10 +188,6 @@ public class PlatformManagementScreenV2 extends Screen {
             int destCount = platform.getEnabledDestinations().size();
             String dest = destCount == 0 ? "Any town" : destCount + (destCount == 1 ? " town" : " towns");
             platformListGrid.addLabel(i, 4, dest, TEXT_COLOR);
-
-            net.minecraft.core.BlockPos at = platform.getInterfacePos();
-            String where = at == null ? "—" : at.getX() + ", " + at.getY() + ", " + at.getZ();
-            platformListGrid.addLabel(i, 5, where, TEXT_COLOR);
         }
 
         if (platforms.isEmpty()) {

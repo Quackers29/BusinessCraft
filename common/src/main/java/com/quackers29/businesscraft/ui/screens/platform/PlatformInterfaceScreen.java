@@ -234,8 +234,8 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
         int x = panelX + 14;
         int y = bodyTop + (tight ? 4 : 8);
         int inner = panelW - 28;
-        int buttonH = panelH < 180 ? 16 : 20;
-        int gap = tight ? 6 : 14;
+        int buttonH = panelH < 250 ? 16 : 20;
+        int gap = tight ? 4 : 14;
         y = sectionTitle(graphics, x, y, "Platform");
         boolean on = platform.isEnabled();
         control(graphics, "toggle", on ? "Disable platform" : "Enable platform",
@@ -252,22 +252,25 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
         y += buttonH + gap;
 
         y = sectionTitle(graphics, x, y, "Spawn");
-        String spawnHint = tight
-                ? "Spread stays inside the search radius."
-                : "Search radius is how far this platform notices visitors. Spread is how far tourists may stand off the path. Spread cannot exceed the radius.";
-        y += drawWrapped(graphics, spawnHint, x, y, inner, MUTED, tight ? 2 : 3) + (tight ? 4 : 6);
+        if (!tight) {
+            y += drawWrapped(graphics,
+                    "Search radius is how far this platform notices visitors. Spread is how far tourists may stand off the path. Spread cannot exceed the radius.",
+                    x, y, inner, MUTED, 3) + 6;
+        }
         y = stepper(graphics, mouseX, mouseY, x, y, inner, buttonH, "radius",
                 "Search radius", platform.getSearchRadius(), "blocks");
         y += tight ? 4 : 8;
         y = stepper(graphics, mouseX, mouseY, x, y, inner, buttonH, "spread",
                 "Spread", platform.getSpread(), platform.getSpread() == 0 ? "on the line" : "blocks off the line");
-        y += tight ? 8 : 16;
+        y += tight ? 4 : 16;
 
         y = sectionTitle(graphics, x, y, "Destinations");
-        String hint = destinations.stream().anyMatch(d -> d.enabled)
-                ? "Allowed towns only. Turn them all off to accept any town."
-                : "No towns selected. Tourists may travel to any town.";
-        y += drawWrapped(graphics, hint, x, y, inner, MUTED, 3) + 6;
+        if (!tight) {
+            String hint = destinations.stream().anyMatch(d -> d.enabled)
+                    ? "Allowed towns only. Turn them all off to accept any town."
+                    : "No towns selected. Tourists may travel to any town.";
+            y += drawWrapped(graphics, hint, x, y, inner, MUTED, 3) + 6;
+        }
         if (destinations.isEmpty()) {
             graphics.drawString(this.font, "Looking for other towns…", x, y, MUTED, false);
             y += 16;
