@@ -10,7 +10,8 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Right-clicking a tourist opens a tourist screen instead of the villager trade window. The title is the tourist's personal name and rank, and the screen shows the origin town, destination, distance, and progress to the next rank.
 - The old barrier "info" row is gone. Locked deals say which rank unlocks them. The Travel Ticket tooltip says it is a paper souvenir and what Any Town means.
 - Tourist deals are a wider, look-themed set (still records in code, not a config file). The distance fare is unchanged. Nothing a tourist sells is worth more than the goods they ask for.
-- A tourist shows only their personal name, and only from a few blocks away. The name is chosen when they spawn and kept in the save.
+- A tourist shows their first name above their head, from a few blocks away, including through walls. The full name stays on the tourist screen. The name is chosen when they spawn and kept in the save.
+- The eight newer tourist looks use the same face layout as the original eight: the same brow, eye, and mouth placement, and the same blush, stubble, glasses, beard, and moustache masks.
 - The tourist screen times the visit in minutes. The trade list scrolls when the window is short.
 
 ## [0.9.0-beta] — 2026-07-16

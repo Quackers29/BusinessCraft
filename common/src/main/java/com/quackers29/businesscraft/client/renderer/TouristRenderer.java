@@ -21,7 +21,9 @@ import org.joml.Matrix4f;
 
 /**
  * Humanoid tourist. Appearance comes from the packed look (skin, outfit, headwear,
- * accessory). The only floating text is the personal name, and only up close.
+ * accessory). The only floating text is the first name, and only up close.
+ * The full name stays on the tourist screen. The name is drawn see-through and
+ * depth-tested, so it can show through walls.
  */
 public class TouristRenderer extends MobRenderer<TouristEntity, TouristModel> {
     private static final float NAME_TAG_SCALE = 0.02F;
@@ -80,7 +82,11 @@ public class TouristRenderer extends MobRenderer<TouristEntity, TouristModel> {
         if (TouristNames.isPlaceholder(personal)) {
             return;
         }
-        Component line = Component.literal(personal);
+        String first = TouristNames.firstOf(personal);
+        if (first.isBlank()) {
+            return;
+        }
+        Component line = Component.literal(first);
         float scale = NAME_TAG_SCALE;
         poseStack.pushPose();
         poseStack.translate(0.0D, entity.getBbHeight() + 0.62F, 0.0D);
@@ -88,9 +94,11 @@ public class TouristRenderer extends MobRenderer<TouristEntity, TouristModel> {
         poseStack.scale(-scale, -scale, scale);
         Font font = this.getFont();
         Matrix4f matrix = poseStack.last().pose();
-        float lineWidth = font.width(line);
-        // NORMAL is depth-tested, so a wall between the player and the tourist hides the name.
-        font.drawInBatch(line, -lineWidth / 2.0F, 0.0F, NAME_COLOR, false, matrix, buffer,
+        float x = -font.width(line) / 2.0F;
+        // See-through first, then the depth-tested pass, the same order as a vanilla nameplate.
+        font.drawInBatch(line, x, 0.0F, NAME_COLOR, false, matrix, buffer,
+                Font.DisplayMode.SEE_THROUGH, 0, packedLight);
+        font.drawInBatch(line, x, 0.0F, NAME_COLOR, false, matrix, buffer,
                 Font.DisplayMode.NORMAL, 0, packedLight);
         poseStack.popPose();
     }
