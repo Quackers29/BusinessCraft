@@ -38,7 +38,6 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
     private boolean touristSpawningEnabled;
     private BlockPos pathStart;
     private BlockPos pathEnd;
-    private int searchRadius = 10;
     // Pending tourist spawns buffer (accumulated from production)
     private int pendingTouristSpawns = 0;
 
@@ -570,7 +569,6 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
             tag.put("PathEnd", endPos);
         }
 
-        tag.putInt("searchRadius", searchRadius);
         tag.putInt("pendingTouristSpawns", pendingTouristSpawns);
         tag.putBoolean("touristSpawningEnabled", touristSpawningEnabled);
 
@@ -727,8 +725,6 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
                     endPos.getInt("y"),
                     endPos.getInt("z"));
         }
-
-        town.searchRadius = tag.contains("searchRadius") ? tag.getInt("searchRadius") : 10;
 
         if (tag.contains("pendingTouristSpawns")) {
             town.pendingTouristSpawns = tag.getInt("pendingTouristSpawns");
@@ -963,14 +959,6 @@ public class Town implements ITownDataProvider, com.quackers29.businesscraft.tow
 
     public BlockPos getPathEnd() {
         return pathEnd;
-    }
-
-    public int getSearchRadius() {
-        return searchRadius;
-    }
-
-    public void setSearchRadius(int searchRadius) {
-        this.searchRadius = searchRadius;
     }
 
     public String getBiome() {

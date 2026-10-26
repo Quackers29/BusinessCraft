@@ -83,6 +83,8 @@ import java.util.ArrayList;
 import net.minecraft.world.phys.Vec3;
 import com.quackers29.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
 import com.quackers29.businesscraft.platform.Platform;
+import com.quackers29.businesscraft.platform.PlatformTouristCleanup;
+import com.quackers29.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 import net.minecraft.resources.ResourceLocation;
 import com.quackers29.businesscraft.api.ITouristHelper;
 import com.quackers29.businesscraft.api.ITouristHelper.TouristInfo;
@@ -129,8 +131,6 @@ public class TownInterfaceEntity extends BlockEntity
             .addField("spawn_enabled", this::getTouristSpawningEnabledAsInt, this::setTouristSpawningEnabledFromInt,
                     "Tourist spawning enabled flag")
             .addReadOnlyField("can_spawn", this::getCanSpawnTouristsAsInt, "Whether town can currently spawn tourists")
-            .addField("search_radius", this::getSearchRadius, this::setSearchRadius,
-                    "Search radius for tourist detection")
             .addReadOnlyField("tourist_count", this::getTouristCountFromTown, "Current number of tourists in town")
             .addReadOnlyField("max_tourists", this::getMaxTouristsFromTown, "Maximum tourists allowed in town")
             .build();
@@ -144,17 +144,13 @@ public class TownInterfaceEntity extends BlockEntity
     private UUID townId;
     private String name;
     private Town town;
-    private static final ConfigLoader CONFIG = ConfigLoader.INSTANCE;
     private Map<UUID, Vec3> lastPositions = new HashMap<>();
-    private static final int DEFAULT_SEARCH_RADIUS = CONFIG.vehicleSearchRadius;
-    private int searchRadius = -1; // Will be set from NBT or default
     private final AABB searchBounds = new AABB(worldPosition).inflate(15);
     private List<LivingEntity> tourists = new ArrayList<>();
     private ITownDataProvider townDataProvider;
 
     private static final double SYNC_RADIUS_SQR = 64.0D * 64.0D;
     private int lastPushedRevision = -1;
-    private long lastSearchRadiusLogTime = 0; // For rate-limiting debug logs
 
     private final TouristVehicleManager touristVehicleManager = new TouristVehicleManager();
 
@@ -364,7 +360,7 @@ public ViewModelCache getVmCache() {
 
     @Override
     public Component getDisplayName() {
-        return Component.translatable("container.businesscraft.town_block");
+        return Component.translatable("block.businesscraft.town_interface");
     }
 
     @Nullable
@@ -606,9 +602,7 @@ public ViewModelCache getVmCache() {
         if (!level.isClientSide()) {
             updateFromTownProvider();
         }
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Saving TownInterfaceEntity with searchRadius: {}",
-                searchRadius);
-        nbtDataHelper.saveToNBT(tag, itemHandler, townId, name, pathStart, pathEnd, platformManager, searchRadius);
+        nbtDataHelper.saveToNBT(tag, itemHandler, townId, name, pathStart, pathEnd, platformManager);
     }
 
     @Override
@@ -626,17 +620,6 @@ public ViewModelCache getVmCache() {
 
         if (bufferManager != null && townId != null) {
             bufferManager.setTownId(townId);
-        }
-
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Before NBT load: searchRadius={}", this.searchRadius);
-        if (result.hasSearchRadius()) {
-            this.searchRadius = result.searchRadius;
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Loaded searchRadius from NBT: {} -> {}",
-                    result.searchRadius, this.searchRadius);
-        } else {
-            this.searchRadius = DEFAULT_SEARCH_RADIUS;
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Using default searchRadius: {} -> {}",
-                    DEFAULT_SEARCH_RADIUS, this.searchRadius);
         }
 
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Loaded NBT data: {}", result.getSummary());
@@ -720,7 +703,6 @@ public ViewModelCache getVmCache() {
                                 townId,
                                 platformManager,
                                 visitBuffer,
-                                searchRadius,
                                 name,
                                 this::setChanged);
                     }
@@ -746,7 +728,7 @@ public ViewModelCache getVmCache() {
                                 level,
                                 platform.getStartPos(),
                                 platform.getEndPos(),
-                                searchRadius,
+                                platform.getSearchRadius(),
                                 townId);
                     }
                 }
@@ -837,8 +819,6 @@ public ViewModelCache getVmCache() {
 
         String freshTownName = getTownName();
         tag.putString("name", freshTownName != null ? freshTownName : "");
-
-        tag.putInt("searchRadius", getSearchRadius());
 
         syncResourcesForClient(tag);
 
@@ -996,56 +976,8 @@ public ViewModelCache getVmCache() {
         }
     }
 
-    private void mountTouristsToVehicles() {
-        if (level == null || level.isClientSide || town == null)
-            return;
-        if (pathStart == null || pathEnd == null)
-            return;
-
-        int mounted = touristVehicleManager.mountTouristsToVehicles(level, pathStart, pathEnd, searchRadius, townId);
-        if (mounted > 0) {
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Mounted {} tourists to vehicles for town {}",
-                    mounted, name);
-        }
-    }
-
     private String formatVec3(Vec3 vec) {
         return String.format("[%.6f, %.6f, %.6f]", vec.x, vec.y, vec.z);
-    }
-
-    public int getSearchRadius() {
-        int result = searchRadius > 0 ? searchRadius : DEFAULT_SEARCH_RADIUS;
-
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastSearchRadiusLogTime > 1000) {
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "getSearchRadius() field={}, result={}",
-                    searchRadius, result);
-            lastSearchRadiusLogTime = currentTime;
-        }
-
-        return result;
-    }
-
-    public void setSearchRadius(int radius) {
-        int oldValue = this.searchRadius;
-        this.searchRadius = Math.max(1, Math.min(radius, 100)); // Limit between 1-100 blocks
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "setSearchRadius() {} -> {}", oldValue,
-                this.searchRadius);
-
-        if (townId != null && level instanceof ServerLevel sLevel) {
-            Town town = TownManager.get(sLevel).getTown(townId);
-            if (town != null) {
-                town.setSearchRadius(this.searchRadius);
-                TownManager.get(sLevel).markDirty();
-            }
-        }
-
-        if (level != null && !level.isClientSide()) {
-            containerData.markDirty("search_radius");
-            level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
-        }
-
-        setChanged();
     }
 
     public Town getTown() {
@@ -1124,10 +1056,6 @@ public ViewModelCache getVmCache() {
         }
         if (!java.util.Objects.equals(this.pathEnd, provider.getPathEnd())) {
             this.pathEnd = provider.getPathEnd();
-            changed = true;
-        }
-        if (this.searchRadius != provider.getSearchRadius()) {
-            this.searchRadius = provider.getSearchRadius();
             changed = true;
         }
         return changed;
@@ -1313,8 +1241,66 @@ public ViewModelCache getVmCache() {
         boolean removed = platformManager.removePlatform(platformId);
         if (removed) {
             platformIndicatorSpawnTimes.remove(platformId);
+            if (level instanceof ServerLevel serverLevel) {
+                PlatformTouristCleanup.dismissLoaded(serverLevel, platformId);
+            }
+            syncPlatforms();
         }
         return removed;
+    }
+
+    public UUID addInterfacePlatform(BlockPos pos) {
+        return platformManager.addInterfacePlatform(pos);
+    }
+
+    public int getPlatformCount() {
+        return platformManager.getPlatformCount();
+    }
+
+    public java.util.List<BlockPos> getPlatformInterfacePositions() {
+        return platformManager.getInterfacePositions();
+    }
+
+    public com.quackers29.businesscraft.town.data.PlatformManager.RelinkResult relinkPlatform(UUID platformId,
+            BlockPos interfacePos) {
+        return platformManager.relink(platformId, interfacePos);
+    }
+
+    /**
+     * Pushes the platform list to tracking clients. Safe to call after add, remove, or relink.
+     */
+    public void syncPlatforms() {
+        setChanged();
+        if (level == null || level.isClientSide()) {
+            return;
+        }
+        BlockState state = getBlockState();
+        level.sendBlockUpdated(worldPosition, state, state, 3);
+        if (PlatformAccess.getNetworkMessages() != null) {
+            PlatformAccess.getNetworkMessages().sendToAllTrackingChunk(
+                    new RefreshPlatformsPacket(worldPosition), level, worldPosition);
+        }
+    }
+
+    /**
+     * Town Centre is going away. Loaded tourists on its platforms are dismissed while the town still
+     * exists, and any loaded Platform Interface blocks are marked inactive. Unloaded interfaces notice
+     * the missing town the next time their chunk loads.
+     */
+    public void releasePlatformsForRemovedTown(ServerLevel serverLevel) {
+        java.util.List<UUID> platformIds = new java.util.ArrayList<>();
+        for (Platform platform : platformManager.getPlatforms(false)) {
+            platformIds.add(platform.getId());
+        }
+        for (BlockPos interfacePos : platformManager.getInterfacePositions()) {
+            serverLevel.getChunkAt(interfacePos);
+            if (serverLevel.getBlockEntity(interfacePos) instanceof PlatformInterfaceEntity entity) {
+                entity.markInactive(PlatformInterfaceEntity.REASON_TOWN_GONE);
+            }
+        }
+        for (UUID platformId : platformIds) {
+            PlatformTouristCleanup.dismissLoaded(serverLevel, platformId);
+        }
     }
 
     /**

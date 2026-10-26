@@ -77,7 +77,10 @@ public class RequestTownPlatformDataPacket {
                                 platform.isEnabled(),
                                 platform.getStartPos(),
                                 platform.getEndPos(),
-                                platform.getEnabledDestinations());
+                                platform.getEnabledDestinations(),
+                                platform.getSearchRadius(),
+                                platform.getSpread(),
+                                platform.getInterfacePos());
                     }
 
                     PlatformAccess.getNetworkMessages().sendToPlayer(response, player);

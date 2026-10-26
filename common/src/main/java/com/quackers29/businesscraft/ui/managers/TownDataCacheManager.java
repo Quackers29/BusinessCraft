@@ -27,7 +27,6 @@ public class TownDataCacheManager {
     private int cachedPopulation;
     private int cachedTourists;
     private int cachedMaxTourists;
-    private int cachedSearchRadius;
 
     // Static cache for trading view-model (Global sync)
     private static TradingViewModel globalTradingViewModel;
@@ -91,7 +90,6 @@ public class TownDataCacheManager {
         this.cachedPopulation = getCachedPopulation();
         this.cachedTourists = getCachedTouristCount();
         this.cachedMaxTourists = getCachedMaxTourists();
-        this.cachedSearchRadius = getCachedSearchRadius();
     }
 
     /**
@@ -170,18 +168,6 @@ public class TownDataCacheManager {
     }
 
     /**
-     * Gets the cached search radius.
-     * 
-     * @return The search radius
-     */
-    public int getCachedSearchRadius() {
-        if (dataCache != null) {
-            return dataCache.getSearchRadius();
-        }
-        return menu.getSearchRadius();
-    }
-
-    /**
      * Gets the cached resources map.
      * 
      * @return Map of items to quantities
@@ -237,15 +223,6 @@ public class TownDataCacheManager {
     }
 
     /**
-     * Updates the cached search radius value.
-     * 
-     * @param newRadius The new search radius
-     */
-    public void updateCachedSearchRadius(int newRadius) {
-        this.cachedSearchRadius = newRadius;
-    }
-
-    /**
      * Gets the locally cached population (for UI updates).
      * 
      * @return The locally cached population
@@ -270,15 +247,6 @@ public class TownDataCacheManager {
      */
     public int getLocalCachedMaxTourists() {
         return cachedMaxTourists;
-    }
-
-    /**
-     * Gets the locally cached search radius (for UI updates).
-     * 
-     * @return The locally cached search radius
-     */
-    public int getLocalCachedSearchRadius() {
-        return cachedSearchRadius;
     }
 
     // --- Overview Data ---

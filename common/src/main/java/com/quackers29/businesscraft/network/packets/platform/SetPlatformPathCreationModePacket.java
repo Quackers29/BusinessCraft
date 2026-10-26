@@ -9,6 +9,8 @@ import net.minecraft.world.level.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.platform.Platform;
+import com.quackers29.businesscraft.platform.PlatformPathSync;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.event.PlatformPathHandler;
 import com.quackers29.businesscraft.debug.DebugConfig;
@@ -72,6 +74,8 @@ public class SetPlatformPathCreationModePacket {
                 // Update the platform path handler state
                 if (mode) {
                     PlatformPathHandler.setActivePlatform(pos, platformId);
+                    Platform platform = townInterface.getPlatform(platformId);
+                    PlatformPathSync.show(player, townInterface, platform);
                 } else {
                     PlatformPathHandler.clearActivePlatform();
                 }

@@ -1,0 +1,6 @@
+{
+  "parent": "businesscraft:block/platform_interface",
+  "textures": {
+    "lamp": "businesscraft:block/platform_interface_lamp_off"
+  }
+}

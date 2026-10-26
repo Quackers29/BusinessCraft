@@ -20,8 +20,6 @@ public class TownValidationService {
     
     private static final int MIN_TOWN_NAME_LENGTH = 1;
     private static final int MAX_TOWN_NAME_LENGTH = 50;
-    private static final int MIN_SEARCH_RADIUS = 1;
-    private static final int MAX_SEARCH_RADIUS = 100;
     
     /**
      * Validates town creation request.
@@ -74,14 +72,6 @@ public class TownValidationService {
             Result<Void, BCError.ValidationError> nameValidation = validateTownName(settings.getName());
             if (nameValidation.isFailure()) {
                 return nameValidation;
-            }
-        }
-        
-        // Validate search radius if being updated
-        if (settings.getSearchRadius() != null) {
-            Result<Void, BCError.ValidationError> radiusValidation = validateSearchRadius(settings.getSearchRadius());
-            if (radiusValidation.isFailure()) {
-                return radiusValidation;
             }
         }
         
@@ -163,26 +153,6 @@ public class TownValidationService {
         if (Math.abs(position.getZ()) > 30000000) {
             return Result.failure(new BCError.ValidationError("POSITION_TOO_FAR", 
                 "Town Z coordinate is too far from world center"));
-        }
-        
-        return Result.success(null);
-    }
-    
-    /**
-     * Validates search radius setting.
-     * 
-     * @param radius The search radius to validate
-     * @return Result indicating validation success or failure
-     */
-    public Result<Void, BCError.ValidationError> validateSearchRadius(int radius) {
-        if (radius < MIN_SEARCH_RADIUS) {
-            return Result.failure(new BCError.ValidationError("RADIUS_TOO_SMALL", 
-                String.format("Search radius must be at least %d blocks", MIN_SEARCH_RADIUS)));
-        }
-        
-        if (radius > MAX_SEARCH_RADIUS) {
-            return Result.failure(new BCError.ValidationError("RADIUS_TOO_LARGE", 
-                String.format("Search radius cannot exceed %d blocks", MAX_SEARCH_RADIUS)));
         }
         
         return Result.success(null);

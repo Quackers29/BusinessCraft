@@ -214,17 +214,6 @@ class TownValidationServiceTest {
         assertTrue(validator.validatePosition(new BlockPos(limit, 64, 0)).isSuccess());
     }
 
-    // --- validateSearchRadius ---
-
-    @Test
-    void validateSearchRadius_bounds() {
-        assertEquals("RADIUS_TOO_SMALL", validator.validateSearchRadius(0).getError().getCode());
-        assertEquals("RADIUS_TOO_LARGE", validator.validateSearchRadius(101).getError().getCode());
-        assertTrue(validator.validateSearchRadius(1).isSuccess());
-        assertTrue(validator.validateSearchRadius(100).isSuccess());
-        assertTrue(validator.validateSearchRadius(10).isSuccess());
-    }
-
     // --- validateTouristManagement ---
 
     @Test
@@ -337,10 +326,6 @@ class TownValidationServiceTest {
         assertEquals("INVALID_NAME_CHARACTERS", validator.validateTownSettings(s).getError().getCode());
 
         s.setName("Good Name");
-        s.setSearchRadius(0);
-        assertEquals("RADIUS_TOO_SMALL", validator.validateTownSettings(s).getError().getCode());
-
-        s.setSearchRadius(25);
         assertTrue(validator.validateTownSettings(s).isSuccess());
 
         // tourist flag can be anything

@@ -2,9 +2,9 @@ package com.quackers29.businesscraft.block;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.town.TownManager;
-import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -183,8 +183,6 @@ public class TownInterfaceBlock extends BaseEntityBlock {
                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Registered new town with ID: {}", townId);
                     townInterface.setTownId(townId);
 
-                    createDefaultPlatform(townInterface, pos, placer);
-
                     townInterface.setChanged();
                     serverLevel.sendBlockUpdated(pos, state, state, 3);
                 }
@@ -194,75 +192,14 @@ public class TownInterfaceBlock extends BaseEntityBlock {
         }
     }
 
-    private void createDefaultPlatform(TownInterfaceEntity townInterface, BlockPos townPos,
-            @Nullable LivingEntity placer) {
-        boolean platformAdded = townInterface.addPlatform();
-
-        if (!platformAdded) {
-            LOGGER.error("Failed to add default platform for town at {}", townPos);
-            return;
-        }
-
-        List<Platform> platforms = townInterface.getPlatforms();
-        if (platforms.isEmpty()) {
-            LOGGER.error("No platforms found after adding default platform for town at {}", townPos);
-            return;
-        }
-
-        Platform platform = platforms.get(0);
-
-        Direction direction = Direction.NORTH;
-
-        if (placer != null) {
-            direction = Direction.getNearest(
-                    (float) placer.getLookAngle().x,
-                    (float) placer.getLookAngle().y,
-                    (float) placer.getLookAngle().z);
-        }
-
-        BlockPos platformStart = null;
-        BlockPos platformEnd = null;
-
-        switch (direction) {
-            case NORTH -> {
-                platformStart = townPos.north(3).above(-1);
-                platformEnd = townPos.north(5).above(-1);
-            }
-            case SOUTH -> {
-                platformStart = townPos.south(3).above(-1);
-                platformEnd = townPos.south(5).above(-1);
-            }
-            case WEST -> {
-                platformStart = townPos.west(3).above(-1);
-                platformEnd = townPos.west(5).above(-1);
-            }
-            case EAST -> {
-                platformStart = townPos.east(3).above(-1);
-                platformEnd = townPos.east(5).above(-1);
-            }
-            default -> {
-                platformStart = townPos.north(3).above(-1);
-                platformEnd = townPos.north(5).above(-1);
-            }
-        }
-
-        platform.setStartPos(platformStart);
-        platform.setEndPos(platformEnd);
-        platform.setName("Platform 1");
-        platform.setEnabled(true);
-
-        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM,
-                "Created default platform for town at {} with start {} and end {}",
-                townPos, platformStart, platformEnd);
-    }
-
     @Override
     public void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.is(newState.getBlock())) {
             if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townInterface) {
                 UUID townId = townInterface.getTownId();
-                if (townId != null && !level.isClientSide()) {
-                    TownManager.get((ServerLevel) level).removeTown(townId);
+                if (townId != null && !level.isClientSide() && level instanceof ServerLevel serverLevel) {
+                    townInterface.releasePlatformsForRemovedTown(serverLevel);
+                    TownManager.get(serverLevel).removeTown(townId);
                 }
             }
             super.onRemove(state, level, pos, newState, isMoving);
@@ -310,45 +247,7 @@ public class TownInterfaceBlock extends BaseEntityBlock {
 
             if (shouldSpawnIndicators) {
                 platformIndicatorSpawnTimes.put(platformId, gameTime);
-
-                BlockPos startPos = platform.getStartPos();
-                BlockPos endPos = platform.getEndPos();
-
-                int startX = startPos.getX();
-                int startY = startPos.getY();
-                int startZ = startPos.getZ();
-                int endX = endPos.getX();
-                int endY = endPos.getY();
-                int endZ = endPos.getZ();
-
-                int dx = endX - startX;
-                int dy = endY - startY;
-                int dz = endZ - startZ;
-                double length = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                int steps = (int) Math.max(1, Math.ceil(length));
-
-                for (int i = 0; i <= steps; i++) {
-                    double t = (steps == 0) ? 0 : (double) i / steps;
-                    double x = startX + dx * t;
-                    double y = startY + dy * t + 1.0;
-                    double z = startZ + dz * t;
-
-                    ((ServerLevel) level).sendParticles(
-                            ParticleTypes.HAPPY_VILLAGER,
-                            x + 0.5,
-                            y,
-                            z + 0.5,
-                            5,
-                            0.2, 0.2, 0.2,
-                            0.0
-                    );
-                }
-
-                spawnSearchRadiusParticles(
-                        (ServerLevel) level,
-                        startPos,
-                        endPos,
-                        townInterface.getSearchRadius());
+                spawnIndicator((ServerLevel) level, platform);
             }
         }
     }
@@ -370,7 +269,35 @@ public class TownInterfaceBlock extends BaseEntityBlock {
                 .removeIf(platformId -> platforms.stream().noneMatch(p -> p.getId().equals(platformId)));
     }
 
-    private void spawnSearchRadiusParticles(ServerLevel level, BlockPos startPos, BlockPos endPos, int radius) {
+    /** One burst of the path particles used when a player has just selected a platform or the town. */
+    public static void spawnIndicator(ServerLevel level, com.quackers29.businesscraft.platform.Platform platform) {
+        if (level == null || platform == null || !platform.isComplete()) {
+            return;
+        }
+        BlockPos startPos = platform.getStartPos();
+        BlockPos endPos = platform.getEndPos();
+        int startX = startPos.getX();
+        int startY = startPos.getY();
+        int startZ = startPos.getZ();
+        int endX = endPos.getX();
+        int endY = endPos.getY();
+        int endZ = endPos.getZ();
+        int dx = endX - startX;
+        int dy = endY - startY;
+        int dz = endZ - startZ;
+        double length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        int steps = (int) Math.max(1, Math.ceil(length));
+        for (int i = 0; i <= steps; i++) {
+            double t = (steps == 0) ? 0 : (double) i / steps;
+            double x = startX + dx * t;
+            double y = startY + dy * t + 1.0;
+            double z = startZ + dz * t;
+            level.sendParticles(ParticleTypes.HAPPY_VILLAGER, x + 0.5, y, z + 0.5, 5, 0.2, 0.2, 0.2, 0.0);
+        }
+        spawnSearchRadiusParticles(level, startPos, endPos, platform.getSearchRadius());
+    }
+
+    private static void spawnSearchRadiusParticles(ServerLevel level, BlockPos startPos, BlockPos endPos, int radius) {
         int startX = startPos.getX();
         int startY = startPos.getY();
         int startZ = startPos.getZ();

@@ -1,13 +1,17 @@
 package com.quackers29.businesscraft.client.render.world;
 
 import com.quackers29.businesscraft.api.RenderHelper;
+import com.quackers29.businesscraft.block.entity.PlatformInterfaceEntity;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.platform.Platform;
+import com.quackers29.businesscraft.platform.PlatformPathView;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,19 +26,24 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
 
     public static class PlatformVisualizationData {
         private final List<Platform> platforms;
-        private final int searchRadius;
+        /** True when the player is looking at one platform, so an in-progress point still shows. */
+        private final boolean showPartial;
 
-        public PlatformVisualizationData(List<Platform> platforms, int searchRadius) {
+        public PlatformVisualizationData(List<Platform> platforms) {
+            this(platforms, false);
+        }
+
+        public PlatformVisualizationData(List<Platform> platforms, boolean showPartial) {
             this.platforms = new ArrayList<>(platforms);
-            this.searchRadius = searchRadius;
+            this.showPartial = showPartial;
         }
 
         public List<Platform> getPlatforms() {
             return platforms;
         }
 
-        public int getSearchRadius() {
-            return searchRadius;
+        public boolean showPartial() {
+            return showPartial;
         }
     }
 
@@ -64,22 +73,30 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
                     return;
                 }
 
-                // Check if this is a TownInterfaceEntity with active visualization
+                if (!manager.shouldShowVisualization(VisualizationManager.TYPE_PLATFORM, pos)) {
+                    return;
+                }
+                UUID onlyPlatform = filterAt(manager, pos);
                 if (blockEntity instanceof TownInterfaceEntity townInterfaceEntity) {
-                    // Check if this town has active platform visualization
-                    if (manager.shouldShowVisualization(VisualizationManager.TYPE_PLATFORM, pos)) {
-                        // Get platform data from the town interface entity
-                        List<Platform> platforms = townInterfaceEntity.getPlatforms();
-                        int searchRadius = townInterfaceEntity.getSearchRadius();
-
-                        if (time % 2000 < 50) {
-                            DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_VISUALIZATION, "[PLATFORM] Town at {} has {} platforms", pos, platforms.size());
-                        }
-
+                    List<Platform> platforms = PlatformPathView.select(townInterfaceEntity.getPlatforms(), onlyPlatform);
+                    if (time % 2000 < 50) {
+                        DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_VISUALIZATION,
+                                "[PLATFORM] Town at {} has {} platforms", pos, platforms.size());
+                    }
+                    if (!platforms.isEmpty()) {
+                        visualizations.add(new VisualizationData(
+                                VisualizationManager.TYPE_PLATFORM, pos,
+                                new PlatformVisualizationData(platforms, onlyPlatform != null)));
+                    }
+                } else if (blockEntity instanceof PlatformInterfaceEntity link && link.getTownCentre() != null) {
+                    BlockEntity townBe = level.getBlockEntity(link.getTownCentre());
+                    if (townBe instanceof TownInterfaceEntity town) {
+                        UUID platformId = onlyPlatform != null ? onlyPlatform : link.getPlatformId();
+                        List<Platform> platforms = PlatformPathView.select(town.getPlatforms(), platformId);
                         if (!platforms.isEmpty()) {
-                            PlatformVisualizationData data = new PlatformVisualizationData(platforms, searchRadius);
                             visualizations.add(new VisualizationData(
-                                    VisualizationManager.TYPE_PLATFORM, pos, data));
+                                    VisualizationManager.TYPE_PLATFORM, pos,
+                                    new PlatformVisualizationData(platforms, true)));
                         }
                     }
                 }
@@ -122,26 +139,30 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
                 .lineConfig(lineConfig);
 
         for (Platform platform : platformData.getPlatforms()) {
-            if (!platform.isEnabled() || !platform.isComplete()) {
-                continue;
+            boolean complete = platform.isComplete();
+            if (complete && (platform.isEnabled() || platformData.showPartial())) {
+                BlockPos startPos = platform.getStartPos();
+                BlockPos endPos = platform.getEndPos();
+                PathRenderer3D.renderPath(poseStack, startPos, endPos, PATH_COLOR, pathConfig);
+                BoundaryRenderer3D.renderRectangularBoundary(
+                        poseStack, startPos, endPos, platform.getSearchRadius(), BOUNDARY_COLOR, boundaryConfig);
+            } else if (platformData.showPartial()) {
+                BlockPos point = platform.getStartPos() != null ? platform.getStartPos() : platform.getEndPos();
+                if (point != null) {
+                    PathRenderer3D.renderPath(poseStack, point, point, PATH_COLOR, pathConfig);
+                }
             }
-
-            BlockPos startPos = platform.getStartPos();
-            BlockPos endPos = platform.getEndPos();
-
-            PathRenderer3D.renderPath(
-                    poseStack,
-                    startPos, endPos,
-                    PATH_COLOR,
-                    pathConfig);
-
-            BoundaryRenderer3D.renderRectangularBoundary(
-                    poseStack,
-                    startPos, endPos,
-                    platformData.getSearchRadius(),
-                    BOUNDARY_COLOR,
-                    boundaryConfig);
         }
+    }
+
+    private static UUID filterAt(VisualizationManager manager, BlockPos pos) {
+        for (VisualizationManager.VisualizationEntry entry : manager
+                .getActiveVisualizations(VisualizationManager.TYPE_PLATFORM)) {
+            if (pos.equals(entry.getPosition()) && entry.getData() instanceof UUID id) {
+                return id;
+            }
+        }
+        return null;
     }
 
     @Override
@@ -160,16 +181,31 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
         manager.showVisualization(
                 VisualizationManager.TYPE_PLATFORM,
                 townBlockPos,
-                null, // Data will be fetched from TownBlockEntity during rendering
+                null, // Every platform on the Town Centre. Data is read from the block entity.
                 600 // 30 seconds duration
         );
 
         manager.showVisualization(
                 VisualizationManager.TYPE_TOWN_BOUNDARY,
                 townBlockPos,
-                null, // Data will be fetched from TownBlockEntity during rendering
-                600 // 30 seconds duration - same as platforms
+                null,
+                600
         );
+    }
+
+    /**
+     * The same path line as the Town Centre, limited to one platform. Anchored on the
+     * Platform Interface block so it can show while that block is selected.
+     */
+    public static void showPlatformPath(BlockPos interfacePos, UUID platformId, long gameTime) {
+        if (interfacePos == null || platformId == null) {
+            return;
+        }
+        VisualizationManager.getInstance().showVisualization(
+                VisualizationManager.TYPE_PLATFORM,
+                interfacePos,
+                platformId,
+                600);
     }
 
     public static void hidePlatformVisualization(BlockPos townBlockPos) {

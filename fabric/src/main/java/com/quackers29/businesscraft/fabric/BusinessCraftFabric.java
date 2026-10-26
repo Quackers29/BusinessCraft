@@ -168,6 +168,17 @@ public class BusinessCraftFabric implements ModInitializer {
             com.quackers29.businesscraft.town.TownManager.clearInstances();
         });
 
+        net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
+                .modifyEntriesEvent(net.minecraft.world.item.CreativeModeTabs.BUILDING_BLOCKS)
+                .register(entries -> {
+                    if (com.quackers29.businesscraft.init.CommonModBlocks.TOWN_INTERFACE_BLOCK != null) {
+                        entries.accept(com.quackers29.businesscraft.init.CommonModBlocks.TOWN_INTERFACE_BLOCK.get());
+                    }
+                    if (com.quackers29.businesscraft.init.CommonModBlocks.PLATFORM_INTERFACE_BLOCK != null) {
+                        entries.accept(com.quackers29.businesscraft.init.CommonModBlocks.PLATFORM_INTERFACE_BLOCK.get());
+                    }
+                });
+
         LOGGER.info("BusinessCraft Fabric initialized successfully!");
     }
 }

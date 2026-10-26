@@ -18,6 +18,9 @@ public class Platform {
     private boolean enabled;
     private BlockPos startPos;
     private BlockPos endPos;
+    private BlockPos interfacePos;
+    private int searchRadius = PlatformSpawn.DEFAULT_RADIUS;
+    private int spread = PlatformSpawn.DEFAULT_SPREAD;
     private Set<UUID> enabledDestinations = new HashSet<>();
 
     /**
@@ -81,6 +84,21 @@ public class Platform {
                 }
             }
         }
+
+        if (tag.contains("InterfaceX")) {
+            this.interfacePos = new BlockPos(
+                    tag.getInt("InterfaceX"),
+                    tag.getInt("InterfaceY"),
+                    tag.getInt("InterfaceZ"));
+        }
+
+        if (tag.contains("SearchRadius")) {
+            this.searchRadius = tag.getInt("SearchRadius");
+        }
+        if (tag.contains("Spread")) {
+            this.spread = tag.getInt("Spread");
+        }
+        applySpawnLimits();
     }
 
     /**
@@ -113,6 +131,14 @@ public class Platform {
             i++;
         }
         tag.put("Destinations", destTag);
+
+        tag.putInt("SearchRadius", getSearchRadius());
+        tag.putInt("Spread", getSpread());
+        if (interfacePos != null) {
+            tag.putInt("InterfaceX", interfacePos.getX());
+            tag.putInt("InterfaceY", interfacePos.getY());
+            tag.putInt("InterfaceZ", interfacePos.getZ());
+        }
 
         return tag;
     }
@@ -178,6 +204,39 @@ public class Platform {
      */
     public void setEndPos(BlockPos endPos) {
         this.endPos = endPos;
+    }
+
+    /**
+     * World position of the Platform Interface block that owns this platform.
+     */
+    public BlockPos getInterfacePos() {
+        return interfacePos;
+    }
+
+    public void setInterfacePos(BlockPos interfacePos) {
+        this.interfacePos = interfacePos == null ? null : interfacePos.immutable();
+    }
+
+    public int getSearchRadius() {
+        return PlatformSpawn.clampRadius(searchRadius);
+    }
+
+    public void setSearchRadius(int searchRadius) {
+        this.searchRadius = PlatformSpawn.clampRadius(searchRadius);
+        this.spread = PlatformSpawn.clampSpread(this.spread, this.searchRadius);
+    }
+
+    public int getSpread() {
+        return PlatformSpawn.clampSpread(spread, getSearchRadius());
+    }
+
+    public void setSpread(int spread) {
+        this.spread = PlatformSpawn.clampSpread(spread, this.searchRadius);
+    }
+
+    private void applySpawnLimits() {
+        this.searchRadius = PlatformSpawn.clampRadius(this.searchRadius);
+        this.spread = PlatformSpawn.clampSpread(this.spread, this.searchRadius);
     }
 
     /**
@@ -283,15 +342,19 @@ public class Platform {
             return false;
         Platform platform = (Platform) o;
         return enabled == platform.enabled &&
+                searchRadius == platform.searchRadius &&
+                spread == platform.spread &&
                 java.util.Objects.equals(id, platform.id) &&
                 java.util.Objects.equals(name, platform.name) &&
                 java.util.Objects.equals(startPos, platform.startPos) &&
                 java.util.Objects.equals(endPos, platform.endPos) &&
+                java.util.Objects.equals(interfacePos, platform.interfacePos) &&
                 java.util.Objects.equals(enabledDestinations, platform.enabledDestinations);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(id, name, enabled, startPos, endPos, enabledDestinations);
+        return java.util.Objects.hash(id, name, enabled, searchRadius, spread, startPos, endPos, interfacePos,
+                enabledDestinations);
     }
 }

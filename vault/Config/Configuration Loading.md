@@ -46,6 +46,7 @@ All configuration is side-effectful mutation of public static fields. There are 
 Defaults (source of truth = the Java field initializers; must match the shipped toml and every getOrElse second argument):
 
 - Vehicles: enableCreateTrains=true, enableMinecarts=true, vehicleSearchRadius=3, minecartStopThreshold=0.001
+- Platforms: maxSearchRadius=100 (`platforms.maxSearchRadius`). Each platform still starts at search radius 10 and spread 0. Spread cannot exceed that platform's own search radius, so this value is also the spread cap. Forge and Fabric both read the same `businesscraft.toml`.
 - Town: defaultStartingPopulation=5, defaultBorderRadius=50, craftableTownInterface=true, townNames=<14 names via getDefault...>, maxTouristsPerTown=1000, populationPerTourist=5, maxPopBasedTourists=20, minPopForTourists=5 (town spacing uses boundary radii / defaultBorderRadius, not a flat min-distance config)
 - Tourist: touristExpiryMinutes=120.0, enableTouristExpiry=true, notifyOnTouristDeparture=true, touristSystemEnabled=true
 - Economy: metersPerEmerald=1000, minPayoutDistance=100, currencyItem="minecraft:emerald"

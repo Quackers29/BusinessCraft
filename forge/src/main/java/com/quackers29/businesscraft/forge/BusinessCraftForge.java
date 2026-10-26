@@ -197,6 +197,9 @@ public class BusinessCraftForge {
             if (com.quackers29.businesscraft.init.CommonModBlocks.TOWN_INTERFACE_BLOCK != null) {
                 event.accept(com.quackers29.businesscraft.init.CommonModBlocks.TOWN_INTERFACE_BLOCK.get());
             }
+            if (com.quackers29.businesscraft.init.CommonModBlocks.PLATFORM_INTERFACE_BLOCK != null) {
+                event.accept(com.quackers29.businesscraft.init.CommonModBlocks.PLATFORM_INTERFACE_BLOCK.get());
+            }
         }
     }
 

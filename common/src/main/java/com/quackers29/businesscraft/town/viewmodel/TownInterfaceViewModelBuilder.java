@@ -19,7 +19,7 @@ public class TownInterfaceViewModelBuilder {
     public static TownInterfaceViewModel build(Town town, TownInterfaceEntity entity) {
         if (town == null) {
             // Fallback for when town data isn't available yet
-            return createErrorViewModel("Loading Town Data...", entity);
+            return createErrorViewModel("Loading Town Data...");
         }
 
         // 1. Biome Formatting
@@ -76,10 +76,7 @@ public class TownInterfaceViewModelBuilder {
         boolean spawning = town.canSpawnTourists();
         boolean taxes = false; // Placeholder
 
-        // 7. Search Radius
-        int radius = town.getSearchRadius();
-
-        // 8. Cumulative Tourism Stats (for config requirements like "tourism" and "tourism_dist")
+        // 7. Cumulative Tourism Stats (for config requirements like "tourism" and "tourism_dist")
         long totalTouristsArrived = town.getTotalTouristsArrived();
         double totalTouristDistance = town.getTotalTouristDistance();
         float borderRadius = town.getBoundaryRadius();
@@ -110,7 +107,6 @@ public class TownInterfaceViewModelBuilder {
                 wuStatus,
                 spawning,
                 taxes,
-                radius,
                 (int) totalTouristsArrived,
                 totalTouristDistance,
                 borderRadius,
@@ -119,14 +115,12 @@ public class TownInterfaceViewModelBuilder {
                 recentSummary);
     }
 
-    private static TownInterfaceViewModel createErrorViewModel(String message, TownInterfaceEntity entity) {
-        int radius = (entity != null) ? entity.getSearchRadius() : 10;
+    private static TownInterfaceViewModel createErrorViewModel(String message) {
         return new TownInterfaceViewModel(
                 message, "Unknown", "Unknown",
                 "-/-", "-/-", "-%", "-/-",
                 Status.CRITICAL, Status.CRITICAL, Status.CRITICAL,
                 false, false,
-                radius,
                 0,    // totalTouristsArrived
                 0.0,  // totalTouristDistance
                 50f,  // borderRadius default

@@ -6,8 +6,11 @@ import net.minecraft.server.level.ServerPlayer;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.quackers29.businesscraft.block.entity.PlatformInterfaceEntity;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.block.TownInterfaceBlock;
+import com.quackers29.businesscraft.platform.Platform;
+import com.quackers29.businesscraft.platform.PlatformPathSync;
 import com.quackers29.businesscraft.network.packets.misc.BaseBlockEntityPacket;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -59,33 +62,15 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
                         "Player {} exited TownInterfaceEntity UI at {}", player.getUUID(), pos);
                 townInterface.registerPlayerExitUI(player.getUUID());
                 PlatformAccess.getNetworkMessages().sendToPlayer(new PlatformVisualizationPacket(pos), player);
-
-                // Also send platform data to the client so it can render them
-                java.util.UUID townId = townInterface.getTownId();
-                if (townId != null && level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
-                    com.quackers29.businesscraft.town.Town town = com.quackers29.businesscraft.town.TownManager
-                            .get(serverLevel).getTown(townId);
-                    if (town != null) {
-                        TownPlatformDataResponsePacket platformPacket = new TownPlatformDataResponsePacket(townId);
-
-                        for (com.quackers29.businesscraft.platform.Platform platform : townInterface.getPlatforms()) {
-                            platformPacket.addPlatform(
-                                    platform.getId(),
-                                    platform.getName(),
-                                    platform.isEnabled(),
-                                    platform.getStartPos(),
-                                    platform.getEndPos(),
-                                    platform.getEnabledDestinations());
-                        }
-
-                        platformPacket.setTownInfo(town.getName(), (int) town.getPopulation(), (int) town.getTouristCount(),
-                                town.getBoundaryRadius());
-
-                        PlatformAccess.getNetworkMessages().sendToPlayer(platformPacket, player);
-
-                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                                "Sent {} platforms to client for visualization", townInterface.getPlatforms().size());
-                    }
+                sendPlatformData(player, level, townInterface);
+            } else if (be instanceof PlatformInterfaceEntity platformInterface) {
+                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                        "Player {} exited Platform Interface UI at {}", player.getUUID(), pos);
+                BlockPos townPos = platformInterface.getTownCentre();
+                if (townPos != null && level.getBlockEntity(townPos) instanceof TownInterfaceEntity townInterface) {
+                    sendPlatformData(player, level, townInterface);
+                    Platform platform = townInterface.getPlatform(platformInterface.getPlatformId());
+                    PlatformPathSync.show(player, townInterface, platform);
                 }
             }
             // Then check if it's a TownInterfaceBlock
@@ -100,6 +85,36 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
             }
         });
         PlatformAccess.getNetwork().setPacketHandled(context);
+    }
+
+    private static void sendPlatformData(ServerPlayer player, Level level, TownInterfaceEntity townInterface) {
+        java.util.UUID townId = townInterface.getTownId();
+        if (townId == null || !(level instanceof net.minecraft.server.level.ServerLevel serverLevel)) {
+            return;
+        }
+        com.quackers29.businesscraft.town.Town town = com.quackers29.businesscraft.town.TownManager
+                .get(serverLevel).getTown(townId);
+        if (town == null) {
+            return;
+        }
+        TownPlatformDataResponsePacket platformPacket = new TownPlatformDataResponsePacket(townId);
+        for (Platform platform : townInterface.getPlatforms()) {
+            platformPacket.addPlatform(
+                    platform.getId(),
+                    platform.getName(),
+                    platform.isEnabled(),
+                    platform.getStartPos(),
+                    platform.getEndPos(),
+                    platform.getEnabledDestinations(),
+                    platform.getSearchRadius(),
+                    platform.getSpread(),
+                    platform.getInterfacePos());
+        }
+        platformPacket.setTownInfo(town.getName(), (int) town.getPopulation(), (int) town.getTouristCount(),
+                town.getBoundaryRadius());
+        PlatformAccess.getNetworkMessages().sendToPlayer(platformPacket, player);
+        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                "Sent {} platforms to client for visualization", townInterface.getPlatforms().size());
     }
 }
 

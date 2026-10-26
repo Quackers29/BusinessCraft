@@ -84,14 +84,13 @@ class TownDataSnapshotBuilderTest {
         CompoundTag blockEntity = new CompoundTag();
         blockEntity.putUUID("TownId", TOWN_A);
         blockEntity.putString("name", "Alpha");
-        blockEntity.putInt("searchRadius", 12);
 
         CompoundTag entry = TownDataSnapshotBuilder.buildTownEntry(
                 town, TownSavedData.CURRENT_DATA_VERSION, platforms, blockEntity, List.of());
 
         assertEquals(1, entry.getList("platforms", Tag.TAG_COMPOUND).size());
         assertEquals("Alpha", entry.getCompound("blockEntity").getString("name"));
-        assertEquals(12, entry.getCompound("blockEntity").getInt("searchRadius"));
+        assertFalse(entry.getCompound("blockEntity").contains("searchRadius"));
     }
 
     @Test

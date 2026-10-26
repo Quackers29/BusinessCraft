@@ -173,17 +173,11 @@ public final class ShowcaseRouteRegistry {
                 "press-button:id:" + ShowcaseButtonIds.SETTINGS_SET_PLATFORMS,
                 "wait-for-screen:PlatformManagementScreenV2:160",
                 "wait-for-platforms:120")));
-        routes.add(new ShowcaseRoute("platform/destinations", List.of(
+        routes.add(new ShowcaseRoute("platform/interface", List.of(
                 "setup:world",
-                "open-town",
-                "wait-for-screen:TownInterfaceScreen:120",
-                "set-tab:settings",
-                "wait-tab:settings",
-                "press-button:id:" + ShowcaseButtonIds.SETTINGS_SET_PLATFORMS,
-                "wait-for-screen:PlatformManagementScreenV2:160",
-                "wait-for-platforms:120",
-                "press-button:id:" + ShowcaseButtonIds.platformDestinations(0),
-                "wait-for-screen:DestinationsScreenV2:160")));
+                "wait-for-platform-block:160",
+                "open-platform-interface",
+                "wait-for-screen:PlatformInterfaceScreen:160")));
         routes.add(tourist("tourist/before", "legacy"));
         routes.add(tourist("tourist/wanderer", "wanderer"));
         routes.add(tourist("tourist/voyager", "voyager"));

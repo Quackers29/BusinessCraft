@@ -1,8 +1,14 @@
 package com.quackers29.businesscraft.client.showcase;
 
 import com.quackers29.businesscraft.block.TownInterfaceBlock;
+import com.quackers29.businesscraft.block.entity.PlatformInterfaceEntity;
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.init.CommonModBlocks;
+import com.quackers29.businesscraft.platform.Platform;
+import com.quackers29.businesscraft.ui.screens.platform.PlatformInterfaceScreen;
+import com.quackers29.businesscraft.ui.screens.platform.PlatformManagementScreenV2;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.core.BlockPos;
@@ -198,9 +204,9 @@ public final class Showcase {
             }
         }
         ticksOnShot++;
-        if (shot.screen && !tabReady(minecraft, shot)) {
-            if (ticksOnShot == 40 || ticksOnShot == 70) {
-                showTab(minecraft, tabFor(shot.name));
+        if (shot.screen && !shotReady(minecraft, shot)) {
+            if ((ticksOnShot == 40 || ticksOnShot == 70) && shot.before != null) {
+                shot.before.run();
             }
             if (ticksOnShot > 100) {
                 failure = "town screen did not show " + shot.name;
@@ -230,21 +236,42 @@ public final class Showcase {
         for (String name : ShowcaseSelection.shotsFor(property)) {
             boolean screen = screenShot(name);
             String tab = tabFor(name);
-            Runnable before = screen ? () -> showTab(Minecraft.getInstance(), tab) : null;
+            Runnable before = switch (name) {
+                case "platform_interface_screen" -> () -> ShowcasePlatforms.openScreen(Minecraft.getInstance(), townPos);
+                case "platform_overview" -> () -> PlatformManagementScreenV2.open(townPos);
+                default -> screen ? () -> showTab(Minecraft.getInstance(), tab) : null;
+            };
             shots.add(new PlannedShot(name, pauseFor(name), screen, before));
         }
         return List.copyOf(shots);
     }
 
     private static int pauseFor(String name) {
-        if ("town_overview".equals(name)) {
+        if ("town_overview".equals(name) || "platform_interface_screen".equals(name)
+                || "platform_overview".equals(name) || name.startsWith("platform_lamp_")) {
             return 50;
+        }
+        if ("platform_interface".equals(name) || name.startsWith("platform_") || "town_paths".equals(name)) {
+            return 30;
         }
         return name.startsWith("town_") && !name.startsWith("town_interface") ? 30 : 20;
     }
 
     private static boolean screenShot(String name) {
-        return name.startsWith("town_") && !name.startsWith("town_interface");
+        if ("platform_interface_screen".equals(name) || "platform_overview".equals(name)) {
+            return true;
+        }
+        return name.startsWith("town_") && !name.startsWith("town_interface") && !"town_paths".equals(name);
+    }
+
+    private static boolean shotReady(Minecraft minecraft, PlannedShot shot) {
+        if ("platform_interface_screen".equals(shot.name)) {
+            return minecraft.screen instanceof PlatformInterfaceScreen;
+        }
+        if ("platform_overview".equals(shot.name)) {
+            return minecraft.screen instanceof PlatformManagementScreenV2;
+        }
+        return tabReady(minecraft, shot);
     }
 
     private static void build(MinecraftServer server) {
@@ -298,6 +325,7 @@ public final class Showcase {
             }
             townPos = placeAt.immutable();
             ShowcaseTourismSeed.seed(level, townPos);
+            ShowcasePlatforms.ensure(level, townPos);
             player.setGameMode(GameType.SPECTATOR);
             LOGGER.info("Showcase placed town interface at {}", townPos);
             buildDone = true;
@@ -309,12 +337,40 @@ public final class Showcase {
 
     private static void aim(Minecraft minecraft, PlannedShot shot) {
         BlockPos pos = townPos;
-        Vec3 target = Vec3.atCenterOf(pos);
+        boolean machineShot = "platform_interface".equals(shot.name) || "platform_front".equals(shot.name)
+                || "platform_side".equals(shot.name) || "platform_rail".equals(shot.name)
+                || "platform_hand".equals(shot.name) || "platform_path".equals(shot.name)
+                || shot.name.startsWith("platform_lamp_");
+        BlockPos lookAt = machineShot ? ShowcasePlatforms.interfacePos(pos) : pos;
+        if ("platform_path".equals(shot.name) && lookAt != null) {
+            lookAt = lookAt.north(4);
+        }
+        if ("town_paths".equals(shot.name)) {
+            lookAt = pos.offset(4, 0, 4);
+        }
+        if (lookAt == null) {
+            lookAt = pos;
+        }
+        Vec3 target = Vec3.atCenterOf(lookAt);
         Vec3 eye = switch (shot.name) {
             case "town_interface_back" -> target.add(-1.8, 1.6, -3.2);
+            case "platform_front", "platform_interface" -> target.add(0.0, 0.72, 2.2);
+            case "platform_side" -> target.add(2.45, 0.7, 0.7);
+            case "platform_rail" -> target.add(1.9, 1.15, 2.35);
+            case "platform_hand" -> target.add(0.15, 0.85, 2.05);
+            case "platform_lamp_on", "platform_lamp_off" -> target.add(0.2, 1.15, 2.55);
+            case "platform_path" -> Vec3.atCenterOf(ShowcasePlatforms.interfacePos(pos)).add(1.65, 1.45, 2.2);
+            case "town_paths" -> Vec3.atCenterOf(pos).add(8.0, 9.5, 13.0);
             case "town_interface", "warmup" -> target.add(1.8, 1.6, 3.2);
             default -> target.add(0.0, 1.2, 2.4);
         };
+        showPaths(shot, pos);
+        minecraft.options.setCameraType(CameraType.FIRST_PERSON);
+        minecraft.options.hideGui = !"platform_hand".equals(shot.name);
+        if ("platform_hand".equals(shot.name) && minecraft.player != null) {
+            minecraft.player.setItemInHand(InteractionHand.MAIN_HAND,
+                    new ItemStack(CommonModBlocks.PLATFORM_INTERFACE_BLOCK.get()));
+        }
         float[] facing = ShowcaseSelection.facing(eye.x, eye.y, eye.z, target.x, target.y + 0.2, target.z);
         Player player = minecraft.player;
         double feetY = eye.y - player.getEyeHeight();
@@ -325,10 +381,65 @@ public final class Showcase {
             server.execute(() -> {
                 ServerPlayer serverPlayer = server.getPlayerList().getPlayer(player.getUUID());
                 if (serverPlayer != null) {
+                    if (shot.name.startsWith("platform_lamp_")) {
+                        serverPlayer.serverLevel().setDayTime(18000);
+                        applyLamp(serverPlayer.serverLevel(), "platform_lamp_on".equals(shot.name));
+                    }
+                    if ("platform_hand".equals(shot.name)) {
+                        serverPlayer.setGameMode(GameType.CREATIVE);
+                        serverPlayer.setItemInHand(InteractionHand.MAIN_HAND,
+                                new ItemStack(CommonModBlocks.PLATFORM_INTERFACE_BLOCK.get()));
+                    } else {
+                        serverPlayer.setGameMode(GameType.SPECTATOR);
+                    }
                     serverPlayer.teleportTo(serverPlayer.serverLevel(), eye.x, feetY, eye.z, facing[0], facing[1]);
                     serverPlayer.setYHeadRot(facing[0]);
                 }
             });
+        }
+    }
+
+    /** Night shots of the sign lamp, driven through the same enabled-flag sync the screen uses. */
+    private static void applyLamp(ServerLevel level, boolean enabled) {
+        BlockPos town = townPos;
+        BlockPos machine = ShowcasePlatforms.interfacePos(town);
+        if (town == null || machine == null) {
+            return;
+        }
+        if (level.getBlockEntity(town) instanceof TownInterfaceEntity townEntity
+                && ShowcasePlatforms.firstPlatformId() != null) {
+            Platform platform = townEntity.getPlatform(ShowcasePlatforms.firstPlatformId());
+            if (platform != null) {
+                platform.setEnabled(enabled);
+                townEntity.setChanged();
+            }
+        }
+        if (level.getBlockEntity(machine) instanceof PlatformInterfaceEntity entity) {
+            entity.syncLamp();
+        }
+    }
+
+    private static void showPaths(PlannedShot shot, BlockPos townPos) {
+        if (townPos == null) {
+            return;
+        }
+        BlockPos machine = ShowcasePlatforms.interfacePos(townPos);
+        BlockPos second = ShowcasePlatforms.secondPos(townPos);
+        if ("platform_path".equals(shot.name) && machine != null && ShowcasePlatforms.firstPlatformId() != null) {
+            com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer.hidePlatformVisualization(townPos);
+            if (second != null) {
+                com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer.hidePlatformVisualization(second);
+            }
+            com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer.showPlatformPath(
+                    machine, ShowcasePlatforms.firstPlatformId(), 0);
+        } else if ("town_paths".equals(shot.name)) {
+            if (machine != null) {
+                com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer.hidePlatformVisualization(machine);
+            }
+            if (second != null) {
+                com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer.hidePlatformVisualization(second);
+            }
+            com.quackers29.businesscraft.client.render.world.PlatformVisualizationRenderer.showPlatformVisualization(townPos, 0);
         }
     }
 

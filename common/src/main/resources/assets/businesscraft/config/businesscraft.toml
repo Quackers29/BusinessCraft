@@ -16,6 +16,12 @@
     # List of random town names for auto-naming
     townNames = ["Riverside", "Hillcrest", "Meadowbrook", "Oakville", "Stonebridge", "Willowglen", "Sunnyvale", "Cedarwood", "Maplehaven", "Brookside", "Fairview", "Pinehurst", "Elmwood", "Greystone"]
 
+[platforms]
+    # Highest search radius a platform may use, in blocks.
+    # Each platform still starts at 10, with spread 0 (tourists stand on the path line).
+    # Spread cannot exceed that platform's own search radius, so this is also the spread cap.
+    maxSearchRadius = 100
+
 [vehicles]
     # Enable Create mod train integration
     enableCreateTrains = true

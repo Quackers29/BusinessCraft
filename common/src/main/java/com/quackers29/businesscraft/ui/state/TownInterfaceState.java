@@ -33,7 +33,6 @@ public class TownInterfaceState {
     private int population = 5;
     private int touristCount = 0;
     private int maxTourists = 5;
-    private int searchRadius = 10;
     private boolean taxesEnabled = false;
     
     // Resource State
@@ -166,17 +165,6 @@ public class TownInterfaceState {
     public void setMaxTourists(int max) {
         if (this.maxTourists != max) {
             this.maxTourists = max;
-            notifyStateChange();
-        }
-    }
-    
-    public int getSearchRadius() {
-        return searchRadius;
-    }
-    
-    public void setSearchRadius(int radius) {
-        if (this.searchRadius != radius) {
-            this.searchRadius = radius;
             notifyStateChange();
         }
     }

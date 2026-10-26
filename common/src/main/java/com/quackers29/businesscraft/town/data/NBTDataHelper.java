@@ -37,10 +37,9 @@ public class NBTDataHelper {
      * @param pathStart Legacy path start position
      * @param pathEnd Legacy path end position
      * @param platformManager The platform manager
-     * @param searchRadius The search radius
      */
     public void saveToNBT(CompoundTag tag, Object itemHandler, UUID townId, String name,
-                         BlockPos pathStart, BlockPos pathEnd, PlatformManager platformManager, int searchRadius) {
+                         BlockPos pathStart, BlockPos pathEnd, PlatformManager platformManager) {
         
         // Save inventory
         tag.put("inventory", (CompoundTag) com.quackers29.businesscraft.api.PlatformAccess.getItemHandlers().serializeNBT(itemHandler));
@@ -71,10 +70,6 @@ public class NBTDataHelper {
         
         // Save platforms using platform manager
         platformManager.saveToNBT(tag);
-        
-        tag.putInt("searchRadius", searchRadius);
-        
-        // Visit history is now saved in the Town object
     }
     
     /**
@@ -111,10 +106,6 @@ public class NBTDataHelper {
             );
         }
         
-        if (tag.contains("searchRadius")) {
-            result.searchRadius = tag.getInt("searchRadius");
-        }
-        
         // Load town data and handle legacy migration
         if (tag.contains("TownId")) {
             result.townId = tag.getUUID("TownId");
@@ -137,11 +128,6 @@ public class NBTDataHelper {
                     if (result.pathEnd == null && result.town.getPathEnd() != null) {
                         result.pathEnd = result.town.getPathEnd();
                     }
-                    
-                    // Use town search radius if already set
-                    if (result.searchRadius <= 0 && result.town.getSearchRadius() > 0) {
-                        result.searchRadius = result.town.getSearchRadius();
-                    }
                 }
             }
         }
@@ -150,14 +136,9 @@ public class NBTDataHelper {
             result.name = tag.getString("name");
         }
 
-        // Load platforms using platform manager
+        // Load platforms using platform manager. Platforms without an interface block are dropped.
         platformManager.loadFromNBT(tag);
-        
-        // Create legacy platform if needed
-        if (result.pathStart != null && result.pathEnd != null) {
-            platformManager.createLegacyPlatform(result.pathStart, result.pathEnd);
-        }
-        
+
         return result;
     }
     
@@ -170,27 +151,14 @@ public class NBTDataHelper {
         public Town town;
         public BlockPos pathStart;
         public BlockPos pathEnd;
-        public int searchRadius;
         public boolean touristSpawningEnabled = true;
-        
-        public LoadResult() {
-            // Default values
-            this.searchRadius = -1; // Indicates not set
-        }
-        
-        /**
-         * Checks if the search radius was loaded from NBT
-         */
-        public boolean hasSearchRadius() {
-            return searchRadius > 0;
-        }
         
         /**
          * Gets a summary of loaded data for debugging
          */
         public String getSummary() {
-            return String.format("TownId: %s, Name: %s, PathStart: %s, PathEnd: %s, SearchRadius: %d, SpawningEnabled: %s",
-                townId, name, pathStart, pathEnd, searchRadius, touristSpawningEnabled);
+            return String.format("TownId: %s, Name: %s, PathStart: %s, PathEnd: %s, SpawningEnabled: %s",
+                townId, name, pathStart, pathEnd, touristSpawningEnabled);
         }
     }
 } 

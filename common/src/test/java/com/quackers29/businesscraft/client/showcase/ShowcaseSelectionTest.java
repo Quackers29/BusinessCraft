@@ -60,6 +60,28 @@ class ShowcaseSelectionTest {
     }
 
     @Test
+    void lampScene_isTheLitAndDarkSign() {
+        assertEquals(
+                List.of("warmup", "platform_lamp_on", "platform_lamp_off"),
+                ShowcaseSelection.shotsFor("lamp"));
+    }
+
+    @Test
+    void kioskScene_showsTheMachineAndItsPath() {
+        assertEquals(
+                List.of("warmup", "platform_front", "platform_side", "platform_rail", "platform_hand",
+                        "platform_path", "town_paths"),
+                ShowcaseSelection.shotsFor("kiosk"));
+    }
+
+    @Test
+    void platformScene_isTownCentreBlockAndBothScreens() {
+        assertEquals(
+                List.of("warmup", "town_overview", "platform_interface", "platform_interface_screen", "platform_overview"),
+                ShowcaseSelection.shotsFor("platform"));
+    }
+
+    @Test
     void exactShot_doesNotPullTheOtherSide() {
         assertEquals(List.of("warmup", "town_interface"), ShowcaseSelection.shotsFor("town_interface"));
         assertEquals(

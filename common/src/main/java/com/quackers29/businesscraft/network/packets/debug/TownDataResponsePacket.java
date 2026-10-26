@@ -31,13 +31,12 @@ public class TownDataResponsePacket {
             boolean canSpawnTourists = buf.readBoolean();
             String pathStart = buf.readBoolean() ? buf.readUtf() : null;
             String pathEnd = buf.readBoolean() ? buf.readUtf() : null;
-            int searchRadius = buf.readInt();
             int totalVisitors = buf.readInt();
 
             townData.add(new TownDebugOverlay.TownDebugData(
                     id, name, position, population,
                     touristSpawningEnabled, canSpawnTourists,
-                    pathStart, pathEnd, searchRadius, totalVisitors));
+                    pathStart, pathEnd, totalVisitors));
         }
     }
 
@@ -58,7 +57,6 @@ public class TownDataResponsePacket {
             buf.writeBoolean(data.pathEnd != null);
             if (data.pathEnd != null)
                 buf.writeUtf(data.pathEnd);
-            buf.writeInt(data.searchRadius);
             buf.writeInt(data.totalVisitors);
         }
     }

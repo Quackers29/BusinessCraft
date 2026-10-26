@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.fabric.init;
 
 import com.quackers29.businesscraft.debug.DebugConfig;
+import com.quackers29.businesscraft.block.entity.PlatformInterfaceEntity;
 import com.quackers29.businesscraft.fabric.block.entity.FabricTownInterfaceEntity;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
@@ -19,11 +20,16 @@ public class FabricModBlockEntities {
 
     // Store the registered block entity type for later retrieval
     public static BlockEntityType<?> TOWN_INTERFACE_ENTITY_TYPE;
+    public static BlockEntityType<?> PLATFORM_INTERFACE_ENTITY_TYPE;
     private static boolean registrationAttempted = false;
     private static boolean registrationSuccessful = false;
 
     public static BlockEntityType<?> getTownInterfaceEntityType() {
         return TOWN_INTERFACE_ENTITY_TYPE;
+    }
+
+    public static BlockEntityType<?> getPlatformInterfaceEntityType() {
+        return PLATFORM_INTERFACE_ENTITY_TYPE;
     }
 
     public static void register() {
@@ -99,6 +105,24 @@ public class FabricModBlockEntities {
                         new ResourceLocation(MOD_ID, "town_interface_entity"), TOWN_INTERFACE_ENTITY_TYPE);
                 DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION,
                         "Registered block entity type without block association: {}", TOWN_INTERFACE_ENTITY_TYPE);
+            }
+
+            net.minecraft.world.level.block.Block platformInterfaceBlock = BuiltInRegistries.BLOCK
+                    .get(new ResourceLocation("businesscraft", "platform_interface"));
+            if (platformInterfaceBlock != null) {
+                PLATFORM_INTERFACE_ENTITY_TYPE = FabricBlockEntityTypeBuilder.create(
+                        PlatformInterfaceEntity::new,
+                        platformInterfaceBlock).build();
+                Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
+                        new ResourceLocation(MOD_ID, "platform_interface_entity"), PLATFORM_INTERFACE_ENTITY_TYPE);
+                DebugConfig.debug(LOGGER, DebugConfig.MOD_INITIALIZATION,
+                        "Successfully registered PlatformInterfaceEntity: {}", PLATFORM_INTERFACE_ENTITY_TYPE);
+            } else {
+                LOGGER.warn("Platform interface block not found; registering block entity type without a block");
+                PLATFORM_INTERFACE_ENTITY_TYPE = FabricBlockEntityTypeBuilder.create(
+                        PlatformInterfaceEntity::new).build();
+                Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE,
+                        new ResourceLocation(MOD_ID, "platform_interface_entity"), PLATFORM_INTERFACE_ENTITY_TYPE);
             }
 
         } catch (Exception e) {

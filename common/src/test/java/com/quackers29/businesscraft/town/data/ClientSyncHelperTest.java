@@ -153,8 +153,6 @@ class ClientSyncHelperTest {
         @Override public void setPathStart(BlockPos pos) {}
         @Override public BlockPos getPathEnd() { return null; }
         @Override public void setPathEnd(BlockPos pos) {}
-        @Override public int getSearchRadius() { return 0; }
-        @Override public void setSearchRadius(int radius) {}
         @Override public boolean canSpawnTourists() { return false; }
         @Override public void markDirty() {}
         @Override public BlockPos getPosition() { return BlockPos.ZERO; }

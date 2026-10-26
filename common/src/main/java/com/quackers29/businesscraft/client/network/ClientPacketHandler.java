@@ -237,29 +237,19 @@ public final class ClientPacketHandler {
         CompoundTag platformTag = new CompoundTag();
         ListTag platformsTag = new ListTag();
         for (TownPlatformDataResponsePacket.PlatformInfo platform : packet.getPlatforms().values()) {
-            CompoundTag pTag = new CompoundTag();
-            pTag.putUUID("Id", platform.id);
-            pTag.putString("Name", platform.name);
-            pTag.putBoolean("Enabled", platform.enabled);
-            if (platform.startPos != null) {
-                pTag.putInt("StartX", platform.startPos.getX());
-                pTag.putInt("StartY", platform.startPos.getY());
-                pTag.putInt("StartZ", platform.startPos.getZ());
-            }
-            if (platform.endPos != null) {
-                pTag.putInt("EndX", platform.endPos.getX());
-                pTag.putInt("EndY", platform.endPos.getY());
-                pTag.putInt("EndZ", platform.endPos.getZ());
-            }
-            CompoundTag destTag = new CompoundTag();
-            destTag.putInt("Count", platform.enabledDestinations.size());
-            int destIndex = 0;
+            com.quackers29.businesscraft.platform.Platform restored = new com.quackers29.businesscraft.platform.Platform(
+                    platform.id);
+            restored.setName(platform.name);
+            restored.setEnabled(platform.enabled);
+            restored.setStartPos(platform.startPos);
+            restored.setEndPos(platform.endPos);
+            restored.setSearchRadius(platform.searchRadius);
+            restored.setSpread(platform.spread);
+            restored.setInterfacePos(platform.interfacePos);
             for (java.util.UUID destId : platform.enabledDestinations) {
-                destTag.putUUID("Dest" + destIndex, destId);
-                destIndex++;
+                restored.enableDestination(destId);
             }
-            pTag.put("Destinations", destTag);
-            platformsTag.add(pTag);
+            platformsTag.add(restored.toNBT());
         }
         platformTag.put("platforms", platformsTag);
         return platformTag;

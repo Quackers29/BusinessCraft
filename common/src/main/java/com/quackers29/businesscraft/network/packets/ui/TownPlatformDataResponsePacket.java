@@ -30,8 +30,10 @@ public class TownPlatformDataResponsePacket {
     }
 
     public void addPlatform(UUID platformId, String name, boolean enabled,
-            BlockPos startPos, BlockPos endPos, Set<UUID> enabledDestinations) {
-        platforms.put(platformId, new PlatformInfo(platformId, name, enabled, startPos, endPos, enabledDestinations));
+            BlockPos startPos, BlockPos endPos, Set<UUID> enabledDestinations,
+            int searchRadius, int spread, BlockPos interfacePos) {
+        platforms.put(platformId, new PlatformInfo(platformId, name, enabled, startPos, endPos, enabledDestinations,
+                searchRadius, spread, interfacePos));
     }
 
     public void setTownInfo(String name, int population, int touristCount, int boundaryRadius) {
@@ -82,6 +84,13 @@ public class TownPlatformDataResponsePacket {
             for (UUID destId : platform.enabledDestinations) {
                 buf.writeUUID(destId);
             }
+
+            buf.writeInt(platform.searchRadius);
+            buf.writeInt(platform.spread);
+            buf.writeBoolean(platform.interfacePos != null);
+            if (platform.interfacePos != null) {
+                buf.writeBlockPos(platform.interfacePos);
+            }
         }
     }
 
@@ -116,7 +125,13 @@ public class TownPlatformDataResponsePacket {
                 enabledDestinations.add(buf.readUUID());
             }
 
-            packet.addPlatform(platformId, name, enabled, startPos, endPos, enabledDestinations);
+            int searchRadius = buf.readInt();
+            int spread = buf.readInt();
+            boolean hasInterface = buf.readBoolean();
+            BlockPos interfacePos = hasInterface ? buf.readBlockPos() : null;
+
+            packet.addPlatform(platformId, name, enabled, startPos, endPos, enabledDestinations,
+                    searchRadius, spread, interfacePos);
         }
 
         return packet;
@@ -135,15 +150,21 @@ public class TownPlatformDataResponsePacket {
         public final BlockPos startPos;
         public final BlockPos endPos;
         public final Set<UUID> enabledDestinations;
+        public final int searchRadius;
+        public final int spread;
+        public final BlockPos interfacePos;
 
         public PlatformInfo(UUID id, String name, boolean enabled, BlockPos startPos, BlockPos endPos,
-                Set<UUID> enabledDestinations) {
+                Set<UUID> enabledDestinations, int searchRadius, int spread, BlockPos interfacePos) {
             this.id = id;
             this.name = name;
             this.enabled = enabled;
             this.startPos = startPos;
             this.endPos = endPos;
             this.enabledDestinations = new java.util.HashSet<>(enabledDestinations);
+            this.searchRadius = searchRadius;
+            this.spread = spread;
+            this.interfacePos = interfacePos;
         }
     }
 

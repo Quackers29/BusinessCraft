@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * Covers the collection semantics, cap enforcement, mutation notification,
  * defensive copies, enabled+complete filtering, NBT save/load/updateClient
- * orchestration, legacy single-path migration, and transient UI state in
+ * orchestration, and transient UI state in
  * PlatformManager.
  *
  * Pure logic using only BlockPos/CompoundTag/UUID (allowed per protocol,
@@ -337,45 +337,6 @@ class PlatformManagerTest {
         CompoundTag tagWithout = new CompoundTag(); // no platforms key
         clientMgr.updateClientPlatforms(tagWithout);
         assertEquals(0, clientMgr.getPlatforms(true).size());
-    }
-
-    // --- legacy migration ---
-
-    @Test
-    void createLegacyPlatform_emptyAndValidPositions_createsMainPlatformAndNotifies() {
-        BlockPos s = new BlockPos(10, 64, 20);
-        BlockPos e = new BlockPos(40, 64, 20);
-
-        manager.createLegacyPlatform(s, e);
-
-        assertEquals(1, manager.getPlatformCount());
-        assertEquals(1, changeCount.get());
-
-        Platform p = manager.getPlatforms(false).get(0);
-        assertEquals("Main Platform", p.getName());
-        assertTrue(p.isEnabled());
-        assertEquals(s, p.getStartPos());
-        assertEquals(e, p.getEndPos());
-    }
-
-    @Test
-    void createLegacyPlatform_alreadyPopulated_isNoOp() {
-        assertTrue(manager.addPlatform());
-        int before = manager.getPlatformCount();
-        int notifies = changeCount.get();
-
-        manager.createLegacyPlatform(START_A, END_A);
-
-        assertEquals(before, manager.getPlatformCount());
-        assertEquals(notifies, changeCount.get());
-    }
-
-    @Test
-    void createLegacyPlatform_nullPosition_isNoOp() {
-        manager.createLegacyPlatform(START_A, null);
-        manager.createLegacyPlatform(null, END_A);
-        assertEquals(0, manager.getPlatformCount());
-        assertEquals(0, changeCount.get());
     }
 
     // --- counts and canAdd ---

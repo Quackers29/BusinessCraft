@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "RIR",
+    "I#I",
+    "RIR"
+  ],
+  "key": {
+    "R": {
+      "item": "minecraft:rail"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "#": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "item": "businesscraft:platform_interface",
+    "count": 1
+  }
+}

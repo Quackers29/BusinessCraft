@@ -9,7 +9,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket;
-import com.quackers29.businesscraft.network.packets.platform.SetSearchRadiusPacket;
 import net.minecraft.core.BlockPos;
 import java.util.List;
 import java.util.Map;
@@ -33,17 +32,8 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     // Dependency container for coordinated functionality
     private TownScreenDependencies dependencies;
 
-    // Cache the current search radius for UI updates
-    private int currentSearchRadius;
-
     public TownInterfaceScreen(TownInterfaceMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
-
-        // Initialize cached values from the menu
-        this.currentSearchRadius = menu.getSearchRadius();
-
-        DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "TownInterfaceScreen created with radius: {}",
-                currentSearchRadius);
     }
 
     @Override
@@ -211,16 +201,6 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     // ===== Specific Interface Implementations =====
 
     @Override
-    public void setCurrentSearchRadius(int radius) {
-        this.currentSearchRadius = radius;
-    }
-
-    @Override
-    public int getSearchRadiusFromMenu() {
-        return menu.getSearchRadius();
-    }
-
-    @Override
     public BottomButtonManager getButtonManager() {
         return buttonManager;
     }
@@ -241,49 +221,6 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
         // This ensures when the user navigates back from the platform screen,
         // they return to the town interface
         this.minecraft.setScreen(platformScreen);
-    }
-
-    /**
-     * Handles changes to the search radius using the extracted SearchRadiusManager.
-     * This method is used by tab implementations.
-     */
-    public void handleRadiusChange(int mouseButton) {
-        if (dependencies == null) {
-            LOGGER.warn("Dependencies not initialized, cannot handle radius change");
-            // Chat message removed
-            return;
-        }
-
-        try {
-            SearchRadiusManager radiusManager = dependencies.getRadiusManager();
-            boolean isShift = hasShiftDown();
-
-            SearchRadiusManager.RadiusChangeResult result = radiusManager.handleRadiusChange(mouseButton, isShift);
-
-            // Update our cached value
-            currentSearchRadius = result.getNewRadius();
-
-            // User feedback removed - no chat message for radius changes
-
-            // Play a click sound for feedback
-            playButtonClickSound();
-
-            DebugConfig.debug(LOGGER, DebugConfig.SEARCH_RADIUS_MANAGER, "Search radius changed to: {}",
-                    result.getNewRadius());
-
-        } catch (Exception e) {
-            LOGGER.error("Error handling radius change", e);
-            // Error chat message removed
-        }
-    }
-
-    /**
-     * Gets the current search radius for UI display
-     * 
-     * @return The current search radius
-     */
-    public int getCurrentSearchRadius() {
-        return currentSearchRadius;
     }
 
     // Helper methods to get data from the cache manager
