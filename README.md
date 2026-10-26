@@ -272,7 +272,7 @@ Each content type optimizes rendering and interaction patterns for specific data
 **✅ Complete Client-Server Communication**
 
 #### **Platform Management** (`network/packets/platform/` - 9 packets)
-Platform creation/deletion, path setting and reset, destination selection, enable/disable, path creation mode, search radius, refresh — e.g. `AddPlatformPacket`, `SetPlatformPathPacket`, `SetPlatformDestinationPacket`, `SetPlatformEnabledPacket`
+Path setting and reset, destination selection, enable/disable, path creation mode, search radius and spread, refresh — e.g. `SetPlatformPathPacket`, `SetPlatformDestinationPacket`, `SetPlatformEnabledPacket`, `SetPlatformAreaPacket`
 
 #### **Storage & Payment Board** (`network/packets/storage/` - 12 packets)
 Communal/personal/buffer storage request+response pairs, payment board sync and claims, resource trading — e.g. `PaymentBoardClaimPacket`, `PersonalStoragePacket`, `BufferStorageResponsePacket`, `TradeResourcePacket`
@@ -390,8 +390,8 @@ Server-built UI view models pushed to the client: town interface, resources, pro
 
 ### **How a town is set up**
 
-1. **Craft and place a Town Centre** — recipe: 8 obsidian around 1 diamond (`O O O / O # O / O O O`). Place it at least **100 blocks** from another Town Centre if both use the default radius (50). The town name is chosen from config; there is no town owner.
-2. **Craft Platform Interface blocks** — recipe: rails + iron ring with redstone centre (`R I R / I # I / R I R`). Place them **inside** the town boundary (max 10 per town, at least **5 blocks** from another interface of the same town).
+1. **Craft and place a Town Centre** — recipe: 8 obsidian around 1 diamond (`OOO` / `O#O` / `OOO`). Place it at least **100 blocks** from another Town Centre if both use the default radius (50). The town name is chosen from config; there is no town owner. The Town Centre lists platforms; it does not add or remove them.
+2. **Craft Platform Interface blocks** — recipe: rails and iron around redstone (`RIR` / `I#I` / `RIR`). Place them **inside** the town boundary (max 10 per town, at least **5 blocks** from another interface of the same town). Placement outside the boundary fails.
 3. **On each Platform Interface** — set the spawn path (two right-clicks), search radius and spread, enable the platform, and pick destination towns (or leave none for “any town”). The sign lamp is on only when the platform is linked and enabled.
 4. **Move tourists** — they **do not walk**; use minecarts or Create trains. Fare is linear: default **100 blocks per emerald** (`economy.metersPerEmerald`). Claim distance milestones from the Payment Board.
 5. **Breaking blocks** — breaking a Platform Interface removes that platform; breaking the Town Centre deactivates loaded interfaces and dismisses tourists on those platforms.
@@ -413,7 +413,7 @@ Server-built UI view models pushed to the client: town interface, resources, pro
 
 3. **Grow tourism**
    ```
-   → Reach min population for tourists (default 5) via visits
+   → New towns start at population 5, the default minimum for tourists
    → Watch visit history and claim Payment Board milestones
    ```
 

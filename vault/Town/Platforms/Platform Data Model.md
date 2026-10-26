@@ -6,18 +6,17 @@ tags:
 # Platform Data Model
 
 **Breadcrumb**: Town > Platforms > Platform Data Model
-**TL;DR**: A Platform is a named, enableable path (start/end BlockPos) with a set of target destination town UUIDs (or "any town" when empty); it supports NBT roundtrip, defensive copies, a compat Map view of destinations, and isComplete check used to gate tourist spawning and visualization.
+**TL;DR**: A Platform is a named, enableable record tied to a Platform Interface block position, with path endpoints, search radius, lateral spread, and destination allow-list (empty = any town); `isEnabled && isComplete` gates spawning and the interface lamp.
 
 ## What it does
-Platforms define the physical rail/road paths and allowed destination towns for tourists leaving a given town. Up to 10 platforms per town (enforced by PlatformManager). Each platform can be toggled on/off by players, have its path endpoints set via the UI, and target specific other towns (or accept any). The data model is pure and persisted with the town's NBT; the isEnabled + isComplete predicate controls whether the platform is active for spawning and 3D path rendering.
+Each platform row belongs to one **Platform Interface** block (`interfacePos`). Tourists spawn along the segment from `startPos` to `endPos` using `PlatformSpawn` (point on the line plus lateral **spread** within the platform's **search radius**). Players edit path, enabled flag, search radius (default 10, max `platforms.maxSearchRadius`), spread (default 0 = on the path line; cannot exceed that platform's radius), and destinations on **PlatformInterfaceScreen**. Up to 10 platforms per town (`PlatformManager`). Disabled platforms are skipped for spawning and show an unlit lamp. Data persists in the town NBT; load drops platforms with no interface position.
 
 ## How it works (process view)
-- Player opens Platform Management UI on a town, adds a new platform (name auto "Platform N", enabled=true, no path yet).
-- Player enters path creation mode for a platform and right-clicks two blocks to set start and end positions (these become the bounds for spawning tourists along the line).
-- Optionally, player selects specific destination towns from the list (or leaves empty = "any town" special case).
-- Enabled + complete platforms are used by spawning logic and rendered in world with particles/lines.
-- On save, the entire list of platforms (with their paths and dest sets) is written into the TownInterfaceEntity's NBT under the town data.
-- **Worked example**: New platform after add: id=random, name="Platform 1", enabled=true, start=null, end=null, dests=empty. After setting path (10,64,20)→(40,64,20) and enabling two dest UUIDs D1/D2: isComplete()=true, hasNoEnabledDestinations()=false, getDestinations() returns {D1:true, D2:true}, getEnabledDestinations() returns copy of {D1,D2}. Saving to NBT produces compound with Id/Name/Enabled/StartX.. /Destinations:{Count:2,Dest0:D1,...}. Loading back yields equal Platform.
+- Platform is created when an interface is placed (`addInterfacePlatform` sets `interfacePos` and default name `"Platform N"`).
+- Player configures start/end path, optional destination UUIDs (empty set = any town), search radius, and spread on the interface block UI.
+- `TouristSpawningHelper` uses enabled + complete platforms only; spawn position from `PlatformSpawn.point` along the segment.
+- Town Centre platform tab displays the list read-only; it does not create platforms.
+- **Worked example**: After placement: id=random, name="Platform 1", enabled=true, interfacePos=(10,64,5), path unset → `isComplete()` false, not in `getEnabledPlatforms()`. After path (10,64,5)→(40,64,5), radius 10, spread 2, dests {D1}: complete and spawnable. Disable → omitted from spawning, lamp off.
 
 ---
 > [!info]- Deep reference
@@ -26,7 +25,11 @@ Platforms define the physical rail/road paths and allowed destination towns for 
 ## Key classes & methods
 | Class / Method | File | Role |
 |---|---|---|
-| `Platform()` / `Platform(UUID)` / `Platform(String, boolean, BlockPos, BlockPos)` | `common/src/main/java/com/quackers29/businesscraft/platform/Platform.java` | Primary constructors; random ID for new, full state for legacy recreation |
+| `Platform()` / `Platform(UUID)` | `common/src/main/java/com/quackers29/businesscraft/platform/Platform.java` | New platform (random id) or relink with fixed id |
+| `getInterfacePos()` / `setInterfacePos()` | same | Link to Platform Interface block; required for load into manager list |
+| `getSearchRadius()` / `setSearchRadius()` | same | Default `PlatformSpawn.DEFAULT_RADIUS` (10); clamped to config max when edited |
+| `getSpread()` / `setSpread()` | same | Default 0; capped to platform search radius |
+| `Platform(String, boolean, BlockPos, BlockPos)` | same | Legacy ctor for tests; not player migration |
 | `Platform(CompoundTag)` / `fromNBT(CompoundTag)` / `save()` / `toNBT()` | same | Full NBT serialization roundtrip (core fields always written; positions and destinations optional on load) |
 | `isComplete()` | same | Returns true only if both startPos and endPos are non-null — used as spawn/visual gate |
 | `hasNoEnabledDestinations()` | same | True when enabledDestinations set is empty → signals "accept any town" (ANY_TOWN_DESTINATION special in spawning) |
@@ -43,9 +46,10 @@ No numeric formulas; the "logic" is state machine + serialization + defensive da
 - **Compat transform**: `getDestinations()` always allocates a new HashMap and populates it with `true` values for the current enabled set. It never returns the internal set directly and never contains `false` entries (post-refactor all entries mean "enabled").
 - **SetDestinationEnabled**: convenience that delegates to add or remove on the internal set; no-op on remove-missing.
 - **NBT save (save/toNBT)**:
-  - Always: "Id"(UUID), "Name"(String), "Enabled"(boolean)
-  - If pos != null: "StartX/Y/Z" (int), "EndX/Y/Z" (int)
-  - Always: "Destinations" compound { "Count": N, "Dest0": UUID, ... "DestN-1": UUID }
+  - Always: "Id", "Name", "Enabled"
+  - Optional: Start/End XYZ, Interface XYZ, SearchRadius, Spread
+  - "Destinations" compound { "Count": N, "Dest0": UUID, ... }
+- **Load into manager**: `PlatformManager.loadFromNBT` / `updateClientPlatforms` only retain entries with non-null `interfacePos`.
 - **NBT load (tag ctor / fromNBT)**:
   - Core three fields read unconditionally (getUUID/getString/getBoolean will throw on absent key in MC CompoundTag — prod code always writes them).
   - Positions: guarded by `tag.contains("StartX")` etc → null if missing.
@@ -69,7 +73,7 @@ No numeric formulas; the "logic" is state machine + serialization + defensive da
 ## Test coverage
 - Test file: `common/src/test/java/com/quackers29/businesscraft/platform/PlatformTest.java`
 - Covered: all ctors (incl. tag roundtrip), isComplete for null/partial/full paths, hasNoEnabledDest + destination add/remove/is/clear/get/set/getDestinations (map transform + defensive), NBT save/load for positions + destinations (0 and N), equals/hash including dest sets, getName/getId after load.
-- Not covered: integration with PlatformManager (max 10, manager-level add/remove, client list, legacy create, notify callbacks — those are in manager), actual world spawning or packet flows (require MC), visualization.
+- Not covered: full PlatformManager + interface placement integration (see manager/interface notes), live spawning (NEEDS-MC).
 - 25 tests; all edges from this note + defensive mutation cases + full roundtrips with hand-verified state. Full suite green.
 
 ## Open questions
@@ -80,7 +84,7 @@ No numeric formulas; the "logic" is state machine + serialization + defensive da
 
 ## Related
 - [[Town/Town Overview]]
-- [[Town/Platforms/Platform Data Model]] (this note)
-- PlatformManager (in town/data) owns the list, enforces MAX=10, handles creation mode and NBT for the collection
-- Used by: TownInterfaceEntity, TownInterfaceBlock (spawn gates), PlatformVisualizationRenderer, various Set*Packet handlers for path/dest/enabled mutations
-- TouristSpawningHelper.selectTouristDestination consumes hasNoEnabledDestinations + getDestinations
+- [[Town/Platforms/Platform Interface]]
+- [[Town/Platforms/Platform Management]]
+- PlatformManager owns the list; PlatformInterfaceEntity edits per-block fields via packets
+- TouristSpawningHelper: `getEnabledPlatforms`, `PlatformSpawn.point`, destination selection
