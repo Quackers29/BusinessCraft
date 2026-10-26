@@ -125,7 +125,7 @@ public class PlatformManagementScreenV2 extends Screen {
                 PLATFORM_LIST_X, PLATFORM_LIST_Y + 5,
                 listWidth - 8, listHeight - 10,
                 6) // Status, Name, State, Path, Destinations, Position
-                .withColumnWeights(new float[] {0.06f, 0.18f, 0.16f, 0.14f, 0.18f, 0.28f})
+                .withColumnWeights(new float[] {0.05f, 0.18f, 0.16f, 0.20f, 0.16f, 0.25f})
                 .withRowHeight(18)
                 .withSpacing(4, 3) // Back to normal spacing
                 .withMargins(4, 2) // Reduced vertical margin from 4 to 2 to fit more rows
