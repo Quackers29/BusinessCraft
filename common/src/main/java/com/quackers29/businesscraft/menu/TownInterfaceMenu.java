@@ -469,9 +469,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      * @return true if the platform was added successfully
      */
     public boolean addPlatform() {
-        if (level != null && level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
-            return townEntity.addPlatform();
-        }
+        // Platforms are created by placing a Platform Interface block, not from this menu.
         return false;
     }
 
@@ -483,7 +481,7 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      */
     public boolean removePlatform(UUID platformId) {
         if (level != null && level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
-            return townEntity.removePlatform(platformId);
+            return townEntity.removeLegacyPlatform(platformId);
         }
         return false;
     }

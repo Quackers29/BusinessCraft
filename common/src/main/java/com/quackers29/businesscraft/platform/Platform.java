@@ -18,6 +18,9 @@ public class Platform {
     private boolean enabled;
     private BlockPos startPos;
     private BlockPos endPos;
+    private BlockPos interfacePos;
+    /** True for platforms created before Platform Interface blocks, or with no block of their own. */
+    private boolean legacy;
     private Set<UUID> enabledDestinations = new HashSet<>();
 
     /**
@@ -81,6 +84,20 @@ public class Platform {
                 }
             }
         }
+
+        if (tag.contains("InterfaceX")) {
+            this.interfacePos = new BlockPos(
+                    tag.getInt("InterfaceX"),
+                    tag.getInt("InterfaceY"),
+                    tag.getInt("InterfaceZ"));
+        }
+
+        if (tag.contains("Legacy")) {
+            this.legacy = tag.getBoolean("Legacy");
+        } else {
+            // Saves from before Platform Interface blocks omit both keys.
+            this.legacy = this.interfacePos == null;
+        }
     }
 
     /**
@@ -113,6 +130,13 @@ public class Platform {
             i++;
         }
         tag.put("Destinations", destTag);
+
+        tag.putBoolean("Legacy", legacy);
+        if (interfacePos != null) {
+            tag.putInt("InterfaceX", interfacePos.getX());
+            tag.putInt("InterfaceY", interfacePos.getY());
+            tag.putInt("InterfaceZ", interfacePos.getZ());
+        }
 
         return tag;
     }
@@ -178,6 +202,29 @@ public class Platform {
      */
     public void setEndPos(BlockPos endPos) {
         this.endPos = endPos;
+    }
+
+    /**
+     * World position of the Platform Interface block that owns this platform, or null for a legacy platform.
+     */
+    public BlockPos getInterfacePos() {
+        return interfacePos;
+    }
+
+    public void setInterfacePos(BlockPos interfacePos) {
+        this.interfacePos = interfacePos == null ? null : interfacePos.immutable();
+    }
+
+    /**
+     * Legacy platforms were created from the Town Centre screen (or older path data) and have no interface block.
+     * They stay in the town list and can still be removed there.
+     */
+    public boolean isLegacy() {
+        return legacy;
+    }
+
+    public void setLegacy(boolean legacy) {
+        this.legacy = legacy;
     }
 
     /**
@@ -283,15 +330,17 @@ public class Platform {
             return false;
         Platform platform = (Platform) o;
         return enabled == platform.enabled &&
+                legacy == platform.legacy &&
                 java.util.Objects.equals(id, platform.id) &&
                 java.util.Objects.equals(name, platform.name) &&
                 java.util.Objects.equals(startPos, platform.startPos) &&
                 java.util.Objects.equals(endPos, platform.endPos) &&
+                java.util.Objects.equals(interfacePos, platform.interfacePos) &&
                 java.util.Objects.equals(enabledDestinations, platform.enabledDestinations);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(id, name, enabled, startPos, endPos, enabledDestinations);
+        return java.util.Objects.hash(id, name, enabled, legacy, startPos, endPos, interfacePos, enabledDestinations);
     }
 }

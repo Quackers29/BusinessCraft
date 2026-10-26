@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.init;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.menu.PaymentBoardMenu;
 import com.quackers29.businesscraft.menu.StorageMenu;
+import com.quackers29.businesscraft.menu.PlatformInterfaceMenu;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import com.quackers29.businesscraft.menu.TradeMenu;
 import com.quackers29.businesscraft.menu.ContractBoardMenu;
@@ -17,6 +18,7 @@ public class CommonModMenuTypes {
         public static Supplier<MenuType<PaymentBoardMenu>> PAYMENT_BOARD_MENU;
         public static Supplier<MenuType<ContractBoardMenu>> CONTRACT_BOARD_MENU;
         public static Supplier<MenuType<com.quackers29.businesscraft.menu.TouristMenu>> TOURIST_MENU;
+        public static Supplier<MenuType<PlatformInterfaceMenu>> PLATFORM_INTERFACE_MENU;
 
         public static void register() {
                 TOWN_INTERFACE_MENU = PlatformAccess.getRegistry().registerExtendedMenuType("town_interface",
@@ -36,5 +38,8 @@ public class CommonModMenuTypes {
 
                 TOURIST_MENU = PlatformAccess.getRegistry().registerExtendedMenuType("tourist_menu",
                                 com.quackers29.businesscraft.menu.TouristMenu::new);
+
+                PLATFORM_INTERFACE_MENU = PlatformAccess.getRegistry().registerExtendedMenuType("platform_interface",
+                                PlatformInterfaceMenu::new);
         }
 }

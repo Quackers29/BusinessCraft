@@ -75,7 +75,9 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
                                     platform.isEnabled(),
                                     platform.getStartPos(),
                                     platform.getEndPos(),
-                                    platform.getEnabledDestinations());
+                                    platform.getEnabledDestinations(),
+                                    platform.isLegacy(),
+                                    platform.getInterfacePos());
                         }
 
                         platformPacket.setTownInfo(town.getName(), (int) town.getPopulation(), (int) town.getTouristCount(),

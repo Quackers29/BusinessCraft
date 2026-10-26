@@ -83,6 +83,8 @@ import java.util.ArrayList;
 import net.minecraft.world.phys.Vec3;
 import com.quackers29.businesscraft.api.ITownDataProvider.VisitHistoryRecord;
 import com.quackers29.businesscraft.platform.Platform;
+import com.quackers29.businesscraft.platform.PlatformTouristCleanup;
+import com.quackers29.businesscraft.network.packets.platform.RefreshPlatformsPacket;
 import net.minecraft.resources.ResourceLocation;
 import com.quackers29.businesscraft.api.ITouristHelper;
 import com.quackers29.businesscraft.api.ITouristHelper.TouristInfo;
@@ -364,7 +366,7 @@ public ViewModelCache getVmCache() {
 
     @Override
     public Component getDisplayName() {
-        return Component.translatable("container.businesscraft.town_block");
+        return Component.translatable("block.businesscraft.town_interface");
     }
 
     @Nullable
@@ -1313,8 +1315,74 @@ public ViewModelCache getVmCache() {
         boolean removed = platformManager.removePlatform(platformId);
         if (removed) {
             platformIndicatorSpawnTimes.remove(platformId);
+            if (level instanceof ServerLevel serverLevel) {
+                PlatformTouristCleanup.dismissLoaded(serverLevel, platformId);
+            }
+            syncPlatforms();
         }
         return removed;
+    }
+
+    public boolean removeLegacyPlatform(UUID platformId) {
+        Platform platform = platformManager.getPlatform(platformId);
+        if (platform == null || !platform.isLegacy()) {
+            return false;
+        }
+        return removePlatform(platformId);
+    }
+
+    public UUID addInterfacePlatform(BlockPos pos) {
+        return platformManager.addInterfacePlatform(pos);
+    }
+
+    public int getPlatformCount() {
+        return platformManager.getPlatformCount();
+    }
+
+    public java.util.List<BlockPos> getPlatformInterfacePositions() {
+        return platformManager.getInterfacePositions();
+    }
+
+    public com.quackers29.businesscraft.town.data.PlatformManager.RelinkResult relinkPlatform(UUID platformId,
+            BlockPos interfacePos) {
+        return platformManager.relink(platformId, interfacePos);
+    }
+
+    /**
+     * Pushes the platform list to tracking clients. Safe to call after add, remove, or relink.
+     */
+    public void syncPlatforms() {
+        setChanged();
+        if (level == null || level.isClientSide()) {
+            return;
+        }
+        BlockState state = getBlockState();
+        level.sendBlockUpdated(worldPosition, state, state, 3);
+        if (PlatformAccess.getNetworkMessages() != null) {
+            PlatformAccess.getNetworkMessages().sendToAllTrackingChunk(
+                    new RefreshPlatformsPacket(worldPosition), level, worldPosition);
+        }
+    }
+
+    /**
+     * Town Centre is going away. Loaded tourists on its platforms are dismissed while the town still
+     * exists, and any loaded Platform Interface blocks are marked inactive. Unloaded interfaces notice
+     * the missing town the next time their chunk loads.
+     */
+    public void releasePlatformsForRemovedTown(ServerLevel serverLevel) {
+        java.util.List<UUID> platformIds = new java.util.ArrayList<>();
+        for (Platform platform : platformManager.getPlatforms(false)) {
+            platformIds.add(platform.getId());
+        }
+        for (BlockPos interfacePos : platformManager.getInterfacePositions()) {
+            serverLevel.getChunkAt(interfacePos);
+            if (serverLevel.getBlockEntity(interfacePos) instanceof PlatformInterfaceEntity entity) {
+                entity.markInactive(PlatformInterfaceEntity.REASON_TOWN_GONE);
+            }
+        }
+        for (UUID platformId : platformIds) {
+            PlatformTouristCleanup.dismissLoaded(serverLevel, platformId);
+        }
     }
 
     /**

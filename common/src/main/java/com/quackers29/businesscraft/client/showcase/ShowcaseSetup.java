@@ -44,10 +44,12 @@ public final class ShowcaseSetup {
                 LOGGER.warn("Showcase setup: town interface has no town");
                 return;
             }
-            if (townInterface.getPlatforms().isEmpty() && townInterface.canAddMorePlatforms()) {
+            if (!ShowcasePlatforms.ensure(level, townPos)
+                    && townInterface.getPlatforms().isEmpty()
+                    && townInterface.canAddMorePlatforms()) {
                 townInterface.addPlatform();
                 townInterface.setChanged();
-                LOGGER.info("Showcase setup: added default platform");
+                LOGGER.info("Showcase setup: added legacy platform because no interface could be placed");
             }
             seedAuctionContract(level, town);
             seedVisitHistory(level, town, townPos, townInterface);

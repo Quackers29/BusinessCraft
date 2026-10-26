@@ -2,6 +2,8 @@ package com.quackers29.businesscraft.client.showcase;
 
 import com.quackers29.businesscraft.block.TownInterfaceBlock;
 import com.quackers29.businesscraft.init.CommonModBlocks;
+import com.quackers29.businesscraft.ui.screens.platform.PlatformInterfaceScreen;
+import com.quackers29.businesscraft.ui.screens.platform.PlatformManagementScreenV2;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
@@ -198,9 +200,9 @@ public final class Showcase {
             }
         }
         ticksOnShot++;
-        if (shot.screen && !tabReady(minecraft, shot)) {
-            if (ticksOnShot == 40 || ticksOnShot == 70) {
-                showTab(minecraft, tabFor(shot.name));
+        if (shot.screen && !shotReady(minecraft, shot)) {
+            if ((ticksOnShot == 40 || ticksOnShot == 70) && shot.before != null) {
+                shot.before.run();
             }
             if (ticksOnShot > 100) {
                 failure = "town screen did not show " + shot.name;
@@ -230,21 +232,42 @@ public final class Showcase {
         for (String name : ShowcaseSelection.shotsFor(property)) {
             boolean screen = screenShot(name);
             String tab = tabFor(name);
-            Runnable before = screen ? () -> showTab(Minecraft.getInstance(), tab) : null;
+            Runnable before = switch (name) {
+                case "platform_interface_screen" -> () -> ShowcasePlatforms.openScreen(Minecraft.getInstance(), townPos);
+                case "platform_overview" -> () -> PlatformManagementScreenV2.open(townPos);
+                default -> screen ? () -> showTab(Minecraft.getInstance(), tab) : null;
+            };
             shots.add(new PlannedShot(name, pauseFor(name), screen, before));
         }
         return List.copyOf(shots);
     }
 
     private static int pauseFor(String name) {
-        if ("town_overview".equals(name)) {
+        if ("town_overview".equals(name) || "platform_interface_screen".equals(name)
+                || "platform_overview".equals(name)) {
             return 50;
+        }
+        if ("platform_interface".equals(name)) {
+            return 30;
         }
         return name.startsWith("town_") && !name.startsWith("town_interface") ? 30 : 20;
     }
 
     private static boolean screenShot(String name) {
+        if ("platform_interface_screen".equals(name) || "platform_overview".equals(name)) {
+            return true;
+        }
         return name.startsWith("town_") && !name.startsWith("town_interface");
+    }
+
+    private static boolean shotReady(Minecraft minecraft, PlannedShot shot) {
+        if ("platform_interface_screen".equals(shot.name)) {
+            return minecraft.screen instanceof PlatformInterfaceScreen;
+        }
+        if ("platform_overview".equals(shot.name)) {
+            return minecraft.screen instanceof PlatformManagementScreenV2;
+        }
+        return tabReady(minecraft, shot);
     }
 
     private static void build(MinecraftServer server) {
@@ -298,6 +321,7 @@ public final class Showcase {
             }
             townPos = placeAt.immutable();
             ShowcaseTourismSeed.seed(level, townPos);
+            ShowcasePlatforms.ensure(level, townPos);
             player.setGameMode(GameType.SPECTATOR);
             LOGGER.info("Showcase placed town interface at {}", townPos);
             buildDone = true;
@@ -309,9 +333,16 @@ public final class Showcase {
 
     private static void aim(Minecraft minecraft, PlannedShot shot) {
         BlockPos pos = townPos;
-        Vec3 target = Vec3.atCenterOf(pos);
+        BlockPos lookAt = "platform_interface".equals(shot.name)
+                ? ShowcasePlatforms.interfacePos(pos)
+                : pos;
+        if (lookAt == null) {
+            lookAt = pos;
+        }
+        Vec3 target = Vec3.atCenterOf(lookAt);
         Vec3 eye = switch (shot.name) {
             case "town_interface_back" -> target.add(-1.8, 1.6, -3.2);
+            case "platform_interface" -> target.add(2.2, 1.5, 3.4);
             case "town_interface", "warmup" -> target.add(1.8, 1.6, 3.2);
             default -> target.add(0.0, 1.2, 2.4);
         };

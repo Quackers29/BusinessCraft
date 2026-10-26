@@ -30,8 +30,10 @@ public class TownPlatformDataResponsePacket {
     }
 
     public void addPlatform(UUID platformId, String name, boolean enabled,
-            BlockPos startPos, BlockPos endPos, Set<UUID> enabledDestinations) {
-        platforms.put(platformId, new PlatformInfo(platformId, name, enabled, startPos, endPos, enabledDestinations));
+            BlockPos startPos, BlockPos endPos, Set<UUID> enabledDestinations,
+            boolean legacy, BlockPos interfacePos) {
+        platforms.put(platformId, new PlatformInfo(platformId, name, enabled, startPos, endPos, enabledDestinations,
+                legacy, interfacePos));
     }
 
     public void setTownInfo(String name, int population, int touristCount, int boundaryRadius) {
@@ -82,6 +84,12 @@ public class TownPlatformDataResponsePacket {
             for (UUID destId : platform.enabledDestinations) {
                 buf.writeUUID(destId);
             }
+
+            buf.writeBoolean(platform.legacy);
+            buf.writeBoolean(platform.interfacePos != null);
+            if (platform.interfacePos != null) {
+                buf.writeBlockPos(platform.interfacePos);
+            }
         }
     }
 
@@ -116,7 +124,11 @@ public class TownPlatformDataResponsePacket {
                 enabledDestinations.add(buf.readUUID());
             }
 
-            packet.addPlatform(platformId, name, enabled, startPos, endPos, enabledDestinations);
+            boolean legacy = buf.readBoolean();
+            boolean hasInterface = buf.readBoolean();
+            BlockPos interfacePos = hasInterface ? buf.readBlockPos() : null;
+
+            packet.addPlatform(platformId, name, enabled, startPos, endPos, enabledDestinations, legacy, interfacePos);
         }
 
         return packet;
@@ -135,15 +147,19 @@ public class TownPlatformDataResponsePacket {
         public final BlockPos startPos;
         public final BlockPos endPos;
         public final Set<UUID> enabledDestinations;
+        public final boolean legacy;
+        public final BlockPos interfacePos;
 
         public PlatformInfo(UUID id, String name, boolean enabled, BlockPos startPos, BlockPos endPos,
-                Set<UUID> enabledDestinations) {
+                Set<UUID> enabledDestinations, boolean legacy, BlockPos interfacePos) {
             this.id = id;
             this.name = name;
             this.enabled = enabled;
             this.startPos = startPos;
             this.endPos = endPos;
             this.enabledDestinations = new java.util.HashSet<>(enabledDestinations);
+            this.legacy = legacy;
+            this.interfacePos = interfacePos;
         }
     }
 

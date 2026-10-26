@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "businesscraft:block/platform_interface" },
+    "facing=south": { "model": "businesscraft:block/platform_interface", "y": 180 },
+    "facing=west": { "model": "businesscraft:block/platform_interface", "y": 270 },
+    "facing=east": { "model": "businesscraft:block/platform_interface", "y": 90 }
+  }
+}

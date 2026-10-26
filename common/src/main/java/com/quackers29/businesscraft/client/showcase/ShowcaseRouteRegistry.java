@@ -173,6 +173,11 @@ public final class ShowcaseRouteRegistry {
                 "press-button:id:" + ShowcaseButtonIds.SETTINGS_SET_PLATFORMS,
                 "wait-for-screen:PlatformManagementScreenV2:160",
                 "wait-for-platforms:120")));
+        routes.add(new ShowcaseRoute("platform/interface", List.of(
+                "setup:world",
+                "wait-for-platform-block:160",
+                "open-platform-interface",
+                "wait-for-screen:PlatformInterfaceScreen:160")));
         routes.add(new ShowcaseRoute("platform/destinations", List.of(
                 "setup:world",
                 "open-town",

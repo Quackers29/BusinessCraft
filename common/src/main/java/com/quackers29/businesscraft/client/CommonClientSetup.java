@@ -13,6 +13,7 @@ import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import com.quackers29.businesscraft.menu.TradeMenu;
 import com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen;
 import com.quackers29.businesscraft.ui.screens.town.StorageScreen;
+import com.quackers29.businesscraft.ui.screens.platform.PlatformInterfaceScreen;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
 import com.quackers29.businesscraft.ui.screens.town.TradeScreen;
 import com.quackers29.businesscraft.ui.screens.town.ContractBoardScreen;
@@ -57,6 +58,7 @@ public class CommonClientSetup {
         MenuScreens.register(CommonModMenuTypes.CONTRACT_BOARD_MENU.get(), ContractBoardScreen::new);
         MenuScreens.register(CommonModMenuTypes.TOURIST_MENU.get(),
                 com.quackers29.businesscraft.ui.screens.TouristScreen::new);
+        MenuScreens.register(CommonModMenuTypes.PLATFORM_INTERFACE_MENU.get(), PlatformInterfaceScreen::new);
     }
 
     @SuppressWarnings("unchecked")

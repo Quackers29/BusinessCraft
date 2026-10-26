@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.network.packets.platform;
 
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -65,8 +66,15 @@ public class DeletePlatformPacket {
             // Check if the block entity is valid
             BlockEntity be = level.getBlockEntity(blockPos);
             if (be instanceof TownInterfaceEntity townInterface) {
-                // Delete the platform
-                boolean deleted = townInterface.removePlatform(platformId);
+                com.quackers29.businesscraft.platform.Platform platform = townInterface.getPlatform(platformId);
+                if (platform == null || !platform.isLegacy()) {
+                    player.displayClientMessage(
+                            Component.translatable("businesscraft.platform_interface.remove_refused"), false);
+                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
+                            "Refused delete of non-legacy platform {} at {}", platformId, blockPos);
+                    return;
+                }
+                boolean deleted = townInterface.removeLegacyPlatform(platformId);
                 if (deleted) {
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                         "Deleted platform {} from town at {}", platformId, blockPos);

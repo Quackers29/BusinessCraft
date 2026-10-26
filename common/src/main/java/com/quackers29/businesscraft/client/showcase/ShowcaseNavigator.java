@@ -55,6 +55,10 @@ public final class ShowcaseNavigator {
             openTownInterface(minecraft, townPos);
             return null;
         }
+        if ("open-platform-interface".equals(step)) {
+            ShowcasePlatforms.openScreen(minecraft, townPos);
+            return null;
+        }
         if (step.startsWith("set-tab:")) {
             String tab = step.substring("set-tab:".length());
             if (!(minecraft.screen instanceof TownInterfaceScreen screen) || screen.getTabPanel() == null) {
@@ -149,17 +153,28 @@ public final class ShowcaseNavigator {
             return minecraft.screen instanceof PlatformManagementScreenV2 platform
                     && platform.showcaseHasPlatforms();
         }
+        if (step.startsWith("wait-for-platform-block:")) {
+            BlockPos pos = ShowcasePlatforms.lastPlaced();
+            if (pos == null) {
+                pos = ShowcasePlatforms.interfacePos(Showcase.getActiveTownBlockPos());
+            }
+            if (pos == null || minecraft.level == null) {
+                return false;
+            }
+            return minecraft.level.getBlockState(pos).getBlock() instanceof com.quackers29.businesscraft.block.PlatformInterfaceBlock;
+        }
         return true;
     }
 
     public static int waitTimeoutTicks(String step) {
         if (step.startsWith("wait-for-screen:") || step.startsWith("wait-tab:")
                 || step.startsWith("wait-for-popup:") || step.startsWith("wait-for-contracts:")
-                || step.startsWith("wait-for-platforms:")) {
+                || step.startsWith("wait-for-platforms:") || step.startsWith("wait-for-platform-block:")) {
             String[] parts = step.split(":");
-            if (parts.length >= 3) {
+            String timeout = parts.length >= 3 ? parts[2] : parts.length == 2 ? parts[1] : "";
+            if (!timeout.isEmpty()) {
                 try {
-                    return Integer.parseInt(parts[2]);
+                    return Integer.parseInt(timeout);
                 } catch (NumberFormatException ignored) {
                     return 100;
                 }
@@ -172,7 +187,7 @@ public final class ShowcaseNavigator {
     public static boolean isWaitStep(String step) {
         return step.startsWith("wait-for-screen:") || step.startsWith("wait-tab:")
                 || step.startsWith("wait-for-popup:") || step.startsWith("wait-for-contracts:")
-                || step.startsWith("wait-for-platforms:");
+                || step.startsWith("wait-for-platforms:") || step.startsWith("wait-for-platform-block:");
     }
 
     private static boolean pressButton(Minecraft minecraft, String id, String label) {

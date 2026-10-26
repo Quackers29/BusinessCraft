@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.network.packets.platform;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -59,47 +60,11 @@ public class AddPlatformPacket {
                     return;
                 }
 
-                Level level = player.level();
-
-                // Check if the block entity is valid
-                BlockEntity be = level.getBlockEntity(blockPos);
-                if (be instanceof TownInterfaceEntity townInterface) {
-                DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                    "Player {} is adding a new platform to town block at {}", player.getName().getString(), blockPos);
-                
-                if (townInterface.canAddMorePlatforms()) {
-                    boolean added = townInterface.addPlatform();
-                    if (added) {
-                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
-                            "Successfully added new platform to town block at {}", blockPos);
-                        townInterface.setChanged();
-                        
-                        // NEW: Explicitly send BE data packet to the requesting player (reliable sync)
-                        if (level instanceof ServerLevel serverLevel) {
-                            ClientboundBlockEntityDataPacket bePacket = ClientboundBlockEntityDataPacket.create(townInterface);
-                            player.connection.send(bePacket);
-                            DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                                "Sent explicit BE sync packet to {} for updated platforms at {}", 
-                                player.getName().getString(), blockPos);
-                        }
-                        
-                        // Force a block update to ensure clients get the updated data
-                        level.sendBlockUpdated(blockPos, level.getBlockState(blockPos), level.getBlockState(blockPos), 3);
-                        
-                        // Notify client of the update
-                        PlatformAccess.getNetworkMessages().sendToAllTrackingChunk(new RefreshPlatformsPacket(blockPos), level, blockPos);
-                    } else {
-                        DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                        "Failed to add platform to town block at {} - already at max capacity", blockPos);
-                    }
-                } else {
-                    DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                        "Failed to add platform to town block at {} - already at max capacity", blockPos);
-                }
-            } else {
+                player.displayClientMessage(
+                        Component.translatable("businesscraft.platform_interface.add_refused"), false);
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS,
-                    "AddPlatformPacket: Block entity at {} is not a TownInterfaceEntity", blockPos);
-            }
+                        "Refused AddPlatformPacket from {} — platforms are placed as Platform Interface blocks",
+                        player.getName().getString());
             } catch (Exception e) {
                 LOGGER.error("Error handling AddPlatformPacket", e);
                 // Don't crash the server, but log the error

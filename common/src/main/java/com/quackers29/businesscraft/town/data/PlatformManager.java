@@ -21,7 +21,15 @@ import java.util.*;
  */
 public class PlatformManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlatformManager.class);
-    private static final int MAX_PLATFORMS = 10;
+    public static final int MAX_PLATFORMS = 10;
+
+    public enum RelinkResult {
+        LINKED,
+        RELINKED,
+        AT_CAP,
+        DUPLICATE,
+        NOT_OURS
+    }
 
     // Platform storage
     private final List<Platform> platforms = new ArrayList<>();
@@ -77,9 +85,105 @@ public class PlatformManager {
 
         Platform platform = new Platform();
         platform.setName("Platform " + (platforms.size() + 1));
+        platform.setLegacy(true);
         platforms.add(platform);
         notifyChanged();
         return true;
+    }
+
+    /**
+     * Adds a platform owned by a Platform Interface block. Fails at the cap, on a duplicate position,
+     * or when another interface is closer than {@link com.quackers29.businesscraft.platform.PlatformPlacement#MIN_SEPARATION}.
+     *
+     * @return the new platform id, or null when the add was rejected
+     */
+    public UUID addInterfacePlatform(BlockPos interfacePos) {
+        if (interfacePos == null || platforms.size() >= MAX_PLATFORMS) {
+            return null;
+        }
+        BlockPos pos = interfacePos.immutable();
+        for (Platform existing : platforms) {
+            BlockPos other = existing.getInterfacePos();
+            if (other == null) {
+                continue;
+            }
+            if (other.equals(pos) || com.quackers29.businesscraft.platform.PlatformPlacement.tooClose(pos, other)) {
+                return null;
+            }
+        }
+        Platform platform = new Platform();
+        platform.setName("Platform " + (platforms.size() + 1));
+        platform.setEnabled(true);
+        platform.setLegacy(false);
+        platform.setInterfacePos(pos);
+        platforms.add(platform);
+        notifyChanged();
+        return platform.getId();
+    }
+
+    /**
+     * Removes a legacy platform (no interface block). Interface-backed platforms are removed by breaking the block.
+     */
+    public boolean removeLegacyPlatform(UUID platformId) {
+        Platform platform = getPlatform(platformId);
+        if (platform == null || !platform.isLegacy()) {
+            return false;
+        }
+        return removePlatform(platformId);
+    }
+
+    /**
+     * Re-associates a loaded Platform Interface with the platform it already owns.
+     * Recreates the platform when the town still exists but the entry was missing, and refuses to steal
+     * a legacy platform or one owned by a different block.
+     */
+    public RelinkResult relink(UUID platformId, BlockPos interfacePos) {
+        if (platformId == null || interfacePos == null) {
+            return RelinkResult.NOT_OURS;
+        }
+        BlockPos pos = interfacePos.immutable();
+        Platform existing = getPlatform(platformId);
+        if (existing == null) {
+            if (platforms.size() >= MAX_PLATFORMS) {
+                return RelinkResult.AT_CAP;
+            }
+            for (Platform other : platforms) {
+                if (pos.equals(other.getInterfacePos())) {
+                    return RelinkResult.DUPLICATE;
+                }
+            }
+            Platform created = new Platform(platformId);
+            created.setName("Platform " + (platforms.size() + 1));
+            created.setEnabled(true);
+            created.setLegacy(false);
+            created.setInterfacePos(pos);
+            platforms.add(created);
+            notifyChanged();
+            return RelinkResult.RELINKED;
+        }
+        if (existing.isLegacy() && existing.getInterfacePos() == null) {
+            return RelinkResult.NOT_OURS;
+        }
+        if (existing.getInterfacePos() != null && !existing.getInterfacePos().equals(pos)) {
+            return RelinkResult.DUPLICATE;
+        }
+        if (existing.getInterfacePos() == null) {
+            existing.setInterfacePos(pos);
+            existing.setLegacy(false);
+            notifyChanged();
+            return RelinkResult.RELINKED;
+        }
+        return RelinkResult.LINKED;
+    }
+
+    public List<BlockPos> getInterfacePositions() {
+        List<BlockPos> positions = new ArrayList<>();
+        for (Platform platform : platforms) {
+            if (platform.getInterfacePos() != null) {
+                positions.add(platform.getInterfacePos());
+            }
+        }
+        return positions;
     }
 
     /**
@@ -275,6 +379,7 @@ public class PlatformManager {
     public void createLegacyPlatform(BlockPos pathStart, BlockPos pathEnd) {
         if (platforms.isEmpty() && pathStart != null && pathEnd != null) {
             Platform legacyPlatform = new Platform("Main Platform", true, pathStart, pathEnd);
+            legacyPlatform.setLegacy(true);
             platforms.add(legacyPlatform);
             notifyChanged();
             LOGGER.info("Created legacy platform from old path data: {} to {}", pathStart, pathEnd);

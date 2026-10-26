@@ -49,7 +49,7 @@ public class SettingsTab extends BaseTownTab {
                 
                 // Add platforms row
                 settingsData.put("Platforms:", new Object[] {
-                    "Set Platforms",
+                    "Platforms",
                     (Consumer<Void>) button -> pressSetPlatforms(),
                     ShowcaseButtonIds.SETTINGS_SET_PLATFORMS
                 });

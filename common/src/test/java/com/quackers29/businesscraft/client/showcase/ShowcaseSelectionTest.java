@@ -28,7 +28,7 @@ class ShowcaseSelectionTest {
         assertEquals(List.of(), ShowcaseSelection.shotsFor("tourists"));
         assertTrue(ShowcaseSelection.touristScreenMode("tourist-screen"));
         assertEquals(List.of(), ShowcaseSelection.shotsFor("tourist-screen"));
-        assertEquals(19, ShowcaseRouteRegistry.allRoutes().size());
+        assertEquals(20, ShowcaseRouteRegistry.allRoutes().size());
         assertEquals(5, ShowcaseRouteRegistry.touristScreenRoutes().size());
         assertTrue(ShowcaseRouteRegistry.touristScreenRoutes().stream()
                 .anyMatch(route -> "tourist/scrolled".equals(route.name())));
@@ -57,6 +57,13 @@ class ShowcaseSelectionTest {
                 List.of("warmup", "town_interface", "town_interface_back"),
                 ShowcaseSelection.shotsFor("block"));
         assertFalse(ShowcaseSelection.includes("block", "town_overview"));
+    }
+
+    @Test
+    void platformScene_isTownCentreBlockAndBothScreens() {
+        assertEquals(
+                List.of("warmup", "town_overview", "platform_interface", "platform_interface_screen", "platform_overview"),
+                ShowcaseSelection.shotsFor("platform"));
     }
 
     @Test

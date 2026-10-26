@@ -12,4 +12,9 @@ public class ForgeBlockEntityHelper implements BlockEntityHelper {
     public BlockEntityType<?> getTownInterfaceEntityType() {
         return ForgeModBlockEntities.TOWN_INTERFACE_ENTITY.get();
     }
+
+    @Override
+    public BlockEntityType<?> getPlatformInterfaceEntityType() {
+        return ForgeModBlockEntities.PLATFORM_INTERFACE_ENTITY.get();
+    }
 }
