@@ -722,7 +722,6 @@ public ViewModelCache getVmCache() {
                                 townId,
                                 platformManager,
                                 visitBuffer,
-                                searchRadius,
                                 name,
                                 this::setChanged);
                     }
@@ -748,7 +747,7 @@ public ViewModelCache getVmCache() {
                                 level,
                                 platform.getStartPos(),
                                 platform.getEndPos(),
-                                searchRadius,
+                                platform.getSearchRadius(),
                                 townId);
                     }
                 }
@@ -1321,14 +1320,6 @@ public ViewModelCache getVmCache() {
             syncPlatforms();
         }
         return removed;
-    }
-
-    public boolean removeLegacyPlatform(UUID platformId) {
-        Platform platform = platformManager.getPlatform(platformId);
-        if (platform == null || !platform.isLegacy()) {
-            return false;
-        }
-        return removePlatform(platformId);
     }
 
     public UUID addInterfacePlatform(BlockPos pos) {

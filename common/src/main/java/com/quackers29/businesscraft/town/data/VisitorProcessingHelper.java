@@ -68,7 +68,7 @@ public class VisitorProcessingHelper {
      */
     public void processVisitors(Level level, BlockPos townBlockPos, UUID townId,
             PlatformManager platformManager, VisitBuffer visitBuffer,
-            int searchRadius, String townName, Runnable changeCallback) {
+            String townName, Runnable changeCallback) {
 
         if (townId == null || !(level instanceof ServerLevel serverLevel))
             return;
@@ -95,6 +95,7 @@ public class VisitorProcessingHelper {
             BlockPos endPos = platform.getEndPos();
 
             // Create capsule-shaped AABB around the platform path
+            int searchRadius = platform.getSearchRadius();
             AABB platformBounds = new AABB(
                     Math.min(startPos.getX(), endPos.getX()) - searchRadius,
                     Math.min(startPos.getY(), endPos.getY()) - 2,

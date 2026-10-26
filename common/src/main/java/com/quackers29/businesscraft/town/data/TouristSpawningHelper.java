@@ -60,14 +60,18 @@ public class TouristSpawningHelper {
         if (startPos == null || endPos == null)
             return false;
 
-        // Count existing tourists in the platform area
+        int spread = platform.getSpread();
+        int radius = platform.getSearchRadius();
+        int band = Math.max(spread, 1);
+
+        // Count existing tourists in the platform area, wide enough for the spawn spread.
         AABB pathBounds = new AABB(
-                Math.min(startPos.getX(), endPos.getX()) - 1,
-                startPos.getY(),
-                Math.min(startPos.getZ(), endPos.getZ()) - 1,
-                Math.max(startPos.getX(), endPos.getX()) + 1,
-                startPos.getY() + 2,
-                Math.max(startPos.getZ(), endPos.getZ()) + 1);
+                Math.min(startPos.getX(), endPos.getX()) - band,
+                Math.min(startPos.getY(), endPos.getY()) - 2,
+                Math.min(startPos.getZ(), endPos.getZ()) - band,
+                Math.max(startPos.getX(), endPos.getX()) + band,
+                Math.max(startPos.getY(), endPos.getY()) + 3,
+                Math.max(startPos.getZ(), endPos.getZ()) + band);
 
         List<Villager> existingTourists = level.getEntitiesOfClass(Villager.class, pathBounds);
 
@@ -81,15 +85,16 @@ public class TouristSpawningHelper {
 
             // Try up to 3 times to find a valid spawn location
             for (int attempt = 0; attempt < 3; attempt++) {
-                // Calculate a random position along the path
                 double progress = random.nextDouble();
-                double exactX = startPos.getX() + (endPos.getX() - startPos.getX()) * progress;
-                double exactZ = startPos.getZ() + (endPos.getZ() - startPos.getZ()) * progress;
-                int x = (int) Math.round(exactX);
-                int z = (int) Math.round(exactZ);
-                int y = startPos.getY() + 1;
-
-                BlockPos spawnPos = new BlockPos(x, y, z);
+                double lateral = spread == 0 ? 0 : (random.nextDouble() * 2.0 - 1.0) * spread;
+                double[] xz = com.quackers29.businesscraft.platform.PlatformSpawn.point(
+                        startPos, endPos, progress, lateral, spread, radius);
+                int x = (int) Math.round(xz[0]);
+                int z = (int) Math.round(xz[1]);
+                BlockPos spawnPos = findStandingPos(level, x, z, startPos.getY(), radius);
+                if (spawnPos == null) {
+                    continue;
+                }
 
                 // Check if the position is already occupied
                 boolean isOccupied = existingTourists.stream()
@@ -194,6 +199,25 @@ public class TouristSpawningHelper {
 
         // Use our allocation tracker to select a fair destination
         return TouristAllocationTracker.selectFairDestination(originTownId, populationMap);
+    }
+
+    /**
+     * Feet position on solid ground near the path height, with room to stand.
+     */
+    private static BlockPos findStandingPos(Level level, int x, int z, int pathY, int verticalRange) {
+        int top = pathY + 2;
+        int bottom = pathY - Math.max(2, verticalRange);
+        for (int y = top; y >= bottom; y--) {
+            BlockPos feet = new BlockPos(x, y, z);
+            if (!level.getBlockState(feet).isAir() || !level.getBlockState(feet.above()).isAir()) {
+                continue;
+            }
+            BlockPos ground = feet.below();
+            if (!level.getBlockState(ground).getCollisionShape(level, ground).isEmpty()) {
+                return feet;
+            }
+        }
+        return null;
     }
 
     /**

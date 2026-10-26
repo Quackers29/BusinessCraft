@@ -59,14 +59,9 @@ public class FabricClientHelper implements ClientHelper {
             java.util.Map<java.util.UUID, Integer> townDistances,
             java.util.Map<java.util.UUID, String> townDirections) {
         Minecraft mc = Minecraft.getInstance();
-        mc.setScreen(new com.quackers29.businesscraft.ui.screens.platform.DestinationsScreenV2(
-                pos,
-                platformId,
-                platformName,
-                townNames,
-                enabledState,
-                townDistances,
-                townDirections));
+        if (mc.screen instanceof com.quackers29.businesscraft.ui.screens.platform.PlatformInterfaceScreen screen) {
+            screen.receiveDestinations(platformName, townNames, enabledState, townDistances, townDirections);
+        }
     }
 
     @Override

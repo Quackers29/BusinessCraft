@@ -35,7 +35,6 @@ public final class TouristUiSummaries {
         if (town == null || entity == null) {
             return "—";
         }
-        int searchRadius = entity.getSearchRadius();
         var platforms = entity.getPlatforms();
         if (platforms.isEmpty()) {
             return town.getTouristCount() > 0 ? town.getTouristCount() + " waiting (no platforms)" : "None waiting";
@@ -50,6 +49,7 @@ public final class TouristUiSummaries {
             }
             BlockPos startPos = platform.getStartPos();
             BlockPos endPos = platform.getEndPos();
+            int searchRadius = platform.getSearchRadius();
             AABB bounds = new AABB(
                     Math.min(startPos.getX(), endPos.getX()) - searchRadius,
                     Math.min(startPos.getY(), endPos.getY()) - 2,

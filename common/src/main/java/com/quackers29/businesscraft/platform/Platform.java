@@ -19,8 +19,8 @@ public class Platform {
     private BlockPos startPos;
     private BlockPos endPos;
     private BlockPos interfacePos;
-    /** True for platforms created before Platform Interface blocks, or with no block of their own. */
-    private boolean legacy;
+    private int searchRadius = PlatformSpawn.DEFAULT_RADIUS;
+    private int spread = PlatformSpawn.DEFAULT_SPREAD;
     private Set<UUID> enabledDestinations = new HashSet<>();
 
     /**
@@ -92,12 +92,13 @@ public class Platform {
                     tag.getInt("InterfaceZ"));
         }
 
-        if (tag.contains("Legacy")) {
-            this.legacy = tag.getBoolean("Legacy");
-        } else {
-            // Saves from before Platform Interface blocks omit both keys.
-            this.legacy = this.interfacePos == null;
+        if (tag.contains("SearchRadius")) {
+            this.searchRadius = tag.getInt("SearchRadius");
         }
+        if (tag.contains("Spread")) {
+            this.spread = tag.getInt("Spread");
+        }
+        applySpawnLimits();
     }
 
     /**
@@ -131,7 +132,8 @@ public class Platform {
         }
         tag.put("Destinations", destTag);
 
-        tag.putBoolean("Legacy", legacy);
+        tag.putInt("SearchRadius", searchRadius);
+        tag.putInt("Spread", spread);
         if (interfacePos != null) {
             tag.putInt("InterfaceX", interfacePos.getX());
             tag.putInt("InterfaceY", interfacePos.getY());
@@ -205,7 +207,7 @@ public class Platform {
     }
 
     /**
-     * World position of the Platform Interface block that owns this platform, or null for a legacy platform.
+     * World position of the Platform Interface block that owns this platform.
      */
     public BlockPos getInterfacePos() {
         return interfacePos;
@@ -215,16 +217,26 @@ public class Platform {
         this.interfacePos = interfacePos == null ? null : interfacePos.immutable();
     }
 
-    /**
-     * Legacy platforms were created from the Town Centre screen (or older path data) and have no interface block.
-     * They stay in the town list and can still be removed there.
-     */
-    public boolean isLegacy() {
-        return legacy;
+    public int getSearchRadius() {
+        return searchRadius;
     }
 
-    public void setLegacy(boolean legacy) {
-        this.legacy = legacy;
+    public void setSearchRadius(int searchRadius) {
+        this.searchRadius = PlatformSpawn.clampRadius(searchRadius);
+        this.spread = PlatformSpawn.clampSpread(this.spread, this.searchRadius);
+    }
+
+    public int getSpread() {
+        return spread;
+    }
+
+    public void setSpread(int spread) {
+        this.spread = PlatformSpawn.clampSpread(spread, this.searchRadius);
+    }
+
+    private void applySpawnLimits() {
+        this.searchRadius = PlatformSpawn.clampRadius(this.searchRadius);
+        this.spread = PlatformSpawn.clampSpread(this.spread, this.searchRadius);
     }
 
     /**
@@ -330,7 +342,8 @@ public class Platform {
             return false;
         Platform platform = (Platform) o;
         return enabled == platform.enabled &&
-                legacy == platform.legacy &&
+                searchRadius == platform.searchRadius &&
+                spread == platform.spread &&
                 java.util.Objects.equals(id, platform.id) &&
                 java.util.Objects.equals(name, platform.name) &&
                 java.util.Objects.equals(startPos, platform.startPos) &&
@@ -341,6 +354,7 @@ public class Platform {
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(id, name, enabled, legacy, startPos, endPos, interfacePos, enabledDestinations);
+        return java.util.Objects.hash(id, name, enabled, searchRadius, spread, startPos, endPos, interfacePos,
+                enabledDestinations);
     }
 }

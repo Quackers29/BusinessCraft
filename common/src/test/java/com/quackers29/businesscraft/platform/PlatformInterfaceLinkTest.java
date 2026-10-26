@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.platform;
 
 import com.quackers29.businesscraft.api.ITouristHelper;
+import com.quackers29.businesscraft.platform.PlatformSpawn;
 import com.quackers29.businesscraft.town.data.PlatformManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -13,8 +14,8 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Platform Interface placement, town linking, the 10-platform cap, legacy migration,
- * and save/load of mixed legacy and interface-backed platforms.
+ * Platform Interface placement, town linking, the 10-platform cap, and save/load.
+ * Platforms without an interface block are not kept.
  */
 class PlatformInterfaceLinkTest {
 
@@ -105,33 +106,14 @@ class PlatformInterfaceLinkTest {
         assertNotNull(id);
         assertEquals(1, manager.getPlatformCount());
         Platform platform = manager.getPlatform(id);
-        assertFalse(platform.isLegacy());
+        assertEquals(PlatformSpawn.DEFAULT_RADIUS, platform.getSearchRadius());
+        assertEquals(PlatformSpawn.DEFAULT_SPREAD, platform.getSpread());
         assertEquals(pos, platform.getInterfacePos());
         assertEquals(List.of(pos), manager.getInterfacePositions());
-
-        assertFalse(manager.removeLegacyPlatform(id));
-        assertEquals(1, manager.getPlatformCount());
 
         assertTrue(manager.removePlatform(id));
         assertEquals(0, manager.getPlatformCount());
         assertNull(manager.addInterfacePlatform(null));
-    }
-
-    @Test
-    void addPlatform_andCreateLegacy_areLegacyAndRemovableFromTheTownList() {
-        PlatformManager manager = new PlatformManager();
-        assertTrue(manager.addPlatform());
-        Platform added = manager.getPlatforms(false).get(0);
-        assertTrue(added.isLegacy());
-        assertNull(added.getInterfacePos());
-        assertTrue(manager.removeLegacyPlatform(added.getId()));
-
-        manager.createLegacyPlatform(new BlockPos(1, 64, 1), new BlockPos(6, 64, 1));
-        Platform migrated = manager.getPlatforms(false).get(0);
-        assertTrue(migrated.isLegacy());
-        assertTrue(migrated.isComplete());
-        assertTrue(manager.removeLegacyPlatform(migrated.getId()));
-        assertEquals(0, manager.getPlatformCount());
     }
 
     @Test
@@ -152,43 +134,39 @@ class PlatformInterfaceLinkTest {
     }
 
     @Test
-    void oldSaveWithoutLegacyKey_loadsAsLegacy() {
-        CompoundTag tag = new CompoundTag();
-        UUID id = UUID.randomUUID();
-        tag.putUUID("Id", id);
-        tag.putString("Name", "Old Platform");
-        tag.putBoolean("Enabled", true);
-        tag.putInt("StartX", 2);
-        tag.putInt("StartY", 64);
-        tag.putInt("StartZ", 3);
-        tag.putInt("EndX", 8);
-        tag.putInt("EndY", 64);
-        tag.putInt("EndZ", 3);
+    void platformWithoutInterfaceBlock_isDroppedOnLoad() {
+        CompoundTag platform = new CompoundTag();
+        platform.putUUID("Id", UUID.randomUUID());
+        platform.putString("Name", "Old Platform");
+        platform.putBoolean("Enabled", true);
+        platform.putInt("StartX", 2);
+        platform.putInt("StartY", 64);
+        platform.putInt("StartZ", 3);
+        platform.putInt("EndX", 8);
+        platform.putInt("EndY", 64);
+        platform.putInt("EndZ", 3);
+        net.minecraft.nbt.ListTag list = new net.minecraft.nbt.ListTag();
+        list.add(platform);
+        CompoundTag saved = new CompoundTag();
+        saved.put("platforms", list);
 
-        Platform loaded = Platform.fromNBT(tag);
-        assertTrue(loaded.isLegacy());
-        assertNull(loaded.getInterfacePos());
-        assertEquals(new BlockPos(2, 64, 3), loaded.getStartPos());
-        assertEquals(new BlockPos(8, 64, 3), loaded.getEndPos());
-        assertTrue(loaded.isComplete());
+        PlatformManager manager = new PlatformManager();
+        manager.loadFromNBT(saved);
+        assertEquals(0, manager.getPlatformCount());
     }
 
     @Test
-    void persistence_roundTripsMixedLegacyAndInterfacePlatforms() {
+    void persistence_roundTripsInterfacePlatformIncludingRadiusAndSpread() {
         PlatformManager manager = new PlatformManager();
-        assertTrue(manager.addPlatform());
-        Platform legacy = manager.getPlatforms(false).get(0);
-        legacy.setEnabled(false);
-        legacy.setStartPos(new BlockPos(1, 64, 2));
-        legacy.setEndPos(new BlockPos(9, 64, 2));
-        legacy.enableDestination(DEST);
-
         BlockPos interfacePos = new BlockPos(20, 65, -4);
         UUID interfaceId = manager.addInterfacePlatform(interfacePos);
         Platform bound = manager.getPlatform(interfaceId);
+        bound.setEnabled(false);
         bound.setStartPos(new BlockPos(20, 65, -2));
         bound.setEndPos(new BlockPos(20, 65, 4));
         bound.enableDestination(DEST);
+        bound.setSearchRadius(8);
+        bound.setSpread(20);
 
         CompoundTag saved = new CompoundTag();
         manager.saveToNBT(saved);
@@ -196,21 +174,15 @@ class PlatformInterfaceLinkTest {
         PlatformManager loaded = new PlatformManager();
         loaded.loadFromNBT(saved);
 
-        assertEquals(2, loaded.getPlatformCount());
-        Platform loadedLegacy = loaded.getPlatform(legacy.getId());
-        assertTrue(loadedLegacy.isLegacy());
-        assertNull(loadedLegacy.getInterfacePos());
-        assertFalse(loadedLegacy.isEnabled());
-        assertEquals(new BlockPos(1, 64, 2), loadedLegacy.getStartPos());
-        assertEquals(new BlockPos(9, 64, 2), loadedLegacy.getEndPos());
-        assertTrue(loadedLegacy.isDestinationEnabled(DEST));
-
+        assertEquals(1, loaded.getPlatformCount());
         Platform loadedBound = loaded.getPlatform(interfaceId);
-        assertFalse(loadedBound.isLegacy());
         assertEquals(interfacePos, loadedBound.getInterfacePos());
+        assertFalse(loadedBound.isEnabled());
         assertEquals(new BlockPos(20, 65, -2), loadedBound.getStartPos());
         assertEquals(new BlockPos(20, 65, 4), loadedBound.getEndPos());
         assertTrue(loadedBound.isDestinationEnabled(DEST));
+        assertEquals(8, loadedBound.getSearchRadius());
+        assertEquals(8, loadedBound.getSpread());
         assertEquals(List.of(interfacePos), loaded.getInterfacePositions());
     }
 
@@ -222,21 +194,10 @@ class PlatformInterfaceLinkTest {
 
         assertEquals(PlatformManager.RelinkResult.LINKED, manager.relink(id, pos));
 
-        assertTrue(manager.addPlatform());
-        UUID legacyId = manager.getPlatforms(false).stream()
-                .filter(Platform::isLegacy)
-                .map(Platform::getId)
-                .findFirst()
-                .orElseThrow();
-        assertEquals(PlatformManager.RelinkResult.NOT_OURS,
-                manager.relink(legacyId, new BlockPos(30, 64, 0)));
-        assertTrue(manager.getPlatform(legacyId).isLegacy());
-
         UUID other = UUID.randomUUID();
         assertEquals(PlatformManager.RelinkResult.RELINKED,
                 manager.relink(other, new BlockPos(40, 64, 0)));
         assertEquals(new BlockPos(40, 64, 0), manager.getPlatform(other).getInterfacePos());
-        assertFalse(manager.getPlatform(other).isLegacy());
 
         assertEquals(PlatformManager.RelinkResult.DUPLICATE, manager.relink(id, new BlockPos(9, 64, 0)));
         assertEquals(pos, manager.getPlatform(id).getInterfacePos());

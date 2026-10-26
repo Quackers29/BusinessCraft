@@ -285,7 +285,7 @@ public class TownInterfaceBlock extends BaseEntityBlock {
                         (ServerLevel) level,
                         startPos,
                         endPos,
-                        townInterface.getSearchRadius());
+                        platform.getSearchRadius());
             }
         }
     }

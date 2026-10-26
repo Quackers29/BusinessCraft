@@ -138,7 +138,7 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
             BoundaryRenderer3D.renderRectangularBoundary(
                     poseStack,
                     startPos, endPos,
-                    platformData.getSearchRadius(),
+                    platform.getSearchRadius(),
                     BOUNDARY_COLOR,
                     boundaryConfig);
         }

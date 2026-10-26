@@ -480,9 +480,6 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
      * @return true if the platform was removed successfully
      */
     public boolean removePlatform(UUID platformId) {
-        if (level != null && level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
-            return townEntity.removeLegacyPlatform(platformId);
-        }
         return false;
     }
 

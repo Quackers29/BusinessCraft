@@ -243,7 +243,8 @@ public final class ClientPacketHandler {
             restored.setEnabled(platform.enabled);
             restored.setStartPos(platform.startPos);
             restored.setEndPos(platform.endPos);
-            restored.setLegacy(platform.legacy);
+            restored.setSearchRadius(platform.searchRadius);
+            restored.setSpread(platform.spread);
             restored.setInterfacePos(platform.interfacePos);
             for (java.util.UUID destId : platform.enabledDestinations) {
                 restored.enableDestination(destId);

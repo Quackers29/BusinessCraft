@@ -6,144 +6,460 @@ import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.client.PlatformPathKeyHandler;
 import com.quackers29.businesscraft.menu.PlatformInterfaceMenu;
 import com.quackers29.businesscraft.network.packets.platform.ResetPlatformPathPacket;
+import com.quackers29.businesscraft.network.packets.platform.SetPlatformAreaPacket;
+import com.quackers29.businesscraft.network.packets.platform.SetPlatformDestinationPacket;
+import com.quackers29.businesscraft.network.packets.platform.SetPlatformEnabledPacket;
 import com.quackers29.businesscraft.network.packets.platform.SetPlatformPathCreationModePacket;
+import com.quackers29.businesscraft.network.packets.ui.OpenDestinationsUIPacket;
 import com.quackers29.businesscraft.platform.Platform;
-import com.quackers29.businesscraft.ui.util.InventoryRenderer;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 /**
- * Path-only screen for one Platform Interface. Enable and destination allow-list stay on the Town Centre.
+ * One platform's screen. Path, enable, search radius, spread, and the destination allow-list
+ * are edited here. The Town Centre only shows the result.
  */
 public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInterfaceMenu> {
-    private static final int HEADER = 0xFFFCB821;
-    private static final int TEXT = 0xFFE8E8E8;
-    private static final int MUTED = 0xFFB0B0B0;
+    private static final int PANEL = 0xF014161C;
+    private static final int BORDER = 0xFFD7B56D;
+    private static final int SECTION = 0xFF1A1F2A;
+    private static final int WHITE = 0xFFFFFFFF;
+    private static final int MUTED = 0xFFC2C6CE;
+    private static final int GOLD = 0xFFFFD56A;
+    private static final int AQUA = 0xFF8FDBFF;
+    private static final int GREEN = 0xFF7DFF7D;
+    private static final int RED = 0xFFFFA3A3;
+    private static final int LINE = 0xFF3A404C;
 
-    private boolean buttonsForActive;
+    private final List<Destination> destinations = new ArrayList<>();
+    private final List<Hit> hits = new ArrayList<>();
+    private int scroll;
+    private int contentHeight;
+    private int bodyTop;
+    private int bodyHeight;
+    private int panelX;
+    private int panelY;
+    private int panelW;
+    private int panelH;
 
     public PlatformInterfaceScreen(PlatformInterfaceMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
-        this.imageWidth = 240;
-        this.imageHeight = 150;
+        this.imageWidth = 440;
+        this.imageHeight = 360;
+    }
+
+    public void receiveDestinations(String platformName, Map<UUID, String> names, Map<UUID, Boolean> enabled,
+            Map<UUID, Integer> distances, Map<UUID, String> directions) {
+        destinations.clear();
+        if (names != null) {
+            for (Map.Entry<UUID, String> entry : names.entrySet()) {
+                UUID id = entry.getKey();
+                destinations.add(new Destination(
+                        id,
+                        entry.getValue() == null ? "Town" : entry.getValue(),
+                        enabled != null && Boolean.TRUE.equals(enabled.get(id)),
+                        distances == null ? 0 : distances.getOrDefault(id, 0),
+                        directions == null ? "" : directions.getOrDefault(id, "")));
+            }
+            destinations.sort(Comparator.comparingInt(Destination::distance).thenComparing(Destination::name));
+        }
     }
 
     @Override
     protected void init() {
+        fitPanel();
         super.init();
-        requestPlatformData();
-        addButtons();
+        requestData();
     }
 
-    private void requestPlatformData() {
+    private void fitPanel() {
+        int margin = 8;
+        this.panelW = Math.min(460, Math.max(280, this.width - margin * 2));
+        this.panelH = Math.min(430, Math.max(148, this.height - margin * 2));
+        if (this.panelW > this.width - 4) {
+            this.panelW = Math.max(120, this.width - 4);
+        }
+        if (this.panelH > this.height - 4) {
+            this.panelH = Math.max(120, this.height - 4);
+        }
+        this.imageWidth = panelW;
+        this.imageHeight = panelH;
+    }
+
+    private void requestData() {
         PlatformInterfaceEntity entity = entity();
         if (entity == null || entity.getTownId() == null || PlatformAccess.getNetworkMessages() == null) {
             return;
         }
         PlatformAccess.getNetworkMessages().sendToServer(
                 new com.quackers29.businesscraft.network.packets.ui.RequestTownPlatformDataPacket(entity.getTownId()));
-    }
-
-    private void addButtons() {
-        PlatformInterfaceEntity entity = entity();
-        if (entity == null || !entity.isActive() || entity.getTownCentre() == null || entity.getPlatformId() == null) {
-            return;
+        if (entity.getTownCentre() != null && entity.getPlatformId() != null) {
+            PlatformAccess.getNetworkMessages().sendToServer(
+                    new OpenDestinationsUIPacket(entity.getTownCentre(), entity.getPlatformId()));
         }
-        int x = this.leftPos + 16;
-        int y = this.topPos + this.imageHeight - 32;
-        addRenderableWidget(Button.builder(Component.translatable("businesscraft.platform_interface.set_path"), pressed -> startPath())
-                .bounds(x, y, 100, 20)
-                .build());
-        Platform platform = currentPlatform();
-        if (platform != null && platform.isComplete()) {
-            addRenderableWidget(Button.builder(Component.translatable("businesscraft.reset"), pressed -> resetPath())
-                    .bounds(x + 108, y, 100, 20)
-                    .build());
-        }
-    }
-
-    private void rebuild() {
-        clearWidgets();
-        addButtons();
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        PlatformInterfaceEntity current = entity();
-        boolean active = current != null && current.isActive();
-        if (active != buttonsForActive) {
-            buttonsForActive = active;
-            if (active) {
-                requestPlatformData();
-            }
-            rebuild();
-        }
+        fitPanel();
+        this.leftPos = (this.width - panelW) / 2;
+        this.topPos = (this.height - panelH) / 2;
+        this.panelX = this.leftPos;
+        this.panelY = this.topPos;
         this.renderBackground(graphics);
-        int x = this.leftPos;
-        int y = this.topPos;
-        graphics.fill(x, y, x + this.imageWidth, y + this.imageHeight, InventoryRenderer.BACKGROUND_COLOR);
-        InventoryRenderer.drawBorder(graphics, x, y, this.imageWidth, this.imageHeight, InventoryRenderer.BORDER_COLOR, 2);
-
-        graphics.drawString(this.font, this.title, x + 12, y + 10, HEADER, false);
+        hits.clear();
+        graphics.fill(panelX - 1, panelY - 1, panelX + panelW + 1, panelY + panelH + 1, BORDER);
+        graphics.fill(panelX, panelY, panelX + panelW, panelY + panelH, PANEL);
 
         PlatformInterfaceEntity entity = entity();
-        int line = y + 32;
-        if (entity == null) {
-            graphics.drawString(this.font, Component.translatable("businesscraft.platform_interface.not_linked"),
-                    x + 12, line, TEXT, false);
-        } else if (!entity.isActive()) {
-            String reason = entity.getInactiveReason() == null
-                    ? PlatformInterfaceEntity.REASON_NOT_LINKED
-                    : entity.getInactiveReason();
-            graphics.drawString(this.font, Component.translatable("businesscraft.platform_interface.inactive",
-                    Component.translatable(reason)), x + 12, line, 0xFFFF8888, false);
-            graphics.drawString(this.font, Component.translatable("businesscraft.platform_interface.inactive_hint"),
-                    x + 12, line + 14, MUTED, false);
-        } else {
-            graphics.drawString(this.font, Component.translatable("businesscraft.platform_interface.path_only"),
-                    x + 12, line, TEXT, false);
-            Platform platform = currentPlatform();
-            String path = pathLine(platform);
-            graphics.drawString(this.font, path, x + 12, line + 16, MUTED, false);
-            String town = townName(entity);
-            if (town != null) {
-                graphics.drawString(this.font, town, x + 12, line + 30, MUTED, false);
-            }
+        Platform platform = currentPlatform();
+        drawHeader(graphics, entity, platform);
+
+        int headerBottom = panelY + 52;
+        this.bodyTop = headerBottom;
+        this.bodyHeight = panelH - 52 - 6;
+        if (entity == null || !entity.isActive() || platform == null) {
+            String reason = entity == null || entity.getInactiveReason() == null
+                    ? "it is not linked to a town"
+                    : Component.translatable(entity.getInactiveReason()).getString();
+            graphics.drawString(this.font, "This platform is inactive.", panelX + 16, headerBottom + 12, RED, false);
+            drawWrapped(graphics, reason, panelX + 16, headerBottom + 28, panelW - 32, MUTED);
+            graphics.drawString(this.font, "Break the block to pick it up.", panelX + 16, headerBottom + 56, MUTED, false);
+            return;
         }
 
-        for (var child : this.children()) {
-            if (child instanceof Renderable renderable) {
-                renderable.render(graphics, mouseX, mouseY, partialTick);
+        graphics.enableScissor(panelX + 4, bodyTop, panelX + panelW - 4, bodyTop + bodyHeight);
+        graphics.pose().pushPose();
+        graphics.pose().translate(0, -scroll, 0);
+        int y = drawBody(graphics, mouseX, mouseY + scroll, platform);
+        graphics.pose().popPose();
+        graphics.disableScissor();
+        this.contentHeight = y - bodyTop;
+        int maxScroll = Math.max(0, contentHeight - bodyHeight);
+        if (scroll > maxScroll) {
+            scroll = maxScroll;
+        }
+        if (maxScroll > 0) {
+            int trackX = panelX + panelW - 6;
+            int thumbH = Math.max(12, bodyHeight * bodyHeight / (contentHeight + bodyHeight));
+            int thumbY = bodyTop + (bodyHeight - thumbH) * scroll / maxScroll;
+            graphics.fill(trackX, bodyTop, trackX + 3, bodyTop + bodyHeight, 0xFF2A3140);
+            graphics.fill(trackX, thumbY, trackX + 3, thumbY + thumbH, BORDER);
+        }
+    }
+
+    private void drawHeader(GuiGraphics graphics, PlatformInterfaceEntity entity, Platform platform) {
+        String name = platform != null && platform.getName() != null ? platform.getName() : "Platform";
+        graphics.drawString(this.font, name, panelX + 14, panelY + 10, WHITE, false);
+        String town = townName(entity);
+        if (town != null) {
+            int width = this.font.width(town);
+            graphics.drawString(this.font, town, panelX + panelW - 14 - width, panelY + 10, AQUA, false);
+        }
+        graphics.fill(panelX + 12, panelY + 24, panelX + panelW - 12, panelY + 25, LINE);
+
+        boolean enabled = platform != null && platform.isEnabled();
+        boolean path = platform != null && platform.isComplete();
+        int allowed = countAllowed();
+        String dest = allowed == 0 ? "Any town" : allowed + (allowed == 1 ? " town" : " towns");
+        int chipY = panelY + 32;
+        if (panelW < 360) {
+            String line = (enabled ? "Enabled" : "Disabled") + "   ·   " + (path ? "Path set" : "No path") + "   ·   " + dest;
+            graphics.drawString(this.font, fit(line, panelW - 28), panelX + 14, chipY + 4, MUTED, false);
+        } else {
+            chip(graphics, panelX + 14, chipY, enabled ? "Enabled" : "Disabled", enabled ? GREEN : RED);
+            chip(graphics, panelX + 110, chipY, path ? "Path set" : "No path", path ? GREEN : GOLD);
+            chip(graphics, panelX + 200, chipY, dest, GOLD);
+        }
+    }
+
+    private int countAllowed() {
+        int n = 0;
+        for (Destination destination : destinations) {
+            if (destination.enabled) {
+                n++;
             }
+        }
+        if (n == 0 && destinations.isEmpty()) {
+            Platform platform = currentPlatform();
+            if (platform != null) {
+                return platform.getEnabledDestinations().size();
+            }
+        }
+        return n;
+    }
+
+    private void chip(GuiGraphics graphics, int x, int y, String text, int color) {
+        int w = this.font.width(text) + 10;
+        if (x + w > panelX + panelW - 8) {
+            return;
+        }
+        graphics.fill(x, y, x + w, y + 16, SECTION);
+        graphics.drawString(this.font, text, x + 5, y + 4, color, false);
+    }
+
+    private int drawBody(GuiGraphics graphics, int mouseX, int mouseY, Platform platform) {
+        int x = panelX + 14;
+        int y = bodyTop + 8;
+        int inner = panelW - 28;
+        int buttonH = panelH < 200 ? 18 : 20;
+        y = sectionTitle(graphics, x, y, "Platform");
+        control(graphics, "toggle", platform.isEnabled() ? "Disable platform" : "Enable platform",
+                x, y, Math.min(160, inner), buttonH, mouseX, mouseY, true);
+        y += buttonH + (panelH < 260 ? 8 : 14);
+        y = sectionTitle(graphics, x, y, "Path");
+        graphics.drawString(this.font, pathLine(platform), x, y, MUTED, false);
+        y += 14;
+        int buttonW = Math.min(120, (inner - 8) / 2);
+        control(graphics, "set-path", "Set Path", x, y, buttonW, buttonH, mouseX, mouseY, true);
+        control(graphics, "reset-path", "Reset", x + buttonW + 8, y, buttonW, buttonH, mouseX, mouseY,
+                platform.isComplete());
+        y += buttonH + (panelH < 260 ? 8 : 14);
+
+        y = sectionTitle(graphics, x, y, "Spawn");
+        String spawnHint = panelH < 260
+                ? "Radius finds visitors. Spread stands tourists off the path, never past the radius."
+                : "Search radius is how far this platform notices visitors. Spread is how far tourists may stand off the path. Spread cannot exceed the radius.";
+        drawWrapped(graphics, spawnHint, x, y, inner, MUTED);
+        y += panelH < 260 ? 12 : 32;
+        y = stepper(graphics, mouseX, mouseY, x, y, inner, buttonH, "radius",
+                "Search radius", platform.getSearchRadius(), "blocks");
+        y += 8;
+        y = stepper(graphics, mouseX, mouseY, x, y, inner, buttonH, "spread",
+                "Spread", platform.getSpread(), platform.getSpread() == 0 ? "on the line" : "blocks off the line");
+        y += 16;
+
+        y = sectionTitle(graphics, x, y, "Destinations");
+        String hint = destinations.stream().anyMatch(d -> d.enabled)
+                ? "Allowed towns only. Turn them all off to accept any town."
+                : "No towns selected. Tourists may travel to any town.";
+        drawWrapped(graphics, hint, x, y, inner, MUTED);
+        y += 22;
+        if (destinations.isEmpty()) {
+            graphics.drawString(this.font, "Looking for other towns…", x, y, MUTED, false);
+            y += 16;
+        }
+        for (Destination destination : destinations) {
+            int rowH = 22;
+            graphics.fill(x, y, x + inner, y + rowH, SECTION);
+            String label = destination.name;
+            String meta = destination.direction.isEmpty()
+                    ? destination.distance + "m"
+                    : destination.direction + "  " + destination.distance + "m";
+            int toggleW = 64;
+            int nameMax = inner - toggleW - this.font.width(meta) - 16;
+            if (this.font.width(label) > nameMax && nameMax > 12) {
+                label = this.font.plainSubstrByWidth(label, nameMax - this.font.width("…")) + "…";
+            }
+            graphics.drawString(this.font, label, x + 6, y + 7, WHITE, false);
+            graphics.drawString(this.font, meta, x + inner - toggleW - 8 - this.font.width(meta), y + 7, MUTED, false);
+            control(graphics, "dest:" + destination.id, destination.enabled ? "Allow" : "Block",
+                    x + inner - toggleW, y + 2, toggleW, rowH - 4, mouseX, mouseY, true);
+            y += rowH + 4;
+        }
+        return y + 8;
+    }
+
+    private int sectionTitle(GuiGraphics graphics, int x, int y, String title) {
+        graphics.drawString(this.font, title, x, y, GOLD, false);
+        graphics.fill(x, y + 12, panelX + panelW - 14, y + 13, LINE);
+        return y + 18;
+    }
+
+    private int stepper(GuiGraphics graphics, int mouseX, int mouseY, int x, int y, int inner, int buttonH,
+            String id, String label, int value, String suffix) {
+        graphics.drawString(this.font, label, x, y + 6, WHITE, false);
+        String valueText = value + "  " + suffix;
+        int valueW = this.font.width(valueText);
+        int minusX = x + inner - buttonH * 2 - 8 - valueW - 8;
+        if (minusX < x + this.font.width(label) + 8) {
+            y += 14;
+            minusX = x + inner - buttonH * 2 - 8 - valueW - 8;
+        }
+        graphics.drawString(this.font, valueText, x + inner - buttonH * 2 - 16 - valueW, y + 6, AQUA, false);
+        control(graphics, id + "-minus", "−", x + inner - buttonH * 2 - 8, y, buttonH, buttonH, mouseX, mouseY, true);
+        control(graphics, id + "-plus", "+", x + inner - buttonH, y, buttonH, buttonH, mouseX, mouseY, true);
+        return y + buttonH;
+    }
+
+    private void control(GuiGraphics graphics, String id, String label, int x, int y, int w, int h,
+            int mouseX, int mouseY, boolean enabled) {
+        boolean hover = enabled && mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
+        int bg = !enabled ? 0xFF242830 : hover ? 0xFF3C4A62 : 0xFF2C3342;
+        graphics.fill(x, y, x + w, y + h, bg);
+        graphics.fill(x, y, x + w, y + 1, enabled ? BORDER : 0xFF3A404C);
+        int color = enabled ? WHITE : 0xFF8A909A;
+        int textW = this.font.width(label);
+        graphics.drawString(this.font, label, x + (w - textW) / 2, y + (h - 8) / 2, color, false);
+        if (enabled) {
+            hits.add(new Hit(id, x, y - scroll, w, h));
+        }
+    }
+
+    private void drawWrapped(GuiGraphics graphics, String text, int x, int y, int width, int color) {
+        List<String> lines = com.quackers29.businesscraft.ui.util.UiTextWrap.wrap(text, width, this.font::width);
+        int limit = Math.min(3, lines.size());
+        for (int i = 0; i < limit; i++) {
+            graphics.drawString(this.font, lines.get(i), x, y + i * 10, color, false);
+        }
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button != 0) {
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+        for (Hit hit : hits) {
+            int screenY = hit.y;
+            if (mouseX >= hit.x && mouseX < hit.x + hit.w && mouseY >= screenY && mouseY < screenY + hit.h) {
+                if (mouseY < bodyTop || mouseY >= bodyTop + bodyHeight) {
+                    continue;
+                }
+                activate(hit.id);
+                return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        int maxScroll = Math.max(0, contentHeight - bodyHeight);
+        if (maxScroll <= 0) {
+            return super.mouseScrolled(mouseX, mouseY, delta);
+        }
+        int step = panelH < 220 ? 18 : 24;
+        scroll = Math.max(0, Math.min(maxScroll, scroll - (int) Math.signum(delta) * step));
+        return true;
+    }
+
+    private void activate(String id) {
+        if (this.minecraft != null) {
+            this.minecraft.getSoundManager().play(
+                    net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+        }
+        Platform platform = currentPlatform();
+        PlatformInterfaceEntity entity = entity();
+        if (platform == null || entity == null || entity.getTownCentre() == null || entity.getPlatformId() == null) {
+            return;
+        }
+        int step = hasShiftDown() ? 5 : 1;
+        switch (id) {
+            case "toggle" -> toggleEnabled(entity, platform);
+            case "set-path" -> startPath(entity, platform);
+            case "reset-path" -> resetPath(entity, platform);
+            case "radius-minus" -> changeArea(entity, platform, platform.getSearchRadius() - step, platform.getSpread());
+            case "radius-plus" -> changeArea(entity, platform, platform.getSearchRadius() + step, platform.getSpread());
+            case "spread-minus" -> changeArea(entity, platform, platform.getSearchRadius(), platform.getSpread() - step);
+            case "spread-plus" -> changeArea(entity, platform, platform.getSearchRadius(), platform.getSpread() + step);
+            default -> {
+                if (id.startsWith("dest:")) {
+                    toggleDestination(entity, platform, UUID.fromString(id.substring("dest:".length())));
+                }
+            }
+        }
+    }
+
+    private void toggleEnabled(PlatformInterfaceEntity entity, Platform platform) {
+        boolean next = !platform.isEnabled();
+        platform.setEnabled(next);
+        if (PlatformAccess.getNetworkMessages() == null) {
+            return;
+        }
+        PlatformAccess.getNetworkMessages().sendToServer(new SetPlatformEnabledPacket(
+                entity.getTownCentre(), entity.getPlatformId(), next));
+    }
+
+    private String fit(String text, int maxWidth) {
+        if (this.font.width(text) <= maxWidth) {
+            return text;
+        }
+        return this.font.plainSubstrByWidth(text, Math.max(8, maxWidth - this.font.width("…"))) + "…";
+    }
+
+    private void changeArea(PlatformInterfaceEntity entity, Platform platform, int radius, int spread) {
+        platform.setSearchRadius(radius);
+        platform.setSpread(spread);
+        if (PlatformAccess.getNetworkMessages() == null) {
+            return;
+        }
+        PlatformAccess.getNetworkMessages().sendToServer(new SetPlatformAreaPacket(
+                entity.getTownCentre(), entity.getPlatformId(), platform.getSearchRadius(), platform.getSpread()));
+    }
+
+    private void toggleDestination(PlatformInterfaceEntity entity, Platform platform, UUID townId) {
+        boolean next = !platform.isDestinationEnabled(townId);
+        platform.setDestinationEnabled(townId, next);
+        for (Destination destination : destinations) {
+            if (destination.id.equals(townId)) {
+                destination.enabled = next;
+            }
+        }
+        if (PlatformAccess.getNetworkMessages() == null) {
+            return;
+        }
+        PlatformAccess.getNetworkMessages().sendToServer(new SetPlatformDestinationPacket(
+                entity.getTownCentre(), entity.getPlatformId(), townId, next));
+    }
+
+    private void startPath(PlatformInterfaceEntity entity, Platform platform) {
+        if (PlatformAccess.getNetworkMessages() == null) {
+            return;
+        }
+        PlatformAccess.getNetworkMessages().sendToServer(new SetPlatformPathCreationModePacket(
+                entity.getTownCentre(), platform.getId(), true));
+        PlatformPathKeyHandler.setActivePlatform(entity.getTownCentre(), platform.getId());
+        if (this.minecraft != null && this.minecraft.player != null) {
+            this.minecraft.player.displayClientMessage(
+                    Component.translatable("businesscraft.platform_path_instructions"), false);
+        }
+        if (this.minecraft != null) {
+            this.minecraft.setScreen(null);
+        }
+    }
+
+    private void resetPath(PlatformInterfaceEntity entity, Platform platform) {
+        if (PlatformAccess.getNetworkMessages() == null) {
+            return;
+        }
+        PlatformAccess.getNetworkMessages().sendToServer(new ResetPlatformPathPacket(
+                entity.getTownCentre(), platform.getId()));
+        platform.setStartPos(null);
+        platform.setEndPos(null);
+        if (this.minecraft != null && this.minecraft.player != null) {
+            this.minecraft.player.displayClientMessage(
+                    Component.translatable("businesscraft.platform_path_reset"), false);
         }
     }
 
     private static String pathLine(Platform platform) {
-        if (platform == null) {
-            return "Path: …";
-        }
-        if (!platform.isComplete()) {
-            return "Path: not set";
+        if (platform == null || !platform.isComplete()) {
+            return "Click two blocks in the world to mark the track.";
         }
         BlockPos start = platform.getStartPos();
         BlockPos end = platform.getEndPos();
-        return "Path: " + start.getX() + ", " + start.getY() + ", " + start.getZ()
-                + " → " + end.getX() + ", " + end.getY() + ", " + end.getZ();
+        return start.getX() + ", " + start.getY() + ", " + start.getZ()
+                + "   →   " + end.getX() + ", " + end.getY() + ", " + end.getZ();
     }
 
     private String townName(PlatformInterfaceEntity entity) {
-        if (this.minecraft == null || entity.getTownCentre() == null) {
+        if (entity == null || entity.getTownCentre() == null || this.minecraft == null || this.minecraft.level == null) {
             return null;
         }
         BlockEntity be = this.minecraft.level.getBlockEntity(entity.getTownCentre());
         if (be instanceof TownInterfaceEntity town && town.getTownName() != null && !town.getTownName().isEmpty()) {
-            return "Town: " + town.getTownName();
+            return town.getTownName();
         }
         return null;
     }
@@ -159,7 +475,7 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
     private Platform currentPlatform() {
         PlatformInterfaceEntity entity = entity();
         if (entity == null || entity.getPlatformId() == null || entity.getTownCentre() == null
-                || this.minecraft == null) {
+                || this.minecraft == null || this.minecraft.level == null) {
             return null;
         }
         BlockEntity be = this.minecraft.level.getBlockEntity(entity.getTownCentre());
@@ -174,39 +490,6 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
         return null;
     }
 
-    private void startPath() {
-        PlatformInterfaceEntity entity = entity();
-        Platform platform = currentPlatform();
-        if (entity == null || !entity.isActive() || platform == null || PlatformAccess.getNetworkMessages() == null) {
-            return;
-        }
-        PlatformAccess.getNetworkMessages().sendToServer(new SetPlatformPathCreationModePacket(
-                entity.getTownCentre(), platform.getId(), true));
-        PlatformPathKeyHandler.setActivePlatform(entity.getTownCentre(), platform.getId());
-        if (this.minecraft.player != null) {
-            this.minecraft.player.displayClientMessage(
-                    Component.translatable("businesscraft.platform_path_instructions"), false);
-        }
-        this.minecraft.setScreen(null);
-    }
-
-    private void resetPath() {
-        PlatformInterfaceEntity entity = entity();
-        Platform platform = currentPlatform();
-        if (entity == null || platform == null || PlatformAccess.getNetworkMessages() == null) {
-            return;
-        }
-        PlatformAccess.getNetworkMessages().sendToServer(new ResetPlatformPathPacket(
-                entity.getTownCentre(), platform.getId()));
-        platform.setStartPos(null);
-        platform.setEndPos(null);
-        if (this.minecraft.player != null) {
-            this.minecraft.player.displayClientMessage(
-                    Component.translatable("businesscraft.platform_path_reset"), false);
-        }
-        rebuild();
-    }
-
     @Override
     protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
     }
@@ -218,5 +501,32 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    private static final class Destination {
+        final UUID id;
+        final String name;
+        boolean enabled;
+        final int distance;
+        final String direction;
+
+        Destination(UUID id, String name, boolean enabled, int distance, String direction) {
+            this.id = id;
+            this.name = name;
+            this.enabled = enabled;
+            this.distance = distance;
+            this.direction = direction;
+        }
+
+        String name() {
+            return name;
+        }
+
+        int distance() {
+            return distance;
+        }
+    }
+
+    private record Hit(String id, int x, int y, int w, int h) {
     }
 }

@@ -150,14 +150,9 @@ public class NBTDataHelper {
             result.name = tag.getString("name");
         }
 
-        // Load platforms using platform manager
+        // Load platforms using platform manager. Platforms without an interface block are dropped.
         platformManager.loadFromNBT(tag);
-        
-        // Create legacy platform if needed
-        if (result.pathStart != null && result.pathEnd != null) {
-            platformManager.createLegacyPlatform(result.pathStart, result.pathEnd);
-        }
-        
+
         return result;
     }
     

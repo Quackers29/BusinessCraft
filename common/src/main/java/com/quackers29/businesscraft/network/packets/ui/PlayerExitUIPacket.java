@@ -76,7 +76,8 @@ public class PlayerExitUIPacket extends BaseBlockEntityPacket {
                                     platform.getStartPos(),
                                     platform.getEndPos(),
                                     platform.getEnabledDestinations(),
-                                    platform.isLegacy(),
+                                    platform.getSearchRadius(),
+                                    platform.getSpread(),
                                     platform.getInterfacePos());
                         }
 

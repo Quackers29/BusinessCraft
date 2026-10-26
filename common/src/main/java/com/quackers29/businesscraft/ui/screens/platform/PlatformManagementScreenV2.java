@@ -1,16 +1,8 @@
 package com.quackers29.businesscraft.ui.screens.platform;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
-import com.quackers29.businesscraft.network.packets.platform.DeletePlatformPacket;
-// ModMessages replaced with PlatformAccess.getNetworkMessages()
-import com.quackers29.businesscraft.network.packets.platform.SetPlatformEnabledPacket;
-import com.quackers29.businesscraft.network.packets.ui.OpenDestinationsUIPacket;
-import com.quackers29.businesscraft.network.packets.platform.SetPlatformPathCreationModePacket;
-import com.quackers29.businesscraft.network.packets.platform.ResetPlatformPathPacket;
 import com.quackers29.businesscraft.platform.Platform;
-import com.quackers29.businesscraft.client.PlatformPathKeyHandler;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
-import com.quackers29.businesscraft.client.showcase.ShowcaseButtonIds;
 import com.quackers29.businesscraft.ui.util.ScreenNavigationHelper;
 import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import com.quackers29.businesscraft.ui.util.InventoryRenderer;
@@ -19,7 +11,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -59,15 +50,15 @@ public class PlatformManagementScreenV2 extends Screen {
     // Platform list section
     private static final int PLATFORM_LIST_X = SECTION_PADDING + 12;
     private static final int PLATFORM_LIST_Y = HEADER_HEIGHT + ELEMENT_SPACING;
-    private static final int PLATFORM_LIST_WIDTH = 300;
-    private static final int PLATFORM_LIST_HEIGHT = 120; // Height for scrolling
+    private static final int PLATFORM_LIST_WIDTH = 500;
+    private static final int PLATFORM_LIST_HEIGHT = 150;
 
     // UI Components
     private UIGridBuilder platformListGrid;
 
     // Screen dimensions
-    private int imageWidth = 340;
-    private int imageHeight = 200;
+    private int imageWidth = 540;
+    private int imageHeight = 250;
 
     // Enhanced color scheme matching Payment Board
     private static final int SUCCESS_COLOR = 0xB0228B22; // Green for enabled
@@ -87,6 +78,9 @@ public class PlatformManagementScreenV2 extends Screen {
     @Override
     protected void init() {
         super.init();
+        int margin = 16;
+        this.imageWidth = Math.min(540, Math.max(300, this.width - margin));
+        this.imageHeight = Math.min(260, Math.max(190, this.height - margin));
 
         // Initialize platform list grid
         initializePlatformListGrid();
@@ -125,11 +119,13 @@ public class PlatformManagementScreenV2 extends Screen {
 
     private void initializePlatformListGrid() {
         // Create grid similar to Payment Board pattern
+        int listWidth = Math.max(220, imageWidth - PLATFORM_LIST_X - 16);
+        int listHeight = Math.max(70, imageHeight - PLATFORM_LIST_Y - 36);
         platformListGrid = UIGridBuilder.create(
                 PLATFORM_LIST_X, PLATFORM_LIST_Y + 5,
-                PLATFORM_LIST_WIDTH - 8, PLATFORM_LIST_HEIGHT - 10,
-                6) // Status, Name, Toggle, Destinations, Path, Remove (legacy only)
-                .withColumnWeights(new float[] {0.07f, 0.28f, 0.13f, 0.16f, 0.18f, 0.18f})
+                listWidth - 8, listHeight - 10,
+                6) // Status, Name, State, Path, Destinations, Position
+                .withColumnWeights(new float[] {0.06f, 0.18f, 0.16f, 0.14f, 0.18f, 0.28f})
                 .withRowHeight(18)
                 .withSpacing(4, 3) // Back to normal spacing
                 .withMargins(4, 2) // Reduced vertical margin from 4 to 2 to fit more rows
@@ -177,56 +173,24 @@ public class PlatformManagementScreenV2 extends Screen {
             platformListGrid.addStatusIndicator(i, 0, canSpawn, SUCCESS_COLOR, DISABLED_COLOR, 13);
 
             // Column 1: Platform name. The name column is wide enough for the full word.
-            String nameText = "Platform " + (i + 1);
-            if (platform.isLegacy()) {
-                nameText += " *";
-            } else if (platform.isComplete()) {
-                nameText += " ✓";
-            }
-            String nameTip = platform.isLegacy()
-                    ? "Legacy platform with no Platform Interface block"
-                    : (platform.isComplete() ? "Platform path is configured" : "Set the path at its Platform Interface");
-            platformListGrid.addLabelWithTooltip(i, 1, nameText, nameTip, TEXT_COLOR);
+            String nameText = platform.getName() == null || platform.getName().isBlank()
+                    ? "Platform " + (i + 1)
+                    : platform.getName();
+            platformListGrid.addLabelWithTooltip(i, 1, nameText,
+                    "Open this platform's Platform Interface to change it", TEXT_COLOR);
 
-            // Column 2: Toggle button
-            String toggleText = platform.isEnabled() ? "ON" : "OFF";
-            int toggleColor = platform.isEnabled() ? SUCCESS_COLOR : DISABLED_COLOR;
-            final int platformIndex = i; // Capture index for closure
-            platformListGrid.addButtonWithTooltip(i, 2, toggleText,
-                    platform.isEnabled() ? "Click to disable platform" : "Click to enable platform",
-                    (v) -> togglePlatformByIndex(platformIndex), toggleColor);
+            String state = platform.isEnabled() ? "Enabled" : "Disabled";
+            platformListGrid.addLabel(i, 2, state, platform.isEnabled() ? SUCCESS_COLOR : DISABLED_COLOR);
 
-            // Column 3: Destinations button
-            String destTooltip = platform.hasNoEnabledDestinations()
-                    ? "No destinations selected - allows any destination"
-                    : "Specific destinations selected";
-            platformListGrid.addButtonWithTooltip(i, 3,
-                    i == 0 ? ShowcaseButtonIds.platformDestinations(0) : null,
-                    "Dest",
-                    destTooltip,
-                    (v) -> openDestinationsByIndex(platformIndex), INFO_COLOR);
+            platformListGrid.addLabel(i, 3, platform.isComplete() ? "Path set" : "No path", TEXT_COLOR);
 
-            // Column 4: path. Interface blocks edit the path on their own screen.
-            // Legacy platforms keep Set/Reset here because they have no block.
-            if (platform.isLegacy()) {
-                if (platform.isComplete()) {
-                    platformListGrid.addButtonWithTooltip(i, 4, "Reset",
-                            "Reset platform path",
-                            (v) -> resetPlatformPathByIndex(platformIndex), DANGER_COLOR);
-                } else {
-                    platformListGrid.addButtonWithTooltip(i, 4, "Set Path",
-                            "Set platform path by clicking two blocks",
-                            (v) -> setPlatformPathByIndex(platformIndex), INFO_COLOR);
-                }
-                platformListGrid.addButtonWithTooltip(i, 5, "Remove",
-                        "Remove this legacy platform",
-                        (v) -> removeLegacyByIndex(platformIndex), DANGER_COLOR);
-            } else {
-                platformListGrid.addLabelWithTooltip(i, 4, "At block",
-                        "Set the path by right-clicking this platform's Platform Interface",
-                        TEXT_COLOR);
-                platformListGrid.addLabel(i, 5, "", TEXT_COLOR);
-            }
+            int destCount = platform.getEnabledDestinations().size();
+            String dest = destCount == 0 ? "Any town" : destCount + (destCount == 1 ? " town" : " towns");
+            platformListGrid.addLabel(i, 4, dest, TEXT_COLOR);
+
+            net.minecraft.core.BlockPos at = platform.getInterfacePos();
+            String where = at == null ? "—" : at.getX() + ", " + at.getY() + ", " + at.getZ();
+            platformListGrid.addLabel(i, 5, where, TEXT_COLOR);
         }
 
         if (platforms.isEmpty()) {
@@ -300,15 +264,17 @@ public class PlatformManagementScreenV2 extends Screen {
         int padding = INNER_PADDING;
         int sectionX = x + PLATFORM_LIST_X - padding;
         int sectionY = y + PLATFORM_LIST_Y - padding - 10;
-        int sectionWidth = PLATFORM_LIST_WIDTH + (padding * 2);
-        int sectionHeight = PLATFORM_LIST_HEIGHT + (padding * 2) + 10;
+        int sectionWidth = imageWidth - PLATFORM_LIST_X;
+        int sectionHeight = imageHeight - PLATFORM_LIST_Y - 8;
 
         guiGraphics.fill(sectionX, sectionY, sectionX + sectionWidth, sectionY + sectionHeight, SECTION_BG_COLOR);
         InventoryRenderer.drawBorder(guiGraphics, sectionX, sectionY, sectionWidth, sectionHeight,
                 InventoryRenderer.INVENTORY_BORDER_COLOR, 2);
 
         // Section header
-        String headerText = platforms.isEmpty() ? "No Platforms" : "Platforms (" + platforms.size() + ")";
+        String headerText = platforms.isEmpty()
+                ? "No platforms yet"
+                : "Platforms (" + platforms.size() + ")  ·  read only";
         guiGraphics.drawString(this.font, headerText,
                 x + PLATFORM_LIST_X + 6, y + PLATFORM_LIST_Y - 12, HEADER_COLOR);
 
@@ -411,107 +377,6 @@ public class PlatformManagementScreenV2 extends Screen {
 
         return InventoryRenderer.isMouseOverElement(mouseX, mouseY, x, y,
                 BACK_BUTTON_X, BACK_BUTTON_Y, BACK_BUTTON_WIDTH, BACK_BUTTON_HEIGHT);
-    }
-
-    // Platform action methods - using indices to avoid stale object references
-    private void togglePlatformByIndex(int index) {
-        if (index < 0 || index >= platforms.size())
-            return;
-
-        Platform platform = platforms.get(index);
-        boolean newState = !platform.isEnabled();
-
-        // Record toggle time to prevent server refresh conflicts
-        lastToggleTime = System.currentTimeMillis();
-
-        PlatformAccess.getNetworkMessages().sendToServer(new SetPlatformEnabledPacket(
-                townBlockPos, platform.getId(), newState));
-
-        // Update local state immediately for instant feedback
-        platform.setEnabled(newState);
-
-        // Update the UI immediately (server refresh will be blocked for 500ms)
-        if (platformListGrid != null) {
-            platformListGrid.clearElements();
-            populateGridWithPlatforms();
-        }
-    }
-
-    private void openDestinationsByIndex(int index) {
-        if (index < 0 || index >= platforms.size())
-            return;
-
-        Platform platform = platforms.get(index);
-        PlatformAccess.getNetworkMessages().sendToServer(new OpenDestinationsUIPacket(
-                townBlockPos, platform.getId()));
-    }
-
-    private void setPlatformPathByIndex(int index) {
-        if (index < 0 || index >= platforms.size())
-            return;
-
-        Platform platform = platforms.get(index);
-        // Send packet to enter platform path creation mode
-        PlatformAccess.getNetworkMessages().sendToServer(new SetPlatformPathCreationModePacket(
-                townBlockPos, platform.getId(), true));
-
-        // Register with key handler
-        PlatformPathKeyHandler.setActivePlatform(townBlockPos, platform.getId());
-
-        // Show instructions
-        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
-        if (clientHelper != null) {
-            Object playerObj = clientHelper.getClientPlayer();
-            if (playerObj instanceof Player player) {
-                player.displayClientMessage(
-                        Component.translatable("businesscraft.platform_path_instructions"), false);
-            }
-        }
-
-        // Close UI
-        minecraft.setScreen(null);
-    }
-
-    private void resetPlatformPathByIndex(int index) {
-        if (index < 0 || index >= platforms.size())
-            return;
-
-        Platform platform = platforms.get(index);
-        PlatformAccess.getNetworkMessages().sendToServer(new ResetPlatformPathPacket(
-                townBlockPos, platform.getId()));
-
-        // Update local state
-        platform.setStartPos(null);
-        platform.setEndPos(null);
-
-        // Show feedback
-        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
-        if (clientHelper != null) {
-            Object playerObj = clientHelper.getClientPlayer();
-            if (playerObj instanceof Player player) {
-                player.displayClientMessage(
-                        Component.translatable("businesscraft.platform_path_reset"), false);
-            }
-        }
-
-        // Force the grid to refresh immediately by clearing and repopulating
-        if (platformListGrid != null) {
-            platformListGrid.clearElements();
-            populateGridWithPlatforms();
-        }
-    }
-
-    private void removeLegacyByIndex(int index) {
-        if (index < 0 || index >= platforms.size()) {
-            return;
-        }
-        Platform platform = platforms.get(index);
-        if (!platform.isLegacy()) {
-            return;
-        }
-        PlatformAccess.getNetworkMessages().sendToServer(new DeletePlatformPacket(
-                townBlockPos, platform.getId()));
-        refreshPlatformDataFromServer();
     }
 
     /**

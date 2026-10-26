@@ -83,12 +83,9 @@ public class PacketRegistry {
                                 SetPathCreationModePacket::decode, SetPathCreationModePacket::encode,
                                 SetPathCreationModePacket::handle);
 
-                register(AddPlatformPacket.class, "add_platform_packet", NetworkDirection.PLAY_TO_SERVER,
-                                AddPlatformPacket::decode, AddPlatformPacket::encode, AddPlatformPacket::handle);
-
-                register(DeletePlatformPacket.class, "delete_platform_packet", NetworkDirection.PLAY_TO_SERVER,
-                                DeletePlatformPacket::decode, DeletePlatformPacket::encode,
-                                DeletePlatformPacket::handle);
+                register(SetPlatformAreaPacket.class, "set_platform_area_packet", NetworkDirection.PLAY_TO_SERVER,
+                                SetPlatformAreaPacket::decode, SetPlatformAreaPacket::encode,
+                                SetPlatformAreaPacket::handle);
 
                 register(SetPlatformEnabledPacket.class, "set_platform_enabled_packet", NetworkDirection.PLAY_TO_SERVER,
                                 SetPlatformEnabledPacket::decode, SetPlatformEnabledPacket::encode,

@@ -79,16 +79,8 @@ public class PlatformManager {
      * @return true if added successfully, false if at max capacity
      */
     public boolean addPlatform() {
-        if (platforms.size() >= MAX_PLATFORMS) {
-            return false;
-        }
-
-        Platform platform = new Platform();
-        platform.setName("Platform " + (platforms.size() + 1));
-        platform.setLegacy(true);
-        platforms.add(platform);
-        notifyChanged();
-        return true;
+        BlockPos pos = new BlockPos(platforms.size() * com.quackers29.businesscraft.platform.PlatformPlacement.MIN_SEPARATION, 0, 0);
+        return addInterfacePlatform(pos) != null;
     }
 
     /**
@@ -114,7 +106,6 @@ public class PlatformManager {
         Platform platform = new Platform();
         platform.setName("Platform " + (platforms.size() + 1));
         platform.setEnabled(true);
-        platform.setLegacy(false);
         platform.setInterfacePos(pos);
         platforms.add(platform);
         notifyChanged();
@@ -122,20 +113,9 @@ public class PlatformManager {
     }
 
     /**
-     * Removes a legacy platform (no interface block). Interface-backed platforms are removed by breaking the block.
-     */
-    public boolean removeLegacyPlatform(UUID platformId) {
-        Platform platform = getPlatform(platformId);
-        if (platform == null || !platform.isLegacy()) {
-            return false;
-        }
-        return removePlatform(platformId);
-    }
-
-    /**
      * Re-associates a loaded Platform Interface with the platform it already owns.
      * Recreates the platform when the town still exists but the entry was missing, and refuses to steal
-     * a legacy platform or one owned by a different block.
+     * one owned by a different block.
      */
     public RelinkResult relink(UUID platformId, BlockPos interfacePos) {
         if (platformId == null || interfacePos == null) {
@@ -155,23 +135,13 @@ public class PlatformManager {
             Platform created = new Platform(platformId);
             created.setName("Platform " + (platforms.size() + 1));
             created.setEnabled(true);
-            created.setLegacy(false);
             created.setInterfacePos(pos);
             platforms.add(created);
             notifyChanged();
             return RelinkResult.RELINKED;
         }
-        if (existing.isLegacy() && existing.getInterfacePos() == null) {
-            return RelinkResult.NOT_OURS;
-        }
-        if (existing.getInterfacePos() != null && !existing.getInterfacePos().equals(pos)) {
-            return RelinkResult.DUPLICATE;
-        }
-        if (existing.getInterfacePos() == null) {
-            existing.setInterfacePos(pos);
-            existing.setLegacy(false);
-            notifyChanged();
-            return RelinkResult.RELINKED;
+        if (existing.getInterfacePos() == null || !existing.getInterfacePos().equals(pos)) {
+            return existing.getInterfacePos() == null ? RelinkResult.NOT_OURS : RelinkResult.DUPLICATE;
         }
         return RelinkResult.LINKED;
     }
@@ -345,7 +315,10 @@ public class PlatformManager {
             ListTag platformsTag = tag.getList("platforms", Tag.TAG_COMPOUND);
             for (int i = 0; i < platformsTag.size(); i++) {
                 CompoundTag platformTag = platformsTag.getCompound(i);
-                platforms.add(Platform.fromNBT(platformTag));
+                Platform platform = Platform.fromNBT(platformTag);
+                if (platform.getInterfacePos() != null) {
+                    platforms.add(platform);
+                }
             }
         }
     }
@@ -362,27 +335,14 @@ public class PlatformManager {
             for (int i = 0; i < platformsTag.size(); i++) {
                 CompoundTag platformTag = platformsTag.getCompound(i);
                 Platform platform = Platform.fromNBT(platformTag);
+                if (platform.getInterfacePos() == null) {
+                    continue;
+                }
                 clientPlatforms.add(platform);
             }
             DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] Updated {} client platforms from NBT tag", clientPlatforms.size());
         } else {
             DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_SYSTEM, "[PLATFORM] No platforms in NBT tag");
-        }
-    }
-
-    /**
-     * Creates a legacy platform from old path data if no platforms exist
-     * 
-     * @param pathStart The legacy path start
-     * @param pathEnd   The legacy path end
-     */
-    public void createLegacyPlatform(BlockPos pathStart, BlockPos pathEnd) {
-        if (platforms.isEmpty() && pathStart != null && pathEnd != null) {
-            Platform legacyPlatform = new Platform("Main Platform", true, pathStart, pathEnd);
-            legacyPlatform.setLegacy(true);
-            platforms.add(legacyPlatform);
-            notifyChanged();
-            LOGGER.info("Created legacy platform from old path data: {} to {}", pathStart, pathEnd);
         }
     }
 
