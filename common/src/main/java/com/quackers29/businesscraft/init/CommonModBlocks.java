@@ -26,9 +26,10 @@ public class CommonModBlocks {
 
         PLATFORM_INTERFACE_BLOCK = PlatformAccess.getRegistry().registerBlock("platform_interface",
                 () -> new PlatformInterfaceBlock(BlockBehaviour.Properties.of()
-                        .mapColor(MapColor.COLOR_ORANGE)
+                        .mapColor(MapColor.METAL)
                         .strength(3.5f, 6.0f)
                         .sound(SoundType.METAL)
+                        .lightLevel(state -> 10)
                         .requiresCorrectToolForDrops()));
 
         PlatformAccess.getRegistry().registerBlockItem("platform_interface", PLATFORM_INTERFACE_BLOCK::get);

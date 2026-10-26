@@ -33,12 +33,16 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -47,7 +51,11 @@ import java.util.UUID;
  */
 public class PlatformInterfaceBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
-    private static final VoxelShape SHAPE = Block.box(0, 0, 0, 16, 15, 16);
+    /** Cabinet, ticket tray, and roof lamp. North is the unrotated model, front toward -Z. */
+    private static final VoxelShape NORTH_SHAPE = Shapes.or(
+            Block.box(2, 0, 1, 14, 13, 14),
+            Block.box(5, 12, 6, 11, 16, 12));
+    private static final Map<Direction, VoxelShape> SHAPES = facingShapes(NORTH_SHAPE);
 
     public PlatformInterfaceBlock(Properties properties) {
         super(properties);
@@ -67,7 +75,46 @@ public class PlatformInterfaceBlock extends BaseEntityBlock {
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return SHAPE;
+        return SHAPES.getOrDefault(state.getValue(FACING), NORTH_SHAPE);
+    }
+
+    @Override
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return getShape(state, level, pos, context);
+    }
+
+    private static Map<Direction, VoxelShape> facingShapes(VoxelShape north) {
+        Map<Direction, VoxelShape> shapes = new EnumMap<>(Direction.class);
+        shapes.put(Direction.NORTH, north);
+        shapes.put(Direction.EAST, rotateY(north, 1));
+        shapes.put(Direction.SOUTH, rotateY(north, 2));
+        shapes.put(Direction.WEST, rotateY(north, 3));
+        return shapes;
+    }
+
+    /** Clockwise quarters around Y, matching the blockstate {@code y} rotation. */
+    private static VoxelShape rotateY(VoxelShape shape, int quarters) {
+        VoxelShape result = shape;
+        for (int i = 0; i < quarters; i++) {
+            VoxelShape turned = Shapes.empty();
+            for (AABB box : result.toAabbs()) {
+                double x1 = box.minX * 16.0;
+                double y1 = box.minY * 16.0;
+                double z1 = box.minZ * 16.0;
+                double x2 = box.maxX * 16.0;
+                double y2 = box.maxY * 16.0;
+                double z2 = box.maxZ * 16.0;
+                double nx1 = 16.0 - z2;
+                double nz1 = x1;
+                double nx2 = 16.0 - z1;
+                double nz2 = x2;
+                turned = Shapes.or(turned, Block.box(
+                        Math.min(nx1, nx2), y1, Math.min(nz1, nz2),
+                        Math.max(nx1, nx2), y2, Math.max(nz1, nz2)));
+            }
+            result = turned;
+        }
+        return result;
     }
 
     @Override
