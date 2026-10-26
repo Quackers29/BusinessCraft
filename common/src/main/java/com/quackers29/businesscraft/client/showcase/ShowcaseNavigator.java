@@ -3,6 +3,9 @@ package com.quackers29.businesscraft.client.showcase;
 import com.quackers29.businesscraft.block.TownInterfaceBlock;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.entity.TouristEntity;
+import com.quackers29.businesscraft.entity.TouristType;
+import com.quackers29.businesscraft.entity.tourist.TouristLook;
+import com.quackers29.businesscraft.entity.tourist.TouristLooks;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import com.quackers29.businesscraft.ui.screens.TouristScreen;
@@ -101,6 +104,14 @@ public final class ShowcaseNavigator {
                 return null;
             }
             return "tourist screen not open for hover";
+        }
+        if (step.startsWith("scroll-tourist:")) {
+            int rows = Integer.parseInt(step.substring("scroll-tourist:".length()));
+            if (minecraft.screen instanceof TouristScreen screen) {
+                screen.showcaseScrollRows(rows);
+                return null;
+            }
+            return "tourist screen not open for scroll";
         }
         return "unknown step: " + step;
     }
@@ -224,8 +235,9 @@ public final class ShowcaseNavigator {
         }
         ServerLevel level = player.serverLevel();
         player.setGameMode(GameType.CREATIVE);
-        give(player, Items.PAPER, 1);
-        give(player, Items.BREAD, 8);
+        give(player, Items.PAPER, 4);
+        give(player, Items.BREAD, 16);
+        give(player, Items.SAND, 16);
         TouristEntity tourist = nearestTourist(level, townPos);
         if (tourist == null) {
             tourist = spawnTourist(level, townPos);
@@ -233,7 +245,22 @@ public final class ShowcaseNavigator {
         if (tourist == null) {
             return;
         }
-        tourist.applyJourneyForScreen("Brookside", destination, anyTown, tourist.getTouristType(), distance);
+        TouristLook desert = null;
+        for (TouristLook look : TouristLooks.all()) {
+            if ("desert_guide".equals(look.id())) {
+                desert = look;
+                break;
+            }
+        }
+        TouristType type = tourist.getTouristType();
+        if (desert != null) {
+            tourist.applyLook(desert);
+            if (desert.type() != null) {
+                type = desert.type();
+            }
+        }
+        tourist.applyJourneyForScreen("Brookside", destination, anyTown, type, distance);
+        tourist.applyScreenClock(17 * 60 + 31, 60 * 60 + 51 * 60);
         player.teleportTo(level, tourist.getX(), tourist.getY(), tourist.getZ() + 2.0, 180.0f, 0.0f);
         TouristEntity.showcaseVanillaScreen = legacy;
         try {

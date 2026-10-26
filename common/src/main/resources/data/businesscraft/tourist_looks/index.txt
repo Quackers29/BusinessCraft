@@ -9,3 +9,11 @@ coast_visitor
 night_luxury
 desert_guide
 festival_guest
+alpine_walker
+rain_caller
+garden_pilgrim
+library_clerk
+harbour_skipper
+bazaar_merchant
+canyon_scout
+station_conductor

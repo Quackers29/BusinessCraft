@@ -4,9 +4,9 @@ import com.quackers29.businesscraft.client.model.TouristModel;
 import com.quackers29.businesscraft.client.renderer.layer.TouristAccessoryLayer;
 import com.quackers29.businesscraft.client.renderer.layer.TouristHeadwearLayer;
 import com.quackers29.businesscraft.client.renderer.layer.TouristOutfitLayer;
-import com.quackers29.businesscraft.economy.JourneyProgress;
 import com.quackers29.businesscraft.entity.TouristDisplayFormat;
 import com.quackers29.businesscraft.entity.TouristEntity;
+import com.quackers29.businesscraft.entity.TouristNames;
 import com.quackers29.businesscraft.entity.tourist.TouristAppearance;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -19,16 +19,16 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Humanoid tourist. Appearance comes from the packed look (skin, outfit, headwear,
- * accessory). Name tags are the multi-line destination / origin / type lines.
+ * accessory). The only floating text is the first name, and only up close.
+ * The full name stays on the tourist screen. The name is drawn see-through and
+ * depth-tested, so it can show through walls.
  */
 public class TouristRenderer extends MobRenderer<TouristEntity, TouristModel> {
-    private static final float NAME_TAG_SCALE = 0.025F;
-    private static final int LINE_SPACING = 10;
+    private static final float NAME_TAG_SCALE = 0.02F;
+    /** Light grey, slightly transparent. No background is drawn with this. */
+    private static final int NAME_COLOR = 0xD0D8D8D8;
 
     public TouristRenderer(EntityRendererProvider.Context context) {
         super(context, new TouristModel(context.bakeLayer(TouristModel.LAYER)), 0.5F);
@@ -78,35 +78,28 @@ public class TouristRenderer extends MobRenderer<TouristEntity, TouristModel> {
         if (!TouristDisplayFormat.withinNameTagRange(distSq)) {
             return;
         }
-
-        String tier = JourneyProgress.tierName(entity.getVillagerData().getLevel());
-        List<Component> lines = new ArrayList<>();
-        lines.add(TouristDisplayFormat.primaryLine(entity.getSyncedDestLabel(), entity.isAnyTownDestination()));
-        lines.add(TouristDisplayFormat.originLine(entity.getSyncedOriginLabel()));
-        Component typeAndDistance = TouristDisplayFormat.typeAndDistanceLine(
-                entity.getTouristType(), tier, entity.getTotalDistanceTraveled());
-        if (typeAndDistance != null) {
-            lines.add(typeAndDistance);
+        String personal = entity.getPersonalName();
+        if (TouristNames.isPlaceholder(personal)) {
+            return;
         }
-
+        String first = TouristNames.firstOf(personal);
+        if (first.isBlank()) {
+            return;
+        }
+        Component line = Component.literal(first);
         float scale = NAME_TAG_SCALE;
         poseStack.pushPose();
-        // Anchor sits above the tallest hat. Negative font Y (after the flip) stacks lines upward.
-        poseStack.translate(0.0D, entity.getBbHeight() + 0.95F, 0.0D);
+        poseStack.translate(0.0D, entity.getBbHeight() + 0.62F, 0.0D);
         poseStack.mulPose(this.entityRenderDispatcher.cameraOrientation());
         poseStack.scale(-scale, -scale, scale);
-
         Font font = this.getFont();
         Matrix4f matrix = poseStack.last().pose();
-        int background = 0xB0000000;
-        for (int i = 0; i < lines.size(); i++) {
-            Component line = lines.get(i);
-            float lineWidth = font.width(line);
-            float y = -((lines.size() - 1 - i) * LINE_SPACING);
-            font.drawInBatch(line, -lineWidth / 2.0F, y, 0xFFFFFF, false, matrix, buffer,
-                    Font.DisplayMode.NORMAL, background, packedLight);
-        }
-
+        float x = -font.width(line) / 2.0F;
+        // See-through first, then the depth-tested pass, the same order as a vanilla nameplate.
+        font.drawInBatch(line, x, 0.0F, NAME_COLOR, false, matrix, buffer,
+                Font.DisplayMode.SEE_THROUGH, 0, packedLight);
+        font.drawInBatch(line, x, 0.0F, NAME_COLOR, false, matrix, buffer,
+                Font.DisplayMode.NORMAL, 0, packedLight);
         poseStack.popPose();
     }
 

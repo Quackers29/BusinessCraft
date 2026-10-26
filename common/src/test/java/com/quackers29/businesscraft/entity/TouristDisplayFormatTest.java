@@ -23,9 +23,11 @@ class TouristDisplayFormatTest {
     }
 
     @Test
-    void withinNameTagRange_respects48Blocks() {
-        assertTrue(TouristDisplayFormat.withinNameTagRange(47 * 47));
-        assertFalse(TouristDisplayFormat.withinNameTagRange(49 * 49));
+    void withinNameTagRange_respectsFiveBlocks() {
+        assertEquals(5.0, TouristDisplayFormat.NAME_TAG_MAX_DISTANCE);
+        assertTrue(TouristDisplayFormat.withinNameTagRange(4.9 * 4.9));
+        assertTrue(TouristDisplayFormat.withinNameTagRange(5.0 * 5.0));
+        assertFalse(TouristDisplayFormat.withinNameTagRange(5.1 * 5.1));
     }
 
     @Test

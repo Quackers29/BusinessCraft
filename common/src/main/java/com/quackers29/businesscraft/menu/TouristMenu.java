@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.menu;
 
 import com.quackers29.businesscraft.entity.TouristEntity;
+import com.quackers29.businesscraft.entity.TouristTimer;
 import com.quackers29.businesscraft.entity.TouristTradeCatalog;
 import com.quackers29.businesscraft.network.PlayerItemExchange;
 import net.minecraft.network.FriendlyByteBuf;
@@ -16,11 +17,15 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.trading.MerchantOffer;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 /**
  * Tourist conversation. There are no input slots: choosing a row takes the
  * cost from the player's inventory and gives the same result the old merchant
- * offer did. Journey numbers travel in data slots so the screen can refresh
- * while it is open.
+ * offer did. Distance, rank, and which deals were used travel in data slots.
+ * The journey clock is snapshotted when the screen opens. Those slots are not
+ * rewritten every second: the client advances the label from the snapshot, and
+ * the remaining time is sent again only when the tourist starts or stops moving.
  */
 public class TouristMenu extends AbstractContainerMenu {
     public static final int DATA_DISTANCE_LO = 0;
@@ -39,6 +44,9 @@ public class TouristMenu extends AbstractContainerMenu {
     private final TouristScreenData opened;
     @Nullable
     private final TouristEntity tourist;
+    /** Server only. Stops the journey slots from changing every second. */
+    private boolean timersSeeded;
+    private boolean timerStationary;
 
     public TouristMenu(int containerId, Inventory playerInventory, TouristEntity tourist) {
         this(containerId, playerInventory, tourist, TouristScreenData.capture(tourist), new SimpleContainerData(DATA_COUNT));
@@ -72,10 +80,11 @@ public class TouristMenu extends AbstractContainerMenu {
         if (player.level().isClientSide || tourist == null || !(player instanceof ServerPlayer serverPlayer)) {
             return false;
         }
-        if (id < 0 || id >= TouristTradeCatalog.all().size()) {
+        List<TouristTradeCatalog.TradeDef> defs = defs();
+        if (id < 0 || id >= defs.size()) {
             return false;
         }
-        TouristTradeCatalog.TradeDef def = TouristTradeCatalog.all().get(id);
+        TouristTradeCatalog.TradeDef def = defs.get(id);
         int level = tourist.getVillagerData().getLevel();
         if (level < def.minLevel()) {
             return false;
@@ -179,6 +188,32 @@ public class TouristMenu extends AbstractContainerMenu {
         return (data.get(DATA_FLAGS) & FLAG_STATIONARY) != 0;
     }
 
+    /** Name captured when the screen opened. */
+    public String personalName() {
+        return opened.personalName();
+    }
+
+    /** Look whose trade list this screen is showing. */
+    public String lookId() {
+        if (tourist != null && !tourist.level().isClientSide) {
+            String live = tourist.getLookId();
+            if (live != null && !live.isBlank()) {
+                return live;
+            }
+        }
+        return opened.lookId();
+    }
+
+    /** Journey seconds from the open snapshot, not the data slot. */
+    public int openedJourneySeconds() {
+        return opened.journeySeconds();
+    }
+
+    /** Remaining seconds from the open snapshot, not the data slot. */
+    public int openedRemainingSeconds() {
+        return opened.remainingSeconds();
+    }
+
     private TouristTradeCatalog.TradeContext contextFromTourist() {
         int level = Math.max(1, tourist.getVillagerData().getLevel());
         return new TouristTradeCatalog.TradeContext(
@@ -187,8 +222,8 @@ public class TouristMenu extends AbstractContainerMenu {
                 tourist.isAnyTownDestination(),
                 com.quackers29.businesscraft.economy.JourneyProgress.tierName(level),
                 tourist.getTotalDistanceTraveled(),
-                TouristTradeCatalog.formatDuration(TouristScreenData.clampSeconds(tourist.getJourneyTicks())),
-                TouristTradeCatalog.formatDuration(TouristScreenData.clampSeconds(tourist.getExpiryTicks())),
+                TouristTradeCatalog.formatDuration(Math.max(0, tourist.getJourneyTicks() / 20)),
+                TouristTradeCatalog.formatDuration(Math.max(0, tourist.getExpiryTicks() / 20)),
                 tourist.isStationary());
     }
 
@@ -214,16 +249,31 @@ public class TouristMenu extends AbstractContainerMenu {
         data.set(DATA_DISTANCE_LO, TouristScreenData.distanceLo(meters));
         data.set(DATA_DISTANCE_HI, TouristScreenData.distanceHi(meters));
         data.set(DATA_LEVEL, Math.max(1, tourist.getVillagerData().getLevel()));
-        data.set(DATA_USES, TouristTradeCatalog.usesMask(tourist.getOffers()));
-        data.set(DATA_JOURNEY_SEC, TouristScreenData.clampSeconds(tourist.getJourneyTicks()));
-        data.set(DATA_REMAINING_SEC, TouristScreenData.clampSeconds(tourist.getExpiryTicks()));
+        data.set(DATA_USES, TouristTradeCatalog.usesMask(tourist.getOffers(), defs()));
+        boolean stationary = tourist.isStationary();
+        if (TouristTimer.shouldSync(timersSeeded, timerStationary, stationary)) {
+            int remaining = TouristScreenData.clampSeconds(tourist.getExpiryTicks());
+            if (!timersSeeded) {
+                data.set(DATA_JOURNEY_SEC, TouristScreenData.clampSeconds(tourist.getJourneyTicks()));
+                data.set(DATA_REMAINING_SEC, remaining);
+                timersSeeded = true;
+            } else {
+                data.set(DATA_REMAINING_SEC, remaining);
+            }
+            timerStationary = stationary;
+        }
         int flags = 0;
         if (tourist.isAnyTownDestination()) {
             flags |= FLAG_ANY_TOWN;
         }
-        if (tourist.isStationary()) {
+        if (stationary) {
             flags |= FLAG_STATIONARY;
         }
         data.set(DATA_FLAGS, flags);
+    }
+
+    private List<TouristTradeCatalog.TradeDef> defs() {
+        String lookId = tourist != null ? tourist.getLookId() : opened.lookId();
+        return TouristTradeCatalog.forLook(lookId);
     }
 }
