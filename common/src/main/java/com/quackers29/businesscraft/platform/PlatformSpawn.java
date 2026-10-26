@@ -9,15 +9,25 @@ import net.minecraft.core.BlockPos;
  */
 public final class PlatformSpawn {
     public static final int MIN_RADIUS = 1;
-    public static final int MAX_RADIUS = 100;
+    /** Default for {@code platforms.maxSearchRadius} when the config value is missing or below 1. */
+    public static final int DEFAULT_MAX_RADIUS = 100;
     public static final int DEFAULT_RADIUS = 10;
     public static final int DEFAULT_SPREAD = 0;
 
     private PlatformSpawn() {
     }
 
+    /** Highest search radius a platform may use. Spread is capped by the platform's own radius, not by a second config. */
+    public static int maxRadius() {
+        int configured = com.quackers29.businesscraft.config.ConfigLoader.maxPlatformSearchRadius;
+        if (configured < MIN_RADIUS) {
+            return DEFAULT_MAX_RADIUS;
+        }
+        return configured;
+    }
+
     public static int clampRadius(int radius) {
-        return Math.max(MIN_RADIUS, Math.min(MAX_RADIUS, radius));
+        return Math.max(MIN_RADIUS, Math.min(maxRadius(), radius));
     }
 
     public static int clampSpread(int spread, int radius) {

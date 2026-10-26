@@ -49,6 +49,7 @@ class ConfigLoaderTest {
     private boolean savedEnableMilestones, savedPlayerTracking, savedTownBoundaryMessages;
     private boolean savedTradingEnabled, savedProductionEnabled, savedResearchEnabled, savedContractsEnabled;
     private int savedVehicleSearchRadius, savedDefaultStartingPopulation, savedDefaultBorderRadius;
+    private int savedMaxPlatformSearchRadius;
     private int savedMaxTouristsPerTown, savedPopulationPerTourist, savedMaxPopBasedTourists;
     private int savedMinPopForTourists, savedMetersPerEmerald, savedTradingTickInterval;
     private int savedProductionTickInterval, savedDailyTickInterval, savedMinStockPercent, savedExcessStockPercent;
@@ -72,6 +73,7 @@ class ConfigLoaderTest {
         savedEnableCreateTrains = ConfigLoader.enableCreateTrains;
         savedEnableMinecarts = ConfigLoader.enableMinecarts;
         savedVehicleSearchRadius = ConfigLoader.vehicleSearchRadius;
+        savedMaxPlatformSearchRadius = ConfigLoader.maxPlatformSearchRadius;
         savedMinecartStopThreshold = ConfigLoader.minecartStopThreshold;
 
         savedTownNames = new ArrayList<>(ConfigLoader.townNames);
@@ -140,6 +142,7 @@ class ConfigLoaderTest {
         ConfigLoader.enableCreateTrains = savedEnableCreateTrains;
         ConfigLoader.enableMinecarts = savedEnableMinecarts;
         ConfigLoader.vehicleSearchRadius = savedVehicleSearchRadius;
+        ConfigLoader.maxPlatformSearchRadius = savedMaxPlatformSearchRadius;
         ConfigLoader.minecartStopThreshold = savedMinecartStopThreshold;
 
         ConfigLoader.townNames = new ArrayList<>(savedTownNames);
@@ -245,6 +248,7 @@ class ConfigLoaderTest {
         assertEquals(5, ConfigLoader.minPopForTourists);
         assertEquals(5, ConfigLoader.defaultStartingPopulation);
         assertEquals(50, ConfigLoader.defaultBorderRadius);
+        assertEquals(100, ConfigLoader.maxPlatformSearchRadius);
         assertTrue(ConfigLoader.craftableTownInterface);
         assertEquals(1000, ConfigLoader.maxTouristsPerTown);
         assertEquals(5, ConfigLoader.populationPerTourist);
@@ -313,6 +317,9 @@ class ConfigLoaderTest {
             craftableTownInterface = true
             townNames = ["Alpha", "Beta"]
 
+            [platforms]
+            maxSearchRadius = 40
+
             [vehicles]
             enableCreateTrains = false
             vehicleSearchRadius = 7
@@ -345,6 +352,7 @@ class ConfigLoaderTest {
         ConfigLoader.loadConfig();
 
         assertEquals(12, ConfigLoader.defaultStartingPopulation);
+        assertEquals(40, ConfigLoader.maxPlatformSearchRadius);
         assertTrue(ConfigLoader.craftableTownInterface);
         assertEquals(List.of("Alpha", "Beta"), ConfigLoader.townNames);
 
@@ -500,6 +508,7 @@ class ConfigLoaderTest {
         // After copy, the values must match the shipped defaults (identical to Java inits)
         assertEquals(5, ConfigLoader.defaultStartingPopulation);
         assertEquals(50, ConfigLoader.defaultBorderRadius);
+        assertEquals(100, ConfigLoader.maxPlatformSearchRadius);
         assertEquals(100, ConfigLoader.metersPerEmerald);
         assertTrue(ConfigLoader.milestoneRewards.containsKey(1000));
         assertTrue(ConfigLoader.milestoneRewards.containsKey(5000));
@@ -513,6 +522,7 @@ class ConfigLoaderTest {
         ConfigLoader.metersPerEmerald = 77;
         ConfigLoader.defaultStartingPopulation = 9;
         ConfigLoader.defaultBorderRadius = 75;
+        ConfigLoader.maxPlatformSearchRadius = 60;
         ConfigLoader.milestoneRewards.clear();
         ConfigLoader.milestoneRewards.put(25, List.of("minecraft:emerald:3"));
 
@@ -523,6 +533,7 @@ class ConfigLoaderTest {
         ConfigLoader.metersPerEmerald = 999;
         ConfigLoader.defaultStartingPopulation = 1;
         ConfigLoader.defaultBorderRadius = 1;
+        ConfigLoader.maxPlatformSearchRadius = 1;
         ConfigLoader.milestoneRewards.clear();
 
         ConfigLoader.loadConfig();
@@ -530,6 +541,8 @@ class ConfigLoaderTest {
         assertEquals(77, ConfigLoader.metersPerEmerald);
         assertEquals(9, ConfigLoader.defaultStartingPopulation);
         assertEquals(75, ConfigLoader.defaultBorderRadius);
+        assertEquals(60, ConfigLoader.maxPlatformSearchRadius);
+        assertTrue(Files.readString(configFile).contains("Highest search radius a platform may use"));
         assertEquals(1, ConfigLoader.milestoneRewards.size());
         assertEquals(List.of("minecraft:emerald:3"), ConfigLoader.milestoneRewards.get(25));
     }

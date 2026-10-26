@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.platform;
 
+import com.quackers29.businesscraft.config.ConfigLoader;
 import net.minecraft.core.BlockPos;
 import org.junit.jupiter.api.Test;
 
@@ -44,6 +45,25 @@ class PlatformSpawnTest {
 
         double[] clamped = PlatformSpawn.point(START, END, 0.5, 40, 40, 10);
         assertEquals(10, PlatformSpawn.distanceToSegment(START, END, clamped[0], clamped[1]), 1.0e-6);
+    }
+
+    @Test
+    void clampRadius_readsTheConfiguredMax() {
+        int saved = ConfigLoader.maxPlatformSearchRadius;
+        try {
+            ConfigLoader.maxPlatformSearchRadius = 40;
+            assertEquals(40, PlatformSpawn.maxRadius());
+            assertEquals(40, PlatformSpawn.clampRadius(500));
+            assertEquals(1, PlatformSpawn.clampRadius(0));
+            assertEquals(40, PlatformSpawn.clampSpread(90, 80));
+            assertEquals(12, PlatformSpawn.clampSpread(12, 40));
+
+            ConfigLoader.maxPlatformSearchRadius = 0;
+            assertEquals(PlatformSpawn.DEFAULT_MAX_RADIUS, PlatformSpawn.maxRadius());
+            assertEquals(100, PlatformSpawn.clampRadius(500));
+        } finally {
+            ConfigLoader.maxPlatformSearchRadius = saved;
+        }
     }
 
     @Test

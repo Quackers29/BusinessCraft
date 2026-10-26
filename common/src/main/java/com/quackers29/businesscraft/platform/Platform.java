@@ -132,8 +132,8 @@ public class Platform {
         }
         tag.put("Destinations", destTag);
 
-        tag.putInt("SearchRadius", searchRadius);
-        tag.putInt("Spread", spread);
+        tag.putInt("SearchRadius", getSearchRadius());
+        tag.putInt("Spread", getSpread());
         if (interfacePos != null) {
             tag.putInt("InterfaceX", interfacePos.getX());
             tag.putInt("InterfaceY", interfacePos.getY());
@@ -218,7 +218,7 @@ public class Platform {
     }
 
     public int getSearchRadius() {
-        return searchRadius;
+        return PlatformSpawn.clampRadius(searchRadius);
     }
 
     public void setSearchRadius(int searchRadius) {
@@ -227,7 +227,7 @@ public class Platform {
     }
 
     public int getSpread() {
-        return spread;
+        return PlatformSpawn.clampSpread(spread, getSearchRadius());
     }
 
     public void setSpread(int spread) {

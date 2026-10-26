@@ -32,6 +32,11 @@ public class ConfigLoader {
     public static int defaultStartingPopulation = 5;
     /** Default town boundary radius (blocks) when no {@code border} modifier is set. */
     public static int defaultBorderRadius = 50;
+    /**
+     * Highest search radius one platform may use, in blocks. Each platform still starts at 10.
+     * Spread cannot exceed that platform's own radius.
+     */
+    public static int maxPlatformSearchRadius = 100;
     public static boolean craftableTownInterface = true;
     public static int maxTouristsPerTown = 1000;
     public static int populationPerTourist = 5;
@@ -147,6 +152,8 @@ public class ConfigLoader {
                 defaultStartingPopulation = config.getIntOrElse("general.defaultStartingPopulation", 5);
                 defaultBorderRadius = config.getIntOrElse("general.defaultBorderRadius", 50);
                 craftableTownInterface = config.getOrElse("general.craftableTownInterface", true);
+                int configuredMaxRadius = config.getIntOrElse("platforms.maxSearchRadius", 100);
+                maxPlatformSearchRadius = Math.max(1, configuredMaxRadius);
                 townNames = config.getOrElse("general.townNames", getDefaultTownNames());
 
                 // Vehicle settings
@@ -293,6 +300,12 @@ public class ConfigLoader {
                 config.setComment("general.craftableTownInterface", " When false: Town Interface is nearly indestructible in survival. Creative players can still break it. When true (default): block is craftable and breakable with diamond pickaxe or better.");
                 config.set("general.townNames", townNames);
                 config.setComment("general.townNames", " List of random town names for auto-naming");
+
+                config.set("platforms.maxSearchRadius", maxPlatformSearchRadius);
+                config.setComment("platforms.maxSearchRadius",
+                        " Highest search radius a platform may use, in blocks. Default 100. "
+                                + "Each platform still starts at 10 with spread 0. "
+                                + "Spread cannot exceed that platform's own search radius.");
 
                 // Vehicle settings
                 config.set("vehicles.enableCreateTrains", enableCreateTrains);
