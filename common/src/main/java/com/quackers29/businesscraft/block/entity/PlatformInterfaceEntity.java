@@ -209,6 +209,11 @@ public class PlatformInterfaceEntity extends BlockEntity {
     }
 
     private void writeLink(CompoundTag tag) {
+        writeLink(tag, townId, platformId, townCentre, active, inactiveReason);
+    }
+
+    public static void writeLink(CompoundTag tag, UUID townId, UUID platformId, BlockPos townCentre,
+            boolean active, String inactiveReason) {
         if (townId != null) {
             tag.putUUID("TownId", townId);
         }
@@ -227,17 +232,41 @@ public class PlatformInterfaceEntity extends BlockEntity {
     }
 
     private void readLink(CompoundTag tag) {
-        townId = tag.hasUUID("TownId") ? tag.getUUID("TownId") : null;
-        platformId = tag.hasUUID("PlatformId") ? tag.getUUID("PlatformId") : null;
-        if (tag.contains("TownX")) {
-            townCentre = new BlockPos(tag.getInt("TownX"), tag.getInt("TownY"), tag.getInt("TownZ"));
-        } else {
-            townCentre = null;
-        }
-        active = tag.getBoolean("Active");
-        inactiveReason = tag.contains("InactiveReason") ? tag.getString("InactiveReason") : null;
+        LinkRecord link = readLinkRecord(tag);
+        townId = link.townId;
+        platformId = link.platformId;
+        townCentre = link.townCentre;
+        active = link.active;
+        inactiveReason = link.inactiveReason;
+    }
+
+    public static LinkRecord readLinkRecord(CompoundTag tag) {
+        UUID townId = tag.hasUUID("TownId") ? tag.getUUID("TownId") : null;
+        UUID platformId = tag.hasUUID("PlatformId") ? tag.getUUID("PlatformId") : null;
+        BlockPos townCentre = tag.contains("TownX")
+                ? new BlockPos(tag.getInt("TownX"), tag.getInt("TownY"), tag.getInt("TownZ"))
+                : null;
+        boolean active = tag.getBoolean("Active");
+        String inactiveReason = tag.contains("InactiveReason") ? tag.getString("InactiveReason") : null;
         if (!active && inactiveReason == null) {
             inactiveReason = REASON_NOT_LINKED;
+        }
+        return new LinkRecord(townId, platformId, townCentre, active, inactiveReason);
+    }
+
+    public static final class LinkRecord {
+        public final UUID townId;
+        public final UUID platformId;
+        public final BlockPos townCentre;
+        public final boolean active;
+        public final String inactiveReason;
+
+        LinkRecord(UUID townId, UUID platformId, BlockPos townCentre, boolean active, String inactiveReason) {
+            this.townId = townId;
+            this.platformId = platformId;
+            this.townCentre = townCentre;
+            this.active = active;
+            this.inactiveReason = inactiveReason;
         }
     }
 }

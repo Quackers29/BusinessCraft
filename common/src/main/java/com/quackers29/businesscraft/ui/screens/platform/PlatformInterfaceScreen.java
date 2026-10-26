@@ -41,6 +41,10 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
     private static final int AQUA = 0xFF8FDBFF;
     private static final int GREEN = 0xFF7DFF7D;
     private static final int RED = 0xFFFFA3A3;
+    private static final int ON_BG = 0xFF8FDB9A;
+    private static final int ON_FG = 0xFF102816;
+    private static final int OFF_BG = 0xFFF0A3A3;
+    private static final int OFF_FG = 0xFF3A1216;
     private static final int LINE = 0xFF3A404C;
 
     private final List<Destination> destinations = new ArrayList<>();
@@ -178,13 +182,17 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
         int allowed = countAllowed();
         String dest = allowed == 0 ? "Any town" : allowed + (allowed == 1 ? " town" : " towns");
         int chipY = panelY + (tight ? 22 : 32);
+        String state = enabled ? "Enabled" : "Disabled";
         if (panelW < 360) {
-            String line = (enabled ? "Enabled" : "Disabled") + "   ·   " + (path ? "Path set" : "No path") + "   ·   " + dest;
-            graphics.drawString(this.font, fit(line, panelW - 28), panelX + 14, chipY + 4, MUTED, false);
+            chip(graphics, panelX + 14, chipY, state, enabled ? ON_FG : OFF_FG, enabled ? ON_BG : OFF_BG);
+            String rest = (path ? "Path set" : "No path") + "  ·  " + dest;
+            int stateW = this.font.width(state) + 14;
+            graphics.drawString(this.font, fit(rest, panelW - 28 - stateW), panelX + 14 + stateW, chipY + 4, MUTED, false);
         } else {
-            chip(graphics, panelX + 14, chipY, enabled ? "Enabled" : "Disabled", enabled ? GREEN : RED);
-            chip(graphics, panelX + 110, chipY, path ? "Path set" : "No path", path ? GREEN : GOLD);
-            chip(graphics, panelX + 200, chipY, dest, GOLD);
+            chip(graphics, panelX + 14, chipY, enabled ? "Enabled" : "Disabled",
+                    enabled ? ON_FG : OFF_FG, enabled ? ON_BG : OFF_BG);
+            chip(graphics, panelX + 110, chipY, path ? "Path set" : "No path", path ? GREEN : GOLD, SECTION);
+            chip(graphics, panelX + 200, chipY, dest, GOLD, SECTION);
         }
     }
 
@@ -204,12 +212,12 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
         return n;
     }
 
-    private void chip(GuiGraphics graphics, int x, int y, String text, int color) {
+    private void chip(GuiGraphics graphics, int x, int y, String text, int color, int background) {
         int w = this.font.width(text) + 10;
         if (x + w > panelX + panelW - 8) {
             return;
         }
-        graphics.fill(x, y, x + w, y + 16, SECTION);
+        graphics.fill(x, y, x + w, y + 16, background);
         graphics.drawString(this.font, text, x + 5, y + 4, color, false);
     }
 
@@ -229,16 +237,18 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
         int buttonH = panelH < 180 ? 16 : 20;
         int gap = tight ? 6 : 14;
         y = sectionTitle(graphics, x, y, "Platform");
-        control(graphics, "toggle", platform.isEnabled() ? "Disable platform" : "Enable platform",
-                x, y, Math.min(160, inner), buttonH, mouseX, mouseY, true);
+        boolean on = platform.isEnabled();
+        control(graphics, "toggle", on ? "Disable platform" : "Enable platform",
+                x, y, Math.min(180, inner), buttonH, mouseX, mouseY, true,
+                on ? ON_BG : OFF_BG, on ? ON_FG : OFF_FG);
         y += buttonH + gap;
         y = sectionTitle(graphics, x, y, "Path");
         graphics.drawString(this.font, fit(pathLine(platform), inner), x, y, MUTED, false);
         y += tight ? 12 : 14;
         int buttonW = Math.min(120, (inner - 8) / 2);
-        control(graphics, "set-path", "Set Path", x, y, buttonW, buttonH, mouseX, mouseY, true);
+        control(graphics, "set-path", "Set Path", x, y, buttonW, buttonH, mouseX, mouseY, true, 0, 0);
         control(graphics, "reset-path", "Reset", x + buttonW + 8, y, buttonW, buttonH, mouseX, mouseY,
-                platform.isComplete());
+                platform.isComplete(), 0, 0);
         y += buttonH + gap;
 
         y = sectionTitle(graphics, x, y, "Spawn");
@@ -277,7 +287,8 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
             graphics.drawString(this.font, label, x + 6, y + 7, WHITE, false);
             graphics.drawString(this.font, meta, x + inner - toggleW - 8 - this.font.width(meta), y + 7, MUTED, false);
             control(graphics, "dest:" + destination.id, destination.enabled ? "On" : "Off",
-                    x + inner - toggleW, y + 2, toggleW, rowH - 4, mouseX, mouseY, true);
+                    x + inner - toggleW, y + 2, toggleW, rowH - 4, mouseX, mouseY, true,
+                    destination.enabled ? ON_BG : OFF_BG, destination.enabled ? ON_FG : OFF_FG);
             y += rowH + 4;
         }
         return y + 8;
@@ -301,23 +312,40 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
             minusX = x + inner - buttonH * 2 - 8 - valueW - 8;
         }
         graphics.drawString(this.font, valueText, x + inner - buttonH * 2 - 16 - valueW, y + 6, AQUA, false);
-        control(graphics, id + "-minus", "−", x + inner - buttonH * 2 - 8, y, buttonH, buttonH, mouseX, mouseY, true);
-        control(graphics, id + "-plus", "+", x + inner - buttonH, y, buttonH, buttonH, mouseX, mouseY, true);
+        control(graphics, id + "-minus", "−", x + inner - buttonH * 2 - 8, y, buttonH, buttonH, mouseX, mouseY, true,
+                0, 0);
+        control(graphics, id + "-plus", "+", x + inner - buttonH, y, buttonH, buttonH, mouseX, mouseY, true,
+                0, 0);
         return y + buttonH;
     }
 
     private void control(GuiGraphics graphics, String id, String label, int x, int y, int w, int h,
-            int mouseX, int mouseY, boolean enabled) {
+            int mouseX, int mouseY, boolean enabled, int fill, int labelColor) {
         boolean hover = enabled && mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
-        int bg = !enabled ? 0xFF242830 : hover ? 0xFF3C4A62 : 0xFF2C3342;
+        boolean tinted = fill != 0;
+        int bg = !enabled ? 0xFF242830 : tinted ? (hover ? brighten(fill) : fill) : hover ? 0xFF3C4A62 : 0xFF2C3342;
         graphics.fill(x, y, x + w, y + h, bg);
-        graphics.fill(x, y, x + w, y + 1, enabled ? BORDER : 0xFF3A404C);
-        int color = enabled ? WHITE : 0xFF8A909A;
+        graphics.fill(x, y, x + w, y + 1, enabled ? (tinted ? darken(fill) : BORDER) : 0xFF3A404C);
+        int color = !enabled ? 0xFF8A909A : tinted ? labelColor : WHITE;
         int textW = this.font.width(label);
         graphics.drawString(this.font, label, x + (w - textW) / 2, y + (h - 8) / 2, color, false);
         if (enabled) {
             hits.add(new Hit(id, x, y - scroll, w, h));
         }
+    }
+
+    private static int brighten(int color) {
+        int r = Math.min(255, ((color >> 16) & 0xFF) + 24);
+        int g = Math.min(255, ((color >> 8) & 0xFF) + 24);
+        int b = Math.min(255, (color & 0xFF) + 24);
+        return 0xFF000000 | (r << 16) | (g << 8) | b;
+    }
+
+    private static int darken(int color) {
+        int r = Math.max(0, ((color >> 16) & 0xFF) - 40);
+        int g = Math.max(0, ((color >> 8) & 0xFF) - 40);
+        int b = Math.max(0, (color & 0xFF) - 40);
+        return 0xFF000000 | (r << 16) | (g << 8) | b;
     }
 
     private int drawWrapped(GuiGraphics graphics, String text, int x, int y, int width, int color, int maxLines) {

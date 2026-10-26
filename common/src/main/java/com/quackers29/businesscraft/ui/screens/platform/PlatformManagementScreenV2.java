@@ -50,21 +50,21 @@ public class PlatformManagementScreenV2 extends Screen {
     // Platform list section
     private static final int PLATFORM_LIST_X = SECTION_PADDING + 12;
     private static final int PLATFORM_LIST_Y = HEADER_HEIGHT + ELEMENT_SPACING;
-    private static final int PLATFORM_LIST_WIDTH = 500;
-    private static final int PLATFORM_LIST_HEIGHT = 150;
+    private static final int PLATFORM_LIST_WIDTH = 300;
+    private static final int PLATFORM_LIST_HEIGHT = 120;
 
     // UI Components
     private UIGridBuilder platformListGrid;
 
     // Screen dimensions
-    private int imageWidth = 540;
-    private int imageHeight = 250;
+    private int imageWidth = 340;
+    private int imageHeight = 200;
 
     // Enhanced color scheme matching Payment Board
-    private static final int SUCCESS_COLOR = 0xB0228B22; // Green for enabled
+    private static final int SUCCESS_COLOR = 0xFF8FDB9A; // Light green for enabled
     private static final int INFO_COLOR = 0xB0336699; // Blue for actions
     private static final int DANGER_COLOR = 0xB0CC2222; // Red for delete
-    private static final int DISABLED_COLOR = 0xA0666666; // Gray for disabled
+    private static final int DISABLED_COLOR = 0xFFF0A3A3; // Light red for disabled
     private static final int TEXT_COLOR = 0xFFFFFFFF; // White text
     private static final int HEADER_COLOR = 0xFFFCB821; // Gold for headers
     private static final int SECTION_BG_COLOR = 0x90000000; // Semi-transparent black
@@ -78,9 +78,8 @@ public class PlatformManagementScreenV2 extends Screen {
     @Override
     protected void init() {
         super.init();
-        int margin = 16;
-        this.imageWidth = Math.min(540, Math.max(300, this.width - margin));
-        this.imageHeight = Math.min(260, Math.max(190, this.height - margin));
+        this.imageWidth = Math.min(340, Math.max(220, this.width - 8));
+        this.imageHeight = Math.min(200, Math.max(120, this.height - 8));
 
         // Initialize platform list grid
         initializePlatformListGrid();
@@ -119,13 +118,13 @@ public class PlatformManagementScreenV2 extends Screen {
 
     private void initializePlatformListGrid() {
         // Create grid similar to Payment Board pattern
-        int listWidth = Math.max(220, imageWidth - PLATFORM_LIST_X - 16);
-        int listHeight = Math.max(70, imageHeight - PLATFORM_LIST_Y - 36);
+        int listWidth = Math.min(PLATFORM_LIST_WIDTH, Math.max(200, imageWidth - PLATFORM_LIST_X - 16));
+        int listHeight = Math.min(PLATFORM_LIST_HEIGHT, Math.max(60, imageHeight - PLATFORM_LIST_Y - 16));
         platformListGrid = UIGridBuilder.create(
                 PLATFORM_LIST_X, PLATFORM_LIST_Y + 5,
                 listWidth - 8, listHeight - 10,
                 6) // Status, Name, State, Path, Destinations, Position
-                .withColumnWeights(new float[] {0.05f, 0.18f, 0.16f, 0.20f, 0.16f, 0.25f})
+                .withColumnWeights(new float[] {0.06f, 0.20f, 0.18f, 0.18f, 0.18f, 0.20f})
                 .withRowHeight(18)
                 .withSpacing(4, 3) // Back to normal spacing
                 .withMargins(4, 2) // Reduced vertical margin from 4 to 2 to fit more rows
@@ -277,59 +276,6 @@ public class PlatformManagementScreenV2 extends Screen {
                 : "Platforms (" + platforms.size() + ")  ·  read only";
         guiGraphics.drawString(this.font, headerText,
                 x + PLATFORM_LIST_X + 6, y + PLATFORM_LIST_Y - 12, HEADER_COLOR);
-
-        String waiting = resolveWaitingSummary();
-        String recent = resolveRecentArrivalsSummary();
-        int lineY = y + imageHeight - 24;
-        int textX = x + 8;
-        int maxText = imageWidth - 16;
-        guiGraphics.fill(x + 4, lineY - 3, x + imageWidth - 4, y + imageHeight - 4, 0xF0101218);
-        guiGraphics.drawString(this.font, fitFooter("Waiting: " + waiting, maxText),
-                textX, lineY, 0xFFE8E8E8);
-        guiGraphics.drawString(this.font, fitFooter("Recent: " + recent, maxText),
-                textX, lineY + 11, 0xFFD0D0D0);
-    }
-
-    private String fitFooter(String text, int maxWidth) {
-        if (text == null) {
-            return "";
-        }
-        if (this.font.width(text) <= maxWidth) {
-            return text;
-        }
-        String ellipsis = "…";
-        int room = maxWidth - this.font.width(ellipsis);
-        if (room <= 0) {
-            return ellipsis;
-        }
-        return this.font.plainSubstrByWidth(text, room) + ellipsis;
-    }
-
-    private String resolveWaitingSummary() {
-        com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel vm = loadInterfaceViewModel();
-        return vm != null ? vm.getWaitingTouristsSummary() : "—";
-    }
-
-    private String resolveRecentArrivalsSummary() {
-        com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel vm = loadInterfaceViewModel();
-        return vm != null ? vm.getRecentArrivalsSummary() : "—";
-    }
-
-    private com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel loadInterfaceViewModel() {
-        com.quackers29.businesscraft.api.ClientHelper clientHelper = PlatformAccess.getClient();
-        if (clientHelper == null) {
-            return null;
-        }
-        Object levelObj = clientHelper.getClientLevel();
-        if (!(levelObj instanceof Level level)) {
-            return null;
-        }
-        BlockEntity be = level.getBlockEntity(townBlockPos);
-        if (be instanceof TownInterfaceEntity townInterface) {
-            return townInterface.getVmCache()
-                    .get(com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel.class);
-        }
-        return null;
     }
 
     @Override

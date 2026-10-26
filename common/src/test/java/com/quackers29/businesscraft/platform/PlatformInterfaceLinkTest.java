@@ -1,10 +1,16 @@
 package com.quackers29.businesscraft.platform;
 
 import com.quackers29.businesscraft.api.ITouristHelper;
-import com.quackers29.businesscraft.platform.PlatformSpawn;
+import com.quackers29.businesscraft.block.entity.PlatformInterfaceEntity;
+import com.quackers29.businesscraft.config.ConfigLoader;
+import com.quackers29.businesscraft.network.packets.platform.SetPlatformAreaPacket;
+import com.quackers29.businesscraft.network.packets.ui.TownPlatformDataResponsePacket;
 import com.quackers29.businesscraft.town.data.PlatformManager;
+import io.netty.buffer.Unpooled;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.FriendlyByteBuf;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -225,5 +231,218 @@ class PlatformInterfaceLinkTest {
         assertEquals(townId, PlatformTouristCleanup.originTownId(tags));
         assertNull(PlatformTouristCleanup.originTownId(Set.of("from_town_not-a-uuid")));
         assertEquals(0, PlatformTouristCleanup.dismissLoaded(null, platformId));
+    }
+
+    @Test
+    void persistence_roundTripsEveryPlatformField() {
+        UUID destOn = DEST;
+        UUID destOff = UUID.fromString("22222222-2222-2222-2222-222222222222");
+        PlatformManager manager = new PlatformManager();
+        BlockPos interfacePos = new BlockPos(12, 70, -8);
+        UUID id = manager.addInterfacePlatform(interfacePos);
+        Platform platform = manager.getPlatform(id);
+        platform.setName("North Gate");
+        platform.setEnabled(false);
+        platform.setStartPos(new BlockPos(12, 70, -6));
+        platform.setEndPos(new BlockPos(18, 71, 2));
+        platform.enableDestination(destOn);
+        platform.enableDestination(destOff);
+        platform.disableDestination(destOff);
+        platform.setSearchRadius(25);
+        platform.setSpread(7);
+
+        CompoundTag saved = new CompoundTag();
+        manager.saveToNBT(saved);
+        CompoundTag raw = saved.getList("platforms", Tag.TAG_COMPOUND).getCompound(0);
+        assertEquals(id, raw.getUUID("Id"));
+        assertEquals("North Gate", raw.getString("Name"));
+        assertFalse(raw.getBoolean("Enabled"));
+        assertEquals(25, raw.getInt("SearchRadius"));
+        assertEquals(7, raw.getInt("Spread"));
+        assertEquals(12, raw.getInt("InterfaceX"));
+        assertEquals(70, raw.getInt("InterfaceY"));
+        assertEquals(-8, raw.getInt("InterfaceZ"));
+        assertEquals(1, raw.getCompound("Destinations").getInt("Count"));
+
+        PlatformManager loaded = new PlatformManager();
+        loaded.loadFromNBT(saved);
+        Platform again = loaded.getPlatform(id);
+        assertEquals(id, again.getId());
+        assertEquals("North Gate", again.getName());
+        assertFalse(again.isEnabled());
+        assertEquals(new BlockPos(12, 70, -6), again.getStartPos());
+        assertEquals(new BlockPos(18, 71, 2), again.getEndPos());
+        assertEquals(interfacePos, again.getInterfacePos());
+        assertTrue(again.isDestinationEnabled(destOn));
+        assertFalse(again.isDestinationEnabled(destOff));
+        assertEquals(Set.of(destOn), again.getEnabledDestinations());
+        assertEquals(25, again.getSearchRadius());
+        assertEquals(7, again.getSpread());
+    }
+
+    @Test
+    void loadAndSetters_clampRadiusAndSpreadToTheConfiguredMax() {
+        int savedMax = ConfigLoader.maxPlatformSearchRadius;
+        try {
+            ConfigLoader.maxPlatformSearchRadius = 40;
+            CompoundTag tag = new CompoundTag();
+            UUID id = UUID.fromString("dddddddd-dddd-dddd-dddd-dddddddddddd");
+            tag.putUUID("Id", id);
+            tag.putString("Name", "Wide");
+            tag.putBoolean("Enabled", true);
+            tag.putInt("StartX", 4);
+            tag.putInt("StartY", 64);
+            tag.putInt("StartZ", 1);
+            tag.putInt("EndX", 9);
+            tag.putInt("EndY", 64);
+            tag.putInt("EndZ", 1);
+            tag.putInt("InterfaceX", 4);
+            tag.putInt("InterfaceY", 64);
+            tag.putInt("InterfaceZ", 0);
+            tag.putInt("SearchRadius", 90);
+            tag.putInt("Spread", 55);
+            CompoundTag destinations = new CompoundTag();
+            destinations.putInt("Count", 1);
+            destinations.putUUID("Dest0", DEST);
+            tag.put("Destinations", destinations);
+
+            Platform loaded = Platform.fromNBT(tag);
+            assertEquals(40, loaded.getSearchRadius());
+            assertEquals(40, loaded.getSpread());
+            assertEquals(new BlockPos(4, 64, 1), loaded.getStartPos());
+            assertEquals(new BlockPos(9, 64, 1), loaded.getEndPos());
+            assertEquals(new BlockPos(4, 64, 0), loaded.getInterfacePos());
+            assertTrue(loaded.isDestinationEnabled(DEST));
+
+            loaded.setSearchRadius(200);
+            loaded.setSpread(80);
+            assertEquals(40, loaded.getSearchRadius());
+            assertEquals(40, loaded.getSpread());
+            CompoundTag written = loaded.save();
+            assertEquals(40, written.getInt("SearchRadius"));
+            assertEquals(40, written.getInt("Spread"));
+
+            ConfigLoader.maxPlatformSearchRadius = 100;
+            Platform remembered = new Platform(id);
+            remembered.setSearchRadius(80);
+            remembered.setSpread(30);
+            ConfigLoader.maxPlatformSearchRadius = 20;
+            assertEquals(20, remembered.getSearchRadius());
+            assertEquals(20, remembered.getSpread());
+            assertEquals(20, remembered.save().getInt("SearchRadius"));
+            assertEquals(20, remembered.save().getInt("Spread"));
+        } finally {
+            ConfigLoader.maxPlatformSearchRadius = savedMax;
+        }
+    }
+
+    @Test
+    void syncPacket_roundTripsEveryField_andClientRestoreClamps() {
+        int savedMax = ConfigLoader.maxPlatformSearchRadius;
+        try {
+            UUID platformId = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc");
+            UUID destOff = UUID.fromString("22222222-2222-2222-2222-222222222222");
+            BlockPos start = new BlockPos(3, 64, 5);
+            BlockPos end = new BlockPos(9, 64, 5);
+            BlockPos interfacePos = new BlockPos(3, 64, 1);
+
+            TownPlatformDataResponsePacket packet = new TownPlatformDataResponsePacket(TOWN_A);
+            packet.setTownInfo("Hillcrest", 12, 4, 50);
+            packet.addPlatform(platformId, "North Gate", false, start, end, Set.of(DEST), 25, 7, interfacePos);
+
+            FriendlyByteBuf buf = new FriendlyByteBuf(Unpooled.buffer());
+            packet.encode(buf);
+            TownPlatformDataResponsePacket decoded = TownPlatformDataResponsePacket.decode(buf);
+            assertEquals(TOWN_A, decoded.getTownId());
+            assertEquals("Hillcrest", decoded.getTownInfo().name);
+            assertEquals(12, decoded.getTownInfo().population);
+            assertEquals(4, decoded.getTownInfo().touristCount);
+            assertEquals(50, decoded.getTownInfo().boundaryRadius);
+            TownPlatformDataResponsePacket.PlatformInfo info = decoded.getPlatforms().get(platformId);
+            assertEquals("North Gate", info.name);
+            assertFalse(info.enabled);
+            assertEquals(start, info.startPos);
+            assertEquals(end, info.endPos);
+            assertEquals(Set.of(DEST), info.enabledDestinations);
+            assertFalse(info.enabledDestinations.contains(destOff));
+            assertEquals(25, info.searchRadius);
+            assertEquals(7, info.spread);
+            assertEquals(interfacePos, info.interfacePos);
+
+            BlockPos centre = new BlockPos(8, 65, 2);
+            SetPlatformAreaPacket area = new SetPlatformAreaPacket(centre, platformId, 90, 55);
+            FriendlyByteBuf areaBuf = new FriendlyByteBuf(Unpooled.buffer());
+            area.encode(areaBuf);
+            assertEquals(centre, areaBuf.readBlockPos());
+            assertEquals(platformId, areaBuf.readUUID());
+            assertEquals(90, areaBuf.readInt());
+            assertEquals(55, areaBuf.readInt());
+            assertFalse(areaBuf.isReadable());
+
+            ConfigLoader.maxPlatformSearchRadius = 15;
+            TownPlatformDataResponsePacket oversized = new TownPlatformDataResponsePacket(TOWN_A);
+            oversized.addPlatform(platformId, "North Gate", true, start, end, Set.of(DEST), 90, 55, interfacePos);
+            FriendlyByteBuf raw = new FriendlyByteBuf(Unpooled.buffer());
+            oversized.encode(raw);
+            TownPlatformDataResponsePacket.PlatformInfo wide = TownPlatformDataResponsePacket.decode(raw)
+                    .getPlatforms().get(platformId);
+            Platform restored = new Platform(wide.id);
+            restored.setName(wide.name);
+            restored.setEnabled(wide.enabled);
+            restored.setStartPos(wide.startPos);
+            restored.setEndPos(wide.endPos);
+            restored.setSearchRadius(wide.searchRadius);
+            restored.setSpread(wide.spread);
+            restored.setInterfacePos(wide.interfacePos);
+            for (UUID destination : wide.enabledDestinations) {
+                restored.enableDestination(destination);
+            }
+            assertEquals(15, restored.getSearchRadius());
+            assertEquals(15, restored.getSpread());
+            Platform fromDisk = Platform.fromNBT(restored.toNBT());
+            assertEquals(platformId, fromDisk.getId());
+            assertEquals("North Gate", fromDisk.getName());
+            assertTrue(fromDisk.isEnabled());
+            assertEquals(start, fromDisk.getStartPos());
+            assertEquals(end, fromDisk.getEndPos());
+            assertEquals(interfacePos, fromDisk.getInterfacePos());
+            assertEquals(Set.of(DEST), fromDisk.getEnabledDestinations());
+            assertEquals(15, fromDisk.getSearchRadius());
+            assertEquals(15, fromDisk.getSpread());
+        } finally {
+            ConfigLoader.maxPlatformSearchRadius = savedMax;
+        }
+    }
+
+    @Test
+    void interfaceLink_roundTripsTownPlatformCentreAndState() {
+        UUID platformId = UUID.fromString("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee");
+        BlockPos centre = new BlockPos(4, 64, 9);
+        CompoundTag tag = new CompoundTag();
+        PlatformInterfaceEntity.writeLink(tag, TOWN_A, platformId, centre, false,
+                "businesscraft.platform_interface.too_close");
+
+        PlatformInterfaceEntity.LinkRecord link = PlatformInterfaceEntity.readLinkRecord(tag);
+        assertEquals(TOWN_A, link.townId);
+        assertEquals(platformId, link.platformId);
+        assertEquals(centre, link.townCentre);
+        assertFalse(link.active);
+        assertEquals("businesscraft.platform_interface.too_close", link.inactiveReason);
+
+        CompoundTag active = new CompoundTag();
+        PlatformInterfaceEntity.writeLink(active, TOWN_B, platformId, centre, true, null);
+        PlatformInterfaceEntity.LinkRecord linked = PlatformInterfaceEntity.readLinkRecord(active);
+        assertTrue(linked.active);
+        assertNull(linked.inactiveReason);
+        assertEquals(TOWN_B, linked.townId);
+
+        CompoundTag bare = new CompoundTag();
+        bare.putBoolean("Active", false);
+        PlatformInterfaceEntity.LinkRecord missing = PlatformInterfaceEntity.readLinkRecord(bare);
+        assertFalse(missing.active);
+        assertEquals(PlatformInterfaceEntity.REASON_NOT_LINKED, missing.inactiveReason);
+        assertNull(missing.townId);
+        assertNull(missing.platformId);
+        assertNull(missing.townCentre);
     }
 }
