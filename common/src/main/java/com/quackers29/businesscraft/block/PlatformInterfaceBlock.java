@@ -31,6 +31,8 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.AABB;
@@ -51,6 +53,8 @@ import java.util.UUID;
  */
 public class PlatformInterfaceBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
+    /** Sign lamp. On while the interface is linked and its platform is enabled. */
+    public static final BooleanProperty LIT = BlockStateProperties.LIT;
     /** Cabinet, ticket tray, roof, and sign lamp. North is the unrotated model, front toward -Z. */
     private static final VoxelShape NORTH_SHAPE = Shapes.or(
             Block.box(2, 0, 1, 14, 13.8, 14),
@@ -59,12 +63,14 @@ public class PlatformInterfaceBlock extends BaseEntityBlock {
 
     public PlatformInterfaceBlock(Properties properties) {
         super(properties);
-        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
+        this.registerDefaultState(this.stateDefinition.any()
+                .setValue(FACING, Direction.NORTH)
+                .setValue(LIT, true));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING);
+        builder.add(FACING, LIT);
     }
 
     @Nullable

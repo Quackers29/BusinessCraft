@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import com.quackers29.businesscraft.block.entity.PlatformInterfaceEntity;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.network.packets.platform.RefreshPlatformsPacket;
@@ -77,6 +78,13 @@ public class SetPlatformEnabledPacket {
                 if (platform != null) {
                     // Update enabled state
                     platform.setEnabled(enabled);
+                    if (level instanceof ServerLevel serverLevel && platform.getInterfacePos() != null) {
+                        BlockPos interfacePos = platform.getInterfacePos();
+                        serverLevel.getChunkAt(interfacePos);
+                        if (serverLevel.getBlockEntity(interfacePos) instanceof PlatformInterfaceEntity platformInterface) {
+                            platformInterface.syncLamp();
+                        }
+                    }
                     DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 
                         "Player {} is setting platform {} enabled state to {} at {}", 
                         player.getName().getString(), platformId, enabled, blockPos);

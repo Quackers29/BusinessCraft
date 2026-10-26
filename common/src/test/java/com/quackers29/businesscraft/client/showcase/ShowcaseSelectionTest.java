@@ -60,6 +60,13 @@ class ShowcaseSelectionTest {
     }
 
     @Test
+    void lampScene_isTheLitAndDarkSign() {
+        assertEquals(
+                List.of("warmup", "platform_lamp_on", "platform_lamp_off"),
+                ShowcaseSelection.shotsFor("lamp"));
+    }
+
+    @Test
     void kioskScene_showsTheMachineAndItsPath() {
         assertEquals(
                 List.of("warmup", "platform_front", "platform_side", "platform_rail", "platform_hand",

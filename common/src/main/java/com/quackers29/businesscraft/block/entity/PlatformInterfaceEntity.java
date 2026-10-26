@@ -1,7 +1,9 @@
 package com.quackers29.businesscraft.block.entity;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.block.PlatformInterfaceBlock;
 import com.quackers29.businesscraft.platform.Platform;
+import com.quackers29.businesscraft.platform.PlatformLamp;
 import com.quackers29.businesscraft.platform.PlatformTouristCleanup;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
@@ -14,6 +16,7 @@ import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -56,6 +59,7 @@ public class PlatformInterfaceEntity extends BlockEntity {
         this.active = true;
         this.inactiveReason = null;
         syncToClients();
+        syncLamp();
     }
 
     public UUID getTownId() {
@@ -87,6 +91,7 @@ public class PlatformInterfaceEntity extends BlockEntity {
             syncToClients();
             announce(reason);
         }
+        syncLamp();
     }
 
     public void markActive() {
@@ -94,6 +99,28 @@ public class PlatformInterfaceEntity extends BlockEntity {
             active = true;
             inactiveReason = null;
             syncToClients();
+        }
+        syncLamp();
+    }
+
+    /**
+     * Matches the sign lamp to the link and the platform's enabled flag, and sends the block state
+     * to clients. Inactive interfaces, including those whose Town Centre was removed, stay dark.
+     */
+    public void syncLamp() {
+        if (!(level instanceof ServerLevel server)) {
+            return;
+        }
+        boolean enabled = false;
+        if (active && platformId != null && townCentre != null
+                && server.getBlockEntity(townCentre) instanceof TownInterfaceEntity town) {
+            Platform platform = town.getPlatform(platformId);
+            enabled = platform != null && platform.isEnabled();
+        }
+        boolean lit = PlatformLamp.isLit(active, enabled);
+        BlockState state = getBlockState();
+        if (state.hasProperty(PlatformInterfaceBlock.LIT) && state.getValue(PlatformInterfaceBlock.LIT) != lit) {
+            server.setBlock(worldPosition, state.setValue(PlatformInterfaceBlock.LIT, lit), Block.UPDATE_ALL);
         }
     }
 
@@ -128,8 +155,11 @@ public class PlatformInterfaceEntity extends BlockEntity {
         if (townId == null || platformId == null) {
             if (active) {
                 markInactive(REASON_NOT_LINKED);
-            } else if (inactiveReason == null) {
-                inactiveReason = REASON_NOT_LINKED;
+            } else {
+                if (inactiveReason == null) {
+                    inactiveReason = REASON_NOT_LINKED;
+                }
+                syncLamp();
             }
             return;
         }
@@ -142,6 +172,9 @@ public class PlatformInterfaceEntity extends BlockEntity {
             townCentre = town.getPosition().immutable();
         }
         if (!(level.getBlockEntity(townCentre) instanceof TownInterfaceEntity townEntity)) {
+            if (!active) {
+                syncLamp();
+            }
             return;
         }
         PlatformManager.RelinkResult result = townEntity.relinkPlatform(platformId, getBlockPos());

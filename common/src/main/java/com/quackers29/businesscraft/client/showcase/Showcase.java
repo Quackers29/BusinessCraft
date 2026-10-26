@@ -1,7 +1,10 @@
 package com.quackers29.businesscraft.client.showcase;
 
 import com.quackers29.businesscraft.block.TownInterfaceBlock;
+import com.quackers29.businesscraft.block.entity.PlatformInterfaceEntity;
+import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.init.CommonModBlocks;
+import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.ui.screens.platform.PlatformInterfaceScreen;
 import com.quackers29.businesscraft.ui.screens.platform.PlatformManagementScreenV2;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
@@ -245,7 +248,7 @@ public final class Showcase {
 
     private static int pauseFor(String name) {
         if ("town_overview".equals(name) || "platform_interface_screen".equals(name)
-                || "platform_overview".equals(name)) {
+                || "platform_overview".equals(name) || name.startsWith("platform_lamp_")) {
             return 50;
         }
         if ("platform_interface".equals(name) || name.startsWith("platform_") || "town_paths".equals(name)) {
@@ -336,7 +339,8 @@ public final class Showcase {
         BlockPos pos = townPos;
         boolean machineShot = "platform_interface".equals(shot.name) || "platform_front".equals(shot.name)
                 || "platform_side".equals(shot.name) || "platform_rail".equals(shot.name)
-                || "platform_hand".equals(shot.name) || "platform_path".equals(shot.name);
+                || "platform_hand".equals(shot.name) || "platform_path".equals(shot.name)
+                || shot.name.startsWith("platform_lamp_");
         BlockPos lookAt = machineShot ? ShowcasePlatforms.interfacePos(pos) : pos;
         if ("platform_path".equals(shot.name) && lookAt != null) {
             lookAt = lookAt.north(4);
@@ -354,6 +358,7 @@ public final class Showcase {
             case "platform_side" -> target.add(2.45, 0.7, 0.7);
             case "platform_rail" -> target.add(1.9, 1.15, 2.35);
             case "platform_hand" -> target.add(0.15, 0.85, 2.05);
+            case "platform_lamp_on", "platform_lamp_off" -> target.add(0.2, 1.15, 2.55);
             case "platform_path" -> Vec3.atCenterOf(ShowcasePlatforms.interfacePos(pos)).add(1.65, 1.45, 2.2);
             case "town_paths" -> Vec3.atCenterOf(pos).add(8.0, 9.5, 13.0);
             case "town_interface", "warmup" -> target.add(1.8, 1.6, 3.2);
@@ -376,6 +381,10 @@ public final class Showcase {
             server.execute(() -> {
                 ServerPlayer serverPlayer = server.getPlayerList().getPlayer(player.getUUID());
                 if (serverPlayer != null) {
+                    if (shot.name.startsWith("platform_lamp_")) {
+                        serverPlayer.serverLevel().setDayTime(18000);
+                        applyLamp(serverPlayer.serverLevel(), "platform_lamp_on".equals(shot.name));
+                    }
                     if ("platform_hand".equals(shot.name)) {
                         serverPlayer.setGameMode(GameType.CREATIVE);
                         serverPlayer.setItemInHand(InteractionHand.MAIN_HAND,
@@ -387,6 +396,26 @@ public final class Showcase {
                     serverPlayer.setYHeadRot(facing[0]);
                 }
             });
+        }
+    }
+
+    /** Night shots of the sign lamp, driven through the same enabled-flag sync the screen uses. */
+    private static void applyLamp(ServerLevel level, boolean enabled) {
+        BlockPos town = townPos;
+        BlockPos machine = ShowcasePlatforms.interfacePos(town);
+        if (town == null || machine == null) {
+            return;
+        }
+        if (level.getBlockEntity(town) instanceof TownInterfaceEntity townEntity
+                && ShowcasePlatforms.firstPlatformId() != null) {
+            Platform platform = townEntity.getPlatform(ShowcasePlatforms.firstPlatformId());
+            if (platform != null) {
+                platform.setEnabled(enabled);
+                townEntity.setChanged();
+            }
+        }
+        if (level.getBlockEntity(machine) instanceof PlatformInterfaceEntity entity) {
+            entity.syncLamp();
         }
     }
 

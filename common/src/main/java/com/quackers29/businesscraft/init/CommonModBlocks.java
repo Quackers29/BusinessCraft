@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.init;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.PlatformInterfaceBlock;
 import com.quackers29.businesscraft.block.TownInterfaceBlock;
+import com.quackers29.businesscraft.platform.PlatformLamp;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
@@ -29,7 +30,7 @@ public class CommonModBlocks {
                         .mapColor(MapColor.METAL)
                         .strength(3.5f, 6.0f)
                         .sound(SoundType.METAL)
-                        .lightLevel(state -> 10)
+                        .lightLevel(state -> PlatformLamp.emission(state.getValue(PlatformInterfaceBlock.LIT)))
                         .requiresCorrectToolForDrops()));
 
         PlatformAccess.getRegistry().registerBlockItem("platform_interface", PLATFORM_INTERFACE_BLOCK::get);
