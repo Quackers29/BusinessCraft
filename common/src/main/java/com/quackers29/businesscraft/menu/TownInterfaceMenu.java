@@ -412,26 +412,6 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     }
 
     /**
-     * Adds a new platform to the town block entity
-     * 
-     * @return true if the platform was added successfully
-     */
-    public boolean addPlatform() {
-        // Platforms are created by placing a Platform Interface block, not from this menu.
-        return false;
-    }
-
-    /**
-     * Removes a platform by ID
-     * 
-     * @param platformId The UUID of the platform to remove
-     * @return true if the platform was removed successfully
-     */
-    public boolean removePlatform(UUID platformId) {
-        return false;
-    }
-
-    /**
      * Gets a specific platform by ID
      * 
      * @param platformId The UUID of the platform to get

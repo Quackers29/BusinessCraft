@@ -297,7 +297,7 @@ public class ConfigLoader {
                 config.set("general.defaultBorderRadius", defaultBorderRadius);
                 config.setComment("general.defaultBorderRadius", " Default town boundary radius in blocks when no border modifier is set. Also used for new-town placement spacing.");
                 config.set("general.craftableTownInterface", craftableTownInterface);
-                config.setComment("general.craftableTownInterface", " When false: Town Interface is nearly indestructible in survival. Creative players can still break it. When true (default): block is craftable and breakable with diamond pickaxe or better.");
+                config.setComment("general.craftableTownInterface", " When false: Town Centre is nearly indestructible in survival. Creative players can still break it. When true (default): block is craftable and breakable.");
                 config.set("general.townNames", townNames);
                 config.setComment("general.townNames", " List of random town names for auto-naming");
 

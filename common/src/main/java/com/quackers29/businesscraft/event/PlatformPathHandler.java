@@ -77,7 +77,8 @@ public class PlatformPathHandler {
             if (!awaitingSecondClick) {
                 townInterface.setPlatformPathStart(activePlatformId, clickedPos);
                 player.sendSystemMessage(
-                    Component.literal("Platform start point set! Now click to set the end point.")
+                    Component.translatable("businesscraft.platform_path_start_set",
+                            clickedPos.getX(), clickedPos.getY(), clickedPos.getZ())
                         .withStyle(ChatFormatting.YELLOW)
                 );
                 awaitingSecondClick = true;
@@ -94,7 +95,8 @@ public class PlatformPathHandler {
                 }
                 
                 player.sendSystemMessage(
-                    Component.literal("Platform path created!")
+                    Component.translatable("businesscraft.platform_path_end_set",
+                            clickedPos.getX(), clickedPos.getY(), clickedPos.getZ())
                         .withStyle(ChatFormatting.GREEN)
                 );
                 
@@ -133,8 +135,8 @@ public class PlatformPathHandler {
         double distance = Math.sqrt(pos.distSqr(townInterface.getBlockPos()));
         
         if (distance > boundaryRadius) {
-            return String.format("Point too far from town! Distance: %.1f blocks, Town boundary: %d blocks (Population: %d)", 
-                distance, boundaryRadius, town.getPopulation());
+            return String.format("Point too far from town! Distance: %.1f blocks, town boundary: %d blocks",
+                distance, boundaryRadius);
         }
         
         LOGGER.debug("Platform point validated: distance={}, boundary={}, population={}", 

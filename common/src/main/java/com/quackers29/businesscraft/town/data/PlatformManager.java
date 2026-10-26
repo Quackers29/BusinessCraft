@@ -74,9 +74,10 @@ public class PlatformManager {
     }
 
     /**
-     * Adds a new platform
-     * 
-     * @return true if added successfully, false if at max capacity
+     * Test helper. Places a platform at a synthetic position spaced from the others.
+     * Players add a platform by placing a Platform Interface block, which calls {@link #addInterfacePlatform}.
+     *
+     * @return true if added successfully, false if at max capacity or too close
      */
     public boolean addPlatform() {
         BlockPos pos = new BlockPos(platforms.size() * com.quackers29.businesscraft.platform.PlatformPlacement.MIN_SEPARATION, 0, 0);

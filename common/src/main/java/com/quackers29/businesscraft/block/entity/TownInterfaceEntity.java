@@ -1226,16 +1226,7 @@ public ViewModelCache getVmCache() {
     }
 
     /**
-     * Adds a new platform
-     * 
-     * @return true if added successfully, false if at max capacity
-     */
-    public boolean addPlatform() {
-        return platformManager.addPlatform();
-    }
-
-    /**
-     * Removes a platform by ID
+     * Removes a platform by ID. Players remove a platform by breaking its Platform Interface.
      */
     public boolean removePlatform(UUID platformId) {
         boolean removed = platformManager.removePlatform(platformId);
