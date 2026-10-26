@@ -29,7 +29,11 @@ class ShowcaseSelectionTest {
         assertTrue(ShowcaseSelection.touristScreenMode("tourist-screen"));
         assertEquals(List.of(), ShowcaseSelection.shotsFor("tourist-screen"));
         assertEquals(19, ShowcaseRouteRegistry.allRoutes().size());
-        assertEquals(4, ShowcaseRouteRegistry.touristScreenRoutes().size());
+        assertEquals(5, ShowcaseRouteRegistry.touristScreenRoutes().size());
+        assertTrue(ShowcaseRouteRegistry.touristScreenRoutes().stream()
+                .anyMatch(route -> "tourist/scrolled".equals(route.name())));
+        assertTrue(ShowcaseRouteRegistry.allRoutes().stream()
+                .noneMatch(route -> "tourist/scrolled".equals(route.name())));
     }
 
     @Test

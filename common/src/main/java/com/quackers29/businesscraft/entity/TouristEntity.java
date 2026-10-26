@@ -37,7 +37,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
+import net.minecraft.world.phys.AABB;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.entity.tourist.TouristAppearance;
 import com.quackers29.businesscraft.entity.tourist.TouristLook;
@@ -120,6 +123,12 @@ public class TouristEntity extends Villager {
     /** Look id saved beside the packed int so reloads stay readable. Not synced. */
     private String lookId = "";
 
+    /**
+     * Personal name, saved in NBT. The vanilla custom name is kept in step with it
+     * so the client can draw the name tag. Empty until {@link #ensurePersonalName()}.
+     */
+    private String personalName = "";
+
     public TouristEntity(EntityType<? extends Villager> entityType, Level level) {
         super(entityType, level);
         this.spawnTime = level.getGameTime();
@@ -159,7 +168,6 @@ public class TouristEntity extends Villager {
 
         assignSpawnVariety();
         refreshSyncedLabels();
-        this.setCustomName(Component.literal("Tourist"));
         this.setCustomNameVisible(true);
 
         PlatformAccess.getTouristHelper().addStandardTouristTags(
@@ -208,6 +216,9 @@ public class TouristEntity extends Villager {
         super.tick();
         if (!this.level().isClientSide && this.getLookPacked() == TouristAppearance.UNSET) {
             this.assignLook();
+        }
+        if (!this.level().isClientSide) {
+            this.ensurePersonalName();
         }
 
         if (!hasMoved && !this.level().isClientSide) {
@@ -400,7 +411,78 @@ public class TouristEntity extends Villager {
     }
 
     public String getLookId() {
-        return this.lookId == null ? "" : this.lookId;
+        if (this.lookId != null && !this.lookId.isBlank()) {
+            return this.lookId;
+        }
+        int packed = this.getLookPacked();
+        if (packed == TouristAppearance.UNSET) {
+            return "";
+        }
+        for (TouristLook look : TouristLooks.all()) {
+            if (look.packed() == packed) {
+                return look.id();
+            }
+        }
+        return "";
+    }
+
+    public String getPersonalName() {
+        if (!TouristNames.isPlaceholder(this.personalName)) {
+            return this.personalName;
+        }
+        Component custom = this.getCustomName();
+        if (custom != null) {
+            String text = custom.getString().trim();
+            if (!TouristNames.isPlaceholder(text)) {
+                return text;
+            }
+        }
+        return this.personalName == null ? "" : this.personalName;
+    }
+
+    public void setPersonalName(String name) {
+        this.personalName = name == null ? "" : name.trim();
+        if (!TouristNames.isPlaceholder(this.personalName)) {
+            this.setCustomName(Component.literal(this.personalName));
+        }
+    }
+
+    /**
+     * Gives a saved tourist a name the first time the server sees them without one.
+     * A real custom name already on the entity (not the old "Tourist" label) is kept.
+     * Nearby tourists are skipped so a platform does not fill up with the same name.
+     */
+    public void ensurePersonalName() {
+        if (this.level().isClientSide || !TouristNames.isPlaceholder(this.personalName)) {
+            return;
+        }
+        Component custom = this.getCustomName();
+        if (custom != null && !TouristNames.isPlaceholder(custom.getString())) {
+            this.setPersonalName(custom.getString());
+            return;
+        }
+        Set<String> full = new HashSet<>();
+        Set<String> first = new HashSet<>();
+        AABB box = this.getBoundingBox().inflate(TouristNames.NEARBY_BLOCKS);
+        for (TouristEntity other : this.level().getEntitiesOfClass(TouristEntity.class, box, entity -> entity != this)) {
+            String nearby = other.getPersonalName();
+            if (!TouristNames.isPlaceholder(nearby)) {
+                full.add(nearby);
+                first.add(TouristNames.firstOf(nearby));
+            }
+        }
+        this.setPersonalName(TouristNames.pick(this.getRandom()::nextInt, full, first));
+    }
+
+    /**
+     * Pins the journey and the waiting time shown on the tourist screen.
+     * Seconds are stored as the spawn timestamp and the expiry countdown.
+     */
+    public void applyScreenClock(int journeySeconds, int remainingSeconds) {
+        long now = this.level().getGameTime();
+        this.spawnTime = now - (long) Math.max(0, journeySeconds) * 20L;
+        this.expiryTicks = Math.max(0, remainingSeconds) * 20;
+        this.isCurrentlyStationary = true;
     }
 
     /** Server and showcase use this so the choice is stored before the entity is tracked. */
@@ -415,6 +497,7 @@ public class TouristEntity extends Villager {
         if (look.type() != null) {
             this.entityData.set(DATA_TOURIST_TYPE, look.type().index());
         }
+        this.customOffers = null;
     }
 
     /**
@@ -432,7 +515,7 @@ public class TouristEntity extends Villager {
         this.setVillagerData(this.getVillagerData().setLevel(rank));
         syncSkinTierFromLevel();
         refreshSyncedLabels();
-        this.setCustomName(Component.literal("Tourist"));
+        this.setPersonalName("Eleanor Hart");
         this.setCustomNameVisible(true);
         this.customOffers = null;
     }
@@ -572,6 +655,9 @@ public class TouristEntity extends Villager {
             tag.putString("TouristLookId", this.lookId == null ? "" : this.lookId);
         }
         tag.putInt("TouristType", this.entityData.get(DATA_TOURIST_TYPE));
+        if (!TouristNames.isPlaceholder(this.personalName)) {
+            tag.putString("PersonalName", this.personalName);
+        }
     }
 
     @Override
@@ -644,6 +730,12 @@ public class TouristEntity extends Villager {
         }
         if (tag.contains("TouristType")) {
             this.entityData.set(DATA_TOURIST_TYPE, tag.getInt("TouristType"));
+        }
+        if (tag.contains("PersonalName")) {
+            String saved = tag.getString("PersonalName");
+            if (!TouristNames.isPlaceholder(saved)) {
+                this.setPersonalName(saved);
+            }
         }
 
         syncSkinTierFromLevel();
@@ -752,7 +844,8 @@ public class TouristEntity extends Villager {
                     // Old villager window, kept so the showcase can photograph it.
                     this.openTradingScreen(player, this.getDisplayName(), this.getVillagerData().getLevel());
                 } else {
-                    this.openTouristScreen(player);
+                    this.ensurePersonalName();
+                this.openTouristScreen(player);
                 }
             }
             return net.minecraft.world.InteractionResult.CONSUME;
@@ -871,9 +964,9 @@ public class TouristEntity extends Villager {
                 TouristTradeCatalog.formatDuration(Math.max(0, this.expiryTicks) / 20),
                 this.isCurrentlyStationary);
         if (showcaseVanillaScreen) {
-            return TouristTradeCatalog.offersForVanillaScreenshot(level, context);
+            return TouristTradeCatalog.offersForVanillaScreenshot(level, context, getLookId());
         }
-        MerchantOffers offers = TouristTradeCatalog.offersFor(level, context);
+        MerchantOffers offers = TouristTradeCatalog.offersFor(level, context, getLookId());
         DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
                 "Total offers created: {} (level {})", offers.size(), level);
         return offers;

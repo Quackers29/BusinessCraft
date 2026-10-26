@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.menu;
 
 import com.quackers29.businesscraft.entity.TouristEntity;
+import com.quackers29.businesscraft.entity.TouristNames;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.MenuProvider;
@@ -21,7 +22,12 @@ public final class TouristMenuProvider implements MenuProvider, OpeningDataWrite
 
     @Override
     public Component getDisplayName() {
-        return Component.literal("Tourist");
+        tourist.ensurePersonalName();
+        String name = tourist.getPersonalName();
+        if (TouristNames.isPlaceholder(name)) {
+            name = "Tourist";
+        }
+        return Component.literal(name);
     }
 
     @Nullable

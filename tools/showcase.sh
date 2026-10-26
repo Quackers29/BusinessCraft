@@ -12,6 +12,9 @@
 #   bash tools/showcase.sh map-sweep forge 1920x1080_gui4
 #   bash tools/showcase.sh tourists forge          # every tourist look, front and side
 #   bash tools/showcase.sh tourist-screen forge   # vanilla merchant screen, then the tourist screen
+#   bash tools/showcase.sh tourist-screen-854-gui2 forge   # same shots at 854x480, gui scale 2
+#   bash tools/showcase.sh tourist-screen-854-gui3 forge   # same shots at 854x480, gui scale 3
+#   bash tools/showcase.sh tourist-screen-720-gui2 forge   # same shots at 1280x720, gui scale 2
 #   bash tools/showcase-map-sweep.sh forge       # full resolution/gui matrix
 #
 # Each run writes:
@@ -35,6 +38,32 @@ SCENES="${1:-all}"
 shift || true
 LOADER="${1:-forge}"
 shift || true
+
+# Small-window aliases. Gradle still receives tourist-screen; the folder name keeps the size.
+MODE_TAG=""
+case "$SCENES" in
+    tourist-screen-854-gui2)
+        MODE_TAG="$SCENES"
+        SCENES="tourist-screen"
+        SHOWCASE_WIDTH=854
+        SHOWCASE_HEIGHT=480
+        SHOWCASE_GUI_SCALE="${SHOWCASE_GUI_SCALE:-2}"
+        ;;
+    tourist-screen-854-gui3)
+        MODE_TAG="$SCENES"
+        SCENES="tourist-screen"
+        SHOWCASE_WIDTH=854
+        SHOWCASE_HEIGHT=480
+        SHOWCASE_GUI_SCALE="${SHOWCASE_GUI_SCALE:-3}"
+        ;;
+    tourist-screen-720-gui2)
+        MODE_TAG="$SCENES"
+        SCENES="tourist-screen"
+        SHOWCASE_WIDTH=1280
+        SHOWCASE_HEIGHT=720
+        SHOWCASE_GUI_SCALE="${SHOWCASE_GUI_SCALE:-2}"
+        ;;
+esac
 TESTBED_CHECKS="all"
 MAP_SWEEP_TAG="map"
 if [[ "$SCENES" == "testbed" ]]; then
@@ -51,7 +80,7 @@ case "$LOADER" in
         ;;
 esac
 
-MODE="$SCENES"
+MODE="${MODE_TAG:-$SCENES}"
 showcase_output_init "$MODE" "$LOADER" "$ROOT"
 echo "Output: $SHOWCASE_RUN_DIR"
 
@@ -248,8 +277,8 @@ elif [[ "$SCENES" == "tourist-screen" ]]; then
         echo "Missing showcase manifest: $MANIFEST" >&2
         code=1
     fi
-    if [[ "$view_count" -lt 4 ]]; then
-        echo "Expected at least 4 tourist screen views, found $view_count" >&2
+    if [[ "$view_count" -lt 5 ]]; then
+        echo "Expected at least 5 tourist screen views, found $view_count" >&2
         code=1
     fi
     if grep -q '"ok": false' "$MANIFEST" 2>/dev/null; then

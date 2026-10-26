@@ -25,11 +25,25 @@ public final class ShowcaseRouteRegistry {
         return ROUTES;
     }
 
-    /** Before (vanilla merchant window) and after (tourist screen) shots. */
+    /**
+     * Before (vanilla merchant window) and after (tourist screen) shots, plus a
+     * scrolled trade list. The scrolled route is not part of {@link #allRoutes()}
+     * so the full UI sweep stays the same length.
+     */
     public static List<ShowcaseRoute> touristScreenRoutes() {
-        return ROUTES.stream()
-                .filter(route -> route.name().startsWith("tourist/"))
-                .toList();
+        List<ShowcaseRoute> routes = new ArrayList<>();
+        for (ShowcaseRoute route : ROUTES) {
+            if (route.name().startsWith("tourist/")) {
+                routes.add(route);
+            }
+        }
+        routes.add(new ShowcaseRoute("tourist/scrolled", List.of(
+                "setup:world",
+                "open-tourist:voyager",
+                "wait-for-screen:TouristScreen:160",
+                "scroll-tourist:4",
+                "hover-tourist-trade:5")));
+        return List.copyOf(routes);
     }
 
     public static List<ShowcaseCoverageExclusion> coverageExclusions() {

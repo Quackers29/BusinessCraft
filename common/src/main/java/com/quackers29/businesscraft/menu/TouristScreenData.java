@@ -12,13 +12,15 @@ import net.minecraft.network.FriendlyByteBuf;
  * moving through the menu's data slots after that.
  */
 public final class TouristScreenData {
-    public static final int VERSION = 1;
+    public static final int VERSION = 2;
 
     private final String origin;
     private final String destination;
     private final boolean anyTown;
     private final String typeName;
     private final String lookLabel;
+    private final String personalName;
+    private final String lookId;
     private final int[] thresholds;
     private final int level;
     private final int distanceMeters;
@@ -28,13 +30,15 @@ public final class TouristScreenData {
     private final boolean stationary;
 
     public TouristScreenData(String origin, String destination, boolean anyTown, String typeName, String lookLabel,
-            int[] thresholds, int level, int distanceMeters, int usesMask, int journeySeconds, int remainingSeconds,
-            boolean stationary) {
+            String personalName, String lookId, int[] thresholds, int level, int distanceMeters, int usesMask,
+            int journeySeconds, int remainingSeconds, boolean stationary) {
         this.origin = origin == null ? "Unknown" : origin;
         this.destination = destination == null ? "Unknown" : destination;
         this.anyTown = anyTown;
         this.typeName = typeName == null ? "" : typeName;
         this.lookLabel = lookLabel == null ? "" : lookLabel;
+        this.personalName = personalName == null ? "" : personalName;
+        this.lookId = lookId == null ? "" : lookId;
         this.thresholds = thresholds == null || thresholds.length == 0
                 ? JourneyProgress.DEFAULT_TOURIST_LEVELS.clone()
                 : thresholds.clone();
@@ -47,27 +51,31 @@ public final class TouristScreenData {
     }
 
     public static TouristScreenData capture(TouristEntity tourist) {
+        tourist.ensurePersonalName();
         int level = tourist.getVillagerData().getLevel();
         double distance = tourist.getTotalDistanceTraveled();
         int[] thresholds = ConfigLoader.touristLevelDistances;
         int meters = (int) Math.round(Math.max(0.0, distance));
+        String lookId = tourist.getLookId();
         return new TouristScreenData(
                 tourist.getOriginTownName(),
                 tourist.getDestinationTownName(),
                 tourist.isAnyTownDestination(),
                 tourist.getTouristType().displayName(),
-                TouristTradeCatalog.lookLabel(tourist.getLookId()),
+                TouristTradeCatalog.lookLabel(lookId),
+                tourist.getPersonalName(),
+                lookId,
                 thresholds,
                 level,
                 meters,
-                TouristTradeCatalog.usesMask(tourist.getOffers()),
-                clampSeconds(tourist.getJourneyTicks()),
-                clampSeconds(tourist.getExpiryTicks()),
+                TouristTradeCatalog.usesMask(tourist.getOffers(), TouristTradeCatalog.forLook(lookId)),
+                Math.max(0, tourist.getJourneyTicks() / 20),
+                Math.max(0, tourist.getExpiryTicks() / 20),
                 tourist.isStationary());
     }
 
     public static TouristScreenData fallback() {
-        return new TouristScreenData("Unknown", TouristEntity.ANY_TOWN_NAME, true, "", "",
+        return new TouristScreenData("Unknown", TouristEntity.ANY_TOWN_NAME, true, "", "", "", "",
                 JourneyProgress.DEFAULT_TOURIST_LEVELS, 1, 0, 0, 0, 0, true);
     }
 
@@ -78,6 +86,8 @@ public final class TouristScreenData {
         buf.writeBoolean(anyTown);
         buf.writeUtf(clamp(typeName, 32));
         buf.writeUtf(clamp(lookLabel, 64));
+        buf.writeUtf(clamp(personalName, 64));
+        buf.writeUtf(clamp(lookId, 64));
         buf.writeVarInt(thresholds.length);
         for (int threshold : thresholds) {
             buf.writeVarInt(threshold);
@@ -85,8 +95,8 @@ public final class TouristScreenData {
         buf.writeVarInt(level);
         buf.writeVarInt(distanceMeters);
         buf.writeVarInt(usesMask);
-        buf.writeVarInt(Math.min(journeySeconds, 32_767));
-        buf.writeVarInt(Math.min(remainingSeconds, 32_767));
+        buf.writeVarInt(Math.max(0, journeySeconds));
+        buf.writeVarInt(Math.max(0, remainingSeconds));
         buf.writeBoolean(stationary);
     }
 
@@ -103,6 +113,8 @@ public final class TouristScreenData {
         boolean anyTown = buf.readBoolean();
         String typeName = buf.readUtf(32);
         String lookLabel = buf.readUtf(64);
+        String personalName = buf.readUtf(64);
+        String lookId = buf.readUtf(64);
         int count = buf.readVarInt();
         int[] thresholds = new int[Math.max(0, Math.min(count, 16))];
         for (int i = 0; i < thresholds.length; i++) {
@@ -119,6 +131,8 @@ public final class TouristScreenData {
                 anyTown,
                 typeName,
                 lookLabel,
+                personalName,
+                lookId,
                 thresholds,
                 buf.readVarInt(),
                 buf.readVarInt(),
@@ -161,6 +175,14 @@ public final class TouristScreenData {
 
     public String lookLabel() {
         return lookLabel;
+    }
+
+    public String personalName() {
+        return personalName;
+    }
+
+    public String lookId() {
+        return lookId;
     }
 
     public int[] thresholds() {

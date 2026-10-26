@@ -198,7 +198,8 @@ public final class ShowcaseTouristLineup {
             int x0 = originX - 4;
             int x1 = originX + (int) Math.ceil((count - 1) * SPACING) + 6;
             int z0 = originZ - 5;
-            int z1 = originZ + 18;
+            // The front camera sits about span / tan(35°) in front of sixteen tourists.
+            int z1 = originZ + 40;
             for (int x = x0; x <= x1; x++) {
                 for (int z = z0; z <= z1; z++) {
                     level.setBlock(new BlockPos(x, ground, z), Blocks.SMOOTH_STONE.defaultBlockState(), 3);

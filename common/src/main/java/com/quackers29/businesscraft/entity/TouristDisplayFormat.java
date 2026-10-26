@@ -8,8 +8,11 @@ import net.minecraft.network.chat.MutableComponent;
  * Pure formatting for tourist name tags (client + unit tests).
  */
 public final class TouristDisplayFormat {
-    /** Name tags fade beyond this distance (blocks). */
-    public static final double NAME_TAG_MAX_DISTANCE = 48.0;
+    /**
+     * Personal name is drawn only inside this distance (blocks).
+     * A constant for now; a config entry can replace it later.
+     */
+    public static final double NAME_TAG_MAX_DISTANCE = 5.0;
 
     private TouristDisplayFormat() {
     }
