@@ -997,19 +997,6 @@ public ViewModelCache getVmCache() {
         }
     }
 
-    private void mountTouristsToVehicles() {
-        if (level == null || level.isClientSide || town == null)
-            return;
-        if (pathStart == null || pathEnd == null)
-            return;
-
-        int mounted = touristVehicleManager.mountTouristsToVehicles(level, pathStart, pathEnd, searchRadius, townId);
-        if (mounted > 0) {
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Mounted {} tourists to vehicles for town {}",
-                    mounted, name);
-        }
-    }
-
     private String formatVec3(Vec3 vec) {
         return String.format("[%.6f, %.6f, %.6f]", vec.x, vec.y, vec.z);
     }

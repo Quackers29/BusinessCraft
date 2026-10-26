@@ -12,6 +12,7 @@ import com.quackers29.businesscraft.network.packets.platform.SetPlatformEnabledP
 import com.quackers29.businesscraft.network.packets.platform.SetPlatformPathCreationModePacket;
 import com.quackers29.businesscraft.network.packets.ui.OpenDestinationsUIPacket;
 import com.quackers29.businesscraft.platform.Platform;
+import com.quackers29.businesscraft.ui.util.UiTextWrap;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.BlockPos;
@@ -126,15 +127,15 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
         Platform platform = currentPlatform();
         drawHeader(graphics, entity, platform);
 
-        int headerBottom = panelY + 52;
+        int headerBottom = panelY + headerHeight();
         this.bodyTop = headerBottom;
-        this.bodyHeight = panelH - 52 - 6;
+        this.bodyHeight = panelH - headerHeight() - (compact() ? 4 : 6);
         if (entity == null || !entity.isActive() || platform == null) {
             String reason = entity == null || entity.getInactiveReason() == null
                     ? "it is not linked to a town"
                     : Component.translatable(entity.getInactiveReason()).getString();
             graphics.drawString(this.font, "This platform is inactive.", panelX + 16, headerBottom + 12, RED, false);
-            drawWrapped(graphics, reason, panelX + 16, headerBottom + 28, panelW - 32, MUTED);
+            drawWrapped(graphics, reason, panelX + 16, headerBottom + 28, panelW - 32, MUTED, 3);
             graphics.drawString(this.font, "Break the block to pick it up.", panelX + 16, headerBottom + 56, MUTED, false);
             return;
         }
@@ -160,20 +161,23 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
     }
 
     private void drawHeader(GuiGraphics graphics, PlatformInterfaceEntity entity, Platform platform) {
+        boolean tight = compact();
+        int nameY = panelY + (tight ? 7 : 10);
         String name = platform != null && platform.getName() != null ? platform.getName() : "Platform";
-        graphics.drawString(this.font, name, panelX + 14, panelY + 10, WHITE, false);
+        graphics.drawString(this.font, name, panelX + 14, nameY, WHITE, false);
         String town = townName(entity);
         if (town != null) {
             int width = this.font.width(town);
-            graphics.drawString(this.font, town, panelX + panelW - 14 - width, panelY + 10, AQUA, false);
+            graphics.drawString(this.font, town, panelX + panelW - 14 - width, nameY, AQUA, false);
         }
-        graphics.fill(panelX + 12, panelY + 24, panelX + panelW - 12, panelY + 25, LINE);
+        int lineY = panelY + (tight ? 18 : 24);
+        graphics.fill(panelX + 12, lineY, panelX + panelW - 12, lineY + 1, LINE);
 
         boolean enabled = platform != null && platform.isEnabled();
         boolean path = platform != null && platform.isComplete();
         int allowed = countAllowed();
         String dest = allowed == 0 ? "Any town" : allowed + (allowed == 1 ? " town" : " towns");
-        int chipY = panelY + 32;
+        int chipY = panelY + (tight ? 22 : 32);
         if (panelW < 360) {
             String line = (enabled ? "Enabled" : "Disabled") + "   ·   " + (path ? "Path set" : "No path") + "   ·   " + dest;
             graphics.drawString(this.font, fit(line, panelW - 28), panelX + 14, chipY + 4, MUTED, false);
@@ -209,43 +213,51 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
         graphics.drawString(this.font, text, x + 5, y + 4, color, false);
     }
 
+    private boolean compact() {
+        return panelH < 260;
+    }
+
+    private int headerHeight() {
+        return compact() ? 40 : 52;
+    }
+
     private int drawBody(GuiGraphics graphics, int mouseX, int mouseY, Platform platform) {
+        boolean tight = compact();
         int x = panelX + 14;
-        int y = bodyTop + 8;
+        int y = bodyTop + (tight ? 4 : 8);
         int inner = panelW - 28;
-        int buttonH = panelH < 200 ? 18 : 20;
+        int buttonH = panelH < 180 ? 16 : 20;
+        int gap = tight ? 6 : 14;
         y = sectionTitle(graphics, x, y, "Platform");
         control(graphics, "toggle", platform.isEnabled() ? "Disable platform" : "Enable platform",
                 x, y, Math.min(160, inner), buttonH, mouseX, mouseY, true);
-        y += buttonH + (panelH < 260 ? 8 : 14);
+        y += buttonH + gap;
         y = sectionTitle(graphics, x, y, "Path");
-        graphics.drawString(this.font, pathLine(platform), x, y, MUTED, false);
-        y += 14;
+        graphics.drawString(this.font, fit(pathLine(platform), inner), x, y, MUTED, false);
+        y += tight ? 12 : 14;
         int buttonW = Math.min(120, (inner - 8) / 2);
         control(graphics, "set-path", "Set Path", x, y, buttonW, buttonH, mouseX, mouseY, true);
         control(graphics, "reset-path", "Reset", x + buttonW + 8, y, buttonW, buttonH, mouseX, mouseY,
                 platform.isComplete());
-        y += buttonH + (panelH < 260 ? 8 : 14);
+        y += buttonH + gap;
 
         y = sectionTitle(graphics, x, y, "Spawn");
-        String spawnHint = panelH < 260
-                ? "Radius finds visitors. Spread stands tourists off the path, never past the radius."
+        String spawnHint = tight
+                ? "Spread stays inside the search radius."
                 : "Search radius is how far this platform notices visitors. Spread is how far tourists may stand off the path. Spread cannot exceed the radius.";
-        drawWrapped(graphics, spawnHint, x, y, inner, MUTED);
-        y += panelH < 260 ? 12 : 32;
+        y += drawWrapped(graphics, spawnHint, x, y, inner, MUTED, tight ? 2 : 3) + (tight ? 4 : 6);
         y = stepper(graphics, mouseX, mouseY, x, y, inner, buttonH, "radius",
                 "Search radius", platform.getSearchRadius(), "blocks");
-        y += 8;
+        y += tight ? 4 : 8;
         y = stepper(graphics, mouseX, mouseY, x, y, inner, buttonH, "spread",
                 "Spread", platform.getSpread(), platform.getSpread() == 0 ? "on the line" : "blocks off the line");
-        y += 16;
+        y += tight ? 8 : 16;
 
         y = sectionTitle(graphics, x, y, "Destinations");
         String hint = destinations.stream().anyMatch(d -> d.enabled)
                 ? "Allowed towns only. Turn them all off to accept any town."
                 : "No towns selected. Tourists may travel to any town.";
-        drawWrapped(graphics, hint, x, y, inner, MUTED);
-        y += 22;
+        y += drawWrapped(graphics, hint, x, y, inner, MUTED, 3) + 6;
         if (destinations.isEmpty()) {
             graphics.drawString(this.font, "Looking for other towns…", x, y, MUTED, false);
             y += 16;
@@ -264,7 +276,7 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
             }
             graphics.drawString(this.font, label, x + 6, y + 7, WHITE, false);
             graphics.drawString(this.font, meta, x + inner - toggleW - 8 - this.font.width(meta), y + 7, MUTED, false);
-            control(graphics, "dest:" + destination.id, destination.enabled ? "Allow" : "Block",
+            control(graphics, "dest:" + destination.id, destination.enabled ? "On" : "Off",
                     x + inner - toggleW, y + 2, toggleW, rowH - 4, mouseX, mouseY, true);
             y += rowH + 4;
         }
@@ -273,8 +285,9 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
 
     private int sectionTitle(GuiGraphics graphics, int x, int y, String title) {
         graphics.drawString(this.font, title, x, y, GOLD, false);
-        graphics.fill(x, y + 12, panelX + panelW - 14, y + 13, LINE);
-        return y + 18;
+        int line = compact() ? 9 : 11;
+        graphics.fill(x, y + line, panelX + panelW - 14, y + line + 1, LINE);
+        return y + (compact() ? 13 : 18);
     }
 
     private int stepper(GuiGraphics graphics, int mouseX, int mouseY, int x, int y, int inner, int buttonH,
@@ -307,12 +320,13 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
         }
     }
 
-    private void drawWrapped(GuiGraphics graphics, String text, int x, int y, int width, int color) {
-        List<String> lines = com.quackers29.businesscraft.ui.util.UiTextWrap.wrap(text, width, this.font::width);
-        int limit = Math.min(3, lines.size());
+    private int drawWrapped(GuiGraphics graphics, String text, int x, int y, int width, int color, int maxLines) {
+        List<String> lines = UiTextWrap.wrap(text, width, this.font::width);
+        int limit = Math.min(maxLines, lines.size());
         for (int i = 0; i < limit; i++) {
             graphics.drawString(this.font, lines.get(i), x, y + i * 10, color, false);
         }
+        return limit * 10;
     }
 
     @Override
