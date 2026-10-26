@@ -4,6 +4,8 @@
 **Target**: Post v1.0 (release sequence: 0.9.x public beta → v1.0 with Tourist Transport Contracts + prestige — see `ROADMAP_v0.9.md` and `ROADMAP_v1.md`)  
 **Focus**: Deepening the single-server economy — starting with advanced contracts, reputation, and companies, plus town specialization and player production.
 
+**Current state (0.9, before v2)**: Tourism transport only by default; platforms are **Platform Interface** blocks; tourists do not walk. VIP / advanced contract ideas in this doc build on **v1** tourist transport contracts (not shipped in 0.9).
+
 ## v2 Opening Priorities (Advanced Features Deferred from v1 Planning)
 
 To keep v1 focused on the base Tourist Transport Contracts and the initial prestige system, the more ambitious expansions are the primary early focus of v2:

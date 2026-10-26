@@ -4,6 +4,12 @@
 **Scope**: The road from the 0.9.x public beta (see `ROADMAP_v0.9.md`) to a true 1.0.
 **Guiding principle**: 0.9 proves the core tourism loop is polished and understandable. 1.0 earns its number by adding the three features that complete the fantasy: **player-driven tourist transportation work**, **a long-term goal to chase**, and **towns you can discover in the world** — not only craft. Beta feedback decides ordering and tuning within this scope.
 
+## Current state (0.9.x — as of 2026-10-26)
+- **Towns**: Craft and place a **Town Centre** block to found a town and set its boundary. There is no town owner; the name comes from `general.townNames`.
+- **Platforms**: Craft **Platform Interface** blocks and place them inside the boundary (up to 10; 5-block spacing). Each block is one platform. Path, search radius, spread, enable, and destination allow-list are edited on the **Platform Interface** screen. The Town Centre shows a **read-only** platform list — no “add platform” from town UI.
+- **Tourists**: **Do not walk today** (movement speed ~0). Players must move them with minecarts or Create trains. Sixteen layered looks, personal names, and distance ranks ship in 0.9 (`docs/TOURIST_MODELS.md`).
+- **Not in 0.9**: Tourist transport contracts, prestige / “First to City”, and worldgen (pillars below). Production, research, trading, and contracts remain locked by default.
+
 ## Vision for v1.0
 A player who has mastered the core loop should have a reason to keep playing: accept tourist transport contracts from towns, run a transportation business with recurring routes, see their personal contribution on leaderboards, and race toward the "First to City" prestige milestone — alone or against other players on a server. New players joining a world for the first time should also be able to stumble on generated Town Interfaces in villages or across the map, giving the mod a natural discovery path beyond crafting.
 
@@ -34,7 +40,7 @@ Configurable world generation so Town Interfaces appear naturally in the world �
 - **Config UX**: master switch **on** by default (v1.0); villages on; random off. Tunable rarity for random mode when enabled. *Verified*
 - **Boundary respect**: generated placements must go through the same `TownBoundaryService` / `TownManager` validation as player-placed towns — likely a custom `StructurePlacement` for dynamic distance checks in random mode.
 - **Platform implementation**: datapack structure assets in common, platform-specific registry injection on Forge and Fabric (exploration notes in the worldgen plan).
-- **Generated town bootstrap**: spawned towns use the same registration, boundary validation, biome kit, default platform, and notification paths as player-founded towns (no bypass shortcuts). Name from `townNames` pool; on exhaustion merge 2→3→… pool names (merged names tracked as used); pop = `defaultStartingPopulation`. *Verified*
+- **Generated town bootstrap**: spawned towns use the same registration, boundary validation, biome kit, platform placement, and notification paths as player-founded towns (no bypass shortcuts). Name from `townNames` pool; on exhaustion merge 2→3→… pool names (merged names tracked as used); pop = `defaultStartingPopulation`. Worldgen structures must place **Platform Interface** blocks (0.9 design: one block per platform), not invent detached platform records. *Verified*
 - **0.9 interim**: the beta still enables crafting by default so survival works before worldgen ships; worldgen is the v1.0 upgrade that makes discovery feel native.
 - **Existing worlds**: new chunks only — no retrofit of villages already generated. *Verified*
 

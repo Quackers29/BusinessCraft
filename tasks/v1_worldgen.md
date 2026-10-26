@@ -39,6 +39,8 @@ This design gives players full flexibility (off, villages only, random only, or 
 
 **Generated town identity** — *Verified*: name drawn from `townNames` config pool; when every pool name is used, merge two unused pool names at random (e.g. `clifftown-hillcrest`) and register the merge as used; if two-name merges exhaust, merge three, and so on. Starting population uses `defaultStartingPopulation` from config. Platform is part of the spawned structure.
 
+**0.9 platform model (current code)**: each platform is a placed **Platform Interface** block with saved block position. Worldgen must include those blocks in structure templates (and wire paths/settings as needed); it cannot create “default platforms” in town data alone.
+
 ## Current State
 - Zero world generation or structure code exists for Town Interfaces.
 - The block can only be obtained via creative or (when enabled) crafting.
