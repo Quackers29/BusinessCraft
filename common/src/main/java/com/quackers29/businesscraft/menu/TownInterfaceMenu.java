@@ -42,7 +42,6 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
     private boolean needsImmediateSync = true;
 
     // Add ContainerData field for syncing values between server and client
-    private static final int DATA_SEARCH_RADIUS = 0;
     private static final int DATA_TOURIST_COUNT = 1;
     private static final int DATA_MAX_TOURISTS = 2;
     private static final int DATA_POPULATION = 3;
@@ -71,8 +70,6 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
 
     // Settings
     private boolean taxesEnabled = false;
-    // Local cache for client-side
-    private int clientSearchRadius = 10;
     private long lastUpdateTick = 0;
 
     /**
@@ -391,55 +388,6 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
         // In a real implementation, this would trigger a server-side update
     }
 
-    /**
-     * Gets the search radius for this town
-     * 
-     * @return the search radius value
-     */
-    /**
-     * Gets the search radius for this town
-     * 
-     * @return the search radius value
-     */
-    public int getSearchRadius() {
-        // CLIENT SIDE
-        if (level != null && level.isClientSide()) {
-            // Priority 1: Check block entity for latest ViewModel
-            if (level.getBlockEntity(pos) instanceof TownInterfaceEntity townEntity) {
-                var vm = townEntity.getVmCache().get(com.quackers29.businesscraft.town.viewmodel.TownInterfaceViewModel.class);
-                if (vm != null) {
-                    return vm.getSearchRadius();
-                }
-            }
-            // Priority 2: Use client cache as fallback
-            return clientSearchRadius;
-        }
-
-        // SERVER SIDE
-        if (town != null) {
-            return town.getSearchRadius();
-        }
-
-        // Fallback
-        return 10;
-    }
-
-    /**
-     * Updates the client-side search radius value
-     * This provides immediate visual feedback until the server syncs
-     * 
-     * @param radius The new radius value
-     */
-    public void setClientSearchRadius(int radius) {
-        // Store the new radius in our client cache
-        this.clientSearchRadius = radius;
-
-        // Also update in the data if we're on the client (for immediate feedback)
-        if (level != null && level.isClientSide() && hasDataSlot(DATA_SEARCH_RADIUS)) {
-            data.set(DATA_SEARCH_RADIUS, radius);
-        }
-    }
-
     private boolean hasDataSlot(int index) {
         return data != null && index >= 0 && index < data.getCount();
     }
@@ -645,14 +593,6 @@ public class TownInterfaceMenu extends AbstractContainerMenu {
 
         // Update the data slots with current values
         updateDataSlots();
-    }
-
-    /**
-     * Forces a refresh of the search radius data specifically.
-     * This should be called when the search radius is updated on the server.
-     */
-    public void refreshSearchRadius() {
-        // No-op: handled by ViewModel sync
     }
 
     /**

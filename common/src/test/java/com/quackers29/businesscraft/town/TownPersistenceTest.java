@@ -120,6 +120,25 @@ class TownPersistenceTest {
     }
 
     @Test
+    void save_omitsTownSearchRadius_andLoadIgnoresALeftoverKey() {
+        Town town = new Town(TOWN_ID, POS, "NoRadius");
+        CompoundTag saved = new CompoundTag();
+        town.save(saved);
+        assertFalse(saved.contains("searchRadius"));
+
+        CompoundTag legacy = new CompoundTag();
+        legacy.putUUID("id", TOWN_ID);
+        legacy.putString("name", "LegacyRadius");
+        legacy.putInt("posX", POS.getX());
+        legacy.putInt("posY", POS.getY());
+        legacy.putInt("posZ", POS.getZ());
+        legacy.putInt("searchRadius", 33);
+        Town loaded = Town.load(legacy);
+        assertEquals("LegacyRadius", loaded.getName());
+        assertEquals(POS, loaded.getPosition());
+    }
+
+    @Test
     void saveLoad_roundTripsLegacyVisitFlag() {
         Town town = new Town(TOWN_ID, POS, "Flag");
         town.setLegacyVisitHistoryMigrated(true);

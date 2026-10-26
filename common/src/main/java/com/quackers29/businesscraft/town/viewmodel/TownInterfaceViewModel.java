@@ -43,9 +43,6 @@ public class TownInterfaceViewModel implements IViewModel {
     private final boolean spawningEnabled;
     private final boolean taxesEnabled;
 
-    // Configurable values that need to be edited
-    private final int searchRadius;
-
     // Cumulative Tourism Stats (for config requirements like "tourism" and "tourism_dist")
     private final int totalTouristsArrived;
     private final double totalTouristDistance;
@@ -71,7 +68,6 @@ public class TownInterfaceViewModel implements IViewModel {
             Status workUnitsStatus,
             boolean spawningEnabled,
             boolean taxesEnabled,
-            int searchRadius,
             int totalTouristsArrived,
             double totalTouristDistance,
             float borderRadius,
@@ -90,7 +86,6 @@ public class TownInterfaceViewModel implements IViewModel {
         this.workUnitsStatus = workUnitsStatus;
         this.spawningEnabled = spawningEnabled;
         this.taxesEnabled = taxesEnabled;
-        this.searchRadius = searchRadius;
         this.totalTouristsArrived = totalTouristsArrived;
         this.totalTouristDistance = totalTouristDistance;
         this.borderRadius = borderRadius;
@@ -112,7 +107,6 @@ public class TownInterfaceViewModel implements IViewModel {
         this.workUnitsStatus = buf.readEnum(Status.class);
         this.spawningEnabled = buf.readBoolean();
         this.taxesEnabled = buf.readBoolean();
-        this.searchRadius = buf.readInt();
         this.totalTouristsArrived = buf.readInt();
         this.totalTouristDistance = buf.readDouble();
         this.borderRadius = buf.readFloat();
@@ -134,7 +128,6 @@ public class TownInterfaceViewModel implements IViewModel {
         buf.writeEnum(workUnitsStatus);
         buf.writeBoolean(spawningEnabled);
         buf.writeBoolean(taxesEnabled);
-        buf.writeInt(searchRadius);
         buf.writeInt(totalTouristsArrived);
         buf.writeDouble(totalTouristDistance);
         buf.writeFloat(borderRadius);
@@ -190,10 +183,6 @@ public class TownInterfaceViewModel implements IViewModel {
 
     public boolean isTaxesEnabled() {
         return taxesEnabled;
-    }
-
-    public int getSearchRadius() {
-        return searchRadius;
     }
 
     public String getPrimaryWarning() {

@@ -23,9 +23,6 @@ public class TownScreenRenderManager {
         int getUpdateCounter();
         void setUpdateCounter(int counter);
         int getRefreshInterval();
-        int getCurrentSearchRadius();
-        void setCurrentSearchRadius(int radius);
-        int getSearchRadiusFromMenu();
     }
     
     public interface ScreenLayoutProvider {
@@ -110,11 +107,6 @@ public class TownScreenRenderManager {
             if (cacheManager != null) {
                 cacheManager.invalidateCache();
                 cacheManager.refreshCachedValues();
-                // DON'T override search radius during refresh - it may have been manually changed
-                // cacheProvider.setCurrentSearchRadius(cacheManager.getLocalCachedSearchRadius());
-            } else {
-                // DON'T override search radius during refresh - it may have been manually changed
-                // cacheProvider.setCurrentSearchRadius(cacheProvider.getSearchRadiusFromMenu());
             }
             
             // Update the active tab if exists

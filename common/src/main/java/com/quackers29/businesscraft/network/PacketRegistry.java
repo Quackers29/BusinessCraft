@@ -74,10 +74,6 @@ public class PacketRegistry {
                 register(SetTownNamePacket.class, "set_town_name_packet", NetworkDirection.PLAY_TO_SERVER,
                                 SetTownNamePacket::decode, SetTownNamePacket::encode, SetTownNamePacket::handle);
 
-                register(SetSearchRadiusPacket.class, "set_search_radius_packet", NetworkDirection.PLAY_TO_SERVER,
-                                SetSearchRadiusPacket::new, SetSearchRadiusPacket::toBytes,
-                                SetSearchRadiusPacket::handle);
-
                 register(SetPathCreationModePacket.class, "set_path_creation_mode_packet",
                                 NetworkDirection.PLAY_TO_SERVER,
                                 SetPathCreationModePacket::decode, SetPathCreationModePacket::encode,

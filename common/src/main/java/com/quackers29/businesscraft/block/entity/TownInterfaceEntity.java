@@ -131,8 +131,6 @@ public class TownInterfaceEntity extends BlockEntity
             .addField("spawn_enabled", this::getTouristSpawningEnabledAsInt, this::setTouristSpawningEnabledFromInt,
                     "Tourist spawning enabled flag")
             .addReadOnlyField("can_spawn", this::getCanSpawnTouristsAsInt, "Whether town can currently spawn tourists")
-            .addField("search_radius", this::getSearchRadius, this::setSearchRadius,
-                    "Search radius for tourist detection")
             .addReadOnlyField("tourist_count", this::getTouristCountFromTown, "Current number of tourists in town")
             .addReadOnlyField("max_tourists", this::getMaxTouristsFromTown, "Maximum tourists allowed in town")
             .build();
@@ -146,17 +144,13 @@ public class TownInterfaceEntity extends BlockEntity
     private UUID townId;
     private String name;
     private Town town;
-    private static final ConfigLoader CONFIG = ConfigLoader.INSTANCE;
     private Map<UUID, Vec3> lastPositions = new HashMap<>();
-    private static final int DEFAULT_SEARCH_RADIUS = CONFIG.vehicleSearchRadius;
-    private int searchRadius = -1; // Will be set from NBT or default
     private final AABB searchBounds = new AABB(worldPosition).inflate(15);
     private List<LivingEntity> tourists = new ArrayList<>();
     private ITownDataProvider townDataProvider;
 
     private static final double SYNC_RADIUS_SQR = 64.0D * 64.0D;
     private int lastPushedRevision = -1;
-    private long lastSearchRadiusLogTime = 0; // For rate-limiting debug logs
 
     private final TouristVehicleManager touristVehicleManager = new TouristVehicleManager();
 
@@ -608,9 +602,7 @@ public ViewModelCache getVmCache() {
         if (!level.isClientSide()) {
             updateFromTownProvider();
         }
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Saving TownInterfaceEntity with searchRadius: {}",
-                searchRadius);
-        nbtDataHelper.saveToNBT(tag, itemHandler, townId, name, pathStart, pathEnd, platformManager, searchRadius);
+        nbtDataHelper.saveToNBT(tag, itemHandler, townId, name, pathStart, pathEnd, platformManager);
     }
 
     @Override
@@ -628,17 +620,6 @@ public ViewModelCache getVmCache() {
 
         if (bufferManager != null && townId != null) {
             bufferManager.setTownId(townId);
-        }
-
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Before NBT load: searchRadius={}", this.searchRadius);
-        if (result.hasSearchRadius()) {
-            this.searchRadius = result.searchRadius;
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Loaded searchRadius from NBT: {} -> {}",
-                    result.searchRadius, this.searchRadius);
-        } else {
-            this.searchRadius = DEFAULT_SEARCH_RADIUS;
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Using default searchRadius: {} -> {}",
-                    DEFAULT_SEARCH_RADIUS, this.searchRadius);
         }
 
         DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "Loaded NBT data: {}", result.getSummary());
@@ -839,8 +820,6 @@ public ViewModelCache getVmCache() {
         String freshTownName = getTownName();
         tag.putString("name", freshTownName != null ? freshTownName : "");
 
-        tag.putInt("searchRadius", getSearchRadius());
-
         syncResourcesForClient(tag);
 
         platformManager.saveToNBT(tag);
@@ -1001,41 +980,6 @@ public ViewModelCache getVmCache() {
         return String.format("[%.6f, %.6f, %.6f]", vec.x, vec.y, vec.z);
     }
 
-    public int getSearchRadius() {
-        int result = searchRadius > 0 ? searchRadius : DEFAULT_SEARCH_RADIUS;
-
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastSearchRadiusLogTime > 1000) {
-            DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "getSearchRadius() field={}, result={}",
-                    searchRadius, result);
-            lastSearchRadiusLogTime = currentTime;
-        }
-
-        return result;
-    }
-
-    public void setSearchRadius(int radius) {
-        int oldValue = this.searchRadius;
-        this.searchRadius = Math.max(1, Math.min(radius, 100)); // Limit between 1-100 blocks
-        DebugConfig.debug(LOGGER, DebugConfig.TOWN_BLOCK_ENTITY, "setSearchRadius() {} -> {}", oldValue,
-                this.searchRadius);
-
-        if (townId != null && level instanceof ServerLevel sLevel) {
-            Town town = TownManager.get(sLevel).getTown(townId);
-            if (town != null) {
-                town.setSearchRadius(this.searchRadius);
-                TownManager.get(sLevel).markDirty();
-            }
-        }
-
-        if (level != null && !level.isClientSide()) {
-            containerData.markDirty("search_radius");
-            level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_ALL);
-        }
-
-        setChanged();
-    }
-
     public Town getTown() {
         if (townId != null && level instanceof ServerLevel serverLevel) {
             return TownManager.get(serverLevel).getTown(townId);
@@ -1112,10 +1056,6 @@ public ViewModelCache getVmCache() {
         }
         if (!java.util.Objects.equals(this.pathEnd, provider.getPathEnd())) {
             this.pathEnd = provider.getPathEnd();
-            changed = true;
-        }
-        if (this.searchRadius != provider.getSearchRadius()) {
-            this.searchRadius = provider.getSearchRadius();
             changed = true;
         }
         return changed;

@@ -39,9 +39,6 @@ public class TownDataCache {
     public int getMaxTourists() {
         return getOrFetchValue("maxTourists", () -> (int) dataProvider.getMaxTourists(), DEFAULT_TTL);
     }
-    public int getSearchRadius() {
-        return getOrFetchValue("searchRadius", dataProvider::getSearchRadius, DEFAULT_TTL);
-    }
     public int getWorkUnits() {
         return getOrFetchValue("workUnits", () -> (int) dataProvider.getWorkUnits(), DEFAULT_TTL);
     }

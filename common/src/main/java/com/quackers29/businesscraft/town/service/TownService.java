@@ -310,10 +310,6 @@ public class TownService {
                 town.setTouristSpawningEnabled(settings.getTouristSpawningEnabled());
             }
 
-            if (settings.getSearchRadius() != null) {
-                town.setSearchRadius(settings.getSearchRadius());
-            }
-
             return Result.success(null);
 
         } catch (Exception e) {
@@ -359,7 +355,6 @@ public class TownService {
     public static class TownSettings {
         private String name;
         private Boolean touristSpawningEnabled;
-        private Integer searchRadius;
 
         // Getters and setters
         public String getName() {
@@ -376,14 +371,6 @@ public class TownService {
 
         public void setTouristSpawningEnabled(Boolean touristSpawningEnabled) {
             this.touristSpawningEnabled = touristSpawningEnabled;
-        }
-
-        public Integer getSearchRadius() {
-            return searchRadius;
-        }
-
-        public void setSearchRadius(Integer searchRadius) {
-            this.searchRadius = searchRadius;
         }
     }
 }

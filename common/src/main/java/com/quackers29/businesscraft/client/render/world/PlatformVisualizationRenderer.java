@@ -22,19 +22,13 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
 
     public static class PlatformVisualizationData {
         private final List<Platform> platforms;
-        private final int searchRadius;
 
-        public PlatformVisualizationData(List<Platform> platforms, int searchRadius) {
+        public PlatformVisualizationData(List<Platform> platforms) {
             this.platforms = new ArrayList<>(platforms);
-            this.searchRadius = searchRadius;
         }
 
         public List<Platform> getPlatforms() {
             return platforms;
-        }
-
-        public int getSearchRadius() {
-            return searchRadius;
         }
     }
 
@@ -70,14 +64,13 @@ public class PlatformVisualizationRenderer extends WorldVisualizationRenderer {
                     if (manager.shouldShowVisualization(VisualizationManager.TYPE_PLATFORM, pos)) {
                         // Get platform data from the town interface entity
                         List<Platform> platforms = townInterfaceEntity.getPlatforms();
-                        int searchRadius = townInterfaceEntity.getSearchRadius();
 
                         if (time % 2000 < 50) {
                             DebugConfig.debug(LOGGER, DebugConfig.PLATFORM_VISUALIZATION, "[PLATFORM] Town at {} has {} platforms", pos, platforms.size());
                         }
 
                         if (!platforms.isEmpty()) {
-                            PlatformVisualizationData data = new PlatformVisualizationData(platforms, searchRadius);
+                            PlatformVisualizationData data = new PlatformVisualizationData(platforms);
                             visualizations.add(new VisualizationData(
                                     VisualizationManager.TYPE_PLATFORM, pos, data));
                         }

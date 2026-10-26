@@ -53,10 +53,6 @@ public interface ITownDataProvider {
 
     void setPathEnd(BlockPos pos);
 
-    int getSearchRadius();
-
-    void setSearchRadius(int radius);
-
     boolean canSpawnTourists();
 
     void markDirty();

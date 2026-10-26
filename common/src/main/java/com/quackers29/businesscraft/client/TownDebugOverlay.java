@@ -136,7 +136,7 @@ public class TownDebugOverlay {
                             " | Can Spawn: " + (town.canSpawnTourists ? "Yes" : "No"),
                     "Path: " + (town.pathStart != null ? town.pathStart : "None") + " → " +
                             (town.pathEnd != null ? town.pathEnd : "None"),
-                    "Search Radius: " + town.searchRadius + " | Total Visitors: " + town.totalVisitors
+                    "Total Visitors: " + town.totalVisitors
             };
 
             for (String line : dataLines) {
@@ -192,12 +192,11 @@ public class TownDebugOverlay {
         public boolean canSpawnTourists;
         public String pathStart;
         public String pathEnd;
-        public int searchRadius;
         public int totalVisitors;
 
         public TownDebugData(String id, String name, String position, int population,
                 boolean touristSpawningEnabled, boolean canSpawnTourists,
-                String pathStart, String pathEnd, int searchRadius, int totalVisitors) {
+                String pathStart, String pathEnd, int totalVisitors) {
             this.id = id;
             this.name = name;
             this.position = position;
@@ -207,7 +206,6 @@ public class TownDebugOverlay {
             this.canSpawnTourists = canSpawnTourists;
             this.pathStart = pathStart;
             this.pathEnd = pathEnd;
-            this.searchRadius = searchRadius;
             this.totalVisitors = totalVisitors;
         }
     }

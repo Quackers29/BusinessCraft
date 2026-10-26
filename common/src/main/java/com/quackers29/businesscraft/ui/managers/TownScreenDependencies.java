@@ -14,7 +14,6 @@ public class TownScreenDependencies {
     private static final Logger LOGGER = LoggerFactory.getLogger(TownScreenDependencies.class);
     
     private final ModalCoordinator modalCoordinator;
-    private final SearchRadiusManager radiusManager;
     private final ButtonActionCoordinator buttonCoordinator;
     private final TownDataCacheManager cacheManager;
     
@@ -22,11 +21,9 @@ public class TownScreenDependencies {
      * Private constructor - use factory method create() instead.
      */
     private TownScreenDependencies(ModalCoordinator modalCoordinator,
-                                  SearchRadiusManager radiusManager,
                                   ButtonActionCoordinator buttonCoordinator,
                                   TownDataCacheManager cacheManager) {
         this.modalCoordinator = modalCoordinator;
-        this.radiusManager = radiusManager;
         this.buttonCoordinator = buttonCoordinator;
         this.cacheManager = cacheManager;
         
@@ -51,13 +48,6 @@ public class TownScreenDependencies {
             // Create modal coordinator
             ModalCoordinator modalCoordinator = new ModalCoordinator(screen, menu);
             
-            // Create search radius manager
-            SearchRadiusManager radiusManager = new SearchRadiusManager(
-                menu, 
-                menu.getBlockPos(), 
-                cacheManager
-            );
-            
             // Create button action coordinator
             ButtonActionCoordinator buttonCoordinator = new ButtonActionCoordinator(
                 screen, 
@@ -65,11 +55,10 @@ public class TownScreenDependencies {
             );
             
             // Validate all dependencies were created successfully
-            validateDependencies(modalCoordinator, radiusManager, buttonCoordinator, cacheManager);
+            validateDependencies(modalCoordinator, buttonCoordinator, cacheManager);
             
             TownScreenDependencies dependencies = new TownScreenDependencies(
                 modalCoordinator, 
-                radiusManager, 
                 buttonCoordinator, 
                 cacheManager
             );
@@ -107,14 +96,10 @@ public class TownScreenDependencies {
      * Validates that all dependencies were created successfully.
      */
     private static void validateDependencies(ModalCoordinator modalCoordinator,
-                                           SearchRadiusManager radiusManager,
                                            ButtonActionCoordinator buttonCoordinator,
                                            TownDataCacheManager cacheManager) {
         if (modalCoordinator == null || !modalCoordinator.validateDependencies()) {
             throw new RuntimeException("ModalCoordinator validation failed");
-        }
-        if (radiusManager == null) {
-            throw new RuntimeException("SearchRadiusManager creation failed");
         }
         if (buttonCoordinator == null || !buttonCoordinator.validateDependencies()) {
             throw new RuntimeException("ButtonActionCoordinator validation failed");
@@ -131,15 +116,6 @@ public class TownScreenDependencies {
      */
     public ModalCoordinator getModalCoordinator() {
         return modalCoordinator;
-    }
-    
-    /**
-     * Gets the search radius manager instance.
-     * 
-     * @return The search radius manager
-     */
-    public SearchRadiusManager getRadiusManager() {
-        return radiusManager;
     }
     
     /**
@@ -169,11 +145,6 @@ public class TownScreenDependencies {
         try {
             if (modalCoordinator == null || !modalCoordinator.validateDependencies()) {
                 LOGGER.warn("ModalCoordinator validation failed");
-                return false;
-            }
-            
-            if (radiusManager == null) {
-                LOGGER.warn("SearchRadiusManager is null");
                 return false;
             }
             

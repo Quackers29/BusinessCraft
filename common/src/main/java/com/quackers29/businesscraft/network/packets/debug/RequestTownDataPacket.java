@@ -59,7 +59,6 @@ public class RequestTownDataPacket {
                             town.canSpawnTourists(),
                             town.getPathStart() != null ? town.getPathStart().toShortString() : null,
                             town.getPathEnd() != null ? town.getPathEnd().toShortString() : null,
-                            town.getSearchRadius(),
                             town.getTotalVisitors()));
                 }
             }
