@@ -51,10 +51,10 @@ import java.util.UUID;
  */
 public class PlatformInterfaceBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
-    /** Cabinet, ticket tray, and roof lamp. North is the unrotated model, front toward -Z. */
+    /** Cabinet, ticket tray, roof, and sign lamp. North is the unrotated model, front toward -Z. */
     private static final VoxelShape NORTH_SHAPE = Shapes.or(
-            Block.box(2, 0, 1, 14, 13, 14),
-            Block.box(5, 12, 6, 11, 16, 12));
+            Block.box(2, 0, 1, 14, 13.8, 14),
+            Block.box(4.5, 13.8, 7, 11.5, 16, 12));
     private static final Map<Direction, VoxelShape> SHAPES = facingShapes(NORTH_SHAPE);
 
     public PlatformInterfaceBlock(Properties properties) {

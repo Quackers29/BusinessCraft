@@ -5,6 +5,7 @@ import com.quackers29.businesscraft.init.CommonModBlocks;
 import com.quackers29.businesscraft.ui.screens.platform.PlatformInterfaceScreen;
 import com.quackers29.businesscraft.ui.screens.platform.PlatformManagementScreenV2;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.core.BlockPos;
@@ -257,7 +258,7 @@ public final class Showcase {
         if ("platform_interface_screen".equals(name) || "platform_overview".equals(name)) {
             return true;
         }
-        return name.startsWith("town_") && !name.startsWith("town_interface");
+        return name.startsWith("town_") && !name.startsWith("town_interface") && !"town_paths".equals(name);
     }
 
     private static boolean shotReady(Minecraft minecraft, PlannedShot shot) {
@@ -349,16 +350,22 @@ public final class Showcase {
         Vec3 target = Vec3.atCenterOf(lookAt);
         Vec3 eye = switch (shot.name) {
             case "town_interface_back" -> target.add(-1.8, 1.6, -3.2);
-            case "platform_front", "platform_interface" -> target.add(0.0, 1.15, 3.1);
-            case "platform_side" -> target.add(3.3, 1.35, 0.4);
-            case "platform_rail" -> target.add(2.6, 2.0, 2.4);
-            case "platform_hand" -> target.add(0.0, 0.2, 2.4);
-            case "platform_path" -> target.add(3.6, 2.6, 1.2);
-            case "town_paths" -> target.add(2.5, 7.5, 6.5);
+            case "platform_front", "platform_interface" -> target.add(0.0, 0.72, 2.2);
+            case "platform_side" -> target.add(2.45, 0.7, 0.7);
+            case "platform_rail" -> target.add(1.9, 1.15, 2.35);
+            case "platform_hand" -> target.add(0.15, 0.85, 2.05);
+            case "platform_path" -> Vec3.atCenterOf(ShowcasePlatforms.interfacePos(pos)).add(1.65, 1.45, 2.2);
+            case "town_paths" -> Vec3.atCenterOf(pos).add(8.0, 9.5, 13.0);
             case "town_interface", "warmup" -> target.add(1.8, 1.6, 3.2);
             default -> target.add(0.0, 1.2, 2.4);
         };
         showPaths(shot, pos);
+        minecraft.options.setCameraType(CameraType.FIRST_PERSON);
+        minecraft.options.hideGui = !"platform_hand".equals(shot.name);
+        if ("platform_hand".equals(shot.name) && minecraft.player != null) {
+            minecraft.player.setItemInHand(InteractionHand.MAIN_HAND,
+                    new ItemStack(CommonModBlocks.PLATFORM_INTERFACE_BLOCK.get()));
+        }
         float[] facing = ShowcaseSelection.facing(eye.x, eye.y, eye.z, target.x, target.y + 0.2, target.z);
         Player player = minecraft.player;
         double feetY = eye.y - player.getEyeHeight();
@@ -371,9 +378,8 @@ public final class Showcase {
                 if (serverPlayer != null) {
                     if ("platform_hand".equals(shot.name)) {
                         serverPlayer.setGameMode(GameType.CREATIVE);
-                        serverPlayer.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,
-                                new net.minecraft.world.item.ItemStack(
-                                        com.quackers29.businesscraft.init.CommonModBlocks.PLATFORM_INTERFACE_BLOCK.get()));
+                        serverPlayer.setItemInHand(InteractionHand.MAIN_HAND,
+                                new ItemStack(CommonModBlocks.PLATFORM_INTERFACE_BLOCK.get()));
                     } else {
                         serverPlayer.setGameMode(GameType.SPECTATOR);
                     }
