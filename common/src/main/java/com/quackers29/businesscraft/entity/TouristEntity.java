@@ -49,7 +49,7 @@ import com.quackers29.businesscraft.entity.tourist.TouristLooks;
 public class TouristEntity extends Villager {
     private static final Logger LOGGER = LoggerFactory.getLogger(TouristEntity.class);
     /** Lowers the humanoid model into minecarts and Create seats (villager default offset is too high). */
-    private static final double RIDING_Y_OFFSET = -0.2625D;
+    private static final double RIDING_Y_OFFSET = -0.35D;
 
     // Synced entity data for live updates on client
     private static final EntityDataAccessor<Float> DATA_DISTANCE_TRAVELED =
