@@ -4,12 +4,12 @@ tags:
 ---
 # BusinessCraft — Mod Overview
 
-**TL;DR**: Town management + tourism economy mod (Forge & Fabric 1.20.1) — players found towns, build transport platforms, and earn emeralds when tourists travel real distances between towns.
+**TL;DR**: Town management + tourism economy mod (Forge & Fabric 1.20.1) — players place a Town Centre block to found a town, add up to ten Platform Interface blocks inside the boundary, and earn emeralds when tourists ride real distances between towns.
 
 ## The core loop
-1. **Found a town** by placing a Town Interface block (minimum distance from other towns enforced).
-2. **Build platforms** (up to 10 per town) — designated arrival/departure areas that can target specific destination towns or "any town".
-3. **Tourists spawn** at towns (population-driven) and travel via minecarts, Create trains, or on foot.
+1. **Found a town** by placing a **Town Centre** block (`town_interface`; no town owner). Placement must respect each town's border radius (`general.defaultBorderRadius`, default 50) and stay at least `newRadius + existingRadius` away from other towns.
+2. **Build platforms** by placing **Platform Interface** blocks inside the boundary (up to 10 per town) — each block is one platform with path, destinations, search radius, and spread edited on the block screen ([[Town/Platforms/Platform Interface]]).
+3. **Tourists spawn** at enabled platforms (population-driven) and **wait for minecarts or Create trains** — they do not walk ([[Tourists/Looks/Tourist Looks Names and Ranks]]).
 4. **Arrivals pay**: the destination town earns emeralds based on the distance each tourist actually traveled (see [[Economy/Tourist Payments/Distance Payment Calculation]]). Long journeys also trigger milestone rewards.
 5. **Towns grow**: tourism increases population, which raises tourist capacity, enabling more traffic — and feeds town upgrades, production, and research.
 
@@ -22,7 +22,7 @@ tags:
 - [[Config/Config Overview|Config]] — settings file, hot reload, key settings
 - [[Core/Core Overview|Core]] — cross-cutting utilities (time formatting for all UIs, success/failure handling)
 
-Platforms (paths, destinations, enable/disable) are documented under the Town area: [[Town/Platforms/Platform Data Model|Platform Data Model]] and [[Town/Platforms/Platform Management|Platform Management]].
+Platforms are documented under Town: [[Town/Platforms/Platform Interface]], [[Town/Platforms/Platform Data Model|Platform Data Model]], and [[Town/Platforms/Platform Management|Platform Management]]. Town/product choices: [[Town/Decisions/Town Centre and Platform Decisions]].
 
 ## Reading paths
 - **Human, "how does the mod work?"**: this note → area overview notes. Stop there; that's the full picture in plain language.

@@ -2,7 +2,7 @@
 
 **Context**: Public beta ships the polished tourism core as **0.9.x** (`tasks/ROADMAP_v0.9.md`). **v1.0** adds tourist transport contracts, prestige/"First to City", and Town Interface worldgen (`tasks/ROADMAP_v1.md`, `tasks/v1_worldgen.md`).
 
-**Status**: Steps 1–3 + border cleanup **done**. Finish pre-Step-4 decisions, then Step 4 last.
+**Status**: Steps 1–3 + border cleanup + **Town Centre / Platform Interface town setup** **done**. Step 4 verification mostly open (see below).
 
 ---
 
@@ -32,6 +32,11 @@
 - [x] Placement ≥ `defaultBorder + existing border` (100 for two unmodified fresh towns)
 - [x] Production option: `border_expansion_production` (`pop:>80%pop_cap` → `border:1`) unlocked by `border_expansion`
 
+**Town setup (current design — closed)**
+- [x] **Town Centre** block defines town + boundary; no owner; name from `townNames`
+- [x] **Platform Interface** blocks (craftable, inside boundary, cap 10, 5-block spacing) — one block per platform; settings on interface; Town Centre read-only platform list
+- [x] Sign lamp = linked + enabled; spawns need enabled + path; breaking centre deactivates interfaces / dismisses tourists
+
 **Earlier phases**
 - [x] Phase A roadmap/docs reorg
 - [x] Phase B hygiene (license MIT, debug off, Fabric loot jar, etc. — merged into Steps 2–3)
@@ -46,34 +51,21 @@
 
 - [x] **Commit** pending work (done by owner)
 - [x] **Oasis pop**: bumped oasis kit `pop:4` → `pop:5` (matches `minPopForTourists=5`; only kit that was below). Kept minPop at 5.
-- [ ] **Tourist skins (strategy A, rebuilt from original PNGs)** — deferred (owner working on it); in-game OK still open
+- [x] **Tourist looks in game**: 16 `tourist_looks` presets, personal names, distance ranks, tourist screen (`docs/TOURIST_MODELS.md`) — **owner in-game visual/playtest sign-off still open**
 - [x] **Phase C** (optional): fake-success UI audit — done for 0.9 (see Optional section)
-
-### Tourist skin rework — rebuilt from original UV masks; await in-game OK
-
-**Approach (2nd pass)**
-- Deleted `scripts/generate_tourist_*.py` (no committed generators)
-- Used restored `tourist_basic.png` + `tourist_hat_red.png` as UV/mask source of truth
-- Hat overlays: same opaque mask as original red hat (480 px); clean solid crown/band colors
-- Bodies: keep original head + camera; darken baked hat shell under overlay; recolor clothing for tiers
-  - basic ≈ original safari (hat shell darkened)
-  - experienced = deeper olive / browns
-  - luxury = navy / charcoal (+ gold lens)
-
-**Code**
-- [x] No profession layer; hat layer renders `hat` + `hat_rim`
-- [ ] **Owner**: Forge client — check tiers + colored hats sit on head
 
 ---
 
 ## Step 4 — Default flip + verification (LAST)
 
-- [x] Tourism-only defaults: `craftableTownInterface=true`; tourists/milestones on; production/research/trading/contracts **off**; `metersPerEmerald=1000`; milestones 1000m→apple, 5000m→bread; `minPayoutDistance=100`; confirm free tourism CSV
+- [x] Tourism-only defaults: `craftableTownInterface=true`; tourists/milestones on; production/research/trading/contracts **off**; `metersPerEmerald=100` (shipped default); milestones 1000m→apple, 5000m→bread; `minPayoutDistance=100`; `minPopForTourists=5`; confirm free tourism CSV
 - [ ] Manual Option C in-game trace (tourism with production off; oasis pop=5 OK)
-- [ ] Dedicated-server boot smoke — Forge + Fabric (refactor Fabric server paths **only if** smoke fails)
+- [x] Dedicated-server boot smoke — Forge + Fabric (**2026-10-26 pass**: `tools/server-boot-smoke.sh`, both reached Done)
 - [ ] Full SP pass both loaders + manual Create pass (Create Fabric = class-name sniff; verify or document Forge-only). Docs: tourists can't walk (speed 0) — need carts/trains
 - [ ] Performance smoke: multiple towns / many tourists (thresholds TBD in playtest)
 - [ ] Listing (Modrinth + CurseForge) + README/wiki; beta save-compat caveat; publish
+
+**2026-10-26 automated checks (this pass)**: `./gradlew test` pass; Forge `tools/showcase.sh` all-views (19), platform, tourists (16 looks), tourist-screen, two-towns — all PASS. Fabric client showcase and full survival playtest **not** run this pass.
 
 **Deferred (unchanged)**: Fabric class-split (unless smoke fails), localization, multiplayer playtest, `UIGridBuilder` refactor, GameTest for NEEDS-MC ledger rows (`toImprove.md`)
 
@@ -97,3 +89,14 @@
 - `UIGridBuilder` refactor → `toImprove.md`
 
 **Test + Docs Loop**: parked (seeds exhausted). Re-invoke when new logic lands.
+
+---
+
+## Future ideas (not now)
+
+- **Create Aeronautics** — planes, balloons, etc. as another tourist transport mode (alongside minecarts / Create trains).
+- **Elevation-aware rewards** — factor vertical travel into tourist payout or milestone bonuses.
+- **Achievements** — e.g. “Flying High” for extreme altitude journeys.
+- **Speed bonuses** — extra rewards for deliveries faster than Create trains’ max speed (anti-exploit rules TBD).
+
+See also `vault/Tourists/Future Tourism Ideas.md`.

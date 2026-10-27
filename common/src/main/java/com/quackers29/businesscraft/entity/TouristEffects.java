@@ -25,7 +25,7 @@ public final class TouristEffects {
     public static void playBoarding(ServerLevel level, Entity tourist, Entity vehicle) {
         Vec3 pos = tourist.position();
         burst(level, pos, ParticleTypes.CLOUD, 4);
-        level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.MINECART_INSIDE, SoundSource.NEUTRAL, 0.35f, 1.25f);
+        level.playSound(null, pos.x, pos.y, pos.z, TouristSounds.BOARDING, SoundSource.NEUTRAL, 0.5f, 1.25f);
     }
 
     /**
@@ -48,7 +48,7 @@ public final class TouristEffects {
             burst(level, pos, ParticleTypes.TOTEM_OF_UNDYING, 4);
             level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.PLAYER_LEVELUP, SoundSource.NEUTRAL, 0.3f, 1.45f);
         } else {
-            level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.VILLAGER_CELEBRATE, SoundSource.NEUTRAL, 0.45f, 1.15f);
+            level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.NEUTRAL, 0.35f, 1.15f);
         }
     }
 

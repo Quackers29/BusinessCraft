@@ -74,11 +74,6 @@ public class PacketRegistry {
                 register(SetTownNamePacket.class, "set_town_name_packet", NetworkDirection.PLAY_TO_SERVER,
                                 SetTownNamePacket::decode, SetTownNamePacket::encode, SetTownNamePacket::handle);
 
-                register(SetPathCreationModePacket.class, "set_path_creation_mode_packet",
-                                NetworkDirection.PLAY_TO_SERVER,
-                                SetPathCreationModePacket::decode, SetPathCreationModePacket::encode,
-                                SetPathCreationModePacket::handle);
-
                 register(SetPlatformAreaPacket.class, "set_platform_area_packet", NetworkDirection.PLAY_TO_SERVER,
                                 SetPlatformAreaPacket::decode, SetPlatformAreaPacket::encode,
                                 SetPlatformAreaPacket::handle);

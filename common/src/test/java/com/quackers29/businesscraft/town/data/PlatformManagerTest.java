@@ -48,7 +48,7 @@ class PlatformManagerTest {
 
     @Test
     void addPlatform_firstAdd_succeedsWithDefaultNameAndNotifies() {
-        boolean added = manager.addPlatform();
+        boolean added = PlatformManagerTestFixtures.addSyntheticPlatform(manager);
         assertTrue(added);
         assertEquals(1, changeCount.get());
         assertEquals(1, manager.getPlatformCount());
@@ -64,9 +64,9 @@ class PlatformManagerTest {
 
     @Test
     void addPlatform_multiple_sequentialNamesAndGrowth() {
-        assertTrue(manager.addPlatform());
-        assertTrue(manager.addPlatform());
-        assertTrue(manager.addPlatform());
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
 
         assertEquals(3, manager.getPlatformCount());
         assertEquals(3, changeCount.get());
@@ -80,12 +80,12 @@ class PlatformManagerTest {
     @Test
     void addPlatform_atMax_returnsFalseAndDoesNotGrowOrNotifyExtra() {
         for (int i = 0; i < 10; i++) {
-            assertTrue(manager.addPlatform(), "add " + (i + 1) + " should succeed");
+            assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager), "add " + (i + 1) + " should succeed");
         }
         assertEquals(10, manager.getPlatformCount());
         int countAfterTen = changeCount.get();
 
-        boolean eleventh = manager.addPlatform();
+        boolean eleventh = PlatformManagerTestFixtures.addSyntheticPlatform(manager);
         assertFalse(eleventh);
         assertEquals(10, manager.getPlatformCount());
         assertEquals(countAfterTen, changeCount.get(), "no notify on rejected add");
@@ -96,7 +96,7 @@ class PlatformManagerTest {
 
     @Test
     void removePlatform_existing_removesAndNotifies() {
-        assertTrue(manager.addPlatform());
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
         UUID id = manager.getPlatforms(false).get(0).getId();
 
         boolean removed = manager.removePlatform(id);
@@ -108,7 +108,7 @@ class PlatformManagerTest {
 
     @Test
     void removePlatform_missing_returnsFalseAndNoExtraNotify() {
-        assertTrue(manager.addPlatform());
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
         int before = changeCount.get();
 
         boolean removed = manager.removePlatform(UUID.randomUUID());
@@ -121,7 +121,7 @@ class PlatformManagerTest {
 
     @Test
     void getPlatform_present_returnsLiveInstance() {
-        assertTrue(manager.addPlatform());
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
         UUID id = manager.getPlatforms(false).get(0).getId();
 
         Platform p = manager.getPlatform(id);
@@ -136,7 +136,7 @@ class PlatformManagerTest {
 
     @Test
     void setPlatformPathStartEnd_andToggle_affectPlatformAndNotify() {
-        assertTrue(manager.addPlatform());
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
         UUID id = manager.getPlatforms(false).get(0).getId();
         int before = changeCount.get();
 
@@ -164,8 +164,8 @@ class PlatformManagerTest {
 
     @Test
     void getPlatforms_returnsDefensiveCopy_serverSide_mutateCopyDoesNotAffectManager() {
-        manager.addPlatform();
-        manager.addPlatform();
+        PlatformManagerTestFixtures.addSyntheticPlatform(manager);
+        PlatformManagerTestFixtures.addSyntheticPlatform(manager);
 
         List<Platform> copy = manager.getPlatforms(false);
         copy.clear();
@@ -177,7 +177,7 @@ class PlatformManagerTest {
     @Test
     void getPlatforms_clientSide_returnsSeparateDefensiveCopy() {
         // populate server list
-        manager.addPlatform();
+        PlatformManagerTestFixtures.addSyntheticPlatform(manager);
         // simulate client sync with same tag
         CompoundTag tag = new CompoundTag();
         manager.saveToNBT(tag);
@@ -196,20 +196,20 @@ class PlatformManagerTest {
     @Test
     void getEnabledPlatforms_onlyReturnsEnabledAndComplete() {
         // 1: good
-        assertTrue(manager.addPlatform());
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
         UUID good = manager.getPlatforms(false).get(0).getId();
         manager.setPlatformPathStart(good, START_A);
         manager.setPlatformPathEnd(good, END_A);
         // remains enabled
 
         // 2: enabled but incomplete (no end)
-        assertTrue(manager.addPlatform());
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
         UUID incomplete = manager.getPlatforms(false).get(1).getId();
         manager.setPlatformPathStart(incomplete, START_B);
         // no end
 
         // 3: complete but disabled
-        assertTrue(manager.addPlatform());
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
         UUID disabled = manager.getPlatforms(false).get(2).getId();
         manager.setPlatformPathStart(disabled, START_A);
         manager.setPlatformPathEnd(disabled, END_A);
@@ -222,7 +222,7 @@ class PlatformManagerTest {
 
     @Test
     void getEnabledPlatforms_emptyWhenNoneQualify() {
-        assertTrue(manager.addPlatform());
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
         // no path set -> incomplete
         assertTrue(manager.getEnabledPlatforms().isEmpty());
     }
@@ -238,7 +238,7 @@ class PlatformManagerTest {
 
     @Test
     void saveToNBT_nonEmpty_writesListTagWithPlatformEntries() {
-        assertTrue(manager.addPlatform());
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
         UUID id = manager.getPlatforms(false).get(0).getId();
         manager.setPlatformPathStart(id, START_A);
         manager.setPlatformPathEnd(id, END_A);
@@ -253,8 +253,8 @@ class PlatformManagerTest {
     @Test
     void loadFromNBT_roundtrip_restoresAllPlatformState() {
         // seed two platforms with paths and one dest
-        assertTrue(manager.addPlatform());
-        assertTrue(manager.addPlatform());
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
         List<Platform> seeded = manager.getPlatforms(false);
         UUID id1 = seeded.get(0).getId();
         UUID id2 = seeded.get(1).getId();
@@ -293,7 +293,7 @@ class PlatformManagerTest {
     @Test
     void loadFromNBT_missingKey_leavesEmptyAfterClear() {
         // first put something in
-        manager.addPlatform();
+        PlatformManagerTestFixtures.addSyntheticPlatform(manager);
         CompoundTag emptyish = new CompoundTag();
         // no "platforms" key
 
@@ -305,7 +305,7 @@ class PlatformManagerTest {
 
     @Test
     void updateClientPlatforms_replacesClientListFromTag() {
-        assertTrue(manager.addPlatform());
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
         UUID id = manager.getPlatforms(false).get(0).getId();
         manager.setPlatformPathStart(id, START_A);
         manager.setPlatformPathEnd(id, END_A);
@@ -326,7 +326,7 @@ class PlatformManagerTest {
     @Test
     void updateClientPlatforms_missingKey_clearsClientList() {
         // seed a client list somehow
-        assertTrue(manager.addPlatform());
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
         CompoundTag tagWith = new CompoundTag();
         manager.saveToNBT(tagWith);
 
@@ -346,8 +346,8 @@ class PlatformManagerTest {
         assertEquals(0, manager.getPlatformCount());
         assertTrue(manager.canAddMorePlatforms());
 
-        manager.addPlatform();
-        manager.addPlatform();
+        PlatformManagerTestFixtures.addSyntheticPlatform(manager);
+        PlatformManagerTestFixtures.addSyntheticPlatform(manager);
         assertEquals(2, manager.getPlatformCount());
 
         UUID id = manager.getPlatforms(false).get(0).getId();
@@ -355,36 +355,19 @@ class PlatformManagerTest {
         assertEquals(1, manager.getPlatformCount());
     }
 
-    // --- creation mode state (transient) ---
-
-    @Test
-    void creationMode_setAndGet_roundtripsAndClearsIdWhenDisabled() {
-        UUID someId = UUID.randomUUID();
-        manager.setPlatformCreationMode(true, someId);
-        assertTrue(manager.isInPlatformCreationMode());
-        assertEquals(someId, manager.getPlatformBeingEdited());
-
-        manager.setPlatformCreationMode(false, someId);
-        assertFalse(manager.isInPlatformCreationMode());
-        assertNull(manager.getPlatformBeingEdited());
-    }
-
     // --- clear ---
 
     @Test
     void clear_resetsListsModeAndCount() {
-        manager.addPlatform();
-        manager.addPlatform();
+        PlatformManagerTestFixtures.addSyntheticPlatform(manager);
+        PlatformManagerTestFixtures.addSyntheticPlatform(manager);
         UUID id = manager.getPlatforms(false).get(0).getId();
         manager.setPlatformPathStart(id, START_A);
-        manager.setPlatformCreationMode(true, id);
 
         manager.clear();
 
         assertEquals(0, manager.getPlatformCount());
         assertEquals(0, manager.getPlatforms(true).size());
-        assertFalse(manager.isInPlatformCreationMode());
-        assertNull(manager.getPlatformBeingEdited());
         // clear does not go through notify path in current impl; no assertion on count here
     }
 
@@ -392,7 +375,7 @@ class PlatformManagerTest {
 
     @Test
     void getEnabledPlatforms_updatesWhenPlatformToggledOrPathCompleted() {
-        assertTrue(manager.addPlatform());
+        assertTrue(PlatformManagerTestFixtures.addSyntheticPlatform(manager));
         UUID id = manager.getPlatforms(false).get(0).getId();
 
         assertTrue(manager.getEnabledPlatforms().isEmpty()); // incomplete

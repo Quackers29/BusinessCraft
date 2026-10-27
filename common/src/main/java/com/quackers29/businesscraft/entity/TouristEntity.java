@@ -48,6 +48,8 @@ import com.quackers29.businesscraft.entity.tourist.TouristLooks;
 
 public class TouristEntity extends Villager {
     private static final Logger LOGGER = LoggerFactory.getLogger(TouristEntity.class);
+    /** Lowers the humanoid model into minecarts and Create seats (villager default offset is too high). */
+    private static final double RIDING_Y_OFFSET = -0.35D;
 
     // Synced entity data for live updates on client
     private static final EntityDataAccessor<Float> DATA_DISTANCE_TRAVELED =
@@ -268,7 +270,7 @@ public class TouristEntity extends Villager {
                     } else {
                         // 50% chance to celebrate when going fast (increased for testing)
                         if (this.random.nextFloat() < 0.25f) {
-                            this.playSound(SoundEvents.VILLAGER_CELEBRATE, 1.0f, 1.0f);
+                            this.playSound(SoundEvents.EXPERIENCE_ORB_PICKUP, 0.35f, 1.05f);
                             this.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
                             lastSpeedReactionTick = currentTick;
                             DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
@@ -762,6 +764,11 @@ public class TouristEntity extends Villager {
     @Override
     protected SoundEvent getAmbientSound() {
         return null;
+    }
+
+    @Override
+    public double getMyRidingOffset() {
+        return this.isPassenger() ? RIDING_Y_OFFSET : super.getMyRidingOffset();
     }
 
     @Override

@@ -2,8 +2,6 @@ package com.quackers29.businesscraft.api;
 
 import java.util.function.Consumer;
 
-import net.minecraft.core.BlockPos;
-
 public interface EventHelper {
     void registerModEvent(Object listener);
 
@@ -14,10 +12,6 @@ public interface EventHelper {
     void addServerStartedListener(Consumer<Void> listener);
 
     void addLevelUnloadListener(Consumer<Void> listener);
-
-    void setActiveTownBlock(BlockPos pos);
-
-    void clearActiveTownBlock();
 
     void registerPlayerTickCallback(EventCallbacks.PlayerTickCallback callback);
 

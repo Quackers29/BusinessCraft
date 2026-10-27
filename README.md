@@ -1,6 +1,6 @@
 # BusinessCraft - Town Management Mod
 
-**A Minecraft Forge / Fabric 1.20.1 mod featuring town management and tourism economy systems.**
+**A Minecraft Forge / Fabric 1.20.1 mod (0.9.0-beta) featuring town management and a tourism transport economy.**
 
 ## 🏙️ Core Systems Overview
 
@@ -14,8 +14,8 @@
   
 - **Advanced Population Mechanics**:
   - Dynamic population growth from tourist visits
-  - Tourist capacity management (population-driven, configurable, upgradeable)
-  - Population-based platform allocation and spawning rates
+  - Tourist spawning gated by minimum population (`minPopForTourists`, default 5)
+  - Up to **10 platforms per town**, each tied to a placed **Platform Interface** block inside the town boundary (not allocated from population)
   
 - **Comprehensive Visit Tracking**:
   - Up to 50 visit history records with timestamps
@@ -26,23 +26,14 @@
   - Delegates complex business logic to `TownService`
   - Clean separation between data model and business operations
 
-### **Block Entity System** (`TownInterfaceEntity.java`)
-**✅ Advanced Modular Architecture**
+### **Town Centre & Platform Interface blocks**
+**✅ Town Centre (`town_interface`, display name Town Centre) + craftable Platform Interface blocks**
 
-- **14 Specialized Helper Classes**:
-  - `ClientSyncHelper`: Advanced server-client synchronization
-  - `PlatformManager`: Complete platform lifecycle management
-  - `VisitorProcessingHelper`: Complex visitor detection algorithms
-  - `TouristSpawningHelper`: Population-based spawning logic
-  - `NBTDataHelper`: Robust save/load with data migration
-  - `ContainerDataHelper`: Modular ContainerData field system
-  - `TownBufferManager`: 18-slot buffer inventory management
-
-- **Real-Time World Integration**:
-  - Particle effect visualization with rate limiting
-  - Smart resource processing (1 item/tick with sync)
-  - Platform-based tourist spawning (up to 10 platforms/town)
-  - Sophisticated client-side caching with auto-refresh
+- **Town Centre** defines the town, its name (from `general.townNames`), and circular boundary (border modifier or `general.defaultBorderRadius`, default 50). Placement must be at least **sum of both towns’ radii** from another Town Centre (100 blocks for two fresh towns). The boundary does **not** grow with population. In survival it **drops only when mined with a diamond-tier pickaxe** (vanilla `needs_diamond_tool` + `mineable/pickaxe` tags). **Platform Interface** blocks use a normal iron-tier pickaxe (any pickaxe).
+- **Platform Interface** blocks are crafted and placed **inside** the boundary; each block is one platform. Breaking the block removes that platform. Settings (path, search radius, spread, enable, destinations) live on the Platform Interface screen; the Town Centre only shows a read-only platform list.
+- **Town Centre block entity** (`TownInterfaceEntity.java`) — modular server-side town logic:
+  - **14 Specialized Helper Classes**: `ClientSyncHelper`, `PlatformManager`, `VisitorProcessingHelper`, `TouristSpawningHelper`, `NBTDataHelper`, `ContainerDataHelper`, `TownBufferManager`
+  - **Real-Time World Integration**: particle visualization, buffer processing, platform-based spawning (up to 10/town), client caching
 
 ### **Tourist Entity System** (`TouristEntity.java`)
 **✅ Advanced Villager-Based Implementation**
@@ -53,8 +44,10 @@
   - Smart ride extension (resets timer on minecart/Create train boarding)
 
 - **Professional Tourist Behavior**:
+  - **Tourists do not walk** in 0.9 (movement speed is effectively zero); they wait on the platform until a minecart or Create train carries them
+  - **16 layered looks** (`data/businesscraft/tourist_looks`), personal names (name tag shows first name), distance ranks (Wanderer → Renowned; see `tourists.levelDistances` in config)
   - Origin/destination tracking with UUID persistence
-  - Unemployed villager base with random appearance generation
+  - Unemployed villager base with layered look rendering
   - Multiple breeding prevention safeguards
   - Death/departure notifications to origin towns
 
@@ -63,14 +56,15 @@
   - Integration with Create mod vehicle systems
   - Proper cleanup and accounting on entity removal
 
-### **Platform Transportation System** (`Platform.java`)
+### **Platform Transportation System** (`Platform.java` + Platform Interface block)
 **✅ Multi-Destination Platform Architecture**
 
-- **Comprehensive Platform Management**:
-  - Multi-destination support per platform
-  - Complete NBT serialization for persistence
-  - Path validation with start/end position tracking
-  - Individual enable/disable controls
+- **Comprehensive Platform Management** (per Platform Interface block):
+  - Multi-destination allow-list per platform (empty selection = any town)
+  - Complete NBT serialization for persistence (platforms without a saved interface position are dropped on load)
+  - Path set on the Platform Interface (two right-clicks); spawn requires **enabled** + complete path
+  - Search radius (default 10, cap `platforms.maxSearchRadius` default 100), spread (≤ search radius; 0 = on the path line), enable toggle
+  - Sign lamp lit only when linked and enabled; disabling stops spawns
 
 - **Destination System**:
   - UUID-based town identification
@@ -108,12 +102,12 @@
 
 ---
 
-## 🏛️ Town Interface Block UI System
+## 🏛️ Town Centre UI System
 
-### **Main Town Interface Screen** (`TownInterfaceScreen.java`)
+### **Main Town Centre Screen** (`TownInterfaceScreen.java`)
 **✅ Complete 4-Tab Management Interface**
 
-The Town Interface Block provides a well-designed tabbed interface for complete town management. Built with clean architecture using dependency injection and specialized managers.
+The **Town Centre** block provides a tabbed interface for town overview, resources, and settings. **Platform path, radius, spread, enable, and destinations are configured on each Platform Interface block**, not here (this screen only lists platform state). Built with clean architecture using dependency injection and specialized managers.
 
 #### **Core Architecture**
 - **15+ UI Managers**: `TownScreenDependencies`, `BottomButtonManager`, `TownTabController`, etc.
@@ -171,23 +165,14 @@ The Town Interface Block provides a well-designed tabbed interface for complete 
   - Resource state tracking with `Map.copyOf()` for safety
 
 #### **⚙️ Settings Tab** (`SettingsTab.java`)
-**✅ Configuration Management Interface**
+**✅ Town-Level Settings (not platforms)**
 
-- **Platform Management Integration**:
-  - **"Set Platforms" Button**: Opens `PlatformManagementScreenV2`
-  - Direct navigation to platform configuration
-  - Sound feedback on button interactions
-  
-- **Search Radius Controls**:
-  - **Dynamic Radius Display**: Shows current search radius value
-  - **Left-Click**: Increase radius
-  - **Right-Click**: Decrease radius (via custom click handler)
-  - **Real-time Updates**: Radius changes reflected immediately
+- Town name editing and ranking display (no add/delete platform controls on the Town Centre)
+- Tabs for production, research, trading, and contracts remain visible but are **locked off by default** in 0.9 (tourism + milestones on)
 
 - **Technical Architecture**:
   - `StandardTabContent` with `BUTTON_GRID` layout
   - `Consumer<Void>` button action handlers
-  - Custom click handler for right-click functionality
   - `LinkedHashMap` maintains button order
 
 ### **Specialized Screen System**
@@ -287,7 +272,7 @@ Each content type optimizes rendering and interaction patterns for specific data
 **✅ Complete Client-Server Communication**
 
 #### **Platform Management** (`network/packets/platform/` - 9 packets)
-Platform creation/deletion, path setting and reset, destination selection, enable/disable, path creation mode, search radius, refresh — e.g. `AddPlatformPacket`, `SetPlatformPathPacket`, `SetPlatformDestinationPacket`, `SetPlatformEnabledPacket`
+Path setting and reset, destination selection, enable/disable, path creation mode, search radius and spread, refresh — e.g. `SetPlatformPathPacket`, `SetPlatformDestinationPacket`, `SetPlatformEnabledPacket`, `SetPlatformAreaPacket`
 
 #### **Storage & Payment Board** (`network/packets/storage/` - 12 packets)
 Communal/personal/buffer storage request+response pairs, payment board sync and claims, resource trading — e.g. `PaymentBoardClaimPacket`, `PersonalStoragePacket`, `BufferStorageResponsePacket`, `TradeResourcePacket`
@@ -399,37 +384,43 @@ Server-built UI view models pushed to the client: town interface, resources, pro
 ### **Installation Requirements**
 - **Minecraft**: 1.20.1
 - **Loader**: Forge or Fabric (both fully supported)
+- **Mod version**: 0.9.0-beta
 - **Memory**: Recommended 4GB+ for optimal performance
-- **Storage**: Persistent data saved with world files
+- **Storage**: Persistent data saved with world files (no pre-alpha save back-compat promise)
+
+### **How a town is set up**
+
+1. **Craft and place a Town Centre** — recipe: 8 obsidian around 1 diamond (`OOO` / `O#O` / `OOO`). Place it at least **100 blocks** from another Town Centre if both use the default radius (50). The town name is chosen from config; there is no town owner. The Town Centre lists platforms; it does not add or remove them.
+2. **Craft Platform Interface blocks** — recipe: rails and iron around redstone (`RIR` / `I#I` / `RIR`). Place them **inside** the town boundary (max 10 per town, at least **5 blocks** from another interface of the same town). Placement outside the boundary fails.
+3. **On each Platform Interface** — set the spawn path (two right-clicks), search radius and spread, enable the platform, and pick destination towns (or leave none for “any town”). The sign lamp is on only when the platform is linked and enabled.
+4. **Move tourists** — they **do not walk**; use minecarts or Create trains. Fare is linear: default **100 blocks per emerald** (`economy.metersPerEmerald`). Claim distance milestones from the Payment Board.
+5. **Breaking blocks** — breaking a Platform Interface removes that platform; breaking the Town Centre deactivates loaded interfaces and dismisses tourists on those platforms.
 
 ### **Quick Start Guide**
 
-1. **Establish Your First Town**
+1. **Establish your first town**
    ```
-   → Place a Town Block in your desired location
-   → Right-click to access the town interface
-   → Configure your town name using the real-time editor
-   ```
-
-2. **Set Up Transportation Infrastructure**
-   ```
-   → Build platforms for tourist spawning and travel
-   → Use the platform path creation system to connect destinations
-   → Configure individual platform settings (enable/disable, destinations)
+   → Craft and place a Town Centre (see recipe above)
+   → Right-click for overview, resources, and town settings
    ```
 
-3. **Monitor Town Growth**
+2. **Set up transport**
    ```
-   → Access the Population tab to track growth metrics
-   → Review visit history to understand tourist patterns
-   → Claim milestone rewards from the Payment Board system
+   → Place Platform Interface blocks inside the boundary
+   → On each interface: set path, radius/spread, enable, destinations
+   → Build rails or Create routes; tourists need carts/trains
    ```
 
-4. **Advanced Configuration**
+3. **Grow tourism**
    ```
-   → Adjust tourist expiry times and population ratios
-   → Configure minimum distances between towns
-   → Set up Create mod integration for train transportation
+   → New towns start at population 5, the default minimum for tourists
+   → Watch visit history and claim Payment Board milestones
+   ```
+
+4. **Server tuning (optional)**
+   ```
+   → Edit config TOML: tourist expiry, milestones, locked subsystems
+   → Production, research, trading, and contracts stay off unless enabled
    ```
 
 ---

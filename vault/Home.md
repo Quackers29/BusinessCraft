@@ -18,8 +18,8 @@ Folders mirror game systems, nesting from system → subsystem → process:
 
 - **[[Economy/Economy Overview|Economy/]]** — tourist payments, milestones, currency, market prices
 - **[[Trade/Trade Overview|Trade/]]** — contracts, bidding, courier delivery, town-to-town trades, global market
-- **[[Town/Town Overview|Town/]]** — town lifecycle, population, resources, boundaries, visit history, payment board, platforms (under `Town/Platforms/`)
-- **[[Tourists/Tourists Overview|Tourists/]]** — spawning, AI, expiry, capacity, ride mechanics
+- **[[Town/Town Overview|Town/]]** — town lifecycle, population, resources, boundaries, visit history, payment board, platforms ([[Town/Platforms/Platform Interface]], [[Town/Decisions/Town Centre and Platform Decisions]])
+- **[[Tourists/Tourists Overview|Tourists/]]** — spawning, AI, expiry, capacity, ride mechanics ([[Tourists/Looks/Tourist Looks Names and Ranks]])
 - **[[Production/Production Overview|Production/]]** — production recipes, upgrades, research
 - **[[Config/Config Overview|Config/]]** — configuration system and key settings
 - **[[Core/Core Overview|Core/]]** — cross-cutting pure utilities (time formatting, result/error types)

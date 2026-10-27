@@ -17,7 +17,6 @@ import com.quackers29.businesscraft.forge.init.ForgeModEntityTypes;
 import com.quackers29.businesscraft.forge.init.ForgeModBlockEntities;
 import com.quackers29.businesscraft.forge.init.ForgeModMenuTypes;
 import com.quackers29.businesscraft.forge.network.ForgeModMessages;
-import com.quackers29.businesscraft.forge.event.ForgeModEvents;
 import com.quackers29.businesscraft.api.PlatformHelper;
 import com.quackers29.businesscraft.api.RegistryHelper;
 import com.quackers29.businesscraft.api.EventHelper;

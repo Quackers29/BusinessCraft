@@ -1,76 +1,73 @@
 # BusinessCraft - Living Document
 
-**Last Updated**: May 20, 2026  
-**Project Status**: Polishing for First Release  
-**Core Vision**: Create a compelling **transport economy** in Minecraft. Towns generate supply and demand. Tourists provide the visible, living justification for building transportation infrastructure (especially Create trains).
+**Last Updated**: October 26, 2026  
+**Project Status**: 0.9.0-beta — tourism transport core  
+**Core Vision**: Create a compelling **transport economy** in Minecraft. Towns attract tourists; **moving them real distance** (minecarts, Create trains) generates revenue and growth. Production, trading, and contracts exist in code but ship **locked off** in 0.9.
 
 ## The Big Idea (Why This Mod Exists)
 
 Most transport in Minecraft feels pointless — Create trains run empty around servers with no passengers or purpose.
 
-**BusinessCraft's core fantasy**: Build towns that produce goods and need resources. These towns attract **living tourists**. By building platforms and transport networks, you enable tourists to travel efficiently. The further they travel, the more revenue they generate. Successful transport makes towns grow, produce more contracts, and attract more tourists.
+**BusinessCraft's long-term fantasy**: Towns produce goods, negotiate contracts, and attract living tourists. Transport networks matter because tourists (and eventually goods) need to move. **What ships in 0.9** is the tourism slice of that fantasy: found a town with a **Town Centre**, place **Platform Interface** blocks, route tourists, earn fares and milestones. Deeper supply/demand and town-to-town trading are roadmap work (`tasks/ROADMAP_v2.md`, `tasks/ROADMAP_v3.md`).
 
-**First release priority**: Focus on **entity (tourist) transport** because it creates the strongest emotional impact. Seeing tourists actually riding your Create trains (instead of them running empty) will be the main "aha" moment that makes the mod compelling.
+**First release priority**: **Entity (tourist) transport** — seeing tourists ride your trains instead of empty loops is the main “aha” moment. Tourists **do not walk** in 0.9; they wait until carried.
 
-## Core Player Loop
+## Core Player Loop (0.9)
 
-1. **Build Towns** — Place Town Interface, name it, grow population through successful tourism
-2. **Build Transport** — Create platforms and routes (integrates with Create trains, rails, etc.)
-3. **Attract & Move Tourists** — They travel your networks, generating revenue based on *actual distance traveled*
-4. **Grow Economy** — Revenue funds upgrades, contracts, production. Towns produce what they sell and buy what they need
-5. **Repeat** — Better transport → more tourists → more revenue → bigger towns
+1. **Found a town** — Place a **Town Centre** block (boundary + name). No owner.
+2. **Place platforms** — Craft **Platform Interface** blocks inside the boundary; set path, radius, spread, enable, destinations on each.
+3. **Move tourists** — Spawn when enabled + path complete and population ≥ `minPopForTourists` (default 5). Carry them with minecarts or Create; fare scales with distance (`metersPerEmerald=100` default).
+4. **Collect payoff** — Payment Board milestones, population growth from visits, visit history.
+5. **Expand** — More interfaces (up to 10), better routes, optional unlocked subsystems if a server enables them.
 
-**Success metric for v1.0**: Player understands they are building a living transport economy within the first 10-15 minutes.
+**Success metric for v1.0**: Player understands they are building a living transport economy within the first 10-15 minutes. (0.9 focuses on getting tourism transport understandable and honest.)
 
-## Current Focus Areas (First Release)
+## Current Focus Areas (0.9 beta)
 
-- **Tourist Polish** (Active): Visuals, skins (config/skins folder), behaviors, and clear payoff when they use transport
-- **Transportation Feedback**: Make it visually satisfying when tourists ride trains/platforms
-- **Onboarding**: Clear messaging about the transport economy fantasy
-- **Balance**: Early milestones should feel rewarding quickly
+- **Tourism transport loop**: Town Centre + Platform Interface setup, honest UI, distance payouts
+- **Tourist presentation**: 16 layered looks, names, ranks — see **`docs/TOURIST_MODELS.md`** (not a `config/skins` folder workflow)
+- **Verification**: Automated tests + showcase harness; owner playtest and listings still open (`tasks/todo.md`)
+- **Locked by default**: production, research, trading, contracts (tabs visible, inert)
 
-**Documentation & external communication** will be done last, just before release.
+**Documentation**: README + roadmaps updated for 0.9; wiki/vault for deeper design notes.
 
 ## Key Systems (Verified from Codebase)
 
 ### Town System (`com.quackers29.businesscraft.town`)
 - `Town.java` (major class with component architecture)
-- Components: Economy, Production, Trading, Contracts, Upgrades
+- Components: Economy, Production, Trading, Contracts, Upgrades (several gated off in default config)
 - Multi-tier storage, population growth from tourism, milestone tracking
+- Boundary from modifier / `defaultBorderRadius` (not population growth)
 
 ### Tourist System (`com.quackers29.businesscraft.entity`)
-- `TouristEntity` with custom AI goals (gossip, gaze, celebration on speed)
-- Smart ride extension, expiry system, origin tracking
-- **Active work**: Tiered skins via dynamic config/skins loading (see Kanban task below)
+- `TouristEntity` — ride extension, expiry, origin/destination tracking
+- **Looks**: datapack `tourist_looks` + layered textures (`docs/TOURIST_MODELS.md`)
+- **Movement**: effectively stationary on foot in 0.9 (player transport required)
 
-### Platform & Transport (`com.quackers29.businesscraft.platform`)
-- `Platform.java` with multi-destination and visualization
-- Designed as integration point for Create and other transport mods
+### Platform & Transport
+- `Platform.java` data + **Platform Interface** block entity (settings and path on the block)
+- Town Centre block entity holds town state; read-only platform list in UI
+- Integration point for Create and minecarts
 
 ### UI & Supporting Systems
 - Production-grade UI framework (`BCScreenBuilder`, state binding, modals)
-- Strong network layer (22 packets), debug system (`DebugConfig` with 25+ flags), data helpers
+- Network layer (platform/town/storage/UI packets), debug system (`DebugConfig`), data helpers
 
 ## Architecture Principles
 - Common-first (all logic in `common/`)
 - Component and Provider patterns for clean separation
-- Living documentation (this file is the single source of truth)
+- Living documentation (this file is the single source of truth for architecture intent)
 - Observability-first (excellent debug overlay via F3+K)
 
-## Active Kanban Work
-- `t_1ab40ead` (researcher): Completed — researched tiered tourist skins
-- `t_961c5537` (coder): Completed — implemented dynamic skin loading system (`TouristSkinManager`, renderer integration, config/skins support)
-- `t_0af9f211` (artist): **Rejected** — produced only hat textures. Changes reverted and code cleaned up.
-- `t_d3f21c03` (artist): **Active** — new much stricter task to create proper full-body 64x64 tourist entity textures (no placeholders, specific clothing per tier, correct UV mapping).
-
-**New Profile**: `artist` — created for visual work (Gareth's weakest area). Now being given extremely specific prompts.
-
-**Next Priority**: Get high-quality full tourist skins that work properly with the existing renderer and hat layer. This is critical for first release visual polish.
+## Roadmap pointers
+- **0.9**: `tasks/ROADMAP_v0.9.md`, checklist `tasks/todo.md`
+- **v1**: contracts, prestige, worldgen — `tasks/ROADMAP_v1.md`, `tasks/v1_worldgen.md` (includes future tourist walk-to-seat polish)
+- **v2 / v3**: trading depth, federation — `tasks/ROADMAP_v2.md`, `tasks/ROADMAP_v3.md`
 
 ---
 
 **Archive**: Old documents moved to `docs/archive/`
 
-**Obsidian**: Open this project folder in Obsidian for richer personal notes and linking.
+**Obsidian**: Personal design vault lives in **`vault/`** (link from repo root in your Obsidian vault setup).
 
-*This is the single living document. It will be updated as we polish the transport economy systems. No other living docs will be maintained in this folder.*
+*This is the single living document. It will be updated as systems ship. No other living docs will be maintained in this folder.*

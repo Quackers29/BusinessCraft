@@ -38,14 +38,6 @@ public class FabricEventHelper implements EventHelper {
         // Will be handled in FabricEventCallbackHandler
     }
 
-    public void setActiveTownBlock(BlockPos pos) {
-        com.quackers29.businesscraft.fabric.event.FabricModEvents.setActiveTownBlock(pos);
-    }
-
-    public void clearActiveTownBlock() {
-        com.quackers29.businesscraft.fabric.event.FabricModEvents.clearActiveTownBlock();
-    }
-
     public void registerPlayerTickCallback(EventCallbacks.PlayerTickCallback callback) {
         FabricEventCallbackHandler.registerPlayerTickCallback(callback);
     }
