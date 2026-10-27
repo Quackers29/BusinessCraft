@@ -48,6 +48,8 @@ import com.quackers29.businesscraft.entity.tourist.TouristLooks;
 
 public class TouristEntity extends Villager {
     private static final Logger LOGGER = LoggerFactory.getLogger(TouristEntity.class);
+    /** Lowers the humanoid model into minecarts and Create seats (villager default offset is too high). */
+    private static final double RIDING_Y_OFFSET = -0.4375D;
 
     // Synced entity data for live updates on client
     private static final EntityDataAccessor<Float> DATA_DISTANCE_TRAVELED =
@@ -268,7 +270,7 @@ public class TouristEntity extends Villager {
                     } else {
                         // 50% chance to celebrate when going fast (increased for testing)
                         if (this.random.nextFloat() < 0.25f) {
-                            this.playSound(SoundEvents.VILLAGER_CELEBRATE, 1.0f, 1.0f);
+                            TouristSounds.play(this, TouristSounds.CELEBRATE, 0.35f, 1.05f);
                             this.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
                             lastSpeedReactionTick = currentTick;
                             DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY,
@@ -765,6 +767,26 @@ public class TouristEntity extends Villager {
     }
 
     @Override
+    protected SoundEvent getHurtSound(net.minecraft.world.damagesource.DamageSource damageSource) {
+        return TouristSounds.HURT;
+    }
+
+    @Override
+    protected SoundEvent getDeathSound() {
+        return TouristSounds.DEATH;
+    }
+
+    @Override
+    protected float getSoundVolume() {
+        return 0.35f;
+    }
+
+    @Override
+    public double getMyRidingOffset() {
+        return this.isPassenger() ? RIDING_Y_OFFSET : super.getMyRidingOffset();
+    }
+
+    @Override
     public int getAmbientSoundInterval() {
         return Integer.MAX_VALUE; // Never play automatically
     }
@@ -837,7 +859,7 @@ public class TouristEntity extends Villager {
                     "Tourist mobInteract - opening trading screen for player {}", player.getName().getString());
 
                 // Play greeting sound
-                this.playSound(SoundEvents.VILLAGER_YES, 1.0f, 1.0f);
+                TouristSounds.play(this, TouristSounds.GREET, 0.45f, 1.1f);
 
                 this.setTradingPlayer(player);
                 if (showcaseVanillaScreen) {
@@ -867,7 +889,7 @@ public class TouristEntity extends Villager {
 
         // Play farewell sound
         if (!this.level().isClientSide) {
-            this.playSound(SoundEvents.VILLAGER_NO, 1.0f, 1.0f);
+            TouristSounds.play(this, TouristSounds.FAREWELL, 0.4f, 0.95f);
         }
 
         DebugConfig.debug(LOGGER, DebugConfig.TOURIST_ENTITY, "Stopped trading");

@@ -12,7 +12,7 @@ import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.platform.PlatformPathSync;
 import com.quackers29.businesscraft.api.PlatformAccess;
-import com.quackers29.businesscraft.event.PlatformPathHandler;
+import com.quackers29.businesscraft.event.PlatformPathSessions;
 import com.quackers29.businesscraft.debug.DebugConfig;
 
 /**
@@ -69,15 +69,12 @@ public class SetPlatformPathCreationModePacket {
                     "Player {} is setting platform {} path creation mode to {} at {}", 
                     player.getName().getString(), platformId, mode, pos);
                 
-                townInterface.setPlatformCreationMode(mode, platformId);
-                
-                // Update the platform path handler state
                 if (mode) {
-                    PlatformPathHandler.setActivePlatform(pos, platformId);
+                    PlatformPathSessions.begin(player.getUUID(), pos, platformId);
                     Platform platform = townInterface.getPlatform(platformId);
                     PlatformPathSync.show(player, townInterface, platform);
                 } else {
-                    PlatformPathHandler.clearActivePlatform();
+                    PlatformPathSessions.clear(player.getUUID());
                 }
                 
                 DebugConfig.debug(LOGGER, DebugConfig.NETWORK_PACKETS, 

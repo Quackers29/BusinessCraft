@@ -136,9 +136,6 @@ public class TownInterfaceEntity extends BlockEntity
             .build();
     private static final Logger LOGGER = LoggerFactory.getLogger(TownInterfaceEntity.class);
     private Map<String, Integer> visitingPopulation = new HashMap<>();
-    private BlockPos pathStart;
-    private BlockPos pathEnd;
-    private boolean isInPathCreationMode = false;
     private final Random random = new Random();
     private boolean touristSpawningEnabled = true;
     private UUID townId;
@@ -602,7 +599,7 @@ public ViewModelCache getVmCache() {
         if (!level.isClientSide()) {
             updateFromTownProvider();
         }
-        nbtDataHelper.saveToNBT(tag, itemHandler, townId, name, pathStart, pathEnd, platformManager);
+        nbtDataHelper.saveToNBT(tag, itemHandler, townId, name, platformManager);
     }
 
     @Override
@@ -614,8 +611,6 @@ public ViewModelCache getVmCache() {
         this.townId = result.townId;
         this.name = result.name;
         this.town = result.town;
-        this.pathStart = result.pathStart;
-        this.pathEnd = result.pathEnd;
         this.touristSpawningEnabled = result.touristSpawningEnabled;
 
         if (bufferManager != null && townId != null) {
@@ -867,68 +862,6 @@ public ViewModelCache getVmCache() {
         return visitingPopulation.getOrDefault(townName, 0);
     }
 
-    public BlockPos getPathStart() {
-        return pathStart;
-    }
-
-    public BlockPos getPathEnd() {
-        return pathEnd;
-    }
-
-    public void setPathStart(BlockPos pos) {
-        this.pathStart = pos;
-
-        ITownDataProvider provider = getTownDataProvider();
-        if (provider != null) {
-            provider.setPathStart(pos);
-            provider.markDirty();
-        }
-
-        setChanged();
-    }
-
-    public void setPathEnd(BlockPos pos) {
-        this.pathEnd = pos;
-
-        ITownDataProvider provider = getTownDataProvider();
-        if (provider != null) {
-            provider.setPathEnd(pos);
-            provider.markDirty();
-        }
-
-        setChanged();
-    }
-
-    public boolean isInPathCreationMode() {
-        return isInPathCreationMode;
-    }
-
-    public void setPathCreationMode(boolean mode) {
-        this.isInPathCreationMode = mode;
-    }
-
-    /**
-     * Validates if a position is within the town's boundary radius
-     * 
-     * @param pos The position to validate
-     * @return true if valid, false if outside boundary
-     */
-    public boolean isValidPathDistance(BlockPos pos) {
-        if (townId == null || !(level instanceof ServerLevel serverLevel)) {
-            return false;
-        }
-
-        Town town = TownManager.get(serverLevel).getTown(townId);
-        if (town == null) {
-            return false;
-        }
-
-        int boundaryRadius = town.getBoundaryRadius();
-        double distance = Math.sqrt(pos.distSqr(this.getBlockPos()));
-
-        return distance <= boundaryRadius;
-    }
-
     public UUID getTownId() {
         return townId;
     }
@@ -1048,14 +981,6 @@ public ViewModelCache getVmCache() {
         boolean changed = false;
         if (this.touristSpawningEnabled != provider.isTouristSpawningEnabled()) {
             this.touristSpawningEnabled = provider.isTouristSpawningEnabled();
-            changed = true;
-        }
-        if (!java.util.Objects.equals(this.pathStart, provider.getPathStart())) {
-            this.pathStart = provider.getPathStart();
-            changed = true;
-        }
-        if (!java.util.Objects.equals(this.pathEnd, provider.getPathEnd())) {
-            this.pathEnd = provider.getPathEnd();
             changed = true;
         }
         return changed;
@@ -1320,27 +1245,6 @@ public ViewModelCache getVmCache() {
      */
     public void togglePlatformEnabled(UUID platformId) {
         platformManager.togglePlatformEnabled(platformId);
-    }
-
-    /**
-     * Sets whether we're in platform path creation mode
-     */
-    public void setPlatformCreationMode(boolean mode, UUID platformId) {
-        platformManager.setPlatformCreationMode(mode, platformId);
-    }
-
-    /**
-     * Gets whether we're in platform path creation mode
-     */
-    public boolean isInPlatformCreationMode() {
-        return platformManager.isInPlatformCreationMode();
-    }
-
-    /**
-     * Gets the ID of the platform currently being edited
-     */
-    public UUID getPlatformBeingEdited() {
-        return platformManager.getPlatformBeingEdited();
     }
 
     /**

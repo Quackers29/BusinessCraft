@@ -29,7 +29,7 @@
 ### **Town Centre & Platform Interface blocks**
 **✅ Town Centre (`town_interface`, display name Town Centre) + craftable Platform Interface blocks**
 
-- **Town Centre** defines the town, its name (from `general.townNames`), and circular boundary (border modifier or `general.defaultBorderRadius`, default 50). Placement must be at least **sum of both towns’ radii** from another Town Centre (100 blocks for two fresh towns). The boundary does **not** grow with population.
+- **Town Centre** defines the town, its name (from `general.townNames`), and circular boundary (border modifier or `general.defaultBorderRadius`, default 50). Placement must be at least **sum of both towns’ radii** from another Town Centre (100 blocks for two fresh towns). The boundary does **not** grow with population. In survival it **drops only when mined with a diamond-tier pickaxe** (vanilla `needs_diamond_tool` + `mineable/pickaxe` tags). **Platform Interface** blocks use a normal iron-tier pickaxe (any pickaxe).
 - **Platform Interface** blocks are crafted and placed **inside** the boundary; each block is one platform. Breaking the block removes that platform. Settings (path, search radius, spread, enable, destinations) live on the Platform Interface screen; the Town Centre only shows a read-only platform list.
 - **Town Centre block entity** (`TownInterfaceEntity.java`) — modular server-side town logic:
   - **14 Specialized Helper Classes**: `ClientSyncHelper`, `PlatformManager`, `VisitorProcessingHelper`, `TouristSpawningHelper`, `NBTDataHelper`, `ContainerDataHelper`, `TownBufferManager`

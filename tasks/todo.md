@@ -89,3 +89,14 @@
 - `UIGridBuilder` refactor → `toImprove.md`
 
 **Test + Docs Loop**: parked (seeds exhausted). Re-invoke when new logic lands.
+
+---
+
+## Future ideas (not now)
+
+- **Create Aeronautics** — planes, balloons, etc. as another tourist transport mode (alongside minecarts / Create trains).
+- **Elevation-aware rewards** — factor vertical travel into tourist payout or milestone bonuses.
+- **Achievements** — e.g. “Flying High” for extreme altitude journeys.
+- **Speed bonuses** — extra rewards for deliveries faster than Create trains’ max speed (anti-exploit rules TBD).
+
+See also `vault/Tourists/Future Tourism Ideas.md`.

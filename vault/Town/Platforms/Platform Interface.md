@@ -40,7 +40,7 @@ Players do not add platforms from a button on the Town Centre. Instead they craf
 - **Separation**: `PlatformPlacement.MIN_SEPARATION` = 5 blocks (Euclidean 3D) between interface positions in the same town.
 - **Boundary**: Placement uses each town's effective border radius (modifier or `general.defaultBorderRadius`, default 50) — not population-based growth.
 - **Inactive reason**: `businesscraft.platform_interface.town_gone` when the Town Centre is removed.
-- **`addPlatform()` on PlatformManager**: test/showcase helper only; invents spaced positions — not the player flow.
+- **Synthetic platforms in tests**: `PlatformManagerTestFixtures.addSyntheticPlatform()` — not the player flow.
 
 ## Edge cases & behaviors
 - Placement with no enclosing town → rejected (`OUTSIDE` or equivalent).
@@ -53,8 +53,7 @@ Players do not add platforms from a button on the Town Centre. Instead they craf
 - `PlatformManagerTest` — manager cap, NBT, `addInterfacePlatform` / relink paths (see manager note).
 
 ## Open questions
-- `TownInterfaceEntity` still stores town-level `pathStart` / `pathEnd` and `SetPathCreationModePacket` is registered, but no current UI sends path creation to the Town Centre — legacy surface area only.
-- `PlatformManager.addPlatform()` remains for tests/showcase; players use interface blocks only.
+- Platform path creation mode is **per player** (`PlatformPathSessions` + `SetPlatformPathCreationModePacket` from the Platform Interface screen). Town-level path fields and `SetPathCreationModePacket` were removed; paths live on each `Platform` only.
 
 ## Related
 - [[Town/Platforms/Platform Management]]

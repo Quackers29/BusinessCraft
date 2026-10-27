@@ -45,7 +45,14 @@ public class TouristRenderer extends MobRenderer<TouristEntity, TouristModel> {
             packed = 0;
         }
         this.model.prepare(packed);
+        if (entity.isPassenger()) {
+            poseStack.pushPose();
+            poseStack.translate(0.0D, -0.125D, 0.0D);
+        }
         super.render(entity, entityYaw, partialTicks, poseStack, buffer, packedLight);
+        if (entity.isPassenger()) {
+            poseStack.popPose();
+        }
     }
 
     @Override

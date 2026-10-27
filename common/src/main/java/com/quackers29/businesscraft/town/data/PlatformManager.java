@@ -35,10 +35,6 @@ public class PlatformManager {
     private final List<Platform> platforms = new ArrayList<>();
     private final List<Platform> clientPlatforms = new ArrayList<>();
 
-    // Platform creation state
-    private boolean isInPlatformCreationMode = false;
-    private UUID platformBeingEdited = null;
-
     // Callback for notifying when changes occur
     private Runnable changeCallback;
 
@@ -71,17 +67,6 @@ public class PlatformManager {
             return new ArrayList<>(clientPlatforms);
         }
         return new ArrayList<>(platforms);
-    }
-
-    /**
-     * Test helper. Places a platform at a synthetic position spaced from the others.
-     * Players add a platform by placing a Platform Interface block, which calls {@link #addInterfacePlatform}.
-     *
-     * @return true if added successfully, false if at max capacity or too close
-     */
-    public boolean addPlatform() {
-        BlockPos pos = new BlockPos(platforms.size() * com.quackers29.businesscraft.platform.PlatformPlacement.MIN_SEPARATION, 0, 0);
-        return addInterfacePlatform(pos) != null;
     }
 
     /**
@@ -235,35 +220,6 @@ public class PlatformManager {
     }
 
     /**
-     * Sets whether we're in platform path creation mode
-     * 
-     * @param mode       Whether creation mode is enabled
-     * @param platformId The platform being edited (null if mode is false)
-     */
-    public void setPlatformCreationMode(boolean mode, UUID platformId) {
-        this.isInPlatformCreationMode = mode;
-        this.platformBeingEdited = mode ? platformId : null;
-    }
-
-    /**
-     * Gets whether we're in platform path creation mode
-     * 
-     * @return true if in creation mode
-     */
-    public boolean isInPlatformCreationMode() {
-        return isInPlatformCreationMode;
-    }
-
-    /**
-     * Gets the ID of the platform currently being edited
-     * 
-     * @return The platform ID, or null if none
-     */
-    public UUID getPlatformBeingEdited() {
-        return platformBeingEdited;
-    }
-
-    /**
      * Checks if we can add more platforms
      * 
      * @return true if more platforms can be added
@@ -364,7 +320,5 @@ public class PlatformManager {
     public void clear() {
         platforms.clear();
         clientPlatforms.clear();
-        isInPlatformCreationMode = false;
-        platformBeingEdited = null;
     }
 }

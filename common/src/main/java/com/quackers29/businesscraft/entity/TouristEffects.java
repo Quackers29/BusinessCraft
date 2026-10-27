@@ -19,13 +19,13 @@ public final class TouristEffects {
     public static void playSpawn(ServerLevel level, Vec3 pos) {
         burst(level, pos, ParticleTypes.HAPPY_VILLAGER, 6);
         burst(level, pos, ParticleTypes.END_ROD, 3);
-        level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.VILLAGER_YES, SoundSource.NEUTRAL, 0.55f, 1.15f);
+        level.playSound(null, pos.x, pos.y, pos.z, TouristSounds.GREET, SoundSource.NEUTRAL, 0.45f, 1.15f);
     }
 
     public static void playBoarding(ServerLevel level, Entity tourist, Entity vehicle) {
         Vec3 pos = tourist.position();
         burst(level, pos, ParticleTypes.CLOUD, 4);
-        level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.MINECART_INSIDE, SoundSource.NEUTRAL, 0.35f, 1.25f);
+        level.playSound(null, pos.x, pos.y, pos.z, TouristSounds.BOARDING, SoundSource.NEUTRAL, 0.5f, 1.25f);
     }
 
     /**
@@ -36,7 +36,7 @@ public final class TouristEffects {
         int rank = JourneyProgress.levelForDistance(distance, ConfigLoader.touristLevelDistances);
         if (distance < ConfigLoader.minPayoutDistance) {
             burst(level, pos, ParticleTypes.SMOKE, 4);
-            level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.VILLAGER_NO, SoundSource.NEUTRAL, 0.25f, 0.9f);
+            level.playSound(null, pos.x, pos.y, pos.z, TouristSounds.FAREWELL, SoundSource.NEUTRAL, 0.3f, 0.9f);
             return;
         }
         burst(level, pos, ParticleTypes.HAPPY_VILLAGER, 6);
@@ -48,7 +48,7 @@ public final class TouristEffects {
             burst(level, pos, ParticleTypes.TOTEM_OF_UNDYING, 4);
             level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.PLAYER_LEVELUP, SoundSource.NEUTRAL, 0.3f, 1.45f);
         } else {
-            level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.VILLAGER_CELEBRATE, SoundSource.NEUTRAL, 0.45f, 1.15f);
+            level.playSound(null, pos.x, pos.y, pos.z, TouristSounds.CELEBRATE, SoundSource.NEUTRAL, 0.35f, 1.15f);
         }
     }
 

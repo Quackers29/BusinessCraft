@@ -6,7 +6,6 @@ import com.quackers29.businesscraft.fabric.FabricModMessages;
 import com.quackers29.businesscraft.network.packets.ui.OpenTownInterfacePacket;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.api.ITownDataProvider;
-import com.quackers29.businesscraft.event.TownEventHandler;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -117,11 +116,6 @@ public class FabricEventCallbackHandler {
                 return InteractionResult.PASS;
 
             BlockPos pos = hitResult.getBlockPos();
-
-            // Path creation mode logic
-            if (TownEventHandler.onRightClickBlock(player, world, pos)) {
-                return InteractionResult.FAIL;
-            }
 
             // Call registered callbacks
             for (EventCallbacks.RightClickBlockCallback callback : rightClickBlockCallbacks) {

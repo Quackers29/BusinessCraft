@@ -30,7 +30,7 @@ A town can have up to 10 platforms. Each platform is created when a **Platform I
 | `PlatformManager` | `common/src/main/java/com/quackers29/businesscraft/town/data/PlatformManager.java` | Collection + cap + notification + dual (server/client) lists + NBT orchestration |
 | `addInterfacePlatform(BlockPos)` | same | Player flow: new Platform with `interfacePos`; null at cap/duplicate/too close |
 | `relink(UUID, BlockPos)` | same | Load-time link; `RelinkResult` enum |
-| `addPlatform()` | same | **Test/showcase helper only** — synthetic spaced positions; not player UI |
+| `PlatformManagerTestFixtures.addSyntheticPlatform()` | `common/src/test/.../PlatformManagerTestFixtures.java` | **Tests only** — synthetic spaced positions; not player UI |
 | `removePlatform(UUID)` | same | removeIf by id; returns true if removed; notifies |
 | `getPlatform(UUID)` | same | Stream findFirst or null (no defensive copy of the Platform itself) |
 | `setPlatformPathStart/End(UUID, BlockPos)` / `togglePlatformEnabled(UUID)` | same | Delegate to the Platform, then notifyChanged() |
@@ -41,13 +41,13 @@ A town can have up to 10 platforms. Each platform is created when a **Platform I
 | `updateClientPlatforms(CompoundTag)` | same | `clientPlatforms.clear()` + repopulate from tag's "platforms" list using fromNBT; used for client sync (debug log) |
 | `canAddMorePlatforms()` / `getMaxPlatforms()` / `getPlatformCount()` | same | `size < 10`, 10, `size` respectively |
 | `setChangeCallback(Runnable)` / `notifyChanged()` (private) | same | Callback is typically `TownInterfaceEntity::setChanged`; all mutating ops (add/remove/path/enable/legacy) fire it |
-| `setPlatformCreationMode(...)` / `isInPlatformCreationMode()` / `getPlatformBeingEdited()` | same | UI state for the path-creation flow (which platform is being edited) — no persistence |
-| `clear()` | same | Wipes both lists + resets creation mode fields (used for cleanup) |
+| `PlatformPathSessions` | `common/.../event/PlatformPathSessions.java` | Per-player path creation UI state (town block pos + platform id + click progress); cleared on logout |
+| `clear()` | same | Wipes both server and client platform lists (used for cleanup) |
 
 ## Rules & formulas (exact)
 No arithmetic formulas; the rules are structural and operational.
 
-- **Hard cap**: `MAX_PLATFORMS = 10` (constant). `addPlatform()` returns false immediately if `platforms.size() >= 10`; the new platform is never created.
+- **Hard cap**: `MAX_PLATFORMS = 10` (constant). `addInterfacePlatform` returns null when `platforms.size() >= 10`.
 - **Name on add**: `"Platform " + (platforms.size() + 1)` at the moment of insertion (1-based, reflects the count after this add in the name).
 - **Defensive copies on read**: `getPlatforms(isClient)` and the internal `getEnabledPlatforms` path both allocate fresh collections. Callers can mutate the returned lists without affecting internal state. Individual `Platform` objects returned by `getPlatform` are the live ones (mutations via their setters are the intended path and go through the manager's setX methods which notify).
 - **NBT write (saveToNBT)**: only emits the "platforms" key when `!platforms.isEmpty()`. Empty list → no key written (enables legacy detection on load and keeps tag small).
@@ -55,7 +55,7 @@ No arithmetic formulas; the rules are structural and operational.
 - **Client snapshot (updateClientPlatforms)**: clears client list, repopulates from tag with the same `interfacePos != null` filter as load.
 - **Legacy migration**: removed — no `createLegacyPlatform`; old single-path Town Centre fields are not auto-imported.
 - **Enabled + complete filter**: `getEnabledPlatforms()` uses `p.isEnabled() && p.isComplete()` (from Platform: both start and end non-null). This is the exact predicate used by TouristSpawningHelper and rendering.
-- **Creation mode**: purely transient UI state; never serialized. `setPlatformCreationMode(mode, id)` sets the two fields; when mode=false the id is forced to null.
+- **Path creation mode**: per-player session in `PlatformPathSessions` (not on `PlatformManager`); never serialized.
 - **Change notification**: server mutations (addInterfacePlatform, relink when it adds, remove, path/toggle setters) call `notifyChanged()`. loadFromNBT, updateClientPlatforms, and clear do not notify.
 - **getPlatform / remove / setX on unknown id**: get returns null; remove returns false; setX methods return false. Safe no-ops.
 
@@ -67,7 +67,7 @@ No arithmetic formulas; the rules are structural and operational.
 - loadFromNBT with missing or empty "platforms" tag leaves the list empty after clear.
 - updateClientPlatforms with no "platforms" key leaves client list empty after clear (and logs "No platforms in NBT tag").
 - loadFromNBT with platforms missing InterfacePos in NBT: those compounds load as Platform objects but are not added to the list.
-- After clear(): size=0, client size=0, creation mode=false, edited id=null.
+- After clear(): size=0, client size=0.
 - getPlatforms(true) and getPlatforms(false) always return distinct new ArrayList instances even if contents match.
 - Platform objects inside the lists are the same instances until replaced by load; their internal mutation (e.g. direct setStartPos on a gotten Platform) would bypass notify — but all production call sites go through the manager's delegating methods.
 - Concurrent modification not an issue (single-threaded server tick + save/load on main).
@@ -81,7 +81,7 @@ No arithmetic formulas; the rules are structural and operational.
 
 ## Open questions
 - Direct mutation of a Platform obtained via `getPlatform(id)` (calling its setStartPos etc.) would bypass the manager's notifyChanged. All current callers use the manager wrapper methods, but the exposure of the live object is a foot-gun. A future hardening could return an immutable view or force all writes through the manager.
-- `addPlatform()` still exists for unit tests/showcase; document and guard so it is not described as the player add flow (see [[Town/Platforms/Platform Interface]]).
+- Synthetic platform adds live in `PlatformManagerTestFixtures` for unit tests only (see [[Town/Platforms/Platform Interface]]).
 - Client list is never defensively copied in the same way on read paths inside update (it is replaced wholesale). Since update is only called from desync paths this is fine, but getPlatforms(true) still wraps it in new ArrayList for callers.
 - The "Platform N" naming uses the size at add time; if platforms are removed later the numbers are not renumbered. This matches current behavior (pinned by test if written); whether players expect dense numbering is a UX question.
 - No persistence of creation-mode state across logins/saves (by design — it's a transient UI session).
