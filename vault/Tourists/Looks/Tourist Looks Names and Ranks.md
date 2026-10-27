@@ -16,7 +16,7 @@ Tourists are visually distinct villagers, not generic clones. The mod ships sixt
 - **Names** — `TouristNames` supplies personal names; the entity stores and displays them on the name tag.
 - **Ranks** — `JourneyProgress` maps total traveled distance to one of five rank labels; thresholds come from config (must be strictly rising ints).
 - **Movement** — `TouristEntity` sets movement speed to `0.000001f` so pathfinding on foot is not part of the gameplay loop; ride mechanics extend lifetime and count distance while in vehicles (see [[Tourists/Lifecycle/Tourist Distance Tracking, Ride Extension and Expiry]]). Seated pose uses a lowered riding offset so humanoid models sit inside minecarts and Create seats.
-- **Audio** — tourists use soft note-block / chime sounds (`TouristSounds`), not villager grunts; boarding plays a one-shot bell and suppresses minecart/train loop audio when only tourists are aboard (players keep vanilla vehicle sounds).
+- **Audio** — villager hurt/death/ambient/trade sounds as before; boarding plays a one-shot **note-block bell** (`TouristSounds.BOARDING`) instead of minecart rolling, with client-side loop muting when only tourists are aboard. Fast rides and short successful arrivals can play **experience orb pickup** at the tuned volumes from `TouristEntity` / `TouristEffects`.
 - **Trades** — Trade catalog is tied to looks/catalog data; the tourist UI presents a scrollable list.
 - **Worked example** — A new tourist spawns with look #7 and personal name "Elena"; rank shows Wanderer at 0 m traveled. After 600 m in a minecart, rank stays Wanderer; at 520 m total journey distance they become Traveler. They never path-walk off the platform — they wait for a cart.
 

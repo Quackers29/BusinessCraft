@@ -3,7 +3,7 @@ package com.quackers29.businesscraft.entity.ai.goal;
 import com.quackers29.businesscraft.entity.TouristEntity;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import net.minecraft.world.entity.ai.goal.Goal;
-import com.quackers29.businesscraft.entity.TouristSounds;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.phys.AABB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +28,7 @@ public class TouristGossipGoal extends Goal {
     private static final int MAX_GOSSIP_DURATION = 80; // 4 seconds
     private static final int MIN_SEARCH_INTERVAL = 40; // 2 seconds
     private static final int MAX_SEARCH_INTERVAL = 80; // 4 seconds
-    private static final float SOUND_CHANCE = 0.02f;
+    private static final float SOUND_CHANCE = 0.0f; // 5% chance per tick
 
     public TouristGossipGoal(TouristEntity tourist) {
         this.tourist = tourist;
@@ -106,7 +106,7 @@ public class TouristGossipGoal extends Goal {
 
         // Occasionally play ambient villager sounds
         if (tourist.getRandom().nextFloat() < SOUND_CHANCE) {
-            TouristSounds.play(tourist, TouristSounds.AMBIENT, 0.22f, 0.95f);
+            tourist.playSound(SoundEvents.VILLAGER_AMBIENT, 0.6f, 1.0f);
         }
     }
 

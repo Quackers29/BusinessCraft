@@ -6,7 +6,7 @@ import com.quackers29.businesscraft.entity.TouristTradeCatalog;
 import com.quackers29.businesscraft.network.PlayerItemExchange;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
-import com.quackers29.businesscraft.entity.TouristSounds;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -107,8 +107,8 @@ public class TouristMenu extends AbstractContainerMenu {
             serverPlayer.drop(result, false);
         }
         tourist.notifyTrade(offer);
-        serverPlayer.level().playSound(null, tourist.blockPosition(), TouristSounds.GREET,
-                SoundSource.NEUTRAL, 0.45f, TouristSounds.pitch(tourist, 1.1f));
+        serverPlayer.level().playSound(null, tourist.blockPosition(), SoundEvents.VILLAGER_YES,
+                SoundSource.NEUTRAL, 1.0f, 1.0f);
         pushFromTourist();
         return true;
     }
