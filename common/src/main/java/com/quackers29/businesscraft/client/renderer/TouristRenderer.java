@@ -30,8 +30,8 @@ public class TouristRenderer extends MobRenderer<TouristEntity, TouristModel> {
     private static final float NAME_TAG_SCALE = 0.02F;
     /** Light grey, slightly transparent. No background is drawn with this. */
     private static final int NAME_COLOR = 0xD0D8D8D8;
-    /** Softer grey for conductor route line under the personal name. */
-    private static final int CONDUCTOR_ROUTE_COLOR = 0xB0A8A8A8;
+    /** Solid light yellow route line (ARGB); readable on dark backgrounds. */
+    private static final int CONDUCTOR_ROUTE_COLOR = TouristDisplayFormat.CONDUCTOR_ROUTE_NAME_TAG_COLOR;
 
     public TouristRenderer(EntityRendererProvider.Context context) {
         super(context, new TouristModel(context.bakeLayer(TouristModel.LAYER)), 0.5F);

@@ -31,6 +31,11 @@ class TouristDisplayFormatTest {
     }
 
     @Test
+    void conductorRouteNameTagColor_isOpaqueLightYellow() {
+        assertEquals(0xFFFFFFAA, TouristDisplayFormat.CONDUCTOR_ROUTE_NAME_TAG_COLOR);
+    }
+
+    @Test
     void withinNameTagRange_respectsFiveBlocks() {
         assertEquals(5.0, TouristDisplayFormat.NAME_TAG_MAX_DISTANCE);
         assertTrue(TouristDisplayFormat.withinNameTagRange(4.9 * 4.9));

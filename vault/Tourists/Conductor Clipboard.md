@@ -1,6 +1,6 @@
 # Conductor's Clipboard
 
-**TL;DR:** Craftable item `conductor_clipboard`. While held (main or off hand), tourist name tags within 5 blocks show a second grey line `Origin -> Destination` using synced entity labels (includes Any Town).
+**TL;DR:** Craftable item `conductor_clipboard`. While held (main or off hand), tourist name tags within 5 blocks show a second solid light-yellow line (`#FFFFAA`) `Origin -> Destination` using synced entity labels (includes Any Town).
 
 ## Related
 
