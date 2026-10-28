@@ -217,6 +217,18 @@ public class VisitorProcessingHelper {
                 // Store the distance in the visitor info for later payment calculation
                 visitBuffer.updateVisitorDistance(UUID.fromString(touristInfo.originTownId), distance);
 
+                UUID arrivalTownId = townId;
+                if (villager instanceof TouristEntity touristForLearning) {
+                    Platform originPlatform = TouristDestinationLearning.resolveOriginPlatform(
+                            serverLevel,
+                            UUID.fromString(touristInfo.originTownId),
+                            touristInfo.platformId);
+                    long tripDurationTicks = Math.max(0L,
+                            serverLevel.getGameTime() - touristForLearning.getSpawnTime());
+                    TouristDestinationLearning.onArrival(
+                            serverLevel, originPlatform, arrivalTownId, distance, tripDurationTicks);
+                }
+
                 // Verify the distance was stored
                 double storedDistance = visitBuffer.getAverageDistance(UUID.fromString(touristInfo.originTownId));
                 DebugConfig.debug(LOGGER, DebugConfig.VISITOR_PROCESSING,

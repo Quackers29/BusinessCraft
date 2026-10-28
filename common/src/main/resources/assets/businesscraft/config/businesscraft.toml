@@ -52,6 +52,22 @@
     # Blocks traveled to reach tourist ranks 2, 3, 4, 5 (rank 1 is below the first number).
     # With metersPerEmerald = 100 that is about 5 / 15 / 30 / 60 emeralds per tourist.
     levelDistances = [500, 1500, 3000, 6000]
+    # Default destination mode for newly placed platforms: any, auto, or specific
+    defaultDestinationMode = "auto"
+    # AUTO: max fraction of spawns using learned destinations once confidence is full (0.0–1.0)
+    autoMaxLearnedShare = 0.7
+    # AUTO: half-life for learned route scores, in in-game minutes
+    autoScoreHalfLifeMinutes = 10080.0
+    # AUTO: learned scores below this are removed
+    autoPruneFloor = 0.05
+    # AUTO: maximum learned destination towns kept per platform
+    autoMaxLearnedTowns = 12
+    # AUTO: total learned score before learned routes affect spawns
+    autoMinScoreForLearning = 2.0
+    # AUTO: score penalty when a learned-destination tourist expires without arriving
+    autoExpiryPenalty = 1.0
+    # AUTO: per-route fade half-life is at least (average trip ticks × this multiplier)
+    autoFadeTripMultiplier = 2.0
 
 [economy]
     # Blocks traveled per emerald per tourist (linear curve when payoutCurveExponent = 1.0).

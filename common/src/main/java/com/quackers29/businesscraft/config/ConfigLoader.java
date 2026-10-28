@@ -12,6 +12,8 @@ import java.util.Map;
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import com.quackers29.businesscraft.economy.JourneyProgress;
+import com.quackers29.businesscraft.platform.DestinationMode;
+import com.quackers29.businesscraft.town.data.TouristDestinationLearning;
 import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 
@@ -102,6 +104,23 @@ public class ConfigLoader {
 
     // Phase 11: Global system toggles
     public static boolean touristSystemEnabled = true;
+
+    /** Default destination mode for newly placed platforms (any, auto, specific). */
+    public static DestinationMode defaultDestinationMode = DestinationMode.AUTO;
+    /** Max fraction of AUTO spawns that use a learned destination once confidence is full (0–1). */
+    public static double touristAutoMaxLearnedShare = 0.7;
+    /** Score half-life for learned routes, in in-game minutes (converted to ticks at use). */
+    public static double touristAutoScoreHalfLifeMinutes = 10080.0;
+    public static double touristAutoScoreHalfLifeTicks = 10080.0 * 60.0 * 20.0;
+    public static double touristAutoPruneFloor = 0.05;
+    public static int touristAutoMaxLearnedTowns = 12;
+    /** Total learned score required before AUTO prefers learned routes over pure exploration. */
+    public static double touristAutoMinScoreForLearning = 2.0;
+    /** Score removed when a learned-destination tourist expires without arriving. */
+    public static double touristAutoExpiryPenalty = 1.0;
+    /** Multiplier applied to average trip duration (ticks) when computing per-route score half-life. */
+    public static double touristAutoFadeTripMultiplier = 2.0;
+
     public static boolean contractsEnabled = false;
     public static boolean researchEnabled = false;
 
@@ -171,6 +190,18 @@ public class ConfigLoader {
                 enableTouristExpiry = config.getOrElse("tourists.enableTouristExpiry", true);
                 notifyOnTouristDeparture = config.getOrElse("tourists.notifyOnTouristDeparture", true);
                 touristSystemEnabled = config.getOrElse("tourists.enabled", true);
+                defaultDestinationMode = readDestinationMode(config, "tourists.defaultDestinationMode",
+                        DestinationMode.AUTO);
+                touristAutoMaxLearnedShare = readShare(config, "tourists.autoMaxLearnedShare", 0.7);
+                touristAutoScoreHalfLifeMinutes = readPositiveDouble(config, "tourists.autoScoreHalfLifeMinutes",
+                        10080.0);
+                touristAutoScoreHalfLifeTicks = TouristDestinationLearning.halfLifeMinutesToTicks(
+                        touristAutoScoreHalfLifeMinutes);
+                touristAutoPruneFloor = readNonNegativeDouble(config, "tourists.autoPruneFloor", 0.05);
+                touristAutoMaxLearnedTowns = readPositiveInt(config, "tourists.autoMaxLearnedTowns", 12);
+                touristAutoMinScoreForLearning = readPositiveDouble(config, "tourists.autoMinScoreForLearning", 2.0);
+                touristAutoExpiryPenalty = readNonNegativeDouble(config, "tourists.autoExpiryPenalty", 1.0);
+                touristAutoFadeTripMultiplier = readPositiveDouble(config, "tourists.autoFadeTripMultiplier", 2.0);
                 touristLevelDistances = readRisingInts(config, "tourists.levelDistances",
                         JourneyProgress.DEFAULT_TOURIST_LEVELS);
                 notorietyDistances = readRisingInts(config, "economy.notorietyDistances",
@@ -334,6 +365,29 @@ public class ConfigLoader {
                 config.setComment("tourists.notifyOnTouristDeparture", " Notify origin town when tourist departs");
                 config.set("tourists.enabled", touristSystemEnabled);
                 config.setComment("tourists.enabled", "Master switch - completely disables tourist spawning globally");
+                config.set("tourists.defaultDestinationMode", defaultDestinationMode.toConfigValue());
+                config.setComment("tourists.defaultDestinationMode",
+                        " Default destination mode for newly placed platforms: any, auto, or specific");
+                config.set("tourists.autoMaxLearnedShare", touristAutoMaxLearnedShare);
+                config.setComment("tourists.autoMaxLearnedShare",
+                        " AUTO: max fraction of spawns using learned destinations once confidence is full (0.0–1.0)");
+                config.set("tourists.autoScoreHalfLifeMinutes", touristAutoScoreHalfLifeMinutes);
+                config.setComment("tourists.autoScoreHalfLifeMinutes",
+                        " AUTO: half-life for learned route scores, in in-game minutes (decays on world time, not wall clock)");
+                config.set("tourists.autoPruneFloor", touristAutoPruneFloor);
+                config.setComment("tourists.autoPruneFloor", " AUTO: learned scores below this are removed");
+                config.set("tourists.autoMaxLearnedTowns", touristAutoMaxLearnedTowns);
+                config.setComment("tourists.autoMaxLearnedTowns", " AUTO: maximum learned destination towns kept per platform");
+                config.set("tourists.autoMinScoreForLearning", touristAutoMinScoreForLearning);
+                config.setComment("tourists.autoMinScoreForLearning",
+                        " AUTO: total learned score before learned destinations are preferred over exploration");
+                config.set("tourists.autoExpiryPenalty", touristAutoExpiryPenalty);
+                config.setComment("tourists.autoExpiryPenalty",
+                        " AUTO: score penalty when a learned-destination tourist expires without arriving");
+                config.set("tourists.autoFadeTripMultiplier", touristAutoFadeTripMultiplier);
+                config.setComment("tourists.autoFadeTripMultiplier",
+                        " AUTO: per-route score half-life is at least (average trip ticks × this multiplier), "
+                                + "but never below autoScoreHalfLifeMinutes");
                 config.set("tourists.levelDistances", toList(touristLevelDistances));
                 config.setComment("tourists.levelDistances",
                         " Blocks traveled to reach tourist ranks 2, 3, ... (rank 1 is below the first number). "
@@ -482,5 +536,68 @@ public class ConfigLoader {
             }
         }
         return list;
+    }
+
+    private static DestinationMode readDestinationMode(CommentedFileConfig config, String key,
+            DestinationMode fallback) {
+        if (!config.contains(key)) {
+            return fallback;
+        }
+        return DestinationMode.fromConfig(config.getOrElse(key, fallback.toConfigValue()), fallback);
+    }
+
+    private static double readShare(CommentedFileConfig config, String key, double fallback) {
+        double value = readDouble(config, key, fallback);
+        if (value < 0 || value > 1) {
+            LOGGER.warn("Config {}={} out of range [0,1], using {}", key, value, fallback);
+            return fallback;
+        }
+        return value;
+    }
+
+    private static double readPositiveDouble(CommentedFileConfig config, String key, double fallback) {
+        double value = readDouble(config, key, fallback);
+        if (value <= 0) {
+            LOGGER.warn("Config {}={} must be positive, using {}", key, value, fallback);
+            return fallback;
+        }
+        return value;
+    }
+
+    private static double readNonNegativeDouble(CommentedFileConfig config, String key, double fallback) {
+        double value = readDouble(config, key, fallback);
+        if (value < 0) {
+            LOGGER.warn("Config {}={} must be non-negative, using {}", key, value, fallback);
+            return fallback;
+        }
+        return value;
+    }
+
+    private static int readPositiveInt(CommentedFileConfig config, String key, int fallback) {
+        if (!config.contains(key)) {
+            return fallback;
+        }
+        int value = config.getIntOrElse(key, fallback);
+        if (value <= 0) {
+            LOGGER.warn("Config {}={} must be positive, using {}", key, value, fallback);
+            return fallback;
+        }
+        return value;
+    }
+
+    private static double readDouble(CommentedFileConfig config, String key, double fallback) {
+        if (!config.contains(key)) {
+            return fallback;
+        }
+        Object raw = config.get(key);
+        if (raw instanceof Number numeric) {
+            return numeric.doubleValue();
+        }
+        try {
+            return Double.parseDouble(String.valueOf(raw));
+        } catch (NumberFormatException e) {
+            LOGGER.warn("Config {} invalid, using {}", key, fallback);
+            return fallback;
+        }
     }
 }

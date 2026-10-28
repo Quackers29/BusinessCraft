@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.platform;
 import java.util.UUID;
 import java.util.Map;
 import java.util.HashMap;
+import com.quackers29.businesscraft.config.ConfigLoader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -22,6 +23,8 @@ public class Platform {
     private int searchRadius = PlatformSpawn.DEFAULT_RADIUS;
     private int spread = PlatformSpawn.DEFAULT_SPREAD;
     private Set<UUID> enabledDestinations = new HashSet<>();
+    private DestinationMode destinationMode = ConfigLoader.defaultDestinationMode;
+    private final PlatformLearnedRoutes learnedRoutes = new PlatformLearnedRoutes();
 
     /**
      * Create a new platform with a random ID
@@ -98,6 +101,19 @@ public class Platform {
         if (tag.contains("Spread")) {
             this.spread = tag.getInt("Spread");
         }
+
+        if (tag.contains("DestinationMode")) {
+            this.destinationMode = DestinationMode.fromConfig(tag.getString("DestinationMode"), destinationMode);
+        } else if (!enabledDestinations.isEmpty()) {
+            this.destinationMode = DestinationMode.SPECIFIC;
+        } else {
+            this.destinationMode = ConfigLoader.defaultDestinationMode;
+        }
+
+        if (tag.contains("LearnedRoutes")) {
+            learnedRoutes.load(tag.getCompound("LearnedRoutes"));
+        }
+
         applySpawnLimits();
     }
 
@@ -134,6 +150,8 @@ public class Platform {
 
         tag.putInt("SearchRadius", getSearchRadius());
         tag.putInt("Spread", getSpread());
+        tag.putString("DestinationMode", destinationMode.toConfigValue());
+        tag.put("LearnedRoutes", learnedRoutes.save());
         if (interfacePos != null) {
             tag.putInt("InterfaceX", interfacePos.getX());
             tag.putInt("InterfaceY", interfacePos.getY());
@@ -310,9 +328,45 @@ public class Platform {
     public void setDestinationEnabled(UUID destinationId, boolean enabled) {
         if (enabled) {
             enabledDestinations.add(destinationId);
+            this.destinationMode = DestinationMode.SPECIFIC;
         } else {
             enabledDestinations.remove(destinationId);
         }
+    }
+
+    public DestinationMode getDestinationMode() {
+        return destinationMode;
+    }
+
+    public void setDestinationMode(DestinationMode mode) {
+        if (mode != null) {
+            this.destinationMode = mode;
+        }
+    }
+
+    public PlatformLearnedRoutes getLearnedRoutes() {
+        return learnedRoutes;
+    }
+
+    public void clearLearnedRoutes() {
+        learnedRoutes.clear();
+    }
+
+    /**
+     * Short label for UI (Any / Auto / Specific list).
+     */
+    public String getDestinationModeDisplayLabel() {
+        return switch (destinationMode) {
+            case ANY -> "Any";
+            case AUTO -> "Auto";
+            case SPECIFIC -> {
+                int n = enabledDestinations.size();
+                if (n == 0) {
+                    yield "Specific (none)";
+                }
+                yield n == 1 ? "1 town" : n + " towns";
+            }
+        };
     }
 
     /**
@@ -349,12 +403,14 @@ public class Platform {
                 java.util.Objects.equals(startPos, platform.startPos) &&
                 java.util.Objects.equals(endPos, platform.endPos) &&
                 java.util.Objects.equals(interfacePos, platform.interfacePos) &&
-                java.util.Objects.equals(enabledDestinations, platform.enabledDestinations);
+                java.util.Objects.equals(enabledDestinations, platform.enabledDestinations) &&
+                destinationMode == platform.destinationMode &&
+                java.util.Objects.equals(learnedRoutes, platform.learnedRoutes);
     }
 
     @Override
     public int hashCode() {
         return java.util.Objects.hash(id, name, enabled, searchRadius, spread, startPos, endPos, interfacePos,
-                enabledDestinations);
+                enabledDestinations, destinationMode, learnedRoutes);
     }
 }
