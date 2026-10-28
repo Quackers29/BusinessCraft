@@ -35,4 +35,8 @@ public class CommonModBlocks {
 
         PlatformAccess.getRegistry().registerBlockItem("platform_interface", PLATFORM_INTERFACE_BLOCK::get);
     }
+
+    public static void registerItems() {
+        CommonModItems.register();
+    }
 }

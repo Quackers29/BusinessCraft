@@ -69,6 +69,17 @@ public final class TouristDisplayFormat {
         return trimmed;
     }
 
+    /**
+     * Compact origin/destination line for the conductor clipboard name-tag overlay.
+     */
+    public static String conductorRouteLine(String originLabel, String destinationLabel) {
+        return sanitize(originLabel, "Unknown") + " -> " + sanitize(destinationLabel, "Unknown");
+    }
+
+    public static MutableComponent conductorRouteComponent(String originLabel, String destinationLabel) {
+        return Component.literal(conductorRouteLine(originLabel, destinationLabel)).withStyle(ChatFormatting.GRAY);
+    }
+
     public static boolean withinNameTagRange(double distanceSq) {
         double max = NAME_TAG_MAX_DISTANCE;
         return distanceSq <= max * max;

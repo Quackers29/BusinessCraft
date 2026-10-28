@@ -23,6 +23,14 @@ class TouristDisplayFormatTest {
     }
 
     @Test
+    void conductorRouteLine_formatsOriginAndDestination() {
+        assertEquals("Oakvale -> Hillcrest",
+                TouristDisplayFormat.conductorRouteLine("Oakvale", "Hillcrest"));
+        assertEquals("Brookside -> Any Town",
+                TouristDisplayFormat.conductorRouteLine("Brookside", "Any Town"));
+    }
+
+    @Test
     void withinNameTagRange_respectsFiveBlocks() {
         assertEquals(5.0, TouristDisplayFormat.NAME_TAG_MAX_DISTANCE);
         assertTrue(TouristDisplayFormat.withinNameTagRange(4.9 * 4.9));
