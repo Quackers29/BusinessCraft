@@ -103,9 +103,8 @@ public class Platform {
         }
 
         if (tag.contains("DestinationMode")) {
-            this.destinationMode = DestinationMode.fromConfig(tag.getString("DestinationMode"), destinationMode);
-        } else if (!enabledDestinations.isEmpty()) {
-            this.destinationMode = DestinationMode.SPECIFIC;
+            this.destinationMode = DestinationMode.fromConfig(tag.getString("DestinationMode"),
+                    ConfigLoader.defaultDestinationMode);
         } else {
             this.destinationMode = ConfigLoader.defaultDestinationMode;
         }
