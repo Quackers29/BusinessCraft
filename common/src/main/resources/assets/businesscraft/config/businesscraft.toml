@@ -68,6 +68,17 @@
     autoExpiryPenalty = 1.0
     # AUTO: per-route fade half-life is at least (average trip ticks × this multiplier)
     autoFadeTripMultiplier = 2.0
+    # Any-Town ride-on: stay on at intermediate stops so farther towns can be reached
+    autoRideOnBaseChance = 0.45
+    autoRideOnDistanceBonusScale = 0.35
+    autoRideOnDistanceReferenceBlocks = 500.0
+    autoRideOnSkipPenalty = 0.12
+    autoRideOnMaxStayChance = 0.92
+    autoRideOnMaxSkips = 4
+    autoPassReachWeight = 0.35
+    # Learned spawn selection (does not change fares)
+    autoDistanceBias = 0.75
+    autoRandomness = 0.35
 
 [economy]
     # Blocks traveled per emerald per tourist (linear curve when payoutCurveExponent = 1.0).

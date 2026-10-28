@@ -3,6 +3,7 @@ package com.quackers29.businesscraft.platform;
 import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
 
+import java.util.Random;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -81,5 +82,32 @@ class PlatformLearnedRoutesTest {
             routes.recordSuccess(UUID.randomUUID(), i, 1.0 + i * 0.01, SHORT_TRIP, 3, 0.05);
         }
         assertTrue(routes.snapshotEntries().size() <= 3);
+    }
+
+    @Test
+    void distanceBias_favorsFartherTownWhenScoresEqual() {
+        double savedBias = com.quackers29.businesscraft.config.ConfigLoader.touristAutoDistanceBias;
+        double savedRand = com.quackers29.businesscraft.config.ConfigLoader.touristAutoRandomness;
+        try {
+            com.quackers29.businesscraft.config.ConfigLoader.touristAutoDistanceBias = 1.0;
+            com.quackers29.businesscraft.config.ConfigLoader.touristAutoRandomness = 0.0;
+            PlatformLearnedRoutes routes = new PlatformLearnedRoutes();
+            routes.recordSuccess(DEST_NEAR, 0, 5.0, SHORT_TRIP, 12, 0.01);
+            routes.recordSuccess(DEST_FAR, 0, 5.0, LONG_TRIP, 12, 0.01);
+            java.util.Set<UUID> valid = java.util.Set.of(DEST_NEAR, DEST_FAR);
+            UUID origin = UUID.randomUUID();
+            int farPicks = 0;
+            Random random = new Random(42);
+            for (int i = 0; i < 500; i++) {
+                UUID picked = routes.pickWeightedDestination(random, valid, origin, id -> id.equals(DEST_FAR) ? 1000 : 100);
+                if (DEST_FAR.equals(picked)) {
+                    farPicks++;
+                }
+            }
+            assertTrue(farPicks > 250, "far town should win majority with distance bias, got " + farPicks);
+        } finally {
+            com.quackers29.businesscraft.config.ConfigLoader.touristAutoDistanceBias = savedBias;
+            com.quackers29.businesscraft.config.ConfigLoader.touristAutoRandomness = savedRand;
+        }
     }
 }

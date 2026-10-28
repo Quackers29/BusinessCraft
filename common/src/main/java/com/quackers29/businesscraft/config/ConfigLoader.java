@@ -120,6 +120,24 @@ public class ConfigLoader {
     public static double touristAutoExpiryPenalty = 1.0;
     /** Multiplier applied to average trip duration (ticks) when computing per-route score half-life. */
     public static double touristAutoFadeTripMultiplier = 2.0;
+    /** Base probability (0–1) an open-ticket tourist stays on at an intermediate platform stop. */
+    public static double touristAutoRideOnBaseChance = 0.45;
+    /** Added stay probability per block traveled divided by {@link #touristAutoRideOnDistanceReferenceBlocks}. */
+    public static double touristAutoRideOnDistanceBonusScale = 0.35;
+    /** Blocks used to normalize traveled distance for ride-on stay chance. */
+    public static double touristAutoRideOnDistanceReferenceBlocks = 500.0;
+    /** Stay probability subtracted per town already skipped on this trip. */
+    public static double touristAutoRideOnSkipPenalty = 0.12;
+    /** Upper cap on stay probability at a single stop. */
+    public static double touristAutoRideOnMaxStayChance = 0.92;
+    /** After this many ride-on skips, the next stop must be an alight. */
+    public static int touristAutoRideOnMaxSkips = 4;
+    /** Fraction of a full arrival credit when a town is passed without alighting. */
+    public static double touristAutoPassReachWeight = 0.35;
+    /** Spawn weight multiplier strength for farther learned towns (0 = score-only). */
+    public static double touristAutoDistanceBias = 0.75;
+    /** Random jitter on spawn weights (0 = none, 1 = up to ±100%). */
+    public static double touristAutoRandomness = 0.35;
 
     public static boolean contractsEnabled = false;
     public static boolean researchEnabled = false;
@@ -202,6 +220,16 @@ public class ConfigLoader {
                 touristAutoMinScoreForLearning = readPositiveDouble(config, "tourists.autoMinScoreForLearning", 2.0);
                 touristAutoExpiryPenalty = readNonNegativeDouble(config, "tourists.autoExpiryPenalty", 1.0);
                 touristAutoFadeTripMultiplier = readPositiveDouble(config, "tourists.autoFadeTripMultiplier", 2.0);
+                touristAutoRideOnBaseChance = readShare(config, "tourists.autoRideOnBaseChance", 0.45);
+                touristAutoRideOnDistanceBonusScale = readShare(config, "tourists.autoRideOnDistanceBonusScale", 0.35);
+                touristAutoRideOnDistanceReferenceBlocks = readPositiveDouble(config,
+                        "tourists.autoRideOnDistanceReferenceBlocks", 500.0);
+                touristAutoRideOnSkipPenalty = readShare(config, "tourists.autoRideOnSkipPenalty", 0.12);
+                touristAutoRideOnMaxStayChance = readShare(config, "tourists.autoRideOnMaxStayChance", 0.92);
+                touristAutoRideOnMaxSkips = readPositiveInt(config, "tourists.autoRideOnMaxSkips", 4);
+                touristAutoPassReachWeight = readNonNegativeDouble(config, "tourists.autoPassReachWeight", 0.35);
+                touristAutoDistanceBias = readNonNegativeDouble(config, "tourists.autoDistanceBias", 0.75);
+                touristAutoRandomness = readShare(config, "tourists.autoRandomness", 0.35);
                 touristLevelDistances = readRisingInts(config, "tourists.levelDistances",
                         JourneyProgress.DEFAULT_TOURIST_LEVELS);
                 notorietyDistances = readRisingInts(config, "economy.notorietyDistances",
@@ -388,6 +416,32 @@ public class ConfigLoader {
                 config.setComment("tourists.autoFadeTripMultiplier",
                         " AUTO: per-route score half-life is at least (average trip ticks × this multiplier), "
                                 + "but never below autoScoreHalfLifeMinutes");
+                config.set("tourists.autoRideOnBaseChance", touristAutoRideOnBaseChance);
+                config.setComment("tourists.autoRideOnBaseChance",
+                        " AUTO: base chance (0–1) an Any-Town tourist stays on at an intermediate platform stop");
+                config.set("tourists.autoRideOnDistanceBonusScale", touristAutoRideOnDistanceBonusScale);
+                config.setComment("tourists.autoRideOnDistanceBonusScale",
+                        " AUTO: added stay chance per (blocks traveled ÷ autoRideOnDistanceReferenceBlocks)");
+                config.set("tourists.autoRideOnDistanceReferenceBlocks", touristAutoRideOnDistanceReferenceBlocks);
+                config.setComment("tourists.autoRideOnDistanceReferenceBlocks",
+                        " AUTO: block distance that counts as 1.0 for ride-on distance bonus");
+                config.set("tourists.autoRideOnSkipPenalty", touristAutoRideOnSkipPenalty);
+                config.setComment("tourists.autoRideOnSkipPenalty",
+                        " AUTO: stay chance reduction per town already skipped on this trip");
+                config.set("tourists.autoRideOnMaxStayChance", touristAutoRideOnMaxStayChance);
+                config.setComment("tourists.autoRideOnMaxStayChance", " AUTO: cap on stay probability at one stop");
+                config.set("tourists.autoRideOnMaxSkips", touristAutoRideOnMaxSkips);
+                config.setComment("tourists.autoRideOnMaxSkips",
+                        " AUTO: after this many skipped stops, the tourist must alight at the next stop");
+                config.set("tourists.autoPassReachWeight", touristAutoPassReachWeight);
+                config.setComment("tourists.autoPassReachWeight",
+                        " AUTO: learned score added when a town is passed without alighting (fraction of arrival)");
+                config.set("tourists.autoDistanceBias", touristAutoDistanceBias);
+                config.setComment("tourists.autoDistanceBias",
+                        " AUTO: spawn weight boost for farther learned towns (0 = score only)");
+                config.set("tourists.autoRandomness", touristAutoRandomness);
+                config.setComment("tourists.autoRandomness",
+                        " AUTO: random jitter on learned spawn weights (0–1, fraction of weight)");
                 config.set("tourists.levelDistances", toList(touristLevelDistances));
                 config.setComment("tourists.levelDistances",
                         " Blocks traveled to reach tourist ranks 2, 3, ... (rank 1 is below the first number). "

@@ -87,6 +87,11 @@ public class TouristEntity extends Villager {
     private UUID spawnPlatformId;
     /** World game time (ticks) when this tourist spawned; used for trip duration and AUTO learning. */
     private long spawnTime;
+    /** Towns skipped via ride-on on this trip (open ticket). */
+    private int rideOnSkips;
+    /** While set, arrival processing is suppressed at this stop until the tourist moves again. */
+    @Nullable
+    private UUID rideThroughTownId;
 
     // Track initial spawn position to determine if tourist has moved
     private double spawnPosX;
@@ -388,6 +393,27 @@ public class TouristEntity extends Villager {
         return this.spawnTime;
     }
 
+    public int getRideOnSkips() {
+        return rideOnSkips;
+    }
+
+    public void incrementRideOnSkips() {
+        this.rideOnSkips++;
+    }
+
+    @Nullable
+    public UUID getRideThroughTownId() {
+        return rideThroughTownId;
+    }
+
+    public void setRideThroughTownId(@Nullable UUID townId) {
+        this.rideThroughTownId = townId;
+    }
+
+    public void clearRideThroughTownId() {
+        this.rideThroughTownId = null;
+    }
+
     public UUID getOriginTownId() {
         return this.originTownId;
     }
@@ -640,6 +666,10 @@ public class TouristEntity extends Villager {
         tag.putInt("ExpiryTicks", expiryTicks);
         tag.putBoolean("HasNotifiedOrigin", hasNotifiedOriginTown);
         tag.putLong("SpawnTime", spawnTime);
+        tag.putInt("RideOnSkips", rideOnSkips);
+        if (rideThroughTownId != null) {
+            tag.putUUID("RideThroughTownId", rideThroughTownId);
+        }
         tag.putBoolean("HasReceivedRideExtension", hasReceivedRideExtension);
         tag.putDouble("SpawnPosX", spawnPosX);
         tag.putDouble("SpawnPosY", spawnPosY);
@@ -690,6 +720,12 @@ public class TouristEntity extends Villager {
         }
         if (tag.contains("SpawnTime")) {
             spawnTime = tag.getLong("SpawnTime");
+        }
+        if (tag.contains("RideOnSkips")) {
+            rideOnSkips = tag.getInt("RideOnSkips");
+        }
+        if (tag.contains("RideThroughTownId")) {
+            rideThroughTownId = tag.getUUID("RideThroughTownId");
         }
         if (tag.contains("HasReceivedRideExtension")) {
             hasReceivedRideExtension = tag.getBoolean("HasReceivedRideExtension");

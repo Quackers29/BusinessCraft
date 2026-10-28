@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.platform;
 
+import com.quackers29.businesscraft.config.ConfigLoader;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
+import java.util.function.ToDoubleFunction;
 
 /**
  * Rolling destination scores learned from successful arrivals at an AUTO platform.
@@ -222,9 +224,37 @@ public final class PlatformLearnedRoutes {
     }
 
     public UUID pickWeightedDestination(Random random, java.util.Set<UUID> validDestinations, UUID originTownId) {
+        return pickWeightedDestination(random, validDestinations, originTownId, null);
+    }
+
+    /**
+     * Picks a learned town weighted by score, optionally boosted for distance and jittered by config randomness.
+     *
+     * @param blockDistanceFromOrigin straight-line blocks from origin town to each candidate; ignored when null
+     */
+    public UUID pickWeightedDestination(Random random, java.util.Set<UUID> validDestinations, UUID originTownId,
+            ToDoubleFunction<UUID> blockDistanceFromOrigin) {
         double total = 0;
         List<UUID> ids = new ArrayList<>();
         List<Double> weights = new ArrayList<>();
+        double maxDist = 0;
+        if (blockDistanceFromOrigin != null) {
+            for (Map.Entry<UUID, Entry> e : entries.entrySet()) {
+                UUID dest = e.getKey();
+                if (dest.equals(originTownId)) {
+                    continue;
+                }
+                if (validDestinations != null && !validDestinations.contains(dest)) {
+                    continue;
+                }
+                if (e.getValue().score <= 0) {
+                    continue;
+                }
+                maxDist = Math.max(maxDist, Math.max(0, blockDistanceFromOrigin.applyAsDouble(dest)));
+            }
+        }
+        double bias = ConfigLoader.touristAutoDistanceBias;
+        double randomness = ConfigLoader.touristAutoRandomness;
         for (Map.Entry<UUID, Entry> e : entries.entrySet()) {
             UUID dest = e.getKey();
             if (dest.equals(originTownId)) {
@@ -234,6 +264,16 @@ public final class PlatformLearnedRoutes {
                 continue;
             }
             double w = e.getValue().score;
+            if (w <= 0) {
+                continue;
+            }
+            if (blockDistanceFromOrigin != null && maxDist > 0) {
+                double dist = Math.max(0, blockDistanceFromOrigin.applyAsDouble(dest));
+                w *= 1.0 + bias * (dist / maxDist);
+            }
+            if (randomness > 0) {
+                w *= 1.0 + (random.nextDouble() * 2.0 - 1.0) * randomness;
+            }
             if (w <= 0) {
                 continue;
             }

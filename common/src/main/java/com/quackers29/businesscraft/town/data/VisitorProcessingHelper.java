@@ -152,6 +152,10 @@ public class VisitorProcessingHelper {
         // Calculate position change
         double positionChange = currentPos.distanceTo(lastPos);
 
+        if (villager instanceof TouristEntity movingTourist && positionChange > VISITOR_POSITION_CHANGE_THRESHOLD) {
+            movingTourist.clearRideThroughTownId();
+        }
+
         // Skip if villager has moved too much (likely on transport)
         if (positionChange > VISITOR_POSITION_CHANGE_THRESHOLD) {
             return false;
@@ -173,6 +177,30 @@ public class VisitorProcessingHelper {
                             // "Any town" destination (UUID 0-0)
                             (touristInfo.destinationTownId != null &&
                                     touristInfo.destinationTownId.equals(ANY_TOWN_DESTINATION.toString())))) {
+
+                if (villager instanceof TouristEntity touristBeforeAlight) {
+                    UUID pendingRideThrough = touristBeforeAlight.getRideThroughTownId();
+                    if (pendingRideThrough != null && pendingRideThrough.equals(townId)) {
+                        return false;
+                    }
+                    boolean openTicket = touristInfo.destinationTownId != null
+                            && touristInfo.destinationTownId.equals(ANY_TOWN_DESTINATION.toString());
+                    if (openTicket && !TouristAlightDecision.shouldAlightAtOpenStop(
+                            townId,
+                            UUID.fromString(touristInfo.originTownId),
+                            touristBeforeAlight.getTotalDistanceTraveled(),
+                            touristBeforeAlight.getRideOnSkips(),
+                            serverLevel.getRandom())) {
+                        touristBeforeAlight.setRideThroughTownId(townId);
+                        touristBeforeAlight.incrementRideOnSkips();
+                        Platform originPlatformForPass = TouristDestinationLearning.resolveOriginPlatform(
+                                serverLevel,
+                                UUID.fromString(touristInfo.originTownId),
+                                touristInfo.platformId);
+                        TouristDestinationLearning.onPassedStop(serverLevel, originPlatformForPass, townId);
+                        return false;
+                    }
+                }
 
                 // Look up the origin town to get its actual current position
                 UUID originTownUuid = UUID.fromString(touristInfo.originTownId);

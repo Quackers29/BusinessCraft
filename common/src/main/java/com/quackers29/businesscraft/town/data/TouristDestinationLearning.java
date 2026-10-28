@@ -39,12 +39,55 @@ public final class TouristDestinationLearning {
                 originTownId);
 
         if (share > 0 && random.nextDouble() < share) {
-            UUID picked = learned.pickWeightedDestination(random, valid, originTownId);
+            BlockPos originPos = townBlockPos(level, originTownId);
+            UUID picked = learned.pickWeightedDestination(random, valid, originTownId, destId -> {
+                if (originPos == null) {
+                    return 0;
+                }
+                Town town = TownManager.get(level).getTown(destId);
+                if (town == null || town.getPosition() == null) {
+                    return 0;
+                }
+                return Math.sqrt(originPos.distSqr(town.getPosition()));
+            });
             if (picked != null) {
                 return picked;
             }
         }
         return ANY_TOWN;
+    }
+
+    /**
+     * Partial credit when an open-ticket tourist rides through a town without alighting.
+     */
+    public static void onPassedStop(ServerLevel level, Platform originPlatform, UUID passedTownId) {
+        if (originPlatform == null || passedTownId == null) {
+            return;
+        }
+        if (originPlatform.getDestinationMode() != DestinationMode.AUTO) {
+            return;
+        }
+        if (ANY_TOWN.equals(passedTownId)) {
+            return;
+        }
+        double passWeight = ConfigLoader.touristAutoPassReachWeight;
+        if (passWeight <= 0) {
+            return;
+        }
+        long tick = level.getGameTime();
+        decayPlatform(originPlatform, tick);
+        originPlatform.getLearnedRoutes().recordSuccess(
+                passedTownId,
+                tick,
+                passWeight,
+                0,
+                ConfigLoader.touristAutoMaxLearnedTowns,
+                ConfigLoader.touristAutoPruneFloor);
+    }
+
+    private static BlockPos townBlockPos(ServerLevel level, UUID townId) {
+        Town town = TownManager.get(level).getTown(townId);
+        return town == null ? null : town.getPosition();
     }
 
     public static void onArrival(ServerLevel level, Platform originPlatform, UUID arrivalTownId,
