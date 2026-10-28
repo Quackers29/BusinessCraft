@@ -56,6 +56,12 @@ public class ForgeRegistryHelper implements RegistryHelper {
     }
 
     @Override
+    public <T extends Item> Supplier<T> registerItem(String name, Supplier<T> item) {
+        RegistryObject<Item> registered = ITEMS.register(name, item);
+        return () -> (T) registered.get();
+    }
+
+    @Override
     public <T extends EntityType<?>> Supplier<T> registerEntityType(String name, Supplier<T> entityType) {
         return ENTITY_TYPES.register(name, entityType);
     }

@@ -100,6 +100,16 @@ public class PacketRegistry {
                                 SetPlatformDestinationPacket::decode, SetPlatformDestinationPacket::encode,
                                 SetPlatformDestinationPacket::handle);
 
+                register(SetPlatformDestinationModePacket.class, "set_platform_destination_mode_packet",
+                                NetworkDirection.PLAY_TO_SERVER,
+                                SetPlatformDestinationModePacket::decode, SetPlatformDestinationModePacket::encode,
+                                SetPlatformDestinationModePacket::handle);
+
+                register(ClearPlatformLearnedRoutesPacket.class, "clear_platform_learned_routes_packet",
+                                NetworkDirection.PLAY_TO_SERVER,
+                                ClearPlatformLearnedRoutesPacket::decode, ClearPlatformLearnedRoutesPacket::encode,
+                                ClearPlatformLearnedRoutesPacket::handle);
+
                 register(OpenDestinationsUIPacket.class, "open_destinations_uipacket", NetworkDirection.PLAY_TO_SERVER,
                                 OpenDestinationsUIPacket::decode, OpenDestinationsUIPacket::encode,
                                 OpenDestinationsUIPacket::handle);

@@ -276,6 +276,10 @@ A platform spawn rolls a random type in `assignSpawnVariety`, then `assignLook` 
 
 The floating text is only the first word (`TouristNames.firstOf`), in a light grey, with no shadow and no dark plate. It is drawn twice (see-through, then depth-tested) and only inside 5 blocks (`TouristDisplayFormat.NAME_TAG_MAX_DISTANCE`). The tourist screen title is the full name. `setCustomNameVisible(true)` is what allows the tag; the showcase lineup turns it off so the portraits stay clean.
 
+While the local player holds a **Conductor's Clipboard** (`conductor_clipboard`, main or off hand), a second name-tag line appears under the first name: `Origin -> Destination` (solid light yellow `#FFFFAA`, same distance and see-through passes). Labels come from synced entity data (`DATA_ORIGIN_LABEL`, `DATA_DEST_LABEL`), including **Any Town** for open tickets. No extra server data is required beyond existing spawn/sync. Detection uses `ConductorClipboardItem.clientPlayerHoldingForRouteView()` and `PlatformAccess.getClient()` (Forge and Fabric client helpers).
+
+Craft: two paper, one iron ingot, two sticks (shaped recipe in `data/businesscraft/recipes/conductor_clipboard.json`). Creative tab: **Tools & Utilities**.
+
 `DATA_SKIN_TIER` tracks journey rank. The renderer does not read it. Rank does not change the model.
 
 ## Common pitfalls

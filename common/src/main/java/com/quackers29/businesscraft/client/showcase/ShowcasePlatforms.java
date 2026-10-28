@@ -1,6 +1,10 @@
 package com.quackers29.businesscraft.client.showcase;
 
 import com.quackers29.businesscraft.block.PlatformInterfaceBlock;
+import com.quackers29.businesscraft.platform.DestinationMode;
+import com.quackers29.businesscraft.platform.Platform;
+import com.quackers29.businesscraft.town.Town;
+import com.quackers29.businesscraft.town.TownManager;
 import com.quackers29.businesscraft.block.entity.PlatformInterfaceEntity;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.init.CommonModBlocks;
@@ -154,12 +158,41 @@ public final class ShowcasePlatforms {
     }
 
     public static void openScreen(Minecraft minecraft, BlockPos townPos) {
+        openScreenForDestinationDemo(minecraft, townPos, null);
+    }
+
+    public enum DestinationDemoMode {
+        ANY,
+        AUTO,
+        SPECIFIC
+    }
+
+    /**
+     * Applies server-side platform destination state for showcase, then opens the interface screen.
+     */
+    public static void openScreenForDestinationDemo(Minecraft minecraft, BlockPos townPos,
+            DestinationDemoMode mode) {
         BlockPos pos = placedAt != null ? placedAt : interfacePos(townPos);
         if (pos == null || minecraft.getSingleplayerServer() == null || minecraft.player == null) {
             return;
         }
+        minecraft.setScreen(null);
         MinecraftServer server = minecraft.getSingleplayerServer();
         UUID playerId = minecraft.player.getUUID();
+        server.execute(() -> {
+            ServerPlayer player = server.getPlayerList().getPlayer(playerId);
+            if (player == null) {
+                return;
+            }
+            if (mode != null) {
+                applyDestinationDemo(player.serverLevel(), townPos, mode);
+            }
+            minecraft.execute(() -> openScreenOnClient(minecraft, pos, playerId, server));
+        });
+    }
+
+    private static void openScreenOnClient(Minecraft minecraft, BlockPos pos, UUID playerId,
+            MinecraftServer server) {
         server.execute(() -> {
             ServerPlayer player = server.getPlayerList().getPlayer(playerId);
             if (player == null) {
@@ -172,5 +205,59 @@ public final class ShowcasePlatforms {
                         new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false));
             }
         });
+    }
+
+    static void applyDestinationDemo(ServerLevel level, BlockPos townPos, DestinationDemoMode mode) {
+        if (!(level.getBlockEntity(townPos) instanceof TownInterfaceEntity townInterface)) {
+            return;
+        }
+        UUID platformId = firstPlatformId;
+        if (platformId == null) {
+            return;
+        }
+        Platform platform = townInterface.getPlatform(platformId);
+        if (platform == null) {
+            return;
+        }
+        platform.clearLearnedRoutes();
+        for (UUID id : platform.getEnabledDestinations()) {
+            platform.disableDestination(id);
+        }
+        TownManager manager = TownManager.get(level);
+        UUID oak = townIdByName(manager, "Oakvale");
+        UUID hill = townIdByName(manager, "Hillcrest");
+        long tick = level.getGameTime();
+        switch (mode) {
+            case ANY -> platform.setDestinationMode(DestinationMode.ANY);
+            case AUTO -> {
+                platform.setDestinationMode(DestinationMode.AUTO);
+                if (oak != null) {
+                    platform.getLearnedRoutes().recordSuccess(oak, tick, 5.0, 2L * 60L * 60L * 20L, 12, 0.05);
+                }
+                if (hill != null) {
+                    platform.getLearnedRoutes().recordSuccess(hill, tick, 3.0, 5L * 60L * 20L, 12, 0.05);
+                }
+            }
+            case SPECIFIC -> {
+                platform.setDestinationMode(DestinationMode.SPECIFIC);
+                if (oak != null) {
+                    platform.enableDestination(oak);
+                }
+                if (hill != null) {
+                    platform.enableDestination(hill);
+                }
+            }
+        }
+        townInterface.setChanged();
+        townInterface.syncPlatforms();
+    }
+
+    private static UUID townIdByName(TownManager manager, String name) {
+        for (Town town : manager.getAllTowns().values()) {
+            if (name.equals(town.getName())) {
+                return town.getId();
+            }
+        }
+        return null;
     }
 }

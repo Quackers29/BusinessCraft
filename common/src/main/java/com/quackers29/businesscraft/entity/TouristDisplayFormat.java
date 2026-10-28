@@ -13,6 +13,8 @@ public final class TouristDisplayFormat {
      * A constant for now; a config entry can replace it later.
      */
     public static final double NAME_TAG_MAX_DISTANCE = 5.0;
+    /** ARGB for conductor clipboard route line under the personal name (solid #FFFFAA). */
+    public static final int CONDUCTOR_ROUTE_NAME_TAG_COLOR = 0xFFFFFFAA;
 
     private TouristDisplayFormat() {
     }
@@ -67,6 +69,17 @@ public final class TouristDisplayFormat {
             return trimmed.substring(0, 21) + "...";
         }
         return trimmed;
+    }
+
+    /**
+     * Compact origin/destination line for the conductor clipboard name-tag overlay.
+     */
+    public static String conductorRouteLine(String originLabel, String destinationLabel) {
+        return sanitize(originLabel, "Unknown") + " -> " + sanitize(destinationLabel, "Unknown");
+    }
+
+    public static MutableComponent conductorRouteComponent(String originLabel, String destinationLabel) {
+        return Component.literal(conductorRouteLine(originLabel, destinationLabel));
     }
 
     public static boolean withinNameTagRange(double distanceSq) {

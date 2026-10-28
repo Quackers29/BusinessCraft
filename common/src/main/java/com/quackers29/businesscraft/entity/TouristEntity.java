@@ -84,7 +84,14 @@ public class TouristEntity extends Villager {
     private String originTownName;
     private UUID destinationTownId;
     private String destinationTownName;
+    private UUID spawnPlatformId;
+    /** World game time (ticks) when this tourist spawned; used for trip duration and AUTO learning. */
     private long spawnTime;
+    /** Towns skipped via ride-on on this trip (open ticket). */
+    private int rideOnSkips;
+    /** While set, arrival processing is suppressed at this stop until the tourist moves again. */
+    @Nullable
+    private UUID rideThroughTownId;
 
     // Track initial spawn position to determine if tourist has moved
     private double spawnPosX;
@@ -159,6 +166,10 @@ public class TouristEntity extends Villager {
         if (originTown != null) {
             this.originTownId = originTown.getId();
             this.originTownName = originTown.getName();
+        }
+
+        if (platform != null) {
+            this.spawnPlatformId = platform.getId();
         }
 
         this.destinationTownId = destinationTownId;
@@ -323,6 +334,13 @@ public class TouristEntity extends Villager {
 
     private void notifyOriginTownOfQuitting() {
         if (this.level() instanceof ServerLevel serverLevel && originTownId != null) {
+            if (destinationTownId != null && !destinationTownId.equals(ANY_TOWN_DESTINATION) && spawnPlatformId != null) {
+                Platform originPlatform = com.quackers29.businesscraft.town.data.TouristDestinationLearning
+                        .resolveOriginPlatform(serverLevel, originTownId, spawnPlatformId.toString());
+                com.quackers29.businesscraft.town.data.TouristDestinationLearning.onExpiredWithoutArrival(
+                        serverLevel, originPlatform, destinationTownId);
+            }
+
             Town originTown = TownNotificationUtils.removeTouristFromOrigin(serverLevel, originTownId);
 
             if (hasMoved && ConfigLoader.notifyOnTouristDeparture && originTown != null) {
@@ -373,6 +391,27 @@ public class TouristEntity extends Villager {
 
     public long getSpawnTime() {
         return this.spawnTime;
+    }
+
+    public int getRideOnSkips() {
+        return rideOnSkips;
+    }
+
+    public void incrementRideOnSkips() {
+        this.rideOnSkips++;
+    }
+
+    @Nullable
+    public UUID getRideThroughTownId() {
+        return rideThroughTownId;
+    }
+
+    public void setRideThroughTownId(@Nullable UUID townId) {
+        this.rideThroughTownId = townId;
+    }
+
+    public void clearRideThroughTownId() {
+        this.rideThroughTownId = null;
     }
 
     public UUID getOriginTownId() {
@@ -627,6 +666,10 @@ public class TouristEntity extends Villager {
         tag.putInt("ExpiryTicks", expiryTicks);
         tag.putBoolean("HasNotifiedOrigin", hasNotifiedOriginTown);
         tag.putLong("SpawnTime", spawnTime);
+        tag.putInt("RideOnSkips", rideOnSkips);
+        if (rideThroughTownId != null) {
+            tag.putUUID("RideThroughTownId", rideThroughTownId);
+        }
         tag.putBoolean("HasReceivedRideExtension", hasReceivedRideExtension);
         tag.putDouble("SpawnPosX", spawnPosX);
         tag.putDouble("SpawnPosY", spawnPosY);
@@ -652,6 +695,9 @@ public class TouristEntity extends Villager {
         if (destinationTownName != null) {
             tag.putString("DestinationTownName", destinationTownName);
         }
+        if (spawnPlatformId != null) {
+            tag.putUUID("SpawnPlatformId", spawnPlatformId);
+        }
         if (this.getLookPacked() != TouristAppearance.UNSET) {
             tag.putInt("TouristLook", this.getLookPacked());
             tag.putString("TouristLookId", this.lookId == null ? "" : this.lookId);
@@ -674,6 +720,12 @@ public class TouristEntity extends Villager {
         }
         if (tag.contains("SpawnTime")) {
             spawnTime = tag.getLong("SpawnTime");
+        }
+        if (tag.contains("RideOnSkips")) {
+            rideOnSkips = tag.getInt("RideOnSkips");
+        }
+        if (tag.contains("RideThroughTownId")) {
+            rideThroughTownId = tag.getUUID("RideThroughTownId");
         }
         if (tag.contains("HasReceivedRideExtension")) {
             hasReceivedRideExtension = tag.getBoolean("HasReceivedRideExtension");
@@ -723,6 +775,9 @@ public class TouristEntity extends Villager {
         }
         if (tag.contains("DestinationTownName")) {
             destinationTownName = tag.getString("DestinationTownName");
+        }
+        if (tag.contains("SpawnPlatformId")) {
+            spawnPlatformId = tag.getUUID("SpawnPlatformId");
         }
         if (tag.contains("TouristLook")) {
             this.entityData.set(DATA_LOOK, tag.getInt("TouristLook"));

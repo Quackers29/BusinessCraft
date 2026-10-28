@@ -92,6 +92,7 @@ public class PlatformManager {
         Platform platform = new Platform();
         platform.setName("Platform " + (platforms.size() + 1));
         platform.setEnabled(true);
+        platform.setDestinationMode(com.quackers29.businesscraft.config.ConfigLoader.defaultDestinationMode);
         platform.setInterfacePos(pos);
         platforms.add(platform);
         notifyChanged();

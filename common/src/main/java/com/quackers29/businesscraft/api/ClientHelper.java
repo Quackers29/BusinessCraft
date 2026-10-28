@@ -30,7 +30,9 @@ public interface ClientHelper {
             java.util.Map<java.util.UUID, String> townNames,
             java.util.Map<java.util.UUID, Boolean> enabledState,
             java.util.Map<java.util.UUID, Integer> townDistances,
-            java.util.Map<java.util.UUID, String> townDirections);
+            java.util.Map<java.util.UUID, String> townDirections,
+            com.quackers29.businesscraft.platform.DestinationMode destinationMode,
+            java.util.List<com.quackers29.businesscraft.network.packets.ui.RefreshDestinationsPacket.LearnedRouteEntry> learnedRoutes);
 
     void invalidateTownScreenCache();
 

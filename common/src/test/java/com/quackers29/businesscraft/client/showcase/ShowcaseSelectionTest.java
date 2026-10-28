@@ -77,7 +77,9 @@ class ShowcaseSelectionTest {
     @Test
     void platformScene_isTownCentreBlockAndBothScreens() {
         assertEquals(
-                List.of("warmup", "town_overview", "platform_interface", "platform_interface_screen", "platform_overview"),
+                List.of("warmup", "town_overview", "platform_interface",
+                        "platform_interface_mode_any", "platform_interface_mode_auto",
+                        "platform_interface_mode_specific", "platform_overview"),
                 ShowcaseSelection.shotsFor("platform"));
     }
 

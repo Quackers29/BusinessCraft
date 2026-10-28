@@ -19,6 +19,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.core.Holder;
 import net.minecraft.world.item.Items;
+import com.quackers29.businesscraft.town.data.TouristDestinationLearning;
 import com.quackers29.businesscraft.town.utils.TownNotificationUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
@@ -332,6 +333,14 @@ public class TownManager {
         if (savedData.getTowns().remove(id) != null) {
             savedData.setDirty();
         }
+    }
+
+    public void removeTown(ServerLevel level, UUID id) {
+        if (id == null) {
+            return;
+        }
+        TouristDestinationLearning.purgeTownFromAllPlatforms(level, id);
+        removeTown(id);
     }
 
     public void markDirty() {

@@ -8,11 +8,15 @@ import com.quackers29.businesscraft.menu.PlatformInterfaceMenu;
 import com.quackers29.businesscraft.network.packets.platform.ResetPlatformPathPacket;
 import com.quackers29.businesscraft.network.packets.platform.SetPlatformAreaPacket;
 import com.quackers29.businesscraft.network.packets.platform.SetPlatformDestinationPacket;
-import com.quackers29.businesscraft.network.packets.platform.SetPlatformEnabledPacket;
+import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.network.packets.platform.SetPlatformPathCreationModePacket;
+import com.quackers29.businesscraft.network.packets.platform.SetPlatformEnabledPacket;
 import com.quackers29.businesscraft.network.packets.ui.PlayerExitUIPacket;
 import com.quackers29.businesscraft.network.packets.ui.OpenDestinationsUIPacket;
-import com.quackers29.businesscraft.platform.Platform;
+import com.quackers29.businesscraft.network.packets.platform.ClearPlatformLearnedRoutesPacket;
+import com.quackers29.businesscraft.network.packets.platform.SetPlatformDestinationModePacket;
+import com.quackers29.businesscraft.network.packets.ui.RefreshDestinationsPacket;
+import com.quackers29.businesscraft.platform.DestinationMode;
 import com.quackers29.businesscraft.ui.util.UiTextWrap;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -49,6 +53,8 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
     private static final int LINE = 0xFF3A404C;
 
     private final List<Destination> destinations = new ArrayList<>();
+    private final List<RefreshDestinationsPacket.LearnedRouteEntry> learnedRoutes = new ArrayList<>();
+    private DestinationMode destinationMode = DestinationMode.AUTO;
     private final List<Hit> hits = new ArrayList<>();
     private int scroll;
     private int contentHeight;
@@ -66,8 +72,16 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
     }
 
     public void receiveDestinations(String platformName, Map<UUID, String> names, Map<UUID, Boolean> enabled,
-            Map<UUID, Integer> distances, Map<UUID, String> directions) {
+            Map<UUID, Integer> distances, Map<UUID, String> directions, DestinationMode mode,
+            List<RefreshDestinationsPacket.LearnedRouteEntry> learned) {
         destinations.clear();
+        learnedRoutes.clear();
+        if (mode != null) {
+            this.destinationMode = mode;
+        }
+        if (learned != null) {
+            learnedRoutes.addAll(learned);
+        }
         if (names != null) {
             for (Map.Entry<UUID, String> entry : names.entrySet()) {
                 UUID id = entry.getKey();
@@ -189,8 +203,7 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
 
         boolean enabled = platform != null && platform.isEnabled();
         boolean path = platform != null && platform.isComplete();
-        int allowed = countAllowed();
-        String dest = allowed == 0 ? "Any town" : allowed + (allowed == 1 ? " town" : " towns");
+        String dest = destinationChipLabel(platform);
         int chipY = panelY + (tight ? 22 : 32);
         String state = enabled ? "Enabled" : "Disabled";
         if (panelW < 360) {
@@ -276,35 +289,80 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
 
         y = sectionTitle(graphics, x, y, "Destinations");
         if (!tight) {
-            String hint = destinations.stream().anyMatch(d -> d.enabled)
-                    ? "Allowed towns only. Turn them all off to accept any town."
-                    : "No towns selected. Tourists may travel to any town.";
-            y += drawWrapped(graphics, hint, x, y, inner, MUTED, 3) + 6;
+            y += drawWrapped(graphics,
+                    "Any: open ticket. Auto: learns reachable towns. Specific: only towns you enable below.",
+                    x, y, inner, MUTED, 2) + 6;
         }
-        if (destinations.isEmpty()) {
-            graphics.drawString(this.font, "Looking for other towns…", x, y, MUTED, false);
-            y += 16;
-        }
-        for (Destination destination : destinations) {
-            int rowH = 22;
-            graphics.fill(x, y, x + inner, y + rowH, SECTION);
-            String label = destination.name;
-            String meta = destination.direction.isEmpty()
-                    ? destination.distance + "m"
-                    : destination.direction + "  " + destination.distance + "m";
-            int toggleW = 64;
-            int nameMax = inner - toggleW - this.font.width(meta) - 16;
-            if (this.font.width(label) > nameMax && nameMax > 12) {
-                label = this.font.plainSubstrByWidth(label, nameMax - this.font.width("…")) + "…";
+        int modeW = Math.min(72, (inner - 8) / 3);
+        control(graphics, "mode-any", "Any", x, y, modeW, buttonH, mouseX, mouseY, true,
+                destinationMode == DestinationMode.ANY ? ON_BG : SECTION,
+                destinationMode == DestinationMode.ANY ? ON_FG : WHITE);
+        control(graphics, "mode-auto", "Auto", x + modeW + 4, y, modeW, buttonH, mouseX, mouseY, true,
+                destinationMode == DestinationMode.AUTO ? ON_BG : SECTION,
+                destinationMode == DestinationMode.AUTO ? ON_FG : WHITE);
+        control(graphics, "mode-specific", "Specific", x + (modeW + 4) * 2, y, modeW, buttonH, mouseX, mouseY, true,
+                destinationMode == DestinationMode.SPECIFIC ? ON_BG : SECTION,
+                destinationMode == DestinationMode.SPECIFIC ? ON_FG : WHITE);
+        y += buttonH + (tight ? 6 : 10);
+
+        if (destinationMode == DestinationMode.AUTO) {
+            if (learnedRoutes.isEmpty()) {
+                graphics.drawString(this.font, "No learned routes yet — send Any Town tourists first.",
+                        x, y, MUTED, false);
+                y += 16;
+            } else {
+                for (RefreshDestinationsPacket.LearnedRouteEntry route : learnedRoutes) {
+                    int rowH = 18;
+                    graphics.fill(x, y, x + inner, y + rowH, SECTION);
+                    String share = Math.round(route.strength() * 100) + "%";
+                    graphics.drawString(this.font, route.name(), x + 6, y + 5, WHITE, false);
+                    graphics.drawString(this.font, share, x + inner - 6 - this.font.width(share), y + 5, AQUA, false);
+                    y += rowH + 2;
+                }
             }
-            graphics.drawString(this.font, label, x + 6, y + 7, WHITE, false);
-            graphics.drawString(this.font, meta, x + inner - toggleW - 8 - this.font.width(meta), y + 7, MUTED, false);
-            control(graphics, "dest:" + destination.id, destination.enabled ? "On" : "Off",
-                    x + inner - toggleW, y + 2, toggleW, rowH - 4, mouseX, mouseY, true,
-                    destination.enabled ? ON_BG : OFF_BG, destination.enabled ? ON_FG : OFF_FG);
-            y += rowH + 4;
+            control(graphics, "forget-learned", "Forget learned routes", x, y, Math.min(inner, 180), buttonH,
+                    mouseX, mouseY, true, OFF_BG, OFF_FG);
+            y += buttonH + gap;
+        }
+
+        if (destinationMode == DestinationMode.SPECIFIC) {
+            if (destinations.isEmpty()) {
+                graphics.drawString(this.font, "Looking for other towns…", x, y, MUTED, false);
+                y += 16;
+            }
+            for (Destination destination : destinations) {
+                int rowH = 22;
+                graphics.fill(x, y, x + inner, y + rowH, SECTION);
+                String label = destination.name;
+                String meta = destination.direction.isEmpty()
+                        ? destination.distance + "m"
+                        : destination.direction + "  " + destination.distance + "m";
+                int toggleW = 64;
+                int nameMax = inner - toggleW - this.font.width(meta) - 16;
+                if (this.font.width(label) > nameMax && nameMax > 12) {
+                    label = this.font.plainSubstrByWidth(label, nameMax - this.font.width("…")) + "…";
+                }
+                graphics.drawString(this.font, label, x + 6, y + 7, WHITE, false);
+                graphics.drawString(this.font, meta, x + inner - toggleW - 8 - this.font.width(meta), y + 7, MUTED,
+                        false);
+                control(graphics, "dest:" + destination.id, destination.enabled ? "On" : "Off",
+                        x + inner - toggleW, y + 2, toggleW, rowH - 4, mouseX, mouseY, true,
+                        destination.enabled ? ON_BG : OFF_BG, destination.enabled ? ON_FG : OFF_FG);
+                y += rowH + 4;
+            }
         }
         return y + 8;
+    }
+
+    private String destinationChipLabel(Platform platform) {
+        if (platform != null) {
+            return platform.getDestinationModeDisplayLabel();
+        }
+        return switch (destinationMode) {
+            case ANY -> "Any";
+            case AUTO -> "Auto";
+            case SPECIFIC -> "Specific";
+        };
     }
 
     private int sectionTitle(GuiGraphics graphics, int x, int y, String title) {
@@ -418,6 +476,10 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
             case "radius-plus" -> changeArea(entity, platform, platform.getSearchRadius() + step, platform.getSpread());
             case "spread-minus" -> changeArea(entity, platform, platform.getSearchRadius(), platform.getSpread() - step);
             case "spread-plus" -> changeArea(entity, platform, platform.getSearchRadius(), platform.getSpread() + step);
+            case "mode-any" -> setDestinationMode(entity, DestinationMode.ANY);
+            case "mode-auto" -> setDestinationMode(entity, DestinationMode.AUTO);
+            case "mode-specific" -> setDestinationMode(entity, DestinationMode.SPECIFIC);
+            case "forget-learned" -> forgetLearned(entity);
             default -> {
                 if (id.startsWith("dest:")) {
                     toggleDestination(entity, platform, UUID.fromString(id.substring("dest:".length())));
@@ -451,6 +513,32 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
         }
         PlatformAccess.getNetworkMessages().sendToServer(new SetPlatformAreaPacket(
                 entity.getTownCentre(), entity.getPlatformId(), platform.getSearchRadius(), platform.getSpread()));
+    }
+
+    private void setDestinationMode(PlatformInterfaceEntity entity, DestinationMode mode) {
+        destinationMode = mode;
+        Platform platform = currentPlatform();
+        if (platform != null) {
+            platform.setDestinationMode(mode);
+        }
+        if (PlatformAccess.getNetworkMessages() == null) {
+            return;
+        }
+        PlatformAccess.getNetworkMessages().sendToServer(new SetPlatformDestinationModePacket(
+                entity.getTownCentre(), entity.getPlatformId(), mode));
+    }
+
+    private void forgetLearned(PlatformInterfaceEntity entity) {
+        learnedRoutes.clear();
+        Platform platform = currentPlatform();
+        if (platform != null) {
+            platform.clearLearnedRoutes();
+        }
+        if (PlatformAccess.getNetworkMessages() == null) {
+            return;
+        }
+        PlatformAccess.getNetworkMessages().sendToServer(new ClearPlatformLearnedRoutesPacket(
+                entity.getTownCentre(), entity.getPlatformId()));
     }
 
     private void toggleDestination(PlatformInterfaceEntity entity, Platform platform, UUID townId) {
