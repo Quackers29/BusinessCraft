@@ -235,7 +235,7 @@ public class BCTabPanel extends BCComponent {
                 guiGraphics.fill(tabX, y, tabX + tabWidth, y + tabHeight + 1, bgColor);
                 
                 // Draw a lighter highlight at the top of the active tab
-                guiGraphics.fill(tabX, y, tabX + tabWidth, y + 1, 0xFFFFFFFF);
+                guiGraphics.fill(tabX, y, tabX + tabWidth, y + 1, com.quackers29.businesscraft.ui.theme.UiTheme.GOLD);
             } else {
                 // Draw inactive tab with standard height and darker
                 guiGraphics.fill(tabX, y + 1, tabX + tabWidth, y + tabHeight, bgColor);

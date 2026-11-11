@@ -239,8 +239,8 @@ public class StandardTabContent extends BCComponent {
             int trackX = x + width - 6;
             int thumbH = Math.max(8, viewH * viewH / contentHeight);
             int thumbY = viewTop + (int) ((viewH - thumbH) * (labelScroll / (float) maxScroll));
-            guiGraphics.fill(trackX, viewTop, trackX + 3, viewTop + viewH, 0x40FFFFFF);
-            guiGraphics.fill(trackX, thumbY, trackX + 3, thumbY + thumbH, 0xD0FFFFFF);
+            guiGraphics.fill(trackX, viewTop, trackX + 3, viewTop + viewH, com.quackers29.businesscraft.ui.theme.UiTheme.TRACK);
+            guiGraphics.fill(trackX, thumbY, trackX + 3, thumbY + thumbH, com.quackers29.businesscraft.ui.theme.UiTheme.BORDER);
         }
         if (hovered != null) {
             guiGraphics.renderTooltip(font, Component.literal(hovered), mouseX, mouseY);
@@ -255,6 +255,14 @@ public class StandardTabContent extends BCComponent {
             Map<Item, Long> items = itemListSupplier.get();
             Map<Item, String> tooltips = itemTooltipSupplier != null ? itemTooltipSupplier.get() : null;
             Map<Item, String> names = itemNamesSupplier != null ? itemNamesSupplier.get() : null;
+
+            if (items == null || items.isEmpty()) {
+                Font font = Minecraft.getInstance().font;
+                String message = "No resources yet";
+                guiGraphics.drawString(font, message, x + Math.max(8, (width - font.width(message)) / 2),
+                        y + 12, com.quackers29.businesscraft.ui.theme.UiTheme.MUTED, false);
+                return;
+            }
 
             // Create the grid only once to preserve scroll state
             if (grid == null) {
@@ -428,10 +436,12 @@ public class StandardTabContent extends BCComponent {
     private void renderButtonGrid(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         if (buttonGridSupplier != null) {
             Map<String, Object[]> buttonData = buttonGridSupplier.get();
+            int rows = Math.max(1, (buttonData.size() + 1) / 2);
+            int gridHeight = Math.min(height, 10 + rows * 26 + Math.max(0, rows - 1) * 10 + 10);
 
             // Create/update the grid every time to ensure dynamic button text updates
             grid = UIGridBuilder.createLabelButtonGrid(
-                    x, y, width, height,
+                    x, y, width, gridHeight,
                     TEXT_COLOR, TownInterfaceTheme.PRIMARY_COLOR,
                     buttonData)
                     .withBackgroundColor(BACKGROUND_COLOR)

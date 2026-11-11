@@ -116,7 +116,7 @@ public class VisitorHistoryManager extends BaseModalManager {
                 townPos);
 
         visitorScreen.withBackButtonText("Back")
-                .withTitleScale(1.2f)
+                .withTitleScale(1.0f)
                 .withRowHeight(20);
 
         displayModal(visitorScreen);

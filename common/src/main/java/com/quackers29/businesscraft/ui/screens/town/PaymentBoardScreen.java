@@ -39,7 +39,7 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     private static final int HEADER_HEIGHT = 35; // Reduced from 45
     private static final int BACK_BUTTON_X = SECTION_PADDING;
     private static final int BACK_BUTTON_Y = SECTION_PADDING;
-    private static final int BACK_BUTTON_WIDTH = 28;
+    private static final int BACK_BUTTON_WIDTH = com.quackers29.businesscraft.ui.theme.UiTheme.BACK_SIZE;
     private static final int BACK_BUTTON_HEIGHT = 20;
 
     // Payment board section - centered to screen width with slight right adjustment
@@ -70,12 +70,12 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
     private List<RewardEntry> cachedRewards = new ArrayList<>();
 
     // Enhanced color scheme for better visual hierarchy
-    private static final int SUCCESS_COLOR = 0xB0228B22; // Slightly more opaque green
-    private static final int INFO_COLOR = 0xB0336699; // Slightly more opaque blue
-    private static final int EXPIRED_COLOR = 0xA0666666; // Gray for expired
-    private static final int TEXT_COLOR = 0xFFFFFFFF; // White text
-    private static final int HEADER_COLOR = 0xFFFCB821; // Gold for headers
-    private static final int SECTION_BG_COLOR = 0x90000000; // Semi-transparent black for sections
+    private static final int SUCCESS_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.BUTTON;
+    private static final int INFO_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.AQUA;
+    private static final int EXPIRED_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.MUTED;
+    private static final int TEXT_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.TEXT;
+    private static final int HEADER_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.GOLD;
+    private static final int SECTION_BG_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.SECTION;
 
     public PaymentBoardScreen(PaymentBoardMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -375,9 +375,8 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
             if (reward.getSource() == RewardSource.TOURIST_ARRIVAL) {
                 // Column 0: Tourist info "[quantity] x [origin town]" for tourist arrivals
                 String touristInfo = createTouristInfoDisplay(reward);
-                String truncatedTouristInfo = truncateTextStable(touristInfo, 12); // Limit to 12 chars
                 // Don't add UIGrid tooltips for tourist arrivals - use custom tooltips only
-                paymentBoardGrid.addLabel(i, 0, truncatedTouristInfo, TEXT_COLOR);
+                paymentBoardGrid.addLabel(i, 0, touristInfo, TEXT_COLOR);
 
                 // Column 1: Multi-item visual display for tourist arrivals
                 addMultiItemDisplay(i, 1, reward, null); // No UIGrid tooltip - use custom tooltips only
@@ -395,11 +394,11 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
                 // Column 1: Rewards summary (truncated to 12 chars max to prevent overlap) for
                 // other rewards
                 String fullRewardsText = reward.getRewardsDisplay();
-                String rewardsText = truncateTextStable(fullRewardsText, 12);
+                String rewardsText = fullRewardsText;
 
                 if (enhancedTooltip != null) {
                     paymentBoardGrid.addLabelWithTooltip(i, 1, rewardsText, enhancedTooltip, TEXT_COLOR);
-                } else if (fullRewardsText.length() > 12) {
+                } else if (this.font.width(fullRewardsText) > 72) {
                     paymentBoardGrid.addLabelWithTooltip(i, 1, rewardsText, fullRewardsText, TEXT_COLOR);
                 } else {
                     paymentBoardGrid.addLabel(i, 1, rewardsText, TEXT_COLOR);
@@ -428,41 +427,8 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
 
         // If no rewards, show a message
         if (currentRewards.isEmpty()) {
-            paymentBoardGrid.addLabel(0, 1, "No unclaimed rewards", EXPIRED_COLOR);
+            paymentBoardGrid.addLabel(0, 1, "No unclaimed rewards", com.quackers29.businesscraft.ui.theme.UiTheme.MUTED);
         }
-    }
-
-    private String truncateText(String text, int maxCharacters) {
-        if (text == null || text.length() <= maxCharacters)
-            return text;
-
-        // Use character-based truncation for now (simpler and more predictable)
-        if (maxCharacters <= 3)
-            return "...";
-        return text.substring(0, maxCharacters - 3) + "...";
-    }
-
-    /**
-     * Stable truncation that produces consistent results for the same input
-     */
-    private String truncateTextStable(String text, int maxCharacters) {
-        if (text == null || text.isEmpty())
-            return "";
-        if (text.length() <= maxCharacters)
-            return text;
-
-        // Ensure consistent truncation
-        if (maxCharacters <= 3)
-            return "...";
-
-        // Try to break at word boundaries if possible for better readability
-        String truncated = text.substring(0, maxCharacters - 3);
-        int lastSpace = truncated.lastIndexOf(' ');
-        if (lastSpace > maxCharacters / 2) { // Only break at space if it's not too early
-            truncated = truncated.substring(0, lastSpace);
-        }
-
-        return truncated + "...";
     }
 
     /**

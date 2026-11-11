@@ -33,20 +33,20 @@ import java.util.UUID;
  * are edited here. The Town Centre only shows the result.
  */
 public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInterfaceMenu> {
-    private static final int PANEL = 0xF014161C;
-    private static final int BORDER = 0xFFD7B56D;
-    private static final int SECTION = 0xFF1A1F2A;
-    private static final int WHITE = 0xFFFFFFFF;
-    private static final int MUTED = 0xFFC2C6CE;
-    private static final int GOLD = 0xFFFFD56A;
-    private static final int AQUA = 0xFF8FDBFF;
-    private static final int GREEN = 0xFF7DFF7D;
-    private static final int RED = 0xFFFFA3A3;
-    private static final int ON_BG = 0xFF8FDB9A;
-    private static final int ON_FG = 0xFF102816;
-    private static final int OFF_BG = 0xFFF0A3A3;
-    private static final int OFF_FG = 0xFF3A1216;
-    private static final int LINE = 0xFF3A404C;
+    private static final int PANEL = com.quackers29.businesscraft.ui.theme.UiTheme.PANEL;
+    private static final int BORDER = com.quackers29.businesscraft.ui.theme.UiTheme.BORDER;
+    private static final int SECTION = com.quackers29.businesscraft.ui.theme.UiTheme.SECTION;
+    private static final int WHITE = com.quackers29.businesscraft.ui.theme.UiTheme.TEXT;
+    private static final int MUTED = com.quackers29.businesscraft.ui.theme.UiTheme.MUTED;
+    private static final int GOLD = com.quackers29.businesscraft.ui.theme.UiTheme.GOLD;
+    private static final int AQUA = com.quackers29.businesscraft.ui.theme.UiTheme.AQUA;
+    private static final int GREEN = com.quackers29.businesscraft.ui.theme.UiTheme.ON_BG;
+    private static final int RED = com.quackers29.businesscraft.ui.theme.UiTheme.OFF_BG;
+    private static final int ON_BG = com.quackers29.businesscraft.ui.theme.UiTheme.ON_BG;
+    private static final int ON_FG = com.quackers29.businesscraft.ui.theme.UiTheme.ON_FG;
+    private static final int OFF_BG = com.quackers29.businesscraft.ui.theme.UiTheme.OFF_BG;
+    private static final int OFF_FG = com.quackers29.businesscraft.ui.theme.UiTheme.OFF_FG;
+    private static final int LINE = com.quackers29.businesscraft.ui.theme.UiTheme.LINE;
 
     private final List<Destination> destinations = new ArrayList<>();
     private final List<Hit> hits = new ArrayList<>();
@@ -136,6 +136,7 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
         hits.clear();
         graphics.fill(panelX - 1, panelY - 1, panelX + panelW + 1, panelY + panelH + 1, BORDER);
         graphics.fill(panelX, panelY, panelX + panelW, panelY + panelH, PANEL);
+        drawBack(graphics, mouseX, mouseY);
 
         PlatformInterfaceEntity entity = entity();
         Platform platform = currentPlatform();
@@ -174,11 +175,29 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
         }
     }
 
+    private int backSize() {
+        return compact() ? com.quackers29.businesscraft.ui.theme.UiTheme.BUTTON_HEIGHT_COMPACT
+                : com.quackers29.businesscraft.ui.theme.UiTheme.BACK_SIZE;
+    }
+
+    private void drawBack(GuiGraphics graphics, int mouseX, int mouseY) {
+        int back = backSize();
+        int x = panelX + 4;
+        int y = panelY + 4;
+        boolean hover = mouseX >= x && mouseX < x + back && mouseY >= y && mouseY < y + back;
+        graphics.fill(x, y, x + back, y + back,
+                hover ? com.quackers29.businesscraft.ui.theme.UiTheme.BUTTON_HOVER
+                        : com.quackers29.businesscraft.ui.theme.UiTheme.BUTTON);
+        String mark = "◀";
+        int textW = this.font.width(mark);
+        graphics.drawString(this.font, mark, x + (back - textW) / 2, y + (back - 8) / 2, WHITE, false);
+    }
+
     private void drawHeader(GuiGraphics graphics, PlatformInterfaceEntity entity, Platform platform) {
         boolean tight = compact();
         int nameY = panelY + (tight ? 7 : 10);
         String name = platform != null && platform.getName() != null ? platform.getName() : "Platform";
-        graphics.drawString(this.font, name, panelX + 14, nameY, WHITE, false);
+        graphics.drawString(this.font, name, panelX + 28, nameY, WHITE, false);
         String town = townName(entity);
         if (town != null) {
             int width = this.font.width(town);
@@ -336,10 +355,13 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
             int mouseX, int mouseY, boolean enabled, int fill, int labelColor) {
         boolean hover = enabled && mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
         boolean tinted = fill != 0;
-        int bg = !enabled ? 0xFF242830 : tinted ? (hover ? brighten(fill) : fill) : hover ? 0xFF3C4A62 : 0xFF2C3342;
+        int bg = !enabled ? com.quackers29.businesscraft.ui.theme.UiTheme.BUTTON_DISABLED
+                : tinted ? (hover ? brighten(fill) : fill)
+                : hover ? com.quackers29.businesscraft.ui.theme.UiTheme.BUTTON_HOVER
+                : com.quackers29.businesscraft.ui.theme.UiTheme.BUTTON;
         graphics.fill(x, y, x + w, y + h, bg);
         graphics.fill(x, y, x + w, y + 1, enabled ? (tinted ? darken(fill) : BORDER) : 0xFF3A404C);
-        int color = !enabled ? 0xFF8A909A : tinted ? labelColor : WHITE;
+        int color = !enabled ? com.quackers29.businesscraft.ui.theme.UiTheme.BUTTON_DISABLED_TEXT : tinted ? labelColor : WHITE;
         int textW = this.font.width(label);
         graphics.drawString(this.font, label, x + (w - textW) / 2, y + (h - 8) / 2, color, false);
         if (enabled) {
@@ -375,6 +397,11 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
         if (button != 0) {
             return super.mouseClicked(mouseX, mouseY, button);
         }
+        int back = backSize();
+        if (mouseX >= panelX + 4 && mouseX < panelX + 4 + back && mouseY >= panelY + 4 && mouseY < panelY + 4 + back) {
+            this.onClose();
+            return true;
+        }
         for (Hit hit : hits) {
             int screenY = hit.y;
             if (mouseX >= hit.x && mouseX < hit.x + hit.w && mouseY >= screenY && mouseY < screenY + hit.h) {
@@ -409,7 +436,9 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
         if (platform == null || entity == null || entity.getTownCentre() == null || entity.getPlatformId() == null) {
             return;
         }
-        int step = hasShiftDown() ? 5 : 1;
+        int step = hasShiftDown()
+                ? Math.max(1, com.quackers29.businesscraft.config.ConfigLoader.platformRadiusStepFast)
+                : Math.max(1, com.quackers29.businesscraft.config.ConfigLoader.platformRadiusStep);
         switch (id) {
             case "toggle" -> toggleEnabled(entity, platform);
             case "set-path" -> startPath(entity, platform);

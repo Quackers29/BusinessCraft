@@ -245,7 +245,7 @@ public class TownLeaderboardScreen extends Screen {
         contentGrid = UIGridBuilder.create(gridX, gridY, gridWidth, gridHeight, numColumns)
             .withBackgroundColor(0x00000000) // Transparent - we draw panel background
             .withBorderColor(0x00000000) // No border
-            .withMargins(5, 5)
+            .withMargins(8, 8)
             .withSpacing(10, 0)
             .withRowHeight(18)
             .drawBorder(false);
@@ -279,7 +279,7 @@ public class TownLeaderboardScreen extends Screen {
                     String value = column.valueExtractor().apply(town);
 
                     // Use gold color for current town's name, normal color for everything else
-                    int textColor = (col == 0 && isCurrentTown) ? 0xFFFFAA00 : TownInterfaceTheme.TEXT_COLOR;
+                    int textColor = (col == 0 && isCurrentTown) ? com.quackers29.businesscraft.ui.theme.UiTheme.GOLD : TownInterfaceTheme.TEXT_COLOR;
 
                     contentGrid.addLabel(dataRow, col, value, textColor);
                 }
@@ -300,31 +300,35 @@ public class TownLeaderboardScreen extends Screen {
     protected void init() {
         super.init();
 
-        this.panelWidth = (int)(this.width * 0.8);
-        this.panelHeight = (int)(this.height * 0.7) - 40;
+        int rows = Math.max(1, townData.size()) + 1;
+        int needed = 50 + rows * 18 + 16;
+        int maxH = (int) (this.height * 0.7);
+        this.panelWidth = Math.min((int) (this.width * 0.8), Math.max(240, this.width - 16));
+        this.panelHeight = Math.min(Math.max(90, maxH - 36), Math.max(90, needed));
         this.panelLeft = (this.width - panelWidth) / 2;
         this.panelTop = (this.height - panelHeight) / 2 - 10;
 
         calculateVisibleColumns();
         buildGrid();
 
-        int buttonWidth = 120;
-        int buttonX = this.width / 2 - buttonWidth / 2;
-        int buttonY = panelTop + panelHeight + 5;
+        String sortLabel = "Sort: " + sortMode.getDisplayName();
+        int backW = Math.max(64, this.font.width("Back") + 16);
+        int sortW = Math.max(120, this.font.width(sortLabel) + 16);
+        int buttonY = panelTop + panelHeight + 8;
+        int startX = this.width / 2 - (backW + 8 + sortW) / 2;
         this.backButton = this.addRenderableWidget(Button.builder(
             Component.literal("Back"),
             button -> this.minecraft.setScreen(parentScreen))
-            .pos(buttonX, buttonY)
-            .size(buttonWidth, 20)
+            .pos(startX, buttonY)
+            .size(backW, 20)
             .build()
         );
 
-        buttonY = panelTop + panelHeight + 30;
         this.sortButton = this.addRenderableWidget(Button.builder(
-            Component.literal("Sort: " + sortMode.getDisplayName()),
+            Component.literal(sortLabel),
             button -> this.cycleSortMode())
-            .pos(buttonX, buttonY)
-            .size(buttonWidth, 20)
+            .pos(startX + backW + 8, buttonY)
+            .size(sortW, 20)
             .build()
         );
     }
@@ -332,7 +336,7 @@ public class TownLeaderboardScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
         this.renderBackground(graphics);
-        graphics.fill(0, 0, this.width, this.height, 0xB0000000);
+        graphics.fill(0, 0, this.width, this.height, com.quackers29.businesscraft.ui.theme.UiTheme.OVERLAY);
 
         // Panel background and border
         graphics.fill(panelLeft, panelTop, panelLeft + panelWidth, panelTop + panelHeight, 0xF014161C);

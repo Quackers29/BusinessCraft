@@ -42,7 +42,7 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     private static final int HEADER_HEIGHT = 35;
     private static final int BACK_BUTTON_X = SECTION_PADDING;
     private static final int BACK_BUTTON_Y = SECTION_PADDING;
-    private static final int BACK_BUTTON_WIDTH = 28;
+    private static final int BACK_BUTTON_WIDTH = com.quackers29.businesscraft.ui.theme.UiTheme.BACK_SIZE;
     private static final int BACK_BUTTON_HEIGHT = 20;
     private static final int CONTRACT_GRID_X = SECTION_PADDING + 12;
     private static final int CONTRACT_GRID_Y = HEADER_HEIGHT + ELEMENT_SPACING;
@@ -55,8 +55,6 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     // Tab state: 0=Auction, 1=Active, 2=History
     private int selectedTab = 0;
     private static final String[] TAB_NAMES = {"auction", "active", "history"};
-    private static final int DEFAULT_PAGE_SIZE = 20;
-    private static final int HISTORY_DEFAULT_LIMIT = 50;
     private boolean showAllHistory = false; // For history tab: show all vs last 50
 
     private UIGridBuilder contractGrid;
@@ -75,10 +73,9 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
     private boolean showBidInput = false;
 
     // Colors from PaymentBoardScreen
-    private static final int HEADER_COLOR = 0xFFFCB821;
-    private static final int SECTION_BG_COLOR = 0x90000000;
-    private static final int TEXT_COLOR = 0xFFFFFFFF;
-    private static final int SUCCESS_COLOR = 0xB0228B22;
+    private static final int HEADER_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.GOLD;
+    private static final int SECTION_BG_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.SECTION;
+    private static final int TEXT_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.TEXT;
 
     public ContractBoardScreen(ContractBoardMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -112,7 +109,7 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
         String tabName = TAB_NAMES[selectedTab];
         boolean showAll = (selectedTab == 2) && showAllHistory; // Only applies to history tab
         PlatformAccess.getNetworkMessages().sendToServer(
-                new RequestContractListPacket(tabName, currentPage, DEFAULT_PAGE_SIZE, showAll));
+                new RequestContractListPacket(tabName, currentPage, pageSize(), showAll));
     }
 
     /**
@@ -198,7 +195,7 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
             // Col 1: Town Name
             String townName = vm.getIssuerTownName();
             if (townName == null) townName = "Unknown";
-            contractGrid.addLabelWithTooltip(i, 1, truncate(townName, 12), tooltip, TEXT_COLOR);
+            contractGrid.addLabelWithTooltip(i, 1, townName, tooltip, TEXT_COLOR);
 
             // Col 2: Time display (server-calculated, no client System.currentTimeMillis())
             String timeDisplay = vm.getTimeRemainingDisplay();
@@ -214,23 +211,23 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
                 // Auction tab - players view auctions, only towns can bid
                 buttonText = "View";
                 buttonTooltip = "View auction details";
-                buttonColor = 0xFF666666;
+                buttonColor = com.quackers29.businesscraft.ui.theme.UiTheme.BUTTON;
             } else if (selectedTab == 1) {
                 // Active tab - show courier status
                 if (vm.canAcceptCourier()) {
                     buttonText = "Courier";
                     buttonTooltip = "View courier job details";
-                    buttonColor = 0xFF4444AA;
+                    buttonColor = com.quackers29.businesscraft.ui.theme.UiTheme.BUTTON;
                 } else {
                     buttonText = "Delivering";
                     buttonTooltip = "View delivery progress";
-                    buttonColor = 0xFF44AA44;
+                    buttonColor = com.quackers29.businesscraft.ui.theme.UiTheme.BUTTON;
                 }
             } else {
                 // History tab
                 buttonText = "View";
                 buttonTooltip = "View contract details";
-                buttonColor = 0xFF666666;
+                buttonColor = com.quackers29.businesscraft.ui.theme.UiTheme.BUTTON;
             }
             
             String buttonId = (selectedTab == 0) ? ShowcaseButtonIds.CONTRACT_VIEW : null;
@@ -243,8 +240,8 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
             int lastRow = contracts.size();
             contractGrid.updateTotalRows(lastRow + 1);
             contractGrid.addButtonWithTooltip(lastRow, 1, "Show All",
-                    "Show all " + totalCount + " contracts (currently showing " + HISTORY_DEFAULT_LIMIT + ")",
-                    (Consumer<Void>) v -> showAllHistoryContracts(), 0xFF4444AA);
+                    "Show all " + totalCount + " contracts (currently showing " + historyLimit() + ")",
+                    (Consumer<Void>) v -> showAllHistoryContracts(), com.quackers29.businesscraft.ui.theme.UiTheme.BUTTON);
         }
 
         if (contracts.isEmpty()) {
@@ -317,22 +314,12 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
 
     // Legacy methods removed - tooltip/details now built from view-model
 
-    private String truncate(String text, int maxChars) {
-        if (text == null || text.length() <= maxChars)
-            return text;
-        return text.substring(0, maxChars - 3) + "...";
+    private int pageSize() {
+        return Math.max(1, com.quackers29.businesscraft.config.ConfigLoader.contractPageSize);
     }
 
-    private String getTabTitle() {
-        switch (selectedTab) {
-            case 0:
-                return "Auction";
-            case 1:
-                return "Active";
-            case 2:
-                return "History";
-        }
-        return "Contracts";
+    private int historyLimit() {
+        return Math.max(1, com.quackers29.businesscraft.config.ConfigLoader.contractHistoryLimit);
     }
 
     private boolean isMouseOverBackButton(int mx, int my) {
@@ -488,8 +475,7 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
         int w = CONTRACT_GRID_WIDTH + padding * 2;
         int h = CONTRACT_GRID_HEIGHT + padding * 2;
         g.fill(sx, sy, sx + w, sy + h, SECTION_BG_COLOR);
-        InventoryRenderer.drawBorder(g, sx, sy, w, h, InventoryRenderer.INVENTORY_BORDER_COLOR, 2);
-        g.drawString(font, getTabTitle(), x + CONTRACT_GRID_X, y + CONTRACT_GRID_Y - 12, HEADER_COLOR);
+        InventoryRenderer.drawBorder(g, sx, sy, w, h, InventoryRenderer.BORDER_COLOR, 1);
     }
 
     private void renderTabButtons(GuiGraphics g, int x, int y, int mx, int my) {

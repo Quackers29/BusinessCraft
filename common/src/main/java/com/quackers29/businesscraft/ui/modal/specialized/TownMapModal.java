@@ -83,21 +83,22 @@ public class TownMapModal extends Screen {
 
     // Town data
     private Map<UUID, TownMapDataResponsePacket.TownMapInfo> allTowns;
+    private final java.util.List<com.quackers29.businesscraft.ui.util.UiLabelLayout.Rect> townNameBoxes = new java.util.ArrayList<>();
     private TownMapDataResponsePacket.TownMapInfo selectedTown = null;
     private Map<UUID, TownPlatformDataResponsePacket.PlatformInfo> selectedTownPlatforms = null;
     private TownPlatformDataResponsePacket.PlatformInfo selectedPlatform = null;
     private TownPlatformDataResponsePacket.TownInfo selectedTownInfo = null; // Live town info including boundary
 
     // Colors (themed to match existing UI)
-    private static final int BACKGROUND_COLOR = 0xFF222222;
-    private static final int BORDER_COLOR = 0xFFAAAAAA;
-    private static final int TITLE_COLOR = 0xFFFFFFFF;
-    private static final int MAP_BACKGROUND_COLOR = 0xFF1A1A1A;
-    private static final int TOWN_MARKER_COLOR = 0xFF4CAF50;
-    private static final int CURRENT_TOWN_COLOR = 0xFFFF9800;
-    private static final int SELECTED_TOWN_COLOR = 0xFF2196F3;
-    private static final int TEXT_COLOR = 0xFFFFFFFF;
-    private static final int INFO_BACKGROUND = 0xFF333333;
+    private static final int BACKGROUND_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.PANEL;
+    private static final int BORDER_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.BORDER;
+    private static final int TITLE_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.GOLD;
+    private static final int MAP_BACKGROUND_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.SECTION;
+    private static final int TOWN_MARKER_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.ON_BG;
+    private static final int CURRENT_TOWN_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.GOLD;
+    private static final int SELECTED_TOWN_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.AQUA;
+    private static final int TEXT_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.TEXT;
+    private static final int INFO_BACKGROUND = com.quackers29.businesscraft.ui.theme.UiTheme.SECTION;
 
     // Map Constants
     private static final double MIN_ZOOM = 0.05;
@@ -106,11 +107,6 @@ public class TownMapModal extends Screen {
     private static final double COORDINATE_CONVERSION = 0.1;
     private static final int MAX_COORDINATE_MARKERS = 7;
     private static final int CLICK_TOLERANCE = 3;
-    private static final int MIN_MAP_WIDTH = 140;
-    private static final int MIN_MAP_HEIGHT = 110;
-    private static final int MAX_MAP_WIDTH = 420;
-    private static final int MAX_MAP_HEIGHT = 300;
-
     /**
      * Constructor for the town map modal
      * 
@@ -137,9 +133,15 @@ public class TownMapModal extends Screen {
         super.init();
 
         // Use tighter margins on short GUI viewports (e.g. 854×480 @ guiScale 4).
-        int outerMargin = this.height <= 150 ? 8 : 30;
-        this.panelWidth = Math.min(500, Math.max(120, this.width - outerMargin * 2));
-        this.panelHeight = Math.min(400, Math.max(72, this.height - outerMargin * 2));
+        int outerMargin = com.quackers29.businesscraft.ui.theme.UiTheme.SPACE_2;
+        this.panelWidth = Math.max(120, this.width - outerMargin * 2);
+        this.panelHeight = Math.max(72, this.height - outerMargin * 2);
+        if (this.panelWidth > this.width - 4) {
+            this.panelWidth = Math.max(80, this.width - 4);
+        }
+        if (this.panelHeight > this.height - 4) {
+            this.panelHeight = Math.max(64, this.height - 4);
+        }
         this.panelLeft = (this.width - panelWidth) / 2;
         this.panelTop = (this.height - panelHeight) / 2;
 
@@ -217,8 +219,8 @@ public class TownMapModal extends Screen {
         int contentW = panelWidth - leftAxisGutter - rightAxisGutter;
         int availW = Math.max(20, contentW);
 
-        mapHeight = Math.min(MAX_MAP_HEIGHT, availH);
-        mapHeight = Math.max(MIN_MAP_GRID_HEIGHT, Math.min(mapHeight, MAX_MAP_HEIGHT));
+        mapHeight = availH;
+        mapHeight = Math.max(MIN_MAP_GRID_HEIGHT, mapHeight);
         if (availH < MIN_MAP_GRID_HEIGHT) {
             mapHeight = Math.max(12, availH);
         }
@@ -233,7 +235,7 @@ public class TownMapModal extends Screen {
             mapHeight = MIN_MAP_GRID_HEIGHT;
         }
 
-        mapWidth = Math.min(MAX_MAP_WIDTH, Math.max(20, Math.min(availW, MAX_MAP_WIDTH)));
+        mapWidth = Math.max(20, availW);
 
         mapGridLeft = panelLeft + leftAxisGutter + Math.max(0, (contentW - mapWidth) / 2);
         mapGridRight = mapGridLeft + mapWidth;
@@ -709,6 +711,7 @@ public class TownMapModal extends Screen {
         if (allTowns == null)
             return;
 
+        townNameBoxes.clear();
         for (TownMapDataResponsePacket.TownMapInfo town : allTowns.values()) {
             if (isTownVisible(town)) {
                 drawTown(guiGraphics, town, mouseX, mouseY);
@@ -780,6 +783,8 @@ public class TownMapModal extends Screen {
                 // Calculate name position
                 int nameX = screenX - textWidth / 2;
                 int nameY = screenY - markerSize / 2 - 12;
+                nameY = com.quackers29.businesscraft.ui.util.UiLabelLayout.placeY(
+                        nameX, nameY, textWidth, this.font.lineHeight, townNameBoxes);
 
                 // Check if town name would overlap with info panel
                 boolean nameOverlapsInfo = selectedTown != null &&
@@ -787,7 +792,7 @@ public class TownMapModal extends Screen {
                         nameX + textWidth >= panelLeft && nameX <= panelLeft + 200;
 
                 if (!nameOverlapsInfo) {
-                    guiGraphics.drawString(this.font, townName, nameX, nameY, TEXT_COLOR);
+                    guiGraphics.drawString(this.font, townName, nameX, nameY, TEXT_COLOR, false);
                 }
             }
         }
