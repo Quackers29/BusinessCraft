@@ -139,6 +139,7 @@ public class BusinessCraftFabric implements ModInitializer {
         com.quackers29.businesscraft.event.PlayerBoundaryTracker.initialize();
         com.quackers29.businesscraft.event.PlatformPathHandler.initialize();
         com.quackers29.businesscraft.event.TownEventHandler.initialize();
+        com.quackers29.businesscraft.client.showcase.MultiplayerSmokeServer.initialize();
 
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(
                 new com.quackers29.businesscraft.fabric.FabricTouristLookReloadListener());
@@ -153,6 +154,7 @@ public class BusinessCraftFabric implements ModInitializer {
         // Register server tick event
         ServerTickEvents.END_WORLD_TICK.register(level -> {
             TownManager.get(level).tick();
+            com.quackers29.businesscraft.client.showcase.MultiplayerSmokeServer.onLevelTick(level);
             // Tick ContractBoard for each level
             com.quackers29.businesscraft.contract.ContractBoard.get(level).tick(level);
         });

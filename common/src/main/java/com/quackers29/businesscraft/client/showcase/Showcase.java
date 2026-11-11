@@ -84,6 +84,9 @@ public final class Showcase {
     }
 
     public static void tick() {
+        if (MultiplayerSmokeClient.tick()) {
+            return;
+        }
         String property = System.getProperty(PROPERTY);
         if (!ShowcaseSelection.enabled(property)) {
             return;
