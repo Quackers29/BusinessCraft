@@ -21,6 +21,9 @@ dependencies {
     // JetBrains annotations for @NotNull/@Nullable
     api 'org.jetbrains:annotations:23.0.0'
 
+    // Jade API for optional tooltip providers (compile-time only; not bundled)
+    compileOnly fg.deobf("curse.maven:jade-324717:${jade_forge_curse_file}")
+
     // Unit testing (Test + Docs Loop — see tasks/test_doc_loop.md)
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

@@ -200,6 +200,11 @@ public class BusinessCraftForge {
                 event.accept(com.quackers29.businesscraft.init.CommonModBlocks.PLATFORM_INTERFACE_BLOCK.get());
             }
         }
+        if (event.getTabKey() == net.minecraft.world.item.CreativeModeTabs.TOOLS_AND_UTILITIES) {
+            if (com.quackers29.businesscraft.init.CommonModItems.CONDUCTOR_CLIPBOARD != null) {
+                event.accept(com.quackers29.businesscraft.init.CommonModItems.CONDUCTOR_CLIPBOARD.get());
+            }
+        }
     }
 
     // Add a level unload event handler

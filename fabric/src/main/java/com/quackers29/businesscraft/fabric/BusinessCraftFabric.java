@@ -179,6 +179,14 @@ public class BusinessCraftFabric implements ModInitializer {
                     }
                 });
 
+        net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents
+                .modifyEntriesEvent(net.minecraft.world.item.CreativeModeTabs.TOOLS_AND_UTILITIES)
+                .register(entries -> {
+                    if (com.quackers29.businesscraft.init.CommonModItems.CONDUCTOR_CLIPBOARD != null) {
+                        entries.accept(com.quackers29.businesscraft.init.CommonModItems.CONDUCTOR_CLIPBOARD.get());
+                    }
+                });
+
         LOGGER.info("BusinessCraft Fabric initialized successfully!");
     }
 }

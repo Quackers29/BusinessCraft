@@ -574,6 +574,22 @@ class ConfigLoaderTest {
     }
 
     @Test
+    void loadConfig_autoRideOnAndBias_invalidValues_useDefaults() throws IOException {
+        writeToml("""
+            [tourists]
+            autoRideOnBaseChance = 2.0
+            autoRandomness = -0.5
+            autoDistanceBias = -1.0
+            autoRideOnMaxSkips = 0
+            """);
+        ConfigLoader.loadConfig();
+        assertEquals(0.45, ConfigLoader.touristAutoRideOnBaseChance, 1e-9);
+        assertEquals(0.35, ConfigLoader.touristAutoRandomness, 1e-9);
+        assertEquals(0.75, ConfigLoader.touristAutoDistanceBias, 1e-9);
+        assertEquals(4, ConfigLoader.touristAutoRideOnMaxSkips);
+    }
+
+    @Test
     void configurationService_register_nullCallback_returnsInvalidCallback() throws IOException {
         // Need a real file that exists for the later existence check, but we fail earlier
         Files.writeString(configFile, "# dummy");
