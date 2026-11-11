@@ -27,4 +27,21 @@ class UiTextWrapTest {
             assertTrue(WIDTH.applyAsInt(line) <= 90, line);
         }
     }
+
+    @Test
+    void ellipsize_keepsShortTextAndCutsLongText() {
+        assertEquals("Oakvale", UiTextWrap.ellipsize("Oakvale", 80, WIDTH));
+        String cut = UiTextWrap.ellipsize("Meadowbrook", 8 * 6, WIDTH);
+        assertTrue(cut.endsWith("…"), cut);
+        assertTrue(WIDTH.applyAsInt(cut) <= 48, cut);
+    }
+
+    @Test
+    void placeY_nudgesOverlappingLabelsDown() {
+        java.util.List<UiLabelLayout.Rect> placed = new java.util.ArrayList<>();
+        int first = UiLabelLayout.placeY(0, 10, 40, 9, placed);
+        int second = UiLabelLayout.placeY(10, 10, 40, 9, placed);
+        assertEquals(10, first);
+        assertTrue(second >= 20, "second label y=" + second);
+    }
 }

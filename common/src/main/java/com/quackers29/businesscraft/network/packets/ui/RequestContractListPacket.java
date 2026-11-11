@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.network.packets.ui;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.contract.ContractBoard;
 import com.quackers29.businesscraft.contract.viewmodel.ContractSummaryViewModelBuilder;
 import net.minecraft.network.FriendlyByteBuf;
@@ -14,8 +15,6 @@ import org.slf4j.LoggerFactory;
  */
 public class RequestContractListPacket {
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestContractListPacket.class);
-    private static final int DEFAULT_HISTORY_LIMIT = 50;
-
     private final String tab; // "auction", "active", "history"
     private final int page;
     private final int pageSize;
@@ -71,7 +70,7 @@ public class RequestContractListPacket {
                 long serverTime = System.currentTimeMillis();
                 int effectivePageSize = pageSize;
                 if (tabType == ContractSummaryViewModelBuilder.Tab.HISTORY && !showAll) {
-                    effectivePageSize = DEFAULT_HISTORY_LIMIT;
+                    effectivePageSize = Math.max(1, ConfigLoader.contractHistoryLimit);
                 } else if (tabType == ContractSummaryViewModelBuilder.Tab.HISTORY && showAll) {
                     effectivePageSize = Integer.MAX_VALUE; // Fetch all
                 }

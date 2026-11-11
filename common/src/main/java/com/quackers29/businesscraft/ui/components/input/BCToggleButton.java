@@ -9,6 +9,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import java.util.function.Consumer;
 import com.quackers29.businesscraft.ui.components.basic.BCComponent;
 import com.quackers29.businesscraft.ui.components.basic.BCButton;
+import com.quackers29.businesscraft.ui.theme.UiTheme;
 
 /**
  * Toggle button component for BusinessCraft UI system.
@@ -16,17 +17,17 @@ import com.quackers29.businesscraft.ui.components.basic.BCButton;
  */
 public class BCToggleButton extends BCButton {
     private boolean toggled;
-    private int toggledBackgroundColor = 0xA0335599;   // Semi-transparent blue when toggled
-    private int untoggledBackgroundColor = 0x80333333; // Semi-transparent gray when untoggled
-    private int toggledBorderColor = 0xFFFFFFFF;       // White border when toggled
-    private int untoggledBorderColor = 0x80FFFFFF;     // Semi-transparent white border when untoggled
+    private int toggledBackgroundColor = UiTheme.ON_BG;
+    private int untoggledBackgroundColor = UiTheme.OFF_BG;
+    private int toggledBorderColor = UiTheme.ON_FG;
+    private int untoggledBorderColor = UiTheme.OFF_FG;
     private Consumer<BCToggleButton> toggleHandler;
     
     /**
      * Create a new toggle button with standard Button consumer
      */
     public BCToggleButton(boolean initialState, Consumer<Button> onToggle) {
-        super(Component.empty(), onToggle, 120, 20);
+        super(Component.empty(), onToggle, UiTheme.TOGGLE_WIDTH, UiTheme.TOGGLE_HEIGHT);
         this.toggled = initialState;
         this.withBackground(false); // We'll handle our own background
     }

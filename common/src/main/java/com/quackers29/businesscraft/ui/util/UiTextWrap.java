@@ -60,4 +60,33 @@ public final class UiTextWrap {
         }
         return low;
     }
+
+    /**
+     * Shortens {@code text} with an ellipsis so {@code width} of the result is at most {@code maxWidth}.
+     * A non-positive width yields an empty string. Text that already fits is returned unchanged.
+     */
+    public static String ellipsize(String text, int maxWidth, ToIntFunction<String> width) {
+        if (text == null || text.isEmpty() || maxWidth <= 0) {
+            return "";
+        }
+        if (width.applyAsInt(text) <= maxWidth) {
+            return text;
+        }
+        String ellipsis = "…";
+        int ellipsisWidth = width.applyAsInt(ellipsis);
+        if (maxWidth <= ellipsisWidth) {
+            return ellipsis;
+        }
+        int low = 0;
+        int high = text.length();
+        while (low < high) {
+            int mid = (low + high + 1) / 2;
+            if (width.applyAsInt(text.substring(0, mid)) + ellipsisWidth <= maxWidth) {
+                low = mid;
+            } else {
+                high = mid - 1;
+            }
+        }
+        return text.substring(0, low) + ellipsis;
+    }
 }

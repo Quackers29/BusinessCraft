@@ -17,6 +17,10 @@
     townNames = ["Riverside", "Hillcrest", "Meadowbrook", "Oakville", "Stonebridge", "Willowglen", "Sunnyvale", "Cedarwood", "Maplehaven", "Brookside", "Fairview", "Pinehurst", "Elmwood", "Greystone"]
 
 [platforms]
+    # Blocks added or removed per click on a platform radius or spread control.
+    radiusStep = 1
+    # Blocks added or removed per click while Shift is held.
+    radiusStepFast = 5
     # Highest search radius a platform may use, in blocks.
     # Each platform still starts at 10, with spread 0 (tourists stand on the path line).
     # Spread cannot exceed that platform's own search radius, so this is also the spread cap.
@@ -97,6 +101,12 @@
     courierDeliveryMinutesPerMeter = 0.05
     # Snail mail delivery time per meter (minutes)
     snailMailDeliveryMinutesPerMeter = 0.1
+    # Contracts shown per page on the contract board.
+    pageSize = 20
+    # History rows shown before Show All.
+    historyLimit = 50
+    # Bid rows drawn on the contract detail screen before the remainder is summarised.
+    visibleBids = 2
 
 [production]
     # Enable automatic production system

@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.ui.templates;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.ui.theme.UiTheme;
 import net.minecraft.client.gui.Font;
 
 /**
@@ -8,17 +9,16 @@ import net.minecraft.client.gui.Font;
  * Provides consistent styling across all UI elements.
  */
 public class BCTheme {
-    // Default colors with improved visibility
-    private static final int DEFAULT_PRIMARY_COLOR = 0xA0335599;       // Semi-transparent blue
-    private static final int DEFAULT_SECONDARY_COLOR = 0xA0884466;     // Semi-transparent purple
-    private static final int DEFAULT_SUCCESS_COLOR = 0xA0339944;       // Semi-transparent green
-    private static final int DEFAULT_DANGER_COLOR = 0xA0993333;        // Semi-transparent red
-    private static final int DEFAULT_WARNING_COLOR = 0xA0999933;       // Semi-transparent yellow
-    private static final int DEFAULT_INFO_COLOR = 0xA0339999;          // Semi-transparent teal
-    private static final int DEFAULT_TEXT_LIGHT = 0xFFFFFFFF;          // White text
-    private static final int DEFAULT_TEXT_DARK = 0xFF202020;           // Dark gray text
-    private static final int DEFAULT_PANEL_BACKGROUND = 0x80222222;    // Semi-transparent dark gray
-    private static final int DEFAULT_PANEL_BORDER = 0xA0AAAAAA;        // Light gray border
+    private static final int DEFAULT_PRIMARY_COLOR = UiTheme.BUTTON;
+    private static final int DEFAULT_SECONDARY_COLOR = UiTheme.BUTTON;
+    private static final int DEFAULT_SUCCESS_COLOR = UiTheme.ON_BG;
+    private static final int DEFAULT_DANGER_COLOR = UiTheme.OFF_BG;
+    private static final int DEFAULT_WARNING_COLOR = UiTheme.GOLD;
+    private static final int DEFAULT_INFO_COLOR = UiTheme.AQUA;
+    private static final int DEFAULT_TEXT_LIGHT = UiTheme.TEXT;
+    private static final int DEFAULT_TEXT_DARK = UiTheme.ON_FG;
+    private static final int DEFAULT_PANEL_BACKGROUND = UiTheme.PANEL;
+    private static final int DEFAULT_PANEL_BORDER = UiTheme.BORDER;
     
     // Default theme instance
     private static final BCTheme DEFAULT = createDefaultTheme();
@@ -37,15 +37,15 @@ public class BCTheme {
     // Text colors
     private int textLight;
     private int textDark;
-    private int textMuted = 0x999999;
+    private int textMuted = UiTheme.MUTED;
     
     // Panel colors
     private int panelBackground;
     private int panelBorder;
     
     // Component sizing
-    private int padding = 5;
-    private int margin = 5;
+    private int padding = UiTheme.SPACE_2;
+    private int margin = UiTheme.SPACE_2;
     private int cornerRadius = 3;
     private int borderWidth = 1;
     private boolean roundedCorners = true;

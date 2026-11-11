@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.ui.components.basic;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.ui.theme.UiTheme;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
@@ -30,8 +31,8 @@ public class BCButton extends BCComponent {
     
     // Button customization
     private ButtonType type = ButtonType.PRIMARY;
-    private int textColor = 0xFFFFFF;
-    private boolean shadow = true;
+    private int textColor = UiTheme.TEXT;
+    private boolean shadow = false;
     protected Consumer<Button> onPress;
     private Component text;
     private ResourceLocation iconTexture = null;
@@ -42,18 +43,14 @@ public class BCButton extends BCComponent {
     private int iconPadding = 4;
     private boolean drawBackground = true;
     
-    // Color constants for better visibility
-    private static final int PRIMARY_COLOR = 0xA0335599;       // Semi-transparent blue
-    private static final int SECONDARY_COLOR = 0xA0884466;     // Semi-transparent purple
-    private static final int SUCCESS_COLOR = 0xA0339944;       // Semi-transparent green
-    private static final int DANGER_COLOR = 0xA0993333;        // Semi-transparent red
-    private static final int WARNING_COLOR = 0xA0999933;       // Semi-transparent yellow
-    private static final int INFO_COLOR = 0xA0339999;          // Semi-transparent teal
+    private static final int PRIMARY_COLOR = UiTheme.BUTTON;
+    private static final int SECONDARY_COLOR = UiTheme.SECTION;
+    private static final int SUCCESS_COLOR = UiTheme.ON_BG;
+    private static final int DANGER_COLOR = UiTheme.OFF_BG;
+    private static final int WARNING_COLOR = UiTheme.GOLD;
+    private static final int INFO_COLOR = UiTheme.AQUA;
     private static final int OUTLINE_COLOR = 0x40FFFFFF;       // Transparent white outline
     private static final int TRANSPARENT_COLOR = 0x00000000;   // Fully transparent
-    
-    // Hover color modifiers
-    private static final int HOVER_ALPHA_INCREASE = 0x20000000; // Increase alpha by 0x20 when hovering
     
     /**
      * Create a new button using a translation key
@@ -91,10 +88,10 @@ public class BCButton extends BCComponent {
         int baseColor;
         switch (type) {
             case PRIMARY:
-                baseColor = PRIMARY_COLOR;
+                baseColor = hovered ? UiTheme.BUTTON_HOVER : PRIMARY_COLOR;
                 break;
             case SECONDARY:
-                baseColor = SECONDARY_COLOR;
+                baseColor = hovered ? UiTheme.BUTTON_HOVER : SECONDARY_COLOR;
                 break;
             case SUCCESS:
                 baseColor = SUCCESS_COLOR;
@@ -115,11 +112,10 @@ public class BCButton extends BCComponent {
                 baseColor = TRANSPARENT_COLOR;
                 break;
             default:
-                baseColor = PRIMARY_COLOR;
+                baseColor = hovered ? UiTheme.BUTTON_HOVER : PRIMARY_COLOR;
         }
-        
-        // Make the button more opaque when hovered
-        if (hovered) {
+
+        if (hovered && type != ButtonType.PRIMARY && type != ButtonType.SECONDARY) {
             // Add alpha without overflowing
             int alpha = (baseColor >> 24) & 0xFF;
             int rgb = baseColor & 0xFFFFFF;
@@ -190,11 +186,21 @@ public class BCButton extends BCComponent {
             guiGraphics.blit(iconTexture, iconX, iconY, iconU, iconV, iconWidth, iconHeight);
         }
         
-        // Draw text with shadow if enabled
-        if (shadow) {
-            guiGraphics.drawString(font, text, textX, textY, textColor);
+        int color = textColor;
+        boolean dropShadow = shadow;
+        if (textColor == UiTheme.TEXT || textColor == 0xFFFFFF) {
+            if (type == ButtonType.SUCCESS) {
+                color = UiTheme.ON_FG;
+                dropShadow = false;
+            } else if (type == ButtonType.DANGER) {
+                color = UiTheme.OFF_FG;
+                dropShadow = false;
+            }
+        }
+        if (dropShadow) {
+            guiGraphics.drawString(font, text, textX, textY, color);
         } else {
-            guiGraphics.drawString(font, text, textX, textY, textColor, false);
+            guiGraphics.drawString(font, text, textX, textY, color, false);
         }
     }
     
