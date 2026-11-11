@@ -30,6 +30,14 @@ Jade’s own per-plugin toggles (`config.jade.plugin_businesscraft.*`) appear in
 
 Gradle compiles against Jade API artifacts via CurseMaven (see `gradle.properties` for pinned versions). Forge uses `@WailaPlugin` discovery; Fabric lists the `jade` entrypoint in `fabric.mod.json`.
 
+Forge/Fabric `runClient` also pull Jade via `runtimeOnly` / `modLocalRuntime` so local runs and `bash tools/showcase.sh jade forge` can photograph live tooltips. Release jars do not bundle Jade.
+
+```bash
+bash tools/showcase.sh jade forge
+```
+
+Writes `showcase_jade_*.png` under `showcase-output/…/screenshots/` (requires Jade on the dev classpath).
+
 ## Code layout
 
 - `common/.../integration/jade/` — plugin + providers + formatting helpers

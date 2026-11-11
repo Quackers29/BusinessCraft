@@ -72,6 +72,7 @@ public final class Showcase {
     private static boolean testbedConfigured;
     private static boolean mapSweepConfigured;
     private static boolean touristLineupConfigured;
+    private static boolean jadeConfigured;
     private static List<PlannedShot> plan = List.of();
     private static int shotIndex;
     private static int ticksOnShot;
@@ -105,6 +106,9 @@ public final class Showcase {
             } else if (ShowcaseSelection.touristsMode(property)) {
                 plan = List.of();
                 LOGGER.info("Showcase tourist lineup enabled");
+            } else if (ShowcaseSelection.jadeMode(property)) {
+                plan = List.of();
+                LOGGER.info("Showcase Jade tooltips enabled");
             } else if (ShowcaseSelection.touristScreenMode(property)) {
                 ShowcaseAllViews.useRoutes(ShowcaseRouteRegistry.touristScreenRoutes());
                 plan = List.of();
@@ -166,6 +170,17 @@ public final class Showcase {
                 ShowcaseTouristLineup.reset(minecraft);
             }
             ShowcaseTouristLineup.tick(minecraft);
+            return;
+        }
+        if (ShowcaseSelection.jadeMode(property)) {
+            if (minecraft.player == null || minecraft.level == null || minecraft.getSingleplayerServer() == null) {
+                return;
+            }
+            if (!jadeConfigured) {
+                jadeConfigured = true;
+                ShowcaseJade.reset(minecraft);
+            }
+            ShowcaseJade.tick(minecraft);
             return;
         }
         if (minecraft.player == null || minecraft.level == null || minecraft.getSingleplayerServer() == null) {
