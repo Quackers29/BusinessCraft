@@ -142,6 +142,13 @@ public class ConfigLoader {
     public static boolean contractsEnabled = false;
     public static boolean researchEnabled = false;
 
+    // Jade tooltip integration (optional mod; these toggles apply when Jade is installed)
+    public static boolean jadePlatformInterfaceTooltip = true;
+    public static boolean jadeTownInterfaceTooltip = true;
+    public static boolean jadeTouristTooltip = true;
+    /** Top learned towns shown on Platform Interface tooltips in AUTO mode. */
+    public static int jadeMaxLearnedRoutesInTooltip = 3;
+
     public static final ConfigLoader INSTANCE = new ConfigLoader();
 
     private ConfigLoader() {
@@ -276,6 +283,13 @@ public class ConfigLoader {
                 // Player settings
                 playerTracking = config.getOrElse("player.playerTracking", true);
                 townBoundaryMessages = config.getOrElse("player.townBoundaryMessages", true);
+
+                // Jade tooltips (ignored when Jade mod is not installed)
+                jadePlatformInterfaceTooltip = config.getOrElse("jade.platformInterface", true);
+                jadeTownInterfaceTooltip = config.getOrElse("jade.townInterface", true);
+                jadeTouristTooltip = config.getOrElse("jade.tourist", true);
+                jadeMaxLearnedRoutesInTooltip = Math.max(1,
+                        config.getIntOrElse("jade.maxLearnedRoutesInTooltip", 3));
             }
 
             // Load registries after config
@@ -525,6 +539,17 @@ public class ConfigLoader {
 
                 config.set("research.enabled", researchEnabled);
                 config.setComment("research.enabled", "Enable research/upgrade system");
+
+                config.set("jade.platformInterface", jadePlatformInterfaceTooltip);
+                config.setComment("jade.platformInterface",
+                        " Show Platform Interface block tooltips when Jade is installed");
+                config.set("jade.townInterface", jadeTownInterfaceTooltip);
+                config.setComment("jade.townInterface", " Show Town Centre block tooltips when Jade is installed");
+                config.set("jade.tourist", jadeTouristTooltip);
+                config.setComment("jade.tourist", " Show tourist entity tooltips when Jade is installed");
+                config.set("jade.maxLearnedRoutesInTooltip", jadeMaxLearnedRoutesInTooltip);
+                config.setComment("jade.maxLearnedRoutesInTooltip",
+                        " Top learned towns listed on Platform Interface tooltips in AUTO mode");
 
                 config.save();
             }

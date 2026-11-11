@@ -45,6 +45,10 @@ dependencies {
     // Include common module source directly
     compileOnly project(':common')
 
+    // Jade API (optional at runtime — mod loads without Jade)
+    compileOnly fg.deobf("curse.maven:jade-324717:${jade_forge_curse_file}")
+    runtimeOnly fg.deobf("curse.maven:jade-324717:${jade_forge_curse_file}")
+
     // JetBrains annotations for @NotNull/@Nullable
     compileOnly 'org.jetbrains:annotations:23.0.0'
 }
