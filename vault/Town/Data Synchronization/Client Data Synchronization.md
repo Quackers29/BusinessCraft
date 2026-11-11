@@ -113,6 +113,7 @@ return "Town-" + townId.toString().substring(0, 8);
 - Short-ID fallback "Town-12345678" leaks 8 hex chars of the UUID; acceptable for UX but not private.
 
 ## Related
+- [[Tourists/Spawning/Multiplayer Client Agreement]]
 - [[Town/Data Synchronization/Container Data Registration]]
 - [[Town/Town Overview]]
 - [[Town/Visits/Visit Buffer]]

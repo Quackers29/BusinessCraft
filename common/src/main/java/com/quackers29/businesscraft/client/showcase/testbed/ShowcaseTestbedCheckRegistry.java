@@ -13,6 +13,8 @@ import java.util.function.Supplier;
  */
 public final class ShowcaseTestbedCheckRegistry {
     private static final Map<String, Supplier<ShowcaseTestbedCheck>> CHECKS = new LinkedHashMap<>();
+    /** Checks run when the property is blank or {@code all}. The example template is opt-in. */
+    private static final List<String> DEFAULT_CHECKS = List.of("trade-contract");
 
     static {
         register("trade-contract", TradeContractCheck::new);
@@ -47,7 +49,7 @@ public final class ShowcaseTestbedCheckRegistry {
 
     private static List<String> parseNames(String property) {
         if (property == null || property.isBlank() || "all".equalsIgnoreCase(property.trim())) {
-            return allNames();
+            return DEFAULT_CHECKS;
         }
         List<String> names = new ArrayList<>();
         for (String raw : property.split(",")) {
@@ -56,13 +58,13 @@ public final class ShowcaseTestbedCheckRegistry {
                 names.add(token);
             }
         }
-        return names.isEmpty() ? allNames() : List.copyOf(names);
+        return names.isEmpty() ? DEFAULT_CHECKS : List.copyOf(names);
     }
 
     public static Map<String, String> descriptions() {
         Map<String, String> out = new LinkedHashMap<>();
         out.put("trade-contract", "Sell auction between town A and B: list, detail UI, bid, time-skip completion.");
-        out.put("example-dev-item", "Template check for new dev features (always passes; copy to add real asserts).");
+        out.put("example-dev-item", "Template check. Not part of the default set; pass the name to run it.");
         return Collections.unmodifiableMap(out);
     }
 }

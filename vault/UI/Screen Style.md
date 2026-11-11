@@ -64,4 +64,5 @@ Panel `0xF014161C`, border `0xFFD7B56D`, section `0xFF1A1F2A`, text `0xFFFFFFFF`
 - [[Town/Town Overview]]
 - [[Town/Platforms/Platform Interface]]
 - [[Config/Config Overview]]
+- [[UI/Showcase Harness]]
 - `docs/UI_STYLE.md`

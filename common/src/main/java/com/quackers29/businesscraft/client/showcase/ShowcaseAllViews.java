@@ -133,13 +133,13 @@ public final class ShowcaseAllViews {
                 stepIndex++;
                 waitTicks = 0;
             } else if (++waitTicks > ShowcaseNavigator.waitTimeoutTicks(step)) {
-                failure(minecraft, route.name(), "timeout on " + step);
+                failure(minecraft, route, "timeout on " + step, ShowcaseUiSnapshot.capture(minecraft));
             }
             return;
         }
         String err = ShowcaseNavigator.runStep(minecraft, townPos, step);
         if (err != null) {
-            failure(minecraft, route.name(), err);
+            failure(minecraft, route, err, ShowcaseUiSnapshot.capture(minecraft));
             return;
         }
         stepIndex++;
@@ -154,11 +154,18 @@ public final class ShowcaseAllViews {
         if (settleTicks-- > 0) {
             return;
         }
+        Map<String, Object> ui = ShowcaseUiSnapshot.capture(minecraft);
+        String expected = route.expectedScreen();
+        String actual = String.valueOf(ui.get("screen"));
+        if (expected != null && !expected.equals(actual)) {
+            failure(minecraft, route, "screen " + actual + " != " + expected, ui);
+            return;
+        }
         String pngName = route.fileBaseName() + ".png";
         Screenshot.grab(minecraft.gameDirectory, pngName, minecraft.getMainRenderTarget(), message ->
                 LOGGER.info("Showcase view {}: {}", pngName, message.getString()));
         saved++;
-        recordRoute(minecraft, route, pngName, true, null);
+        recordRoute(minecraft, route, pngName, true, null, ui);
         LOGGER.info("Showcase captured route {} ({}/{})", route.name(), routeIndex + 1, routes.size());
         minecraft.setScreen(null);
         routeIndex++;
@@ -173,9 +180,9 @@ public final class ShowcaseAllViews {
         }
     }
 
-    private static void failure(Minecraft minecraft, String routeName, String reason) {
-        LOGGER.error("Showcase route {} failed: {}", routeName, reason);
-        recordRoute(minecraft, findRoute(routeName), null, false, reason);
+    private static void failure(Minecraft minecraft, ShowcaseRoute route, String reason, Map<String, Object> ui) {
+        LOGGER.error("Showcase route {} failed: {}", route.name(), reason);
+        recordRoute(minecraft, route, null, false, reason, ui);
         exitCode = 1;
         stepFailure = reason;
         writeManifest(minecraft, false);
@@ -183,16 +190,8 @@ public final class ShowcaseAllViews {
         runComplete = true;
     }
 
-    private static ShowcaseRoute findRoute(String name) {
-        for (ShowcaseRoute route : routes) {
-            if (route.name().equals(name)) {
-                return route;
-            }
-        }
-        return new ShowcaseRoute(name, List.of());
-    }
-
-    private static void recordRoute(Minecraft minecraft, ShowcaseRoute route, String png, boolean ok, String error) {
+    private static void recordRoute(Minecraft minecraft, ShowcaseRoute route, String png, boolean ok, String error,
+            Map<String, Object> ui) {
         Map<String, Object> entry = new LinkedHashMap<>();
         entry.put("route", route.name());
         entry.put("steps", route.steps());
@@ -200,6 +199,9 @@ public final class ShowcaseAllViews {
         entry.put("ok", ok);
         if (png != null) {
             entry.put("screenshot", png);
+        }
+        if (ui != null) {
+            entry.put("ui", ui);
         }
         if (error != null) {
             entry.put("error", error);

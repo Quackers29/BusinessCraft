@@ -23,8 +23,8 @@ Folders mirror game systems, nesting from system → subsystem → process:
 - **[[Production/Production Overview|Production/]]** — production recipes, upgrades, research
 - **[[Config/Config Overview|Config/]]** — configuration system and key settings
 - **[[Core/Core Overview|Core/]]** — cross-cutting pure utilities (time formatting, result/error types)
-
 - **[[UI/Screen Style]]** — shared screen palette, spacing, and control sizes
+- **[[UI/Showcase Harness]]** — dev client checks (not a player-facing screen)
 
 Planned but empty (create only when notes exist): **Network/** (packet flows).
 

@@ -542,6 +542,10 @@ public class ContractBoardScreen extends AbstractContainerScreen<ContractBoardMe
         return contractGrid != null && contractGrid.invokeButtonById(elementId);
     }
 
+    public List<String> showcaseButtonIds() {
+        return contractGrid == null ? List.of() : contractGrid.buttonIds();
+    }
+
     public boolean showcaseHasAuctionContracts() {
         return selectedTab == 0 && currentContracts != null && !currentContracts.isEmpty();
     }

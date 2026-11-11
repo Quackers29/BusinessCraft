@@ -141,6 +141,7 @@ public class BusinessCraftForge {
         com.quackers29.businesscraft.event.PlayerBoundaryTracker.initialize();
         com.quackers29.businesscraft.event.PlatformPathHandler.initialize();
         com.quackers29.businesscraft.event.TownEventHandler.initialize();
+        com.quackers29.businesscraft.client.showcase.MultiplayerSmokeServer.initialize();
 
         LOGGER.info("BusinessCraft Forge common setup complete.");
     }
@@ -217,12 +218,12 @@ public class BusinessCraftForge {
 
     @SubscribeEvent
     public void onLevelTick(TickEvent.LevelTickEvent event) {
-        if (event.phase == TickEvent.Phase.END && event.level instanceof ServerLevel) {
-            TownManager.get((ServerLevel) event.level).tick();
+        if (event.phase == TickEvent.Phase.END && event.level instanceof ServerLevel serverLevel) {
+            TownManager.get(serverLevel).tick();
+            com.quackers29.businesscraft.client.showcase.MultiplayerSmokeServer.onLevelTick(serverLevel);
             // Only tick ContractBoard once per server tick, not per level
             if (event.level.dimension() == net.minecraft.world.level.Level.OVERWORLD) {
-                com.quackers29.businesscraft.contract.ContractBoard.get((ServerLevel) event.level)
-                        .tick((ServerLevel) event.level);
+                com.quackers29.businesscraft.contract.ContractBoard.get(serverLevel).tick(serverLevel);
             }
         }
     }

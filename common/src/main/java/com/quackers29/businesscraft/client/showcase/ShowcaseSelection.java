@@ -106,6 +106,17 @@ public final class ShowcaseSelection {
         return List.copyOf(selected);
     }
 
+    /** Shots that are written to disk. {@code warmup} is a settle pause, not a file. */
+    public static List<String> writtenShots(String property) {
+        List<String> written = new ArrayList<>();
+        for (String shot : shotsFor(property)) {
+            if (!"warmup".equals(shot)) {
+                written.add(shot);
+            }
+        }
+        return List.copyOf(written);
+    }
+
     public static boolean includes(String property, String shotName) {
         if (!enabled(property) || shotName == null) {
             return false;

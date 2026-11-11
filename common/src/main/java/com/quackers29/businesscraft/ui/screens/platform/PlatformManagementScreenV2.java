@@ -397,6 +397,10 @@ public class PlatformManagementScreenV2 extends Screen {
         return platformListGrid.invokeButtonById(elementId);
     }
 
+    public List<String> showcaseButtonIds() {
+        return platformListGrid == null ? List.of() : platformListGrid.buttonIds();
+    }
+
     public boolean showcaseHasPlatforms() {
         return platforms != null && !platforms.isEmpty();
     }

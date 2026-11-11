@@ -107,3 +107,5 @@ tasks.configureEach { task ->
         }
     }
 }
+
+apply from: rootProject.file('tools/mp-smoke-run.gradle')

@@ -10,7 +10,6 @@ import com.quackers29.businesscraft.ui.screens.platform.PlatformManagementScreen
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Screenshot;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.MinecraftServer;
@@ -39,7 +38,8 @@ import java.util.List;
  * <p>A run joins the quick-play world, builds a throwaway pad, places a town
  * interface the way a player would, photographs the block and the town tabs,
  * then quits. Screenshots are {@code screenshots/showcase_<shot>.png} under
- * the game directory. The world is rewritten, so always give it a copy.
+ * the game directory, with pass/fail in {@code showcase-shots.json}.
+ * The world is rewritten, so always give it a copy.
  *
  * <pre>
  * bash ./gradlew :forge:runClient -PquickPlay=zz_showcase -Pshowcase=all
@@ -85,6 +85,9 @@ public final class Showcase {
     }
 
     public static void tick() {
+        if (MultiplayerSmokeClient.tick()) {
+            return;
+        }
         String property = System.getProperty(PROPERTY);
         if (!ShowcaseSelection.enabled(property)) {
             return;
@@ -92,6 +95,7 @@ public final class Showcase {
         Minecraft minecraft = Minecraft.getInstance();
         if (!configured) {
             configured = true;
+            ShowcaseTownNames.reset();
             minecraft.options.pauseOnLostFocus = false;
             minecraft.options.hideGui = true;
             if (ShowcaseSelection.twoTownsMode(property)) {
@@ -120,8 +124,9 @@ public final class Showcase {
                 LOGGER.info("Showcase all-views enabled: {} routes", ShowcaseAllViews.expectedRouteCount());
             } else {
                 plan = planFor(property);
-                LOGGER.info("Showcase enabled ({}): {}", property.isBlank() ? "all" : property,
-                        plan.stream().map(s -> s.name).toList());
+                String scene = property.isBlank() ? "all" : property.trim();
+                ShowcaseShotManifest.begin(minecraft, scene, ShowcaseSelection.writtenShots(property));
+                LOGGER.info("Showcase enabled ({}): {}", scene, plan.stream().map(s -> s.name).toList());
             }
         }
         if (failure != null) {
@@ -515,9 +520,7 @@ public final class Showcase {
     }
 
     private static void grab(Minecraft minecraft, String name) {
-        String file = "showcase_" + name + ".png";
-        Screenshot.grab(minecraft.gameDirectory, file, minecraft.getMainRenderTarget(), message ->
-                LOGGER.info("Showcase shot {}: {}", file, message.getString()));
+        ShowcaseShotManifest.grab(minecraft, name);
         saved++;
     }
 
@@ -532,13 +535,26 @@ public final class Showcase {
     }
 
     private static void shutdown(Minecraft minecraft) {
-        if (++quitTicks >= QUIT_DELAY_TICKS) {
-            if (processExitCode == 0) {
-                LOGGER.info("Showcase finished: {} screenshots", saved);
-            }
-            minecraft.stop();
-            System.exit(processExitCode);
+        quitTicks++;
+        boolean waited = quitTicks >= QUIT_DELAY_TICKS;
+        boolean grabsSettled = ShowcaseShotManifest.pending() == 0;
+        boolean gaveUp = quitTicks >= QUIT_DELAY_TICKS + 100;
+        if (!waited || (!grabsSettled && !gaveUp)) {
+            return;
         }
+        if (!grabsSettled) {
+            processExitCode = 1;
+            LOGGER.error("Showcase failed: screenshot writes did not finish");
+        }
+        if (ShowcaseShotManifest.hasFailure()) {
+            processExitCode = 1;
+            LOGGER.error("Showcase failed: one or more screenshots were not saved");
+        }
+        if (processExitCode == 0) {
+            LOGGER.info("Showcase finished: {} screenshots", saved);
+        }
+        minecraft.stop();
+        System.exit(processExitCode);
     }
 
     public static void setActiveTownBlockPos(BlockPos pos) {
