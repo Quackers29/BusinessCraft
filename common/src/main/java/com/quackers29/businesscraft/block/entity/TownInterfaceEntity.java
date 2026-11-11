@@ -754,14 +754,6 @@ public ViewModelCache getVmCache() {
         return "Initializing...";
     }
 
-    private String getRandomTownName() {
-        if (ConfigLoader.townNames == null || ConfigLoader.townNames.isEmpty()) {
-            return "DefaultTown";
-        }
-        int index = new Random().nextInt(ConfigLoader.townNames.size());
-        return ConfigLoader.townNames.get(index);
-    }
-
     @Override
     public void setChanged() {
         super.setChanged();

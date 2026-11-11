@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.block;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
+import com.quackers29.businesscraft.client.showcase.ShowcaseTownNames;
 import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.town.TownManager;
@@ -177,7 +178,9 @@ public class TownInterfaceBlock extends BaseEntityBlock {
                         return;
                     }
 
-                    String newTownName = getRandomTownName();
+                    String newTownName = ShowcaseTownNames.isActive()
+                            ? ShowcaseTownNames.next()
+                            : getRandomTownName();
                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Generated town name: {}", newTownName);
                     UUID townId = townManager.registerTown(pos, newTownName);
                     DebugConfig.debug(LOGGER, DebugConfig.TOWN_MANAGER, "Registered new town with ID: {}", townId);
