@@ -2,6 +2,7 @@ package com.quackers29.businesscraft.integration.jade;
 
 import com.quackers29.businesscraft.config.ConfigLoader;
 import com.quackers29.businesscraft.entity.TouristEntity;
+import com.quackers29.businesscraft.entity.TouristDisplayFormat;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -22,19 +23,21 @@ public enum TouristEntityJadeProvider implements IEntityComponentProvider, IServ
         if (!(accessor.getEntity() instanceof TouristEntity tourist)) {
             return;
         }
-        String origin = tourist.getSyncedOriginLabel();
-        String dest = tourist.getSyncedDestLabel();
-        if (origin != null && !origin.isBlank()) {
-            tooltip.add(Component.translatable("businesscraft.jade.tourist.origin", origin));
-        }
-        if (dest != null && !dest.isBlank()) {
-            tooltip.add(Component.translatable("businesscraft.jade.tourist.destination", dest));
-        } else if (tourist.isAnyTownDestination()) {
-            tooltip.add(Component.translatable("businesscraft.jade.tourist.destination",
-                    TouristEntity.ANY_TOWN_NAME));
+        CompoundTag data = accessor.getServerData();
+        if (!data.getBoolean(JadeTooltipNbt.TOURIST)) {
+            return;
         }
 
-        CompoundTag data = accessor.getServerData();
+        String origin = JadeTouristTooltipHelper.resolveOrigin(data, tourist.getSyncedOriginLabel());
+        if (!origin.isEmpty()) {
+            tooltip.add(Component.translatable("businesscraft.jade.tourist.origin", origin));
+        }
+
+        String dest = JadeTouristTooltipHelper.resolveDestination(data, tourist);
+        if (!dest.isEmpty()) {
+            tooltip.add(Component.translatable("businesscraft.jade.tourist.destination", dest));
+        }
+
         if (data.contains(JadeTooltipNbt.TRIP_STATUS)) {
             TouristTripStatus status = TouristTripStatus.parseNbt(data.getString(JadeTooltipNbt.TRIP_STATUS));
             tooltip.add(Component.translatable("businesscraft.jade.tourist.trip_status",
@@ -50,6 +53,11 @@ public enum TouristEntityJadeProvider implements IEntityComponentProvider, IServ
         if (!(accessor.getEntity() instanceof TouristEntity tourist)) {
             return;
         }
+        data.putBoolean(JadeTooltipNbt.TOURIST, true);
+        data.putString(JadeTooltipNbt.ORIGIN,
+                TouristDisplayFormat.sanitize(tourist.getOriginTownName(), "Unknown"));
+        data.putString(JadeTooltipNbt.DESTINATION,
+                TouristDisplayFormat.sanitize(tourist.getDestinationTownName(), "Unknown"));
         TouristTripStatus status = TouristTripStatus.from(tourist.isPassenger(), tourist.isStationary());
         data.putString(JadeTooltipNbt.TRIP_STATUS, status.toNbt());
     }

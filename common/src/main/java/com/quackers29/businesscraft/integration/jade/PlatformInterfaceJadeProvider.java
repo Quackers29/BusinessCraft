@@ -8,8 +8,6 @@ import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.town.Town;
 import com.quackers29.businesscraft.town.TownManager;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -39,35 +37,32 @@ public enum PlatformInterfaceJadeProvider implements IBlockComponentProvider, IS
         if (data.contains(JadeTooltipNbt.NAME)) {
             tooltip.add(Component.translatable("businesscraft.jade.platform.name", data.getString(JadeTooltipNbt.NAME)));
         }
+
+        DestinationMode mode = JadePlatformTooltipHelper.readMode(data);
         if (data.contains(JadeTooltipNbt.MODE)) {
-            DestinationMode mode = DestinationMode.fromConfig(data.getString(JadeTooltipNbt.MODE), DestinationMode.AUTO);
-            tooltip.add(Component.translatable("businesscraft.jade.platform.destination_mode",
-                    Component.translatable(JadeDestinationModes.translationKey(mode))));
-            if (mode == DestinationMode.SPECIFIC && data.contains(JadeTooltipNbt.SPECIFIC_COUNT)) {
-                tooltip.add(Component.translatable("businesscraft.jade.platform.specific_count",
-                        data.getInt(JadeTooltipNbt.SPECIFIC_COUNT)));
+            if (mode == DestinationMode.SPECIFIC) {
+                tooltip.add(Component.translatable(JadePlatformTooltipHelper.modeLineKey(mode),
+                        JadePlatformTooltipHelper.specificTownCount(data)));
+            } else {
+                tooltip.add(Component.translatable(JadePlatformTooltipHelper.modeLineKey(mode)));
             }
-            if (mode == DestinationMode.AUTO && data.contains(JadeTooltipNbt.LEARNED)) {
-                ListTag learned = data.getList(JadeTooltipNbt.LEARNED, Tag.TAG_COMPOUND);
-                if (learned.isEmpty()) {
+            if (mode == DestinationMode.AUTO) {
+                String summary = JadePlatformTooltipHelper.learnedSummary(data);
+                if (summary.isEmpty()) {
                     tooltip.add(Component.translatable("businesscraft.jade.platform.learned_empty"));
                 } else {
-                    for (int i = 0; i < learned.size(); i++) {
-                        CompoundTag row = learned.getCompound(i);
-                        tooltip.add(Component.translatable("businesscraft.jade.platform.learned_line",
-                                row.getString(JadeTooltipNbt.LEARNED_NAME),
-                                row.getInt(JadeTooltipNbt.LEARNED_PERCENT)));
-                    }
+                    tooltip.add(Component.translatable("businesscraft.jade.platform.learned_summary", summary));
                 }
             }
         }
-        boolean enabled = data.getBoolean(JadeTooltipNbt.ENABLED);
-        boolean linked = data.getBoolean(JadeTooltipNbt.LINK_ACTIVE);
-        if (!linked) {
+
+        if (!data.getBoolean(JadeTooltipNbt.LINK_ACTIVE)) {
             tooltip.add(Component.translatable("businesscraft.jade.platform.link_inactive"));
+        } else {
+            boolean enabled = data.getBoolean(JadeTooltipNbt.ENABLED);
+            tooltip.add(Component.translatable(
+                    enabled ? "businesscraft.jade.platform.spawn_enabled" : "businesscraft.jade.platform.spawn_disabled"));
         }
-        tooltip.add(Component.translatable(
-                enabled ? "businesscraft.jade.platform.spawn_enabled" : "businesscraft.jade.platform.spawn_disabled"));
     }
 
     @Override
@@ -122,15 +117,8 @@ public enum PlatformInterfaceJadeProvider implements IBlockComponentProvider, IS
                         Town dest = TownManager.get(serverLevel).getTown(id);
                         return dest != null ? dest.getName() : "Unknown";
                     });
-            ListTag learnedTag = new ListTag();
-            for (LearnedRoutesTooltipHelper.LearnedRouteLine line : lines) {
-                CompoundTag row = new CompoundTag();
-                row.putString(JadeTooltipNbt.LEARNED_NAME, line.townName());
-                row.putInt(JadeTooltipNbt.LEARNED_PERCENT,
-                        LearnedRoutesTooltipHelper.sharePercentRounded(line.strength()));
-                learnedTag.add(row);
-            }
-            data.put(JadeTooltipNbt.LEARNED, learnedTag);
+            data.putString(JadeTooltipNbt.LEARNED_SUMMARY,
+                    LearnedRoutesTooltipHelper.formatLearnedRoutesSummary(lines));
         }
     }
 

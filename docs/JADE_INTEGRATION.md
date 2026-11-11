@@ -6,9 +6,9 @@ BusinessCraft registers an **optional** [Jade](https://www.curseforge.com/minecr
 
 | Target | Lines |
 |--------|--------|
-| **Platform Interface** | Platform name, destination mode (Any / Auto / Specific), enabled-town count (Specific), top learned towns by score % (Auto, capped by config), link/spawn enabled state |
+| **Platform Interface** | Platform name; compact mode line (`Mode: Specific (N towns)`); one-line AUTO learned summary (`Oakvale (40%), …`, capped by config); inactive link or spawns on/off |
 | **Town Centre** | Town name, platform count, current tourist count |
-| **Tourist** | Synced origin/destination labels (`DATA_ORIGIN_LABEL`, `DATA_DEST_LABEL`), trip status (riding / waiting / traveling) from server data |
+| **Tourist** | Origin and destination from **server NBT** (authoritative in MP, including Any Town); falls back to synced labels when needed; trip status (riding / waiting / traveling) from server data |
 
 Block tooltips use Jade **server data providers** so multiplayer tooltips match the authoritative world state.
 
