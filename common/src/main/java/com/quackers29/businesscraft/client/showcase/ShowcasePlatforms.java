@@ -108,7 +108,7 @@ public final class ShowcasePlatforms {
     }
 
     static void applyDestinationDemo(ServerLevel level, BlockPos townPos, DestinationDemoMode mode) {
-        applyDestinationDemo(level, townPos, firstPlatformId, mode);
+        applyDestinationDemo(level, townPos, firstPlatformId(), mode);
     }
 
     /**

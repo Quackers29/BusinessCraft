@@ -69,6 +69,11 @@ public final class ShowcaseShotManifest {
         return failed;
     }
 
+    /** Shot rows recorded so far (name, file, ok). */
+    public static List<Map<String, Object>> rows() {
+        return List.copyOf(shots);
+    }
+
     private static void finishGrab(String name, String file, Component message) {
         boolean ok = message.getContents() instanceof TranslatableContents contents
                 && "screenshot.success".equals(contents.getKey());

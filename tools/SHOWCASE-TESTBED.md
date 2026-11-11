@@ -15,7 +15,7 @@ Omit check names to run the default set (`trade-contract`). `example-dev-item` i
 
 Showcase runs pin town names: the first Town Centre placed in the run is Brookside and the second is Hillcrest. Gameplay outside the harness still picks a name at random.
 
-`all-views` writes a `ui` object on each manifest route (screen simple name, active tab, button ids, scaled width and height) and fails that route when the open screen is not the route's last `wait-for-screen`. Planned-shot modes (`all`, `town`, `block`, `platform`, `kiosk`, `lamp`) write `showcase-shots.json` from each grab. The shell requires every non-warmup shot from `ShowcaseSelection` to be present and saved. A grab callback that is not a successful screenshot fails the run.
+`all-views` writes a `ui` object on each manifest route (screen simple name, active tab, button ids, scaled width and height) and fails that route when the open screen is not the route's last `wait-for-screen`. Planned-shot modes (`all`, `town`, `block`, `platform`, `kiosk`, `lamp`) write `showcase-shots.json` from each grab. The shell requires every non-warmup shot from `ShowcaseSelection` to be present and saved. A grab callback that is not a successful screenshot fails the run. The two-client smoke (`tools/multiplayer-smoke.sh`) uses the same town-name list, the same `ui` snapshot, and the same shot manifest for `mp_nametags`, `mp_track`, and `mp_platform`.
 
 ## Output layout
 

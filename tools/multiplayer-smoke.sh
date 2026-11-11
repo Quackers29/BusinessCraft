@@ -252,13 +252,33 @@ wait_client() {
 require_shots() {
     local dir="$1"
     local label="$2"
-    local name
-    for name in showcase_mp_nametags.png showcase_mp_track.png showcase_mp_platform.png; do
-        if [[ ! -s "$dir/screenshots/$name" ]]; then
-            echo "${label} is missing ${name}" >&2
-            return 1
-        fi
-    done
+    local manifest="$dir/showcase-shots.json"
+    if [[ ! -f "$manifest" ]]; then
+        echo "${label} is missing showcase-shots.json" >&2
+        return 1
+    fi
+    python3 - "$manifest" "$dir/screenshots" "$label" <<'PY'
+import json, sys
+from pathlib import Path
+manifest = json.load(open(sys.argv[1]))
+folder = Path(sys.argv[2])
+label = sys.argv[3]
+expected = ["mp_nametags", "mp_track", "mp_platform"]
+by_name = {row.get("name"): row for row in manifest.get("shots") or []}
+if manifest.get("expected") != expected or manifest.get("pending", 0) != 0 or manifest.get("ok") is not True:
+    print(f"{label}: shot manifest is not the three saved views", file=sys.stderr)
+    sys.exit(1)
+missing = []
+for name in expected:
+    row = by_name.get(name)
+    file_name = f"showcase_{name}.png"
+    path = folder / file_name
+    if row is None or not row.get("ok") or not path.is_file() or path.stat().st_size <= 0:
+        missing.append(name)
+if missing:
+    print(f"{label}: shots failed or missing: {', '.join(missing)}", file=sys.stderr)
+    sys.exit(1)
+PY
 }
 
 run_loader() {
@@ -343,6 +363,8 @@ run_loader() {
 
         cp -f "$alpha_dir/multiplayer-smoke-observation.json" "$SHOWCASE_RUN_DIR/observation-alpha.json" 2>/dev/null || true
         cp -f "$beta_dir/multiplayer-smoke-observation.json" "$SHOWCASE_RUN_DIR/observation-beta.json" 2>/dev/null || true
+        cp -f "$alpha_dir/showcase-shots.json" "$SHOWCASE_RUN_DIR/shots-alpha.json" 2>/dev/null || true
+        cp -f "$beta_dir/showcase-shots.json" "$SHOWCASE_RUN_DIR/shots-beta.json" 2>/dev/null || true
         if [[ -d "$alpha_dir/screenshots" ]]; then
             cp -f "$alpha_dir/screenshots"/showcase_mp_*.png "$SHOWCASE_RUN_DIR/screenshots/alpha/" 2>/dev/null || true
         fi
@@ -398,11 +420,14 @@ run_loader() {
 }
 
 FAILED=0
+# Keep these aligned with MultiplayerSmokePlan (Forge 25565, Fabric 25566).
+FORGE_PORT=25565
+FABRIC_PORT=25566
 if [[ "$TARGET" == "forge" || "$TARGET" == "both" ]]; then
-    run_loader forge 25565 || FAILED=1
+    run_loader forge "$FORGE_PORT" || FAILED=1
 fi
 if [[ "$TARGET" == "fabric" || "$TARGET" == "both" ]]; then
-    run_loader fabric 25566 || FAILED=1
+    run_loader fabric "$FABRIC_PORT" || FAILED=1
 fi
 
 if [[ "$FAILED" -ne 0 ]]; then

@@ -104,9 +104,10 @@ public final class MultiplayerSmokeServer {
         BlockPos oakPos = new BlockPos(0, surface, 0);
         BlockPos hillPos = new BlockPos(0, surface, TOWN_SPACING);
         BlockPos riverPos = new BlockPos(0, surface, TOWN_SPACING * 2);
-        UUID oakId = placeTown(level, oakPos, "Oakvale");
-        UUID hillId = placeTown(level, hillPos, "Hillcrest");
-        UUID riverId = placeTown(level, riverPos, "Rivertown");
+        ShowcaseTownNames.reset();
+        UUID oakId = placeTown(level, oakPos, ShowcaseTownNames.next());
+        UUID hillId = placeTown(level, hillPos, ShowcaseTownNames.next());
+        UUID riverId = placeTown(level, riverPos, ShowcaseTownNames.next());
 
         if (!ShowcasePlatformPlacement.ensure(level, oakPos)) {
             throw new IllegalStateException("Oakvale platform was not placed");

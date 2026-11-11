@@ -6,7 +6,7 @@ tags:
 # Showcase Harness
 
 **Breadcrumb**: UI > Showcase Harness
-**TL;DR**: The dev client harness pins town names, records which screen and buttons were open, and fails a run when a planned screenshot did not save or the open screen is the wrong one.
+**TL;DR**: The dev client harness pins town names, records which screen and buttons were open, and fails a run when a planned screenshot did not save or the open screen is the wrong one. The two-player dedicated-server check uses the same rules.
 
 ## What it does
 Developers run a throwaway client world to photograph town screens and a few scripted checks. The pictures are for people. The pass/fail decision is the manifest: every planned picture must exist, and each UI route must be on the screen it asked for.
@@ -20,6 +20,8 @@ The block, town, platform, kiosk, and lamp scenes (and the combined `all` scene)
 
 The default two-town testbed runs the trade-contract check only. The example template check runs only when named.
 
+The two-player smoke uses the same name list, the same screen record, and the same shot list. Forge listens on 25565 and Fabric on 25566. Each player's report is compared with the other's.
+
 ---
 > [!info]- Deep reference
 > Everything below is implementation detail for developers and AI agents.
@@ -27,7 +29,8 @@ The default two-town testbed runs the trade-contract check only. The example tem
 ## Key classes & methods
 | Class / Method | File | Role |
 |---|---|---|
-| `ShowcaseTownNames` | `common/src/main/java/com/quackers29/businesscraft/client/showcase/ShowcaseTownNames.java` | Brookside, then Hillcrest, while `businesscraft.showcase` is set |
+| `ShowcaseTownNames` | `common/src/main/java/com/quackers29/businesscraft/client/showcase/ShowcaseTownNames.java` | Brookside then Hillcrest in a showcase; Oakvale, Hillcrest, Rivertown when `businesscraft.multiplayerSmoke=setup` |
+| `MultiplayerSmokePlan` | `common/src/main/java/com/quackers29/businesscraft/client/showcase/MultiplayerSmokePlan.java` | Ports 25565 / 25566 and the three client shot names |
 | `TownInterfaceBlock.setPlacedBy` | `common/src/main/java/com/quackers29/businesscraft/block/TownInterfaceBlock.java` | Uses the pinned name during a showcase run |
 | `ShowcaseUiSnapshot.capture` | `common/src/main/java/com/quackers29/businesscraft/client/showcase/ShowcaseUiSnapshot.java` | Screen, tab, button ids, scaled size |
 | `ShowcaseRoute.expectedScreen` | `common/src/main/java/com/quackers29/businesscraft/client/showcase/ShowcaseRoute.java` | Last `wait-for-screen` class name |
@@ -37,10 +40,10 @@ The default two-town testbed runs the trade-contract check only. The example tem
 
 ## Rules & formulas (exact)
 - `ShowcaseTownNames.next()` returns `Brookside`, then `Hillcrest`, then `Brookside-3`, `Brookside-4`, and so on. `Showcase.tick` resets the counter once when a run starts. A rejected placement does not consume a name, because the name is chosen only after the placement check passes.
-- Outside a showcase run, `TownInterfaceBlock` still uses `new Random()` against `ConfigLoader.townNames`.
+- While `businesscraft.multiplayerSmoke=setup`, `ShowcaseTownNames.next()` returns Oakvale, Hillcrest, Rivertown, then Oakvale-4. `MultiplayerSmokeServer.build` resets the counter and takes the first three. Outside both runs, `TownInterfaceBlock` still uses `new Random()` against `ConfigLoader.townNames`.
 - `ui.scaledWidth` and `ui.scaledHeight` are `Screen.width` and `Screen.height` (GUI pixels). An empty screen records the window's scaled size and an empty screen name.
 - Button ids come from the town bottom bar, the settings grid when that tab is active, the contract grid, and the platform-management grid. Other screens record an empty id list.
-- `showcase-shots.json` `ok` is true only when no grab failed, no writes are still pending, and the saved rows match `expected`. `expected` is `ShowcaseSelection.writtenShots` for that scene. `all` writes 17 shots.
+- `showcase-shots.json` `ok` is true only when no grab failed, no writes are still pending, and the saved rows match `expected`. `expected` is `ShowcaseSelection.writtenShots` for that scene. `all` writes 19 shots.
 - `tools/showcase.sh` treats a missing manifest, `ok` not true, a failed row, or a missing PNG as a failed run. `tools/showcase-all-modes-smoke.sh` runs `all`, `town`, `block`, `all-views`, `two-towns`, and `testbed` for one loader.
 
 ## Edge cases & behaviors
@@ -51,7 +54,8 @@ The default two-town testbed runs the trade-contract check only. The example tem
 ## Test coverage
 - Test file: `common/src/test/java/com/quackers29/businesscraft/client/showcase/ShowcaseSelectionTest.java` (written-shot counts, expected screens, pinned names)
 - Test file: `common/src/test/java/com/quackers29/businesscraft/client/showcase/testbed/ShowcaseTestbedCheckRegistryTest.java` (default set versus opt-in template)
-- Not covered here: framebuffer pixels, a second player, or the dedicated-server boot smoke.
+- Test file: `common/src/test/java/com/quackers29/businesscraft/client/showcase/MultiplayerSmokePlanTest.java` (ports, shot names, multiplayer town line)
+- Not covered here: framebuffer pixels, or the dedicated-server boot smoke. The two-player run is [[Tourists/Spawning/Multiplayer Client Agreement]].
 
 ## Open questions
 - None.
@@ -59,3 +63,4 @@ The default two-town testbed runs the trade-contract check only. The example tem
 ## Related
 - [[Home]]
 - [[Town/Town Overview]]
+- [[Tourists/Spawning/Multiplayer Client Agreement]]

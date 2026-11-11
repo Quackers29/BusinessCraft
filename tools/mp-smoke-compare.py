@@ -17,6 +17,8 @@ EXPECTED_LEARNED = {"Hillcrest", "Rivertown"}
 EXPECTED_ENABLED = ["Hillcrest"]
 EXPECTED_NAMES = {"Morgan", "Eleanor"}
 EXPECTED_LINES = {"Oakvale -> Hillcrest", "Oakvale -> Rivertown"}
+EXPECTED_SCREEN = "PlatformInterfaceScreen"
+EXPECTED_SHOTS = ["mp_nametags", "mp_track", "mp_platform"]
 
 
 def load(path: str) -> dict:
@@ -52,6 +54,14 @@ def required_issues(doc: dict, label: str) -> list[str]:
     lines = {tourist.get("clipboardLine") for tourist in tourists}
     if not EXPECTED_LINES.issubset(lines):
         issues.append(f"{label}: clipboard lines {sorted(lines)} missing {sorted(EXPECTED_LINES)}")
+    ui = doc.get("ui") or {}
+    if ui.get("screen") != EXPECTED_SCREEN:
+        issues.append(f"{label}: screen is {ui.get('screen')!r}, expected {EXPECTED_SCREEN}")
+    shots = {row.get("name"): row for row in doc.get("shots") or []}
+    for name in EXPECTED_SHOTS:
+        row = shots.get(name)
+        if row is None or not row.get("ok"):
+            issues.append(f"{label}: shot {name} was not saved")
     return issues
 
 
@@ -133,6 +143,17 @@ def sample(clipboard: str, strength: float = 0.625) -> dict:
             {"nameTag": "Eleanor", "clipboardLine": "Oakvale -> Rivertown"},
             {"nameTag": "Morgan", "clipboardLine": clipboard},
         ],
+        "ui": {
+            "screen": "PlatformInterfaceScreen",
+            "tab": "",
+            "buttonIds": [],
+            "scaledWidth": 960,
+            "scaledHeight": 540,
+        },
+        "shots": [
+            {"name": name, "file": f"showcase_{name}.png", "ok": True}
+            for name in ("mp_nametags", "mp_track", "mp_platform")
+        ],
     }
 
 
@@ -158,6 +179,11 @@ def self_test() -> None:
     missing, _ = evaluate(empty, empty)
     if not any("towns" in issue for issue in missing):
         raise SystemExit("self-test: two empty town lists were accepted")
+    wrong_screen = sample("Oakvale -> Hillcrest")
+    wrong_screen["ui"]["screen"] = "TitleScreen"
+    screen_issues, _ = evaluate(wrong_screen, wrong_screen)
+    if not any("screen" in issue for issue in screen_issues):
+        raise SystemExit("self-test: wrong screen was accepted")
     print("mp-smoke compare self-test passed")
 
 

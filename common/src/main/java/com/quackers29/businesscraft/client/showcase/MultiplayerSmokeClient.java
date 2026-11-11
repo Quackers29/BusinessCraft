@@ -13,7 +13,6 @@ import com.quackers29.businesscraft.network.packets.ui.TownMapDataResponsePacket
 import com.quackers29.businesscraft.ui.screens.platform.PlatformInterfaceScreen;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.DisconnectedScreen;
@@ -68,6 +67,7 @@ public final class MultiplayerSmokeClient {
     private static int stableTowns;
     private static int stablePlatform;
     private static boolean wrote;
+    private static boolean shotsBegun;
     private static String lastScreen = "";
     private static int overlayTicks;
 
@@ -81,6 +81,10 @@ public final class MultiplayerSmokeClient {
         }
         Minecraft minecraft = Minecraft.getInstance();
         minecraft.options.pauseOnLostFocus = false;
+        if (!shotsBegun) {
+            shotsBegun = true;
+            ShowcaseShotManifest.begin(minecraft, "mp-smoke", MultiplayerSmokePlan.SHOTS);
+        }
         if (minecraft.getOverlay() != null) {
             if (overlayTicks++ % 100 == 0) {
                 LOGGER.info("MP_SMOKE_OVERLAY {}", minecraft.getOverlay().getClass().getName());
@@ -177,7 +181,7 @@ public final class MultiplayerSmokeClient {
         if (phaseTicks < 40) {
             return;
         }
-        grab(minecraft, "showcase_mp_nametags.png");
+        ShowcaseShotManifest.grab(minecraft, "mp_nametags");
         enter(Phase.SHOOT_TRACK);
     }
 
@@ -190,7 +194,7 @@ public final class MultiplayerSmokeClient {
         if (phaseTicks < 20) {
             return;
         }
-        grab(minecraft, "showcase_mp_track.png");
+        ShowcaseShotManifest.grab(minecraft, "mp_track");
         enter(Phase.OPEN_PLATFORM);
     }
 
@@ -225,7 +229,7 @@ public final class MultiplayerSmokeClient {
                 && !screen.smokeDestinationRows().isEmpty();
         stablePlatform = ready ? stablePlatform + 1 : 0;
         if (ready && stablePlatform >= 15) {
-            grab(minecraft, "showcase_mp_platform.png");
+            ShowcaseShotManifest.grab(minecraft, "mp_platform");
             enter(Phase.WRITE);
             return;
         }
@@ -236,6 +240,16 @@ public final class MultiplayerSmokeClient {
     }
 
     private static void write(Minecraft minecraft) {
+        if (ShowcaseShotManifest.pending() > 0) {
+            if (phaseTicks > 200) {
+                fail(minecraft, "screenshot writes did not finish");
+            }
+            return;
+        }
+        if (ShowcaseShotManifest.hasFailure()) {
+            fail(minecraft, "one or more screenshots were not saved");
+            return;
+        }
         writeObservation(minecraft, true);
         LOGGER.info("MP_SMOKE_OBSERVATION_WRITTEN {}", observationPath(minecraft));
         exitCode = 0;
@@ -278,11 +292,12 @@ public final class MultiplayerSmokeClient {
     }
 
     private static int port() {
-        String raw = System.getProperty("businesscraft.multiplayerSmoke.port", "25565");
+        String raw = System.getProperty("businesscraft.multiplayerSmoke.port",
+                Integer.toString(MultiplayerSmokePlan.FORGE_PORT));
         try {
             return Integer.parseInt(raw.trim());
         } catch (NumberFormatException exception) {
-            return 25565;
+            return MultiplayerSmokePlan.FORGE_PORT;
         }
     }
 
@@ -372,11 +387,6 @@ public final class MultiplayerSmokeClient {
         return best;
     }
 
-    private static void grab(Minecraft minecraft, String file) {
-        Screenshot.grab(minecraft.gameDirectory, file, minecraft.getMainRenderTarget(), message ->
-                LOGGER.info("MP_SMOKE_SHOT {} {}", file, message.getString()));
-    }
-
     private static void writeObservation(Minecraft minecraft, boolean ok) {
         if (wrote && ok) {
             return;
@@ -391,6 +401,8 @@ public final class MultiplayerSmokeClient {
         }
         body.put("viewer", viewer);
         body.put("holdingClipboard", ConductorClipboardItem.clientPlayerHoldingForRouteView());
+        body.put("ui", ShowcaseUiSnapshot.capture(minecraft));
+        body.put("shots", ShowcaseShotManifest.rows());
         body.put("towns", townRows());
         body.put("platform", platformRow(minecraft));
         body.put("tourists", visibleTourists(minecraft));

@@ -49,11 +49,11 @@ class ShowcaseSelectionTest {
     @Test
     void writtenShots_omitWarmup() {
         assertEquals(ShowcaseSelection.ALL_SHOTS.size() - 1, ShowcaseSelection.writtenShots("all").size());
-        assertEquals(17, ShowcaseSelection.writtenShots("all").size());
+        assertEquals(19, ShowcaseSelection.writtenShots("all").size());
         assertFalse(ShowcaseSelection.writtenShots("all").contains("warmup"));
         assertEquals(List.of("town_interface", "town_interface_back"), ShowcaseSelection.writtenShots("block"));
         assertEquals(4, ShowcaseSelection.writtenShots("town").size());
-        assertEquals(4, ShowcaseSelection.writtenShots("platform").size());
+        assertEquals(6, ShowcaseSelection.writtenShots("platform").size());
         assertEquals(6, ShowcaseSelection.writtenShots("kiosk").size());
         assertEquals(2, ShowcaseSelection.writtenShots("lamp").size());
         assertEquals(List.of(), ShowcaseSelection.writtenShots("all-views"));
