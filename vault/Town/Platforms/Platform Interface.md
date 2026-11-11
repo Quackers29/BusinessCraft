@@ -60,3 +60,4 @@ Players do not add platforms from a button on the Town Centre. Instead they craf
 - [[Town/Platforms/Platform Data Model]]
 - [[Town/Decisions/Town Centre and Platform Decisions]]
 - [[Tourists/Spawning/Tourist Spawning and Destination Selection]]
+- [[Integrations/Jade Tooltips]] (optional WAILA-style details when Jade is installed)

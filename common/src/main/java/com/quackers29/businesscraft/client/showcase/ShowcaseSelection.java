@@ -23,7 +23,9 @@ public final class ShowcaseSelection {
             "town_production",
             "town_settings",
             "platform_interface",
-            "platform_interface_screen",
+            "platform_interface_mode_any",
+            "platform_interface_mode_auto",
+            "platform_interface_mode_specific",
             "platform_overview",
             "platform_front",
             "platform_side",
@@ -37,7 +39,9 @@ public final class ShowcaseSelection {
     private static final Map<String, List<String>> SCENES = Map.of(
             "block", List.of("town_interface", "town_interface_back"),
             "town", List.of("town_overview", "town_resources", "town_production", "town_settings"),
-            "platform", List.of("town_overview", "platform_interface", "platform_interface_screen", "platform_overview"),
+            "platform", List.of("town_overview", "platform_interface",
+                    "platform_interface_mode_any", "platform_interface_mode_auto",
+                    "platform_interface_mode_specific", "platform_overview"),
             "kiosk", List.of("platform_front", "platform_side", "platform_rail", "platform_hand", "platform_path", "town_paths"),
             "lamp", List.of("platform_lamp_on", "platform_lamp_off"));
 
@@ -50,6 +54,7 @@ public final class ShowcaseSelection {
     public static final String MAP_SWEEP = "map-sweep";
     public static final String TOURISTS = "tourists";
     public static final String TOURIST_SCREEN = "tourist-screen";
+    public static final String JADE = "jade";
 
     public static boolean enabled(String property) {
         return property != null;
@@ -79,9 +84,14 @@ public final class ShowcaseSelection {
         return property != null && TOURIST_SCREEN.equalsIgnoreCase(property.trim());
     }
 
+    public static boolean jadeMode(String property) {
+        return property != null && JADE.equalsIgnoreCase(property.trim());
+    }
+
     public static List<String> shotsFor(String property) {
         if (!enabled(property) || allViewsMode(property) || twoTownsMode(property) || testbedMode(property)
-                || mapSweepMode(property) || touristsMode(property) || touristScreenMode(property)) {
+                || mapSweepMode(property) || touristsMode(property) || touristScreenMode(property)
+                || jadeMode(property)) {
             return List.of();
         }
         List<String> selected = new ArrayList<>();

@@ -14,6 +14,14 @@ public interface RegistryHelper {
 
     <T extends Item> Supplier<T> registerBlockItem(String name, Supplier<? extends Block> block);
 
+    /**
+     * Default stores the instance for unit tests; loaders override with real registration.
+     */
+    default <T extends Item> Supplier<T> registerItem(String name, Supplier<T> item) {
+        T instance = item.get();
+        return () -> instance;
+    }
+
     <T extends EntityType<?>> Supplier<T> registerEntityType(String name, Supplier<T> entityType);
 
     <T extends BlockEntityType<?>> Supplier<T> registerBlockEntityType(String name, Supplier<T> blockEntityType);

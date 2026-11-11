@@ -72,6 +72,7 @@ public final class Showcase {
     private static boolean testbedConfigured;
     private static boolean mapSweepConfigured;
     private static boolean touristLineupConfigured;
+    private static boolean jadeConfigured;
     private static List<PlannedShot> plan = List.of();
     private static int shotIndex;
     private static int ticksOnShot;
@@ -106,6 +107,9 @@ public final class Showcase {
             } else if (ShowcaseSelection.touristsMode(property)) {
                 plan = List.of();
                 LOGGER.info("Showcase tourist lineup enabled");
+            } else if (ShowcaseSelection.jadeMode(property)) {
+                plan = List.of();
+                LOGGER.info("Showcase Jade tooltips enabled");
             } else if (ShowcaseSelection.touristScreenMode(property)) {
                 ShowcaseAllViews.useRoutes(ShowcaseRouteRegistry.touristScreenRoutes());
                 plan = List.of();
@@ -168,6 +172,17 @@ public final class Showcase {
                 ShowcaseTouristLineup.reset(minecraft);
             }
             ShowcaseTouristLineup.tick(minecraft);
+            return;
+        }
+        if (ShowcaseSelection.jadeMode(property)) {
+            if (minecraft.player == null || minecraft.level == null || minecraft.getSingleplayerServer() == null) {
+                return;
+            }
+            if (!jadeConfigured) {
+                jadeConfigured = true;
+                ShowcaseJade.reset(minecraft);
+            }
+            ShowcaseJade.tick(minecraft);
             return;
         }
         if (minecraft.player == null || minecraft.level == null || minecraft.getSingleplayerServer() == null) {
@@ -239,7 +254,15 @@ public final class Showcase {
             boolean screen = screenShot(name);
             String tab = tabFor(name);
             Runnable before = switch (name) {
-                case "platform_interface_screen" -> () -> ShowcasePlatforms.openScreen(Minecraft.getInstance(), townPos);
+                case "platform_interface_screen", "platform_interface_mode_any" ->
+                        () -> ShowcasePlatforms.openScreenForDestinationDemo(Minecraft.getInstance(), townPos,
+                                ShowcasePlatforms.DestinationDemoMode.ANY);
+                case "platform_interface_mode_auto" ->
+                        () -> ShowcasePlatforms.openScreenForDestinationDemo(Minecraft.getInstance(), townPos,
+                                ShowcasePlatforms.DestinationDemoMode.AUTO);
+                case "platform_interface_mode_specific" ->
+                        () -> ShowcasePlatforms.openScreenForDestinationDemo(Minecraft.getInstance(), townPos,
+                                ShowcasePlatforms.DestinationDemoMode.SPECIFIC);
                 case "platform_overview" -> () -> PlatformManagementScreenV2.open(townPos);
                 default -> screen ? () -> showTab(Minecraft.getInstance(), tab) : null;
             };
@@ -249,7 +272,8 @@ public final class Showcase {
     }
 
     private static int pauseFor(String name) {
-        if ("town_overview".equals(name) || "platform_interface_screen".equals(name)
+        if ("town_overview".equals(name) || name.startsWith("platform_interface_mode_")
+                || "platform_interface_screen".equals(name)
                 || "platform_overview".equals(name) || name.startsWith("platform_lamp_")) {
             return 50;
         }
@@ -260,14 +284,15 @@ public final class Showcase {
     }
 
     private static boolean screenShot(String name) {
-        if ("platform_interface_screen".equals(name) || "platform_overview".equals(name)) {
+        if ("platform_interface_screen".equals(name) || name.startsWith("platform_interface_mode_")
+                || "platform_overview".equals(name)) {
             return true;
         }
         return name.startsWith("town_") && !name.startsWith("town_interface") && !"town_paths".equals(name);
     }
 
     private static boolean shotReady(Minecraft minecraft, PlannedShot shot) {
-        if ("platform_interface_screen".equals(shot.name)) {
+        if ("platform_interface_screen".equals(shot.name) || shot.name.startsWith("platform_interface_mode_")) {
             return minecraft.screen instanceof PlatformInterfaceScreen;
         }
         if ("platform_overview".equals(shot.name)) {

@@ -38,6 +38,10 @@ dependencies {
     //    exclude group: 'net.minecraftforge', module: 'forge'
     // }
 
+    // Jade API (optional at runtime — mod loads without Jade)
+    modCompileOnly "curse.maven:jade-324717:${jade_fabric_curse_file}"
+    modLocalRuntime "curse.maven:jade-324717:${jade_fabric_curse_file}"
+
     // JetBrains annotations for @NotNull/@Nullable
     compileOnly 'org.jetbrains:annotations:23.0.0'
 

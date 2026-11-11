@@ -11,6 +11,7 @@
 #   bash tools/showcase.sh testbed forge trade-contract
 #   bash tools/showcase.sh map-sweep forge 1920x1080_gui4
 #   bash tools/showcase.sh tourists forge          # every tourist look, front and side
+#   bash tools/showcase.sh jade forge              # Jade tooltips (Town Centre, platforms, tourist)
 #   bash tools/showcase.sh tourist-screen forge   # vanilla merchant screen, then the tourist screen
 #   bash tools/showcase.sh tourist-screen-854-gui2 forge   # same shots at 854x480, gui scale 2
 #   bash tools/showcase.sh tourist-screen-854-gui3 forge   # same shots at 854x480, gui scale 3
@@ -281,6 +282,32 @@ elif [[ "$SCENES" == "tourist-screen" ]]; then
     if [[ -f "$MANIFEST" ]]; then
         cp -f "$MANIFEST" "$SHOWCASE_RUN_DIR/showcase-views-manifest.json"
         bash "$ROOT/tools/showcase-generate-index.sh" "$SHOWCASE_RUN_DIR/index.html" "$SHOWCASE_RUN_DIR/showcase-views-manifest.json"
+    fi
+elif [[ "$SCENES" == "jade" ]]; then
+    MANIFEST_J="$MC_RUN/showcase-jade.json"
+    if [[ ! -f "$MANIFEST_J" ]]; then
+        echo "Missing jade showcase manifest: $MANIFEST_J" >&2
+        code=1
+    else
+        cp -f "$MANIFEST_J" "$SHOWCASE_RUN_DIR/showcase-jade.json"
+        if ! python3 - "$MANIFEST_J" "$SHOWCASE_RUN_DIR/screenshots" <<'PY'
+import json, sys
+from pathlib import Path
+manifest = json.load(open(sys.argv[1]))
+shots = manifest.get("shots", [])
+folder = Path(sys.argv[2])
+if not manifest.get("jadePresent", False):
+    print("Jade was not loaded on the client", file=sys.stderr)
+    sys.exit(1)
+missing = [s for s in shots if not (folder / f"showcase_{s}.png").is_file()]
+if missing:
+    print("missing jade shots: " + ", ".join(missing), file=sys.stderr)
+    sys.exit(1)
+print(f"jade shots ok: {len(shots)}")
+PY
+        then
+            code=1
+        fi
     fi
 elif [[ "$SCENES" == "tourists" ]]; then
     MANIFEST_T="$MC_RUN/showcase-tourists.json"

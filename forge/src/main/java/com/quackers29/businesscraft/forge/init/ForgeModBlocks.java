@@ -9,5 +9,6 @@ import com.quackers29.businesscraft.init.CommonModBlocks;
 public class ForgeModBlocks {
     public static void register() {
         CommonModBlocks.register();
+        CommonModBlocks.registerItems();
     }
 }

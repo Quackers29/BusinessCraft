@@ -140,13 +140,21 @@ public class TouristSpawningHelper {
             return null;
         }
 
-        // Get all possible destination towns
+        com.quackers29.businesscraft.platform.DestinationMode mode = platform.getDestinationMode();
+        if (mode == com.quackers29.businesscraft.platform.DestinationMode.ANY) {
+            return ANY_TOWN_DESTINATION;
+        }
+        if (mode == com.quackers29.businesscraft.platform.DestinationMode.AUTO) {
+            return TouristDestinationLearning.selectAutoDestination(serverLevel, platform, originTownId, random);
+        }
+
+        // SPECIFIC — enabled allow-list
         Map<UUID, Boolean> platformDestinations = platform.getDestinations();
 
         // If no specific destinations are set or all destinations are disabled,
-        // return the special ANY_TOWN_DESTINATION instead of selecting a random town
+        // SPECIFIC mode cannot pick a target.
         if (platformDestinations.isEmpty() || platform.hasNoEnabledDestinations()) {
-            return ANY_TOWN_DESTINATION;
+            return null;
         }
 
         // Filter to only enabled destinations
@@ -158,7 +166,7 @@ public class TouristSpawningHelper {
         }
 
         if (enabledDestinations.isEmpty()) {
-            return ANY_TOWN_DESTINATION;
+            return null;
         }
 
         // Select a destination based on population weights and fairness
