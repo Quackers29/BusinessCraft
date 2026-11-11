@@ -54,8 +54,6 @@ final class GridState {
     double lastMouseX = 0;
     long lastGridCreateLogTime = 0;
     long lastGridRenderLogTime = 0;
-    /** When set, hovered tooltips stay inside this grid's rectangle. */
-    boolean clampTooltip;
     /** Showcase pins a row tooltip. -1 uses the real cursor. */
     int forcedTooltipRow = -1;
     /** Screen-space centre of the first cell, for the showcase cursor. */

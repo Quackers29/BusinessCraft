@@ -16,7 +16,7 @@ A screen fills its panel with the opaque dark colour, draws a gold border, and p
 
 Buttons are 20 pixels tall (16 on a short panel) and wide enough for their label plus 16 pixels. The back control is a 20×20 chevron. A toggle is 64×18: light green with dark text when On, light red with dark text when Off. Claim, View, and Courier stay on the neutral button colour with white text, because light green behind white text is hard to read.
 
-Spacing steps are 4, 8, 12, and 16. A scrollbar is a 3px gold thumb. Most tooltips are clamped to the scaled screen. The production list tooltip is clamped to that list's own rectangle, so a long upgrade description stays inside the panel. Town names on the map step downward when they would otherwise stack. The ranking, visitor history, town detail, and contract detail windows shrink to their rows instead of leaving a tall empty panel.
+Spacing steps are 4, 8, 12, and 16. A scrollbar is a 3px gold thumb. Tooltips are clamped to the scaled screen. Town names on the map step downward when they would otherwise stack. The ranking, visitor history, town detail, and contract detail windows shrink to their rows instead of leaving a tall empty panel.
 
 ---
 > [!info]- Deep reference
@@ -26,9 +26,9 @@ Spacing steps are 4, 8, 12, and 16. A scrollbar is a 3px gold thumb. Most toolti
 | Class / Method | File | Role |
 |---|---|---|
 | `UiTheme` | `common/src/main/java/com/quackers29/businesscraft/ui/theme/UiTheme.java` | Palette, spacing, button, toggle, and scrollbar sizes |
-| `UiTooltip.place` / `placeIn` | `common/src/main/java/com/quackers29/businesscraft/ui/theme/UiTooltip.java` | Keeps a tooltip inside the scaled screen, or inside a panel rectangle |
+| `UiTooltip.place` | `common/src/main/java/com/quackers29/businesscraft/ui/theme/UiTooltip.java` | Keeps a tooltip box inside the scaled screen |
 | `UIGridBuilder` | `common/src/main/java/com/quackers29/businesscraft/ui/grid/UIGridBuilder.java` | Public grid API. Painting, input, cells, and list filling are package helpers |
-| `GridPainter` | `common/src/main/java/com/quackers29/businesscraft/ui/grid/GridPainter.java` | Draws cells, scrollbars, and the clamped production tooltip |
+| `GridPainter` | `common/src/main/java/com/quackers29/businesscraft/ui/grid/GridPainter.java` | Draws cells, scrollbars, and vanilla grid tooltips |
 | `UiTextWrap.ellipsize` | `common/src/main/java/com/quackers29/businesscraft/ui/util/UiTextWrap.java` | Cuts a label to a pixel width |
 | `UiLabelLayout.placeY` | `common/src/main/java/com/quackers29/businesscraft/ui/util/UiLabelLayout.java` | Nudges overlapping map labels down |
 | `TownInterfaceTheme` | `common/src/main/java/com/quackers29/businesscraft/ui/templates/TownInterfaceTheme.java` | Town colour names, now aliases of `UiTheme` |
@@ -53,7 +53,7 @@ Panel `0xF014161C`, border `0xFFD7B56D`, section `0xFF1A1F2A`, text `0xFFFFFFFF`
 - Trade and storage open as `BCModalInventoryScreen`. `TradeMenu` and `StorageMenu` stay registered; there is no separate trade or storage screen.
 
 ## Test coverage
-- Test file: `common/src/test/java/com/quackers29/businesscraft/ui/theme/UiTooltipTest.java` covers screen inset and panel clamping.
+- Test file: `common/src/test/java/com/quackers29/businesscraft/ui/theme/UiTooltipTest.java` covers the scaled-screen inset.
 - Test file: `common/src/test/java/com/quackers29/businesscraft/ui/util/UiTextWrapTest.java` covers ellipsis width and overlapping label nudge.
 - Test file: `common/src/test/java/com/quackers29/businesscraft/config/ConfigLoaderTest.java` covers the new defaults when keys are absent, and a save/load round trip for page size and the fast radius step.
 - `ContractSummaryViewModelBuilderTest.build_pageSizeZeroOrNegative_clampsToDefault20` still expects 20, which is the config default.

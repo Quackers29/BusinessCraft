@@ -996,15 +996,6 @@ public static UIGridBuilder create(int x, int y, int width, int height, int colu
         return input.mouseReleased(mouseX, mouseY, button);
     }
 
-    /**
-     * Keeps hovered tooltips inside this grid. Production uses this so a long
-     * recipe tooltip cannot draw outside the list.
-     */
-    public UIGridBuilder clampTooltipsToPanel() {
-        state.clampTooltip = true;
-        return this;
-    }
-
     /** Showcase pins the tooltip for one row. */
     public void showcaseHoverRow(int row) {
         state.forcedTooltipRow = row;

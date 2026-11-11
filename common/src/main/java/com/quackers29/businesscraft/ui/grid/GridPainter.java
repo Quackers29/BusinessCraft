@@ -3,9 +3,6 @@ package com.quackers29.businesscraft.ui.grid;
 import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.debug.DebugConfig;
 import com.quackers29.businesscraft.ui.theme.UiTheme;
-import com.quackers29.businesscraft.ui.theme.UiTooltip;
-import com.quackers29.businesscraft.ui.util.UiTextWrap;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
@@ -188,11 +185,7 @@ final class GridPainter {
                         for (String line : lines) {
                             tooltipComponents.add(Component.literal(line));
                         }
-                        if (state.clampTooltip) {
-                            renderClampedTooltip(graphics, font, tooltipComponents, mouseX, mouseY);
-                        } else {
-                            graphics.renderComponentTooltip(font, tooltipComponents, mouseX, mouseY);
-                        }
+                        graphics.renderComponentTooltip(font, tooltipComponents, mouseX, mouseY);
                         break; // Only show one tooltip at a time
                     }
                 }
@@ -737,62 +730,5 @@ final class GridPainter {
         // Check if mouse is over thumb
         return mouseX >= thumbX && mouseX < thumbX + thumbWidth &&
                 mouseY >= scrollTrackY && mouseY < scrollTrackY + state.scrollBarHeight;
-    }
-
-
-    private void renderClampedTooltip(GuiGraphics graphics, Font font, java.util.List<Component> lines,
-            int mouseX, int mouseY) {
-        int innerLeft = state.x + 2;
-        int innerTop = state.y + 2;
-        int innerRight = state.x + Math.max(2, state.width) - 2;
-        int innerBottom = state.y + Math.max(2, state.height) - 2;
-        int maxText = Math.max(8, (innerRight - innerLeft) - 8);
-        java.util.List<Component> wrapped = new java.util.ArrayList<>();
-        for (Component line : lines) {
-            String raw = line.getString();
-            if (raw.isEmpty()) {
-                wrapped.add(Component.empty());
-                continue;
-            }
-            for (String part : UiTextWrap.wrap(raw, maxText, font::width)) {
-                wrapped.add(Component.literal(part).withStyle(line.getStyle()));
-            }
-        }
-        if (wrapped.isEmpty()) {
-            return;
-        }
-        int textW = 0;
-        for (Component line : wrapped) {
-            textW = Math.max(textW, font.width(line));
-        }
-        int chrome = 3;
-        int outerW = textW + 8 + chrome * 2;
-        int outerH = wrapped.size() * 10 + 6 + chrome * 2;
-        int preferX = mouseX + 12;
-        int preferY = mouseY - 12;
-        UiTooltip.Box box = UiTooltip.placeIn(innerLeft, innerTop, innerRight, innerBottom,
-                preferX, preferY, outerW, outerH);
-        int textX = box.x() + chrome;
-        int textY = box.y() + chrome + 1;
-        var pose = graphics.pose().last().pose();
-        int originX = Math.round(pose.m30());
-        int originY = Math.round(pose.m31());
-        graphics.pose().pushPose();
-        graphics.pose().translate(0.0, 0.0, 400.0);
-        graphics.enableScissor(originX + state.x, originY + state.y,
-                originX + state.x + state.width, originY + state.y + state.height);
-        int x = box.x();
-        int y = box.y();
-        int bg = 0xF0100010;
-        graphics.fill(x + 1, y + 1, x + outerW - 1, y + outerH - 1, bg);
-        graphics.fill(x, y + 1, x + 1, y + outerH - 1, 0x505000FF);
-        graphics.fill(x + outerW - 1, y + 1, x + outerW, y + outerH - 1, 0x5028007F);
-        graphics.fill(x + 1, y, x + outerW - 1, y + 1, 0x505000FF);
-        graphics.fill(x + 1, y + outerH - 1, x + outerW - 1, y + outerH, 0x5028007F);
-        for (int i = 0; i < wrapped.size(); i++) {
-            graphics.drawString(font, wrapped.get(i), textX, textY + i * 10, 0xFFFFFFFF, false);
-        }
-        graphics.disableScissor();
-        graphics.pose().popPose();
     }
 }

@@ -20,7 +20,7 @@ One palette, one spacing scale, one control size. Screens read `UiTheme` (`commo
 
 ## Spacing and controls
 
-Spacing is 4, 8, 12, 16. Buttons are 20 tall, or 16 when the panel is shorter than 250. Width is the label width plus 16, and at least 20. The back chevron is 20×20. Toggles are 64×18 and read On or Off. Scrollbars are 3px with a gold thumb. Tooltips stay inside the scaled screen (`UiTooltip.place`). The production list tooltip stays inside that list (`UiTooltip.placeIn`). An empty list is one muted sentence.
+Spacing is 4, 8, 12, 16. Buttons are 20 tall, or 16 when the panel is shorter than 250. Width is the label width plus 16, and at least 20. The back chevron is 20×20. Toggles are 64×18 and read On or Off. Scrollbars are 3px with a gold thumb. Tooltips stay inside the scaled screen (`UiTooltip.place`). An empty list is one muted sentence.
 
 Titles are scale 1, gold, with no shadow, and they do not repeat the tab name. Page sizes, history length, visible bids, and platform radius steps come from `businesscraft.toml`. Defaults match the previous hardcoded numbers (20, 50, 2, 1, and 5).
 

@@ -382,8 +382,7 @@ public class StandardTabContent extends BCComponent {
                         .withSpacing(5, 0) // Reduced horizontal spacing
                         .withBackgroundColor(BACKGROUND_COLOR)
                         .withBorderColor(BORDER_COLOR)
-                        .drawBorder(true)
-                        .clampTooltipsToPanel();
+                        .drawBorder(true);
 
                 // Enable auto vertical scrolling
                 grid.withVerticalScrollAuto(true);
