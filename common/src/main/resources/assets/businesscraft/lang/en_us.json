@@ -1,5 +1,6 @@
 {
   "block.businesscraft.town_interface": "Town Centre",
+  "item.businesscraft.conductor_clipboard": "Conductor's Clipboard",
   "container.businesscraft.town_interface": "Town Centre",
   "block.businesscraft.platform_interface": "Platform Interface",
   "container.businesscraft.platform_interface": "Platform Interface",
@@ -60,5 +61,25 @@
   "businesscraft.no_destinations": "No other towns available as destinations",
   "businesscraft.default_destination_info": "If no destinations are enabled, tourists will go to any town",
   "businesscraft.scroll_up": "Up",
-  "businesscraft.scroll_down": "Down"
+  "businesscraft.scroll_down": "Down",
+  "businesscraft.jade.platform.name": "Platform: %s",
+  "businesscraft.jade.platform.mode_any": "Mode: Any",
+  "businesscraft.jade.platform.mode_auto": "Mode: Auto",
+  "businesscraft.jade.platform.mode_specific": "Mode: Specific (%s towns)",
+  "businesscraft.jade.platform.learned_empty": "Learned: —",
+  "businesscraft.jade.platform.learned_summary": "Learned: %s",
+  "businesscraft.jade.platform.link_inactive": "Inactive link",
+  "businesscraft.jade.platform.spawn_enabled": "Spawns: on",
+  "businesscraft.jade.platform.spawn_disabled": "Spawns: off",
+  "businesscraft.jade.town.name": "Town: %s",
+  "businesscraft.jade.town.summary": "Platforms: %s · Tourists: %s",
+  "businesscraft.jade.tourist.origin": "From: %s",
+  "businesscraft.jade.tourist.destination": "To: %s",
+  "businesscraft.jade.tourist.trip_status": "Status: %s",
+  "businesscraft.jade.tourist.status.riding": "Riding",
+  "businesscraft.jade.tourist.status.waiting": "Waiting",
+  "businesscraft.jade.tourist.status.traveling": "Traveling",
+  "config.jade.plugin_businesscraft.platform_interface": "Platform Interface",
+  "config.jade.plugin_businesscraft.town_interface": "Town Centre",
+  "config.jade.plugin_businesscraft.tourist": "Tourist"
 }

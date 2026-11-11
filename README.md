@@ -47,6 +47,7 @@
   - **Tourists do not walk** in 0.9 (movement speed is effectively zero); they wait on the platform until a minecart or Create train carries them
   - **16 layered looks** (`data/businesscraft/tourist_looks`), personal names (name tag shows first name), distance ranks (Wanderer → Renowned; see `tourists.levelDistances` in config)
   - Origin/destination tracking with UUID persistence
+  - **Conductor's Clipboard** (`conductor_clipboard`): craftable item; while held, nearby tourist name tags add a second line `Origin -> Destination` (client-only overlay; synced labels on the entity)
   - Unemployed villager base with layered look rendering
   - Multiple breeding prevention safeguards
   - Death/departure notifications to origin towns

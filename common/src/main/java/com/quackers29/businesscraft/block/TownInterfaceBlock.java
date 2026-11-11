@@ -199,7 +199,7 @@ public class TownInterfaceBlock extends BaseEntityBlock {
                 UUID townId = townInterface.getTownId();
                 if (townId != null && !level.isClientSide() && level instanceof ServerLevel serverLevel) {
                     townInterface.releasePlatformsForRemovedTown(serverLevel);
-                    TownManager.get(serverLevel).removeTown(townId);
+                    TownManager.get(serverLevel).removeTown(serverLevel, townId);
                 }
             }
             super.onRemove(state, level, pos, newState, isMoving);

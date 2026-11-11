@@ -7,6 +7,7 @@ import com.quackers29.businesscraft.client.renderer.layer.TouristOutfitLayer;
 import com.quackers29.businesscraft.entity.TouristDisplayFormat;
 import com.quackers29.businesscraft.entity.TouristEntity;
 import com.quackers29.businesscraft.entity.TouristNames;
+import com.quackers29.businesscraft.item.ConductorClipboardItem;
 import com.quackers29.businesscraft.entity.tourist.TouristAppearance;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -29,6 +30,8 @@ public class TouristRenderer extends MobRenderer<TouristEntity, TouristModel> {
     private static final float NAME_TAG_SCALE = 0.02F;
     /** Light grey, slightly transparent. No background is drawn with this. */
     private static final int NAME_COLOR = 0xD0D8D8D8;
+    /** Solid light yellow route line (ARGB); readable on dark backgrounds. */
+    private static final int CONDUCTOR_ROUTE_COLOR = TouristDisplayFormat.CONDUCTOR_ROUTE_NAME_TAG_COLOR;
 
     public TouristRenderer(EntityRendererProvider.Context context) {
         super(context, new TouristModel(context.bakeLayer(TouristModel.LAYER)), 0.5F);
@@ -102,12 +105,23 @@ public class TouristRenderer extends MobRenderer<TouristEntity, TouristModel> {
         Font font = this.getFont();
         Matrix4f matrix = poseStack.last().pose();
         float x = -font.width(line) / 2.0F;
-        // See-through first, then the depth-tested pass, the same order as a vanilla nameplate.
-        font.drawInBatch(line, x, 0.0F, NAME_COLOR, false, matrix, buffer,
-                Font.DisplayMode.SEE_THROUGH, 0, packedLight);
-        font.drawInBatch(line, x, 0.0F, NAME_COLOR, false, matrix, buffer,
-                Font.DisplayMode.NORMAL, 0, packedLight);
+        drawNameBatch(font, line, x, 0.0F, NAME_COLOR, matrix, buffer, packedLight);
+        if (ConductorClipboardItem.clientPlayerHoldingForRouteView()) {
+            Component route = TouristDisplayFormat.conductorRouteComponent(
+                    entity.getSyncedOriginLabel(), entity.getSyncedDestLabel());
+            float routeY = font.lineHeight + 1.0F;
+            float routeX = -font.width(route) / 2.0F;
+            drawNameBatch(font, route, routeX, routeY, CONDUCTOR_ROUTE_COLOR, matrix, buffer, packedLight);
+        }
         poseStack.popPose();
+    }
+
+    private static void drawNameBatch(Font font, Component text, float x, float y, int color,
+            Matrix4f matrix, MultiBufferSource buffer, int packedLight) {
+        font.drawInBatch(text, x, y, color, false, matrix, buffer,
+                Font.DisplayMode.SEE_THROUGH, 0, packedLight);
+        font.drawInBatch(text, x, y, color, false, matrix, buffer,
+                Font.DisplayMode.NORMAL, 0, packedLight);
     }
 
     @Override

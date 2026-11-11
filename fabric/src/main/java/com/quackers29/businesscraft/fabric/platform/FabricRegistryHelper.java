@@ -41,6 +41,13 @@ public class FabricRegistryHelper implements RegistryHelper {
     }
 
     @Override
+    public <T extends Item> Supplier<T> registerItem(String name, Supplier<T> item) {
+        T instance = item.get();
+        Registry.register(BuiltInRegistries.ITEM, new ResourceLocation(MOD_ID, name), instance);
+        return () -> instance;
+    }
+
+    @Override
     public <T extends EntityType<?>> Supplier<T> registerEntityType(String name, Supplier<T> entityType) {
         T entityTypeInstance = entityType.get();
         Registry.register(BuiltInRegistries.ENTITY_TYPE, new ResourceLocation(MOD_ID, name), entityTypeInstance);

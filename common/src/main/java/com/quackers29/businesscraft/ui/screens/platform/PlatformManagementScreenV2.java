@@ -195,7 +195,12 @@ public class PlatformManagementScreenV2 extends Screen {
             platformListGrid.addLabel(row, 3, platform.isComplete() ? "Path set" : "No path", TEXT_COLOR);
 
             int destCount = platform.getEnabledDestinations().size();
-            String dest = destCount == 0 ? "Any town" : destCount + (destCount == 1 ? " town" : " towns");
+            String dest = switch (platform.getDestinationMode()) {
+                case ANY -> "Any";
+                case AUTO -> "Auto";
+                case SPECIFIC -> destCount == 0 ? "Specific (none)"
+                        : (destCount == 1 ? "1 town" : destCount + " towns");
+            };
             platformListGrid.addLabel(row, 4, dest, TEXT_COLOR);
         }
 

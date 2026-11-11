@@ -9,5 +9,6 @@ import com.quackers29.businesscraft.init.CommonModBlocks;
 public class FabricModBlocks {
     public static void register() {
         CommonModBlocks.register();
+        CommonModBlocks.registerItems();
     }
 }

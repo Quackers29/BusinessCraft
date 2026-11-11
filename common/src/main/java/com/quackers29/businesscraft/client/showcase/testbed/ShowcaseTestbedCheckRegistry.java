@@ -17,6 +17,7 @@ public final class ShowcaseTestbedCheckRegistry {
     static {
         register("trade-contract", TradeContractCheck::new);
         register("example-dev-item", ExampleDevItemCheck::new);
+        register("conductor-clipboard", ConductorClipboardCheck::new);
     }
 
     private ShowcaseTestbedCheckRegistry() {

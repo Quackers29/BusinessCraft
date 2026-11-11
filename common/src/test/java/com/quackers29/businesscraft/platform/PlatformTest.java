@@ -1,5 +1,6 @@
 package com.quackers29.businesscraft.platform;
 
+import com.quackers29.businesscraft.config.ConfigLoader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import org.junit.jupiter.api.Test;
@@ -234,6 +235,28 @@ class PlatformTest {
         assertEquals(0, loaded.getDestinations().size());
         // roundtrip equality
         assertEquals(original, loaded);
+    }
+
+    @Test
+    void nbtLoad_withoutDestinationModeTag_usesConfigDefault_notInferredFromAllowList() {
+        CompoundTag tag = new CompoundTag();
+        tag.putUUID("Id", ID1);
+        tag.putString("Name", "LegacyRow");
+        tag.putBoolean("Enabled", true);
+        CompoundTag destTag = new CompoundTag();
+        destTag.putInt("Count", 1);
+        destTag.putUUID("Dest0", DEST_A);
+        tag.put("Destinations", destTag);
+
+        DestinationMode previous = ConfigLoader.defaultDestinationMode;
+        try {
+            ConfigLoader.defaultDestinationMode = DestinationMode.ANY;
+            Platform loaded = new Platform(tag);
+            assertEquals(DestinationMode.ANY, loaded.getDestinationMode());
+            assertTrue(loaded.isDestinationEnabled(DEST_A));
+        } finally {
+            ConfigLoader.defaultDestinationMode = previous;
+        }
     }
 
     @Test
