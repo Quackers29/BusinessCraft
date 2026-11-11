@@ -14,13 +14,22 @@ public final class UiLabelLayout {
     }
 
     public static int placeY(int x, int y, int w, int h, List<Rect> placed) {
+        return place(x, y, w, h, placed)[1];
+    }
+
+    /**
+     * Places a label. A collision first tries just to the right of the blocking label,
+     * then a full line below the original x. Returns {@code {x, y}}.
+     */
+    public static int[] place(int x, int y, int w, int h, List<Rect> placed) {
+        int nextX = x;
         int nextY = y;
         int boxH = Math.max(1, h);
         int boxW = Math.max(1, w);
         for (int guard = 0; guard < 12; guard++) {
             Rect hit = null;
             for (Rect rect : placed) {
-                if (overlaps(x, nextY, boxW, boxH, rect)) {
+                if (overlaps(nextX, nextY, boxW, boxH, rect)) {
                     hit = rect;
                     break;
                 }
@@ -28,10 +37,26 @@ public final class UiLabelLayout {
             if (hit == null) {
                 break;
             }
-            nextY = hit.y + hit.h + 1;
+            int toTheRight = hit.x + hit.w + 4;
+            if (!overlapsAny(toTheRight, y, boxW, boxH, placed)) {
+                nextX = toTheRight;
+                nextY = y;
+            } else {
+                nextX = x;
+                nextY = hit.y + hit.h + 4;
+            }
         }
-        placed.add(new Rect(x, nextY, boxW, boxH));
-        return nextY;
+        placed.add(new Rect(nextX, nextY, boxW, boxH));
+        return new int[] { nextX, nextY };
+    }
+
+    private static boolean overlapsAny(int x, int y, int w, int h, List<Rect> placed) {
+        for (Rect rect : placed) {
+            if (overlaps(x, y, w, h, rect)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean overlaps(int x, int y, int w, int h, Rect rect) {

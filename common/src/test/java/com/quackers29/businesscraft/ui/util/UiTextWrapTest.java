@@ -40,8 +40,9 @@ class UiTextWrapTest {
     void placeY_nudgesOverlappingLabelsDown() {
         java.util.List<UiLabelLayout.Rect> placed = new java.util.ArrayList<>();
         int first = UiLabelLayout.placeY(0, 10, 40, 9, placed);
-        int second = UiLabelLayout.placeY(10, 10, 40, 9, placed);
+        int[] second = UiLabelLayout.place(10, 10, 40, 9, placed);
         assertEquals(10, first);
-        assertTrue(second >= 20, "second label y=" + second);
+        boolean clear = second[0] >= 44 || second[1] >= 20;
+        assertTrue(clear, "second label at " + second[0] + "," + second[1]);
     }
 }

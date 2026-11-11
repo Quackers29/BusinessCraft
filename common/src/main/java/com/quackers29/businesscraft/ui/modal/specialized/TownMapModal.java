@@ -783,8 +783,10 @@ public class TownMapModal extends Screen {
                 // Calculate name position
                 int nameX = screenX - textWidth / 2;
                 int nameY = screenY - markerSize / 2 - 12;
-                nameY = com.quackers29.businesscraft.ui.util.UiLabelLayout.placeY(
-                        nameX, nameY, textWidth, this.font.lineHeight, townNameBoxes);
+                int[] placedName = com.quackers29.businesscraft.ui.util.UiLabelLayout.place(
+                        nameX, nameY, Math.max(textWidth, 8), Math.max(this.font.lineHeight, 9), townNameBoxes);
+                nameX = placedName[0];
+                nameY = placedName[1];
 
                 // Check if town name would overlap with info panel
                 boolean nameOverlapsInfo = selectedTown != null &&

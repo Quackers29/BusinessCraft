@@ -232,6 +232,13 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
         // Payment board header centered with other sections
         guiGraphics.drawString(this.font, "Unclaimed Rewards",
                 x + PAYMENT_BOARD_X + 6, y + PAYMENT_BOARD_Y - 12, HEADER_COLOR);
+        if (currentRewards.isEmpty()) {
+            String message = "No unclaimed rewards";
+            int messageX = sectionX + (sectionWidth - this.font.width(message)) / 2;
+            int messageY = sectionY + (sectionHeight - this.font.lineHeight) / 2;
+            guiGraphics.drawString(this.font, message, messageX, messageY,
+                    com.quackers29.businesscraft.ui.theme.UiTheme.MUTED, false);
+        }
     }
 
     private void renderBufferStorageSection(GuiGraphics guiGraphics, int x, int y) {
@@ -425,10 +432,6 @@ public class PaymentBoardScreen extends AbstractContainerScreen<PaymentBoardMenu
             }
         }
 
-        // If no rewards, show a message
-        if (currentRewards.isEmpty()) {
-            paymentBoardGrid.addLabel(0, 1, "No unclaimed rewards", com.quackers29.businesscraft.ui.theme.UiTheme.MUTED);
-        }
     }
 
     /**
