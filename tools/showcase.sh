@@ -121,7 +121,8 @@ cp -a "$TEMPLATE" "$WORLD"
 rm -f "$WORLD/session.lock"
 mkdir -p "$SHOTDIR"
 rm -f "$SHOTDIR"/showcase_*.png "$SHOTDIR"/showcase_view_*.png "$SHOTDIR"/showcase_map_*.png "$SHOTDIR"/showcase_testbed_*.png
-rm -f "$MC_RUN/showcase-views-manifest.json" "$MC_RUN/showcase-two-towns-report.json" "$MC_RUN/showcase-testbed-report.json"
+rm -f "$MC_RUN/showcase-views-manifest.json" "$MC_RUN/showcase-two-towns-report.json" "$MC_RUN/showcase-testbed-report.json" \
+    "$MC_RUN/showcase-shots.json"
 
 mkdir -p "$MC_RUN"
 cp "$ROOT/tools/showcase-options.txt" "$OPTIONS"
@@ -165,16 +166,8 @@ map_count="$(find "$SHOWCASE_RUN_DIR/screenshots" -maxdepth 1 -name 'showcase_ma
 echo "Showcase ($LOADER) shots: $count views: $view_count map: $map_count (gradle exit $code)"
 
 MANIFEST="$MC_RUN/showcase-views-manifest.json"
+SHOT_MANIFEST="$MC_RUN/showcase-shots.json"
 ALL_VIEWS_EXPECT=19
-
-case "$SCENES" in
-    "" | all | ALL) expect=6 ;;
-    town) expect=4 ;;
-    tourists) expect=1 ;;
-    block) expect=2 ;;
-    all-views | two-towns | testbed | map-sweep | tourist-screen | production-tooltip | jade) expect=0 ;;
-    *) expect=0 ;;
-esac
 
 if grep -n "Showcase failed" "$LOG"; then
     echo "Showcase reported a failure" >&2
@@ -363,13 +356,38 @@ PY
         fi
     fi
 else
-    if [[ "$count" -eq 0 ]]; then
-        echo "No showcase screenshots were written" >&2
-        exit 1
-    fi
-    if [[ "$expect" -gt 0 && "$count" -ne "$expect" ]]; then
-        echo "Expected $expect shots, found $count" >&2
+    if [[ ! -f "$SHOT_MANIFEST" ]]; then
+        echo "Missing shot manifest: $SHOT_MANIFEST" >&2
         code=1
+    else
+        cp -f "$SHOT_MANIFEST" "$SHOWCASE_RUN_DIR/showcase-shots.json"
+        if ! python3 - "$SHOT_MANIFEST" "$SHOWCASE_RUN_DIR/screenshots" <<'PY'
+import json, sys
+from pathlib import Path
+manifest = json.load(open(sys.argv[1]))
+folder = Path(sys.argv[2])
+expected = manifest.get("expected") or []
+by_name = {row.get("name"): row for row in manifest.get("shots") or []}
+if not expected:
+    print("shot manifest has no expected shots", file=sys.stderr)
+    sys.exit(1)
+if manifest.get("pending", 0) != 0 or manifest.get("ok") is not True:
+    print("shot manifest is not ok", file=sys.stderr)
+    sys.exit(1)
+missing = []
+for name in expected:
+    row = by_name.get(name)
+    file_name = f"showcase_{name}.png"
+    if row is None or not row.get("ok") or not (folder / file_name).is_file():
+        missing.append(name)
+if missing:
+    print("shots failed or missing: " + ", ".join(missing), file=sys.stderr)
+    sys.exit(1)
+print(f"planned shots ok: {len(expected)}")
+PY
+        then
+            code=1
+        fi
     fi
 fi
 

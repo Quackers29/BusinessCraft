@@ -434,6 +434,8 @@ bash tools/showcase-map-sweep.sh forge   # map modal across resolutions / GUI sc
 
 Outputs land under **`showcase-output/`** (see [tools/SHOWCASE-TESTBED.md](tools/SHOWCASE-TESTBED.md)).
 
+Two dedicated-server clients on the same loader: **[tools/MULTIPLAYER-SMOKE.md](tools/MULTIPLAYER-SMOKE.md)** (`bash tools/multiplayer-smoke.sh`).
+
 Related: `bash tools/showcase.sh two-towns forge` (boundary tests + all-views on town B).
 
 ---

@@ -350,6 +350,12 @@ public class TownManager {
     }
 
     public void tick() {
+        // The multiplayer smoke seeds a fixed scene, then waits while two clients boot.
+        // Town recipes (tourism, starvation) would move population during that wait and
+        // make the two clients disagree. The property is set only on that dedicated server.
+        if ("setup".equals(System.getProperty("businesscraft.multiplayerSmoke"))) {
+            return;
+        }
         for (Town town : savedData.getTowns().values()) {
             town.tick();
         }

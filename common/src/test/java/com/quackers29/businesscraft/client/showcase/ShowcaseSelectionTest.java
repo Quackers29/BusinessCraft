@@ -52,6 +52,61 @@ class ShowcaseSelectionTest {
     }
 
     @Test
+    void writtenShots_omitWarmup() {
+        assertEquals(ShowcaseSelection.ALL_SHOTS.size() - 1, ShowcaseSelection.writtenShots("all").size());
+        assertEquals(19, ShowcaseSelection.writtenShots("all").size());
+        assertFalse(ShowcaseSelection.writtenShots("all").contains("warmup"));
+        assertEquals(List.of("town_interface", "town_interface_back"), ShowcaseSelection.writtenShots("block"));
+        assertEquals(4, ShowcaseSelection.writtenShots("town").size());
+        assertEquals(6, ShowcaseSelection.writtenShots("platform").size());
+        assertEquals(6, ShowcaseSelection.writtenShots("kiosk").size());
+        assertEquals(2, ShowcaseSelection.writtenShots("lamp").size());
+        assertEquals(List.of(), ShowcaseSelection.writtenShots("all-views"));
+        assertEquals(List.of(), ShowcaseSelection.writtenShots(null));
+    }
+
+    @Test
+    void routes_recordTheScreenTheyWaitFor() {
+        assertEquals("TownInterfaceScreen", route("town/overview").expectedScreen());
+        assertEquals("TownInterfaceScreen", route("town/edit-name").expectedScreen());
+        assertEquals("TownMapModal", route("town/map").expectedScreen());
+        assertEquals("ContractDetailScreen", route("town/contract-detail").expectedScreen());
+        assertEquals("MerchantScreen", route("tourist/before").expectedScreen());
+        assertEquals("TouristScreen", route("tourist/voyager").expectedScreen());
+        assertEquals("TouristScreen", touristRoute("tourist/scrolled").expectedScreen());
+    }
+
+    @Test
+    void showcaseTownNames_arePinnedInOrder() {
+        System.setProperty("businesscraft.showcase", "all");
+        try {
+            ShowcaseTownNames.reset();
+            assertTrue(ShowcaseTownNames.isActive());
+            assertEquals(ShowcaseTownNames.PRIMARY, ShowcaseTownNames.next());
+            assertEquals(ShowcaseTownNames.SECONDARY, ShowcaseTownNames.next());
+            assertEquals("Brookside-3", ShowcaseTownNames.next());
+        } finally {
+            ShowcaseTownNames.reset();
+            System.clearProperty("businesscraft.showcase");
+        }
+        assertFalse(ShowcaseTownNames.isActive());
+    }
+
+    private static ShowcaseRoute route(String name) {
+        return ShowcaseRouteRegistry.allRoutes().stream()
+                .filter(candidate -> candidate.name().equals(name))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private static ShowcaseRoute touristRoute(String name) {
+        return ShowcaseRouteRegistry.touristScreenRoutes().stream()
+                .filter(candidate -> candidate.name().equals(name))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    @Test
     void townScene_isTheFourTabsPlusWarmup() {
         assertEquals(
                 List.of("warmup", "town_overview", "town_resources", "town_production", "town_settings"),

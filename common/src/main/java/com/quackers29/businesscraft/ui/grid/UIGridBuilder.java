@@ -646,6 +646,17 @@ public static UIGridBuilder create(int x, int y, int width, int height, int colu
         return elementsApi.invokeButtonById(elementId);
     }
 
+    /** Stable button ids currently in this grid, in layout order. */
+    public List<String> buttonIds() {
+        List<String> ids = new ArrayList<>();
+        for (GridElement element : state.elements) {
+            if (element.type == GridElement.Type.BUTTON && element.elementId != null && !element.elementId.isBlank()) {
+                ids.add(element.elementId);
+            }
+        }
+        return ids;
+    }
+
 
 
     /**

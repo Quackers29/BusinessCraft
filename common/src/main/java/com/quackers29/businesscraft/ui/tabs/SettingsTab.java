@@ -7,6 +7,7 @@ import com.quackers29.businesscraft.ui.components.containers.StandardTabContent;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -73,6 +74,10 @@ public class SettingsTab extends BaseTownTab {
 
     public boolean showcaseInvokeButton(String elementId) {
         return contentComponent != null && contentComponent.invokeShowcaseButtonById(elementId);
+    }
+
+    public List<String> showcaseButtonIds() {
+        return contentComponent == null ? List.of() : contentComponent.showcaseButtonIds();
     }
 
     @Override
