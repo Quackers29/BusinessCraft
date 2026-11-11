@@ -1,6 +1,5 @@
 package com.quackers29.businesscraft.ui.managers;
 
-import com.quackers29.businesscraft.ui.modal.core.BCModalScreen;
 import com.quackers29.businesscraft.ui.modal.core.BCPopupScreen;
 import com.quackers29.businesscraft.ui.components.containers.BCTabPanel;
 import com.quackers29.businesscraft.ui.components.basic.BCPanel;
@@ -20,8 +19,6 @@ public class TownScreenEventHandler {
     }
 
     public interface ModalStateProvider {
-        BCModalScreen getActiveModal();
-
         BCPopupScreen getActivePopup();
 
         BCTabPanel getTabPanel();
@@ -58,14 +55,6 @@ public class TownScreenEventHandler {
      */
     public boolean handleMouseClicked(double mouseX, double mouseY, int button,
             java.util.function.Function<Integer, Boolean> superHandler) {
-
-        // Handle clicks on modal screens first, which take priority
-        BCModalScreen activeModal = stateProvider.getActiveModal();
-        if (activeModal != null) {
-            if (activeModal.mouseClicked(mouseX, mouseY, button)) {
-                return true;
-            }
-        }
 
         // If popup is active, let it handle clicks first
         BCPopupScreen activePopup = stateProvider.getActivePopup();
@@ -106,12 +95,6 @@ public class TownScreenEventHandler {
     public boolean handleMouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY,
             java.util.function.Function<Integer, Boolean> superHandler) {
 
-        // If modal is active, let it handle drag first
-        BCModalScreen activeModal = stateProvider.getActiveModal();
-        if (activeModal != null && activeModal.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
-            return true;
-        }
-
         // If popup is active, let it handle drag events
         BCPopupScreen activePopup = stateProvider.getActivePopup();
         if (activePopup != null && activePopup.isVisible() &&
@@ -124,8 +107,8 @@ public class TownScreenEventHandler {
         if (tabPanel != null) {
             String activeTabId = tabPanel.getActiveTabId();
 
-            // For scrollable tabs (Resources, Population) - forward drag events to children
-            if ("resources".equals(activeTabId) || "population".equals(activeTabId)) {
+            // Resources list forwards drag events to its children
+            if ("resources".equals(activeTabId)) {
                 BCPanel panel = tabPanel.getTabPanel(activeTabId);
                 if (panel != null) {
                     // Forward to all children that are visible components
@@ -182,12 +165,6 @@ public class TownScreenEventHandler {
      */
     public boolean handleMouseScrolled(double mouseX, double mouseY, double delta,
             java.util.function.Function<Double, Boolean> superHandler) {
-
-        // If modal is active, let it handle scroll first
-        BCModalScreen activeModal = stateProvider.getActiveModal();
-        if (activeModal != null && activeModal.mouseScrolled(mouseX, mouseY, delta)) {
-            return true;
-        }
 
         // If popup is active, let it handle scroll events
         BCPopupScreen activePopup = stateProvider.getActivePopup();

@@ -1,6 +1,6 @@
 package com.quackers29.businesscraft.ui.modal.specialized;
 
-import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
+import com.quackers29.businesscraft.ui.grid.UIGridBuilder;
 import com.quackers29.businesscraft.ui.theme.UiTheme;
 import com.quackers29.businesscraft.ui.builders.BCComponentFactory;
 import com.quackers29.businesscraft.ui.components.basic.BCLabel;

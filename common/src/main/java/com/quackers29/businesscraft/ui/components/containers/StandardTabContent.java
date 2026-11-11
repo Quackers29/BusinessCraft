@@ -1,7 +1,9 @@
 package com.quackers29.businesscraft.ui.components.containers;
 
 import com.quackers29.businesscraft.ui.components.basic.BCComponent;
-import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
+import com.quackers29.businesscraft.ui.grid.GridContent;
+import com.quackers29.businesscraft.ui.grid.StatusSymbol;
+import com.quackers29.businesscraft.ui.grid.UIGridBuilder;
 import com.quackers29.businesscraft.ui.templates.TownInterfaceTheme;
 import com.quackers29.businesscraft.ui.util.UiTextWrap;
 import net.minecraft.client.Minecraft;
@@ -316,16 +318,16 @@ public class StandardTabContent extends BCComponent {
             // Create column data arrays for 3 columns using UIGridBuilder's modular
             // approach
             @SuppressWarnings("unchecked")
-            java.util.List<UIGridBuilder.GridContent>[] columnData = new java.util.List[3];
+            java.util.List<GridContent>[] columnData = new java.util.List[3];
             columnData[0] = new java.util.ArrayList<>(); // Name column
             columnData[1] = new java.util.ArrayList<>(); // Job column
             columnData[2] = new java.util.ArrayList<>(); // Level column
 
             // Populate column data
             for (int i = 0; i < names.length; i++) {
-                columnData[0].add(UIGridBuilder.GridContent.text(names[i], TEXT_HIGHLIGHT));
-                columnData[1].add(UIGridBuilder.GridContent.text(jobs[i], TEXT_COLOR));
-                columnData[2].add(UIGridBuilder.GridContent.text("Level " + levels[i], TEXT_COLOR));
+                columnData[0].add(GridContent.text(names[i], TEXT_HIGHLIGHT));
+                columnData[1].add(GridContent.text(jobs[i], TEXT_COLOR));
+                columnData[2].add(GridContent.text("Level " + levels[i], TEXT_COLOR));
             }
 
             // Create the grid only once to preserve scroll state
@@ -380,7 +382,8 @@ public class StandardTabContent extends BCComponent {
                         .withSpacing(5, 0) // Reduced horizontal spacing
                         .withBackgroundColor(BACKGROUND_COLOR)
                         .withBorderColor(BORDER_COLOR)
-                        .drawBorder(true);
+                        .drawBorder(true)
+                        .clampTooltipsToPanel();
 
                 // Enable auto vertical scrolling
                 grid.withVerticalScrollAuto(true);
@@ -395,7 +398,7 @@ public class StandardTabContent extends BCComponent {
                     // Status/Progress column: Span 1 (20%)
                     Object statusObj = (i < progress.length) ? progress[i] : "-";
 
-                    if (statusObj instanceof UIGridBuilder.StatusSymbol symbol) {
+                    if (statusObj instanceof StatusSymbol symbol) {
                         grid.addStatusIcon(i, 4, symbol);
                     } else {
                         grid.addLabelWithTooltip(i, 4, 1, 1, String.valueOf(statusObj), tooltip, TEXT_COLOR);
@@ -416,7 +419,7 @@ public class StandardTabContent extends BCComponent {
 
                     Object statusObj = (i < progress.length) ? progress[i] : "-";
 
-                    if (statusObj instanceof UIGridBuilder.StatusSymbol symbol) {
+                    if (statusObj instanceof StatusSymbol symbol) {
                         grid.addStatusIcon(i, 4, symbol);
                     } else {
                         grid.addLabelWithTooltip(i, 4, 1, 1, String.valueOf(statusObj), tooltip, TEXT_COLOR);
@@ -528,5 +531,30 @@ public class StandardTabContent extends BCComponent {
     public void refresh() {
         // Force grid recreation
         grid = null;
+    }
+
+    /** True once the production list has rendered a real tooltip. */
+    public boolean showcaseTooltipReady() {
+        if (contentType != ContentType.PRODUCTION_LIST || grid == null || grid.showcaseAnchorX() == Integer.MIN_VALUE) {
+            return false;
+        }
+        String tooltip = grid.showcaseTooltip(0);
+        return tooltip != null && !tooltip.isBlank() && !tooltip.startsWith("Waiting");
+    }
+
+    public boolean showcasePinTooltip(int row) {
+        if (!showcaseTooltipReady()) {
+            return false;
+        }
+        grid.showcaseHoverRow(row);
+        return true;
+    }
+
+    public int showcaseAnchorX() {
+        return grid == null ? Integer.MIN_VALUE : grid.showcaseAnchorX();
+    }
+
+    public int showcaseAnchorY() {
+        return grid == null ? Integer.MIN_VALUE : grid.showcaseAnchorY();
     }
 }

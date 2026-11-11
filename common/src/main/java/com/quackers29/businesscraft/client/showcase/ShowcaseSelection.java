@@ -54,6 +54,7 @@ public final class ShowcaseSelection {
     public static final String MAP_SWEEP = "map-sweep";
     public static final String TOURISTS = "tourists";
     public static final String TOURIST_SCREEN = "tourist-screen";
+    public static final String PRODUCTION_TOOLTIP = "production-tooltip";
     public static final String JADE = "jade";
 
     public static boolean enabled(String property) {
@@ -84,6 +85,10 @@ public final class ShowcaseSelection {
         return property != null && TOURIST_SCREEN.equalsIgnoreCase(property.trim());
     }
 
+    public static boolean productionTooltipMode(String property) {
+        return property != null && PRODUCTION_TOOLTIP.equalsIgnoreCase(property.trim());
+    }
+
     public static boolean jadeMode(String property) {
         return property != null && JADE.equalsIgnoreCase(property.trim());
     }
@@ -91,7 +96,7 @@ public final class ShowcaseSelection {
     public static List<String> shotsFor(String property) {
         if (!enabled(property) || allViewsMode(property) || twoTownsMode(property) || testbedMode(property)
                 || mapSweepMode(property) || touristsMode(property) || touristScreenMode(property)
-                || jadeMode(property)) {
+                || productionTooltipMode(property) || jadeMode(property)) {
             return List.of();
         }
         List<String> selected = new ArrayList<>();

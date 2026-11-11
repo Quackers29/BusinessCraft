@@ -6,7 +6,6 @@ import com.quackers29.businesscraft.ui.templates.BCTheme;
 import com.quackers29.businesscraft.ui.interfaces.ScreenRenderingCapabilities;
 import com.quackers29.businesscraft.ui.interfaces.ScreenEventCapabilities;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
-import com.quackers29.businesscraft.ui.modal.core.BCModalScreen;
 import com.quackers29.businesscraft.ui.modal.core.BCPopupScreen;
 import com.quackers29.businesscraft.ui.components.containers.BCTabPanel;
 import com.quackers29.businesscraft.ui.layout.TownScreenLayout;
@@ -55,9 +54,8 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
     protected BCTabPanel tabPanel;
     protected BCTheme customTheme;
 
-    // Modal and popup management
+    // Popup management
     protected BCPopupScreen activePopup = null;
-    protected BCModalScreen activeModal = null;
 
     // Manager instances - common to all town screens
     protected TownScreenEventHandler eventHandler;
@@ -259,11 +257,6 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
 
     // ModalStateProvider implementation
     @Override
-    public BCModalScreen getActiveModal() {
-        return activeModal;
-    }
-
-    @Override
     public BCPopupScreen getActivePopup() {
         return activePopup;
     }
@@ -460,13 +453,6 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
         return this.menu;
     }
 
-    /**
-     * Closes the active modal if one exists.
-     */
-    protected void closeActiveModal() {
-        this.activeModal = null;
-    }
-
     // ===== Lifecycle Management =====
 
     @Override
@@ -522,11 +508,6 @@ public abstract class BaseTownScreen<T extends TownInterfaceMenu> extends Abstra
      * Cleans up UI components like modals and popups.
      */
     private void cleanupUIComponents() {
-        if (activeModal != null) {
-            DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "Closing active modal");
-            activeModal = null;
-        }
-
         if (activePopup != null) {
             DebugConfig.debug(LOGGER, DebugConfig.UI_BASE_SCREEN, "Closing active popup");
             activePopup = null;

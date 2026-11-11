@@ -12,7 +12,6 @@ public final class ShowcaseButtonIds {
     public static final String EDIT_NAME = "town.bottom.edit_name";
     public static final String PRODUCTION = "town.bottom.production";
     public static final String UPGRADES = "town.bottom.upgrades";
-    public static final String ASSIGN_JOBS = "town.bottom.assign_jobs";
     public static final String VIEW_VISITORS = "town.bottom.view_visitors";
     public static final String SETTINGS_SET_PLATFORMS = "town.settings.set_platforms";
     public static final String PLATFORM_DESTINATIONS = "platform.destinations";

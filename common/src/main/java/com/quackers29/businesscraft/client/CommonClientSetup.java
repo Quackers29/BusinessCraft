@@ -12,10 +12,8 @@ import com.quackers29.businesscraft.menu.StorageMenu;
 import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import com.quackers29.businesscraft.menu.TradeMenu;
 import com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen;
-import com.quackers29.businesscraft.ui.screens.town.StorageScreen;
 import com.quackers29.businesscraft.ui.screens.platform.PlatformInterfaceScreen;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
-import com.quackers29.businesscraft.ui.screens.town.TradeScreen;
 import com.quackers29.businesscraft.ui.screens.town.ContractBoardScreen;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.gui.screens.Screen;
@@ -52,8 +50,6 @@ public class CommonClientSetup {
         LOGGER.info("Registering screens...");
 
         MenuScreens.register(CommonModMenuTypes.TOWN_INTERFACE_MENU.get(), TownInterfaceScreen::new);
-        MenuScreens.register(CommonModMenuTypes.TRADE_MENU.get(), TradeScreen::new);
-        MenuScreens.register(CommonModMenuTypes.STORAGE_MENU.get(), StorageScreen::new);
         MenuScreens.register(CommonModMenuTypes.PAYMENT_BOARD_MENU.get(), PaymentBoardScreen::new);
         MenuScreens.register(CommonModMenuTypes.CONTRACT_BOARD_MENU.get(), ContractBoardScreen::new);
         MenuScreens.register(CommonModMenuTypes.TOURIST_MENU.get(),

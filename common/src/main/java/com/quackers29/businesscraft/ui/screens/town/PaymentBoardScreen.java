@@ -4,7 +4,7 @@ import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.menu.PaymentBoardMenu;
 import com.quackers29.businesscraft.ui.util.InventoryRenderer;
 import com.quackers29.businesscraft.ui.util.ScreenNavigationHelper;
-import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
+import com.quackers29.businesscraft.ui.grid.UIGridBuilder;
 import com.quackers29.businesscraft.town.data.RewardEntry;
 import com.quackers29.businesscraft.town.data.ClaimStatus;
 import com.quackers29.businesscraft.town.data.RewardSource;

@@ -23,10 +23,8 @@ import com.quackers29.businesscraft.town.viewmodel.IViewModel;
 import com.quackers29.businesscraft.ui.modal.specialized.BCModalInventoryScreen;
 import com.quackers29.businesscraft.ui.modal.specialized.TownMapModal;
 import com.quackers29.businesscraft.ui.screens.town.PaymentBoardScreen;
-import com.quackers29.businesscraft.ui.screens.town.StorageScreen;
 import com.quackers29.businesscraft.ui.screens.town.TownInterfaceScreen;
 import com.quackers29.businesscraft.ui.screens.town.TownLeaderboardScreen;
-import com.quackers29.businesscraft.ui.screens.town.TradeScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
@@ -115,9 +113,7 @@ public final class ClientPacketHandler {
         }
         clientHelper.executeOnClientThread(() -> {
             Object currentScreen = clientHelper.getCurrentScreen();
-            if (currentScreen instanceof TradeScreen tradeScreen) {
-                tradeScreen.setOutputItem(packet.getPaymentItem());
-            } else if (currentScreen instanceof BCModalInventoryScreen<?> modalScreen
+            if (currentScreen instanceof BCModalInventoryScreen<?> modalScreen
                     && modalScreen.getMenu() instanceof TradeMenu tradeMenu) {
                 tradeMenu.setOutputItem(packet.getPaymentItem().copy());
             }
@@ -157,9 +153,7 @@ public final class ClientPacketHandler {
         }
         clientHelper.executeOnClientThread(() -> {
             Object currentScreen = clientHelper.getCurrentScreen();
-            if (currentScreen instanceof StorageScreen storageScreen) {
-                storageScreen.updateStorageItems(packet.getStorageItems());
-            } else if (currentScreen instanceof BCModalInventoryScreen<?> modalScreen
+            if (currentScreen instanceof BCModalInventoryScreen<?> modalScreen
                     && modalScreen.getMenu() instanceof StorageMenu storageMenu) {
                 storageMenu.updateStorageItems(packet.getStorageItems());
             }
@@ -187,9 +181,7 @@ public final class ClientPacketHandler {
         }
         clientHelper.executeOnClientThread(() -> {
             Object currentScreen = clientHelper.getCurrentScreen();
-            if (currentScreen instanceof StorageScreen storageScreen) {
-                storageScreen.updatePersonalStorageItems(packet.getStorageItems());
-            } else if (currentScreen instanceof BCModalInventoryScreen<?> modalScreen
+            if (currentScreen instanceof BCModalInventoryScreen<?> modalScreen
                     && modalScreen.getMenu() instanceof StorageMenu storageMenu) {
                 storageMenu.updatePersonalStorageItems(packet.getStorageItems());
             }

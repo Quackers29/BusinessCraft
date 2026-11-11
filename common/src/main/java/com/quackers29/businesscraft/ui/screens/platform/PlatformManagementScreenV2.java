@@ -4,7 +4,7 @@ import com.quackers29.businesscraft.api.PlatformAccess;
 import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.block.entity.TownInterfaceEntity;
 import com.quackers29.businesscraft.ui.util.ScreenNavigationHelper;
-import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
+import com.quackers29.businesscraft.ui.grid.UIGridBuilder;
 import com.quackers29.businesscraft.ui.util.InventoryRenderer;
 
 import net.minecraft.client.gui.GuiGraphics;
