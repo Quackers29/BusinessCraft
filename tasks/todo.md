@@ -67,7 +67,7 @@
 
 **2026-10-26 automated checks (this pass)**: `./gradlew test` pass; Forge `tools/showcase.sh` all-views (19), platform, tourists (16 looks), tourist-screen, two-towns — all PASS. Fabric client showcase and full survival playtest **not** run this pass.
 
-**Deferred (unchanged)**: Fabric class-split (unless smoke fails), localization, multiplayer playtest, `UIGridBuilder` refactor, GameTest for NEEDS-MC ledger rows (`toImprove.md`)
+**Deferred (unchanged)**: Fabric class-split (unless smoke fails), localization, multiplayer playtest, GameTest for NEEDS-MC ledger rows (`toImprove.md`)
 
 ---
 
@@ -86,7 +86,7 @@
 - Tourist Transport Contracts, prestige/"First to City", Town Interface worldgen → `ROADMAP_v1.md` / `v1_worldgen.md`
 - Localization sweep → `ROADMAP_v1.md`
 - Contract courier player-name lookup (shows ID/"Assigned" today) → `ROADMAP_v1.md`
-- `UIGridBuilder` refactor → `toImprove.md`
+- `UIGridBuilder` now lives in `ui/grid` as a facade over painter, input, cells, and list filling
 
 **Test + Docs Loop**: parked (seeds exhausted). Re-invoke when new logic lands.
 

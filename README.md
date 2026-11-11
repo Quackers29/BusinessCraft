@@ -193,15 +193,10 @@ The **Town Centre** block provides a tabbed interface for town overview, resourc
   - Distance-based milestone rewards
   - Player-specific claim history
 
-#### **🏪 Trade Screen** (`TradeScreen.java`)
-**✅ Commerce Interface**
-- Advanced trading system with inventory integration
-- Real-time trade validation and processing
-
-#### **📦 Storage Screen** (`StorageScreen.java`)
-**✅ Inventory Management**
-- Multi-tiered storage access (resources, communal, personal)
-- 18-slot buffer storage system integration
+#### **🏪 Trade and storage** (`BCModalInventoryScreen`)
+**✅ Commerce and inventory windows**
+- Trade, communal storage, and personal storage open as `BCModalInventoryScreen`
+- `TradeMenu` and `StorageMenu` are the menus behind those windows
 
 ### **Advanced UI Manager System**
 
