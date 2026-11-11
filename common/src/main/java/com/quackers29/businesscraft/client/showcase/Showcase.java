@@ -118,6 +118,10 @@ public final class Showcase {
                 plan = List.of();
                 LOGGER.info("Showcase tourist screen enabled: {} routes",
                         ShowcaseRouteRegistry.touristScreenRoutes().size());
+            } else if (ShowcaseSelection.productionTooltipMode(property)) {
+                ShowcaseAllViews.useRoutes(ShowcaseRouteRegistry.productionTooltipRoutes());
+                plan = List.of();
+                LOGGER.info("Showcase production tooltip enabled");
             } else if (ShowcaseSelection.allViewsMode(property)) {
                 ShowcaseAllViews.useRoutes(null);
                 plan = List.of();
@@ -203,7 +207,8 @@ public final class Showcase {
             }
             return;
         }
-        if (ShowcaseSelection.allViewsMode(property) || ShowcaseSelection.touristScreenMode(property)) {
+        if (ShowcaseSelection.allViewsMode(property) || ShowcaseSelection.touristScreenMode(property)
+                || ShowcaseSelection.productionTooltipMode(property)) {
             if (buildDone && minecraft.getSingleplayerServer() != null) {
                 ShowcaseSetup.prepareOnce(minecraft.getSingleplayerServer(), townPos);
             }

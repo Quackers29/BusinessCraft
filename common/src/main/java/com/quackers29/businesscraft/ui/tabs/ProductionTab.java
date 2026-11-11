@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
+import com.quackers29.businesscraft.ui.grid.StatusSymbol;
 
 /**
  * Production tab implementation (replaces Population tab).
@@ -166,9 +166,9 @@ public class ProductionTab extends BaseTownTab {
                         int pct = (int) (info.getProgressPercentage() * 100);
                         progress.add(pct + "%");
                     } else if (info.isUnlocked() && level <= info.getCurrentLevel()) {
-                        progress.add(UIGridBuilder.StatusSymbol.UNLOCKED);
+                        progress.add(StatusSymbol.UNLOCKED);
                     } else {
-                        progress.add(UIGridBuilder.StatusSymbol.LOCKED);
+                        progress.add(StatusSymbol.LOCKED);
                     }
 
                     // Build tooltip from SERVER-PROVIDED STRINGS (NO CALCULATIONS)
@@ -293,6 +293,22 @@ public class ProductionTab extends BaseTownTab {
      * // Removed to prevent duplication.
      * }
      */
+
+    public boolean showcaseTooltipReady() {
+        return contentComponent != null && contentComponent.showcaseTooltipReady();
+    }
+
+    public boolean showcasePinTooltip(int row) {
+        return contentComponent != null && contentComponent.showcasePinTooltip(row);
+    }
+
+    public int showcaseAnchorX() {
+        return contentComponent == null ? Integer.MIN_VALUE : contentComponent.showcaseAnchorX();
+    }
+
+    public int showcaseAnchorY() {
+        return contentComponent == null ? Integer.MIN_VALUE : contentComponent.showcaseAnchorY();
+    }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {

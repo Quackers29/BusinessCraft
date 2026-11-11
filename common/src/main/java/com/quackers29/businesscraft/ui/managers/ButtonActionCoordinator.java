@@ -125,15 +125,6 @@ public class ButtonActionCoordinator {
     }
 
     /**
-     * Handles the assign jobs action.
-     * Currently shows a placeholder message as the feature is not yet implemented.
-     */
-    public void handleAssignJobs() {
-        DebugConfig.debug(LOGGER, DebugConfig.UI_MANAGERS, "Handling assign jobs action (placeholder)");
-        screen.sendChatMessage("Job assignment feature coming soon!");
-    }
-
-    /**
      * Handles the view visitor history action.
      */
     public void handleViewVisitorHistory() {

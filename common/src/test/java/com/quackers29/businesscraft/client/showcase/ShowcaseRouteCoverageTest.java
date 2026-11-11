@@ -13,7 +13,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -74,7 +73,6 @@ class ShowcaseRouteCoverageTest {
                     || parent.startsWith("AbstractContainerScreen")
                     || parent.startsWith("BCModalGridScreen")
                     || parent.startsWith("BCModalInventoryScreen")
-                    || parent.startsWith("BCModalScreen")
                     || parent.startsWith("BCPopupScreen")
                     || parent.startsWith("BaseTownScreen")) {
                 return simple;
@@ -89,7 +87,7 @@ class ShowcaseRouteCoverageTest {
     }
 
     @Test
-    void exclusionsAreNonEmptyForLegacyScreens() {
-        assertFalse(ShowcaseRouteRegistry.coverageExclusions().isEmpty());
+    void noLegacyScreenExclusionsRemain() {
+        assertTrue(ShowcaseRouteRegistry.coverageExclusions().isEmpty());
     }
 }

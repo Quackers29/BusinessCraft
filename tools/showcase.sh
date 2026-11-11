@@ -13,6 +13,7 @@
 #   bash tools/showcase.sh tourists forge          # every tourist look, front and side
 #   bash tools/showcase.sh jade forge              # Jade tooltips (Town Centre, platforms, tourist)
 #   bash tools/showcase.sh tourist-screen forge   # vanilla merchant screen, then the tourist screen
+#   bash tools/showcase.sh production-tooltip forge   # upgrades list with the first tooltip open
 #   bash tools/showcase.sh tourist-screen-854-gui2 forge   # same shots at 854x480, gui scale 2
 #   bash tools/showcase.sh tourist-screen-854-gui3 forge   # same shots at 854x480, gui scale 3
 #   bash tools/showcase.sh tourist-screen-720-gui2 forge   # same shots at 1280x720, gui scale 2
@@ -277,6 +278,23 @@ elif [[ "$SCENES" == "tourist-screen" ]]; then
     fi
     if grep -q '"ok": false' "$MANIFEST" 2>/dev/null; then
         echo "One or more tourist screen routes failed (see manifest)" >&2
+        code=1
+    fi
+    if [[ -f "$MANIFEST" ]]; then
+        cp -f "$MANIFEST" "$SHOWCASE_RUN_DIR/showcase-views-manifest.json"
+        bash "$ROOT/tools/showcase-generate-index.sh" "$SHOWCASE_RUN_DIR/index.html" "$SHOWCASE_RUN_DIR/showcase-views-manifest.json"
+    fi
+elif [[ "$SCENES" == "production-tooltip" ]]; then
+    if [[ ! -f "$MANIFEST" ]]; then
+        echo "Missing showcase manifest: $MANIFEST" >&2
+        code=1
+    fi
+    if [[ "$view_count" -lt 1 ]]; then
+        echo "Expected a production tooltip view, found $view_count" >&2
+        code=1
+    fi
+    if grep -q '"ok": false' "$MANIFEST" 2>/dev/null; then
+        echo "Production tooltip route failed (see manifest)" >&2
         code=1
     fi
     if [[ -f "$MANIFEST" ]]; then

@@ -28,6 +28,11 @@ class ShowcaseSelectionTest {
         assertEquals(List.of(), ShowcaseSelection.shotsFor("tourists"));
         assertTrue(ShowcaseSelection.touristScreenMode("tourist-screen"));
         assertEquals(List.of(), ShowcaseSelection.shotsFor("tourist-screen"));
+        assertTrue(ShowcaseSelection.productionTooltipMode("production-tooltip"));
+        assertEquals(List.of(), ShowcaseSelection.shotsFor("production-tooltip"));
+        assertEquals(1, ShowcaseRouteRegistry.productionTooltipRoutes().size());
+        assertTrue(ShowcaseRouteRegistry.allRoutes().stream()
+                .noneMatch(route -> "town/production-tooltip".equals(route.name())));
         assertTrue(ShowcaseSelection.jadeMode("jade"));
         assertEquals(List.of(), ShowcaseSelection.shotsFor("jade"));
         assertEquals(4, ShowcaseJade.EXPECTED_SHOTS.size());

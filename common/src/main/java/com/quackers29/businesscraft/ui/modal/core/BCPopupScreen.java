@@ -1,7 +1,6 @@
 package com.quackers29.businesscraft.ui.modal.core;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
-import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import com.quackers29.businesscraft.ui.builders.BCComponentFactory;
 import com.quackers29.businesscraft.ui.components.basic.BCPanel;
 import com.quackers29.businesscraft.ui.components.basic.BCButton;

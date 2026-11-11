@@ -7,7 +7,6 @@ import com.quackers29.businesscraft.ui.templates.TownInterfaceTheme;
 import com.quackers29.businesscraft.ui.components.basic.BCComponent;
 import com.quackers29.businesscraft.ui.layout.BCFlowLayout;
 import com.quackers29.businesscraft.ui.builders.BCComponentFactory;
-import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
 import com.quackers29.businesscraft.ui.components.containers.StandardTabContent;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;

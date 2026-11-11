@@ -1,7 +1,7 @@
 package com.quackers29.businesscraft.ui.screens.town;
 
 import com.quackers29.businesscraft.town.data.TownLeaderboardData;
-import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
+import com.quackers29.businesscraft.ui.grid.UIGridBuilder;
 import com.quackers29.businesscraft.ui.templates.TownInterfaceTheme;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;

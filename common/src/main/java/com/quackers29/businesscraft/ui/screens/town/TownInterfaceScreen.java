@@ -4,6 +4,7 @@ import com.quackers29.businesscraft.menu.TownInterfaceMenu;
 import com.quackers29.businesscraft.platform.Platform;
 import com.quackers29.businesscraft.ui.managers.*;
 import com.quackers29.businesscraft.ui.screens.BaseTownScreen;
+import com.quackers29.businesscraft.ui.tabs.ProductionTab;
 import com.quackers29.businesscraft.ui.tabs.ResourcesTab;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -127,15 +128,6 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
     }
 
     @Override
-    public void onAssignJobs() {
-        if (dependencies != null) {
-            dependencies.getButtonCoordinator().handleAssignJobs();
-        } else {
-            sendChatMessage("Job assignment feature coming soon!");
-        }
-    }
-
-    @Override
     public void onViewVisitorHistory() {
         if (dependencies != null) {
             dependencies.getButtonCoordinator().handleViewVisitorHistory();
@@ -241,18 +233,6 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
         return cacheManager.getTouristString();
     }
 
-    // ===== Legacy Modal Methods - Now Handled by Coordinators =====
-    // These methods are kept for backwards compatibility but delegate to
-    // coordinators
-
-    /**
-     * Close the active modal if one exists
-     */
-    @Override
-    protected void closeActiveModal() {
-        this.activeModal = null;
-    }
-
     /**
      * Force refresh the resources tab when resource changes are detected
      * This can be called externally when resource updates occur
@@ -273,6 +253,32 @@ public class TownInterfaceScreen extends BaseTownScreen<TownInterfaceMenu>
      */
     public TownDataCacheManager getCacheManager() {
         return cacheManager;
+    }
+
+    public boolean showcaseProductionTooltipReady() {
+        return productionTab() != null && productionTab().showcaseTooltipReady();
+    }
+
+    public boolean showcasePinProductionTooltip(int row) {
+        return productionTab() != null && productionTab().showcasePinTooltip(row);
+    }
+
+    public int showcaseProductionAnchorX() {
+        ProductionTab tab = productionTab();
+        return tab == null ? Integer.MIN_VALUE : tab.showcaseAnchorX();
+    }
+
+    public int showcaseProductionAnchorY() {
+        ProductionTab tab = productionTab();
+        return tab == null ? Integer.MIN_VALUE : tab.showcaseAnchorY();
+    }
+
+    private ProductionTab productionTab() {
+        if (tabController == null) {
+            return null;
+        }
+        Object tab = tabController.getTab("production");
+        return tab instanceof ProductionTab production ? production : null;
     }
 
     /**

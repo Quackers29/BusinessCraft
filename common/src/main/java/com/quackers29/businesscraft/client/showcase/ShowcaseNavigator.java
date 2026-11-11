@@ -7,7 +7,7 @@ import com.quackers29.businesscraft.entity.TouristType;
 import com.quackers29.businesscraft.entity.tourist.TouristLook;
 import com.quackers29.businesscraft.entity.tourist.TouristLooks;
 import com.quackers29.businesscraft.town.Town;
-import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
+import com.quackers29.businesscraft.ui.grid.UIGridBuilder;
 import com.quackers29.businesscraft.ui.screens.TouristScreen;
 import com.quackers29.businesscraft.ui.managers.BottomButtonManager;
 import com.quackers29.businesscraft.ui.screens.BaseTownScreen;
@@ -18,6 +18,7 @@ import com.quackers29.businesscraft.ui.screens.town.TownLeaderboardScreen;
 import com.quackers29.businesscraft.ui.tabs.SettingsTab;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import org.lwjgl.glfw.GLFW;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.MinecraftServer;
@@ -109,6 +110,14 @@ public final class ShowcaseNavigator {
             }
             return "tourist screen not open for hover";
         }
+        if (step.startsWith("hover-production-tooltip:")) {
+            int row = Integer.parseInt(step.substring("hover-production-tooltip:".length()));
+            if (!(minecraft.screen instanceof TownInterfaceScreen town) || !town.showcasePinProductionTooltip(row)) {
+                return "production tooltip not ready";
+            }
+            moveCursor(minecraft, town.showcaseProductionAnchorX(), town.showcaseProductionAnchorY());
+            return null;
+        }
         if (step.startsWith("scroll-tourist:")) {
             int rows = Integer.parseInt(step.substring("scroll-tourist:".length()));
             if (minecraft.screen instanceof TouristScreen screen) {
@@ -153,6 +162,9 @@ public final class ShowcaseNavigator {
             return minecraft.screen instanceof PlatformManagementScreenV2 platform
                     && platform.showcaseHasPlatforms();
         }
+        if (step.startsWith("wait-for-production-tooltip:")) {
+            return minecraft.screen instanceof TownInterfaceScreen town && town.showcaseProductionTooltipReady();
+        }
         if (step.startsWith("wait-for-platform-block:")) {
             BlockPos pos = ShowcasePlatforms.lastPlaced();
             if (pos == null) {
@@ -169,7 +181,8 @@ public final class ShowcaseNavigator {
     public static int waitTimeoutTicks(String step) {
         if (step.startsWith("wait-for-screen:") || step.startsWith("wait-tab:")
                 || step.startsWith("wait-for-popup:") || step.startsWith("wait-for-contracts:")
-                || step.startsWith("wait-for-platforms:") || step.startsWith("wait-for-platform-block:")) {
+                || step.startsWith("wait-for-platforms:") || step.startsWith("wait-for-platform-block:")
+                || step.startsWith("wait-for-production-tooltip:")) {
             String[] parts = step.split(":");
             String timeout = parts.length >= 3 ? parts[2] : parts.length == 2 ? parts[1] : "";
             if (!timeout.isEmpty()) {
@@ -187,7 +200,8 @@ public final class ShowcaseNavigator {
     public static boolean isWaitStep(String step) {
         return step.startsWith("wait-for-screen:") || step.startsWith("wait-tab:")
                 || step.startsWith("wait-for-popup:") || step.startsWith("wait-for-contracts:")
-                || step.startsWith("wait-for-platforms:") || step.startsWith("wait-for-platform-block:");
+                || step.startsWith("wait-for-platforms:") || step.startsWith("wait-for-platform-block:")
+                || step.startsWith("wait-for-production-tooltip:");
     }
 
     private static boolean pressButton(Minecraft minecraft, String id, String label) {
@@ -359,5 +373,12 @@ public final class ShowcaseNavigator {
                         new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false));
             }
         });
+    }
+
+    /** Moves the OS cursor so the next frames hit the production cell for real. */
+    private static void moveCursor(Minecraft minecraft, int guiX, int guiY) {
+        var window = minecraft.getWindow();
+        double scale = window.getGuiScale();
+        GLFW.glfwSetCursorPos(window.getWindow(), guiX * scale, guiY * scale);
     }
 }

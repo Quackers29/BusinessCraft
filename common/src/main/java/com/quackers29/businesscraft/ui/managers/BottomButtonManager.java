@@ -2,7 +2,7 @@ package com.quackers29.businesscraft.ui.managers;
 
 import com.quackers29.businesscraft.client.showcase.ShowcaseButtonIds;
 import com.quackers29.businesscraft.ui.templates.TownInterfaceTheme;
-import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
+import com.quackers29.businesscraft.ui.grid.UIGridBuilder;
 import net.minecraft.client.gui.GuiGraphics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +24,6 @@ public class BottomButtonManager {
         void onTradeResources();
 
         void onManageStorage();
-
-        void onAssignJobs();
 
         void onViewVisitorHistory();
 
@@ -160,10 +158,6 @@ public class BottomButtonManager {
                 configureResourcesButtons();
                 break;
 
-            case "population":
-                configurePopulationButtons();
-                break;
-
             case "production":
                 configureProductionButtons();
                 break;
@@ -215,19 +209,6 @@ public class BottomButtonManager {
                         v -> actionHandler.onManageStorage(), TownInterfaceTheme.SECONDARY_COLOR)
                 .addButtonWithTooltip(0, 2, ShowcaseButtonIds.CONTRACTS, "Contracts", "View and manage contracts",
                         v -> actionHandler.onContractBoard(), TownInterfaceTheme.ACCENT_COLOR);
-    }
-
-    /**
-     * Configures buttons for the Population tab.
-     */
-    private void configurePopulationButtons() {
-        bottomButtonsGrid
-                .addButtonWithTooltip(0, 0, ShowcaseButtonIds.ASSIGN_JOBS, "Assign Jobs",
-                        "Assign jobs to town citizens",
-                        v -> actionHandler.onAssignJobs(), TownInterfaceTheme.PRIMARY_COLOR)
-                .addButtonWithTooltip(0, 1, ShowcaseButtonIds.VIEW_VISITORS, "View Visitors",
-                        "View history of visitors to your town",
-                        v -> actionHandler.onViewVisitorHistory(), TownInterfaceTheme.SECONDARY_COLOR);
     }
 
     /**

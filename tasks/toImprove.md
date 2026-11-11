@@ -200,5 +200,5 @@ Plus smaller residuals noted in ledger rows: `ContractBoard.closeAuctions()` orc
 
 **Approach**: Set up Minecraft GameTest framework (or fabric-loom test harness) in a platform module so these flows can run against a real headless server. Revisit after v1.0 ships.
 
-### UIGridBuilder refactor (from v1 release review)
-`UIGridBuilder.java` (2,647 lines) — split into focused builder/layout/render concerns. Deferred from the v1.0 release plan as post-release maintainability work.
+### UIGridBuilder refactor (done)
+`UIGridBuilder` is the public facade in `ui/grid`. Painting, input, cell construction, and list filling are separate package classes. The unused `ui/builders/grid` attempt was removed.

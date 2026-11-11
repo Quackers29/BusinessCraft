@@ -10,11 +10,7 @@ import java.util.Set;
  * Canonical list of BusinessCraft UI routes for the all-views showcase harness.
  */
 public final class ShowcaseRouteRegistry {
-    private static final List<ShowcaseCoverageExclusion> EXCLUSIONS = List.of(
-            new ShowcaseCoverageExclusion("TradeScreen",
-                    "Legacy MenuScreens handler; trade UI opens only via BCModalInventoryScreen (route town/trade)."),
-            new ShowcaseCoverageExclusion("StorageScreen",
-                    "Legacy MenuScreens handler; communal/personal storage opens only via BCModalInventoryScreen."));
+    private static final List<ShowcaseCoverageExclusion> EXCLUSIONS = List.of();
 
     private static final List<ShowcaseRoute> ROUTES = buildRoutes();
 
@@ -44,6 +40,22 @@ public final class ShowcaseRouteRegistry {
                 "scroll-tourist:4",
                 "hover-tourist-trade:5")));
         return List.copyOf(routes);
+    }
+
+    /**
+     * Upgrades list with the cursor over the first row. Not part of
+     * {@link #allRoutes()} so the full UI sweep stays the same length.
+     */
+    public static List<ShowcaseRoute> productionTooltipRoutes() {
+        return List.of(new ShowcaseRoute("town/production-tooltip", List.of(
+                "setup:world",
+                "open-town",
+                "wait-for-screen:TownInterfaceScreen:120",
+                "set-tab:production",
+                "wait-tab:production",
+                "press-button:id:" + ShowcaseButtonIds.UPGRADES,
+                "wait-for-production-tooltip:400",
+                "hover-production-tooltip:0")));
     }
 
     public static List<ShowcaseCoverageExclusion> coverageExclusions() {

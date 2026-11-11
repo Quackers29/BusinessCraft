@@ -9,7 +9,7 @@ import com.quackers29.businesscraft.menu.ContractBoardMenu;
 import com.quackers29.businesscraft.network.packets.ui.BidContractPacket;
 import com.quackers29.businesscraft.network.packets.ui.RequestContractListPacket;
 import com.quackers29.businesscraft.client.showcase.ShowcaseButtonIds;
-import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
+import com.quackers29.businesscraft.ui.grid.UIGridBuilder;
 import com.quackers29.businesscraft.ui.managers.TownDataCacheManager;
 import com.quackers29.businesscraft.ui.util.InventoryRenderer;
 import com.quackers29.businesscraft.ui.util.ScreenNavigationHelper;

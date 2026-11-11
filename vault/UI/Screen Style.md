@@ -27,6 +27,8 @@ Spacing steps are 4, 8, 12, and 16. A scrollbar is a 3px gold thumb. Tooltips ar
 |---|---|---|
 | `UiTheme` | `common/src/main/java/com/quackers29/businesscraft/ui/theme/UiTheme.java` | Palette, spacing, button, toggle, and scrollbar sizes |
 | `UiTooltip.place` | `common/src/main/java/com/quackers29/businesscraft/ui/theme/UiTooltip.java` | Keeps a tooltip box inside the scaled screen |
+| `UIGridBuilder` | `common/src/main/java/com/quackers29/businesscraft/ui/grid/UIGridBuilder.java` | Public grid API. Painting, input, cells, and list filling are package helpers |
+| `GridPainter` | `common/src/main/java/com/quackers29/businesscraft/ui/grid/GridPainter.java` | Draws cells, scrollbars, and vanilla grid tooltips |
 | `UiTextWrap.ellipsize` | `common/src/main/java/com/quackers29/businesscraft/ui/util/UiTextWrap.java` | Cuts a label to a pixel width |
 | `UiLabelLayout.placeY` | `common/src/main/java/com/quackers29/businesscraft/ui/util/UiLabelLayout.java` | Nudges overlapping map labels down |
 | `TownInterfaceTheme` | `common/src/main/java/com/quackers29/businesscraft/ui/templates/TownInterfaceTheme.java` | Town colour names, now aliases of `UiTheme` |
@@ -48,16 +50,15 @@ Panel `0xF014161C`, border `0xFFD7B56D`, section `0xFF1A1F2A`, text `0xFFFFFFFF`
 - Light green and light red are status and toggle colours. Claim and other actions use the neutral button so white text stays readable.
 - The shared Town Centre panel stays 256×204. Settings shrinks only the button well, so switching tabs does not resize the window.
 - Storage slot grids stay 2×9 because that is the menu layout, not a display cap.
-- `TradeScreen` and `StorageScreen` are still registered. The live trade window is `BCModalInventoryScreen`.
+- Trade and storage open as `BCModalInventoryScreen`. `TradeMenu` and `StorageMenu` stay registered; there is no separate trade or storage screen.
 
 ## Test coverage
+- Test file: `common/src/test/java/com/quackers29/businesscraft/ui/theme/UiTooltipTest.java` covers the scaled-screen inset.
 - Test file: `common/src/test/java/com/quackers29/businesscraft/ui/util/UiTextWrapTest.java` covers ellipsis width and overlapping label nudge.
 - Test file: `common/src/test/java/com/quackers29/businesscraft/config/ConfigLoaderTest.java` covers the new defaults when keys are absent, and a save/load round trip for page size and the fast radius step.
 - `ContractSummaryViewModelBuilderTest.build_pageSizeZeroOrNegative_clampsToDefault20` still expects 20, which is the config default.
 
 ## Open questions
-- `UIGridBuilder` is still one large class. Splitting it is a follow-up.
-- Unused UI (`ui/builders/grid`, `BCModalScreen`, `BCScreenTemplates`, `TabComponent`, the population button branch) is still in the tree.
 - The edit-name popup is still 300×150. That size is chrome, not a gameplay cap.
 
 ## Related

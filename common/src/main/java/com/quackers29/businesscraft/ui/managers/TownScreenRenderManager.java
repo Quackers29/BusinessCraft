@@ -1,7 +1,6 @@
 package com.quackers29.businesscraft.ui.managers;
 
 import com.quackers29.businesscraft.ui.templates.TownInterfaceTheme;
-import com.quackers29.businesscraft.ui.modal.core.BCModalScreen;
 import com.quackers29.businesscraft.ui.modal.core.BCPopupScreen;
 import com.quackers29.businesscraft.ui.components.containers.BCTabPanel;
 import com.quackers29.businesscraft.ui.components.basic.BCPanel;
@@ -42,7 +41,6 @@ public class TownScreenRenderManager {
     public interface ComponentProvider {
         BCTabPanel getTabPanel();
         BottomButtonManager getButtonManager();
-        BCModalScreen getActiveModal();
         BCPopupScreen getActivePopup();
     }
     
@@ -259,11 +257,5 @@ public class TownScreenRenderManager {
             activePopup.render(graphics, 0, 0, mouseX, mouseY);
         }
         
-        // If we have an active modal, render it last to ensure it's on top of everything
-        BCModalScreen activeModal = componentProvider.getActiveModal();
-        if (activeModal != null) {
-            // The modal now handles its own matrix transformations internally
-            activeModal.render(graphics, 0, 0, mouseX, mouseY);
-        }
     }
 } 
