@@ -208,11 +208,18 @@ public final class ShowcasePlatforms {
     }
 
     static void applyDestinationDemo(ServerLevel level, BlockPos townPos, DestinationDemoMode mode) {
-        if (!(level.getBlockEntity(townPos) instanceof TownInterfaceEntity townInterface)) {
+        applyDestinationDemo(level, townPos, firstPlatformId, mode);
+    }
+
+    /**
+     * Applies destination demo state to a specific platform (used by Jade and platform UI showcase).
+     */
+    public static void applyDestinationDemo(ServerLevel level, BlockPos townPos, UUID platformId,
+            DestinationDemoMode mode) {
+        if (platformId == null || mode == null) {
             return;
         }
-        UUID platformId = firstPlatformId;
-        if (platformId == null) {
+        if (!(level.getBlockEntity(townPos) instanceof TownInterfaceEntity townInterface)) {
             return;
         }
         Platform platform = townInterface.getPlatform(platformId);

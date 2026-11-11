@@ -21,7 +21,13 @@
     ],
     "client": [
       "com.quackers29.businesscraft.fabric.FabricClientSetup"
+    ],
+    "jade": [
+      "com.quackers29.businesscraft.integration.jade.BusinessCraftJadePlugin"
     ]
+  },
+  "suggests": {
+    "jade": "*"
   },
   "depends": {
     "fabricloader": ">=0.15.6",

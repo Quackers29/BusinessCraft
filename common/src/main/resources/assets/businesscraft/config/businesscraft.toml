@@ -161,3 +161,11 @@
 [research]
 enabled = false
 # Enable research/upgrade system
+
+[jade]
+    # Jade (WAILA-style) tooltips — only apply when the Jade mod is installed
+    platformInterface = true
+    townInterface = true
+    tourist = true
+    # Top learned towns listed on Platform Interface tooltips in AUTO mode
+    maxLearnedRoutesInTooltip = 3
