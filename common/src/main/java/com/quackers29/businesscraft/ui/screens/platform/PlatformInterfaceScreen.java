@@ -55,6 +55,9 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
     private final List<Destination> destinations = new ArrayList<>();
     private final List<RefreshDestinationsPacket.LearnedRouteEntry> learnedRoutes = new ArrayList<>();
     private DestinationMode destinationMode = DestinationMode.AUTO;
+    /** Set once {@link #receiveDestinations} has applied a server payload. The multiplayer smoke reads this. */
+    private boolean smokeDataReceived;
+    private String smokePlatformName = "";
     private final List<Hit> hits = new ArrayList<>();
     private int scroll;
     private int contentHeight;
@@ -76,6 +79,8 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
             List<RefreshDestinationsPacket.LearnedRouteEntry> learned) {
         destinations.clear();
         learnedRoutes.clear();
+        this.smokePlatformName = platformName == null ? "" : platformName;
+        this.smokeDataReceived = true;
         if (mode != null) {
             this.destinationMode = mode;
         }
@@ -644,6 +649,41 @@ public class PlatformInterfaceScreen extends AbstractContainerScreen<PlatformInt
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    /** Multiplayer smoke: the server has pushed destination state into this screen. */
+    public boolean smokeDataReceived() {
+        return smokeDataReceived;
+    }
+
+    public String smokePlatformName() {
+        return smokePlatformName;
+    }
+
+    public DestinationMode smokeDestinationMode() {
+        return destinationMode;
+    }
+
+    public List<RefreshDestinationsPacket.LearnedRouteEntry> smokeLearnedRoutes() {
+        return List.copyOf(learnedRoutes);
+    }
+
+    /** Platform power toggle from the synced block entity, or null when that list has not arrived. */
+    public Boolean smokePlatformEnabled() {
+        Platform platform = currentPlatform();
+        return platform == null ? null : platform.isEnabled();
+    }
+
+    public List<SmokeTownRow> smokeDestinationRows() {
+        List<SmokeTownRow> rows = new ArrayList<>();
+        for (Destination destination : destinations) {
+            rows.add(new SmokeTownRow(destination.name, destination.enabled, destination.distance, destination.direction));
+        }
+        return rows;
+    }
+
+    /** One destination row as the platform screen is showing it. */
+    public record SmokeTownRow(String name, boolean enabled, int distance, String direction) {
     }
 
     private static final class Destination {

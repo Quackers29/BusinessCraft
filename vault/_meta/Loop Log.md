@@ -3,6 +3,7 @@
 One line per completed iteration: `YYYY-MM-DD | ID | STATUS | summary`. Use the REAL current date (`wsl date +%F`), never a guessed one.
 
 ---
+2026-11-11 | T-042 | DOC-ONLY | Multiplayer client agreement: dedicated-server smoke compares two clients' tourist tags, clipboard lines, platform mode, and learned routes; vault note + tools/multiplayer-smoke.sh
 2026-06-11 | T-001 | DONE | Distance payment formula documented + 10 tests (reflection on private calculatePayment); count=0 quirk pinned; pilot iteration validated protocol
 2026-06-11 | T-002 | NEEDS-MC | DistanceMilestoneHelper documented; 8 guard/getter tests; positive threshold+reward path blocked by ItemStack static init
 2026-06-11 | T-003 | NEEDS-MC | Auction resolution documented (closeAuctions flow, courier cost ceil(dist/10), bid rounding, snail fallback); 11 tests; courier+orchestration blocked by Town ctor

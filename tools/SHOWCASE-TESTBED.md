@@ -35,6 +35,8 @@ Symlinks: `showcase-output/latest`, `showcase-output/latest_<mode>_<loader>`, an
 
 Set `SHOWCASE_ARTIFACT_DIR=/opt/cursor/artifacts/...` to mirror a copy elsewhere. The `showcase-output/` tree is gitignored.
 
+Dedicated-server agreement between two clients (Forge, then Fabric) is `bash tools/multiplayer-smoke.sh`. See [MULTIPLAYER-SMOKE.md](MULTIPLAYER-SMOKE.md).
+
 ## Registered checks
 
 | Name | Purpose |

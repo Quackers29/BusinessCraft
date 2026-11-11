@@ -1,0 +1,144 @@
+// Dev-only command dump for tools/multiplayer-smoke.sh.
+// Gradle 8's JavaExec always launches the toolchain java, so the smoke script
+// cannot wrap that binary. This records the command in doFirst and skips the launch.
+// -PmpSmoke=setup|observe
+// -PmpSmokePort=25565
+// -PmpSmokeDumpCommand=/tmp/client.json
+// -PshowcaseWidth / -PshowcaseHeight add client window args
+
+tasks.configureEach { task ->
+    if (task.name != 'runClient' && task.name != 'runServer') {
+        return
+    }
+    def mpSmoke = project.findProperty('mpSmoke')
+    if (mpSmoke != null && !mpSmoke.toString().trim().isEmpty()) {
+        task.systemProperty 'businesscraft.multiplayerSmoke', mpSmoke.toString().trim()
+    }
+    def mpSmokePort = project.findProperty('mpSmokePort')
+    if (mpSmokePort != null && !mpSmokePort.toString().trim().isEmpty()) {
+        task.systemProperty 'businesscraft.multiplayerSmoke.port', mpSmokePort.toString().trim()
+    }
+    def width = project.findProperty('showcaseWidth')
+    def height = project.findProperty('showcaseHeight')
+    if (mpSmoke != null && width != null && height != null) {
+        task.args '--width', width.toString(), '--height', height.toString()
+    }
+
+    task.doFirst {
+        def dump = project.findProperty('mpSmokeDumpCommand')
+        if (dump == null || dump.toString().trim().isEmpty()) {
+            return
+        }
+        def forge = task.class.methods.any { it.name == 'getRunConfig' }
+        def spec = forge ? project.dumpForge(task) : project.dumpFabric(task)
+        def file = project.file(dump.toString())
+        file.parentFile.mkdirs()
+        file.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(spec))
+        logger.lifecycle("MP_SMOKE_COMMAND ${file.absolutePath}")
+        throw new org.gradle.api.tasks.StopExecutionException('mp smoke command dumped')
+    }
+}
+
+ext.dumpForge = { task ->
+    def cfg = task.runConfig.get()
+    def pluginLoader = task.class.classLoader
+    def gen = pluginLoader.loadClass('net.minecraftforge.gradle.common.util.runs.RunConfigGenerator')
+    def runConfigClass = pluginLoader.loadClass('net.minecraftforge.gradle.common.util.RunConfig')
+    def mapMods = gen.getDeclaredMethod('mapModClassesToGradle', org.gradle.api.Project, runConfigClass)
+    mapMods.accessible = true
+    def mods = mapMods.invoke(null, task.project, cfg)
+    def configure = gen.getDeclaredMethod('configureTokensLazy', org.gradle.api.Project,
+            runConfigClass, java.util.stream.Stream,
+            org.gradle.api.file.FileCollection, org.gradle.api.file.FileCollection)
+    configure.accessible = true
+    def tokens = configure.invoke(null, task.project, cfg, mods, task.minecraftArtifacts, task.runtimeClasspathArtifacts)
+    def argsStream = gen.getDeclaredMethod('getArgsStream', runConfigClass,
+            java.util.Map, boolean.class)
+    argsStream.accessible = true
+    def program = (argsStream.invoke(null, cfg, tokens, false) as java.util.stream.Stream)
+            .collect(java.util.stream.Collectors.toList())
+    def extraArgs = task.getArgs()
+    if (extraArgs != null) {
+        program.addAll(extraArgs.collect { it.toString() })
+    }
+    if (task.class.methods.any { it.name == 'getAdditionalClientArgs' }) {
+        task.additionalClientArgs.get().each { raw ->
+            program << cfg.replace(tokens, raw.toString())
+        }
+    }
+    def env = new LinkedHashMap<String, String>()
+    cfg.environment.each { key, value ->
+        env[key.toString()] = cfg.replace(tokens, value.toString())
+    }
+    def jvm = cfg.jvmArgs.collect { cfg.replace(tokens, it.toString()) }
+    def props = new LinkedHashMap<String, String>()
+    cfg.properties.each { key, value -> props[key.toString()] = cfg.replace(tokens, value.toString()) }
+    task.systemProperties.each { key, value -> props[key.toString()] = value.toString() }
+    def classpath = []
+    cfg.allSources.each { sourceSet ->
+        sourceSet.runtimeClasspath.files.each { classpath << it.absolutePath }
+    }
+    def javaBin = task.javaLauncher.get().executablePath.asFile.absolutePath
+    def workFile = new File(cfg.workingDirectory.toString())
+    if (!workFile.isAbsolute()) {
+        workFile = new File(task.project.projectDir, cfg.workingDirectory.toString())
+    }
+    return [
+            executable      : javaBin,
+            workingDir      : workFile.absolutePath,
+            mainClass       : cfg.main,
+            classpath       : classpath,
+            jvmArgs         : jvm,
+            systemProperties: props,
+            environment     : env,
+            args            : program.collect { it.toString() },
+    ]
+}
+
+ext.dumpFabric = { task ->
+    def jvm = []
+    def resolved = task.jvmArguments.get()
+    if (resolved != null) {
+        jvm.addAll(resolved.collect { it.toString() })
+    }
+    def configField = null
+    def type = task.class
+    while (type != null && configField == null) {
+        try {
+            configField = type.getDeclaredField('config')
+        } catch (NoSuchFieldException ignored) {
+            type = type.superclass
+        }
+    }
+    if (configField == null) {
+        throw new NoSuchFieldException('Loom run config field')
+    }
+    configField.accessible = true
+    def config = configField.get(task)
+    def work = new File(task.project.projectDir, config.runDir.toString()).absolutePath
+    def javaBin = task.javaLauncher.get().executablePath.asFile.absolutePath
+    def props = new LinkedHashMap<String, String>()
+    task.systemProperties.each { key, value -> props[key.toString()] = value.toString() }
+    def program = task.getArgs().collect { it.toString() }
+    if (config.programArgs != null) {
+        config.programArgs.each { arg ->
+            if (!program.contains(arg.toString())) {
+                program << arg.toString()
+            }
+        }
+    }
+    def env = new LinkedHashMap<String, String>()
+    if (config.environmentVariables != null) {
+        config.environmentVariables.each { key, value -> env[key.toString()] = value.toString() }
+    }
+    return [
+            executable      : javaBin,
+            workingDir      : work,
+            mainClass       : task.mainClass.get(),
+            classpath       : [],
+            jvmArgs         : jvm,
+            systemProperties: props,
+            environment     : env,
+            args            : program,
+    ]
+}

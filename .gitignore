@@ -3,10 +3,13 @@
 /common/build
 /common/logs
 /forge/run
+/forge/run-mp-*/
 /forge/build
 /fabric/build
 /fabric/run
+/fabric/run-mp-*/
 /showcase-output/
+tools/__pycache__/
 # Obsidian local UI state (per-machine; not shared docs)
 vault/.obsidian/
 # Loom/Gradle caches under the Fabric module (root /.gradle does not cover this)
