@@ -336,19 +336,19 @@ public class BCPopupScreen extends BCPanel {
         guiGraphics.pose().translate(0, 0, 100);
         
         // Draw semi-transparent overlay behind popup
-        guiGraphics.fill(0, 0, screenWidth, screenHeight, 0xA0000000);
+        guiGraphics.fill(0, 0, screenWidth, screenHeight, com.quackers29.businesscraft.ui.theme.UiTheme.OVERLAY);
         
-        // Draw popup background (dark gray)
-        guiGraphics.fill(popupX, popupY, popupX + this.width, popupY + this.height, 0xFF333333);
+        guiGraphics.fill(popupX, popupY, popupX + this.width, popupY + this.height,
+                com.quackers29.businesscraft.ui.theme.UiTheme.PANEL);
         
-        // Draw border around popup
-        guiGraphics.hLine(popupX, popupX + this.width - 1, popupY, 0xFFFFFFFF);
-        guiGraphics.hLine(popupX, popupX + this.width - 1, popupY + this.height - 1, 0xFFFFFFFF);
-        guiGraphics.vLine(popupX, popupY, popupY + this.height - 1, 0xFFFFFFFF);
-        guiGraphics.vLine(popupX + this.width - 1, popupY, popupY + this.height - 1, 0xFFFFFFFF);
+        int frame = com.quackers29.businesscraft.ui.theme.UiTheme.BORDER;
+        guiGraphics.hLine(popupX, popupX + this.width - 1, popupY, frame);
+        guiGraphics.hLine(popupX, popupX + this.width - 1, popupY + this.height - 1, frame);
+        guiGraphics.vLine(popupX, popupY, popupY + this.height - 1, frame);
+        guiGraphics.vLine(popupX + this.width - 1, popupY, popupY + this.height - 1, frame);
         
         // Define layout constants
-        final int padding = 20;
+        final int padding = com.quackers29.businesscraft.ui.theme.UiTheme.SPACE_4;
         final int titleHeight = 30;
         
         // Render buttons
@@ -361,57 +361,50 @@ public class BCPopupScreen extends BCPanel {
         // Draw title - centered at top
         Object fontObj = clientHelper.getFont();
         if (fontObj instanceof net.minecraft.client.gui.Font font) {
-            guiGraphics.drawCenteredString(
-                font,
-                Component.literal(this.title),
-                popupX + this.width / 2,
-                popupY + padding,
-                0xFFFFFFFF
-            );
+            int titleW = font.width(this.title);
+            guiGraphics.drawString(font, this.title, popupX + (this.width - titleW) / 2, popupY + padding,
+                    com.quackers29.businesscraft.ui.theme.UiTheme.GOLD, false);
             
-            // Draw instruction text if this is an input popup
             if (type == PopupType.STRING_INPUT || type == PopupType.NUMERIC_INPUT) {
-                String instruction = "Enter " + (type == PopupType.NUMERIC_INPUT ? "value:" : "text:");
+                String instruction = type == PopupType.NUMERIC_INPUT ? "Value" : "Town name";
                 guiGraphics.drawString(
                     font,
                     instruction,
                     popupX + padding,
                     popupY + padding + titleHeight,
-                    0xFFFFFFFF
+                    com.quackers29.businesscraft.ui.theme.UiTheme.MUTED,
+                    false
                 );
             }
             
-            // Cancel button (blue)
             guiGraphics.fill(
                 buttonStartX, 
                 buttonY, 
                 buttonStartX + buttonWidth, 
                 buttonY + 20, 
-                0xFF5555AA // Blue shade matching your UI
+                com.quackers29.businesscraft.ui.theme.UiTheme.OFF_BG
             );
-            guiGraphics.drawCenteredString(
-                font,
-                Component.literal("Cancel"),
-                buttonStartX + buttonWidth / 2,
-                buttonY + 6,
-                0xFFFFFFFF
-            );
+            String cancel = "Cancel";
+            guiGraphics.drawString(font, cancel,
+                    buttonStartX + (buttonWidth - font.width(cancel)) / 2,
+                    buttonY + 6,
+                    com.quackers29.businesscraft.ui.theme.UiTheme.OFF_FG,
+                    false);
             
-            // OK button (green)
             guiGraphics.fill(
                 buttonStartX + buttonWidth + buttonSpacing, 
                 buttonY, 
                 buttonStartX + buttonWidth * 2 + buttonSpacing, 
                 buttonY + 20, 
-                0xFF55AA55 // Green shade matching your UI
+                com.quackers29.businesscraft.ui.theme.UiTheme.ON_BG
             );
-            guiGraphics.drawCenteredString(
-                font,
-                Component.literal("OK"),
-                buttonStartX + buttonWidth + buttonSpacing + buttonWidth / 2,
-                buttonY + 6,
-                0xFFFFFFFF
-            );
+            String ok = "OK";
+            int okX = buttonStartX + buttonWidth + buttonSpacing;
+            guiGraphics.drawString(font, ok,
+                    okX + (buttonWidth - font.width(ok)) / 2,
+                    buttonY + 6,
+                    com.quackers29.businesscraft.ui.theme.UiTheme.ON_FG,
+                    false);
         }
         
         // Render EditBox with proper positioning

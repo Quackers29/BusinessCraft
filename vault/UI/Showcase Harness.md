@@ -63,4 +63,5 @@ The two-player smoke uses the same name list, the same screen record, and the sa
 ## Related
 - [[Home]]
 - [[Town/Town Overview]]
+- [[UI/Screen Style]]
 - [[Tourists/Spawning/Multiplayer Client Agreement]]

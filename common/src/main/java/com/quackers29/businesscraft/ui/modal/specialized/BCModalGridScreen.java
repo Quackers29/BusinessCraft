@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.ui.modal.specialized;
 
 import com.quackers29.businesscraft.ui.builders.UIGridBuilder;
+import com.quackers29.businesscraft.ui.theme.UiTheme;
 import com.quackers29.businesscraft.ui.builders.BCComponentFactory;
 import com.quackers29.businesscraft.ui.components.basic.BCLabel;
 
@@ -40,20 +41,20 @@ public class BCModalGridScreen<T> extends Screen {
     private int panelTop;
     
     // Colors (with defaults)
-    private int backgroundColor = 0xFF000000;    // Black
-    private int borderColor = 0xFFDDDDDD;        // Light gray
-    private int titleColor = 0xFFFFFFFF;         // White
-    private int headerColor = 0xFFDDFFFF;        // Light cyan
-    private int textColor = 0xFFFFFFFF;          // White
-    private int altRowColor1 = 0x30FFFFFF;       // Alternating row color 1
-    private int altRowColor2 = 0x20FFFFFF;       // Alternating row color 2
-    private int scrollbarTrackColor = 0x40FFFFFF; // Light gray semi-transparent
-    private int scrollbarThumbColor = 0xA0CCDDFF; // Light blue semi-transparent
-    private int scrollbarActiveColor = 0xFFCCDDFF; // Light blue opaque
+    private int backgroundColor = UiTheme.PANEL;
+    private int borderColor = UiTheme.BORDER;
+    private int titleColor = UiTheme.GOLD;
+    private int headerColor = UiTheme.AQUA;
+    private int textColor = UiTheme.TEXT;
+    private int altRowColor1 = UiTheme.ROW;
+    private int altRowColor2 = UiTheme.ROW_ALT;
+    private int scrollbarTrackColor = UiTheme.TRACK;
+    private int scrollbarThumbColor = UiTheme.BORDER;
+    private int scrollbarActiveColor = UiTheme.GOLD;
     
     // Scrolling properties
     private int scrollOffset = 0;
-    private final int scrollbarWidth = 8;
+    private final int scrollbarWidth = UiTheme.SCROLLBAR;
     private boolean isDraggingScrollbar = false;
     
     // Content dimensions
@@ -71,11 +72,12 @@ public class BCModalGridScreen<T> extends Screen {
     private Consumer<T> onRowClickHandler;
     
     // Title scale factor
-    private float titleScale = 1.5f;
+    private float titleScale = 1.0f;
 
     // Optional panel size ratios (applied in init when screen dimensions are known)
     private Float panelWidthRatio;
     private Float panelHeightRatio;
+    private boolean fitToRows;
     
     /**
      * Constructor for the modal grid screen
@@ -97,13 +99,26 @@ public class BCModalGridScreen<T> extends Screen {
     protected void init() {
         super.init();
         
-        // Calculate panel dimensions - default to 70% of screen height
-        if (panelWidthRatio != null && panelHeightRatio != null) {
-            this.panelWidth = Math.min((int) (this.width * panelWidthRatio), this.width - 40);
+        int margin = UiTheme.SPACE_2;
+        if (fitToRows && panelWidthRatio != null && panelHeightRatio != null) {
+            int maxW = Math.min((int) (this.width * panelWidthRatio), this.width - margin * 2);
+            int maxH = Math.min((int) (this.height * panelHeightRatio), this.height - margin * 2);
+            int rows = Math.max(1, dataItems.size());
+            int needed = headerHeight + (rows + 1) * rowHeight + 16;
+            int buttonSpace = 28;
+            this.panelWidth = Math.max(220, maxW);
+            this.panelHeight = Math.min(Math.max(headerHeight + rowHeight + 16, maxH - buttonSpace),
+                    Math.max(headerHeight + rowHeight + 16, needed));
+        } else if (panelWidthRatio != null && panelHeightRatio != null) {
+            this.panelWidth = Math.min((int) (this.width * panelWidthRatio), this.width - margin * 2);
             this.panelHeight = (int) (this.height * panelHeightRatio);
         } else {
-            this.panelWidth = Math.min(400, this.width - 40);
-            this.panelHeight = (int) (this.height * 0.7) - 40;
+            this.panelWidth = Math.max(220, this.width - margin * 2);
+            int rows = Math.max(1, dataItems.size());
+            int needed = headerHeight + (rows + 1) * rowHeight + 16;
+            int maxH = (int) (this.height * 0.7) - 28;
+            this.panelHeight = Math.min(Math.max(headerHeight + rowHeight + 16, maxH),
+                    Math.max(headerHeight + rowHeight + 16, needed));
         }
         this.panelLeft = (this.width - panelWidth) / 2;
         this.panelTop = (this.height - panelHeight) / 2 - 10;
@@ -219,13 +234,8 @@ public class BCModalGridScreen<T> extends Screen {
         guiGraphics.pose().translate(-titleX, -titleY, 0);
         
         // Draw title with shadow
-        guiGraphics.drawCenteredString(
-            this.font,
-            this.title,
-            (int)titleX,
-            (int)titleY,
-            titleColor
-        );
+        int titleWidth = this.font.width(this.title);
+        guiGraphics.drawString(this.font, this.title, (int) titleX - titleWidth / 2, (int) titleY, titleColor, false);
         
         // Restore transformation
         guiGraphics.pose().popPose();
@@ -471,6 +481,11 @@ public class BCModalGridScreen<T> extends Screen {
     /**
      * Set custom panel size (as ratio of screen size)
      */
+    public BCModalGridScreen<T> withFitToRows(float maxWidthRatio, float maxHeightRatio) {
+        this.fitToRows = true;
+        return withPanelSize(maxWidthRatio, maxHeightRatio);
+    }
+
     public BCModalGridScreen<T> withPanelSize(float widthRatio, float heightRatio) {
         this.panelWidthRatio = widthRatio;
         this.panelHeightRatio = heightRatio;

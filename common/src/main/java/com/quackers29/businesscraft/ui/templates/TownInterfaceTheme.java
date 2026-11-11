@@ -1,31 +1,27 @@
 package com.quackers29.businesscraft.ui.templates;
 
+import com.quackers29.businesscraft.ui.theme.UiTheme;
+
 /**
- * Centralized theme constants for the Town Interface Screen and related
- * components.
- * This class provides consistent color definitions across all town interface
- * elements.
+ * Town Interface colour names. Values come from {@link UiTheme} so town screens
+ * share the platform and tourist palette.
  */
 public final class TownInterfaceTheme {
 
-    // Primary UI colors - lighter and more visible
-    public static final int PRIMARY_COLOR = 0xA0335599; // Semi-transparent blue
-    public static final int SECONDARY_COLOR = 0xA0884466; // Semi-transparent purple
-    public static final int BACKGROUND_COLOR = 0x80222222; // Semi-transparent dark gray
-    public static final int BORDER_COLOR = 0xA0AAAAAA; // Light gray
+    public static final int PRIMARY_COLOR = UiTheme.BUTTON;
+    public static final int SECONDARY_COLOR = UiTheme.BUTTON;
+    public static final int BACKGROUND_COLOR = UiTheme.PANEL;
+    public static final int BORDER_COLOR = UiTheme.BORDER;
 
-    // Tab-specific colors
-    public static final int ACTIVE_TAB_COLOR = 0xA0CCDDFF; // Light blue for active tab
-    public static final int INACTIVE_TAB_COLOR = 0x80555555; // Medium gray for inactive tabs
+    public static final int ACTIVE_TAB_COLOR = UiTheme.BUTTON;
+    public static final int INACTIVE_TAB_COLOR = UiTheme.SECTION;
 
-    // Text colors
-    public static final int TEXT_COLOR = 0xFFFFFFFF; // White text
-    public static final int TEXT_HIGHLIGHT = 0xFFDDFFFF; // Light cyan highlight text
+    public static final int TEXT_COLOR = UiTheme.TEXT;
+    public static final int TEXT_HIGHLIGHT = UiTheme.AQUA;
 
-    // Status colors
-    public static final int SUCCESS_COLOR = 0xA0339944; // Green
-    public static final int DANGER_COLOR = 0xA0993333; // Red
-    public static final int ACCENT_COLOR = 0xA0FF8844; // Orange accent
+    public static final int SUCCESS_COLOR = UiTheme.ON_BG;
+    public static final int DANGER_COLOR = UiTheme.OFF_BG;
+    public static final int ACCENT_COLOR = UiTheme.GOLD;
 
     // Prevent instantiation
     private TownInterfaceTheme() {
@@ -44,7 +40,7 @@ public final class TownInterfaceTheme {
                 .successColor(SUCCESS_COLOR)
                 .dangerColor(DANGER_COLOR)
                 .textLight(TEXT_COLOR)
-                .textDark(0xFF202020)
+                .textDark(UiTheme.ON_FG)
                 .panelBackground(BACKGROUND_COLOR)
                 .panelBorder(BORDER_COLOR)
                 .roundedCorners(true)

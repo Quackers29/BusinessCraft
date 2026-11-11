@@ -8,6 +8,7 @@ import com.quackers29.businesscraft.ui.layout.BCFlowLayout;
 import com.quackers29.businesscraft.ui.layout.BCGridLayout;
 import com.quackers29.businesscraft.ui.modal.core.BCPopupScreen;
 import com.quackers29.businesscraft.ui.templates.BCTheme;
+import com.quackers29.businesscraft.ui.theme.UiTheme;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
@@ -19,23 +20,21 @@ import java.util.function.Supplier;
  * Factory class for creating BusinessCraft UI components with consistent styling.
  */
 public class BCComponentFactory {
-    // Theme-based color constants
-    private static final int PRIMARY_COLOR = 0xA0335599;       // Semi-transparent blue
-    private static final int SECONDARY_COLOR = 0xA0884466;     // Semi-transparent purple
-    private static final int SUCCESS_COLOR = 0xA0339944;       // Semi-transparent green
-    private static final int DANGER_COLOR = 0xA0993333;        // Semi-transparent red
-    private static final int BACKGROUND_COLOR = 0x80222222;    // Semi-transparent dark gray
-    private static final int BORDER_COLOR = 0xA0AAAAAA;        // Light gray
-    private static final int TEXT_COLOR = 0xFFFFFFFF;          // White text
-    private static final int TEXT_HIGHLIGHT = 0xFFDDFFFF;      // Light cyan highlight text
-    
-    // Sizing constants
-    private static final int STANDARD_BUTTON_HEIGHT = 20;
-    private static final int SMALL_BUTTON_HEIGHT = 16;
+    private static final int PRIMARY_COLOR = UiTheme.BUTTON;
+    private static final int SECONDARY_COLOR = UiTheme.SECTION;
+    private static final int SUCCESS_COLOR = UiTheme.ON_BG;
+    private static final int DANGER_COLOR = UiTheme.OFF_BG;
+    private static final int BACKGROUND_COLOR = UiTheme.PANEL;
+    private static final int BORDER_COLOR = UiTheme.BORDER;
+    private static final int TEXT_COLOR = UiTheme.TEXT;
+    private static final int TEXT_HIGHLIGHT = UiTheme.AQUA;
+
+    private static final int STANDARD_BUTTON_HEIGHT = UiTheme.BUTTON_HEIGHT;
+    private static final int SMALL_BUTTON_HEIGHT = UiTheme.BUTTON_HEIGHT_COMPACT;
     private static final int LARGE_BUTTON_HEIGHT = 24;
-    private static final int STANDARD_PADDING = 8;
-    private static final int SMALL_PADDING = 4;
-    private static final int LARGE_PADDING = 12;
+    private static final int STANDARD_PADDING = UiTheme.SPACE_2;
+    private static final int SMALL_PADDING = UiTheme.SPACE_1;
+    private static final int LARGE_PADDING = UiTheme.SPACE_3;
     
     /**
      * Creates a primary button with consistent styling.
@@ -115,9 +114,9 @@ public class BCComponentFactory {
      */
     public static BCLabel createHeaderLabel(String translationKey, int width) {
         BCLabel label = new BCLabel(translationKey, width, 12);
-        label.withTextColor(BCTheme.get().getTextLight())
+        label.withTextColor(UiTheme.GOLD)
               .withAlignment(BCLabel.TextAlignment.CENTER)
-              .withShadow(true);
+              .withShadow(false);
         return label;
     }
     

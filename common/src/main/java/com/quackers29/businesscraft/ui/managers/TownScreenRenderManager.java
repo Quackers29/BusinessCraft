@@ -152,7 +152,7 @@ public class TownScreenRenderManager {
         int width = layoutProvider.getImageWidth();
         int height = layoutProvider.getImageHeight();
         
-        graphics.fill(leftPos, topPos, leftPos + width, topPos + height, 0x80222222);
+        graphics.fill(leftPos, topPos, leftPos + width, topPos + height, com.quackers29.businesscraft.ui.theme.UiTheme.PANEL);
         
         // Draw border
         graphics.hLine(leftPos, leftPos + width - 1, topPos, BORDER_COLOR);
@@ -221,8 +221,10 @@ public class TownScreenRenderManager {
         int topPos = layoutProvider.getTopPos();
         int width = layoutProvider.getImageWidth();
         
-        graphics.drawCenteredString(font, title, leftPos + width / 2,
-                topPos - layoutProvider.getTitleMarginAbove(), TEXT_COLOR);
+        int titleWidth = font.width(title);
+        graphics.drawString(font, title, leftPos + width / 2 - titleWidth / 2,
+                topPos - layoutProvider.getTitleMarginAbove(),
+                com.quackers29.businesscraft.ui.theme.UiTheme.GOLD, false);
     }
     
     /**

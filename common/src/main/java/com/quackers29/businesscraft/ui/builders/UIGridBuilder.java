@@ -1,6 +1,7 @@
 package com.quackers29.businesscraft.ui.builders;
 
 import com.quackers29.businesscraft.api.PlatformAccess;
+import com.quackers29.businesscraft.ui.theme.UiTheme;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import java.util.ArrayList;
@@ -50,7 +51,7 @@ public class UIGridBuilder {
     private boolean verticalScrollEnabled = false;
     private int verticalScrollOffset = 0;
     private int maxVerticalScrollOffset = 0;
-    private int scrollBarWidth = 6; // Reduced by 30% (8 * 0.7 = 5.6, rounded to 6)
+    private int scrollBarWidth = UiTheme.SCROLLBAR;
     private boolean verticalScrolling = false;
     private int visibleRows = 0;
     private int totalRows = 0;
@@ -1190,7 +1191,7 @@ public class UIGridBuilder {
             if (fontObj instanceof net.minecraft.client.gui.Font font) {
                 int textX = x + width / 2 - font.width(element.text) / 2;
                 int textY = y + (height - font.lineHeight) / 2; // Centered within the actual height
-                graphics.drawString(font, element.text, textX, textY, 0xFFFFFFFF);
+                graphics.drawString(font, element.text, textX, textY, UiTheme.TEXT, false);
             }
         }
     }
@@ -1244,7 +1245,7 @@ public class UIGridBuilder {
         }
 
         int textY = y + (height - font.lineHeight) / 2; // Vertically centered
-        graphics.drawString(font, displayText, textX, textY, element.textColor);
+        graphics.drawString(font, displayText, textX, textY, element.textColor, false);
     }
 
     /**
@@ -1338,7 +1339,7 @@ public class UIGridBuilder {
             if (fontObj instanceof net.minecraft.client.gui.Font font) {
                 int textX = x + width / 2 - font.width(element.text) / 2;
                 int textY = y + (height - 8) / 2;
-                graphics.drawString(font, element.text, textX, textY, 0xFFFFFFFF);
+                graphics.drawString(font, element.text, textX, textY, UiTheme.TEXT, false);
             }
         }
     }
@@ -1414,7 +1415,8 @@ public class UIGridBuilder {
                         multiplier,
                         multiplierX,
                         textY,
-                        0xFFAAAAAA // Light gray color for the multiplier
+                        UiTheme.MUTED,
+                        false
                 );
 
                 // Draw the quantity text right-aligned
@@ -1423,7 +1425,8 @@ public class UIGridBuilder {
                         quantityText,
                         x + width - font.width(quantityText) - 5, // Right-aligned with padding
                         textY,
-                        0xFFFFFFFF // White color for the quantity
+                        UiTheme.TEXT,
+                        false
                 );
             }
         }
@@ -1482,7 +1485,7 @@ public class UIGridBuilder {
                     int textX = x + width - textWidth - 5;
                     int textY = y + (height - font.lineHeight) / 2;
 
-                    graphics.drawString(font, plusText, textX, textY, 0xFFFFFFFF);
+                    graphics.drawString(font, plusText, textX, textY, UiTheme.TEXT, false);
                 }
             }
         }
@@ -1597,23 +1600,23 @@ public class UIGridBuilder {
             case UNLOCKED:
             case CHECKMARK:
                 symbol = "✔"; // Checkmark
-                color = 0xFF55FF55; // Green
+                color = UiTheme.ON_BG;
                 break;
             case LOCKED:
                 symbol = "🔒"; // Padlock
-                color = 0xFFFF5555; // Red
+                color = UiTheme.OFF_BG;
                 break;
             case CROSS:
                 symbol = "✖"; // Cross
-                color = 0xFFFF5555; // Red
+                color = UiTheme.OFF_BG;
                 break;
             case INFO:
                 symbol = "ℹ"; // Info
-                color = 0xFF55FFFF; // Aqua
+                color = UiTheme.AQUA;
                 break;
             case WARNING:
                 symbol = "⚠"; // Warning
-                color = 0xFFFFAA00; // Gold
+                color = UiTheme.GOLD;
                 break;
         }
 

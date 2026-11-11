@@ -44,7 +44,7 @@ public class PlatformManagementScreenV2 extends Screen {
     private static final int HEADER_HEIGHT = 35;
     private static final int BACK_BUTTON_X = SECTION_PADDING;
     private static final int BACK_BUTTON_Y = SECTION_PADDING;
-    private static final int BACK_BUTTON_WIDTH = 28;
+    private static final int BACK_BUTTON_WIDTH = com.quackers29.businesscraft.ui.theme.UiTheme.BACK_SIZE;
     private static final int BACK_BUTTON_HEIGHT = 20;
 
     // Platform list section
@@ -61,13 +61,13 @@ public class PlatformManagementScreenV2 extends Screen {
     private int imageHeight = 200;
 
     // Enhanced color scheme matching Payment Board
-    private static final int SUCCESS_COLOR = 0xFF8FDB9A; // Light green for enabled
-    private static final int INFO_COLOR = 0xB0336699; // Blue for actions
-    private static final int DANGER_COLOR = 0xB0CC2222; // Red for delete
-    private static final int DISABLED_COLOR = 0xFFF0A3A3; // Light red for disabled
-    private static final int TEXT_COLOR = 0xFFFFFFFF; // White text
-    private static final int HEADER_COLOR = 0xFFFCB821; // Gold for headers
-    private static final int SECTION_BG_COLOR = 0x90000000; // Semi-transparent black
+    private static final int SUCCESS_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.ON_BG;
+    private static final int INFO_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.AQUA;
+    private static final int DANGER_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.OFF_BG;
+    private static final int DISABLED_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.OFF_BG;
+    private static final int TEXT_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.TEXT;
+    private static final int HEADER_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.GOLD;
+    private static final int SECTION_BG_COLOR = com.quackers29.businesscraft.ui.theme.UiTheme.SECTION;
 
     public PlatformManagementScreenV2(BlockPos townBlockPos, List<Platform> platforms) {
         super(Component.translatable("businesscraft.manage_platforms"));
@@ -158,18 +158,27 @@ public class PlatformManagementScreenV2 extends Screen {
         platformListGrid.clearElements();
 
         // Always update total rows to handle dynamic changes
-        platformListGrid.updateTotalRows(platforms.size());
+        int header = platforms.isEmpty() ? 0 : 1;
+        platformListGrid.updateTotalRows(platforms.size() + header);
 
         populateGridWithPlatforms();
     }
 
     private void populateGridWithPlatforms() {
+        if (!platforms.isEmpty()) {
+            int muted = com.quackers29.businesscraft.ui.theme.UiTheme.MUTED;
+            platformListGrid.addLabel(0, 1, "Name", muted);
+            platformListGrid.addLabel(0, 2, "State", muted);
+            platformListGrid.addLabel(0, 3, "Path", muted);
+            platformListGrid.addLabel(0, 4, "Destinations", muted);
+        }
         for (int i = 0; i < platforms.size(); i++) {
+            int row = i + 1;
             Platform platform = platforms.get(i);
 
             // Column 0: Status indicator - green only if enabled AND has valid path
             boolean canSpawn = platform.isEnabled() && platform.isComplete();
-            platformListGrid.addStatusIndicator(i, 0, canSpawn, SUCCESS_COLOR, DISABLED_COLOR, 13);
+            platformListGrid.addStatusIndicator(row, 0, canSpawn, SUCCESS_COLOR, DISABLED_COLOR, 13);
 
             // Column 1: Platform name. The name column is wide enough for the full word.
             String nameText = platform.getName() == null || platform.getName().isBlank()
@@ -177,13 +186,13 @@ public class PlatformManagementScreenV2 extends Screen {
                     : platform.getName();
             net.minecraft.core.BlockPos at = platform.getInterfacePos();
             String where = at == null ? "no block position" : "at " + at.getX() + ", " + at.getY() + ", " + at.getZ();
-            platformListGrid.addLabelWithTooltip(i, 1, nameText,
+            platformListGrid.addLabelWithTooltip(row, 1, nameText,
                     "Open this platform's Platform Interface to change it (" + where + ")", TEXT_COLOR);
 
             String state = platform.isEnabled() ? "Enabled" : "Disabled";
-            platformListGrid.addLabel(i, 2, state, platform.isEnabled() ? SUCCESS_COLOR : DISABLED_COLOR);
+            platformListGrid.addLabel(row, 2, state, platform.isEnabled() ? SUCCESS_COLOR : DISABLED_COLOR);
 
-            platformListGrid.addLabel(i, 3, platform.isComplete() ? "Path set" : "No path", TEXT_COLOR);
+            platformListGrid.addLabel(row, 3, platform.isComplete() ? "Path set" : "No path", TEXT_COLOR);
 
             int destCount = platform.getEnabledDestinations().size();
             String dest = switch (platform.getDestinationMode()) {
@@ -192,12 +201,12 @@ public class PlatformManagementScreenV2 extends Screen {
                 case SPECIFIC -> destCount == 0 ? "Specific (none)"
                         : (destCount == 1 ? "1 town" : destCount + " towns");
             };
-            platformListGrid.addLabel(i, 4, dest, TEXT_COLOR);
+            platformListGrid.addLabel(row, 4, dest, TEXT_COLOR);
         }
 
         if (platforms.isEmpty()) {
             platformListGrid.updateTotalRows(1);
-            platformListGrid.addLabel(0, 1, "No platforms yet", DISABLED_COLOR);
+            platformListGrid.addLabel(0, 1, "No platforms yet", com.quackers29.businesscraft.ui.theme.UiTheme.MUTED);
             platformListGrid.addLabelWithTooltip(0, 2, "Place a block",
                     "Place a Platform Interface inside the town boundary", TEXT_COLOR);
         }

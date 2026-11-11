@@ -353,6 +353,11 @@ class ConfigLoaderTest {
 
         assertEquals(12, ConfigLoader.defaultStartingPopulation);
         assertEquals(40, ConfigLoader.maxPlatformSearchRadius);
+        assertEquals(1, ConfigLoader.platformRadiusStep);
+        assertEquals(5, ConfigLoader.platformRadiusStepFast);
+        assertEquals(20, ConfigLoader.contractPageSize);
+        assertEquals(50, ConfigLoader.contractHistoryLimit);
+        assertEquals(2, ConfigLoader.contractVisibleBids);
         assertTrue(ConfigLoader.craftableTownInterface);
         assertEquals(List.of("Alpha", "Beta"), ConfigLoader.townNames);
 
@@ -509,6 +514,11 @@ class ConfigLoaderTest {
         assertEquals(5, ConfigLoader.defaultStartingPopulation);
         assertEquals(50, ConfigLoader.defaultBorderRadius);
         assertEquals(100, ConfigLoader.maxPlatformSearchRadius);
+        assertEquals(1, ConfigLoader.platformRadiusStep);
+        assertEquals(5, ConfigLoader.platformRadiusStepFast);
+        assertEquals(20, ConfigLoader.contractPageSize);
+        assertEquals(50, ConfigLoader.contractHistoryLimit);
+        assertEquals(2, ConfigLoader.contractVisibleBids);
         assertEquals(100, ConfigLoader.metersPerEmerald);
         assertTrue(ConfigLoader.milestoneRewards.containsKey(1000));
         assertTrue(ConfigLoader.milestoneRewards.containsKey(5000));
@@ -523,6 +533,8 @@ class ConfigLoaderTest {
         ConfigLoader.defaultStartingPopulation = 9;
         ConfigLoader.defaultBorderRadius = 75;
         ConfigLoader.maxPlatformSearchRadius = 60;
+        ConfigLoader.contractPageSize = 12;
+        ConfigLoader.platformRadiusStepFast = 8;
         ConfigLoader.milestoneRewards.clear();
         ConfigLoader.milestoneRewards.put(25, List.of("minecraft:emerald:3"));
 
@@ -534,6 +546,8 @@ class ConfigLoaderTest {
         ConfigLoader.defaultStartingPopulation = 1;
         ConfigLoader.defaultBorderRadius = 1;
         ConfigLoader.maxPlatformSearchRadius = 1;
+        ConfigLoader.contractPageSize = 1;
+        ConfigLoader.platformRadiusStepFast = 1;
         ConfigLoader.milestoneRewards.clear();
 
         ConfigLoader.loadConfig();
@@ -542,6 +556,8 @@ class ConfigLoaderTest {
         assertEquals(9, ConfigLoader.defaultStartingPopulation);
         assertEquals(75, ConfigLoader.defaultBorderRadius);
         assertEquals(60, ConfigLoader.maxPlatformSearchRadius);
+        assertEquals(12, ConfigLoader.contractPageSize);
+        assertEquals(8, ConfigLoader.platformRadiusStepFast);
         assertTrue(Files.readString(configFile).contains("Highest search radius a platform may use"));
         assertEquals(1, ConfigLoader.milestoneRewards.size());
         assertEquals(List.of("minecraft:emerald:3"), ConfigLoader.milestoneRewards.get(25));
