@@ -11,7 +11,11 @@ bash tools/showcase.sh testbed forge trade-contract
 bash tools/showcase.sh testbed fabric trade-contract,example-dev-item
 ```
 
-Omit check names to run every registered check.
+Omit check names to run the default set (`trade-contract`). `example-dev-item` is a template and is not in that set; pass its name to run it.
+
+Showcase runs pin town names: the first Town Centre placed in the run is Brookside and the second is Hillcrest. Gameplay outside the harness still picks a name at random.
+
+`all-views` writes a `ui` object on each manifest route (screen simple name, active tab, button ids, scaled width and height) and fails that route when the open screen is not the route's last `wait-for-screen`. Planned-shot modes (`all`, `town`, `block`, `platform`, `kiosk`, `lamp`) write `showcase-shots.json` from each grab. The shell requires every non-warmup shot from `ShowcaseSelection` to be present and saved. A grab callback that is not a successful screenshot fails the run.
 
 ## Output layout
 
@@ -36,7 +40,7 @@ Set `SHOWCASE_ARTIFACT_DIR=/opt/cursor/artifacts/...` to mirror a copy elsewhere
 | Name | Purpose |
 |------|---------|
 | `trade-contract` | Sell auction from town A, bid from town B, contract board + detail UI, time-skipped delivery |
-| `example-dev-item` | Starter template (opens trade from town B); copy to build real dev-item checks |
+| `example-dev-item` | Starter template (opens trade from town B). Opt-in; not part of the default set |
 
 ## Add a new check
 

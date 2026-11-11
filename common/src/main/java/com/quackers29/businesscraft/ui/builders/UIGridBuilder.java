@@ -652,6 +652,17 @@ public class UIGridBuilder {
         return false;
     }
 
+    /** Stable button ids currently in this grid, in layout order. */
+    public List<String> buttonIds() {
+        List<String> ids = new ArrayList<>();
+        for (UIGridElement element : elements) {
+            if (element.type == UIElementType.BUTTON && element.elementId != null && !element.elementId.isBlank()) {
+                ids.add(element.elementId);
+            }
+        }
+        return ids;
+    }
+
     /**
      * Invokes a button's {@code onClick} handler by visible label (case-insensitive).
      */

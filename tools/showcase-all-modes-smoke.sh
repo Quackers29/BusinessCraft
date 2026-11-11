@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# Run every showcase mode once (Forge then Fabric). For CI / release smoke.
+# Run the showcase modes that assert real output for one loader.
+# `all` checks showcase-shots.json (every non-warmup shot), not a fixed count.
+# Pass forge or fabric. Run it twice to cover both loaders.
+# tourists, tourist-screen, and map-sweep stay separate: they are long and
+# already have their own manifests.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 LOADER="${1:-forge}"

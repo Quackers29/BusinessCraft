@@ -24,7 +24,7 @@ Folders mirror game systems, nesting from system → subsystem → process:
 - **[[Config/Config Overview|Config/]]** — configuration system and key settings
 - **[[Core/Core Overview|Core/]]** — cross-cutting pure utilities (time formatting, result/error types)
 
-Planned but empty (create only when notes exist): **Network/** (packet flows), **UI/** (screen/data flows) — mostly DOC-ONLY material.
+Planned but empty (create only when notes exist): **Network/** (packet flows). **UI/** starts with [[UI/Showcase Harness]] (dev client checks; not a player-facing screen).
 
 ## Tracking
 - [[_meta/Coverage Ledger|Coverage Ledger]] — what's covered, in progress, blocked

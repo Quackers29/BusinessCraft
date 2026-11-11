@@ -449,10 +449,20 @@ public class StandardTabContent extends BCComponent {
      * Invokes a settings-style grid button by stable id (showcase harness).
      */
     public boolean invokeShowcaseButtonById(String elementId) {
-        if (contentType != ContentType.BUTTON_GRID || buttonGridSupplier == null || elementId == null) {
-            return false;
+        UIGridBuilder temp = showcaseButtonGrid();
+        return temp != null && elementId != null && temp.invokeButtonById(elementId);
+    }
+
+    public List<String> showcaseButtonIds() {
+        UIGridBuilder temp = showcaseButtonGrid();
+        return temp == null ? List.of() : temp.buttonIds();
+    }
+
+    private UIGridBuilder showcaseButtonGrid() {
+        if (contentType != ContentType.BUTTON_GRID || buttonGridSupplier == null) {
+            return null;
         }
-        UIGridBuilder temp = UIGridBuilder.createLabelButtonGrid(
+        return UIGridBuilder.createLabelButtonGrid(
                 x, y, width, height,
                 TEXT_COLOR, TownInterfaceTheme.PRIMARY_COLOR,
                 buttonGridSupplier.get())
@@ -461,7 +471,6 @@ public class StandardTabContent extends BCComponent {
                 .withMargins(15, 10)
                 .withSpacing(15, 10)
                 .drawBorder(true);
-        return temp.invokeButtonById(elementId);
     }
 
     @Override

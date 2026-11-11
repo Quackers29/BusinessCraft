@@ -11,10 +11,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ShowcaseTestbedCheckRegistryTest {
 
     @Test
-    void resolveAll_includesBuiltInChecks() {
+    void resolveAll_isTradeContractOnly() {
         List<ShowcaseTestbedCheck> checks = ShowcaseTestbedCheckRegistry.resolve("all");
-        assertTrue(checks.size() >= 2);
-        assertTrue(checks.stream().anyMatch(c -> "trade-contract".equals(c.name())));
+        assertEquals(1, checks.size());
+        assertEquals("trade-contract", checks.get(0).name());
+    }
+
+    @Test
+    void exampleDevItem_isOptIn() {
+        List<ShowcaseTestbedCheck> checks = ShowcaseTestbedCheckRegistry.resolve("example-dev-item");
+        assertEquals(1, checks.size());
+        assertEquals("example-dev-item", checks.get(0).name());
+        assertTrue(ShowcaseTestbedCheckRegistry.allNames().contains("example-dev-item"));
     }
 
     @Test
